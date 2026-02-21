@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { SharedNav } from "@/components/SharedNav";
 import { NearbyStores } from "@/components/NearbyStores";
 import { LotteryResultChecker } from "@/components/LotteryResultChecker";
+import { ScratchAnalysis } from "@/components/ScratchAnalysis";
 
 // 五行顏色映射
 const ELEMENT_COLORS: Record<string, { bg: string; text: string; border: string; label: string }> = {
@@ -137,6 +138,7 @@ export default function LotteryOracle() {
   const [savedSessionId, setSavedSessionId] = useState<number | undefined>();
   const [activeSet, setActiveSet] = useState(0);
   const [showNearby, setShowNearby] = useState(false);
+  const [showScratchAnalysis, setShowScratchAnalysis] = useState(false);
   const [countdown, setCountdown] = useState<string | null>(null);
 
   // 今日最佳購買時機
@@ -530,6 +532,41 @@ export default function LotteryOracle() {
               >
                 <div className="px-5 pb-5">
                   <NearbyStores />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* 刮刮樂地址分析 + 面額選號 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="glass-card rounded-2xl border border-white/10 mb-6 overflow-hidden"
+        >
+          <button
+            onClick={() => setShowScratchAnalysis(!showScratchAnalysis)}
+            className="w-full flex items-center justify-between p-5 hover:bg-white/3 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span className="text-sm font-bold text-amber-300 tracking-wider">地址分析 · 面額選號</span>
+              <span className="text-[10px] text-slate-500 ml-1">地址五行 · 50/100/200/500元策略</span>
+            </div>
+            {showScratchAnalysis ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+          </button>
+          <AnimatePresence>
+            {showScratchAnalysis && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="px-5 pb-5">
+                  <ScratchAnalysis />
                 </div>
               </motion.div>
             )}

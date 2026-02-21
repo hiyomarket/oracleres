@@ -125,21 +125,22 @@ export default function WarRoom() {
           className="mb-6"
         >
           {/* 標題列 */}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-white tracking-wide">
+          <div className="flex items-start justify-between mb-4 gap-2">
+            <div className="min-w-0">
+              <h1 className="text-xl md:text-2xl font-bold text-white tracking-wide">
                 ⚔️ 今日作戰室
               </h1>
-              <p className="text-white/40 text-xs mt-1 tracking-widest">TODAY'S WAR ROOM · ORACLE RESONANCE</p>
+              <p className="text-white/40 text-xs mt-1 tracking-widest hidden sm:block">TODAY'S WAR ROOM · ORACLE RESONANCE</p>
             </div>
-            <div className="text-right">
-              <div className="text-amber-400 font-mono text-lg">{timeStr}</div>
-              <div className="text-white/40 text-xs">{data.date.gregorian} 週{data.date.weekday}</div>
+            <div className="text-right shrink-0">
+              <div className="text-amber-400 font-mono text-base md:text-lg">{timeStr}</div>
+              <div className="text-white/40 text-xs">{data.date.gregorian}</div>
+              <div className="text-white/40 text-xs">週{data.date.weekday}</div>
             </div>
           </div>
 
           {/* 核心數據橫排 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3 mb-4">
             {/* 農曆 */}
             <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-center">
               <div className="text-white/40 text-xs mb-1">農曆</div>
@@ -200,7 +201,7 @@ export default function WarRoom() {
         </motion.div>
 
         {/* ═══ 分頁切換 ═══ */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {([
             { key: "overview", label: "🌳 英雄劇本" },
             { key: "tarot", label: "🃏 塔羅流日" },
@@ -211,7 +212,7 @@ export default function WarRoom() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
                 activeTab === tab.key
                   ? "bg-amber-500/20 border border-amber-500/50 text-amber-300"
                   : "bg-white/5 border border-white/10 text-white/50 hover:text-white/70"
@@ -521,7 +522,7 @@ export default function WarRoom() {
                           />
                         </div>
                       </div>
-                      <div className="text-white/40 text-xs mt-1 truncate">{h.label}</div>
+                      <div className="text-white/40 text-xs mt-1 leading-tight">{h.label}</div>
                     </motion.div>
                   ))}
                 </div>

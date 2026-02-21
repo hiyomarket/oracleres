@@ -198,3 +198,12 @@
 - [x] 彩券行收藏功能（FavoriteStores.tsx + favorite_stores DB + 3 個 API + 收藏按鈕）
 - [x] 66 項測試全部通過，TypeScript 零錯誤
 - [x] 儲存 V2.3 checkpoint
+
+## 功能修復 & 增強 v2.4
+
+- [x] 修正作戰室（/war-room）頁面版面問題（Tab 滚動、時辰格子、分頁標籤優化）
+- [x] 刮刮樂選號加入地址五行分析（輸入彩券行地址 → 門牌數字五行屬性 + 共振分數 + 幸運數字）
+- [x] 刮刮樂選號加入多面額選號策略（50/100/200/500元，各對應保守/穩健/積極/天命四種風險等級）
+- [x] ScratchAnalysis.tsx 新組件（地址分析 + 面額選號卡片展開）
+- [x] 66 項測試全部通過，TypeScript 零錯誤
+- [x] 儲存 V2.4 checkpoint

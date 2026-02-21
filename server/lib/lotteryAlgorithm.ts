@@ -344,3 +344,181 @@ export function generateLotterySets(date: Date = new Date()): LotterySet[] {
     },
   ];
 }
+
+// ============================================================
+// 刮刮樂面額選號策略
+// ============================================================
+
+export type ScratchDenomination = 50 | 100 | 200 | 500;
+
+export interface ScratchDenominationStrategy {
+  denomination: ScratchDenomination;
+  label: string;
+  riskLevel: "保守" | "穩健" | "積極" | "天命";
+  description: string;
+  strategy: string;
+  primaryNumbers: number[];
+  backupNumbers: number[];
+  confidence: "high" | "medium" | "low";
+  buyCount: number;
+  maxBudget: number;
+}
+
+/**
+ * 根據面額生成對應的選號策略
+ * 50元：保守型，用神火土為主
+ * 100元：穩健型，火土金三用神平衡
+ * 200元：積極型，強化偏財，引入時辰加成
+ * 500元：天命型，全力共振，最高能量組合
+ */
+export function generateScratchStrategies(date: Date = new Date()): ScratchDenominationStrategy[] {
+  const base = generateLotteryNumbers(date);
+  const sets = generateLotterySets(date);
+
+  const strategy50: ScratchDenominationStrategy = {
+    denomination: 50,
+    label: "50元券",
+    riskLevel: "保守",
+    description: "日常天命微調，以火土用神為核心，穩中求財",
+    strategy: "選擇與今日日干共振最強的2-3個數字，重複出現即為天命暗示",
+    primaryNumbers: [2, 7, 0, 5].filter(n => base.numbers.includes(n)).concat([2, 7, 0]).slice(0, 3),
+    backupNumbers: base.luckyDigits.slice(0, 2),
+    confidence: "high",
+    buyCount: 3,
+    maxBudget: 150,
+  };
+
+  const strategy100: ScratchDenominationStrategy = {
+    denomination: 100,
+    label: "100元券",
+    riskLevel: "穩健",
+    description: "三用神平衡佈局，火土金各司其職，財路寬廣",
+    strategy: "以天命核心組為主，搭配五行平衡組備選，兩組交替購買",
+    primaryNumbers: sets[0]?.numbers ?? base.numbers.slice(0, 4),
+    backupNumbers: sets[1]?.numbers.slice(0, 3) ?? base.bonusNumbers,
+    confidence: "high",
+    buyCount: 2,
+    maxBudget: 200,
+  };
+
+  const strategy200: ScratchDenominationStrategy = {
+    denomination: 200,
+    label: "200元券",
+    riskLevel: "積極",
+    description: "偏財星加持，結合時辰能量，適合偏財指數≥7的吉日",
+    strategy: "以時辰能量組為主，在最佳時辰（申/酉/戌時）購買，效果最強",
+    primaryNumbers: sets[2]?.numbers ?? base.numbers,
+    backupNumbers: base.numbers.slice(0, 3),
+    confidence: base.energyAnalysis.overallLuck >= 7 ? "high" : "medium",
+    buyCount: 1,
+    maxBudget: 200,
+  };
+
+  const strategy500: ScratchDenominationStrategy = {
+    denomination: 500,
+    label: "500元券",
+    riskLevel: "天命",
+    description: "天命全開，五行全力共振，僅在偏財指數≥8的大吉日動用",
+    strategy: "整合三組天命號碼，選取出現頻率最高的數字，為您的天命押注",
+    primaryNumbers: (() => {
+      const allNums = [...(sets[0]?.numbers ?? []), ...(sets[1]?.numbers ?? []), ...(sets[2]?.numbers ?? [])];
+      const freq: Record<number, number> = {};
+      allNums.forEach(n => { freq[n] = (freq[n] ?? 0) + 1; });
+      return Object.entries(freq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([n]) => Number(n));
+    })(),
+    backupNumbers: base.luckyDigits,
+    confidence: base.energyAnalysis.overallLuck >= 8 ? "high" : "low",
+    buyCount: 1,
+    maxBudget: 500,
+  };
+
+  return [strategy50, strategy100, strategy200, strategy500];
+}
+
+// ============================================================
+// 地址五行分析
+// ============================================================
+
+export interface AddressAnalysis {
+  address: string;
+  extractedNumbers: number[];
+  dominantElement: string;
+  elementCounts: Record<string, number>;
+  resonanceScore: number;
+  resonanceLabel: string;
+  advice: string;
+  luckyNumbers: number[];
+}
+
+const ADDRESS_ELEMENT_RESONANCE: Record<string, number> = {
+  fire: 10,
+  earth: 8,
+  metal: 6,
+  wood: 3,
+  water: 2,
+};
+
+export function analyzeAddressWuxing(address: string): AddressAnalysis {
+  const digits = address.match(/\d/g)?.map(Number) ?? [];
+
+  const elementCounts: Record<string, number> = { fire: 0, earth: 0, metal: 0, wood: 0, water: 0 };
+  const elementMap: Record<number, string> = {
+    0: "earth", 1: "wood", 2: "fire", 3: "wood",
+    4: "metal", 5: "earth", 6: "water", 7: "fire",
+    8: "wood", 9: "metal",
+  };
+
+  digits.forEach(d => {
+    const el = elementMap[d] ?? "earth";
+    elementCounts[el] = (elementCounts[el] ?? 0) + 1;
+  });
+
+  const dominantElement = Object.entries(elementCounts)
+    .sort((a, b) => b[1] - a[1])[0]?.[0] ?? "earth";
+
+  const totalDigits = digits.length || 1;
+  let resonanceScore = 0;
+  Object.entries(elementCounts).forEach(([el, count]) => {
+    resonanceScore += (ADDRESS_ELEMENT_RESONANCE[el] ?? 5) * (count / totalDigits);
+  });
+  resonanceScore = Math.min(10, Math.max(1, Math.round(resonanceScore)));
+
+  const resonanceLabel =
+    resonanceScore >= 9 ? "天命共振" :
+    resonanceScore >= 7 ? "吉地加持" :
+    resonanceScore >= 5 ? "平穩之地" :
+    resonanceScore >= 3 ? "能量偏弱" : "忌神之地";
+
+  const elementLabels: Record<string, string> = {
+    fire: "火", earth: "土", metal: "金", wood: "木", water: "水"
+  };
+  const domLabel = elementLabels[dominantElement] ?? "土";
+  const advice =
+    dominantElement === "fire" ? `此地址五行以「火」為主（${domLabel}），與您的甲木命格形成「木火通明」的最佳共振！在此購買刮刮樂，才華與財運雙開，強烈推薦。` :
+    dominantElement === "earth" ? `此地址五行以「土」為主（${domLabel}），土承木根，財星穩固。在此購買刮刮樂，偏財有根基，適合穩健型選號。` :
+    dominantElement === "metal" ? `此地址五行以「金」為主（${domLabel}），金能剋木但也代表規則與精準。在此購買需謹慎選號，建議以火土數字（2,7,0,5）為主。` :
+    dominantElement === "wood" ? `此地址五行以「木」為主（${domLabel}），木旺更旺，能量過盛。建議搭配火色穿搭（紅/橙）來平衡，或選擇其他地址。` :
+    `此地址五行以「水」為主（${domLabel}），水旺剋制甲木的才華發揮。建議避開此地，或在申/酉時（金水交替）前往，以金洩水。`;
+
+  const luckyElements = ["fire", "earth", "metal"].flatMap(el =>
+    Object.entries(elementMap).filter(([, v]) => v === el).map(([k]) => Number(k))
+  );
+  const luckyNumbers = Array.from(new Set(luckyElements)).filter(n => digits.includes(n)).slice(0, 3);
+  if (luckyNumbers.length < 2) {
+    luckyNumbers.push(...[2, 7, 0].filter(n => !luckyNumbers.includes(n)).slice(0, 2 - luckyNumbers.length));
+  }
+
+  return {
+    address,
+    extractedNumbers: digits,
+    dominantElement,
+    elementCounts,
+    resonanceScore,
+    resonanceLabel,
+    advice,
+    luckyNumbers,
+  };
+}
