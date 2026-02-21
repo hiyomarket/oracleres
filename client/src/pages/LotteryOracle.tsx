@@ -1,108 +1,198 @@
-import { useState, useCallback, useEffect } from "react";
+/**
+ * LotteryOracle.tsx
+ * 天命選號頁面 V2.15
+ * 功能：可選日期制選號、天氣狀況納入分析、彩券能量指數、GPS 地圖搜尋彩券行
+ */
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
-import { Sparkles, RefreshCw, Clock, TrendingUp, ChevronDown, ChevronUp, Flame, MapPin } from "lucide-react";
-import { toast } from "sonner";
 import { SharedNav } from "@/components/SharedNav";
-import { NearbyStores } from "@/components/NearbyStores";
-import { LotteryResultChecker } from "@/components/LotteryResultChecker";
-import { ScratchAnalysis } from "@/components/ScratchAnalysis";
 import { ScratchJournal } from "@/components/ScratchJournal";
+import { LotteryResultChecker } from "@/components/LotteryResultChecker";
+import {
+  Sparkles, RefreshCw, Clock, ChevronDown, ChevronUp,
+  TrendingUp, Flame, Calendar, MapPin, Thermometer,
+  CloudRain, Sun, Cloud, Zap, Target, CheckCircle, AlertCircle, MinusCircle,
+} from "lucide-react";
+import { toast } from "sonner";
 
-// 五行顏色映射
+// ── 五行顏色 ──────────────────────────────────────────────────────────────────
 const ELEMENT_COLORS: Record<string, { bg: string; text: string; border: string; label: string }> = {
-  fire:  { bg: "bg-orange-500/20",  text: "text-orange-400",  border: "border-orange-500/40",  label: "火" },
-  earth: { bg: "bg-yellow-600/20",  text: "text-yellow-500",  border: "border-yellow-600/40",  label: "土" },
-  metal: { bg: "bg-slate-400/20",   text: "text-slate-300",   border: "border-slate-400/40",   label: "金" },
-  wood:  { bg: "bg-emerald-500/20", text: "text-emerald-400", border: "border-emerald-500/40", label: "木" },
-  water: { bg: "bg-blue-500/20",    text: "text-blue-400",    border: "border-blue-500/40",    label: "水" },
+  fire:  { bg: "bg-orange-500/20", text: "text-orange-400",  border: "border-orange-500/40",  label: "火" },
+  earth: { bg: "bg-yellow-600/20", text: "text-yellow-500",  border: "border-yellow-600/40",  label: "土" },
+  metal: { bg: "bg-slate-400/20",  text: "text-slate-300",   border: "border-slate-400/40",   label: "金" },
+  wood:  { bg: "bg-emerald-500/20",text: "text-emerald-400", border: "border-emerald-500/40", label: "木" },
+  water: { bg: "bg-blue-500/20",   text: "text-blue-400",    border: "border-blue-500/40",    label: "水" },
 };
 
-// 數字五行對應
 const NUMBER_ELEMENT: Record<number, string> = {
   0: "earth", 1: "wood", 2: "fire", 3: "wood",
   4: "metal", 5: "earth", 6: "water", 7: "fire",
   8: "wood", 9: "metal",
 };
 
-const LUCK_LABELS = ["", "極弱", "弱", "偏弱", "略弱", "平穩", "略強", "偏強", "強", "極強", "天命共振"];
-
-interface NumberBallProps {
-  num: number;
-  delay?: number;
-  size?: "lg" | "md" | "sm";
-  isLucky?: boolean;
+// ── 工具函數 ──────────────────────────────────────────────────────────────────
+function getTodayString() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
-function NumberBall({ num, delay = 0, size = "lg", isLucky = false }: NumberBallProps) {
-  const element = NUMBER_ELEMENT[num] ?? "earth";
-  const colors = ELEMENT_COLORS[element] ?? ELEMENT_COLORS.earth;
-
-  const sizeClasses = {
-    lg: "w-16 h-16 text-2xl font-bold",
-    md: "w-12 h-12 text-xl font-semibold",
-    sm: "w-9 h-9 text-base font-medium",
-  };
-
+// ── 子組件 ────────────────────────────────────────────────────────────────────
+function NumberBall({ num, delay = 0, size = "md", isLucky = false }: {
+  num: number; delay?: number; size?: "sm" | "md" | "lg"; isLucky?: boolean;
+}) {
+  const el = NUMBER_ELEMENT[num] ?? "earth";
+  const c = ELEMENT_COLORS[el] ?? ELEMENT_COLORS.earth;
+  const sizeClass = size === "lg" ? "w-14 h-14 text-2xl" : size === "md" ? "w-11 h-11 text-lg" : "w-8 h-8 text-sm";
   return (
     <motion.div
-      initial={{ scale: 0, rotate: -180, opacity: 0 }}
-      animate={{ scale: 1, rotate: 0, opacity: 1 }}
-      transition={{
-        delay,
-        type: "spring",
-        stiffness: 200,
-        damping: 15,
-      }}
-      className={`
-        relative flex items-center justify-center rounded-full
-        ${sizeClasses[size]}
-        ${colors.bg} ${colors.text} border-2 ${colors.border}
-        ${isLucky ? "ring-2 ring-amber-400/60 ring-offset-2 ring-offset-transparent" : ""}
-      `}
+      className={`${sizeClass} rounded-full flex items-center justify-center font-bold ${c.bg} ${c.text} border ${c.border} ${isLucky ? "ring-2 ring-amber-400/50" : ""}`}
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ delay, type: "spring", stiffness: 300 }}
     >
       {num}
-      {isLucky && (
-        <motion.div
-          className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center"
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ repeat: Infinity, duration: 1.5 }}
-        >
-          <Sparkles className="w-2.5 h-2.5 text-amber-900" />
-        </motion.div>
-      )}
-      <div className={`absolute -bottom-5 text-xs ${colors.text} opacity-70`}>
-        {colors.label}
-      </div>
     </motion.div>
   );
 }
 
 function LuckMeter({ score }: { score: number }) {
-  const percentage = (score / 10) * 100;
-  const color = score >= 8 ? "from-amber-500 to-orange-400"
-    : score >= 6 ? "from-emerald-500 to-teal-400"
-    : score >= 4 ? "from-blue-500 to-cyan-400"
-    : "from-slate-500 to-slate-400";
-
+  const pct = (score / 10) * 100;
+  const color = score >= 8 ? "#f59e0b" : score >= 6 ? "#34d399" : score >= 4 ? "#94a3b8" : "#ef4444";
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center text-sm">
-        <span className="text-slate-400">天命運勢</span>
-        <span className="text-amber-400 font-semibold">{score}/10 {LUCK_LABELS[Math.round(score)]}</span>
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-slate-500">天命共振指數</span>
+        <span className="text-lg font-bold" style={{ color }}>{score.toFixed(1)}/10</span>
       </div>
       <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
         <motion.div
-          className={`h-full rounded-full bg-gradient-to-r ${color}`}
+          className="h-full rounded-full"
+          style={{ backgroundColor: color }}
           initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ duration: 1.2, ease: "easeOut", delay: 0.5 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 1, ease: "easeOut" }}
         />
       </div>
     </div>
   );
 }
 
+// ── 天氣卡片 ──────────────────────────────────────────────────────────────────
+function WeatherCard({ weather, onUseWeather }: {
+  weather: { condition: string; conditionIcon: string; weatherElement: string; temperature: number; tempMax: number; tempMin: number; precipitation: number };
+  onUseWeather: () => void;
+}) {
+  const el = ELEMENT_COLORS[weather.weatherElement] ?? ELEMENT_COLORS.earth;
+  return (
+    <div className={`rounded-xl p-4 border ${el.border} ${el.bg} flex items-center justify-between`}>
+      <div className="flex items-center gap-3">
+        <span className="text-3xl">{weather.conditionIcon}</span>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-white">{weather.condition}</span>
+            <span className={`text-xs px-2 py-0.5 rounded-full ${el.bg} ${el.text} border ${el.border}`}>
+              {el.label}行天氣
+            </span>
+          </div>
+          <div className="text-xs text-slate-400 mt-0.5">
+            {weather.temperature}°C（{weather.tempMin}°–{weather.tempMax}°）
+            {weather.precipitation > 0 && ` · 降雨 ${weather.precipitation}mm`}
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={onUseWeather}
+        className="text-xs px-3 py-1.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-400 hover:bg-amber-500/30 transition-colors"
+      >
+        納入分析
+      </button>
+    </div>
+  );
+}
+
+// ── 能量指數卡片 ──────────────────────────────────────────────────────────────
+function EnergyIndexCard({ data }: {
+  data: {
+    score: number;
+    recommendation: string;
+    recommendationLabel: string;
+    recommendationDesc: string;
+    dayPillar: string;
+    moonPhase: string;
+    moonEmoji: string;
+    factors: Array<{ label: string; value: number; maxValue: number; desc: string }>;
+    dateString: string;
+  };
+}) {
+  const recConfig = {
+    suitable: { color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30", icon: <CheckCircle className="w-5 h-5" /> },
+    observe:  { color: "text-amber-400",   bg: "bg-amber-500/10",   border: "border-amber-500/30",   icon: <MinusCircle className="w-5 h-5" /> },
+    unsuitable: { color: "text-red-400",   bg: "bg-red-500/10",     border: "border-red-500/30",     icon: <AlertCircle className="w-5 h-5" /> },
+  }[data.recommendation] ?? { color: "text-slate-400", bg: "bg-slate-800/60", border: "border-slate-700/50", icon: <MinusCircle className="w-5 h-5" /> };
+
+  const scoreColor = data.score >= 8 ? "#f59e0b" : data.score >= 5 ? "#34d399" : "#ef4444";
+
+  return (
+    <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Zap className="w-4 h-4 text-amber-400" />
+          <span className="text-sm font-bold text-amber-300 tracking-wider">彩券能量指數</span>
+        </div>
+        <span className="text-xs text-slate-500">{data.dateString}</span>
+      </div>
+
+      {/* 分數大字 */}
+      <div className="flex items-center gap-4">
+        <div className="text-center">
+          <div className="text-5xl font-black" style={{ color: scoreColor }}>{data.score.toFixed(1)}</div>
+          <div className="text-xs text-slate-500 mt-1">/ 10</div>
+        </div>
+        <div className="flex-1">
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${recConfig.bg} ${recConfig.border} mb-2`}>
+            <span className={recConfig.color}>{recConfig.icon}</span>
+            <span className={`text-sm font-bold ${recConfig.color}`}>{data.recommendationLabel}</span>
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed">{data.recommendationDesc}</p>
+        </div>
+      </div>
+
+      {/* 命理標籤 */}
+      <div className="flex flex-wrap gap-2">
+        <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700/50 text-slate-300">
+          日柱 {data.dayPillar}
+        </span>
+        <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700/50 text-slate-300">
+          {data.moonEmoji} {data.moonPhase}
+        </span>
+      </div>
+
+      {/* 影響因素 */}
+      <div className="space-y-2">
+        {data.factors.map((f, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <span className="text-xs text-slate-500 w-16 shrink-0">{f.label}</span>
+            <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-amber-500"
+                initial={{ width: 0 }}
+                animate={{ width: `${(f.value / f.maxValue) * 100}%` }}
+                transition={{ duration: 0.8, delay: i * 0.15 }}
+              />
+            </div>
+            <span className="text-xs text-slate-400 w-16 text-right shrink-0">{f.desc}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── 主組件 ────────────────────────────────────────────────────────────────────
 type LotteryData = {
   numbers: number[];
   bonusNumbers: number[];
@@ -138,9 +228,28 @@ export default function LotteryOracle() {
   const [showHistory, setShowHistory] = useState(false);
   const [savedSessionId, setSavedSessionId] = useState<number | undefined>();
   const [activeSet, setActiveSet] = useState(0);
-  const [showNearby, setShowNearby] = useState(false);
   const [showScratchAnalysis, setShowScratchAnalysis] = useState(false);
-  const [countdown, setCountdown] = useState<string | null>(null);
+
+  // 日期選擇
+  const [selectedDate, setSelectedDate] = useState(getTodayString());
+  const isToday = selectedDate === getTodayString();
+
+  // 天氣狀態
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [weatherIncluded, setWeatherIncluded] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  // 取得天氣（需要位置）
+  const weatherQuery = trpc.lottery.getWeather.useQuery(
+    { lat: userLocation?.lat ?? 25.04, lon: userLocation?.lon ?? 121.53, targetDate: selectedDate },
+    { enabled: !!userLocation }
+  );
+
+  // 彩券能量指數
+  const energyQuery = trpc.lottery.energyIndex.useQuery(
+    { targetDate: selectedDate },
+    { staleTime: 60000 }
+  );
 
   // 今日最佳購買時機
   const { data: bestTimeData } = trpc.lottery.bestTime.useQuery(undefined, {
@@ -148,6 +257,7 @@ export default function LotteryOracle() {
   });
 
   // 倒數計時器
+  const [countdown, setCountdown] = useState<string | null>(null);
   useEffect(() => {
     if (!bestTimeData?.countdownSeconds) return;
     let remaining = bestTimeData.countdownSeconds;
@@ -163,6 +273,32 @@ export default function LotteryOracle() {
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
   }, [bestTimeData?.countdownSeconds]);
+
+  // 取得 GPS 位置
+  const requestLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationError("您的瀏覽器不支援 GPS 定位");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        setLocationError(null);
+        toast.success("已取得您的位置，正在獲取天氣資訊...");
+      },
+      () => {
+        setLocationError("無法取得位置，請允許位置存取");
+        // 預設台北
+        setUserLocation({ lat: 25.04, lon: 121.53 });
+      }
+    );
+  }, []);
+
+  // 自動嘗試取得位置
+  useEffect(() => {
+    requestLocation();
+  }, []);
+
   const generateMutation = trpc.lottery.generate.useMutation({
     onSuccess: (data: any) => {
       setResult(data as LotteryData);
@@ -180,13 +316,36 @@ export default function LotteryOracle() {
   const handleGenerate = useCallback(() => {
     setIsRevealing(true);
     setResult(null);
+    setActiveSet(0);
     setTimeout(() => {
-      generateMutation.mutate({ saveRecord: true });
+      const weatherInput = weatherIncluded && weatherQuery.data ? {
+        condition: weatherQuery.data.condition,
+        temperature: weatherQuery.data.temperature,
+        humidity: weatherQuery.data.humidity ?? 65,
+        weatherElement: weatherQuery.data.weatherElement,
+      } : undefined;
+      generateMutation.mutate({
+        saveRecord: isToday,
+        targetDate: selectedDate,
+        weather: weatherInput,
+      });
     }, 800);
-  }, [generateMutation]);
+  }, [generateMutation, selectedDate, weatherIncluded, weatherQuery.data, isToday]);
 
   const todayElement = result?.energyAnalysis.todayElement ?? "fire";
   const elementColors = ELEMENT_COLORS[todayElement] ?? ELEMENT_COLORS.fire;
+
+  // 日期標籤
+  const dateLabelMap: Record<string, string> = useMemo(() => {
+    const today = getTodayString();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+    return { [today]: '今日', [yStr]: '昨日', [tStr]: '明日' };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#050d14] text-white">
@@ -207,11 +366,11 @@ export default function LotteryOracle() {
 
       <SharedNav currentPage="lottery" />
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 pb-24 md:pb-8 oracle-page-content">
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 oracle-page-content">
 
-      {/* 標題區 */}
-      <motion.div
-        className="text-center mb-10"
+        {/* 標題區 */}
+        <motion.div
+          className="text-center mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
@@ -228,7 +387,102 @@ export default function LotteryOracle() {
           </p>
         </motion.div>
 
-        {/* 命理信息條 */}
+        {/* ── 日期選擇器 ────────────────────────────────────────────────── */}
+        <motion.div
+          className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="w-4 h-4 text-amber-400" />
+            <span className="text-sm font-bold text-amber-300 tracking-wider">選擇分析日期</span>
+            {dateLabelMap[selectedDate] && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400">
+                {dateLabelMap[selectedDate]}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+                setResult(null);
+                setWeatherIncluded(false);
+              }}
+              max={(() => {
+                const d = new Date();
+                d.setDate(d.getDate() + 7);
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              })()}
+              min="2024-01-01"
+              className="flex-1 bg-slate-800/80 border border-slate-700/50 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-500/50 [color-scheme:dark]"
+            />
+            <button
+              onClick={() => { setSelectedDate(getTodayString()); setResult(null); setWeatherIncluded(false); }}
+              className="px-3 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700/50 text-slate-400 text-xs hover:border-amber-500/40 hover:text-amber-400 transition-colors whitespace-nowrap"
+            >
+              回今日
+            </button>
+          </div>
+
+          {/* 天氣資訊 */}
+          <div className="mt-4">
+            {!userLocation ? (
+              <button
+                onClick={requestLocation}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-slate-600/50 text-slate-500 text-xs hover:border-amber-500/40 hover:text-amber-400 transition-colors"
+              >
+                <MapPin className="w-3.5 h-3.5" />
+                點擊取得當地天氣（納入五行分析）
+              </button>
+            ) : weatherQuery.isLoading ? (
+              <div className="flex items-center gap-2 text-xs text-slate-500 py-2">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                正在獲取天氣資訊...
+              </div>
+            ) : weatherQuery.data ? (
+              <div className="space-y-2">
+                <WeatherCard
+                  weather={weatherQuery.data}
+                  onUseWeather={() => {
+                    setWeatherIncluded(true);
+                    toast.success(`天氣（${weatherQuery.data!.condition}）已納入選號分析`);
+                  }}
+                />
+                {weatherIncluded && (
+                  <div className="flex items-center gap-2 text-xs text-emerald-400">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    天氣因素已納入選號計算
+                    <button onClick={() => setWeatherIncluded(false)} className="text-slate-500 hover:text-slate-300 ml-auto">移除</button>
+                  </div>
+                )}
+              </div>
+            ) : locationError ? (
+              <div className="text-xs text-red-400 flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5" />
+                {locationError}
+              </div>
+            ) : null}
+          </div>
+        </motion.div>
+
+        {/* ── 彩券能量指數 ──────────────────────────────────────────────── */}
+        {energyQuery.data && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="mb-6"
+          >
+            <EnergyIndexCard data={energyQuery.data} />
+          </motion.div>
+        )}
+
+        {/* 命理信息條（選號後顯示） */}
         {result && (
           <motion.div
             className="flex flex-wrap gap-2 justify-center mb-6"
@@ -251,35 +505,42 @@ export default function LotteryOracle() {
                 🌕 滿月加成
               </div>
             )}
+            {weatherIncluded && weatherQuery.data && (
+              <div className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/30 rounded-full px-3 py-1 text-xs text-blue-400">
+                {weatherQuery.data.conditionIcon} 天氣加成
+              </div>
+            )}
           </motion.div>
         )}
 
-        {/* 主要選號區 */}
+        {/* ── 主要選號區 ────────────────────────────────────────────────── */}
         <AnimatePresence mode="wait">
           {!result && !isRevealing && (
             <motion.div
               key="idle"
-              className="text-center py-16"
+              className="text-center py-12"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="w-32 h-32 mx-auto mb-8 rounded-full border-2 border-amber-500/30 flex items-center justify-center"
+                className="w-28 h-28 mx-auto mb-6 rounded-full border-2 border-amber-500/30 flex items-center justify-center"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
               >
                 <div className="text-5xl">🎰</div>
               </motion.div>
               <p className="text-slate-400 text-sm mb-2">靜心，感受此刻的天命能量</p>
-              <p className="text-slate-500 text-xs">系統將根據您的命格與當下時辰，推算最共振的數字</p>
+              <p className="text-slate-500 text-xs">
+                {isToday ? "系統將根據您的命格與當下時辰，推算最共振的數字" : `系統將根據 ${selectedDate} 的命格能量，推算最共振的數字`}
+              </p>
             </motion.div>
           )}
 
           {isRevealing && (
             <motion.div
               key="revealing"
-              className="text-center py-16"
+              className="text-center py-12"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -292,7 +553,9 @@ export default function LotteryOracle() {
                 ✨
               </motion.div>
               <p className="text-amber-400 text-lg">天命能量匯聚中...</p>
-              <p className="text-slate-500 text-sm mt-2">正在計算您的五行共振數字</p>
+              <p className="text-slate-500 text-sm mt-2">
+                {weatherIncluded ? "正在整合五行共振 + 天氣因素..." : "正在計算您的五行共振數字"}
+              </p>
             </motion.div>
           )}
 
@@ -305,7 +568,7 @@ export default function LotteryOracle() {
               className="space-y-6"
             >
               {/* 號碼組合切換 */}
-              <div className="flex gap-2 justify-center">
+              <div className="flex gap-2 justify-center flex-wrap">
                 {result.sets.map((set, i) => (
                   <button
                     key={i}
@@ -326,7 +589,7 @@ export default function LotteryOracle() {
                 <div className="text-center mb-2">
                   <span className="text-xs text-slate-500">{result.sets[activeSet]?.description}</span>
                 </div>
-                <div className="flex justify-center gap-4 mt-6 mb-8">
+                <div className="flex justify-center gap-3 mt-6 mb-8 flex-wrap">
                   {(result.sets[activeSet]?.numbers ?? result.numbers).map((num, i) => (
                     <NumberBall
                       key={`${activeSet}-${i}-${num}`}
@@ -340,10 +603,10 @@ export default function LotteryOracle() {
 
                 {/* 最幸運數字 */}
                 <div className="border-t border-slate-700/50 pt-4 mt-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
                     <div>
                       <p className="text-xs text-slate-500 mb-1">今日最幸運數字</p>
-                      <div className="flex gap-3">
+                      <div className="flex gap-2">
                         {result.luckyDigits.map((num, i) => (
                           <NumberBall key={i} num={num} delay={0.8 + i * 0.1} size="md" isLucky />
                         ))}
@@ -401,7 +664,7 @@ export default function LotteryOracle() {
           )}
         </AnimatePresence>
 
-        {/* 生成按鈕 */}
+        {/* ── 生成按鈕 ──────────────────────────────────────────────────── */}
         <div className="mt-8 flex justify-center">
           <motion.button
             onClick={handleGenerate}
@@ -421,28 +684,26 @@ export default function LotteryOracle() {
               {isRevealing ? (
                 <><RefreshCw className="w-4 h-4 animate-spin" /> 天命匯聚中...</>
               ) : result ? (
-                <><RefreshCw className="w-4 h-4" /> 重新選號</>
+                <><RefreshCw className="w-4 h-4" /> 重新選號{!isToday ? `（${selectedDate}）` : ''}</>
               ) : (
-                <><Sparkles className="w-4 h-4" /> 啟動天命選號</>
+                <><Sparkles className="w-4 h-4" /> 啟動天命選號{!isToday ? `（${selectedDate}）` : ''}</>
               )}
             </span>
           </motion.button>
         </div>
 
-        {/* 今日最佳購買時機 */}
-        {bestTimeData && (
+        {/* ── 今日最佳購買時機 ──────────────────────────────────────────── */}
+        {bestTimeData && isToday && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="glass-card rounded-2xl p-5 border border-amber-600/20 mb-6"
+            className="glass-card rounded-2xl p-5 border border-amber-600/20 mt-8 mb-6"
           >
             <div className="flex items-center gap-2 mb-4">
               <Clock className="w-4 h-4 text-amber-400" />
               <h3 className="text-sm font-bold text-amber-300 tracking-wider">今日最佳購買時機</h3>
             </div>
-
-            {/* 最佳時辰列表 */}
             <div className="grid grid-cols-3 gap-2 mb-4">
               {bestTimeData.bestSlots.map((slot: any, i: number) => {
                 const isPast = slot.isPast;
@@ -455,95 +716,48 @@ export default function LotteryOracle() {
                   <div
                     key={i}
                     className={`relative rounded-xl p-2.5 text-center border transition-all ${
-                      isCurrent
-                        ? 'border-amber-500/70 bg-amber-900/30 shadow-lg shadow-amber-900/30'
-                        : isPast
-                        ? 'border-white/5 bg-white/2 opacity-40'
-                        : 'border-white/10 bg-white/3'
+                      isCurrent ? 'border-amber-500/70 bg-amber-900/30' :
+                      isPast ? 'border-white/5 bg-white/2 opacity-40' : 'border-white/10 bg-white/3'
                     }`}
                   >
-                    {/* 當前時辰脈動光暈 */}
                     {isCurrent && (
                       <motion.div
                         className="absolute inset-0 rounded-xl"
                         style={{ border: '1.5px solid #f59e0b' }}
-                        animate={{ opacity: [0.4, 1, 0.4], scale: [1, 1.03, 1] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 2, repeat: Infinity }}
                       />
                     )}
                     <div className="text-base font-bold" style={{ color: isPast ? '#475569' : energyColor }}>
                       {slot.chineseName}
                     </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">
-                      {slot.startHour}:00–{slot.endHour}:00
-                    </div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">{slot.startHour}:00–{slot.endHour}:00</div>
                     <div className="text-[9px] mt-1 font-bold" style={{ color: isPast ? '#334155' : energyColor }}>
                       {isPast ? '已過' : isCurrent ? '● 當前' : slot.energyLabel}
                     </div>
                     {!isPast && (
                       <div className="mt-1 h-1 rounded-full bg-white/5 overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${slot.score * 10}%`, backgroundColor: energyColor, opacity: 0.7 }}
-                        />
+                        <div className="h-full rounded-full" style={{ width: `${slot.score * 10}%`, backgroundColor: energyColor, opacity: 0.7 }} />
                       </div>
                     )}
                   </div>
                 );
               })}
             </div>
-
-            {/* 倒數計時 */}
             {bestTimeData.nextBest && countdown && (
               <div className="text-center py-3 rounded-xl border border-amber-600/20 bg-amber-900/10">
                 <div className="text-xs text-slate-400 mb-1">距下一個吉時（{bestTimeData.nextBest.chineseName}時）</div>
                 <div className="text-2xl font-black text-amber-400 font-mono tracking-widest">{countdown}</div>
-                <div className="text-[10px] text-slate-500 mt-1">{bestTimeData.nextBest.actionSuggestion}</div>
               </div>
             )}
           </motion.div>
         )}
 
-        {/* 附近彩券行天命共振 */}
+        {/* ── 地址分析 + 面額選號（GPS 地圖版） ───────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="glass-card rounded-2xl border border-white/10 mb-6 overflow-hidden"
-        >
-          <button
-            onClick={() => setShowNearby(!showNearby)}
-            className="w-full flex items-center justify-between p-5 hover:bg-white/3 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-amber-400" />
-              <span className="text-sm font-bold text-amber-300 tracking-wider">附近彩券行天命共振</span>
-              <span className="text-[10px] text-slate-500 ml-1">GPS 定位 · 流日流時加權</span>
-            </div>
-            {showNearby ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-          </button>
-          <AnimatePresence>
-            {showNearby && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="overflow-hidden"
-              >
-                <div className="px-5 pb-5">
-                  <NearbyStores />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* 刮刮樂地址分析 + 面額選號 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45 }}
           className="glass-card rounded-2xl border border-white/10 mb-6 overflow-hidden"
         >
           <button
@@ -567,16 +781,16 @@ export default function LotteryOracle() {
                 className="overflow-hidden"
               >
                 <div className="px-5 pb-5">
-                  <ScratchAnalysis />
+                  <ScratchAnalysisWithMap selectedDate={selectedDate} />
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
 
-        {/* 歷史記錄 */}
+        {/* ── 歷史記錄 ──────────────────────────────────────────────────── */}
         {history && history.length > 0 && (
-          <div className="mt-8">
+          <div className="mt-6">
             <button
               onClick={() => setShowHistory(!showHistory)}
               className="w-full flex items-center justify-between px-4 py-3 bg-slate-900/60 border border-slate-700/50 rounded-xl text-sm text-slate-400 hover:border-slate-600 transition-colors"
@@ -587,7 +801,6 @@ export default function LotteryOracle() {
               </span>
               {showHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
-
             <AnimatePresence>
               {showHistory && (
                 <motion.div
@@ -600,10 +813,7 @@ export default function LotteryOracle() {
                     {history.map((session) => {
                       const nums = session.numbers as number[];
                       return (
-                        <div
-                          key={session.id}
-                          className="bg-slate-900/40 border border-slate-800/50 rounded-xl p-4"
-                        >
+                        <div key={session.id} className="bg-slate-900/40 border border-slate-800/50 rounded-xl p-4">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-xs text-slate-500">{session.dateString}</span>
                             <div className="flex items-center gap-1">
@@ -616,10 +826,7 @@ export default function LotteryOracle() {
                               const el = NUMBER_ELEMENT[num] ?? "earth";
                               const c = ELEMENT_COLORS[el];
                               return (
-                                <span
-                                  key={i}
-                                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${c.bg} ${c.text} border ${c.border}`}
-                                >
+                                <span key={i} className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${c.bg} ${c.text} border ${c.border}`}>
                                   {num}
                                 </span>
                               );
@@ -638,7 +845,7 @@ export default function LotteryOracle() {
           </div>
         )}
 
-        {/* 開獎對照與天命共振驗證 */}
+        {/* ── 開獎對照 ──────────────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -653,7 +860,7 @@ export default function LotteryOracle() {
           />
         </motion.div>
 
-        {/* 刮刮樂購買日誌 */}
+        {/* ── 刮刮樂購買日誌 ────────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -664,6 +871,259 @@ export default function LotteryOracle() {
         </motion.div>
 
       </div>
+    </div>
+  );
+}
+
+// ── 地址分析 + GPS 地圖 + 面額選號（整合組件）────────────────────────────────
+import { MapView } from "@/components/Map";
+
+function ScratchAnalysisWithMap({ selectedDate }: { selectedDate: string }) {
+  const [address, setAddress] = useState("");
+  const [inputAddress, setInputAddress] = useState("");
+  const [showMap, setShowMap] = useState(false);
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
+  const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([]);
+  const [selectedStore, setSelectedStore] = useState<{ name: string; address: string } | null>(null);
+  const [expandedDenom, setExpandedDenom] = useState<number | null>(100);
+
+  const { data: strategies } = trpc.lottery.scratchStrategies.useQuery(
+    { targetDate: selectedDate },
+    { staleTime: 60000 }
+  );
+
+  const { data: addressData, isLoading: addressLoading } = trpc.lottery.addressAnalysis.useQuery(
+    { address: inputAddress },
+    { enabled: inputAddress.length > 0 }
+  );
+
+  const handleAnalyzeAddress = () => {
+    if (!address.trim()) { toast.error("請輸入彩券行地址"); return; }
+    setInputAddress(address.trim());
+  };
+
+  // 地圖初始化：搜尋附近台灣彩券行
+  const handleMapReady = useCallback((map: google.maps.Map) => {
+    setMapInstance(map);
+    // 清除舊標記
+    markers.forEach(m => { m.map = null; });
+    setMarkers([]);
+
+    const service = new google.maps.places.PlacesService(map);
+    const request = {
+      query: "台灣彩券",
+      fields: ["name", "geometry", "formatted_address"],
+    };
+    service.textSearch(request, (results, status) => {
+      if (status !== google.maps.places.PlacesServiceStatus.OK || !results) return;
+      const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
+      results.slice(0, 20).forEach((place) => {
+        if (!place.geometry?.location) return;
+        const markerEl = document.createElement("div");
+        markerEl.innerHTML = `<div style="background:#f59e0b;color:#000;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.4)">🎰 ${place.name}</div>`;
+        const marker = new google.maps.marker.AdvancedMarkerElement({
+          map,
+          position: place.geometry.location,
+          content: markerEl,
+          title: place.name,
+        });
+        marker.addListener("click", () => {
+          const addr = place.formatted_address ?? place.name ?? "";
+          setSelectedStore({ name: place.name ?? "", address: addr });
+          setAddress(addr);
+          setInputAddress(addr);
+          setShowMap(false);
+          toast.success(`已選擇：${place.name}`);
+        });
+        newMarkers.push(marker);
+      });
+      setMarkers(newMarkers);
+    });
+  }, [markers]);
+
+  const ELEMENT_COLORS_LOCAL: Record<string, { bg: string; text: string; border: string; label: string; emoji: string }> = {
+    fire:  { bg: "bg-orange-500/20", text: "text-orange-400", border: "border-orange-500/40", label: "火", emoji: "🔥" },
+    earth: { bg: "bg-yellow-600/20", text: "text-yellow-500", border: "border-yellow-600/40", label: "土", emoji: "🌍" },
+    metal: { bg: "bg-slate-400/20",  text: "text-slate-300",  border: "border-slate-400/40",  label: "金", emoji: "⚙️" },
+    wood:  { bg: "bg-emerald-500/20",text: "text-emerald-400",border: "border-emerald-500/40",label: "木", emoji: "🌿" },
+    water: { bg: "bg-blue-500/20",   text: "text-blue-400",   border: "border-blue-500/40",   label: "水", emoji: "💧" },
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* GPS 地圖搜尋彩券行 */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin className="w-4 h-4 text-amber-400" />
+          <span className="text-sm font-medium text-amber-300">搜尋附近彩券行</span>
+        </div>
+        <button
+          onClick={() => setShowMap(!showMap)}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-amber-500/40 text-amber-400 text-sm hover:bg-amber-500/10 transition-colors"
+        >
+          <MapPin className="w-4 h-4" />
+          {showMap ? "收起地圖" : "開啟 GPS 地圖搜尋台灣彩券行"}
+        </button>
+
+        {selectedStore && (
+          <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">
+            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">已選擇：{selectedStore.name}（{selectedStore.address}）</span>
+          </div>
+        )}
+
+        <AnimatePresence>
+          {showMap && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden mt-3"
+            >
+              <div className="rounded-xl overflow-hidden border border-slate-700/50" style={{ height: 320 }}>
+                <MapView
+                  onMapReady={handleMapReady}
+                  initialCenter={{ lat: 25.04, lng: 121.53 }}
+                  initialZoom={13}
+                />
+              </div>
+              <p className="text-xs text-slate-500 mt-2 text-center">點擊地圖上的彩券行標記，即可帶入地址進行五行分析</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* 手動輸入地址 */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          placeholder="輸入彩券行地址（或從地圖點選）"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleAnalyzeAddress()}
+          className="flex-1 bg-slate-800/80 border border-slate-700/50 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-500/50"
+        />
+        <button
+          onClick={handleAnalyzeAddress}
+          disabled={addressLoading}
+          className="px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 text-sm hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+        >
+          {addressLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
+        </button>
+      </div>
+
+      {/* 地址五行分析結果 */}
+      {addressData && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`rounded-xl p-4 border ${ELEMENT_COLORS_LOCAL[addressData.dominantElement]?.border ?? 'border-slate-700/50'} ${ELEMENT_COLORS_LOCAL[addressData.dominantElement]?.bg ?? 'bg-slate-800/60'}`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{ELEMENT_COLORS_LOCAL[addressData.dominantElement]?.emoji}</span>
+              <span className={`text-sm font-bold ${ELEMENT_COLORS_LOCAL[addressData.dominantElement]?.text}`}>
+                {ELEMENT_COLORS_LOCAL[addressData.dominantElement]?.label}行彩券行
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-2xl font-bold text-amber-400">{addressData.resonanceScore}</span>
+              <span className="text-xs text-slate-500">/10 共振</span>
+            </div>
+          </div>
+          <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden mb-3">
+            <motion.div
+              className="h-full rounded-full bg-amber-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${(addressData.resonanceScore / 10) * 100}%` }}
+            />
+          </div>
+          <p className="text-xs text-slate-300">{addressData.advice}</p>
+          {addressData.luckyNumbers.length > 0 && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-xs text-slate-500">地址幸運號：</span>
+              <div className="flex gap-1">
+                {addressData.luckyNumbers.map((n, i) => (
+                  <span key={i} className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${ELEMENT_COLORS_LOCAL[addressData.dominantElement]?.bg} ${ELEMENT_COLORS_LOCAL[addressData.dominantElement]?.text} border ${ELEMENT_COLORS_LOCAL[addressData.dominantElement]?.border}`}>{n}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* 面額選號策略 */}
+      {strategies && strategies.length > 0 && (
+        <div>
+          <p className="text-xs text-slate-500 mb-3">面額天命選號策略（依 {selectedDate} 日柱計算）</p>
+          <div className="space-y-2">
+            {strategies.map((strategy: any) => {
+              const isExpanded = expandedDenom === strategy.denomination;
+              return (
+                <div key={strategy.denomination} className="bg-slate-800/60 border border-slate-700/50 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setExpandedDenom(isExpanded ? null : strategy.denomination)}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-700/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-white">{strategy.label}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        strategy.confidence === 'high' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                        strategy.confidence === 'medium' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                        'bg-slate-700/50 text-slate-400 border border-slate-600/50'
+                      }`}>
+                        {strategy.confidence === 'high' ? '高度共振' : strategy.confidence === 'medium' ? '中度共振' : '謹慎嘗試'}
+                      </span>
+                    </div>
+                    {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                  </button>
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-4 pb-4 space-y-3">
+                          <p className="text-xs text-slate-400">{strategy.description}</p>
+                          <div>
+                            <p className="text-xs text-slate-500 mb-2">主要號碼</p>
+                            <div className="flex gap-2 flex-wrap">
+                              {strategy.primaryNumbers.map((n: number, i: number) => {
+                                const el = NUMBER_ELEMENT[n] ?? "earth";
+                                const c = ELEMENT_COLORS[el];
+                                return (
+                                  <span key={i} className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base ${c.bg} ${c.text} border ${c.border}`}>{n}</span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          {strategy.backupNumbers.length > 0 && (
+                            <div>
+                              <p className="text-xs text-slate-500 mb-2">備選號碼</p>
+                              <div className="flex gap-2 flex-wrap">
+                                {strategy.backupNumbers.map((n: number, i: number) => {
+                                  const el = NUMBER_ELEMENT[n] ?? "earth";
+                                  const c = ELEMENT_COLORS[el];
+                                  return (
+                                    <span key={i} className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${c.bg} ${c.text} border ${c.border} opacity-70`}>{n}</span>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          <p className="text-xs text-slate-500 italic">{strategy.strategy}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
