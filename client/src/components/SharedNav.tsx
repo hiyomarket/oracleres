@@ -4,7 +4,7 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
-type NavPage = "oracle" | "lottery" | "calendar" | "stats" | "weekly";
+type NavPage = "oracle" | "lottery" | "calendar" | "stats" | "weekly" | "warRoom";
 
 interface SharedNavProps {
   currentPage: NavPage;
@@ -16,6 +16,7 @@ const NAV_ITEMS: { id: NavPage; path: string; icon: string; label: string }[] = 
   { id: "calendar", path: "/calendar", icon: "📅", label: "日曆" },
   { id: "weekly",   path: "/weekly",   icon: "📈", label: "週報" },
   { id: "stats",    path: "/stats",    icon: "📊", label: "統計" },
+  { id: "warRoom",  path: "/war-room", icon: "⚔️", label: "作戰室" },
 ];
 
 export function SharedNav({ currentPage }: SharedNavProps) {

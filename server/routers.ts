@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
+import { getDailyTenGodAnalysis } from "./lib/tenGods";
+import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
@@ -720,6 +722,145 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
         bestDay,
         worstDay,
         weekSummary: `本週天命能量綜合評估：${bestDay.dayPillar}日為最佳行動日，${worstDay.dayPillar}日宜静心蓄勢。`,
+      };
+    }),
+  }),
+
+  warRoom: router({
+    /**
+     * 今日作戰室完整報告
+     */
+    dailyReport: publicProcedure.query(async () => {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const day = now.getDate();
+      const hour = now.getHours();
+
+      // 1. 農曆日期與天干地支
+      const dateInfo = getFullDateInfo(now);
+      const dayPillar = dateInfo.dayPillar;
+      const monthPillar = dateInfo.monthPillar;
+      const yearPillar = dateInfo.yearPillar;
+
+      // 2. 月相
+      const moonInfo = getMoonPhase(now);
+
+      // 3. 八字十神分析
+      const tenGodAnalysis = getDailyTenGodAnalysis(dayPillar.stem, dayPillar.branch);
+
+      // 4. 塔羅流日
+      const tarot = calculateTarotDailyCard(month, day);
+
+      // 5. 穿搭建議
+      const outfit = generateOutfitAdvice(tenGodAnalysis.mainMeaning.wuxing, tenGodAnalysis.overallScore);
+
+      // 6. 手串推薦
+      const bracelets = recommendBracelets(tenGodAnalysis.mainMeaning.wuxing, tenGodAnalysis.overallScore);
+
+      // 7. 財運羅盤
+      const wealthCompass = generateWealthCompass(
+        tenGodAnalysis.mainMeaning.wuxing,
+        tenGodAnalysis.mainTenGod,
+        tarot.card,
+        tenGodAnalysis.overallScore,
+      );
+
+      // 8. 時辰能量
+      const currentHour = getCurrentHourEnergy(dayPillar.stem);
+      const allHours = getAllHourEnergies(dayPillar.stem);
+      const bestHours = getBestHours(dayPillar.stem).slice(0, 3);
+
+      // 9. 節氣
+      const nearestTerm = getNearestSolarTerm(now);
+
+      // 10. 一句話總結
+      const oneLinerMap: Record<string, string> = {
+        食神: `甲木化火，才華即財富。今日，讓世界看見你的光。`,
+        傷官: `破繭之日，鋒芒畢露。今日，打破一個讓你不舒服的框架。`,
+        偏財: `財星入局，機不可失。今日，主動出擊，把握每一個偏財機遇。`,
+        正財: `穩健積累，水到渠成。今日，每一個認真的細節都是在種下財富的種子。`,
+        七殺: `壓力即動力，挑戰即機遇。今日，以食神之火，制七殺之金。`,
+        正官: `規範護身，官運加持。今日，以專業與誠信，贏得最重要的認可。`,
+        偏印: `深水靜流，智慧沉澱。今日，向內探索，答案就在你的靜默之中。`,
+        正印: `貴人相助，滋養之日。今日，放下自我，接受宇宙的饋贈。`,
+        比肩: `自強不息，獨立前行。今日，以實力說話，讓作品成為最好的名片。`,
+        劫財: `守住根基，靜待時機。今日，低調是最高明的策略。`,
+      };
+      const oneLiner = oneLinerMap[tenGodAnalysis.mainTenGod] || `天命能量 ${tenGodAnalysis.overallScore}/10，保持覺察，順勢而為。`;
+
+      return {
+        // 頂部核心數據
+        date: {
+          gregorian: `${now.getFullYear()}年${month}月${day}日`,
+          lunar: dateInfo.dateString,
+          weekday: ["日", "一", "二", "三", "四", "五", "六"][now.getDay()],
+          nearestSolarTerm: nearestTerm,
+          yearPillar: `${yearPillar.stem}${yearPillar.branch}`,
+          monthPillar: `${monthPillar.stem}${monthPillar.branch}`,
+          dayPillar: `${dayPillar.stem}${dayPillar.branch}`,
+          currentHourName: currentHour.chineseName,
+          currentHourStem: currentHour.stem,
+        },
+        // 一句話總結與核心矛盾
+        oneLiner,
+        coreConflict: tenGodAnalysis.coreConflict,
+        overallScore: tenGodAnalysis.overallScore,
+        // 十神分析
+        tenGod: {
+          main: tenGodAnalysis.mainTenGod,
+          score: tenGodAnalysis.mainScore,
+          role: tenGodAnalysis.mainMeaning.role,
+          energy: tenGodAnalysis.mainMeaning.energy,
+          advice: tenGodAnalysis.mainMeaning.advice,
+          wuxing: tenGodAnalysis.mainMeaning.wuxing,
+          branchGods: tenGodAnalysis.branchTenGods,
+        },
+        // 英雄劇本
+        heroScript: tenGodAnalysis.heroScript,
+        // 塔羅流日
+        tarot: {
+          cardNumber: tarot.cardNumber,
+          name: tarot.card.name,
+          element: tarot.card.element,
+          keywords: tarot.card.keywords,
+          advice: tarot.card.advice,
+          energy: tarot.card.energy,
+          calculation: tarot.calculation,
+        },
+        // 月相
+        moon: {
+          phase: moonInfo.phaseName,
+          emoji: moonInfo.phaseEmoji,
+          illumination: moonInfo.illumination,
+          lunarDay: moonInfo.lunarDay,
+          isFullMoon: moonInfo.isFullMoon,
+          castInfluence: moonInfo.castInfluence,
+        },
+        // 穿搭建議
+        outfit,
+        // 手串推薦
+        bracelets: {
+          leftHand: bracelets.leftHand,
+          rightHand: bracelets.rightHand,
+          summary: bracelets.summary,
+        },
+        // 財運羅盤
+        wealthCompass,
+        // 時辰能量
+        hourEnergy: {
+          current: currentHour,
+          bestHours: bestHours.map(h => ({ name: h.chineseName, branch: h.branch, stem: h.stem, score: h.energyScore, displayTime: h.displayTime })),
+          allHours: allHours.map(h => ({
+            name: h.chineseName,
+            branch: h.branch,
+            stem: h.stem,
+            score: h.energyScore,
+            level: h.energyLevel,
+            label: h.energyLabel,
+            isCurrent: h.isCurrentHour,
+            displayTime: h.displayTime,
+          })),
+        },
       };
     }),
   }),
