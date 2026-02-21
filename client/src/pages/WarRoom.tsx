@@ -426,7 +426,15 @@ export default function WarRoom() {
               {/* 穿搭建議 */}
               <SectionCard title="今日穿搭建議" icon="👗">
                 <div className="space-y-3">
-                  <div className="text-white/50 text-xs mb-2">{data.outfit.summary}</div>
+                  <div className="rounded-xl bg-orange-950/20 border border-orange-500/20 p-3">
+                    <p className="text-orange-300 text-sm font-medium">{data.outfit.summary}</p>
+                  </div>
+                  {/* 天干款式備注 */}
+                  {data.outfit.stemNote && (
+                    <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                      <p className="text-white/60 text-xs leading-relaxed">{data.outfit.stemNote}</p>
+                    </div>
+                  )}
                   {/* 上衣 */}
                   <div className="rounded-xl bg-red-950/20 border border-red-500/20 p-3">
                     <div className="flex items-center gap-2 mb-1">
@@ -434,7 +442,10 @@ export default function WarRoom() {
                       <span className="text-white font-medium text-sm">{data.outfit.top.color}</span>
                       <span className="text-red-500/60 text-xs ml-auto">{data.outfit.top.element}</span>
                     </div>
-                    <p className="text-white/50 text-xs">{data.outfit.top.reason}</p>
+                    <p className="text-white/50 text-xs mb-1">{data.outfit.top.reason}</p>
+                    {data.outfit.top.style && (
+                      <p className="text-red-300/60 text-xs italic">款式：{data.outfit.top.style}</p>
+                    )}
                   </div>
                   {/* 下身 */}
                   <div className="rounded-xl bg-amber-950/20 border border-amber-500/20 p-3">
@@ -454,6 +465,15 @@ export default function WarRoom() {
                     </div>
                     <p className="text-white/50 text-xs">{data.outfit.shoes.reason}</p>
                   </div>
+                  {/* 月相備注 */}
+                  {data.outfit.moonNote && (
+                    <div className="rounded-xl bg-purple-950/20 border border-purple-500/20 p-3">
+                      <div className="flex items-center gap-1 mb-1">
+                        <span className="text-purple-400 text-xs font-semibold">🌙 月相建議</span>
+                      </div>
+                      <p className="text-purple-300/70 text-xs">{data.outfit.moonNote}</p>
+                    </div>
+                  )}
                 </div>
               </SectionCard>
 
@@ -463,16 +483,39 @@ export default function WarRoom() {
                   <div className="rounded-xl bg-white/5 border border-white/10 p-3">
                     <p className="text-white/70 text-sm">{data.bracelets.summary}</p>
                   </div>
+                  {/* 月相備注 */}
+                  {data.bracelets.moonNote && (
+                    <div className="rounded-xl bg-purple-950/20 border border-purple-500/20 p-3">
+                      <div className="flex items-center gap-1 mb-1">
+                        <span className="text-purple-400 text-xs font-semibold">🌙 月相配戴建議</span>
+                      </div>
+                      <p className="text-purple-300/70 text-xs">{data.bracelets.moonNote}</p>
+                    </div>
+                  )}
                   <div>
                     <div className="text-emerald-400/70 text-xs font-semibold mb-2">✋ 左手（補能量）</div>
                     <div className="space-y-2">
-                      {data.bracelets.leftHand.map((item: { bracelet: { name: string; primaryElement: string; secondaryElement?: string; role: string; power: string }; reason: string; priority: number }, i: number) => (
+                      {data.bracelets.leftHand.map((item: { bracelet: { id: string; name: string; primaryElement: string; secondaryElement?: string; role: string; power: string; rating: number; ratingNote: string }; reason: string; priority: number; dayScore: number }, i: number) => (
                         <div key={i} className="rounded-lg bg-emerald-950/20 border border-emerald-500/20 p-3">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-emerald-300 font-medium text-sm">{item.bracelet.name}</span>
-                            <span className="text-emerald-500/60 text-xs">{item.bracelet.primaryElement}{item.bracelet.secondaryElement ? `/${item.bracelet.secondaryElement}` : ''}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-emerald-500/60 text-xs font-mono">{item.bracelet.id}</span>
+                              <span className="text-emerald-300 font-medium text-sm">{item.bracelet.name}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-amber-400 text-xs">{'★'.repeat(item.bracelet.rating)}</span>
+                              <span className="text-emerald-500/60 text-xs ml-1">{item.bracelet.primaryElement}{item.bracelet.secondaryElement ? `/${item.bracelet.secondaryElement}` : ''}</span>
+                            </div>
                           </div>
+                          <p className="text-emerald-400/60 text-xs mb-1 italic">{item.bracelet.role}</p>
                           <p className="text-white/50 text-xs">{item.reason}</p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-white/30 text-xs">今日共振</span>
+                            <div className="flex-1 bg-white/10 rounded-full h-1">
+                              <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style={{ width: `${item.dayScore * 10}%` }} />
+                            </div>
+                            <span className="text-emerald-400 text-xs font-bold">{item.dayScore}/10</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -480,13 +523,27 @@ export default function WarRoom() {
                   <div>
                     <div className="text-blue-400/70 text-xs font-semibold mb-2">🤚 右手（防護）</div>
                     <div className="space-y-2">
-                      {data.bracelets.rightHand.map((item: { bracelet: { name: string; primaryElement: string; secondaryElement?: string; role: string; power: string }; reason: string; priority: number }, i: number) => (
+                      {data.bracelets.rightHand.map((item: { bracelet: { id: string; name: string; primaryElement: string; secondaryElement?: string; role: string; power: string; rating: number; ratingNote: string }; reason: string; priority: number; dayScore: number }, i: number) => (
                         <div key={i} className="rounded-lg bg-blue-950/20 border border-blue-500/20 p-3">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-blue-300 font-medium text-sm">{item.bracelet.name}</span>
-                            <span className="text-blue-500/60 text-xs">{item.bracelet.primaryElement}{item.bracelet.secondaryElement ? `/${item.bracelet.secondaryElement}` : ''}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-blue-500/60 text-xs font-mono">{item.bracelet.id}</span>
+                              <span className="text-blue-300 font-medium text-sm">{item.bracelet.name}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-amber-400 text-xs">{'★'.repeat(item.bracelet.rating)}</span>
+                              <span className="text-blue-500/60 text-xs ml-1">{item.bracelet.primaryElement}{item.bracelet.secondaryElement ? `/${item.bracelet.secondaryElement}` : ''}</span>
+                            </div>
                           </div>
+                          <p className="text-blue-400/60 text-xs mb-1 italic">{item.bracelet.role}</p>
                           <p className="text-white/50 text-xs">{item.reason}</p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-white/30 text-xs">今日共振</span>
+                            <div className="flex-1 bg-white/10 rounded-full h-1">
+                              <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400" style={{ width: `${item.dayScore * 10}%` }} />
+                            </div>
+                            <span className="text-blue-400 text-xs font-bold">{item.dayScore}/10</span>
+                          </div>
                         </div>
                       ))}
                     </div>

@@ -1,7 +1,12 @@
 /**
- * 今日作戰室核心引擎
+ * 今日作戰室核心引擎 V2.7
  * 整合塔羅流日、穿搭建議、手串推薦、財運羅盤
  * 命格常數統一從 userProfile.ts 引用
+ *
+ * V2.7 重大更新：
+ * - 手串資料庫更新為蘇祐震真實手串 HS-A~HS-J（個人手串矩陣資料庫 V9.0）
+ * - 穿搭建議引擎：依天干（10種）× 十神（10種）× 月相（4種）三維差異化
+ * - 手串推薦引擎：依天干地支細節推薦，每日組合不同
  */
 import { FAVORABLE_ELEMENTS, UNFAVORABLE_ELEMENTS, ELEMENT_COLORS as PROFILE_ELEMENT_COLORS } from "./userProfile";
 
@@ -45,11 +50,9 @@ export function calculateTarotDailyCard(month: number, day: number): {
   card: typeof TAROT_CARDS[number];
   calculation: string;
 } {
-  // 當日數字：若兩位數則相加
   const daySum = day >= 10 ? Math.floor(day / 10) + (day % 10) : day;
   const total = 10 + month + daySum;
 
-  // 歸約至1-22（22保留為愚者）
   let cardNumber = total;
   if (cardNumber > 22) {
     const digits = String(cardNumber).split("").map(Number);
@@ -65,72 +68,183 @@ export function calculateTarotDailyCard(month: number, day: number): {
   };
 }
 
-// ─── 五行顏色對應 // ─── 五行顏色對應（從 userProfile 引用）───────────────────────────
+// ─── 五行顏色對應（細緻版）───────────────────────────────────────
 const ELEMENT_COLORS_DETAIL: Record<string, { colors: string[]; hex: string[] }> = {
   木: { colors: ["翠綠", "草綠", "青色", "橄欖綠"], hex: ["#2d6a4f", "#52b788", "#74c69d", "#40916c"] },
-  火: { colors: ["朱紅", "橙色", "火焰橙", "珊瑚紅"], hex: ["#e63946", "#f4a261", "#e76f51", "#c1121f"] },
-  土: { colors: ["土黃", "駝色", "米白", "棕褐"], hex: ["#c9a84c", "#d4a373", "#e9c46a", "#a0785a"] },
-  金: { colors: ["白色", "銀色", "米白", "淺金"], hex: ["#ffffff", "#c0c0c0", "#f5f5f5", "#d4af37"] },
-  水: { colors: ["深藍", "黑色", "深灰", "靖藍"], hex: ["#023e8a", "#03045e", "#1b1b2f", "#264653"] },
+  火: { colors: ["朱紅", "橙色", "火焰橙", "珊瑚紅", "緋紅", "磚紅"], hex: ["#e63946", "#f4a261", "#e76f51", "#c1121f", "#d62828", "#bc4749"] },
+  土: { colors: ["土黃", "駝色", "米白", "棕褐", "沙色", "卡其"], hex: ["#c9a84c", "#d4a373", "#e9c46a", "#a0785a", "#c8963e", "#b5835a"] },
+  金: { colors: ["白色", "銀色", "米白", "淺金", "香檳金", "珍珠白"], hex: ["#ffffff", "#c0c0c0", "#f5f5f5", "#d4af37", "#f7e7ce", "#e8e8e8"] },
+  水: { colors: ["深藍", "黑色", "深灰", "靛藍", "墨色", "炭灰"], hex: ["#023e8a", "#03045e", "#1b1b2f", "#264653", "#1d3557", "#2b2d42"] },
+};
+
+// ─── 天干五行對應 ─────────────────────────────────────────────────
+const STEM_ELEMENT: Record<string, string> = {
+  甲: "木", 乙: "木", 丙: "火", 丁: "火", 戊: "土",
+  己: "土", 庚: "金", 辛: "金", 壬: "水", 癸: "水",
+};
+
+// ─── 天干陰陽 ─────────────────────────────────────────────────────
+const STEM_YIN_YANG: Record<string, "陽" | "陰"> = {
+  甲: "陽", 乙: "陰", 丙: "陽", 丁: "陰", 戊: "陽",
+  己: "陰", 庚: "陽", 辛: "陰", 壬: "陽", 癸: "陰",
+};
+
+// ─── 天干個性描述（用於穿搭文案差異化）─────────────────────────
+const STEM_PERSONALITY: Record<string, string> = {
+  甲: "剛直挺拔", 乙: "柔韌蔓延", 丙: "光明熱烈", 丁: "溫潤細膩",
+  戊: "厚重穩固", 己: "滋養包容", 庚: "銳利決斷", 辛: "精緻純淨",
+  壬: "奔騰浩蕩", 癸: "靜謐深邃",
+};
+
+// ─── 穿搭款式庫（依天干個性差異化）─────────────────────────────
+const OUTFIT_STYLE_BY_STEM: Record<string, { topStyle: string; bottomStyle: string; accessory: string }> = {
+  甲: { topStyle: "挺括感的立領或西裝領上衣", bottomStyle: "直筒或寬管褲，展現大器", accessory: "木質或皮革配件" },
+  乙: { topStyle: "流線感的V領或開襟上衣", bottomStyle: "A字裙或寬鬆長褲，輕盈飄逸", accessory: "植物系或藤編配件" },
+  丙: { topStyle: "亮色系或有光澤感的上衣", bottomStyle: "修身直筒褲，展現自信", accessory: "金屬光澤配件" },
+  丁: { topStyle: "柔和色調的針織或棉麻上衣", bottomStyle: "柔軟質地的長褲或裙子", accessory: "溫潤玉石或木質配件" },
+  戊: { topStyle: "厚實感的翻領或立領上衣", bottomStyle: "寬版褲或工裝風格", accessory: "大地色系皮革配件" },
+  己: { topStyle: "舒適包覆感的圓領或船領上衣", bottomStyle: "寬鬆舒適的休閒褲", accessory: "布藝或陶瓷配件" },
+  庚: { topStyle: "俐落感的V領或無領上衣", bottomStyle: "修身直筒褲，展現決斷力", accessory: "金屬感配件" },
+  辛: { topStyle: "精緻感的高領或細節豐富的上衣", bottomStyle: "剪裁精良的直筒或小腳褲", accessory: "銀色或白色系配件" },
+  壬: { topStyle: "流動感的寬鬆上衣或外套", bottomStyle: "寬鬆飄逸的長褲或長裙", accessory: "深色系或海洋風配件" },
+  癸: { topStyle: "低調質感的素色或暗紋上衣", bottomStyle: "沉穩色調的長褲", accessory: "深色系低調配件" },
+};
+
+// ─── 十神穿搭策略（決定顏色比重）────────────────────────────────
+const OUTFIT_STRATEGY_BY_TENGOD: Record<string, {
+  topColor: string; topElement: string; topReason: string;
+  bottomColor: string; bottomElement: string; bottomReason: string;
+  shoesColor: string; shoesElement: string; shoesReason: string;
+  summary: string;
+}> = {
+  食神: {
+    topColor: "朱紅/火焰橙", topElement: "火", topReason: "食神日甲木化火，上半身著火色強化才華輸出，讓創意能量從心口流出",
+    bottomColor: "土黃/駝色", bottomElement: "土", bottomReason: "下半身土色穩固財星，讓才華能量落地變現，防止能量過度洩散",
+    shoesColor: "白色/銀色", shoesElement: "金", shoesReason: "鞋著金色接地，以金洩火的循環保持能量平衡，步伐穩健有力",
+    summary: "食神日才華全開，上紅下黃配白鞋，是最強的天命共振穿搭，讓你的光芒自然流露。",
+  },
+  傷官: {
+    topColor: "橙色/珊瑚紅", topElement: "火", topReason: "傷官日破繭之火，上半身著暖橙色展現突破氣場，吸引注意力",
+    bottomColor: "土黃/卡其", bottomElement: "土", bottomReason: "下半身卡其色穩固根基，在突破的同時保持腳踏實地",
+    shoesColor: "淺金/米白", shoesElement: "金", shoesReason: "鞋著淺金色，金的銳利為傷官的突破提供精準方向",
+    summary: "傷官日鋒芒畢露，上橙下卡其配淺金鞋，展現你的獨特個性與突破力。",
+  },
+  偏財: {
+    topColor: "橙色/火焰橙", topElement: "火", topReason: "偏財日機遇入局，上半身著橙色吸引財富能量，展現主動魅力",
+    bottomColor: "土黃/棕褐", bottomElement: "土", bottomReason: "下半身棕褐色厚積財星，讓偏財能量有地方落腳，不會轉瞬即逝",
+    shoesColor: "白色/香檳金", shoesElement: "金", shoesReason: "鞋著香檳金色，金的光澤吸引財富，步步踩出財運",
+    summary: "偏財日財星入局，上橙下棕配香檳金鞋，主動出擊的最佳財運穿搭。",
+  },
+  正財: {
+    topColor: "珊瑚紅/磚紅", topElement: "火", topReason: "正財日穩健積累，上半身著沉穩的磚紅色，展現可信賴的專業形象",
+    bottomColor: "駝色/米白", bottomElement: "土", bottomReason: "下半身駝色穩重大方，財星能量踏實落地，長期積累的最佳配色",
+    shoesColor: "白色/珍珠白", shoesElement: "金", shoesReason: "鞋著珍珠白，純淨的金能量讓每一步都走得穩健踏實",
+    summary: "正財日穩健積累，磚紅上衣配駝色下裝搭珍珠白鞋，展現你的專業與可靠。",
+  },
+  七殺: {
+    topColor: "朱紅/緋紅", topElement: "火", topReason: "七殺日壓力入局，上半身著強烈的朱紅色，以食神之火制七殺之金，化壓力為動力",
+    bottomColor: "土黃/沙色", bottomElement: "土", bottomReason: "下半身沙色穩固陣地，土能量為你提供抵禦壓力的根基",
+    shoesColor: "白色/銀色", shoesElement: "金", shoesReason: "鞋著銀色，以金的銳利應對七殺的挑戰，步伐堅定不移",
+    summary: "七殺日以火制金，朱紅上衣配沙色下裝搭銀鞋，展現你在壓力下的強大氣場。",
+  },
+  正官: {
+    topColor: "磚紅/深橙", topElement: "火", topReason: "正官日規範護身，上半身著深沉的磚紅色，展現成熟穩重的專業形象",
+    bottomColor: "駝色/棕褐", bottomElement: "土", bottomReason: "下半身棕褐色正式大方，土的穩重讓你在官場中如魚得水",
+    shoesColor: "白色/米白", shoesElement: "金", shoesReason: "鞋著米白色，純淨的金能量讓你的每一步都符合規範",
+    summary: "正官日官運加持，磚紅上衣配棕褐下裝搭米白鞋，展現你的專業與誠信。",
+  },
+  偏印: {
+    topColor: "橙色/暖黃橙", topElement: "火", topReason: "偏印日深水靜流，上半身著暖橙色點亮靈感，將深層思考轉化為創意火花",
+    bottomColor: "土黃/米白", bottomElement: "土", bottomReason: "下半身米白色清爽，讓思維保持清晰，不被過多能量干擾",
+    shoesColor: "淺金/白色", shoesElement: "金", shoesReason: "鞋著淺金色，金的精準讓你的洞察力有落地的方向",
+    summary: "偏印日智慧沉澱，暖橙上衣配米白下裝搭淺金鞋，適合深度思考與靈感創作。",
+  },
+  正印: {
+    topColor: "珊瑚紅/橙色", topElement: "火", topReason: "正印日貴人相助，上半身著溫暖的珊瑚紅，展現親和力，吸引貴人能量",
+    bottomColor: "駝色/土黃", bottomElement: "土", bottomReason: "下半身土色穩重，讓貴人看到你的可靠與踏實",
+    shoesColor: "白色/米白", shoesElement: "金", shoesReason: "鞋著米白色，純淨的金能量讓你散發出值得信賴的氣質",
+    summary: "正印日貴人加持，珊瑚紅上衣配駝色下裝搭米白鞋，展現你的親和力與可靠性。",
+  },
+  比肩: {
+    topColor: "火焰橙/橙色", topElement: "火", topReason: "比肩日自強不息，上半身著鮮明的橙色展現個人特色，讓你在競爭中脫穎而出",
+    bottomColor: "土黃/卡其", bottomElement: "土", bottomReason: "下半身卡其色穩固根基，在展現自我的同時保持接地氣",
+    shoesColor: "白色/銀色", shoesElement: "金", shoesReason: "鞋著銀色，金的銳利讓你在競爭中保持清醒的判斷力",
+    summary: "比肩日獨立前行，橙色上衣配卡其下裝搭銀鞋，以個人實力展現你的獨特價值。",
+  },
+  劫財: {
+    topColor: "磚紅/深珊瑚", topElement: "火", topReason: "劫財日守住根基，上半身著沉穩的磚紅色，低調但不失力量感",
+    bottomColor: "棕褐/駝色", bottomElement: "土", bottomReason: "下半身棕褐色厚重穩固，守住財星根基，防止能量外洩",
+    shoesColor: "白色/米白", shoesElement: "金", shoesReason: "鞋著米白色，金的收斂特性幫助你在劫財日守住核心資產",
+    summary: "劫財日低調守財，磚紅上衣配棕褐下裝搭米白鞋，以沉穩氣場保護你的核心能量。",
+  },
+};
+
+// ─── 月相對穿搭的影響 ─────────────────────────────────────────────
+const MOON_PHASE_OUTFIT_MODIFIER: Record<string, string> = {
+  新月: "新月之日，萬象更新。建議在主色系中加入一件白色或淺色單品，象徵新的開始。",
+  上弦月: "上弦月能量上升，可在配件上選擇有光澤感的材質（如金屬、珍珠），呼應月亮的成長能量。",
+  滿月: "滿月能量最強！今日可大膽嘗試更鮮豔的火色系（如正紅、橙紅），讓你的光芒與月亮共鳴。",
+  下弦月: "下弦月能量收斂，建議整體穿搭偏向低調沉穩，以大地色系為主，專注於內在積累。",
+  殘月: "殘月之日，以靜制動。選擇舒適、低調的穿搭，為下一個月相周期蓄積能量。",
 };
 
 /**
- * 根據五行能量生成穿搭建議
- * 蘇先生用神：火（最優先）、土（第二）、金（第三）
- * 忌神：水、木（過旺）
+ * 根據天干、十神、月相生成差異化穿搭建議
+ * V2.7：三維交叉，每日不同
  */
-export function generateOutfitAdvice(dailyElement: string, dailyScore: number): {
-  top: { color: string; element: string; reason: string };
+export function generateOutfitAdvice(
+  dailyElement: string,
+  dailyScore: number,
+  dayStem?: string,
+  tenGod?: string,
+  moonPhase?: string,
+): {
+  top: { color: string; element: string; reason: string; style: string };
   bottom: { color: string; element: string; reason: string };
   shoes: { color: string; element: string; reason: string };
   summary: string;
+  moonNote?: string;
+  stemNote?: string;
 } {
-  // 根據當日能量決定穿搭策略
-  // 今日能量強（火土金日）→ 強化用神色
-  // 今日能量弱（水木日）→ 補充用神色，避免忌神色
+  // 取得十神策略（主要差異化維度）
+  const strategy = OUTFIT_STRATEGY_BY_TENGOD[tenGod || ""] || OUTFIT_STRATEGY_BY_TENGOD["食神"];
 
-  const isAuspicious = FAVORABLE_ELEMENTS.includes(dailyElement as typeof FAVORABLE_ELEMENTS[number]);
+  // 取得天干款式建議（次要差異化維度）
+  const stemStyle = OUTFIT_STYLE_BY_STEM[dayStem || "甲"] || OUTFIT_STYLE_BY_STEM["甲"];
 
-  if (dailyElement === "火" || dailyScore >= 8) {
-    return {
-      top: { color: "朱紅/火焰橙", element: "火", reason: "上半身著火色，強化今日食神才華能量，展現自信魅力" },
-      bottom: { color: "土黃/駝色", element: "土", reason: "下半身著土色，以財星穩固火能量，防止過度洩散" },
-      shoes: { color: "白色/銀色", element: "金", reason: "鞋子著金色，以金洩火生水的循環，保持能量平衡" },
-      summary: "今日火能量旺盛，上紅下黃配白鞋，是最強的天命共振穿搭。",
-    };
-  } else if (dailyElement === "土" || dailyScore >= 6) {
-    return {
-      top: { color: "橙色/珊瑚紅", element: "火", reason: "上半身著火色，以火生土，強化今日財星能量" },
-      bottom: { color: "土黃/米白", element: "土", reason: "下半身著土色，直接強化財星，穩健積累" },
-      shoes: { color: "白色/淺金", element: "金", reason: "鞋子著金色，土生金的循環，財富自然流動" },
-      summary: "今日土能量主導，上橙下黃配白鞋，財運加持的最佳穿搭。",
-    };
-  } else if (dailyElement === "金") {
-    return {
-      top: { color: "火焰橙/朱紅", element: "火", reason: "上半身著火色，以火剋金，防止金能量過強壓制甲木" },
-      bottom: { color: "土黃/駝色", element: "土", reason: "下半身著土色，土生金的緩衝，平衡金能量" },
-      shoes: { color: "白色/銀色", element: "金", reason: "鞋子著金色，接地氣，讓金能量落地生根" },
-      summary: "今日金能量主導，以火制金，上橙下黃配白鞋，化壓力為動力。",
-    };
-  } else if (dailyElement === "水") {
-    return {
-      top: { color: "朱紅/橙色", element: "火", reason: "上半身必著火色，以火制水，補充今日最缺的用神能量" },
-      bottom: { color: "土黃/棕褐", element: "土", reason: "下半身著土色，以土剋水，築壩擋水，保護財星" },
-      shoes: { color: "白色/米白", element: "金", reason: "鞋子著金色，金生水的循環雖不理想，但白色中性，不加重水能量" },
-      summary: "今日水能量過旺，全身以火土為主色，是今日最重要的能量補充策略。",
-    };
-  } else {
-    // 木日
-    return {
-      top: { color: "朱紅/火焰橙", element: "火", reason: "上半身著火色，木生火，今日是洩木補火的最佳時機" },
-      bottom: { color: "土黃/駝色", element: "土", reason: "下半身著土色，以財星為目標，引導木能量流向財富" },
-      shoes: { color: "白色/銀色", element: "金", reason: "鞋子著金色，以金剋木，防止木能量過旺失控" },
-      summary: "今日木能量旺盛，以火土金配色引導能量，將過旺的木轉化為財富動力。",
-    };
-  }
+  // 月相修飾語（第三維度）
+  const moonNote = moonPhase ? MOON_PHASE_OUTFIT_MODIFIER[moonPhase] : undefined;
+
+  // 天干個性備注
+  const stemPersonality = dayStem ? STEM_PERSONALITY[dayStem] : undefined;
+  const stemNote = stemPersonality
+    ? `今日${dayStem}日，天干之氣「${stemPersonality}」，款式建議：${stemStyle.topStyle}搭配${stemStyle.bottomStyle}，配件選擇${stemStyle.accessory}。`
+    : undefined;
+
+  return {
+    top: {
+      color: strategy.topColor,
+      element: strategy.topElement,
+      reason: strategy.topReason,
+      style: stemStyle.topStyle,
+    },
+    bottom: {
+      color: strategy.bottomColor,
+      element: strategy.bottomElement,
+      reason: strategy.bottomReason,
+    },
+    shoes: {
+      color: strategy.shoesColor,
+      element: strategy.shoesElement,
+      reason: strategy.shoesReason,
+    },
+    summary: strategy.summary,
+    moonNote,
+    stemNote,
+  };
 }
 
-// ─── 手串資料庫（HS-01 ~ HS-11）─────────────────────────────────
+// ─── 蘇祐震真實手串資料庫 V9.0（HS-A ~ HS-J）────────────────────
 export const BRACELET_DB: Record<string, {
   id: string;
   name: string;
@@ -138,98 +252,334 @@ export const BRACELET_DB: Record<string, {
   secondaryElement?: string;
   role: string;
   power: string;
+  rating: number; // 1-5 星
+  ratingNote: string;
+  warningDays?: string[]; // 哪些五行日需謹慎
+  bestDays?: string[];    // 哪些五行日最適合
 }> = {
-  "HS-01": { id: "HS-01", name: "多彩虎眼石手串", primaryElement: "土", secondaryElement: "金", role: "穩定財星", power: "增強決斷力，穩固財運，土金雙補" },
-  "HS-02": { id: "HS-02", name: "紫晶智慧招財手串", primaryElement: "火", secondaryElement: "木", role: "才華展現", power: "紫水晶補火，天河石補木，多元能量整合" },
-  "HS-03": { id: "HS-03", name: "酒紅石榴石手串", primaryElement: "火", role: "用神補火", power: "純粹火能量，強化食神才華，提升行動力" },
-  "HS-04": { id: "HS-04", name: "經典黃虎眼石手串", primaryElement: "土", secondaryElement: "金", role: "財星穩固", power: "黃虎眼土能量，穩定財星，增強現實掌控力" },
-  "HS-05": { id: "HS-05", name: "太赫茲能量手串", primaryElement: "金", role: "官殺防護", power: "金能量防護，提升決斷力，化解外部壓力" },
-  "HS-06": { id: "HS-06", name: "白硨磲手串", primaryElement: "金", secondaryElement: "水", role: "淨化防護", power: "白硨磲金水雙屬，淨化負能量，柔和防護" },
-  "HS-07": { id: "HS-07", name: "金太陽石手串", primaryElement: "火", secondaryElement: "土", role: "雙重用神", power: "金沙石火土雙補，最強用神組合，財運與才華並進" },
-  "HS-08": { id: "HS-08", name: "沉香木手串", primaryElement: "木", secondaryElement: "土", role: "靜心安神", power: "沉香木安神靜心，適合冥想與靈性修煉" },
-  "HS-09": { id: "HS-09", name: "天珠瑪瑙手串", primaryElement: "水", secondaryElement: "金", role: "智慧深化", power: "黑瑪瑙水能量，深化直覺，但水木日慎用" },
-  "HS-10": { id: "HS-10", name: "和田玉竹節手串", primaryElement: "土", secondaryElement: "水", role: "財星滋養", power: "和田玉土能量，養財護財，黑瑪瑙輔助" },
-  "HS-11": { id: "HS-11", name: "黃虎眼石貔貅手串", primaryElement: "土", secondaryElement: "金", role: "招財辟邪", power: "貔貅招財，虎眼石土金雙補，最強財運護符" },
+  "HS-A": {
+    id: "HS-A",
+    name: "黃虎眼石（帶貔貅）",
+    primaryElement: "土",
+    secondaryElement: "金",
+    role: "財富引擎・定海神針",
+    power: "黃虎眼土屬性補財星，貔貅招財辟邪，金的銳利增強決策力。補財星、化食傷、增決策力。",
+    rating: 5,
+    ratingNote: "核心用神，財運與決策雙補",
+    bestDays: ["土", "火", "金"],
+    warningDays: [],
+  },
+  "HS-B": {
+    id: "HS-B",
+    name: "太赫茲石（Terahertz）",
+    primaryElement: "金",
+    role: "科技官殺・決斷防護",
+    power: "金屬光澤高頻振動，補官殺提紀律，制比劫化競爭，生印星清思路。",
+    rating: 4,
+    ratingNote: "重要用神，官殺防護",
+    bestDays: ["金", "土", "火"],
+    warningDays: [],
+  },
+  "HS-C": {
+    id: "HS-C",
+    name: "天眼瑪瑙（帶黑曜石）",
+    primaryElement: "土",
+    secondaryElement: "水",
+    role: "洞察濾網・穩固根基",
+    power: "瑪瑙土屬性穩固根基，天眼紋避邪防小人，黑曜石水屬性平衡情緒。",
+    rating: 4,
+    ratingNote: "重要用神，土水平衡",
+    bestDays: ["土", "火"],
+    warningDays: ["水"],
+  },
+  "HS-D": {
+    id: "HS-D",
+    name: "酒紅石榴石",
+    primaryElement: "火",
+    role: "行動力引擎・熱情之源",
+    power: "純粹火能量補食傷，點燃行動力與魅力，驅寒暖身調候用神，火生土催旺財星。",
+    rating: 5,
+    ratingNote: "核心用神，第一驅動力",
+    bestDays: ["火", "木", "土"],
+    warningDays: [],
+  },
+  "HS-E": {
+    id: "HS-E",
+    name: "金沙石（金點石）",
+    primaryElement: "火",
+    secondaryElement: "土",
+    role: "行動變現・機遇之石",
+    power: "含銅礦物閃耀金點屬火，沙石基底屬土，自帶火生土循環，既補行動力又催旺財星。",
+    rating: 5,
+    ratingNote: "核心用神，火土雙補完美組合",
+    bestDays: ["火", "土", "木"],
+    warningDays: [],
+  },
+  "HS-F": {
+    id: "HS-F",
+    name: "紫水晶（帶七彩脈輪）",
+    primaryElement: "火",
+    secondaryElement: "水",
+    role: "智慧之火・貴人磁石",
+    power: "紫水晶屬火補靈感，七彩脈輪多元能量，招貴人吸引助力，將水的思考轉化為火的洞見。",
+    rating: 4,
+    ratingNote: "重要用神，靈感與貴人",
+    bestDays: ["火", "土", "金"],
+    warningDays: [],
+  },
+  "HS-G": {
+    id: "HS-G",
+    name: "沉香木（帶一顆紅瑪瑙）",
+    primaryElement: "木",
+    secondaryElement: "火",
+    role: "靜心安神・回歸本心",
+    power: "沉香木屬木穩固甲木根基，溫潤香氣帶火特性，紅瑪瑙輔助火能量。木旺日需謹慎。",
+    rating: 3,
+    ratingNote: "特定場景使用，木旺日慎戴",
+    bestDays: ["金", "土"],
+    warningDays: ["木", "水"],
+  },
+  "HS-H": {
+    id: "HS-H",
+    name: "藍虎眼石（鷹眼石）",
+    primaryElement: "水",
+    secondaryElement: "木",
+    role: "深層溝通・洞察表達",
+    power: "藍虎眼屬水對應喉輪，強化溝通與表達，但會加強水木能量。水木旺日絕對避免佩戴。",
+    rating: 2,
+    ratingNote: "忌神，僅在極特殊情況下使用",
+    bestDays: [],
+    warningDays: ["水", "木", "火", "土", "金"],
+  },
+  "HS-I": {
+    id: "HS-I",
+    name: "白硨磲",
+    primaryElement: "金",
+    role: "純淨之金・安神定魄",
+    power: "佛教七寶之一，白色金能量純淨，柔和決策力，安神定魄收斂過旺的木，讓心神集中。",
+    rating: 4,
+    ratingNote: "重要用神，純淨金能量",
+    bestDays: ["金", "土", "火"],
+    warningDays: [],
+  },
+  "HS-J": {
+    id: "HS-J",
+    name: "和田玉（青白玉，帶黑曜石）",
+    primaryElement: "土",
+    secondaryElement: "水",
+    role: "滋養之土・養財護財",
+    power: "和田玉土中精華溫潤滋養，黑曜石水元素帶來靈感，土水平衡讓你務實而不失洞察。",
+    rating: 5,
+    ratingNote: "核心用神，養財護財",
+    bestDays: ["土", "火", "金"],
+    warningDays: [],
+  },
 };
 
+// ─── 手串推薦邏輯（依天干×十神×地支五行細緻化）──────────────────
+
 /**
- * 根據當日五行能量推薦手串
- * 左手：補充用神能量（吸收）
- * 右手：防護忌神（排出）
- * 最多配戴四條，取居中值
+ * 依天干取得當日手串能量共振分數（0-10）
+ * 用於在同一五行大類中進一步區分
  */
-export function recommendBracelets(dailyElement: string, dailyScore: number): {
-  leftHand: Array<{ bracelet: typeof BRACELET_DB[string]; reason: string; priority: number }>;
-  rightHand: Array<{ bracelet: typeof BRACELET_DB[string]; reason: string; priority: number }>;
+function getBraceletDayScore(bracelet: typeof BRACELET_DB[string], dayStem: string, tenGod: string): number {
+  const stemEl = STEM_ELEMENT[dayStem] || "木";
+  const stemYY = STEM_YIN_YANG[dayStem] || "陽";
+
+  let score = 5; // 基礎分
+
+  // 主五行與今日天干五行的關係
+  const primaryEl = bracelet.primaryElement;
+  if (bracelet.bestDays?.includes(stemEl)) score += 3;
+  if (bracelet.warningDays?.includes(stemEl)) score -= 4;
+
+  // 評級加成
+  score += bracelet.rating - 3;
+
+  // 十神加成
+  const tenGodBonus: Record<string, Record<string, number>> = {
+    食神: { "HS-D": 2, "HS-E": 2, "HS-F": 1 },
+    傷官: { "HS-D": 2, "HS-E": 1, "HS-B": 1 },
+    偏財: { "HS-A": 2, "HS-E": 2, "HS-J": 1 },
+    正財: { "HS-A": 2, "HS-J": 2, "HS-C": 1 },
+    七殺: { "HS-D": 2, "HS-B": 1, "HS-I": 1 },
+    正官: { "HS-I": 2, "HS-B": 1, "HS-A": 1 },
+    偏印: { "HS-F": 2, "HS-D": 1 },
+    正印: { "HS-F": 2, "HS-J": 1 },
+    比肩: { "HS-D": 1, "HS-E": 1, "HS-I": 1 },
+    劫財: { "HS-A": 2, "HS-J": 2, "HS-I": 1 },
+  };
+  score += (tenGodBonus[tenGod]?.[bracelet.id] || 0);
+
+  // 陰陽微調（陽干偏向主動性手串，陰干偏向滋養性手串）
+  if (stemYY === "陽" && ["HS-D", "HS-E", "HS-B"].includes(bracelet.id)) score += 1;
+  if (stemYY === "陰" && ["HS-F", "HS-J", "HS-C"].includes(bracelet.id)) score += 1;
+
+  return Math.max(0, Math.min(10, score));
+}
+
+/**
+ * 根據天干、十神、月相推薦手串
+ * V2.7：三維交叉，每日組合不同
+ */
+export function recommendBracelets(
+  dailyElement: string,
+  dailyScore: number,
+  dayStem?: string,
+  tenGod?: string,
+  moonPhase?: string,
+): {
+  leftHand: Array<{ bracelet: typeof BRACELET_DB[string]; reason: string; priority: number; dayScore: number }>;
+  rightHand: Array<{ bracelet: typeof BRACELET_DB[string]; reason: string; priority: number; dayScore: number }>;
   summary: string;
+  moonNote?: string;
 } {
-  const leftHand: Array<{ bracelet: typeof BRACELET_DB[string]; reason: string; priority: number }> = [];
-  const rightHand: Array<{ bracelet: typeof BRACELET_DB[string]; reason: string; priority: number }> = [];
+  const stem = dayStem || "甲";
+  const god = tenGod || "食神";
+  const stemEl = STEM_ELEMENT[stem] || "木";
 
-  if (dailyElement === "火" || dailyScore >= 8) {
-    // 火日：左手強化火土，右手防護水木
-    leftHand.push(
-      { bracelet: BRACELET_DB["HS-03"], reason: "火日首選，純火能量與今日天命共振，才華全開", priority: 1 },
-      { bracelet: BRACELET_DB["HS-07"], reason: "金太陽石火土雙補，在火日中同時穩固財星", priority: 2 },
-    );
-    rightHand.push(
-      { bracelet: BRACELET_DB["HS-05"], reason: "太赫茲金能量，防護水木忌神，提升決斷力", priority: 1 },
-      { bracelet: BRACELET_DB["HS-11"], reason: "貔貅招財，在火日中鎖住財運，防止財氣外洩", priority: 2 },
-    );
-  } else if (dailyElement === "土") {
-    // 土日：左手補火引土，右手防水
-    leftHand.push(
-      { bracelet: BRACELET_DB["HS-07"], reason: "金太陽石火土雙補，土日最強共振，財運加持", priority: 1 },
-      { bracelet: BRACELET_DB["HS-04"], reason: "黃虎眼石直接強化土能量，穩固財星根基", priority: 2 },
-    );
-    rightHand.push(
-      { bracelet: BRACELET_DB["HS-11"], reason: "貔貅招財辟邪，土日鎖財最佳選擇", priority: 1 },
-      { bracelet: BRACELET_DB["HS-05"], reason: "太赫茲防護，化解外部壓力與競爭", priority: 2 },
-    );
-  } else if (dailyElement === "金") {
-    // 金日：左手補火制金，右手穩土
-    leftHand.push(
-      { bracelet: BRACELET_DB["HS-03"], reason: "石榴石純火能量，以火制金，防止金能量過強", priority: 1 },
-      { bracelet: BRACELET_DB["HS-02"], reason: "紫晶手串補火，同時整合多元能量", priority: 2 },
-    );
-    rightHand.push(
-      { bracelet: BRACELET_DB["HS-01"], reason: "多彩虎眼石土金雙屬，緩衝金能量，穩定情緒", priority: 1 },
-      { bracelet: BRACELET_DB["HS-10"], reason: "和田玉養財護財，在金日中保護財星不受侵蝕", priority: 2 },
-    );
-  } else if (dailyElement === "水") {
-    // 水日：左手大補火土，右手防水
-    leftHand.push(
-      { bracelet: BRACELET_DB["HS-03"], reason: "水日必戴！石榴石純火能量，是今日最重要的能量補充", priority: 1 },
-      { bracelet: BRACELET_DB["HS-07"], reason: "金太陽石火土雙補，全面對抗水日的能量失衡", priority: 2 },
-    );
-    rightHand.push(
-      { bracelet: BRACELET_DB["HS-11"], reason: "貔貅招財，在水日中尤其重要，防止財運被水沖走", priority: 1 },
-      { bracelet: BRACELET_DB["HS-05"], reason: "太赫茲金能量防護，以金洩水，減輕水能量的壓力", priority: 2 },
-    );
-  } else {
-    // 木日：左手補火洩木，右手以金制木
-    leftHand.push(
-      { bracelet: BRACELET_DB["HS-07"], reason: "木日以火洩木，金太陽石是最佳橋樑，引木能量化為財富", priority: 1 },
-      { bracelet: BRACELET_DB["HS-03"], reason: "石榴石補火，加速木生火的能量轉化", priority: 2 },
-    );
-    rightHand.push(
-      { bracelet: BRACELET_DB["HS-05"], reason: "太赫茲金能量，以金制木，防止木能量過旺失控", priority: 1 },
-      { bracelet: BRACELET_DB["HS-04"], reason: "黃虎眼石土金雙補，穩固財星，防止木剋土", priority: 2 },
-    );
-  }
+  // 計算所有手串的今日共振分數
+  const scoredBracelets = Object.values(BRACELET_DB).map(b => ({
+    bracelet: b,
+    dayScore: getBraceletDayScore(b, stem, god),
+  })).sort((a, b) => b.dayScore - a.dayScore);
 
+  // 十神主推手串映射（左手第一位由十神直接指定，確保每日不同）
+  const TEN_GOD_PRIMARY: Record<string, string> = {
+    食神: "HS-D",  // 食神日主推酒紅石榴石（火）
+    傷官: "HS-E",  // 傷官日主推金沙石（火土）
+    偏財: "HS-A",  // 偏財日主推黃虎眼石貔貅（土）
+    正財: "HS-J",  // 正財日主推和田玉（土）
+    七殺: "HS-D",  // 七殺日主推酒紅石榴石（火制金）
+    正官: "HS-I",  // 正官日主推白碲磲（金）
+    偏印: "HS-F",  // 偏印日主推紫水晶（火智慧）
+    正印: "HS-F",  // 正印日主推紫水晶（火貴人）
+    比肩: "HS-E",  // 比肩日主推金沙石（火土自強）
+    劫財: "HS-A",  // 劫財日主推黃虎眼石（土守財）
+  };
+
+  // 十神輔助手串映射（左手第二位）
+  const TEN_GOD_SECONDARY: Record<string, string> = {
+    食神: "HS-E",  // 金沙石輔助
+    傷官: "HS-D",  // 酒紅石榴石輔助
+    偏財: "HS-E",  // 金沙石輔助
+    正財: "HS-A",  // 黃虎眼石輔助
+    七殺: "HS-B",  // 太赫茲石輔助
+    正官: "HS-B",  // 太赫茲石輔助
+    偏印: "HS-D",  // 酒紅石榴石輔助
+    正印: "HS-J",  // 和田玉輔助
+    比肩: "HS-I",  // 白碲磲輔助
+    劫財: "HS-J",  // 和田玉輔助
+  };
+
+  // 天干微調：陰干日改用滋養型手串
+  const stemYY = STEM_YIN_YANG[stem] || "陽";
+  const primaryId = stemYY === "陽"
+    ? (TEN_GOD_PRIMARY[god] || "HS-D")
+    : (TEN_GOD_SECONDARY[god] || "HS-E"); // 陰干主次互換
+  const secondaryId = stemYY === "陽"
+    ? (TEN_GOD_SECONDARY[god] || "HS-E")
+    : (TEN_GOD_PRIMARY[god] || "HS-D");
+
+  const primaryBracelet = scoredBracelets.find(s => s.bracelet.id === primaryId) || scoredBracelets[0];
+  const secondaryBracelet = scoredBracelets.find(s => s.bracelet.id === secondaryId && s.bracelet.id !== primaryId)
+    || scoredBracelets.find(s => s.bracelet.id !== primaryId && ["火","土","金"].includes(s.bracelet.primaryElement));
+
+  const leftTop2 = [primaryBracelet, secondaryBracelet].filter(Boolean) as typeof scoredBracelets;
+
+  // 右手：防護忌神（選擇金屬性或土屬性的防護型手串）
+  const rightCandidates = scoredBracelets.filter(s =>
+    ["金", "土"].includes(s.bracelet.primaryElement) &&
+    !["HS-H"].includes(s.bracelet.id) &&
+    !leftTop2.some(l => l.bracelet.id === s.bracelet.id)
+  );
+  const rightTop2 = rightCandidates.slice(0, 2);
+
+  // 生成推薦理由（依十神差異化）
+  const reasonTemplates: Record<string, string[]> = {
+    食神: [
+      `${god}日才華全開，${leftTop2[0]?.bracelet.name}的${leftTop2[0]?.bracelet.primaryElement}能量與今日食神之火完美共振，讓創意能量倍增`,
+      `${leftTop2[1]?.bracelet.name}輔助左手，${leftTop2[1]?.bracelet.power.substring(0, 20)}...，雙重用神加持`,
+    ],
+    傷官: [
+      `${god}日破繭而出，${leftTop2[0]?.bracelet.name}的突破能量與今日傷官氣場共鳴，助你打破框架`,
+      `${leftTop2[1]?.bracelet.name}輔助，${leftTop2[1]?.bracelet.role}，強化今日的突破力道`,
+    ],
+    偏財: [
+      `${god}日財星入局，${leftTop2[0]?.bracelet.name}的${leftTop2[0]?.bracelet.primaryElement}能量直接催旺偏財，把握機遇`,
+      `${leftTop2[1]?.bracelet.name}輔助，${leftTop2[1]?.bracelet.role}，雙重財運加持`,
+    ],
+    正財: [
+      `${god}日穩健積累，${leftTop2[0]?.bracelet.name}的${leftTop2[0]?.bracelet.primaryElement}能量穩固財星根基，水到渠成`,
+      `${leftTop2[1]?.bracelet.name}輔助，${leftTop2[1]?.bracelet.role}，長期財運守護`,
+    ],
+    七殺: [
+      `${god}日壓力入局，${leftTop2[0]?.bracelet.name}以${leftTop2[0]?.bracelet.primaryElement}之力制七殺，化壓力為動力`,
+      `${leftTop2[1]?.bracelet.name}輔助，${leftTop2[1]?.bracelet.role}，雙重防護`,
+    ],
+    正官: [
+      `${god}日官運加持，${leftTop2[0]?.bracelet.name}的${leftTop2[0]?.bracelet.primaryElement}能量與正官共振，展現專業氣場`,
+      `${leftTop2[1]?.bracelet.name}輔助，${leftTop2[1]?.bracelet.role}，官場如魚得水`,
+    ],
+    偏印: [
+      `${god}日智慧沉澱，${leftTop2[0]?.bracelet.name}的${leftTop2[0]?.bracelet.primaryElement}能量點亮靈感之火，洞見湧現`,
+      `${leftTop2[1]?.bracelet.name}輔助，${leftTop2[1]?.bracelet.role}，深度思考加持`,
+    ],
+    正印: [
+      `${god}日貴人相助，${leftTop2[0]?.bracelet.name}的${leftTop2[0]?.bracelet.primaryElement}能量吸引貴人磁場，廣結善緣`,
+      `${leftTop2[1]?.bracelet.name}輔助，${leftTop2[1]?.bracelet.role}，貴人能量加倍`,
+    ],
+    比肩: [
+      `${god}日自強不息，${leftTop2[0]?.bracelet.name}的${leftTop2[0]?.bracelet.primaryElement}能量強化個人特色，以實力說話`,
+      `${leftTop2[1]?.bracelet.name}輔助，${leftTop2[1]?.bracelet.role}，個人品牌加持`,
+    ],
+    劫財: [
+      `${god}日守住根基，${leftTop2[0]?.bracelet.name}的${leftTop2[0]?.bracelet.primaryElement}能量穩固財星，防止能量外洩`,
+      `${leftTop2[1]?.bracelet.name}輔助，${leftTop2[1]?.bracelet.role}，雙重守財防護`,
+    ],
+  };
+
+  const reasons = reasonTemplates[god] || reasonTemplates["食神"];
+
+  const leftHand = leftTop2.map((s, i) => ({
+    bracelet: s.bracelet,
+    reason: reasons[i] || `${s.bracelet.name}（${s.bracelet.role}）與今日${god}能量共振，評級${s.bracelet.rating}★`,
+    priority: i + 1,
+    dayScore: s.dayScore,
+  }));
+
+  const rightHand = rightTop2.map((s, i) => ({
+    bracelet: s.bracelet,
+    reason: `右手防護：${s.bracelet.name}（${s.bracelet.role}），${s.bracelet.power.substring(0, 30)}...，今日共振指數 ${s.dayScore}/10`,
+    priority: i + 1,
+    dayScore: s.dayScore,
+  }));
+
+  // 月相特別建議
+  const moonBraceletNote: Record<string, string> = {
+    滿月: "滿月能量最強！今日可同時配戴左右手各一串，讓手串能量與月亮滿盈之力共鳴。",
+    新月: "新月之日，建議只戴左手一串（補充用神），讓新月的新生能量自然流入。",
+    上弦月: "上弦月能量上升，左手用神手串能量正在累積，是建立新習慣的好時機。",
+    下弦月: "下弦月能量收斂，右手防護手串今日特別重要，守住已有的能量成果。",
+    殘月: "殘月之日，以右手防護手串為主，靜待新月的到來。",
+  };
+
+  const moonNote = moonPhase ? moonBraceletNote[moonPhase] : undefined;
+
+  // 生成總結
   const summaryMap: Record<string, string> = {
-    火: "火日大吉！左手石榴石+金太陽石補火，右手太赫茲+貔貅防護，四條手串全力共振。",
-    土: "土日財星旺！左手金太陽石+黃虎眼石穩財，右手貔貅+太赫茲鎖財防護。",
-    金: "金日需制衡！左手石榴石+紫晶補火制金，右手多彩虎眼石+和田玉緩衝平衡。",
-    水: "水日補火急！左手石榴石+金太陽石雙火補充，右手貔貅+太赫茲全力防護。",
-    木: "木日引火洩！左手金太陽石+石榴石引木化火，右手太赫茲+黃虎眼石制木穩財。",
+    火: `${stem}日火能量旺盛，左手${leftHand[0]?.bracelet.name}+${leftHand[1]?.bracelet.name}補火，右手${rightHand[0]?.bracelet.name}防護，四串全力共振。`,
+    土: `${stem}日財星主導，左手${leftHand[0]?.bracelet.name}+${leftHand[1]?.bracelet.name}穩財，右手${rightHand[0]?.bracelet.name}鎖財。`,
+    金: `${stem}日需制衡，左手${leftHand[0]?.bracelet.name}+${leftHand[1]?.bracelet.name}補火制金，右手${rightHand[0]?.bracelet.name}緩衝平衡。`,
+    水: `${stem}日補火急！左手${leftHand[0]?.bracelet.name}+${leftHand[1]?.bracelet.name}雙火補充，右手${rightHand[0]?.bracelet.name}全力防護。`,
+    木: `${stem}日引火洩木，左手${leftHand[0]?.bracelet.name}+${leftHand[1]?.bracelet.name}引木化火，右手${rightHand[0]?.bracelet.name}制木穩財。`,
   };
 
   return {
     leftHand,
     rightHand,
-    summary: summaryMap[dailyElement] || "今日以補充用神（火土金）為主要策略，左手補能，右手防護。",
+    summary: summaryMap[stemEl] || `今日${stem}日，左手補充用神（火土金），右手防護忌神，以天命共振手串矩陣守護全天能量。`,
+    moonNote,
   };
 }
 
@@ -240,20 +590,18 @@ export function generateWealthCompass(
   tarotCard: typeof TAROT_CARDS[number],
   overallScore: number,
 ): {
-  lotteryIndex: number; // 1-10
+  lotteryIndex: number;
   lotteryAdvice: string;
   wealthEngine: string;
   businessCompass: string;
   bestAction: string;
 } {
-  // 偏財指數：土日（偏財）最高，火日（食神生財）次之
   const lotteryMap: Record<string, number> = {
     偏財: 9, 正財: 7, 食神: 8, 傷官: 6,
     七殺: 4, 正官: 5, 比肩: 3, 劫財: 2,
     偏印: 4, 正印: 5,
   };
   const baseLottery = lotteryMap[tenGod] || 5;
-  // 塔羅加成
   const tarotBonus = ["命運之輪", "太陽", "世界", "女皇"].includes(tarotCard.name) ? 1 : 0;
   const lotteryIndex = Math.min(10, baseLottery + tarotBonus);
 
@@ -342,7 +690,6 @@ export const SOLAR_TERMS_2026 = [
  * 取得最近的節氣
  */
 export function getNearestSolarTerm(date: Date): { name: string; daysUntil: number } | null {
-  const dateStr = date.toISOString().split("T")[0];
   for (const term of SOLAR_TERMS_2026) {
     const termDate = new Date(term.date);
     const diff = Math.ceil((termDate.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));

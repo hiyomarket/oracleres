@@ -92,13 +92,13 @@ describe("generateOutfitAdvice", () => {
 // ===== 手串推薦測試 =====
 describe("recommendBracelets", () => {
   it("應返回左手和右手推薦", () => {
-    const result = recommendBracelets("火", 8);
+    const result = recommendBracelets("火", 8, "丙", "食神");
     expect(result.leftHand).toBeDefined();
     expect(result.rightHand).toBeDefined();
   });
 
   it("火日左手應推薦火屬性手串", () => {
-    const result = recommendBracelets("火", 9);
+    const result = recommendBracelets("火", 9, "丙", "食神");
     const hasFireBracelet = result.leftHand.some(
       (item) => item.bracelet.primaryElement === "火"
     );
@@ -106,46 +106,75 @@ describe("recommendBracelets", () => {
   });
 
   it("應返回手串推薦摘要", () => {
-    const result = recommendBracelets("木", 6);
+    const result = recommendBracelets("木", 6, "甲", "食神");
     expect(result.summary).toBeTruthy();
     expect(typeof result.summary).toBe("string");
   });
 
-  it("每個推薦應包含手串資訊和原因", () => {
-    const result = recommendBracelets("火", 8);
+  it("每個推薦應包含手串資訊、原因和今日共振指數", () => {
+    const result = recommendBracelets("火", 8, "丙", "食神");
     for (const item of result.leftHand) {
       expect(item.bracelet).toBeDefined();
       expect(item.bracelet.name).toBeTruthy();
       expect(item.reason).toBeTruthy();
       expect(typeof item.priority).toBe("number");
+      expect(typeof item.dayScore).toBe("number");
+      expect(item.dayScore).toBeGreaterThanOrEqual(0);
+      expect(item.dayScore).toBeLessThanOrEqual(10);
     }
+  });
+
+  it("不同十神應產生不同的手串推薦組合（差異化驗證）", () => {
+    // 甲日食神（火手串）與戊日劫財（土手串）應有差異
+    const resultJia = recommendBracelets("木", 6, "甲", "食神");
+    const resultWu = recommendBracelets("土", 7, "戊", "劫財");
+    // 十神不同（食神主推 HS-D vs 劫財主推 HS-A），手串 ID 應不同
+    const jiaIds = resultJia.leftHand.map(i => i.bracelet.id).sort().join(",");
+    const wuIds = resultWu.leftHand.map(i => i.bracelet.id).sort().join(",");
+    expect(jiaIds).not.toBe(wuIds);
+  });
+
+  it("月相滿月時應返回月相配戴建議", () => {
+    const result = recommendBracelets("火", 8, "丙", "食神", "滿月");
+    expect(result.moonNote).toBeTruthy();
+    expect(result.moonNote).toContain("滿月");
   });
 });
 
 // ===== 手串資料庫測試 =====
 describe("BRACELET_DB", () => {
-  it("應包含 HS-01 到 HS-11 共 11 條手串", () => {
+  it("應包含 HS-A 到 HS-J 共 10 條手串（V9.0 實際手串矩陣）", () => {
     const keys = Object.keys(BRACELET_DB);
-    expect(keys.length).toBe(11);
+    expect(keys.length).toBe(10);
   });
 
-  it("每條手串應有完整資訊", () => {
+  it("每條手串應有完整資訊（包含 V9.0 新欄位）", () => {
     for (const [id, bracelet] of Object.entries(BRACELET_DB)) {
       expect(bracelet.id).toBe(id);
       expect(bracelet.name).toBeTruthy();
       expect(bracelet.primaryElement).toBeTruthy();
       expect(bracelet.role).toBeTruthy();
       expect(bracelet.power).toBeTruthy();
+      expect(bracelet.rating).toBeGreaterThanOrEqual(1);
+      expect(bracelet.rating).toBeLessThanOrEqual(5);
     }
   });
 
-  it("石榴石手串（HS-03）應為火屬性", () => {
-    expect(BRACELET_DB["HS-03"].primaryElement).toBe("火");
+  it("酒紅石榴石（HS-D）應為火屬性，評級 5 星（核心用神）", () => {
+    expect(BRACELET_DB["HS-D"].primaryElement).toBe("火");
+    expect(BRACELET_DB["HS-D"].rating).toBe(5);
   });
 
-  it("金太陽石手串（HS-07）應為火土雙屬性", () => {
-    expect(BRACELET_DB["HS-07"].primaryElement).toBe("火");
-    expect(BRACELET_DB["HS-07"].secondaryElement).toBe("土");
+  it("金沙石（HS-E）應為火土雙補，評級 5 星（核心用神）", () => {
+    expect(BRACELET_DB["HS-E"].primaryElement).toBe("火");
+    expect(BRACELET_DB["HS-E"].secondaryElement).toBe("土");
+    expect(BRACELET_DB["HS-E"].rating).toBe(5);
+  });
+
+  it("藍虎眼石（HS-H）應為忌神，評級 2 星，且所有日子都列為警告日", () => {
+    expect(BRACELET_DB["HS-H"].primaryElement).toBe("水");
+    expect(BRACELET_DB["HS-H"].rating).toBe(2);
+    expect(BRACELET_DB["HS-H"].warningDays?.length).toBeGreaterThan(0);
   });
 });
 
