@@ -99,6 +99,18 @@ export default function WarRoom() {
       refetchOnWindowFocus: false,
     }
   );
+  // 統一購彩指數（與選號頁同一引擎）
+  const purchaseAdviceQuery = trpc.lottery.purchaseAdvice.useQuery(
+    { targetDate: selectedDate },
+    { staleTime: 5 * 60 * 1000 }
+  );
+  // 統一偶財指數：優先用 purchaseAdvice 的 compositeScore，如果尚未載入則用 dailyReport 的 lotteryIndex
+  const unifiedLotteryIndex = purchaseAdviceQuery.data
+    ? purchaseAdviceQuery.data.compositeScore
+    : data?.wealthCompass?.lotteryIndex ?? 5;
+  const unifiedLotteryAdvice = purchaseAdviceQuery.data
+    ? purchaseAdviceQuery.data.lotteryTypeAdvice
+    : data?.wealthCompass?.lotteryAdvice ?? '';
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState<"overview" | "tarot" | "outfit" | "wealth" | "hours">("overview");
@@ -739,18 +751,45 @@ export default function WarRoom() {
               exit={{ opacity: 0, x: 20 }}
               className="grid grid-cols-1 md:grid-cols-2 gap-4"
             >
-              {/* 偏財指數 */}
-              <SectionCard title="今日偏財指數" icon="🎰">
+              {/* 偶財指數 - 統一引擎 */}
+              <SectionCard title="本日購彩綜合指數" icon="🎰">
                 <div className="text-center mb-4">
-                  <div className={`text-6xl font-bold ${SCORE_COLOR(data.wealthCompass.lotteryIndex)}`}>
-                    {data.wealthCompass.lotteryIndex}
+                  <div className={`text-6xl font-bold ${SCORE_COLOR(unifiedLotteryIndex)}`}>
+                    {unifiedLotteryIndex.toFixed(1)}
                   </div>
                   <div className="text-white/40 text-sm">/ 10</div>
-                  <ScoreBar score={data.wealthCompass.lotteryIndex} />
+                  <ScoreBar score={unifiedLotteryIndex} />
+                  {purchaseAdviceQuery.data && (
+                    <div className="mt-2 flex items-center justify-center gap-1.5">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                        purchaseAdviceQuery.data.level === 'excellent' ? 'bg-amber-500/20 text-amber-300' :
+                        purchaseAdviceQuery.data.level === 'good' ? 'bg-emerald-500/20 text-emerald-300' :
+                        purchaseAdviceQuery.data.level === 'neutral' ? 'bg-blue-500/20 text-blue-300' :
+                        'bg-slate-500/20 text-slate-400'
+                      }`}>{purchaseAdviceQuery.data.levelLabel}</span>
+                      <span className="text-xs text-white/30">與選號頁同步</span>
+                    </div>
+                  )}
                 </div>
                 <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-                  <p className="text-white/70 text-sm">{data.wealthCompass.lotteryAdvice}</p>
+                  <p className="text-white/70 text-sm">{unifiedLotteryAdvice}</p>
                 </div>
+                {purchaseAdviceQuery.data && (
+                  <div className="mt-3 space-y-1.5">
+                    {purchaseAdviceQuery.data.scoreBreakdown.slice(0, 3).map((item: { label: string; score: number; maxScore: number; desc: string; weight: string }) => (
+                      <div key={item.label} className="flex items-center gap-2 text-xs">
+                        <span className="text-white/40 w-24 shrink-0">{item.label}</span>
+                        <div className="flex-1 bg-white/10 rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className="h-full bg-amber-400/60 rounded-full"
+                            style={{ width: `${(item.score / item.maxScore) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-amber-300/70 w-8 text-right">{item.score.toFixed(1)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </SectionCard>
 
               {/* 財富引擎 */}
@@ -880,7 +919,7 @@ export default function WarRoom() {
           >
             <div className="text-2xl mb-1">🎰</div>
             <div className="text-emerald-300 font-medium text-sm">刮刮樂選號</div>
-            <div className="text-white/40 text-xs">偏財指數 {data.wealthCompass.lotteryIndex}/10</div>
+            <div className="text-white/40 text-xs">購彩指數 {unifiedLotteryIndex.toFixed(1)}/10</div>
           </a>
         </motion.div>
 

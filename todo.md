@@ -412,3 +412,12 @@
 - [x] 購買時機卡片依命格顯示真正的吉凶差異（依 energyScore 排序，不同日期時辰不同）
 - [x] TypeScript 零錯誤，78 項測試全部通過
 - [x] 儲存 V2.17 checkpoint
+
+## 功能增強 v2.18 - 購彩指數歷史走勢圖 + 財運羅盤同步
+
+- [x] 後端：lottery.indexHistory API（計算過去 14 天每日購彩指數，並標記有購買記錄的日期）
+- [x] 後端：作戰室財運羅盤改用 purchaseAdvice 引擎（偶財指數改為六維加權綜合分）
+- [x] 前端：選號頁 PurchaseAdviceCard 下方加入 14 天走勢折線圖（Recharts，購買日用特殊標記）
+- [x] 前端：作戰室財運羅盤改為「本日購彩綜合指數」，顯示與選號頁一致的分數，底部快捷鍵同步更新
+- [x] TypeScript 零錯誤，78 項測試全部通過
+- [x] 儲存 V2.18 checkpoint

@@ -14,6 +14,9 @@ import {
   TrendingUp, Flame, Calendar, MapPin, Thermometer,
   CloudRain, Sun, Cloud, Zap, Target, CheckCircle, AlertCircle, MinusCircle,
 } from "lucide-react";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
+} from "recharts";
 import { toast } from "sonner";
 
 // ── 五行顏色 ──────────────────────────────────────────────────────────────────
@@ -239,6 +242,140 @@ function PurchaseAdviceCard({ data, isLoading }: {
   );
 }
 
+// ── 14 天走勢圖 ────────────────────────────────────────────────────────────
+function IndexHistoryChart({ history, isLoading }: {
+  history?: Array<{
+    date: string;
+    displayDate: string;
+    score: number;
+    level: string;
+    hasPurchase: boolean;
+    winAmount: number;
+  }>;
+  isLoading?: boolean;
+}) {
+  const [showChart, setShowChart] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 animate-pulse">
+        <div className="h-4 bg-slate-700 rounded w-40 mb-4" />
+        <div className="h-32 bg-slate-700 rounded" />
+      </div>
+    );
+  }
+  if (!history || history.length === 0) return null;
+
+  const avg = history.reduce((s, d) => s + d.score, 0) / history.length;
+  const purchaseDays = history.filter(d => d.hasPurchase);
+  const winDays = history.filter(d => d.winAmount > 0);
+
+  // Custom dot: 有購買記錄的日期顯示特殊標記
+  const CustomDot = (props: any) => {
+    const { cx, cy, payload } = props;
+    if (!payload.hasPurchase) return null;
+    const color = payload.winAmount > 0 ? "#f59e0b" : "#64748b";
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={6} fill={color} stroke="#1e293b" strokeWidth={2} />
+        {payload.winAmount > 0 && (
+          <text x={cx} y={cy - 10} textAnchor="middle" fontSize={10} fill="#f59e0b">🏆</text>
+        )}
+      </g>
+    );
+  };
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0].payload;
+    return (
+      <div className="bg-slate-800 border border-slate-600 rounded-lg p-3 text-xs shadow-xl">
+        <div className="font-bold text-white mb-1">{d.displayDate}</div>
+        <div className="text-amber-300">指數：{d.score.toFixed(1)} / 10</div>
+        {d.hasPurchase && (
+          <div className={d.winAmount > 0 ? "text-yellow-400" : "text-slate-400"}>
+            {d.winAmount > 0 ? `🏆 中獎 $${d.winAmount}` : "已購彩（未中）"}
+          </div>
+        )}
+        <div className="text-slate-500 mt-1">{d.level}</div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm">
+      <button
+        onClick={() => setShowChart(!showChart)}
+        className="w-full flex items-center justify-between"
+      >
+        <div className="flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-amber-400" />
+          <span className="text-sm font-bold text-amber-300">過去 14 天指數走勢</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span className="w-2 h-2 rounded-full bg-slate-500 inline-block" /> 已購彩 {purchaseDays.length} 天
+            {winDays.length > 0 && <><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /> 中獎 {winDays.length} 天</>}
+          </div>
+          <span className="text-slate-500 text-xs">{showChart ? "▲" : "▼"}</span>
+        </div>
+      </button>
+
+      {showChart && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="mt-4"
+        >
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+              <XAxis
+                dataKey="displayDate"
+                tick={{ fontSize: 10, fill: "#64748b" }}
+                interval={2}
+              />
+              <YAxis
+                domain={[1, 10]}
+                tick={{ fontSize: 10, fill: "#64748b" }}
+                ticks={[2, 4, 6, 8, 10]}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <ReferenceLine y={avg} stroke="#475569" strokeDasharray="4 4"
+                label={{ value: `均 ${avg.toFixed(1)}`, position: "right", fontSize: 9, fill: "#475569" }}
+              />
+              <ReferenceLine y={7} stroke="#f59e0b" strokeDasharray="2 2" strokeOpacity={0.4} />
+              <Line
+                type="monotone"
+                dataKey="score"
+                stroke="#f59e0b"
+                strokeWidth={2}
+                dot={<CustomDot />}
+                activeDot={{ r: 5, fill: "#f59e0b" }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+          <div className="flex items-center gap-4 mt-3 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-0.5 bg-amber-400" />
+              <span>購彩指數</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-slate-500" />
+              <span>已購彩（未中）</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-amber-400" />
+              <span>🏆 中獎</span>
+            </div>
+          </div>
+          <p className="text-xs text-slate-600 mt-2">＊可回頭驗證：高指數日（≥7）是否真的比較容易中獎？</p>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
 function EnergyIndexCard({ data }: {
   data: {
     score: number;
@@ -384,6 +521,11 @@ export default function LotteryOracle() {
     { staleTime: 30000 }
   );
 
+  // 14 天走勢圖
+  const indexHistoryQuery = trpc.lottery.indexHistory.useQuery(
+    undefined,
+    { staleTime: 300000 }
+  );
   // 今日最佳購買時機
   const { data: bestTimeData } = trpc.lottery.bestTime.useQuery(undefined, {
     refetchInterval: 60000,
@@ -613,6 +755,26 @@ export default function LotteryOracle() {
           <PurchaseAdviceCard
             data={purchaseAdviceQuery.data}
             isLoading={purchaseAdviceQuery.isLoading}
+          />
+        </motion.div>
+
+        {/* 14 天走勢圖 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-6"
+        >
+          <IndexHistoryChart
+            history={indexHistoryQuery.data?.history?.map(d => ({
+              date: d.date,
+              displayDate: d.dateLabel,
+              score: d.compositeScore,
+              level: d.levelLabel,
+              hasPurchase: d.hasPurchase,
+              winAmount: d.wonCount > 0 ? d.wonCount * 100 : 0,
+            }))}
+            isLoading={indexHistoryQuery.isLoading}
           />
         </motion.div>
 
