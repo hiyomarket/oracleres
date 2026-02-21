@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { MoonBlock } from "@/components/MoonBlock";
@@ -10,6 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import type { BlockFace } from "@/components/MoonBlock";
+import { Streamdown } from "streamdown";
 
 type CastPhase = 'idle' | 'animating' | 'result';
 type CastMode = 'single' | 'triple'; // 單擲 vs 三聖杯連擲
@@ -195,6 +196,8 @@ export default function OracleCast() {
   const [showHistory, setShowHistory] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showMoonPhase, setShowMoonPhase] = useState(false);
+  const [llmInsight, setLlmInsight] = useState<string | null>(null);
+  const [showInsight, setShowInsight] = useState(false);
 
   // 三聖杯連擲狀態
   const [tripleCount, setTripleCount] = useState(0);      // 當前第幾擲（0-2）
@@ -208,6 +211,14 @@ export default function OracleCast() {
   const castMutation = trpc.oracle.cast.useMutation();
   const { data: history } = trpc.oracle.history.useQuery({ limit: 10 });
   const notifyMutation = trpc.oracle.notifyDailyEnergy.useMutation();
+  const { data: queryGuide } = trpc.insight.queryGuide.useQuery();
+  const deepReadMutation = trpc.insight.deepRead.useMutation({
+    onSuccess: (data) => {
+      const content = typeof data.content === 'string' ? data.content : String(data.content);
+      setLlmInsight(content);
+      setShowInsight(true);
+    },
+  });
 
   const { isListening, startListening, stopListening } = useVoiceInput((text) => {
     setQuery(prev => prev ? `${prev} ${text}` : text);
@@ -310,7 +321,22 @@ export default function OracleCast() {
     setTripleCount(0);
     setTripleResults([]);
     setTripleConfirmed(false);
+    setLlmInsight(null);
+    setShowInsight(false);
   }, []);
+
+  const handleDeepRead = useCallback(async () => {
+    if (!castResult) return;
+    deepReadMutation.mutate({
+      query,
+      result: castResult.result,
+      dayPillar: `${castResult.dateInfo.dayPillar.stem}${castResult.dateInfo.dayPillar.branch}`,
+      hourPillar: castResult.dateInfo.dateString,
+      energyLevel: castResult.dateInfo.dayPillar.energyLevel,
+      moonPhase: castResult.moonPhase ?? '未知',
+      interpretation: castResult.interpretation,
+    });
+  }, [castResult, query, deepReadMutation]);
 
   const handleNotify = useCallback(async () => {
     try {
@@ -360,6 +386,20 @@ export default function OracleCast() {
               📬
             </button>
           )}
+          <button
+            onClick={() => navigate('/lottery')}
+            className="text-xs text-muted-foreground hover:text-amber-400 transition-colors px-2 py-1.5 rounded-lg border border-border/50 hover:border-amber-600/50"
+            title="天命選號"
+          >
+            🎰 選號
+          </button>
+          <button
+            onClick={() => navigate('/calendar')}
+            className="text-xs text-muted-foreground hover:text-amber-400 transition-colors px-2 py-1.5 rounded-lg border border-border/50 hover:border-amber-600/50"
+            title="天命日曆"
+          >
+            📅 日曆
+          </button>
           <button
             onClick={() => navigate('/stats')}
             className="text-xs text-muted-foreground hover:text-amber-400 transition-colors px-2 py-1.5 rounded-lg border border-border/50 hover:border-amber-600/50"
@@ -483,6 +523,46 @@ export default function OracleCast() {
                   isSpecialEgg={castResult.isSpecialEgg}
                   onReset={handleReset}
                 />
+
+                {/* LLM 深度解讀 */}
+                <div className="mt-4">
+                  {!showInsight ? (
+                    <button
+                      onClick={handleDeepRead}
+                      disabled={deepReadMutation.isPending}
+                      className="w-full py-3 rounded-xl border border-purple-500/30 bg-purple-900/20 text-purple-300 text-sm hover:border-purple-500/60 hover:bg-purple-900/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {deepReadMutation.isPending ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>✦</motion.span>
+                          神明深度解讀中...
+                        </span>
+                      ) : (
+                        '✦ 請求 AI 神諭深度解讀'
+                      )}
+                    </button>
+                  ) : llmInsight && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-5 rounded-2xl border border-purple-500/30 bg-purple-900/20 backdrop-blur-sm"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-purple-400">✦</span>
+                        <span className="text-xs font-semibold text-purple-300 tracking-wider">神諭深度解讀</span>
+                      </div>
+                      <div className="text-sm text-slate-300 leading-relaxed">
+                        <Streamdown>{llmInsight}</Streamdown>
+                      </div>
+                      <button
+                        onClick={() => { setShowInsight(false); setLlmInsight(null); }}
+                        className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        收起解讀
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
               </div>
             ) : (
               <motion.div
@@ -539,6 +619,34 @@ export default function OracleCast() {
                         已得 {tripleCount} 次聖杯，再得 {3 - tripleCount} 次即確認！
                       </p>
                     )}
+                  </motion.div>
+                )}
+
+                {/* 問卜指引 */}
+                {queryGuide && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass-card rounded-2xl p-4 mb-4 border border-amber-600/20"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-lg flex-shrink-0">🧭</span>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <span className="text-xs font-semibold text-amber-400 tracking-wider">問卜指引</span>
+                          <span className="text-xs text-muted-foreground">{queryGuide.currentHour} · {queryGuide.energyLabel}</span>
+                          {queryGuide.isFullMoon && <span className="text-xs text-amber-300">🌕 滿月</span>}
+                        </div>
+                        <p className="text-xs text-muted-foreground/80 leading-relaxed">{queryGuide.guidanceText}</p>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {queryGuide.bestTopics.map((topic: string, i: number) => (
+                            <span key={i} className="text-[10px] px-2 py-0.5 bg-amber-900/30 border border-amber-600/30 rounded-full text-amber-400">
+                              {topic}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
 

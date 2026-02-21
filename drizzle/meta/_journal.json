@@ -15,6 +15,13 @@
       "when": 1771661656181,
       "tag": "0001_tiny_winter_soldier",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1771664807402,
+      "tag": "0002_quick_talkback",
+      "breakpoints": true
     }
   ]
 }

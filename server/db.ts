@@ -1,6 +1,6 @@
 import { eq, desc, sql, count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession } from "../drizzle/schema";
+import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession, lotterySessions, InsertLotterySession, LotterySession } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -183,6 +183,92 @@ export async function getOracleStats(userId?: number) {
     queryTypeCounts,
     energyCounts,
     monthlyCounts: monthlyRaw.reverse(), // 按時間正序
+    recentSessions,
+  };
+}
+
+// ============================================================
+// 刮刮樂選號資料庫操作
+// ============================================================
+
+/**
+ * 儲存刮刮樂選號記錄
+ */
+export async function saveLotterySession(session: InsertLotterySession): Promise<number | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot save lottery session: database not available");
+    return null;
+  }
+  const result = await db.insert(lotterySessions).values(session);
+  return Number((result as any)[0]?.insertId) || null;
+}
+
+/**
+ * 獲取刮刮樂選號歷史記錄
+ */
+export async function getLotteryHistory(userId?: number, limit = 20): Promise<LotterySession[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  if (userId) {
+    return db.select().from(lotterySessions)
+      .where(eq(lotterySessions.userId, userId))
+      .orderBy(desc(lotterySessions.createdAt))
+      .limit(limit);
+  }
+
+  return db.select().from(lotterySessions)
+    .orderBy(desc(lotterySessions.createdAt))
+    .limit(limit);
+}
+
+/**
+ * 獲取刮刮樂統計數據
+ */
+export async function getLotteryStats(userId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const baseWhere = userId ? eq(lotterySessions.userId, userId) : undefined;
+
+  // 總次數
+  const totalResult = await db
+    .select({ total: count() })
+    .from(lotterySessions)
+    .where(baseWhere);
+
+  const total = totalResult[0]?.total ?? 0;
+
+  // 每月選號次數
+  const monthlyRaw = await db
+    .select({
+      month: sql<string>`DATE_FORMAT(createdAt, '%Y-%m')`,
+      count: count(),
+    })
+    .from(lotterySessions)
+    .where(baseWhere)
+    .groupBy(sql`DATE_FORMAT(createdAt, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(createdAt, '%Y-%m') DESC`)
+    .limit(12);
+
+  // 五行分布
+  const elementCounts = await db
+    .select({
+      element: lotterySessions.todayElement,
+      count: count(),
+    })
+    .from(lotterySessions)
+    .where(baseWhere)
+    .groupBy(lotterySessions.todayElement);
+
+  // 最近 10 筆記錄
+  const recentSessions = await getLotteryHistory(userId, 10);
+
+  return {
+    total,
+    monthlyCounts: monthlyRaw.reverse(),
+    elementCounts,
     recentSessions,
   };
 }
