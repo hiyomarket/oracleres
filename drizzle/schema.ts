@@ -1,17 +1,7 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "drizzle-orm/mysql-core";
 
-/**
- * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
- */
 export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
   id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
@@ -25,4 +15,28 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * 神諭記錄資料表
+ * 儲存每次擲筊的完整信息，建立個人神諭資料庫
+ */
+export const oracleSessions = mysqlTable("oracle_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  query: text("query").notNull(),
+  result: mysqlEnum("result", ["sheng", "xiao", "yin", "li"]).notNull(),
+  dayPillarStem: varchar("dayPillarStem", { length: 4 }).notNull(),
+  dayPillarBranch: varchar("dayPillarBranch", { length: 4 }).notNull(),
+  dayPillarStemElement: varchar("dayPillarStemElement", { length: 4 }).notNull(),
+  dayPillarBranchElement: varchar("dayPillarBranchElement", { length: 4 }).notNull(),
+  energyLevel: varchar("energyLevel", { length: 20 }).notNull(),
+  queryType: varchar("queryType", { length: 20 }).notNull(),
+  interpretation: text("interpretation").notNull(),
+  energyResonance: text("energyResonance").notNull(),
+  weights: json("weights").$type<{ sheng: number; xiao: number; yin: number }>(),
+  isSpecialEgg: int("isSpecialEgg").default(0).notNull(),
+  dateString: varchar("dateString", { length: 50 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type OracleSession = typeof oracleSessions.$inferSelect;
+export type InsertOracleSession = typeof oracleSessions.$inferInsert;

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=Noto+Sans+TC:wght@300;400;500&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -43,74 +44,62 @@
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  /* 天命共振主題 - 深邃水藍/墨綠 */
+  --primary: oklch(0.72 0.20 45);
+  --primary-foreground: oklch(0.10 0.02 220);
+  --sidebar-primary: oklch(0.72 0.20 45);
+  --sidebar-primary-foreground: oklch(0.10 0.02 220);
+  --chart-1: oklch(0.72 0.20 45);
+  --chart-2: oklch(0.55 0.15 200);
+  --chart-3: oklch(0.45 0.12 150);
+  --chart-4: oklch(0.65 0.20 30);
+  --chart-5: oklch(0.50 0.10 270);
+  --radius: 0.75rem;
+  --background: oklch(0.10 0.04 222);
+  --foreground: oklch(0.92 0.02 60);
+  --card: oklch(0.14 0.05 218);
+  --card-foreground: oklch(0.90 0.02 60);
+  --popover: oklch(0.13 0.04 220);
+  --popover-foreground: oklch(0.90 0.02 60);
+  --secondary: oklch(0.20 0.06 210);
+  --secondary-foreground: oklch(0.85 0.04 60);
+  --muted: oklch(0.18 0.04 215);
+  --muted-foreground: oklch(0.58 0.04 200);
+  --accent: oklch(0.65 0.20 40);
+  --accent-foreground: oklch(0.10 0.02 220);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.26 0.05 215);
+  --input: oklch(0.20 0.05 215);
+  --ring: oklch(0.72 0.18 45);
+  --sidebar: oklch(0.12 0.05 220);
+  --sidebar-foreground: oklch(0.90 0.02 60);
+  --sidebar-accent: oklch(0.20 0.06 210);
+  --sidebar-accent-foreground: oklch(0.90 0.02 60);
+  --sidebar-border: oklch(0.26 0.05 215);
+  --sidebar-ring: oklch(0.72 0.18 45);
 }
 
 .dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  --primary: oklch(0.72 0.20 45);
+  --primary-foreground: oklch(0.10 0.02 220);
+  --background: oklch(0.10 0.04 222);
+  --foreground: oklch(0.92 0.02 60);
+  --card: oklch(0.14 0.05 218);
+  --card-foreground: oklch(0.90 0.02 60);
+  --popover: oklch(0.13 0.04 220);
+  --popover-foreground: oklch(0.90 0.02 60);
+  --secondary: oklch(0.20 0.06 210);
+  --secondary-foreground: oklch(0.85 0.04 60);
+  --muted: oklch(0.18 0.04 215);
+  --muted-foreground: oklch(0.58 0.04 200);
+  --accent: oklch(0.65 0.20 40);
+  --accent-foreground: oklch(0.10 0.02 220);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.26 0.05 215);
+  --input: oklch(0.20 0.05 215);
+  --ring: oklch(0.72 0.18 45);
 }
 
 @layer base {
@@ -119,6 +108,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Noto Serif TC', 'Noto Sans TC', serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Noto Serif TC', serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -132,6 +125,123 @@
     @apply cursor-pointer;
   }
 }
+
+/* ===== 天命共振動畫 ===== */
+@keyframes waterFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes flamePulse {
+  0%, 100% {
+    box-shadow: 0 0 10px oklch(0.72 0.20 45 / 0.6), 0 0 25px oklch(0.72 0.20 45 / 0.4), 0 0 50px oklch(0.72 0.20 45 / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px oklch(0.82 0.18 75 / 0.8), 0 0 45px oklch(0.72 0.20 45 / 0.6), 0 0 80px oklch(0.72 0.20 45 / 0.3);
+  }
+}
+@keyframes shimmer {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+@keyframes throwUpLeft {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); }
+  35% { transform: translateY(-160px) translateX(-50px) rotate(200deg); }
+  65% { transform: translateY(-120px) translateX(-35px) rotate(310deg); }
+  100% { transform: translateY(0) translateX(0) rotate(var(--final-rotation, 0deg)); }
+}
+@keyframes throwUpRight {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); }
+  35% { transform: translateY(-160px) translateX(50px) rotate(-200deg); }
+  65% { transform: translateY(-120px) translateX(35px) rotate(-310deg); }
+  100% { transform: translateY(0) translateX(0) rotate(var(--final-rotation, 0deg)); }
+}
+@keyframes resultReveal {
+  0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes liJiaoFloat {
+  0%, 100% { transform: translateY(0) rotate(90deg); }
+  50% { transform: translateY(-15px) rotate(90deg); }
+}
+@keyframes energyRing {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; letter-spacing: 0.5em; }
+  100% { opacity: 1; letter-spacing: normal; }
+}
+@keyframes ripple {
+  0% { transform: scale(0); opacity: 0.8; }
+  100% { transform: scale(4); opacity: 0; }
+}
+@keyframes bambooSway {
+  0%, 100% { transform: rotate(-1.5deg) skewX(-0.5deg); transform-origin: bottom center; }
+  50% { transform: rotate(1.5deg) skewX(0.5deg); transform-origin: bottom center; }
+}
+@keyframes particleFloat {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.8; }
+  100% { transform: translateY(-80px) translateX(var(--tx, 20px)) scale(0); opacity: 0; }
+}
+
+/* ===== 天命共振組件 ===== */
+.oracle-bg {
+  background: radial-gradient(
+    ellipse at 30% 20%,
+    oklch(0.20 0.08 165 / 0.8) 0%,
+    oklch(0.12 0.05 225 / 0.9) 40%,
+    oklch(0.08 0.03 220) 100%
+  );
+}
+.flame-button {
+  background: linear-gradient(135deg, oklch(0.75 0.22 50) 0%, oklch(0.68 0.24 35) 50%, oklch(0.72 0.20 45) 100%);
+  animation: flamePulse 2.5s ease-in-out infinite;
+  transition: all 0.3s ease;
+  color: oklch(0.10 0.02 220);
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.flame-button:hover {
+  background: linear-gradient(135deg, oklch(0.82 0.20 60) 0%, oklch(0.75 0.22 40) 50%, oklch(0.80 0.18 50) 100%);
+  transform: translateY(-2px) scale(1.02);
+}
+.flame-button:active { transform: translateY(0) scale(0.98); }
+.flame-button:disabled { animation: none; opacity: 0.5; cursor: not-allowed; transform: none; }
+.glass-card {
+  background: oklch(0.16 0.04 215 / 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.35 0.06 215 / 0.5);
+}
+.oracle-text-gradient {
+  background: linear-gradient(135deg, oklch(0.88 0.18 80), oklch(0.72 0.20 45), oklch(0.65 0.22 35));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.wood-texture-face {
+  background: linear-gradient(160deg, oklch(0.60 0.14 55) 0%, oklch(0.52 0.12 50) 30%, oklch(0.58 0.13 58) 60%, oklch(0.50 0.11 48) 100%);
+}
+.sacred-red-face {
+  background: linear-gradient(160deg, oklch(0.55 0.24 22) 0%, oklch(0.48 0.26 18) 50%, oklch(0.52 0.22 25) 100%);
+}
+.dark-black-face {
+  background: linear-gradient(160deg, oklch(0.14 0.02 220) 0%, oklch(0.09 0.01 215) 50%, oklch(0.12 0.02 220) 100%);
+}
+.gold-special-face {
+  background: linear-gradient(135deg, oklch(0.88 0.18 80) 0%, oklch(0.82 0.20 70) 50%, oklch(0.85 0.16 85) 100%);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: oklch(0.10 0.04 222); }
+::-webkit-scrollbar-thumb { background: oklch(0.30 0.06 215); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: oklch(0.40 0.08 215); }
+::selection { background: oklch(0.72 0.20 45 / 0.4); color: oklch(0.95 0.02 60); }
 
 @layer components {
   /**
