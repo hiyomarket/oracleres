@@ -29,7 +29,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
   });
 
   return (
-    <nav className="relative z-20 flex items-center justify-between px-4 md:px-6 py-3 border-b border-white/5 backdrop-blur-sm bg-black/20">
+    <nav className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-6 py-3 border-b border-white/5 backdrop-blur-md bg-[#050d14]/90">
       {/* 左側：Logo + 返回首頁 */}
       <div className="flex items-center gap-3">
         <button

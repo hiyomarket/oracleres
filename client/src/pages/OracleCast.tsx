@@ -698,13 +698,35 @@ export default function OracleCast() {
                 </div>
 
                 {/* 命理提示 */}
-                <div className="text-center">
+                <div className="text-center mb-6">
                   <p className="text-xs text-muted-foreground/50 tracking-wider">
                     此系統基於蘇先生八字命格「甲子・乙亥・甲子・己巳」
                   </p>
                   <p className="text-xs text-muted-foreground/40 mt-1 tracking-wider">
                     水木之身，以火為用神，每次擲筊皆與天命共振
                   </p>
+                </div>
+
+                {/* 快速功能入口 */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  {[
+                    { path: '/war-room', icon: '⚔️', label: '今日作戰室', desc: '流日分析' },
+                    { path: '/profile', icon: '🔮', label: '命格身份證', desc: '八字紫微' },
+                    { path: '/calendar', icon: '📅', label: '天命日曆', desc: '節氣宜忌' },
+                    { path: '/weekly', icon: '📈', label: '命理週報', desc: 'ROI走勢' },
+                    { path: '/lottery', icon: '🎰', label: '選號日誌', desc: '天命選號' },
+                    { path: '/stats', icon: '📊', label: '擲筊統計', desc: '年度分析' },
+                  ].map((item) => (
+                    <button
+                      key={item.path}
+                      onClick={() => navigate(item.path)}
+                      className="flex flex-col items-center gap-1 p-3 rounded-xl bg-white/5 border border-border/20 hover:bg-white/10 hover:border-amber-600/30 transition-all group"
+                    >
+                      <span className="text-lg group-hover:scale-110 transition-transform">{item.icon}</span>
+                      <span className="text-[11px] font-medium text-slate-300 group-hover:text-amber-300 transition-colors">{item.label}</span>
+                      <span className="text-[9px] text-muted-foreground/50">{item.desc}</span>
+                    </button>
+                  ))}
                 </div>
               </motion.div>
             )}
