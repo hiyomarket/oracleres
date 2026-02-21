@@ -183,3 +183,9 @@
 - [x] oracleAlgorithm.ts 引用 userProfile 命格常數
 - [x] TypeScript 編譯零錯誤，66 項測試全部通過
 - [x] 儲存 V2.1 checkpoint
+
+## 功能修復 v2.2 - 刷刷樂頁面問題修復
+
+- [x] 修復天命工程時程倒數計時器（scoreMap 中英文標籤不匹配，導致分數全部為 5）
+- [x] 修復附近彩券行地點資訊（stemElement 中文未轉換為英文 WuXing，導致 resonanceScore = NaN）
+- [x] 儲存 V2.2 checkpoint
