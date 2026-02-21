@@ -7,6 +7,7 @@ import { SharedNav } from "@/components/SharedNav";
 import { NearbyStores } from "@/components/NearbyStores";
 import { LotteryResultChecker } from "@/components/LotteryResultChecker";
 import { ScratchAnalysis } from "@/components/ScratchAnalysis";
+import { ScratchJournal } from "@/components/ScratchJournal";
 
 // 五行顏色映射
 const ELEMENT_COLORS: Record<string, { bg: string; text: string; border: string; label: string }> = {
@@ -552,7 +553,7 @@ export default function LotteryOracle() {
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-amber-400" />
               <span className="text-sm font-bold text-amber-300 tracking-wider">地址分析 · 面額選號</span>
-              <span className="text-[10px] text-slate-500 ml-1">地址五行 · 50/100/200/500元策略</span>
+              <span className="text-[10px] text-slate-500 ml-1">地址五行 · 100/200/300/500/1000/2000元策略</span>
             </div>
             {showScratchAnalysis ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
           </button>
@@ -650,6 +651,16 @@ export default function LotteryOracle() {
             latestDayPillar={result?.dayPillar}
             latestDateString={result ? `${result.dayPillar}日` : undefined}
           />
+        </motion.div>
+
+        {/* 刮刮樂購買日誌 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="mt-6 bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm"
+        >
+          <ScratchJournal />
         </motion.div>
 
       </div>

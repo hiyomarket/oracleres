@@ -207,3 +207,15 @@
 - [x] ScratchAnalysis.tsx 新組件（地址分析 + 面額選號卡片展開）
 - [x] 66 項測試全部通過，TypeScript 零錯誤
 - [x] 儲存 V2.4 checkpoint
+
+## 功能修復 v2.5 - 時辰能量全面檢查
+
+- [x] 診斷作戰室時辰能量時間軸版面跑掉的根本原因（ENERGY_LEVEL_COLOR 中英文標籤不匹配）
+- [x] 修正作戰室時辰能量時間軸版面（用 label 讀取顏色，進度条改為 score/100）
+- [x] 診斷刷刷樂時辰能量全部顯示「大吉」（bestSlots 只顯示最佳 3 個時辰，屬於正常行為）
+- [x] 刷刷樂面額改為 100/200/300/500/1000/2000 元（後端 + 前端同步更新）
+- [x] 面額選號加入最旺時辰聯動（ScratchAnalysis.tsx 倒數展示）
+- [x] 建立刷刷樂購買日誌（ScratchJournal.tsx + scratch_logs DB + 3 個 API）
+- [x] 購買日誌統計分析（各面額 ROI + 各時辰命中率）
+- [x] 66 項測試全部通過，TypeScript 零錯誤
+- [x] 儲存 V2.5 checkpoint

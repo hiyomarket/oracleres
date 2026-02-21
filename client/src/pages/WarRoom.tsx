@@ -19,12 +19,21 @@ const SCORE_COLOR = (score: number) => {
   return "text-slate-400";
 };
 
-const ENERGY_LEVEL_COLOR: Record<string, string> = {
+// 中文標籤 → 顏色
+ const ENERGY_LABEL_COLOR: Record<string, string> = {
   大吉: "text-amber-400",
   吉: "text-emerald-400",
-  中: "text-blue-400",
+  平: "text-blue-400",
   凶: "text-red-400",
   大凶: "text-red-600",
+};
+// 英文 level → 顏色（備用）
+const ENERGY_LEVEL_COLOR: Record<string, string> = {
+  excellent: "text-amber-400",
+  good: "text-emerald-400",
+  neutral: "text-blue-400",
+  challenging: "text-red-400",
+  complex: "text-purple-400",
 };
 
 function ScoreBar({ score, max = 10 }: { score: number; max?: number }) {
@@ -507,22 +516,33 @@ export default function WarRoom() {
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className={`font-medium text-sm ${h.isCurrent ? "text-amber-300" : "text-white/70"}`}>
-                          {h.name} {h.isCurrent && "◀"}
+                          {h.name} {h.isCurrent && <span className="text-amber-400 text-xs ml-1">●當前</span>}
                         </span>
-                        <span className={`text-xs font-semibold ${ENERGY_LEVEL_COLOR[h.level] || "text-white/50"}`}>
-                          {h.level}
+                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                          h.label === '大吉' ? 'bg-amber-500/20 text-amber-400' :
+                          h.label === '吉' ? 'bg-emerald-500/20 text-emerald-400' :
+                          h.label === '平' ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-red-500/20 text-red-400'
+                        }`}>
+                          {h.label}
                         </span>
                       </div>
-                      <div className="text-white/40 text-xs">{h.displayTime}</div>
-                      <div className="mt-1">
-                        <div className="w-full bg-white/10 rounded-full h-1">
-                          <div
-                            className={`h-full rounded-full ${h.score >= 8 ? "bg-amber-400" : h.score >= 6 ? "bg-emerald-400" : h.score >= 4 ? "bg-blue-400" : "bg-slate-500"}`}
-                            style={{ width: `${h.score * 10}%` }}
+                      <div className="text-white/40 text-[10px]">{h.displayTime}</div>
+                      <div className="mt-1.5">
+                        <div className="w-full bg-white/10 rounded-full h-1.5">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${h.score}%` }}
+                            transition={{ duration: 0.8, delay: i * 0.04 }}
+                            className={`h-full rounded-full ${
+                              h.score >= 80 ? 'bg-gradient-to-r from-amber-500 to-orange-400' :
+                              h.score >= 60 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' :
+                              h.score >= 40 ? 'bg-gradient-to-r from-blue-500 to-cyan-400' :
+                              'bg-gradient-to-r from-red-600 to-red-500'
+                            }`}
                           />
                         </div>
                       </div>
-                      <div className="text-white/40 text-xs mt-1 leading-tight">{h.label}</div>
                     </motion.div>
                   ))}
                 </div>

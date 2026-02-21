@@ -1,6 +1,6 @@
 import { eq, desc, sql, count, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession, lotterySessions, InsertLotterySession, LotterySession, lotteryResults, InsertLotteryResult, LotteryResult, favoriteStores, InsertFavoriteStore } from "../drizzle/schema";
+import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession, lotterySessions, InsertLotterySession, LotterySession, lotteryResults, InsertLotteryResult, LotteryResult, favoriteStores, InsertFavoriteStore, scratchLogs, InsertScratchLog, ScratchLog } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -400,4 +400,87 @@ export async function isFavoriteStore(placeId: string, userId?: number): Promise
     .where(and(eq(favoriteStores.placeId, placeId), eq(favoriteStores.userId, userId)))
     .limit(1);
   return rows.length > 0;
+}
+
+// ── 刮刮樂購買日誌 ──────────────────────────────────────────────────────────
+
+/** 新增一筆購買日誌 */
+export async function addScratchLog(data: InsertScratchLog): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(scratchLogs).values(data);
+  return (result[0] as any).insertId ?? 0;
+}
+
+/** 取得使用者的購買日誌（最新 50 筆） */
+export async function getScratchLogs(userId?: number): Promise<ScratchLog[]> {
+  const db = await getDb();
+  if (!db) return [];
+  if (userId) {
+    return db.select().from(scratchLogs)
+      .where(eq(scratchLogs.userId, userId))
+      .orderBy(desc(scratchLogs.purchasedAt))
+      .limit(50);
+  }
+  return [];
+}
+
+/** 取得統計分析：各面額中獎率、各時辰中獎率、各地址中獎率 */
+export async function getScratchStats(userId?: number): Promise<{
+  byDenomination: { denomination: number; total: number; won: number; totalInvested: number; totalWon: number }[];
+  byHour: { hour: string; total: number; won: number }[];
+  totalInvested: number;
+  totalWon: number;
+  winRate: number;
+}> {
+  const db = await getDb();
+  const empty = { byDenomination: [], byHour: [], totalInvested: 0, totalWon: 0, winRate: 0 };
+  if (!db) return empty;
+
+  const whereClause = userId ? eq(scratchLogs.userId, userId) : undefined;
+
+  // 按面額統計
+  const denomRows = await db.select({
+    denomination: scratchLogs.denomination,
+    total: count(),
+    won: sql<number>`SUM(${scratchLogs.isWon})`,
+    totalInvested: sql<number>`SUM(${scratchLogs.denomination})`,
+    totalWon: sql<number>`SUM(${scratchLogs.wonAmount})`,
+  }).from(scratchLogs)
+    .where(whereClause)
+    .groupBy(scratchLogs.denomination)
+    .orderBy(scratchLogs.denomination);
+
+  // 按時辰統計
+  const hourRows = await db.select({
+    hour: scratchLogs.purchaseHour,
+    total: count(),
+    won: sql<number>`SUM(${scratchLogs.isWon})`,
+  }).from(scratchLogs)
+    .where(whereClause)
+    .groupBy(scratchLogs.purchaseHour);
+
+  const byDenomination = denomRows.map(r => ({
+    denomination: r.denomination,
+    total: Number(r.total),
+    won: Number(r.won ?? 0),
+    totalInvested: Number(r.totalInvested ?? 0),
+    totalWon: Number(r.totalWon ?? 0),
+  }));
+
+  const byHour = hourRows
+    .filter(r => r.hour)
+    .map(r => ({
+      hour: r.hour ?? "",
+      total: Number(r.total),
+      won: Number(r.won ?? 0),
+    }));
+
+  const totalInvested = byDenomination.reduce((s, r) => s + r.totalInvested, 0);
+  const totalWon = byDenomination.reduce((s, r) => s + r.totalWon, 0);
+  const totalCount = byDenomination.reduce((s, r) => s + r.total, 0);
+  const totalWonCount = byDenomination.reduce((s, r) => s + r.won, 0);
+  const winRate = totalCount > 0 ? Math.round((totalWonCount / totalCount) * 100) : 0;
+
+  return { byDenomination, byHour, totalInvested, totalWon, winRate };
 }

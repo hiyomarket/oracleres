@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, tinyint, bigint } from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -133,3 +133,31 @@ export const favoriteStores = mysqlTable("favorite_stores", {
 });
 export type FavoriteStore = typeof favoriteStores.$inferSelect;
 export type InsertFavoriteStore = typeof favoriteStores.$inferInsert;
+
+/**
+ * 刮刮樂購買日誌資料表
+ * 記錄每次購買的面額、地址、時辰、結果，用於長期統計分析
+ */
+export const scratchLogs = mysqlTable("scratch_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  // 購買面額（100/200/300/500/1000/2000）
+  denomination: int("denomination").notNull(),
+  // 彩券行地址（可選）
+  storeAddress: varchar("storeAddress", { length: 500 }),
+  // 購買時辰（地支，例：申）
+  purchaseHour: varchar("purchaseHour", { length: 10 }),
+  // 購買時的天命共振分數（1-10）
+  resonanceScore: int("resonanceScore"),
+  // 是否中獎（0=未中，1=中獎）
+  isWon: int("isWon").default(0).notNull(),
+  // 中獎金額（元）
+  wonAmount: int("wonAmount").default(0),
+  // 備註
+  note: varchar("note", { length: 300 }),
+  // 購買時間（UTC timestamp）
+  purchasedAt: bigint("purchasedAt", { mode: "number" }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ScratchLog = typeof scratchLogs.$inferSelect;
+export type InsertScratchLog = typeof scratchLogs.$inferInsert;

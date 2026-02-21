@@ -1,12 +1,12 @@
 /**
  * ScratchAnalysis.tsx
- * 刮刮樂地址分析 + 面額選號策略
- * 功能：1) 輸入彩券行地址，分析五行共振；2) 依面額（50/100/200/500元）顯示天命選號策略
+ * 刮刮樂地址分析 + 面額選號策略 + 最旺時辰聯動
+ * 功能：1) 輸入彩券行地址，分析五行共振；2) 依面額（100/200/300/500/1000/2000元）顯示天命選號策略；3) 最旺時辰倒數
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
-import { MapPin, Sparkles, ChevronDown, ChevronUp, Target, TrendingUp, Shield, Zap } from "lucide-react";
+import { MapPin, Sparkles, ChevronDown, ChevronUp, Target, TrendingUp, Shield, Zap, Clock, Crown } from "lucide-react";
 import { toast } from "sonner";
 
 // 五行顏色
@@ -18,18 +18,20 @@ const ELEMENT_COLORS: Record<string, { bg: string; text: string; border: string;
   water: { bg: "bg-blue-500/20",   text: "text-blue-400",   border: "border-blue-500/40",   label: "水", emoji: "💧" },
 };
 
-// 面額圖示和顏色
+// 面額圖示和顏色（6種）
 const DENOMINATION_STYLES: Record<number, { icon: React.ReactNode; gradient: string; ring: string; badge: string }> = {
-  50:  { icon: <Shield className="w-5 h-5" />, gradient: "from-emerald-600 to-teal-500", ring: "ring-emerald-500/30", badge: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" },
-  100: { icon: <Target className="w-5 h-5" />, gradient: "from-blue-600 to-cyan-500", ring: "ring-blue-500/30", badge: "bg-blue-500/20 text-blue-400 border-blue-500/40" },
-  200: { icon: <TrendingUp className="w-5 h-5" />, gradient: "from-amber-600 to-orange-500", ring: "ring-amber-500/30", badge: "bg-amber-500/20 text-amber-400 border-amber-500/40" },
-  500: { icon: <Zap className="w-5 h-5" />, gradient: "from-red-600 to-rose-500", ring: "ring-red-500/30", badge: "bg-red-500/20 text-red-400 border-red-500/40" },
+  100:  { icon: <Shield className="w-5 h-5" />,    gradient: "from-emerald-600 to-teal-500",  ring: "ring-emerald-500/30", badge: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" },
+  200:  { icon: <Target className="w-5 h-5" />,    gradient: "from-blue-600 to-cyan-500",     ring: "ring-blue-500/30",    badge: "bg-blue-500/20 text-blue-400 border-blue-500/40" },
+  300:  { icon: <TrendingUp className="w-5 h-5" />,gradient: "from-violet-600 to-purple-500", ring: "ring-violet-500/30",  badge: "bg-violet-500/20 text-violet-400 border-violet-500/40" },
+  500:  { icon: <Zap className="w-5 h-5" />,       gradient: "from-amber-600 to-orange-500",  ring: "ring-amber-500/30",   badge: "bg-amber-500/20 text-amber-400 border-amber-500/40" },
+  1000: { icon: <Sparkles className="w-5 h-5" />,  gradient: "from-red-600 to-rose-500",      ring: "ring-red-500/30",     badge: "bg-red-500/20 text-red-400 border-red-500/40" },
+  2000: { icon: <Crown className="w-5 h-5" />,     gradient: "from-yellow-500 to-amber-400",  ring: "ring-yellow-400/40",  badge: "bg-yellow-400/20 text-yellow-300 border-yellow-400/40" },
 };
 
 const CONFIDENCE_LABELS: Record<string, { label: string; color: string }> = {
-  high: { label: "高度共振", color: "text-amber-400" },
+  high:   { label: "高度共振", color: "text-amber-400" },
   medium: { label: "中度共振", color: "text-blue-400" },
-  low: { label: "謹慎嘗試", color: "text-slate-400" },
+  low:    { label: "謹慎嘗試", color: "text-slate-400" },
 };
 
 function NumberChip({ num }: { num: number }) {
@@ -47,20 +49,44 @@ function NumberChip({ num }: { num: number }) {
   );
 }
 
+function formatCountdown(seconds: number): string {
+  if (seconds <= 0) return "現在正是吉時！";
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}小時 ${m}分鐘後`;
+  if (m > 0) return `${m}分鐘 ${s}秒後`;
+  return `${s}秒後`;
+}
+
 export function ScratchAnalysis() {
   const [address, setAddress] = useState("");
   const [inputAddress, setInputAddress] = useState("");
   const [expandedDenom, setExpandedDenom] = useState<number | null>(100);
   const [showAddressResult, setShowAddressResult] = useState(false);
+  const [countdown, setCountdown] = useState(0);
 
   // 面額選號策略
   const { data: strategies, isLoading: strategiesLoading } = trpc.lottery.scratchStrategies.useQuery();
+
+  // 最旺時辰資訊
+  const { data: bestTimeData } = trpc.lottery.bestTime.useQuery();
 
   // 地址分析（只在輸入地址後觸發）
   const { data: addressData, isLoading: addressLoading } = trpc.lottery.addressAnalysis.useQuery(
     { address: inputAddress },
     { enabled: inputAddress.length > 0 }
   );
+
+  // 倒數計時器
+  useEffect(() => {
+    if (!bestTimeData) return;
+    setCountdown(bestTimeData.countdownSeconds ?? 0);
+    const timer = setInterval(() => {
+      setCountdown(prev => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [bestTimeData]);
 
   const handleAddressAnalyze = () => {
     if (!address.trim()) {
@@ -75,8 +101,67 @@ export function ScratchAnalysis() {
     if (e.key === "Enter") handleAddressAnalyze();
   };
 
+  const isInBestTime = countdown === 0 && bestTimeData;
+
   return (
     <div className="space-y-6">
+
+      {/* ── 最旺時辰聯動倒數 ── */}
+      {bestTimeData && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`rounded-2xl p-4 border ${
+            isInBestTime
+              ? "bg-amber-500/15 border-amber-500/50"
+              : "bg-slate-800/40 border-slate-700/50"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+              isInBestTime ? "bg-amber-500/30" : "bg-slate-700/60"
+            }`}>
+              <Clock className={`w-5 h-5 ${isInBestTime ? "text-amber-300" : "text-slate-400"}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-sm font-semibold ${isInBestTime ? "text-amber-300" : "text-white"}`}>
+                  {isInBestTime ? "🔥 現在正是購買最佳時辰！" : "⏰ 距最旺時辰"}
+                </span>
+                {!isInBestTime && (
+                  <span className="text-amber-400 font-mono font-bold text-sm">
+                    {formatCountdown(countdown)}
+                  </span>
+                )}
+              </div>
+              <p className="text-slate-400 text-xs mt-0.5">
+                {bestTimeData.nextBest
+                  ? `最佳時辰：${bestTimeData.nextBest.chineseName}（${bestTimeData.nextBest.startHour}:00-${bestTimeData.nextBest.endHour}:00）— ${bestTimeData.nextBest.energyLabel}`
+                  : "今日吉時已過，明日再戰"}
+              </p>
+            </div>
+            {/* 最佳時辰標籤 */}
+            {bestTimeData.bestSlots && bestTimeData.bestSlots.length > 0 && (
+              <div className="flex gap-1 flex-shrink-0">
+                {bestTimeData.bestSlots.slice(0, 3).map((slot: { chineseName: string }, i: number) => (
+                  <span key={i} className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    {slot.chineseName}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          {isInBestTime && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-3 text-xs text-amber-200/80 bg-amber-500/10 rounded-xl p-2.5 text-center"
+            >
+              天命共振最強時刻！地址 + 面額 + 時辰三維共振全開，此刻購買效果最佳。
+            </motion.div>
+          )}
+        </motion.div>
+      )}
 
       {/* ── 地址五行分析 ── */}
       <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
@@ -195,7 +280,7 @@ export function ScratchAnalysis() {
         <div className="flex items-center gap-2 mb-4">
           <Sparkles className="w-5 h-5 text-amber-400" />
           <h3 className="text-base font-semibold text-white">面額天命選號策略</h3>
-          <span className="text-xs text-slate-500">依風險等級選擇</span>
+          <span className="text-xs text-slate-500">100 / 200 / 300 / 500 / 1000 / 2000 元</span>
         </div>
 
         {strategiesLoading ? (
@@ -206,6 +291,7 @@ export function ScratchAnalysis() {
               const style = DENOMINATION_STYLES[strategy.denomination] ?? DENOMINATION_STYLES[100];
               const isExpanded = expandedDenom === strategy.denomination;
               const conf = CONFIDENCE_LABELS[strategy.confidence] ?? CONFIDENCE_LABELS.medium;
+              const isHighStake = strategy.denomination >= 1000;
 
               return (
                 <motion.div
@@ -221,7 +307,7 @@ export function ScratchAnalysis() {
                     className="w-full flex items-center gap-3 p-4 text-left hover:bg-slate-700/20 transition-colors"
                   >
                     {/* 面額圖示 */}
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${style.gradient} flex items-center justify-center text-white flex-shrink-0`}>
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${style.gradient} flex items-center justify-center text-white flex-shrink-0 ${isHighStake ? "ring-2 ring-yellow-400/30" : ""}`}>
                       {style.icon}
                     </div>
 
@@ -233,8 +319,13 @@ export function ScratchAnalysis() {
                           {strategy.riskLevel}
                         </span>
                         <span className={`text-xs font-medium ${conf.color}`}>{conf.label}</span>
+                        {isHighStake && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-300 border border-yellow-400/30">
+                            ⚡ 天命大局
+                          </span>
+                        )}
                       </div>
-                      <p className="text-slate-400 text-xs mt-0.5 truncate">{strategy.description}</p>
+                      <p className="text-slate-400 text-xs mt-0.5 line-clamp-1">{strategy.description}</p>
                     </div>
 
                     {/* 主推號碼預覽 */}
@@ -270,6 +361,30 @@ export function ScratchAnalysis() {
                             💡 {strategy.strategy}
                           </div>
 
+                          {/* 2000元特殊警告 */}
+                          {strategy.denomination === 2000 && (
+                            <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-xl p-3 text-xs text-yellow-200 leading-relaxed">
+                              ⚠️ <strong>至尊天命條件：</strong>需同時滿足「大吉時辰 + 吉地彩券行（共振≥8）+ 偏財指數≥9」三維共振全開，方可出手。
+                            </div>
+                          )}
+
+                          {/* 最旺時辰提醒（500元以上顯示） */}
+                          {strategy.denomination >= 500 && bestTimeData?.nextBest && (
+                            <div className={`rounded-xl p-3 text-xs flex items-center gap-2 ${
+                              isInBestTime
+                                ? "bg-amber-500/20 border border-amber-500/40 text-amber-200"
+                                : "bg-slate-900/40 border border-slate-700/50 text-slate-400"
+                            }`}>
+                              <Clock className="w-4 h-4 flex-shrink-0" />
+                              <span>
+                                {isInBestTime
+                                  ? `🔥 現在正是最佳時辰（${bestTimeData.nextBest.chineseName}），立即購買效果最強！`
+                                  : `建議在 ${bestTimeData.nextBest.chineseName}（${bestTimeData.nextBest.startHour}:00-${bestTimeData.nextBest.endHour}:00）購買，距最旺時辰 ${formatCountdown(countdown)}`
+                                }
+                              </span>
+                            </div>
+                          )}
+
                           {/* 主推號碼 */}
                           <div>
                             <p className="text-xs text-slate-500 mb-2">主推號碼（天命共振最強）</p>
@@ -302,7 +417,7 @@ export function ScratchAnalysis() {
                             </div>
                             <div className="flex-1 bg-slate-900/40 rounded-xl p-3 text-center">
                               <p className="text-xs text-slate-500 mb-1">建議預算</p>
-                              <p className="text-xl font-bold text-amber-400">NT${strategy.maxBudget}</p>
+                              <p className="text-xl font-bold text-amber-400">NT${strategy.maxBudget.toLocaleString()}</p>
                             </div>
                           </div>
                         </div>
