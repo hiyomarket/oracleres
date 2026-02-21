@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
+import { SharedNav } from "@/components/SharedNav";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, Legend, LineChart, Line, CartesianGrid
@@ -139,8 +140,9 @@ export default function OracleStats() {
 
   return (
     <div className="min-h-screen oracle-bg">
+      <SharedNav currentPage="stats" />
       {/* 頂部標題 */}
-      <div className="relative z-10 px-4 md:px-8 py-6">
+      <div className="relative z-10 px-4 md:px-8 py-6 pb-20 md:pb-6">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

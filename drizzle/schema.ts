@@ -73,3 +73,30 @@ export const lotterySessions = mysqlTable("lottery_sessions", {
 
 export type LotterySession = typeof lotterySessions.$inferSelect;
 export type InsertLotterySession = typeof lotterySessions.$inferInsert;
+
+// 開獎對照資料表
+export const lotteryResults = mysqlTable("lottery_results", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  // 關聯的選號記錄 ID
+  sessionId: int("sessionId"),
+  // 天命選號（6個）
+  predictedNumbers: json("predictedNumbers").$type<number[]>().notNull(),
+  // 實際開獎號碼（6個）
+  actualNumbers: json("actualNumbers").$type<number[]>().notNull(),
+  // 實際特別號
+  actualBonus: int("actualBonus"),
+  // 命中數量
+  matchCount: int("matchCount").notNull().default(0),
+  // 是否命中特別號
+  bonusMatch: int("bonusMatch").notNull().default(0),
+  // 五行共振分數 (0-100)
+  resonanceScore: int("resonanceScore").notNull().default(0),
+  // 日柱
+  dayPillar: varchar("dayPillar", { length: 4 }).notNull(),
+  // 日期字串
+  dateString: varchar("dateString", { length: 50 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type LotteryResult = typeof lotteryResults.$inferSelect;
+export type InsertLotteryResult = typeof lotteryResults.$inferInsert;

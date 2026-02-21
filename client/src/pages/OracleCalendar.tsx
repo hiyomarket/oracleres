@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { ChevronLeft, ChevronRight, Star, Zap } from "lucide-react";
+import { SharedNav } from "@/components/SharedNav";
 
 const ENERGY_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
   excellent: { bg: "bg-amber-500/15",  border: "border-amber-500/40",  text: "text-amber-400",  dot: "bg-amber-400" },
@@ -58,7 +59,8 @@ export default function OracleCalendar() {
         <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
+      <SharedNav currentPage="calendar" />
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 pb-24 md:pb-8">
         {/* 標題 */}
         <motion.div className="text-center mb-8" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="text-xs tracking-[0.3em] text-teal-500/70 mb-3 uppercase">Oracle Resonance · Calendar</div>

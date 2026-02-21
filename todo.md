@@ -99,3 +99,47 @@
 - [x] 後端：insight.deepRead API（呼叫 LLM 生成個人化詮釋）
 - [x] 前端：結果頁面加入「深度解讀」按鈕
 - [x] 前端：Streamdown 串流顯示 AI 解讀內容
+
+## 功能增強 v1.3
+
+### 統一導航列（所有分頁返回首頁）
+- [x] 建立 SharedNav 共用導航組件（含返回首頁、各分頁連結）
+- [x] OracleCast 主頁整合 SharedNav
+- [x] LotteryOracle 刮刮樂頁整合 SharedNav
+- [x] OracleCalendar 日曆頁整合 SharedNav
+- [x] OracleStats 統計頁整合 SharedNav
+- [x] WeeklyReport 週報頁整合 SharedNav（新頁面）
+
+### 今日最佳購買時機（刮刮樂）
+- [x] 後端：lottery.bestTime API（計算今日最旺時辰列表）
+- [x] 前端：刮刮樂頁加入「今日最佳時機」區塊
+- [x] 前端：倒數計時器（距下一個最佳時辰的倒數）
+- [x] 前端：已過/當前/未來時辰的視覺狀態區分
+
+### 命理週報功能
+- [x] 後端：weeklyReport.sevenDays API（未來7日能量走勢）
+- [x] 前端：週報頁面（/weekly）
+- [x] 前端：七日能量折線圖（Recharts LineChart）
+- [x] 前端：每日能量摘要卡片（適合決策/靜養/社交）
+- [x] 導航欄加入週報入口
+
+### 開獎對照功能（刮刮樂）
+- [x] 資料庫：lottery_results 資料表（儲存開獎對照記錄）
+- [x] 後端：lottery.recordResult API（記錄實際開獎號碼）
+- [x] 後端：lottery.resonanceStats API（五行共振命中率統計）
+- [x] 前端：LotteryResultChecker 組件（輸入開獎號碼）
+- [x] 前端：五行共振分析顯示（哪些五行命中）
+- [x] 前端：長期命中率統計
+
+### 附近彩券行天命共振推薦
+- [x] 前端：GPS 定位取得使用者當前座標
+- [x] 前端：Google Maps Places API 搜尋附近彩券行（關鍵詞：彩券、樂透、公益彩券）
+- [x] 後端：lottery.scoreStores API（計算每家的天命共振指數）
+- [x] 後端：方位五行計算（從使用者位置到店家的方向 → 東木/南火/西金/北水/中土）
+- [x] 後端：門牌號碼五行分析（號碼數字對應五行，與命格比對）
+- [x] 後端：店名字義五行分析（店名關鍵字對應五行能量）
+- [x] 後端：流日流時加權（當日天干地支 × 當前時辰 × 命格用神 → 最終共振分數）
+- [x] 前端：NearbyStores 組件（彩券行列表含天命共振指數、方位、距離、推薦理由）
+- [x] 前端：共振指數視覺化（火焰圖示 1-5 顆，金色高亮最高分店家）
+- [x] 前端：點擊店家開啟 Google Maps 導航
+- [x] 前端：「為何推薦此店」展開說明（方位五行、門牌五行、流時加成）

@@ -11,6 +11,7 @@ import { saveOracleSession, getOracleHistory, getOracleStats, saveLotterySession
 import { notifyOwner } from "./_core/notification";
 import { generateLotteryNumbers, generateLotterySets } from "./lib/lotteryAlgorithm";
 import { invokeLLM } from "./_core/llm";
+import { scoreNearbyStores, type StoreInput, type WuXing } from "./lib/storeResonance";
 
 export const appRouter = router({
   system: systemRouter,
@@ -231,11 +232,149 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
       }),
 
     /**
-     * 獲取刮刮樂統計數據
+     * 獲取刷刷樂統計數據
      */
     stats: publicProcedure.query(async ({ ctx }) => {
       return getLotteryStats(ctx.user?.id);
     }),
+
+    /**
+     * 今日最佳購買時機：計算今日所有時辰的能量等級，找出最適合購買的時辰
+     */
+    bestTime: publicProcedure.query(async () => {
+      const { getFullDateInfo } = await import('./lib/lunarCalendar');
+      const { getAllHourEnergies } = await import('./lib/hourlyEnergy');
+      const dateInfo = getFullDateInfo();
+      const allHours = getAllHourEnergies(dateInfo.dayPillar.stem);
+
+      const now = new Date();
+      const currentHour = now.getHours();
+
+      // 將時辰映射到小時範圍
+      const hourRanges: Record<string, [number, number]> = {
+        '子': [23, 1], '丑': [1, 3], '寅': [3, 5], '卯': [5, 7],
+        '辰': [7, 9], '巳': [9, 11], '午': [11, 13], '未': [13, 15],
+        '申': [15, 17], '酉': [17, 19], '戌': [19, 21], '亥': [21, 23],
+      };
+
+      const BRANCH_ORDER = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+
+      const hourSlots = allHours.map((h, idx) => {
+        const branch = BRANCH_ORDER[idx];
+        const range = hourRanges[branch] ?? [idx * 2, idx * 2 + 2];
+        const startHour = range[0];
+        const endHour = range[1];
+        // 判斷是否為當前時辰
+        let isCurrent = false;
+        if (branch === '子') {
+          isCurrent = currentHour >= 23 || currentHour < 1;
+        } else {
+          isCurrent = currentHour >= startHour && currentHour < endHour;
+        }
+        // 判斷是否已過
+        const isPast = branch !== '子'
+          ? currentHour >= endHour
+          : (currentHour >= 1 && currentHour < 23);
+
+        // 將能量等級轉為分數
+        const scoreMap: Record<string, number> = {
+          excellent: 10, good: 8, neutral: 5, challenging: 2, complex: 4
+        };
+        const score = scoreMap[h.energyLabel] ?? 5;
+
+        return {
+          branch,
+          chineseName: h.chineseName,
+          startHour,
+          endHour,
+          energyLabel: h.energyLabel,
+          score,
+          isCurrent,
+          isPast,
+          stemElement: h.stemElement,
+          actionSuggestion: h.actionSuggestion,
+          auspicious: h.auspicious,
+          inauspicious: h.inauspicious,
+        };
+      });
+
+      // 找出最佳時辰（分數最高的兩個）
+      const bestSlots = [...hourSlots]
+        .filter(h => !h.isPast || h.isCurrent)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+
+      // 找出下一個最佳時辰（未來且分數最高）
+      const nextBest = hourSlots.find(h => !h.isPast && !h.isCurrent && h.score >= 7);
+
+      // 計算到下一個最佳時辰的倒數
+      let countdownSeconds = 0;
+      if (nextBest) {
+        const targetHour = nextBest.startHour;
+        const targetDate = new Date(now);
+        targetDate.setHours(targetHour, 0, 0, 0);
+        if (targetDate <= now) targetDate.setDate(targetDate.getDate() + 1);
+        countdownSeconds = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
+      }
+
+      return {
+        hourSlots,
+        bestSlots,
+        nextBest,
+        countdownSeconds,
+        currentHour,
+        dayPillar: dateInfo.dayPillar,
+      };
+    }),
+
+    /**
+     * 附近彩券行天命共振評分
+     * 輸入：使用者座標 + 店家列表
+     * 輸出：每家店的天命共振指數、方位五行、門牌五行、店名五行、流日流時加成
+     */
+    scoreStores: publicProcedure
+      .input(z.object({
+        userLat: z.number(),
+        userLng: z.number(),
+        stores: z.array(z.object({
+          placeId: z.string(),
+          name: z.string(),
+          address: z.string(),
+          lat: z.number(),
+          lng: z.number(),
+          distance: z.number(),
+          rating: z.number().optional(),
+          isOpen: z.boolean().optional(),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        const { getFullDateInfo } = await import('./lib/lunarCalendar');
+        const { getCurrentHourEnergy } = await import('./lib/hourlyEnergy');
+        const dateInfo = getFullDateInfo();
+        const hourEnergy = getCurrentHourEnergy(dateInfo.dayPillar.stem);
+
+        const dayElement = dateInfo.dayPillar.stemElement.toLowerCase() as WuXing;
+        const hourElement = hourEnergy.stemElement as WuXing;
+
+        const scored = scoreNearbyStores(
+          input.stores as StoreInput[],
+          input.userLat,
+          input.userLng,
+          dayElement,
+          hourElement,
+        );
+
+        return {
+          stores: scored,
+          dayPillar: dateInfo.dayPillar,
+          hourPillar: {
+            chineseName: hourEnergy.chineseName,
+            stemElement: hourEnergy.stemElement,
+            energyLabel: hourEnergy.energyLabel,
+          },
+          analysisTime: new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }),
+        };
+      }),
   }),
 
   calendar: router({
@@ -405,7 +544,184 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
         dateString: dateInfo.dateString,
       };
     }),
+   }),
+
+  lotteryResult: router({
+    /**
+     * 儲存開獎對照記錄
+     */
+    save: publicProcedure
+      .input(z.object({
+        sessionId: z.number().optional(),
+        predictedNumbers: z.array(z.number()),
+        actualNumbers: z.array(z.number()).length(6),
+        actualBonus: z.number().optional(),
+        dayPillar: z.string(),
+        dateString: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { getDayPillar } = await import('./lib/lunarCalendar');
+        const today = new Date();
+        const dp = getDayPillar(today);
+
+        // 計算命中數
+        const predicted = new Set(input.predictedNumbers);
+        const matchCount = input.actualNumbers.filter(n => predicted.has(n)).length;
+        const bonusMatch = input.actualBonus !== undefined && predicted.has(input.actualBonus) ? 1 : 0;
+
+        // 五行共振分數：根據命中號碼的五行與蘇先生命格的共振程度
+        const ELEMENT_MAP: Record<number, string> = {
+          1: 'wood', 3: 'wood', 8: 'wood',
+          2: 'fire', 7: 'fire',
+          5: 'earth', 0: 'earth',
+          4: 'metal', 9: 'metal',
+          6: 'water',
+        };
+        const FAVORABLE = ['fire', 'earth'];
+        let resonanceScore = 40;
+        const matchedNums = input.actualNumbers.filter(n => predicted.has(n));
+        for (const n of matchedNums) {
+          const el = ELEMENT_MAP[n % 10];
+          if (FAVORABLE.includes(el ?? '')) resonanceScore += 12;
+          else resonanceScore += 5;
+        }
+        if (bonusMatch) resonanceScore += 8;
+        resonanceScore = Math.min(100, resonanceScore);
+
+        const { saveLotteryResult } = await import('./db');
+        const id = await saveLotteryResult({
+          userId: ctx.user?.id,
+          sessionId: input.sessionId,
+          predictedNumbers: input.predictedNumbers,
+          actualNumbers: input.actualNumbers,
+          actualBonus: input.actualBonus,
+          matchCount,
+          bonusMatch,
+          resonanceScore,
+          dayPillar: input.dayPillar || `${dp.stem}${dp.branch}`,
+          dateString: input.dateString || `${dp.stem}${dp.branch}日`,
+        });
+
+        return { id, matchCount, bonusMatch, resonanceScore };
+      }),
+
+    /**
+     * 取得開獎對照歷史與統計
+     */
+    history: publicProcedure.query(async ({ ctx }) => {
+      const { getLotteryResults, getLotteryResultStats } = await import('./db');
+      const [records, stats] = await Promise.all([
+        getLotteryResults(30),
+        getLotteryResultStats(),
+      ]);
+      return { records, stats };
+    }),
+  }),
+
+  weeklyReport: router({
+    /**
+     * 命理週報：未來七日能量走勢
+     */
+    sevenDays: publicProcedure.query(async () => {
+      const { getDayPillar } = await import('./lib/lunarCalendar');
+      const { getMoonPhase } = await import('./lib/moonPhase');
+
+      const today = new Date();
+      const days = [];
+
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+
+        const dayPillar = getDayPillar(date);
+        const moonInfo = getMoonPhase(date);
+
+        // 計算當日綜合能量分數 (0-100)
+        let energyScore = 50;
+
+        // 五行與蘇先生命格的共振計算
+        const stemEl = dayPillar.stemElement;
+        const branchEl = dayPillar.branchElement;
+
+        // 火/土日對蘇先生有利（用神）
+        if (stemEl === 'fire' || stemEl === 'earth') energyScore += 20;
+        if (branchEl === 'fire' || branchEl === 'earth') energyScore += 10;
+        // 木日中性
+        if (stemEl === 'wood') energyScore += 5;
+        if (branchEl === 'wood') energyScore += 3;
+        // 水日對蘇先生小利（水旨已強）
+        if (stemEl === 'water') energyScore -= 5;
+        if (branchEl === 'water') energyScore -= 3;
+        // 金日中性偏低
+        if (stemEl === 'metal') energyScore -= 2;
+
+        // 滿月加成
+        if (moonInfo.isFullMoon) energyScore += 8;
+        if (moonInfo.isNewMoon) energyScore -= 3;
+
+        // 限制範圍
+        energyScore = Math.max(10, Math.min(100, energyScore));
+
+        // 定義最適合的行動類型
+        let bestAction = '';
+        let actionIcon = '';
+        let colorClass = ''
+        if (energyScore >= 75) {
+          bestAction = '重大決策 / 事業推進';
+          actionIcon = '🔥';
+          colorClass = 'excellent';
+        } else if (energyScore >= 60) {
+          bestAction = '創意表達 / 社交合作';
+          actionIcon = '✨';
+          colorClass = 'good';
+        } else if (energyScore >= 45) {
+          bestAction = '日常推進 / 學習研究';
+          actionIcon = '🌿';
+          colorClass = 'neutral';
+        } else if (energyScore >= 30) {
+          bestAction = '静心觀察 / 整理資訊';
+          actionIcon = '🌊';
+          colorClass = 'low';
+        } else {
+          bestAction = '休养蓄勢 / 避免重大行動';
+          actionIcon = '🌙';
+          colorClass = 'rest';
+        }
+
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+        const weekday = weekdays[date.getDay()];
+
+        days.push({
+          date: date.toISOString().split('T')[0],
+          dayOffset: i,
+          weekday,
+          isToday: i === 0,
+          dayPillar: `${dayPillar.stem}${dayPillar.branch}`,
+          stemElement: stemEl,
+          branchElement: branchEl,
+          energyScore,
+          colorClass,
+          bestAction,
+          actionIcon,
+          moonPhase: moonInfo.phaseName,
+          moonEmoji: moonInfo.phaseEmoji,
+          isFullMoon: moonInfo.isFullMoon,
+          auspicious: dayPillar.auspicious.slice(0, 2),
+          inauspicious: dayPillar.inauspicious.slice(0, 1),
+        });
+      }
+
+      // 計算本週最佳日
+      const bestDay = days.reduce((best, d) => d.energyScore > best.energyScore ? d : best, days[0]);
+      const worstDay = days.reduce((worst, d) => d.energyScore < worst.energyScore ? d : worst, days[0]);
+
+      return {
+        days,
+        bestDay,
+        worstDay,
+        weekSummary: `本週天命能量綜合評估：${bestDay.dayPillar}日為最佳行動日，${worstDay.dayPillar}日宜静心蓄勢。`,
+      };
+    }),
   }),
 });
-
 export type AppRouter = typeof appRouter;

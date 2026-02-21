@@ -11,6 +11,7 @@ import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import type { BlockFace } from "@/components/MoonBlock";
 import { Streamdown } from "streamdown";
+import { SharedNav } from "@/components/SharedNav";
 
 type CastPhase = 'idle' | 'animating' | 'result';
 type CastMode = 'single' | 'triple'; // 單擲 vs 三聖杯連擲
@@ -368,60 +369,7 @@ export default function OracleCast() {
     <div className="min-h-screen oracle-bg relative">
       <BackgroundParticles />
 
-      {/* 頂部導航 */}
-      <nav className="relative z-10 flex items-center justify-between px-4 md:px-8 py-4">
-        <div className="flex items-center gap-2">
-          <span className="text-amber-400 text-lg">☯</span>
-          <span className="oracle-text-gradient font-bold tracking-widest text-sm md:text-base">
-            天命共振
-          </span>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          {user && (
-            <button
-              onClick={handleNotify}
-              className="text-xs text-muted-foreground hover:text-amber-400 transition-colors px-2 py-1.5 rounded-lg border border-border/50 hover:border-amber-600/50"
-              title="推送今日能量通知"
-            >
-              📬
-            </button>
-          )}
-          <button
-            onClick={() => navigate('/lottery')}
-            className="text-xs text-muted-foreground hover:text-amber-400 transition-colors px-2 py-1.5 rounded-lg border border-border/50 hover:border-amber-600/50"
-            title="天命選號"
-          >
-            🎰 選號
-          </button>
-          <button
-            onClick={() => navigate('/calendar')}
-            className="text-xs text-muted-foreground hover:text-amber-400 transition-colors px-2 py-1.5 rounded-lg border border-border/50 hover:border-amber-600/50"
-            title="天命日曆"
-          >
-            📅 日曆
-          </button>
-          <button
-            onClick={() => navigate('/stats')}
-            className="text-xs text-muted-foreground hover:text-amber-400 transition-colors px-2 py-1.5 rounded-lg border border-border/50 hover:border-amber-600/50"
-            title="神諭統計"
-          >
-            📊 統計
-          </button>
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="text-xs text-muted-foreground hover:text-amber-400 transition-colors px-2 py-1.5 rounded-lg border border-border/50 hover:border-amber-600/50"
-          >
-            📜 記錄
-          </button>
-          {!user ? (
-            <a href={getLoginUrl()} className="text-xs flame-button px-3 py-1.5 rounded-lg">
-              登入
-            </a>
-          ) : (
-            <span className="text-xs text-muted-foreground">{user.name}</span>
-          )}
-        </div>
-      </nav>
+      <SharedNav currentPage="oracle" />
 
       <div className="relative z-10 container mx-auto px-4 pb-12">
         <div className="max-w-2xl mx-auto">

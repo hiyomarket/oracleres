@@ -1,6 +1,6 @@
 import { eq, desc, sql, count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession, lotterySessions, InsertLotterySession, LotterySession } from "../drizzle/schema";
+import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession, lotterySessions, InsertLotterySession, LotterySession, lotteryResults, InsertLotteryResult, LotteryResult } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -270,5 +270,63 @@ export async function getLotteryStats(userId?: number) {
     monthlyCounts: monthlyRaw.reverse(),
     elementCounts,
     recentSessions,
+  };
+}
+
+// ===== Lottery Results (開獎對照) =====
+export async function saveLotteryResult(data: {
+  userId?: number;
+  sessionId?: number;
+  predictedNumbers: number[];
+  actualNumbers: number[];
+  actualBonus?: number;
+  matchCount: number;
+  bonusMatch: number;
+  resonanceScore: number;
+  dayPillar: string;
+  dateString: string;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.insert(lotteryResults).values(data).$returningId();
+  return result?.id ?? null;
+}
+
+export async function getLotteryResults(limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(lotteryResults)
+    .orderBy(desc(lotteryResults.createdAt))
+    .limit(limit);
+}
+
+export async function getLotteryResultStats() {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(lotteryResults);
+  if (!rows.length) return {
+    total: 0, totalMatches: 0, avgMatchCount: 0,
+    avgResonance: 0, bestMatch: 0, distribution: {} as Record<number, number>
+  };
+
+  const distribution: Record<number, number> = {};
+  let totalMatches = 0;
+  let totalResonance = 0;
+  let bestMatch = 0;
+
+  for (const r of rows) {
+    distribution[r.matchCount] = (distribution[r.matchCount] ?? 0) + 1;
+    totalMatches += r.matchCount;
+    totalResonance += r.resonanceScore;
+    if (r.matchCount > bestMatch) bestMatch = r.matchCount;
+  }
+
+  return {
+    total: rows.length,
+    totalMatches,
+    avgMatchCount: +(totalMatches / rows.length).toFixed(2),
+    avgResonance: +(totalResonance / rows.length).toFixed(1),
+    bestMatch,
+    distribution,
   };
 }

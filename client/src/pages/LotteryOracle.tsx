@@ -1,9 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
-import { Sparkles, RefreshCw, Clock, TrendingUp, ChevronDown, ChevronUp, Flame, ArrowLeft } from "lucide-react";
+import { Sparkles, RefreshCw, Clock, TrendingUp, ChevronDown, ChevronUp, Flame, MapPin } from "lucide-react";
 import { toast } from "sonner";
-import { useLocation } from "wouter";
+import { SharedNav } from "@/components/SharedNav";
+import { NearbyStores } from "@/components/NearbyStores";
+import { LotteryResultChecker } from "@/components/LotteryResultChecker";
 
 // 五行顏色映射
 const ELEMENT_COLORS: Record<string, { bg: string; text: string; border: string; label: string }> = {
@@ -132,13 +134,37 @@ export default function LotteryOracle() {
   const [result, setResult] = useState<LotteryData | null>(null);
   const [isRevealing, setIsRevealing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [savedSessionId, setSavedSessionId] = useState<number | undefined>();
   const [activeSet, setActiveSet] = useState(0);
-  const [, navigate] = useLocation();
+  const [showNearby, setShowNearby] = useState(false);
+  const [countdown, setCountdown] = useState<string | null>(null);
 
+  // 今日最佳購買時機
+  const { data: bestTimeData } = trpc.lottery.bestTime.useQuery(undefined, {
+    refetchInterval: 60000,
+  });
+
+  // 倒數計時器
+  useEffect(() => {
+    if (!bestTimeData?.countdownSeconds) return;
+    let remaining = bestTimeData.countdownSeconds;
+    const tick = () => {
+      if (remaining <= 0) { setCountdown(null); return; }
+      const h = Math.floor(remaining / 3600);
+      const m = Math.floor((remaining % 3600) / 60);
+      const s = remaining % 60;
+      setCountdown(`${h > 0 ? h + ':' : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+      remaining--;
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [bestTimeData?.countdownSeconds]);
   const generateMutation = trpc.lottery.generate.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       setResult(data as LotteryData);
       setIsRevealing(false);
+      if (data?.sessionId) setSavedSessionId(data.sessionId);
     },
     onError: () => {
       toast.error("天命能量暫時紊亂，請稍後再試");
@@ -165,7 +191,6 @@ export default function LotteryOracle() {
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl" />
-        {/* 飄浮金幣粒子 */}
         {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
@@ -177,25 +202,9 @@ export default function LotteryOracle() {
         ))}
       </div>
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
-      {/* 頂部導航 */}
-      <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-400 transition-colors px-3 py-2 rounded-lg border border-slate-700/50 hover:border-amber-600/50"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          返回擲筊
-        </button>
-        <div className="flex gap-2">
-          <button onClick={() => navigate('/calendar')} className="text-xs text-slate-400 hover:text-amber-400 transition-colors px-2 py-1.5 rounded-lg border border-slate-700/50 hover:border-amber-600/50">
-            📅 日曆
-          </button>
-          <button onClick={() => navigate('/stats')} className="text-xs text-slate-400 hover:text-amber-400 transition-colors px-2 py-1.5 rounded-lg border border-slate-700/50 hover:border-amber-600/50">
-            📊 統計
-          </button>
-        </div>
-      </div>
+      <SharedNav currentPage="lottery" />
+
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 pb-24 md:pb-8">
 
       {/* 標題區 */}
       <motion.div
@@ -417,6 +426,92 @@ export default function LotteryOracle() {
           </motion.button>
         </div>
 
+        {/* 今日最佳購買時機 */}
+        {bestTimeData && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="glass-card rounded-2xl p-5 border border-amber-600/20 mb-6"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Clock className="w-4 h-4 text-amber-400" />
+              <h3 className="text-sm font-bold text-amber-300 tracking-wider">今日最佳購買時機</h3>
+            </div>
+
+            {/* 最佳時辰列表 */}
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              {bestTimeData.bestSlots.map((slot: any, i: number) => (
+                <div
+                  key={i}
+                  className={`rounded-xl p-2.5 text-center border ${
+                    slot.isCurrent
+                      ? 'border-amber-500/60 bg-amber-900/30'
+                      : 'border-white/10 bg-white/3'
+                  }`}
+                >
+                  <div className={`text-base font-bold ${
+                    slot.energyLabel === 'excellent' ? 'text-amber-400' :
+                    slot.energyLabel === 'good' ? 'text-emerald-400' : 'text-slate-400'
+                  }`}>
+                    {slot.chineseName}
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">
+                    {slot.startHour}:00–{slot.endHour}:00
+                  </div>
+                  {slot.isCurrent && (
+                    <div className="text-[9px] text-amber-400 mt-1 font-bold">● 當前</div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* 倒數計時 */}
+            {bestTimeData.nextBest && countdown && (
+              <div className="text-center py-3 rounded-xl border border-amber-600/20 bg-amber-900/10">
+                <div className="text-xs text-slate-400 mb-1">距下一個吉時（{bestTimeData.nextBest.chineseName}時）</div>
+                <div className="text-2xl font-black text-amber-400 font-mono tracking-widest">{countdown}</div>
+                <div className="text-[10px] text-slate-500 mt-1">{bestTimeData.nextBest.actionSuggestion}</div>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* 附近彩券行天命共振 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="glass-card rounded-2xl border border-white/10 mb-6 overflow-hidden"
+        >
+          <button
+            onClick={() => setShowNearby(!showNearby)}
+            className="w-full flex items-center justify-between p-5 hover:bg-white/3 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-amber-400" />
+              <span className="text-sm font-bold text-amber-300 tracking-wider">附近彩券行天命共振</span>
+              <span className="text-[10px] text-slate-500 ml-1">GPS 定位 · 流日流時加權</span>
+            </div>
+            {showNearby ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+          </button>
+          <AnimatePresence>
+            {showNearby && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="px-5 pb-5">
+                  <NearbyStores />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
         {/* 歷史記錄 */}
         {history && history.length > 0 && (
           <div className="mt-8">
@@ -480,6 +575,22 @@ export default function LotteryOracle() {
             </AnimatePresence>
           </div>
         )}
+
+        {/* 開獎對照與天命共振驗證 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-6"
+        >
+          <LotteryResultChecker
+            latestSessionId={savedSessionId}
+            latestNumbers={result?.sets[activeSet]?.numbers ?? result?.numbers}
+            latestDayPillar={result?.dayPillar}
+            latestDateString={result ? `${result.dayPillar}日` : undefined}
+          />
+        </motion.div>
+
       </div>
     </div>
   );
