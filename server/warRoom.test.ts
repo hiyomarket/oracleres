@@ -251,3 +251,54 @@ describe("getNearestSolarTerm", () => {
     }
   });
 });
+
+// ===== 晨報推播內容測試 =====
+import { generateMorningBriefingContent } from "./lib/morningBriefing";
+
+describe("generateMorningBriefingContent", () => {
+  it("應返回包含標題和內容的物件", () => {
+    const result = generateMorningBriefingContent();
+    expect(result).toHaveProperty("title");
+    expect(result).toHaveProperty("content");
+  });
+
+  it("標題應包含天命晨報字樣", () => {
+    const result = generateMorningBriefingContent();
+    expect(result.title).toContain("天命晨報");
+  });
+
+  it("內容應包含農曆資訊", () => {
+    const result = generateMorningBriefingContent();
+    expect(result.content).toContain("農曆");
+  });
+
+  it("內容應包含十神分析", () => {
+    const result = generateMorningBriefingContent();
+    expect(result.content).toContain("主十神");
+  });
+
+  it("內容應包含塔羅流日", () => {
+    const result = generateMorningBriefingContent();
+    expect(result.content).toContain("塔羅流日");
+  });
+
+  it("內容應包含最旺時辰", () => {
+    const result = generateMorningBriefingContent();
+    expect(result.content).toContain("最旺時辰");
+  });
+
+  it("內容應包含英雄劇本", () => {
+    const result = generateMorningBriefingContent();
+    expect(result.content).toContain("英雄劇本");
+  });
+
+  it("標題長度應在合理範圍內（不超過100字）", () => {
+    const result = generateMorningBriefingContent();
+    expect(result.title.length).toBeLessThanOrEqual(100);
+  });
+
+  it("內容長度應在合理範圍內（不超過20000字）", () => {
+    const result = generateMorningBriefingContent();
+    expect(result.content.length).toBeLessThanOrEqual(20000);
+  });
+});

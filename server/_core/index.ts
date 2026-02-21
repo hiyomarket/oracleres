@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { sendMorningBriefing } from "../lib/morningBriefing";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -63,3 +64,33 @@ async function startServer() {
 }
 
 startServer().catch(console.error);
+
+/**
+ * 每日晨報排程：台灣時間早上 7:00（UTC 23:00）
+ * 每分鐘檢查一次，判斷是否到達台灣時間 07:00
+ */
+let lastBriefingDate = "";
+
+function startMorningBriefingScheduler() {
+  console.log("[MorningBriefing] Scheduler started. Will send daily at 07:00 Taiwan time.");
+  setInterval(async () => {
+    try {
+      // 取得台灣時間
+      const twNow = new Date(Date.now() + 8 * 60 * 60 * 1000);
+      const twHour = twNow.getUTCHours();
+      const twMinute = twNow.getUTCMinutes();
+      const twDateStr = twNow.toISOString().split('T')[0];
+
+      // 台灣時間 07:00 ~ 07:04 且今日尚未發送
+      if (twHour === 7 && twMinute < 5 && lastBriefingDate !== twDateStr) {
+        lastBriefingDate = twDateStr;
+        console.log(`[MorningBriefing] Triggering morning briefing for ${twDateStr}`);
+        await sendMorningBriefing();
+      }
+    } catch (err) {
+      console.error("[MorningBriefing] Scheduler error:", err);
+    }
+  }, 60 * 1000); // 每分鐘檢查
+}
+
+startMorningBriefingScheduler();

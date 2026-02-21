@@ -68,11 +68,36 @@ function SectionCard({ title, icon, children, className = "" }: { title: string;
   );
 }
 
+// 取得台灣時間的 YYYY-MM-DD 字串
+function getTaiwanDateStr(offsetDays = 0): string {
+  const now = new Date();
+  const twMs = now.getTime() + 8 * 60 * 60 * 1000 + offsetDays * 24 * 60 * 60 * 1000;
+  return new Date(twMs).toISOString().split('T')[0];
+}
+
+// 取得台灣時間今天是星期幾（0=日）
+function getTaiwanWeekday(offsetDays = 0): number {
+  const now = new Date();
+  const twMs = now.getTime() + 8 * 60 * 60 * 1000 + offsetDays * 24 * 60 * 60 * 1000;
+  return new Date(twMs).getUTCDay();
+}
+
+const WEEKDAY_NAMES = ["日", "一", "二", "三", "四", "五", "六"];
+
 export default function WarRoom() {
-  const { data, isLoading, error } = trpc.warRoom.dailyReport.useQuery(undefined, {
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+  // 七日選擇器：0=今天，1=明天，...，-1=昨天
+  const [selectedOffset, setSelectedOffset] = useState(0);
+  const selectedDate = getTaiwanDateStr(selectedOffset);
+  const todayDate = getTaiwanDateStr(0);
+  const isViewingToday = selectedDate === todayDate;
+
+  const { data, isLoading, error } = trpc.warRoom.dailyReport.useQuery(
+    { date: selectedDate },
+    {
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+    }
+  );
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState<"overview" | "tarot" | "outfit" | "wealth" | "hours">("overview");
@@ -137,15 +162,54 @@ export default function WarRoom() {
           <div className="flex items-start justify-between mb-4 gap-2">
             <div className="min-w-0">
               <h1 className="text-xl md:text-2xl font-bold text-white tracking-wide">
-                ⚔️ 今日作戰室
+                ⚔️ {isViewingToday ? "今日作戰室" : `${data.date.gregorian.replace(/\d{4}年/, '')}作戰室`}
               </h1>
-              <p className="text-white/40 text-xs mt-1 tracking-widest hidden sm:block">TODAY'S WAR ROOM · ORACLE RESONANCE</p>
+              <p className="text-white/40 text-xs mt-1 tracking-widest hidden sm:block">WAR ROOM · ORACLE RESONANCE</p>
             </div>
             <div className="text-right shrink-0">
-              <div className="text-amber-400 font-mono text-base md:text-lg">{timeStr}</div>
+              {isViewingToday && (
+                <div className="text-amber-400 font-mono text-base md:text-lg">{timeStr}</div>
+              )}
               <div className="text-white/40 text-xs">{data.date.gregorian}</div>
               <div className="text-white/40 text-xs">週{data.date.weekday}</div>
             </div>
+          </div>
+
+          {/* ═══ 本週七日選擇器 ═══ */}
+          <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            {[-1, 0, 1, 2, 3, 4, 5].map(offset => {
+              const dateStr = getTaiwanDateStr(offset);
+              const dayParts = dateStr.split('-');
+              const dayNum = parseInt(dayParts[2]);
+              const weekday = getTaiwanWeekday(offset);
+              const isToday = offset === 0;
+              const isSelected = selectedOffset === offset;
+              return (
+                <button
+                  key={offset}
+                  onClick={() => setSelectedOffset(offset)}
+                  className={`flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-xl border transition-all duration-200 min-w-[52px] ${
+                    isSelected
+                      ? 'border-amber-400 bg-amber-400/20 text-amber-300'
+                      : isToday
+                      ? 'border-white/30 bg-white/10 text-white'
+                      : 'border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/70'
+                  }`}
+                >
+                  <span className="text-xs font-medium">週{WEEKDAY_NAMES[weekday]}</span>
+                  <span className={`text-lg font-bold leading-tight ${isSelected ? 'text-amber-300' : ''}`}>{dayNum}</span>
+                  {isToday && (
+                    <span className="text-xs text-amber-400/80 font-semibold">今日</span>
+                  )}
+                  {!isToday && offset < 0 && (
+                    <span className="text-xs text-white/30">昨日</span>
+                  )}
+                  {!isToday && offset > 0 && (
+                    <span className="text-xs text-white/30">預測</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* 核心數據橫排 */}
