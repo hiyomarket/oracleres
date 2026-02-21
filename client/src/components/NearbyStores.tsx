@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { MapView } from "@/components/Map";
+import { FavoriteStores } from "@/components/FavoriteStores";
+import { Star } from "lucide-react";
 import { toast } from "sonner";
 
 type WuXing = "wood" | "fire" | "earth" | "metal" | "water";
@@ -52,10 +54,14 @@ function StoreCard({
   store,
   isSelected,
   onClick,
+  onFavorite,
+  isFavorited,
 }: {
   store: ScoredStore;
   isSelected: boolean;
   onClick: () => void;
+  onFavorite?: () => void;
+  isFavorited?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const bearingColors = ELEMENT_COLORS[store.bearingElement];
@@ -162,24 +168,46 @@ function StoreCard({
           )}
         </AnimatePresence>
 
-        {/* 導航按鈕 */}
-        <button
-          onClick={handleNavigate}
-          className="mt-3 w-full text-xs py-2 rounded-xl font-semibold transition-all"
-          style={{
-            background: store.resonanceScore >= 70
-              ? "linear-gradient(135deg, #f59e0b, #ef4444)"
-              : "rgba(255,255,255,0.05)",
-            color: store.resonanceScore >= 70 ? "#000" : "#94a3b8",
-            border: store.resonanceScore >= 70 ? "none" : "1px solid rgba(255,255,255,0.1)",
-          }}
-        >
-          🗺 前往此彩券行
-        </button>
+        {/* 操作按鈕區 */}
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={handleNavigate}
+            className="flex-1 text-xs py-2 rounded-xl font-semibold transition-all"
+            style={{
+              background: store.resonanceScore >= 70
+                ? "linear-gradient(135deg, #f59e0b, #ef4444)"
+                : "rgba(255,255,255,0.05)",
+              color: store.resonanceScore >= 70 ? "#000" : "#94a3b8",
+              border: store.resonanceScore >= 70 ? "none" : "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            🗺 前往此彩券行
+          </button>
+          {onFavorite && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onFavorite(); }}
+              className={`w-10 rounded-xl text-sm flex items-center justify-center transition-all border ${
+                isFavorited
+                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                  : 'bg-white/5 border-white/10 text-slate-500 hover:text-amber-400 hover:border-amber-500/30'
+              }`}
+              title={isFavorited ? '已收藏' : '收藏此彩券行'}
+            >
+              <Star className="w-4 h-4" fill={isFavorited ? '#f59e0b' : 'none'} />
+            </button>
+          )}
+        </div>
       </div>
     </motion.div>
   );
 }
+
+const RADIUS_OPTIONS = [
+  { label: '500m', value: 500 },
+  { label: '1km',  value: 1000 },
+  { label: '2km',  value: 2000 },
+  { label: '5km',  value: 5000 },
+];
 
 export function NearbyStores() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -188,9 +216,23 @@ export function NearbyStores() {
   const [rawStores, setRawStores] = useState<any[]>([]);
   const [selectedStore, setSelectedStore] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchRadius, setSearchRadius] = useState(2000);
   const mapRef = useRef<google.maps.Map | null>(null);
 
+  const utils = trpc.useUtils();
   const scoreMutation = trpc.lottery.scoreStores.useMutation();
+  const addFavoriteMutation = trpc.lottery.addFavorite.useMutation({
+    onSuccess: (res) => {
+      if (res.success) {
+        toast.success('已收藏彩券行！可在「我的收藏」查看');
+        utils.lottery.getFavorites.invalidate();
+      } else {
+        toast.error(res.message ?? '收藏失敗');
+      }
+    },
+    onError: () => toast.error('收藏失敗，請稍後再試'),
+  });
+  const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
 
   // 取得 GPS 定位
   const requestLocation = useCallback(() => {
@@ -227,7 +269,7 @@ export function NearbyStores() {
       service.nearbySearch(
         {
           location: center,
-          radius: 2000,
+          radius: searchRadius,
           keyword: "公益彩券 彩券行 樂透",
           type: "store",
         },
@@ -277,7 +319,7 @@ export function NearbyStores() {
         },
       );
     },
-    [userLocation, scoreMutation],
+    [userLocation, scoreMutation, searchRadius],
   );
 
   // 當取得位置後自動觸發地圖搜尋
@@ -287,12 +329,28 @@ export function NearbyStores() {
     }
   }, [userLocation, handleMapReady]);
 
+  // 搜尋範圍改變時重新搜尋
+  const handleRadiusChange = (radius: number) => {
+    setSearchRadius(radius);
+    setRawStores([]);
+    scoreMutation.reset();
+    if (userLocation && mapRef.current) {
+      // 稍後觸發以確保 searchRadius state 已更新
+      setTimeout(() => {
+        if (mapRef.current) handleMapReady(mapRef.current);
+      }, 50);
+    }
+  };
+
   const scoredStores = scoreMutation.data?.stores ?? [];
   const dayPillar = scoreMutation.data?.dayPillar;
   const hourPillar = scoreMutation.data?.hourPillar;
 
   return (
     <div className="space-y-4">
+      {/* 收藏彩券行入口 */}
+      <FavoriteStores />
+
       {/* 標題 */}
       <div className="text-center">
         <h2 className="text-lg font-bold oracle-text-gradient tracking-widest mb-1">
@@ -346,6 +404,26 @@ export function NearbyStores() {
             </div>
           )}
 
+          {/* 搜尋範圍選擇器 */}
+          <div className="glass-card rounded-xl p-3 border border-white/10">
+            <div className="text-[10px] text-slate-500 mb-2">搜尋範圍</div>
+            <div className="flex gap-2">
+              {RADIUS_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => handleRadiusChange(opt.value)}
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    searchRadius === opt.value
+                      ? 'bg-amber-500/25 text-amber-300 border border-amber-500/50'
+                      : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* 地圖 */}
           <div className="rounded-2xl overflow-hidden border border-white/10" style={{ height: 220 }}>
             <MapView
@@ -375,7 +453,7 @@ export function NearbyStores() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-slate-400">
-                  找到 {scoredStores.length} 家彩券行，依天命共振指數排序
+                  找到 {scoredStores.length} 家彩券行（{RADIUS_OPTIONS.find(o => o.value === searchRadius)?.label} 內），依天命共振指數排序
                 </p>
                 <button
                   onClick={requestLocation}
@@ -392,6 +470,17 @@ export function NearbyStores() {
                   onClick={() => setSelectedStore(
                     selectedStore === store.placeId ? null : store.placeId
                   )}
+                  isFavorited={favoritedIds.has(store.placeId)}
+                  onFavorite={() => {
+                    setFavoritedIds(prev => { const s = new Set(prev); s.add(store.placeId); return s; });
+                    addFavoriteMutation.mutate({
+                      placeId: store.placeId,
+                      name: store.name,
+                      address: store.address,
+                      lat: store.lat,
+                      lng: store.lng,
+                    });
+                  }}
                 />
               ))}
             </div>
@@ -400,7 +489,9 @@ export function NearbyStores() {
           {/* 無結果 */}
           {rawStores.length === 0 && !isSearching && !scoreMutation.isPending && (
             <div className="text-center py-6 text-slate-500 text-sm">
-              附近 2 公里內未找到彩券行
+              {RADIUS_OPTIONS.find(o => o.value === searchRadius)?.label} 內未找到彩券行
+              <br />
+              <span className="text-xs text-slate-600">可嘗試擴大搜尋範圍</span>
               <br />
               <button onClick={requestLocation} className="text-amber-400 mt-2 text-xs">
                 重新搜尋

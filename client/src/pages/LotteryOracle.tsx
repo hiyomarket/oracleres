@@ -441,29 +441,53 @@ export default function LotteryOracle() {
 
             {/* 最佳時辰列表 */}
             <div className="grid grid-cols-3 gap-2 mb-4">
-              {bestTimeData.bestSlots.map((slot: any, i: number) => (
-                <div
-                  key={i}
-                  className={`rounded-xl p-2.5 text-center border ${
-                    slot.isCurrent
-                      ? 'border-amber-500/60 bg-amber-900/30'
-                      : 'border-white/10 bg-white/3'
-                  }`}
-                >
-                  <div className={`text-base font-bold ${
-                    slot.energyLabel === 'excellent' ? 'text-amber-400' :
-                    slot.energyLabel === 'good' ? 'text-emerald-400' : 'text-slate-400'
-                  }`}>
-                    {slot.chineseName}
+              {bestTimeData.bestSlots.map((slot: any, i: number) => {
+                const isPast = slot.isPast;
+                const isCurrent = slot.isCurrent;
+                const energyColor =
+                  slot.energyLabel === '大吉' ? '#f59e0b' :
+                  slot.energyLabel === '吉' ? '#34d399' :
+                  slot.energyLabel === '平' ? '#94a3b8' : '#64748b';
+                return (
+                  <div
+                    key={i}
+                    className={`relative rounded-xl p-2.5 text-center border transition-all ${
+                      isCurrent
+                        ? 'border-amber-500/70 bg-amber-900/30 shadow-lg shadow-amber-900/30'
+                        : isPast
+                        ? 'border-white/5 bg-white/2 opacity-40'
+                        : 'border-white/10 bg-white/3'
+                    }`}
+                  >
+                    {/* 當前時辰脈動光暈 */}
+                    {isCurrent && (
+                      <motion.div
+                        className="absolute inset-0 rounded-xl"
+                        style={{ border: '1.5px solid #f59e0b' }}
+                        animate={{ opacity: [0.4, 1, 0.4], scale: [1, 1.03, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                      />
+                    )}
+                    <div className="text-base font-bold" style={{ color: isPast ? '#475569' : energyColor }}>
+                      {slot.chineseName}
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">
+                      {slot.startHour}:00–{slot.endHour}:00
+                    </div>
+                    <div className="text-[9px] mt-1 font-bold" style={{ color: isPast ? '#334155' : energyColor }}>
+                      {isPast ? '已過' : isCurrent ? '● 當前' : slot.energyLabel}
+                    </div>
+                    {!isPast && (
+                      <div className="mt-1 h-1 rounded-full bg-white/5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{ width: `${slot.score * 10}%`, backgroundColor: energyColor, opacity: 0.7 }}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">
-                    {slot.startHour}:00–{slot.endHour}:00
-                  </div>
-                  {slot.isCurrent && (
-                    <div className="text-[9px] text-amber-400 mt-1 font-bold">● 當前</div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* 倒數計時 */}

@@ -96,7 +96,40 @@ export const lotteryResults = mysqlTable("lottery_results", {
   dayPillar: varchar("dayPillar", { length: 4 }).notNull(),
   // 日期字串
   dateString: varchar("dateString", { length: 50 }).notNull(),
+  // 彩券類型: 'lottery'(大樂透) | 'scratch'(刮刮樂)
+  ticketType: varchar("ticketType", { length: 20 }).notNull().default('lottery'),
+  // 刮刮樂專用：券面面額（元）
+  scratchPrice: int("scratchPrice"),
+  // 刮刮樂專用：中獎金額（元）
+  scratchPrize: int("scratchPrize"),
+  // 刮刮樂專用：是否中獎
+  scratchWon: int("scratchWon").default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type LotteryResult = typeof lotteryResults.$inferSelect;
 export type InsertLotteryResult = typeof lotteryResults.$inferInsert;
+
+/**
+ * 彩券行收藏資料表
+ * 儲存使用者收藏的固定彩券行，每次開啟頁面時直接顯示當日共振指數
+ */
+export const favoriteStores = mysqlTable("favorite_stores", {
+  id: int("id").autoincrement().primaryKey(),
+  // 使用者 ID（可為 null，允許未登入用戶使用 sessionKey）
+  userId: int("userId"),
+  // Google Places ID（唯一識別彩券行）
+  placeId: varchar("placeId", { length: 255 }).notNull(),
+  // 彩券行名稱
+  name: varchar("name", { length: 255 }).notNull(),
+  // 地址
+  address: varchar("address", { length: 500 }).notNull(),
+  // 緯度
+  lat: varchar("lat", { length: 30 }).notNull(),
+  // 經度
+  lng: varchar("lng", { length: 30 }).notNull(),
+  // 備註（例如：「最近常去」）
+  note: varchar("note", { length: 200 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type FavoriteStore = typeof favoriteStores.$inferSelect;
+export type InsertFavoriteStore = typeof favoriteStores.$inferInsert;

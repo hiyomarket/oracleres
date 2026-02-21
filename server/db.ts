@@ -1,6 +1,6 @@
-import { eq, desc, sql, count } from "drizzle-orm";
+import { eq, desc, sql, count, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession, lotterySessions, InsertLotterySession, LotterySession, lotteryResults, InsertLotteryResult, LotteryResult } from "../drizzle/schema";
+import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession, lotterySessions, InsertLotterySession, LotterySession, lotteryResults, InsertLotteryResult, LotteryResult, favoriteStores, InsertFavoriteStore } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -285,6 +285,11 @@ export async function saveLotteryResult(data: {
   resonanceScore: number;
   dayPillar: string;
   dateString: string;
+  // 刮刮樂專用
+  ticketType?: string;
+  scratchPrice?: number;
+  scratchPrize?: number;
+  scratchWon?: number;
 }) {
   const db = await getDb();
   if (!db) return null;
@@ -306,27 +311,93 @@ export async function getLotteryResultStats() {
   const rows = await db.select().from(lotteryResults);
   if (!rows.length) return {
     total: 0, totalMatches: 0, avgMatchCount: 0,
-    avgResonance: 0, bestMatch: 0, distribution: {} as Record<number, number>
+    avgResonance: 0, bestMatch: 0, distribution: {} as Record<number, number>,
+    scratchTotal: 0, scratchWonCount: 0, scratchWinRate: 0, scratchTotalInvest: 0, scratchTotalPrize: 0,
   };
 
   const distribution: Record<number, number> = {};
   let totalMatches = 0;
   let totalResonance = 0;
   let bestMatch = 0;
+  // 刮刮樂統計
+  let scratchTotal = 0;
+  let scratchWonCount = 0;
+  let scratchTotalInvest = 0;
+  let scratchTotalPrize = 0;
 
-  for (const r of rows) {
+  const lotteryRows = rows.filter(r => (r.ticketType ?? 'lottery') === 'lottery');
+  const scratchRows = rows.filter(r => r.ticketType === 'scratch');
+
+  for (const r of lotteryRows) {
     distribution[r.matchCount] = (distribution[r.matchCount] ?? 0) + 1;
     totalMatches += r.matchCount;
     totalResonance += r.resonanceScore;
     if (r.matchCount > bestMatch) bestMatch = r.matchCount;
   }
+  for (const r of scratchRows) {
+    scratchTotal++;
+    if (r.scratchWon) scratchWonCount++;
+    scratchTotalInvest += r.scratchPrice ?? 0;
+    scratchTotalPrize += r.scratchPrize ?? 0;
+    totalResonance += r.resonanceScore;
+  }
 
+  const totalAll = rows.length;
   return {
-    total: rows.length,
+    total: lotteryRows.length,
     totalMatches,
-    avgMatchCount: +(totalMatches / rows.length).toFixed(2),
-    avgResonance: +(totalResonance / rows.length).toFixed(1),
+    avgMatchCount: lotteryRows.length > 0 ? +(totalMatches / lotteryRows.length).toFixed(2) : 0,
+    avgResonance: totalAll > 0 ? +(totalResonance / totalAll).toFixed(1) : 0,
     bestMatch,
     distribution,
+    scratchTotal,
+    scratchWonCount,
+    scratchWinRate: scratchTotal > 0 ? +(scratchWonCount / scratchTotal * 100).toFixed(1) : 0,
+    scratchTotalInvest,
+    scratchTotalPrize,
   };
+}
+
+// ============================================================
+// 彩券行收藏 CRUD
+// ============================================================
+
+/** 取得使用者的收藏彩券行列表（最多 5 家） */
+export async function getFavoriteStores(userId?: number): Promise<typeof favoriteStores.$inferSelect[]> {
+  const db = await getDb();
+  if (!db) return [];
+  if (userId) {
+    return db.select().from(favoriteStores).where(eq(favoriteStores.userId, userId)).limit(5);
+  }
+  return [];
+}
+
+/** 新增收藏彩券行 */
+export async function addFavoriteStore(data: InsertFavoriteStore): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(favoriteStores).values(data);
+  return (result[0] as any).insertId ?? 0;
+}
+
+/** 刪除收藏彩券行 */
+export async function removeFavoriteStore(id: number, userId?: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  if (userId) {
+    await db.delete(favoriteStores).where(and(eq(favoriteStores.id, id), eq(favoriteStores.userId, userId)));
+  } else {
+    await db.delete(favoriteStores).where(eq(favoriteStores.id, id));
+  }
+}
+
+/** 檢查是否已收藏（避免重複） */
+export async function isFavoriteStore(placeId: string, userId?: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db || !userId) return false;
+  const rows = await db.select({ id: favoriteStores.id })
+    .from(favoriteStores)
+    .where(and(eq(favoriteStores.placeId, placeId), eq(favoriteStores.userId, userId)))
+    .limit(1);
+  return rows.length > 0;
 }
