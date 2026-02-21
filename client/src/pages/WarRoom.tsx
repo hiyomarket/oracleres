@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { SharedNav } from "@/components/SharedNav";
@@ -101,6 +101,38 @@ export default function WarRoom() {
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState<"overview" | "tarot" | "outfit" | "wealth" | "hours">("overview");
+
+  // 手串佩戴記錄
+  const utils = trpc.useUtils();
+  const { data: wearLogs } = trpc.braceletWear.getByDate.useQuery(
+    { wearDate: selectedDate },
+    { staleTime: 30 * 1000 }
+  );
+  const toggleWear = trpc.braceletWear.toggle.useMutation({
+    onSuccess: () => utils.braceletWear.getByDate.invalidate({ wearDate: selectedDate }),
+  });
+
+  // 建立已佩戴手串的 Set（key = braceletId + hand）
+  const wornSet = useMemo(() => {
+    const s = new Set<string>();
+    if (wearLogs) {
+      for (const log of wearLogs) s.add(`${log.braceletId}-${log.hand}`);
+    }
+    return s;
+  }, [wearLogs]);
+
+  const handleToggleWear = (braceletId: string, braceletName: string, hand: "left" | "right") => {
+    const isWearing = !wornSet.has(`${braceletId}-${hand}`);
+    toggleWear.mutate({
+      wearDate: selectedDate,
+      braceletId,
+      braceletName,
+      hand,
+      dayStem: data?.date?.currentHourStem,
+      tenGod: data?.tenGod?.main,
+      isWearing,
+    });
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -495,57 +527,85 @@ export default function WarRoom() {
                   <div>
                     <div className="text-emerald-400/70 text-xs font-semibold mb-2">✋ 左手（補能量）</div>
                     <div className="space-y-2">
-                      {data.bracelets.leftHand.map((item: { bracelet: { id: string; name: string; primaryElement: string; secondaryElement?: string; role: string; power: string; rating: number; ratingNote: string }; reason: string; priority: number; dayScore: number }, i: number) => (
-                        <div key={i} className="rounded-lg bg-emerald-950/20 border border-emerald-500/20 p-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-emerald-500/60 text-xs font-mono">{item.bracelet.id}</span>
-                              <span className="text-emerald-300 font-medium text-sm">{item.bracelet.name}</span>
+                      {data.bracelets.leftHand.map((item: { bracelet: { id: string; name: string; primaryElement: string; secondaryElement?: string; role: string; power: string; rating: number; ratingNote: string }; reason: string; priority: number; dayScore: number }, i: number) => {
+                        const isWorn = wornSet.has(`${item.bracelet.id}-left`);
+                        return (
+                          <div key={i} className={`rounded-lg border p-3 transition-all ${isWorn ? 'bg-emerald-900/40 border-emerald-400/50' : 'bg-emerald-950/20 border-emerald-500/20'}`}>
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-emerald-500/60 text-xs font-mono">{item.bracelet.id}</span>
+                                <span className="text-emerald-300 font-medium text-sm">{item.bracelet.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-amber-400 text-xs">{'\u2605'.repeat(item.bracelet.rating)}</span>
+                                <span className="text-emerald-500/60 text-xs">{item.bracelet.primaryElement}{item.bracelet.secondaryElement ? `/${item.bracelet.secondaryElement}` : ''}</span>
+                                <button
+                                  onClick={() => handleToggleWear(item.bracelet.id, item.bracelet.name, 'left')}
+                                  disabled={toggleWear.isPending}
+                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
+                                    isWorn
+                                      ? 'bg-emerald-500/30 border border-emerald-400/60 text-emerald-300'
+                                      : 'bg-white/5 border border-white/20 text-white/40 hover:border-emerald-500/40 hover:text-emerald-400'
+                                  }`}
+                                >
+                                  {isWorn ? '✓ 已佩戴' : '佩戴'}
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-amber-400 text-xs">{'★'.repeat(item.bracelet.rating)}</span>
-                              <span className="text-emerald-500/60 text-xs ml-1">{item.bracelet.primaryElement}{item.bracelet.secondaryElement ? `/${item.bracelet.secondaryElement}` : ''}</span>
+                            <p className="text-emerald-400/60 text-xs mb-1 italic">{item.bracelet.role}</p>
+                            <p className="text-white/50 text-xs">{item.reason}</p>
+                            <div className="mt-2 flex items-center gap-2">
+                              <span className="text-white/30 text-xs">今日共振</span>
+                              <div className="flex-1 bg-white/10 rounded-full h-1">
+                                <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style={{ width: `${item.dayScore * 10}%` }} />
+                              </div>
+                              <span className="text-emerald-400 text-xs font-bold">{item.dayScore}/10</span>
                             </div>
                           </div>
-                          <p className="text-emerald-400/60 text-xs mb-1 italic">{item.bracelet.role}</p>
-                          <p className="text-white/50 text-xs">{item.reason}</p>
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className="text-white/30 text-xs">今日共振</span>
-                            <div className="flex-1 bg-white/10 rounded-full h-1">
-                              <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style={{ width: `${item.dayScore * 10}%` }} />
-                            </div>
-                            <span className="text-emerald-400 text-xs font-bold">{item.dayScore}/10</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                   <div>
                     <div className="text-blue-400/70 text-xs font-semibold mb-2">🤚 右手（防護）</div>
                     <div className="space-y-2">
-                      {data.bracelets.rightHand.map((item: { bracelet: { id: string; name: string; primaryElement: string; secondaryElement?: string; role: string; power: string; rating: number; ratingNote: string }; reason: string; priority: number; dayScore: number }, i: number) => (
-                        <div key={i} className="rounded-lg bg-blue-950/20 border border-blue-500/20 p-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-blue-500/60 text-xs font-mono">{item.bracelet.id}</span>
-                              <span className="text-blue-300 font-medium text-sm">{item.bracelet.name}</span>
+                      {data.bracelets.rightHand.map((item: { bracelet: { id: string; name: string; primaryElement: string; secondaryElement?: string; role: string; power: string; rating: number; ratingNote: string }; reason: string; priority: number; dayScore: number }, i: number) => {
+                        const isWorn = wornSet.has(`${item.bracelet.id}-right`);
+                        return (
+                          <div key={i} className={`rounded-lg border p-3 transition-all ${isWorn ? 'bg-blue-900/40 border-blue-400/50' : 'bg-blue-950/20 border-blue-500/20'}`}>
+                            <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-blue-500/60 text-xs font-mono">{item.bracelet.id}</span>
+                                <span className="text-blue-300 font-medium text-sm">{item.bracelet.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-amber-400 text-xs">{'\u2605'.repeat(item.bracelet.rating)}</span>
+                                <span className="text-blue-500/60 text-xs">{item.bracelet.primaryElement}{item.bracelet.secondaryElement ? `/${item.bracelet.secondaryElement}` : ''}</span>
+                                <button
+                                  onClick={() => handleToggleWear(item.bracelet.id, item.bracelet.name, 'right')}
+                                  disabled={toggleWear.isPending}
+                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
+                                    isWorn
+                                      ? 'bg-blue-500/30 border border-blue-400/60 text-blue-300'
+                                      : 'bg-white/5 border border-white/20 text-white/40 hover:border-blue-500/40 hover:text-blue-400'
+                                  }`}
+                                >
+                                  {isWorn ? '✓ 已佩戴' : '佩戴'}
+                                </button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-amber-400 text-xs">{'★'.repeat(item.bracelet.rating)}</span>
-                              <span className="text-blue-500/60 text-xs ml-1">{item.bracelet.primaryElement}{item.bracelet.secondaryElement ? `/${item.bracelet.secondaryElement}` : ''}</span>
+                            <p className="text-blue-400/60 text-xs mb-1 italic">{item.bracelet.role}</p>
+                            <p className="text-white/50 text-xs">{item.reason}</p>
+                            <div className="mt-2 flex items-center gap-2">
+                              <span className="text-white/30 text-xs">今日共振</span>
+                              <div className="flex-1 bg-white/10 rounded-full h-1">
+                                <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400" style={{ width: `${item.dayScore * 10}%` }} />
+                              </div>
+                              <span className="text-blue-400 text-xs font-bold">{item.dayScore}/10</span>
                             </div>
                           </div>
-                          <p className="text-blue-400/60 text-xs mb-1 italic">{item.bracelet.role}</p>
-                          <p className="text-white/50 text-xs">{item.reason}</p>
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className="text-white/30 text-xs">今日共振</span>
-                            <div className="flex-1 bg-white/10 rounded-full h-1">
-                              <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400" style={{ width: `${item.dayScore * 10}%` }} />
-                            </div>
-                            <span className="text-blue-400 text-xs font-bold">{item.dayScore}/10</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

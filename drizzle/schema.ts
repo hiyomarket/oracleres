@@ -161,3 +161,29 @@ export const scratchLogs = mysqlTable("scratch_logs", {
 });
 export type ScratchLog = typeof scratchLogs.$inferSelect;
 export type InsertScratchLog = typeof scratchLogs.$inferInsert;
+
+/**
+ * 手串佩戴記錄資料表
+ * 記錄每日佩戴的手串，長期追蹤手串與刷刷樂命中率的關聯
+ */
+export const braceletWearLogs = mysqlTable("bracelet_wear_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  // 佩戴日期（YYYY-MM-DD）
+  wearDate: varchar("wearDate", { length: 12 }).notNull(),
+  // 手串 ID（HS-A 等）
+  braceletId: varchar("braceletId", { length: 10 }).notNull(),
+  // 手串名稱
+  braceletName: varchar("braceletName", { length: 100 }).notNull(),
+  // 佩戴手（left=左手, right=右手）
+  hand: mysqlEnum("hand", ["left", "right"]).notNull(),
+  // 當日天干（用於統計天命對應）
+  dayStem: varchar("dayStem", { length: 4 }),
+  // 當日十神
+  tenGod: varchar("tenGod", { length: 10 }),
+  // 對應的刷刷樂購買日誌 ID（可選）
+  scratchLogId: int("scratchLogId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type BraceletWearLog = typeof braceletWearLogs.$inferSelect;
+export type InsertBraceletWearLog = typeof braceletWearLogs.$inferInsert;

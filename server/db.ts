@@ -1,6 +1,6 @@
 import { eq, desc, sql, count, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession, lotterySessions, InsertLotterySession, LotterySession, lotteryResults, InsertLotteryResult, LotteryResult, favoriteStores, InsertFavoriteStore, scratchLogs, InsertScratchLog, ScratchLog } from "../drizzle/schema";
+import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession, lotterySessions, InsertLotterySession, LotterySession, lotteryResults, InsertLotteryResult, LotteryResult, favoriteStores, InsertFavoriteStore, scratchLogs, InsertScratchLog, ScratchLog, braceletWearLogs, InsertBraceletWearLog, BraceletWearLog } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -483,4 +483,75 @@ export async function getScratchStats(userId?: number): Promise<{
   const winRate = totalCount > 0 ? Math.round((totalWonCount / totalCount) * 100) : 0;
 
   return { byDenomination, byHour, totalInvested, totalWon, winRate };
+}
+
+// ── 手串佩戴記錄 ─────────────────────────────────────────────────────────────
+
+/** 新增一筆手串佩戴記錄 */
+export async function addBraceletWearLog(data: InsertBraceletWearLog): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(braceletWearLogs).values(data);
+  return (result[0] as any).insertId ?? 0;
+}
+
+/** 取消佩戴記錄（刪除指定日期+手串ID+手的記錄） */
+export async function removeBraceletWearLog(userId: number | undefined, wearDate: string, braceletId: string, hand: "left" | "right"): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  const conditions = [
+    eq(braceletWearLogs.wearDate, wearDate),
+    eq(braceletWearLogs.braceletId, braceletId),
+    eq(braceletWearLogs.hand, hand),
+  ];
+  if (userId) conditions.push(eq(braceletWearLogs.userId, userId) as any);
+  await db.delete(braceletWearLogs).where(and(...conditions));
+}
+
+/** 取得指定日期的佩戴記錄 */
+export async function getBraceletWearLogsByDate(userId: number | undefined, wearDate: string): Promise<BraceletWearLog[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(braceletWearLogs.wearDate, wearDate)];
+  if (userId) conditions.push(eq(braceletWearLogs.userId, userId) as any);
+  return db.select().from(braceletWearLogs).where(and(...conditions));
+}
+
+/** 取得最近 N 天的佩戴歷史 */
+export async function getBraceletWearHistory(userId: number | undefined, limit = 30): Promise<BraceletWearLog[]> {
+  const db = await getDb();
+  if (!db) return [];
+  if (userId) {
+    return db.select().from(braceletWearLogs)
+      .where(eq(braceletWearLogs.userId, userId))
+      .orderBy(desc(braceletWearLogs.wearDate))
+      .limit(limit);
+  }
+  return db.select().from(braceletWearLogs)
+    .orderBy(desc(braceletWearLogs.wearDate))
+    .limit(limit);
+}
+
+/** 統計各手串佩戴次數（用於長期分析） */
+export async function getBraceletWearStats(userId: number | undefined): Promise<{
+  braceletId: string;
+  braceletName: string;
+  totalWears: number;
+}[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const whereClause = userId ? eq(braceletWearLogs.userId, userId) : undefined;
+  const rows = await db.select({
+    braceletId: braceletWearLogs.braceletId,
+    braceletName: braceletWearLogs.braceletName,
+    totalWears: count(),
+  }).from(braceletWearLogs)
+    .where(whereClause)
+    .groupBy(braceletWearLogs.braceletId, braceletWearLogs.braceletName)
+    .orderBy(desc(count()));
+  return rows.map(r => ({
+    braceletId: r.braceletId,
+    braceletName: r.braceletName,
+    totalWears: Number(r.totalWears),
+  }));
 }

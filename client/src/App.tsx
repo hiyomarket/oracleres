@@ -10,6 +10,7 @@ import LotteryOracle from "@/pages/LotteryOracle";
 import OracleCalendar from "@/pages/OracleCalendar";
 import WeeklyReport from "@/pages/WeeklyReport";
 import WarRoom from "@/pages/WarRoom";
+import ProfilePage from "@/pages/ProfilePage";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -21,6 +22,7 @@ function Router() {
       <Route path={"/calendar"} component={OracleCalendar} />
       <Route path={"/weekly"} component={WeeklyReport} />
       <Route path={"/war-room"} component={WarRoom} />
+      <Route path={"/profile"} component={ProfilePage} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
