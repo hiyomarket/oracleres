@@ -6,7 +6,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { castOracle } from "./lib/oracleAlgorithm";
-import { getFullDateInfo } from "./lib/lunarCalendar";
+import { getFullDateInfo, getTaiwanHour } from "./lib/lunarCalendar";
 import { getMoonPhase } from "./lib/moonPhase";
 import { getAllHourEnergies, getCurrentHourEnergy, getBestHours, getWorstHours } from "./lib/hourlyEnergy";
 import { saveOracleSession, getOracleHistory, getOracleStats, saveLotterySession, getLotteryHistory, getLotteryStats } from "./db";
@@ -257,9 +257,8 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
       const { getAllHourEnergies } = await import('./lib/hourlyEnergy');
       const dateInfo = getFullDateInfo();
       const allHours = getAllHourEnergies(dateInfo.dayPillar.stem);
-
-      const now = new Date();
-      const currentHour = now.getHours();
+      // 使用台灣時間 UTC+8
+      const currentHour = getTaiwanHour();;
 
       // 將時辰映射到小時範圍
       const hourRanges: Record<string, [number, number]> = {
@@ -324,10 +323,14 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
       let countdownSeconds = 0;
       if (nextBest) {
         const targetHour = nextBest.startHour;
-        const targetDate = new Date(now);
-        targetDate.setHours(targetHour, 0, 0, 0);
-        if (targetDate <= now) targetDate.setDate(targetDate.getDate() + 1);
-        countdownSeconds = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
+        const nowReal = new Date();
+        // 台灣時間對應的 UTC 時間
+        const taiwanNowMs = nowReal.getTime() + 8 * 60 * 60 * 1000;
+        const taiwanNow = new Date(taiwanNowMs);
+        const targetDate = new Date(taiwanNow);
+        targetDate.setUTCHours(targetHour, 0, 0, 0);
+        if (targetDate <= taiwanNow) targetDate.setUTCDate(targetDate.getUTCDate() + 1);
+        countdownSeconds = Math.floor((targetDate.getTime() - taiwanNow.getTime()) / 1000);
       }
 
       return {

@@ -6,7 +6,7 @@
  * 八字：甲子年 乙亥月 甲子日 己巳時
  */
 
-import { HEAVENLY_STEMS, EARTHLY_BRANCHES, STEM_ELEMENT, BRANCH_ELEMENT } from './lunarCalendar';
+import { HEAVENLY_STEMS, EARTHLY_BRANCHES, STEM_ELEMENT, BRANCH_ELEMENT, getTaiwanHour } from './lunarCalendar';
 import type { EnergyLevel } from './lunarCalendar';
 import { HOUR_ELEMENT_SCORES, SPECIAL_HOUR_BONUS } from './userProfile';
 
@@ -190,8 +190,8 @@ export function getHourEnergy(dayStem: string, hourIndex: number, currentHour?: 
 
   const energyData = calculateHourEnergy(stemElement, hourBranch.branchElement, hourBranch.branch, stem);
 
-  // 判斷是否為當前時辰
-  const now = currentHour ?? new Date().getHours();
+  // 判斷是否為當前時辰（使用台灣時間 UTC+8）
+  const now = currentHour ?? getTaiwanHour();
   let isCurrentHour = false;
   if (hourBranch.startHour === 23) {
     isCurrentHour = now === 23 || now === 0;
@@ -226,8 +226,8 @@ export function getAllHourEnergies(dayStem: string, currentHour?: number): HourE
  * 獲取當前時辰能量
  */
 export function getCurrentHourEnergy(dayStem: string): HourEnergyInfo {
-  const now = new Date();
-  const hour = now.getHours();
+  // 使用台灣時間 UTC+8
+  const hour = getTaiwanHour();
 
   let hourIndex: number;
   if (hour === 23 || hour === 0) {

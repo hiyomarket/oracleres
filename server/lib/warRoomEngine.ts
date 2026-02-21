@@ -24,6 +24,7 @@ export const TAROT_CARDS: Record<number, {
   advice: string;
   energy: string;
 }> = {
+  0:  { name: "愚者（0）", element: "風", keywords: ["純真", "潛能", "起點"], advice: "尚未走過卡巴拉之樹，充滿未開發的潛能與純真的天真。今日適合學習與吸收新知識，保持開放的心態，一切都是新的開始。", energy: "純真潛能能量" },
   1:  { name: "魔術師", element: "風", keywords: ["意志力", "創造", "行動"], advice: "今日一切皆有可能，主動出擊，展現你的能力", energy: "高度主動能量" },
   2:  { name: "女祭司", element: "水", keywords: ["直覺", "神秘", "等待"], advice: "傾聽內心聲音，不急於行動，靜觀其變", energy: "深層洞察能量" },
   3:  { name: "女皇", element: "土", keywords: ["豐盛", "創造力", "感官"], advice: "享受生活之美，創意與財富皆有豐收", energy: "豐盛滋養能量" },
@@ -45,7 +46,7 @@ export const TAROT_CARDS: Record<number, {
   19: { name: "太陽", element: "火", keywords: ["成功", "喜悅", "活力"], advice: "充滿活力的大吉之日，自信展現，成功在望", energy: "光明成功能量" },
   20: { name: "審判", element: "火", keywords: ["覺醒", "召喚", "重生"], advice: "聆聽內心的召喚，做出重要決定，迎接覺醒", energy: "覺醒召喚能量" },
   21: { name: "世界", element: "土", keywords: ["完成", "整合", "成就"], advice: "一個重要階段圓滿完成，整合所有收穫", energy: "圓滿整合能量" },
-  22: { name: "愚者", element: "風", keywords: ["新開始", "冒險", "純真"], advice: "以純真之心踏上新旅程，勇敢冒險", energy: "純真冒險能量" },
+  22: { name: "愚者（22）", element: "風", keywords: ["大智若愚", "圆滿归零", "超越智慧"], advice: "已走完卡巴拉之樹的大愚者，以大智若愚的彙容走過一切。此刻的「不知」是最高層次的智慧，今日適合放下执念，以謙遜與开放的心態迎接宇宙的安排。", energy: "大智若愚圓滿能量" },
 };
 
 /**
@@ -56,21 +57,47 @@ export function calculateTarotDailyCard(month: number, day: number): {
   card: typeof TAROT_CARDS[number];
   calculation: string;
 } {
-  const daySum = day >= 10 ? Math.floor(day / 10) + (day % 10) : day;
-  const total = 10 + month + daySum;
-
+  // 正確計算規則（蒸祈校正版 V9.0）：
+  // 1. 月份 < 10 直接用原數；≥ 10 才將兩位數字相加（如 10→1+0=1, 11→1+1=2, 12→1+2=3）
+  // 2. 日期 < 23 直接用原數；≥ 23 才將兩位數字相加（如 23→2+3=5, 29→2+9=11）
+  // 3. 月日小計若 > 22 則將其各位數字相加归約
+  // 4. 中間個性(10) + 月日小計 = 總和，若 > 22 則將總和各位數字相加归約
+  // 範例：2/21 → 月(2) + 日(21) = 23 → 2+3=5 → 10+5=15 → 1+5=6（戀人）✓
+  // 正確計算流程（V9.0 校正版）：
+  // 步驟1：月份處理（<10 不變，≥10 兩位相加）
+  // 步驟2：日期處理（<23 不變，≥23 兩位相加）
+  // 步驟3：月日小計，若>22 則將小計各位數字相加归約
+  // 步驟4：10 + 歸約後的月日小計 = 總和，若>22 則將總和各位數字相加归約
+  // 規則：只有超過22才需要相加，不超過22的結果直接保留
+  // 範例：2/21 → 月(2)+日(21)=23 → 2+3=5 → 10+5=15（惡魔，不再归約）✓
+  const monthSum = month >= 10 ? Math.floor(month / 10) + (month % 10) : month;
+  const daySum = day >= 23 ? Math.floor(day / 10) + (day % 10) : day;
+  const rawSubTotal = monthSum + daySum;
+  // 月日小計若>22，將小計各位數字相加归約
+  const reducedSub = rawSubTotal > 22
+    ? String(rawSubTotal).split('').map(Number).reduce((a, b) => a + b, 0)
+    : rawSubTotal;
+  const total = 10 + reducedSub;
   let cardNumber = total;
+  // 總和>22 才归約
   if (cardNumber > 22) {
-    const digits = String(cardNumber).split("").map(Number);
+    const digits = String(cardNumber).split('').map(Number);
     cardNumber = digits.reduce((a, b) => a + b, 0);
   }
-  if (cardNumber > 22) cardNumber = cardNumber % 22 || 22;
-  if (cardNumber === 0) cardNumber = 22;
+  // 特殊處理：0 = 小愚者（未走卡巴拉之樹），22 = 大愚者（已走完卡巴拉之樹）
+  if (cardNumber === 0) cardNumber = 0; // 保留 0，小愚者
+
+  // 生成計算説明文字
+  let calcSteps = `月(${monthSum}) + 日(${daySum}) = ${rawSubTotal}`;
+  if (rawSubTotal > 22) calcSteps += ` → ${String(rawSubTotal).split('').join('+')}=${reducedSub}`;
+  calcSteps += ` → 10+${reducedSub}=${total}`;
+  if (total > 22) calcSteps += ` → ${String(total).split('').join('+')}=${cardNumber}`;
+  calcSteps += ` → ${cardNumber}號`;
 
   return {
     cardNumber,
-    card: TAROT_CARDS[cardNumber],
-    calculation: `中間個性(10) + ${month}月 + ${day}日(${daySum}) = ${total} → ${cardNumber}號`,
+    card: TAROT_CARDS[cardNumber] || TAROT_CARDS[22],
+    calculation: `中間個性(10) + ${calcSteps}`,
   };
 }
 

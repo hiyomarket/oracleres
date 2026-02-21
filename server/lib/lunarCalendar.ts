@@ -5,6 +5,26 @@
  */
 import { DAY_ELEMENT_SCORES, SPECIAL_HOUR_BONUS } from "./userProfile";
 
+/**
+ * 取得台灣時間（UTC+8）的小時數（0-23）
+ * 伺服器延用 UTC+0，必須加 8 小時才能得到台灣時間
+ */
+export function getTaiwanHour(date?: Date): number {
+  const now = date || new Date();
+  // UTC 時間毫秒 + 8小時 = 台灣時間毫秒
+  const taiwanMs = now.getTime() + 8 * 60 * 60 * 1000;
+  return new Date(taiwanMs).getUTCHours();
+}
+
+/**
+ * 取得台灣時間（UTC+8）的 Date 物件
+ */
+export function getTaiwanDate(date?: Date): Date {
+  const now = date || new Date();
+  const taiwanMs = now.getTime() + 8 * 60 * 60 * 1000;
+  return new Date(taiwanMs);
+}
+
 export const HEAVENLY_STEMS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
 export const EARTHLY_BRANCHES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
 
@@ -179,8 +199,7 @@ function calculateEnergyLevel(
  * 獲取當前時辰信息
  */
 export function getCurrentHourInfo(): HourInfo {
-  const now = new Date();
-  const hour = now.getHours();
+  const hour = getTaiwanHour();
 
   // 地支時辰對應（每兩小時一個時辰）
   // 子時: 23-01, 丑時: 01-03, 寅時: 03-05...
@@ -214,22 +233,74 @@ export function isLunarChouMonth(date: Date): boolean {
 }
 
 /**
- * 獲取月柱天干地支
+ * 節氣切月表（通用版，誤差在±1天內）
+ * 每條記錄：節氣日期當天开始進入新月支
+ * 寅月：立春（2/4左右）
+ * 卯月：驚蛳（3/6左右）
+ * 辰月：清明（4/5左右）
+ * 巳月：立夏（5/6左右）
+ * 午月：芒種（6/6左右）
+ * 未月：小暑（7/7左右）
+ * 申月：立秋（8/7左右）
+ * 酉月：白露（9/8左右）
+ * 戌月：寒露（10/8左右）
+ * 亥月：立冬（11/7左右）
+ * 子月：大雪（12/7左右）
+ * 丑月：小寒（1/6左右）
+ */
+const SOLAR_TERM_TABLE: Array<{ month: number; day: number; branch: string }> = [
+  { month: 1,  day: 6,  branch: '丑' }, // 小寒 → 丑月
+  { month: 2,  day: 4,  branch: '寅' }, // 立春 → 寅月
+  { month: 3,  day: 6,  branch: '卯' }, // 驚蛳 → 卯月
+  { month: 4,  day: 5,  branch: '辰' }, // 清明 → 辰月
+  { month: 5,  day: 6,  branch: '巳' }, // 立夏 → 巳月
+  { month: 6,  day: 6,  branch: '午' }, // 芒種 → 午月
+  { month: 7,  day: 7,  branch: '未' }, // 小暑 → 未月
+  { month: 8,  day: 7,  branch: '申' }, // 立秋 → 申月
+  { month: 9,  day: 8,  branch: '酉' }, // 白露 → 酉月
+  { month: 10, day: 8,  branch: '戌' }, // 寒露 → 戌月
+  { month: 11, day: 7,  branch: '亥' }, // 立冬 → 亥月
+  { month: 12, day: 7,  branch: '子' }, // 大雪 → 子月
+];
+
+/**
+ * 獲取月柱天干地支（依節氣切月）
  */
 export function getMonthPillar(date: Date): { stem: string; branch: string } {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
+  const day = date.getDate();
 
-  // 月支：寅月(1月)到丑月(12月)，以節氣為準，簡化為以月份計算
-  // 寅=1月, 卯=2月... 丑=12月
-  const branchOrder = ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'];
-  const branch = branchOrder[month - 1];
+  // 找出當前日期所屬的月支：從最後一個節氣往前找
+  let branch = '丑'; // 預設：年初未到節氣前屬上年丑月
+  let isBeforeLiChun = false; // 是否在立春前（屬上一年的丑月）
+  for (let i = SOLAR_TERM_TABLE.length - 1; i >= 0; i--) {
+    const term = SOLAR_TERM_TABLE[i];
+    if (month > term.month || (month === term.month && day >= term.day)) {
+      branch = term.branch;
+      break;
+    }
+  }
+  // 立春（2/4）前的日期屬上一年丑月，月干應用上一年的年干計算
+  const liChunTerm = SOLAR_TERM_TABLE.find(t => t.branch === '寅')!;
+  if (month < liChunTerm.month || (month === liChunTerm.month && day < liChunTerm.day)) {
+    isBeforeLiChun = true;
+  }
 
-  // 月干由年干推算：甲己年起丙寅
-  const yearStemIndex = (year - 4) % 10;
-  const monthStemBase = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0]; // 甲乙丙丁戊己庚辛壬癸對應起始月干索引
-  const startStemIndex = monthStemBase[((yearStemIndex % 10) + 10) % 10];
-  const stemIndex = (startStemIndex + month - 1) % 10;
+  // 月干由年干推算（五虎遇）
+  // 立春前屬上一年的年干，立春後才用當年年干
+  const effectiveYear = isBeforeLiChun ? year - 1 : year;
+  const yearStemIndex = ((effectiveYear - 4) % 10 + 10) % 10; // 甲=0,乙=1,丙=2,丁=3,戊=4,己=5,庚=6,辛=7,壬=8,癸=9
+  const monthStemBase = [2, 4, 6, 8, 0, 2, 4, 6, 8, 0]; // 寅月起始天干索引
+  const startStemIndex = monthStemBase[yearStemIndex];
+
+  // 月支對應的月干偏移（寅月=0, 卯月=1, 辰月=2...)
+  const branchToMonthOffset: Record<string, number> = {
+    '寅': 0, '卯': 1, '辰': 2, '巳': 3, '午': 4, '未': 5,
+    '申': 6, '酉': 7, '戌': 8, '亥': 9, '子': 10, '丑': 11
+  };
+  const monthOffset = branchToMonthOffset[branch] ?? 0;
+  const stemIndex = (startStemIndex + monthOffset) % 10;
   const stem = HEAVENLY_STEMS[stemIndex];
 
   return { stem, branch };
