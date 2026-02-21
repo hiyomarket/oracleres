@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { SharedNav } from "@/components/SharedNav";
+import { TopicAdvicePanel } from "@/components/TopicAdvicePanel";
 
 // 五行顏色映射
 const WUXING_COLORS: Record<string, { bg: string; border: string; text: string; glow: string }> = {
@@ -101,6 +102,33 @@ export default function WarRoom() {
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState<"overview" | "tarot" | "outfit" | "wealth" | "hours">("overview");
+
+  // 天命問卜狀態
+  const [topicQuestion, setTopicQuestion] = useState('');
+  const [selectedTopic, setSelectedTopic] = useState<'work' | 'love' | 'health' | 'wealth' | 'decision' | null>(null);
+  const [topicResult, setTopicResult] = useState<{ topicName: string; advice: string | unknown; context: { dayPillar: string; tenGod: string; overallScore: number; tarotCard: string; moonPhase: string } } | null>(null);
+  const [isAskingTopic, setIsAskingTopic] = useState(false);
+
+  const topicAdviceMutation = trpc.warRoom.topicAdvice.useMutation({
+    onSuccess: (result) => {
+      setTopicResult(result);
+      setIsAskingTopic(false);
+    },
+    onError: () => {
+      setIsAskingTopic(false);
+    },
+  });
+
+  const handleTopicAdvice = (topic: 'work' | 'love' | 'health' | 'wealth' | 'decision') => {
+    setSelectedTopic(topic);
+    setTopicResult(null);
+    setIsAskingTopic(true);
+    topicAdviceMutation.mutate({
+      topic,
+      question: topicQuestion.trim() || undefined,
+      date: selectedDate,
+    });
+  };
 
   // 手串佩戴記錄
   const utils = trpc.useUtils();
@@ -820,6 +848,16 @@ export default function WarRoom() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* ═══ 天命問卜 ═══ */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-6"
+        >
+          <TopicAdvicePanel selectedDate={selectedDate} />
+        </motion.div>
 
         {/* ═══ 底部快捷按鈕 ═══ */}
         <motion.div
