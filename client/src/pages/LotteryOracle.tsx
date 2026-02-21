@@ -115,6 +115,130 @@ function WeatherCard({ weather, onUseWeather }: {
 }
 
 // ── 能量指數卡片 ──────────────────────────────────────────────────────────────
+// ── 統一購彩綜合建議卡片 ─────────────────────────────────────────────────────
+function PurchaseAdviceCard({ data, isLoading }: {
+  data?: {
+    compositeScore: number;
+    level: string;
+    levelLabel: string;
+    levelColor: string;
+    lotteryTypeAdvice: string;
+    scoreBreakdown: Array<{ label: string; score: number; maxScore: number; desc: string; weight: string }>;
+    tenGod: string;
+    dayPillar: string;
+    moonPhase: string;
+    currentHour: string;
+    weatherCondition: string;
+    dateString: string;
+  };
+  isLoading?: boolean;
+}) {
+  const [showBreakdown, setShowBreakdown] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 animate-pulse">
+        <div className="h-4 bg-slate-700 rounded w-32 mb-4" />
+        <div className="h-16 bg-slate-700 rounded mb-3" />
+        <div className="h-10 bg-slate-700 rounded" />
+      </div>
+    );
+  }
+  if (!data) return null;
+
+  const scoreColor = data.compositeScore >= 8 ? "#f59e0b" : data.compositeScore >= 6.5 ? "#34d399" : data.compositeScore >= 5 ? "#fb923c" : "#ef4444";
+  const levelConfig = {
+    excellent: { bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-400", icon: "🎯" },
+    good:      { bg: "bg-amber-500/10",   border: "border-amber-500/30",   text: "text-amber-400",   icon: "✅" },
+    observe:   { bg: "bg-orange-500/10",  border: "border-orange-500/30",  text: "text-orange-400",  icon: "⚖️" },
+    avoid:     { bg: "bg-red-500/10",     border: "border-red-500/30",     text: "text-red-400",     icon: "🚫" },
+  }[data.level] ?? { bg: "bg-slate-800/60", border: "border-slate-700/50", text: "text-slate-400", icon: "❓" };
+
+  return (
+    <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm space-y-4">
+      {/* 標題 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🎰</span>
+          <span className="text-sm font-bold text-amber-300 tracking-wider">本日購彩綜合建議</span>
+        </div>
+        <span className="text-xs text-slate-500">{data.dateString}</span>
+      </div>
+
+      {/* 分數 + 等級 */}
+      <div className="flex items-center gap-4">
+        <div className="text-center shrink-0">
+          <div className="text-5xl font-black" style={{ color: scoreColor }}>{data.compositeScore.toFixed(1)}</div>
+          <div className="text-xs text-slate-500 mt-1">/ 10</div>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${levelConfig.bg} ${levelConfig.border} mb-2`}>
+            <span>{levelConfig.icon}</span>
+            <span className={`text-sm font-bold ${levelConfig.text}`}>{data.levelLabel}</span>
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">{data.lotteryTypeAdvice}</p>
+        </div>
+      </div>
+
+      {/* 命理標籤 */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { label: `日柱 ${data.dayPillar}` },
+          { label: `十神 ${data.tenGod}` },
+          { label: data.moonPhase },
+          { label: `${data.currentHour}時` },
+          ...(data.weatherCondition ? [{ label: data.weatherCondition }] : []),
+        ].map((tag, i) => (
+          <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700/50 text-slate-300">
+            {tag.label}
+          </span>
+        ))}
+      </div>
+
+      {/* 展開分數明細 */}
+      <button
+        onClick={() => setShowBreakdown(!showBreakdown)}
+        className="w-full flex items-center justify-between text-xs text-slate-500 hover:text-slate-300 transition-colors py-1"
+      >
+        <span>六維指數明細（加權計算）</span>
+        <span>{showBreakdown ? "▲" : "▼"}</span>
+      </button>
+
+      {showBreakdown && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="space-y-2 border-t border-slate-700/50 pt-3"
+        >
+          {data.scoreBreakdown.map((item, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="w-24 shrink-0">
+                <div className="text-xs text-slate-400 truncate">{item.label}</div>
+                <div className="text-xs text-slate-600">{item.weight}</div>
+              </div>
+              <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-amber-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(item.score / item.maxScore) * 100}%` }}
+                  transition={{ duration: 0.6, delay: i * 0.1 }}
+                />
+              </div>
+              <div className="w-20 text-right shrink-0">
+                <span className="text-xs font-bold text-amber-300">{item.score.toFixed(1)}</span>
+                <span className="text-xs text-slate-600"> / {item.maxScore}</span>
+              </div>
+            </div>
+          ))}
+          <div className="text-xs text-slate-600 pt-1">
+            ＊偏財指數(40%) + 日柱(30%) + 月相(10%) + 天氣(10%) + 時辰(5%) + 塔羅(5%)
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
 function EnergyIndexCard({ data }: {
   data: {
     score: number;
@@ -245,10 +369,19 @@ export default function LotteryOracle() {
     { enabled: !!userLocation }
   );
 
-  // 彩券能量指數
+  // 彩券能量指數（舊版，保留相容）
   const energyQuery = trpc.lottery.energyIndex.useQuery(
     { targetDate: selectedDate },
     { staleTime: 60000 }
+  );
+  // ✅ 統一購彩綜合建議（整合六維指數）
+  const purchaseAdviceQuery = trpc.lottery.purchaseAdvice.useQuery(
+    {
+      targetDate: selectedDate,
+      weatherElement: weatherIncluded && weatherQuery.data ? weatherQuery.data.weatherElement : undefined,
+      weatherCondition: weatherIncluded && weatherQuery.data ? weatherQuery.data.condition : undefined,
+    },
+    { staleTime: 30000 }
   );
 
   // 今日最佳購買時機
@@ -470,17 +603,18 @@ export default function LotteryOracle() {
           </div>
         </motion.div>
 
-        {/* ── 彩券能量指數 ──────────────────────────────────────────────── */}
-        {energyQuery.data && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="mb-6"
-          >
-            <EnergyIndexCard data={energyQuery.data} />
-          </motion.div>
-        )}
+        {/* ── 本日購彩綜合建議（統一六維指數）──────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="mb-6"
+        >
+          <PurchaseAdviceCard
+            data={purchaseAdviceQuery.data}
+            isLoading={purchaseAdviceQuery.isLoading}
+          />
+        </motion.div>
 
         {/* 命理信息條（選號後顯示） */}
         {result && (
@@ -781,7 +915,11 @@ export default function LotteryOracle() {
                 className="overflow-hidden"
               >
                 <div className="px-5 pb-5">
-                  <ScratchAnalysisWithMap selectedDate={selectedDate} />
+                  <ScratchAnalysisWithMap
+                    selectedDate={selectedDate}
+                    weatherElement={weatherIncluded && weatherQuery.data ? weatherQuery.data.weatherElement : undefined}
+                    addressElement={undefined}
+                  />
                 </div>
               </motion.div>
             )}
@@ -878,7 +1016,7 @@ export default function LotteryOracle() {
 // ── 地址分析 + GPS 地圖 + 面額選號（整合組件）────────────────────────────────
 import { MapView } from "@/components/Map";
 
-function ScratchAnalysisWithMap({ selectedDate }: { selectedDate: string }) {
+function ScratchAnalysisWithMap({ selectedDate, weatherElement, addressElement }: { selectedDate: string; weatherElement?: string; addressElement?: string }) {
   const [address, setAddress] = useState("");
   const [inputAddress, setInputAddress] = useState("");
   const [showMap, setShowMap] = useState(false);
@@ -886,10 +1024,9 @@ function ScratchAnalysisWithMap({ selectedDate }: { selectedDate: string }) {
   const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([]);
   const [selectedStore, setSelectedStore] = useState<{ name: string; address: string } | null>(null);
   const [expandedDenom, setExpandedDenom] = useState<number | null>(100);
-
   const { data: strategies } = trpc.lottery.scratchStrategies.useQuery(
-    { targetDate: selectedDate },
-    { staleTime: 60000 }
+    { targetDate: selectedDate, weatherElement, addressElement, useWeather: !!weatherElement, useAddress: !!addressElement },
+    { staleTime: 30000 }
   );
 
   const { data: addressData, isLoading: addressLoading } = trpc.lottery.addressAnalysis.useQuery(
@@ -1087,6 +1224,11 @@ function ScratchAnalysisWithMap({ selectedDate }: { selectedDate: string }) {
                       >
                         <div className="px-4 pb-4 space-y-3">
                           <p className="text-xs text-slate-400">{strategy.description}</p>
+                          {strategy.scoreReason && (
+                            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 mt-1">
+                              <p className="text-xs text-amber-400">🎯 {strategy.scoreReason}</p>
+                            </div>
+                          )}
                           <div>
                             <p className="text-xs text-slate-500 mb-2">主要號碼</p>
                             <div className="flex gap-2 flex-wrap">
