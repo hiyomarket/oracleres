@@ -208,7 +208,7 @@ export default function OracleCalendar() {
 
       <SharedNav currentPage="calendar" />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-6 pb-24 md:pb-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-6 pb-24 md:pb-8 oracle-page-content">
         {/* 標題 */}
         <motion.div className="text-center mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="text-xs tracking-[0.3em] text-teal-500/70 mb-2 uppercase">Oracle Resonance · Calendar</div>

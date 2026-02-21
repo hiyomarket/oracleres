@@ -190,6 +190,43 @@
 }
 
 /* ===== 天命共振組件 ===== */
+/* ===== 手機 UI 全站優化 ===== */
+
+/* 手機底部安全區域（iOS Home Bar） */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 手機版頁面底部 padding（避免被底部導覽列遮擋） */
+@media (max-width: 768px) {
+  .oracle-page-content {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 改善手機觸控回饋 */
+  button, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* 手機版卡片間距縮小 */
+  .glass-card {
+    border-radius: 1rem;
+  }
+
+  /* 手機版輸入框字體大小（防止 iOS 自動縮放） */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* 手機版滾動優化 */
+@supports (-webkit-overflow-scrolling: touch) {
+  .overflow-y-auto, .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 .oracle-bg {
   background: radial-gradient(
     ellipse at 30% 20%,

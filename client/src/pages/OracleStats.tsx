@@ -142,7 +142,7 @@ export default function OracleStats() {
     <div className="min-h-screen oracle-bg">
       <SharedNav currentPage="stats" />
       {/* 頂部標題 */}
-      <div className="relative z-10 px-4 md:px-8 py-6 pb-20 md:pb-6">
+      <div className="relative z-10 px-4 md:px-8 py-6 pb-20 md:pb-6 oracle-page-content">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

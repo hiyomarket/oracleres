@@ -210,7 +210,7 @@ export default function WarRoom() {
 
       <SharedNav currentPage="warRoom" />
 
-      <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 pb-24 relative z-10">
+      <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 pb-24 relative z-10 oracle-page-content">
 
         {/* ═══ 模塊A：頂部核心數據看板 ═══ */}
         <motion.div

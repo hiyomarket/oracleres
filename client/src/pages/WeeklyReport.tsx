@@ -128,7 +128,7 @@ export default function WeeklyReport() {
 
       <SharedNav currentPage="weekly" />
 
-      <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 pb-24 md:pb-8">
+      <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 pb-24 md:pb-8 oracle-page-content">
 
         {/* 標題 */}
         <motion.div

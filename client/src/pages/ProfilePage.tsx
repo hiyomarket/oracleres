@@ -155,7 +155,7 @@ export default function ProfilePage() {
           <div className="absolute top-4 left-8 text-8xl font-bold text-orange-400 select-none">命</div>
           <div className="absolute top-4 right-8 text-8xl font-bold text-orange-400 select-none">格</div>
         </div>
-        <div className="relative container py-10 px-4 max-w-5xl mx-auto">
+        <div className="relative container py-10 px-4 max-w-5xl mx-auto oracle-page-content">
           <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
             {/* 頭像區 */}
             <div className="flex-shrink-0">

@@ -207,7 +207,7 @@ export default function LotteryOracle() {
 
       <SharedNav currentPage="lottery" />
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 pb-24 md:pb-8">
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 pb-24 md:pb-8 oracle-page-content">
 
       {/* 標題區 */}
       <motion.div

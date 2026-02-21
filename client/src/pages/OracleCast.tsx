@@ -197,6 +197,7 @@ export default function OracleCast() {
   const [llmInsight, setLlmInsight] = useState<string | null>(null);
   const [showInsight, setShowInsight] = useState(false);
   // 最近3筆歷史問題（本地持久化）
+  const [showTemplates, setShowTemplates] = useState(false);
   const [recentQueries, setRecentQueries] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('oracle_recent_queries');
@@ -389,7 +390,7 @@ export default function OracleCast() {
       <BackgroundParticles />
       <SharedNav currentPage="oracle" />
 
-      <div className="relative z-10 container mx-auto px-4 pb-12">
+      <div className="relative z-10 container mx-auto px-4 pb-12 oracle-page-content">
         <div className="max-w-2xl mx-auto">
 
           {/* ═══ 區塊一：筊杯動畫區（置頂，始終顯示） ═══ */}
@@ -616,6 +617,87 @@ export default function OracleCast() {
                 </div>
               </div>
             )}
+
+            {/* 常用問題模板 */}
+            <div className="mt-3 pt-3 border-t border-border/20">
+              <button
+                onClick={() => setShowTemplates(v => !v)}
+                className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60 hover:text-amber-400 transition-colors mb-2"
+              >
+                <span className={`transition-transform ${showTemplates ? 'rotate-90' : ''}`}>▶</span>
+                <span className="tracking-wider">常用問題模板</span>
+              </button>
+              {showTemplates && (
+                <div className="space-y-2">
+                  {([
+                    {
+                      category: '🎰 彩券',
+                      color: 'amber',
+                      templates: [
+                        '今天買大樂透適合嗎？',
+                        '今天買威力彩適合嗎？',
+                        '今天的彩券能量如何？',
+                      ],
+                    },
+                    {
+                      category: '💼 事業',
+                      color: 'blue',
+                      templates: [
+                        '這項合作計畫值得推進嗎？',
+                        '近期的事業發展方向是否正確？',
+                        '這個決策時機是否成熟？',
+                      ],
+                    },
+                    {
+                      category: '💰 財運',
+                      color: 'green',
+                      templates: [
+                        '近期的投資操作是否適合？',
+                        '這筆資金的運用方向是否正確？',
+                        '近期財運走勢如何？',
+                      ],
+                    },
+                    {
+                      category: '💛 感情',
+                      color: 'pink',
+                      templates: [
+                        '近期的感情發展是否順利？',
+                        '這段關係值得繼續投入嗎？',
+                        '此時是否適合表達心意？',
+                      ],
+                    },
+                    {
+                      category: '🌿 健康',
+                      color: 'teal',
+                      templates: [
+                        '近期身體狀況是否需要特別注意？',
+                        '今天的體能狀態適合運動嗎？',
+                        '近期的作息調整方向是否正確？',
+                      ],
+                    },
+                  ] as const).map(({ category, color, templates }) => (
+                    <div key={category}>
+                      <div className="text-[10px] text-muted-foreground/50 mb-1">{category}</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {templates.map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => { setQuery(t); setShowTemplates(false); }}
+                            className={`text-[11px] px-2.5 py-1.5 rounded-lg border transition-all ${
+                              query === t
+                                ? 'border-amber-600/60 bg-amber-900/30 text-amber-300'
+                                : 'border-border/30 bg-white/3 text-muted-foreground hover:border-amber-600/30 hover:text-amber-300/80 hover:bg-amber-900/10'
+                            } active:scale-95`}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* 問卜指引 */}
             {queryGuide && (
