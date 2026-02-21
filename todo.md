@@ -421,3 +421,15 @@
 - [x] 前端：作戰室財運羅盤改為「本日購彩綜合指數」，顯示與選號頁一致的分數，底部快捷鍵同步更新
 - [x] TypeScript 零錯誤，78 項測試全部通過
 - [x] 儲存 V2.18 checkpoint
+
+## 功能增強 v2.19 - 走勢圖中獎標記 + 明日預測 + 本週最佳購彩日
+
+- [x] 後端：scratch_logs 已有 isWon 欄位，直接利用現有欄位
+- [x] 後端：lottery.indexHistory 回傳 hasWin 欄位（查詢 scratch_logs isWon）
+- [x] 後端：lottery.indexHistory 回傳 tomorrow（明日預測分數、日期、等級）
+- [x] 後端：warRoom.dailyReport 加入 weeklyLotteryScores（本週七日購彩指數陣列，標記最高分日 isBest）
+- [x] 前端：走勢圖加入中獎金星標記（金色菱形+★，區別於購買灰色圓）
+- [x] 前端：走勢圖右側加入明日預測虛線（青色虛線延伸 + 標題顯示明日分數）
+- [x] 前端：作戰室七日切換列標記本週最佳購彩日（金色光暈 + 「最旺」標籤 + 分數小字）
+- [x] TypeScript 零錯誤，78 項測試全部通過
+- [x] 儲存 V2.19 checkpoint

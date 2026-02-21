@@ -243,15 +243,22 @@ function PurchaseAdviceCard({ data, isLoading }: {
 }
 
 // ── 14 天走勢圖 ────────────────────────────────────────────────────────────
-function IndexHistoryChart({ history, isLoading }: {
+function IndexHistoryChart({ history, tomorrow, isLoading }: {
   history?: Array<{
     date: string;
     displayDate: string;
     score: number;
     level: string;
     hasPurchase: boolean;
+    hasWin: boolean;
     winAmount: number;
   }>;
+  tomorrow?: {
+    date: string;
+    dateLabel: string;
+    compositeScore: number;
+    levelLabel: string;
+  };
   isLoading?: boolean;
 }) {
   const [showChart, setShowChart] = useState(false);
@@ -268,34 +275,68 @@ function IndexHistoryChart({ history, isLoading }: {
 
   const avg = history.reduce((s, d) => s + d.score, 0) / history.length;
   const purchaseDays = history.filter(d => d.hasPurchase);
-  const winDays = history.filter(d => d.winAmount > 0);
+  const winDays = history.filter(d => d.hasWin);
+
+  // 將明日預測點加入圖表資料
+  const chartData = tomorrow
+    ? [
+        ...history,
+        {
+          date: tomorrow.date,
+          displayDate: `${tomorrow.dateLabel}(明)`,
+          score: null as any,          // 實際指數線不延伸
+          tomorrowScore: tomorrow.compositeScore, // 明日預測線
+          level: tomorrow.levelLabel,
+          hasPurchase: false,
+          hasWin: false,
+          winAmount: 0,
+          isTomorrow: true,
+        },
+      ]
+    : history;
 
   // Custom dot: 有購買記錄的日期顯示特殊標記
   const CustomDot = (props: any) => {
     const { cx, cy, payload } = props;
+    if (payload.isTomorrow) return null;
     if (!payload.hasPurchase) return null;
-    const color = payload.winAmount > 0 ? "#f59e0b" : "#64748b";
+    if (payload.hasWin) {
+      // 中獎：金色菱形 + 金星
+      return (
+        <g>
+          <polygon
+            points={`${cx},${cy - 8} ${cx + 6},${cy - 2} ${cx + 4},${cy + 6} ${cx - 4},${cy + 6} ${cx - 6},${cy - 2}`}
+            fill="#f59e0b" stroke="#1e293b" strokeWidth={1.5}
+          />
+          <text x={cx} y={cy - 14} textAnchor="middle" fontSize={11} fill="#fbbf24">★</text>
+        </g>
+      );
+    }
+    // 已購彩（未中）：灰色圓
     return (
-      <g>
-        <circle cx={cx} cy={cy} r={6} fill={color} stroke="#1e293b" strokeWidth={2} />
-        {payload.winAmount > 0 && (
-          <text x={cx} y={cy - 10} textAnchor="middle" fontSize={10} fill="#f59e0b">🏆</text>
-        )}
-      </g>
+      <circle cx={cx} cy={cy} r={5} fill="#64748b" stroke="#1e293b" strokeWidth={2} />
     );
   };
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
     const d = payload[0].payload;
+    const score = d.isTomorrow ? d.tomorrowScore : d.score;
     return (
       <div className="bg-slate-800 border border-slate-600 rounded-lg p-3 text-xs shadow-xl">
-        <div className="font-bold text-white mb-1">{d.displayDate}</div>
-        <div className="text-amber-300">指數：{d.score.toFixed(1)} / 10</div>
-        {d.hasPurchase && (
-          <div className={d.winAmount > 0 ? "text-yellow-400" : "text-slate-400"}>
-            {d.winAmount > 0 ? `🏆 中獎 $${d.winAmount}` : "已購彩（未中）"}
+        <div className="font-bold text-white mb-1">
+          {d.displayDate}{d.isTomorrow && <span className="ml-1 text-cyan-400">預測</span>}
+        </div>
+        <div className={d.isTomorrow ? "text-cyan-300" : "text-amber-300"}>
+          指數：{score?.toFixed(1)} / 10
+        </div>
+        {d.hasPurchase && !d.isTomorrow && (
+          <div className={d.hasWin ? "text-yellow-400" : "text-slate-400"}>
+            {d.hasWin ? `★ 中獎` : "已購彩（未中）"}
           </div>
+        )}
+        {d.isTomorrow && (
+          <div className="text-cyan-500 mt-1">明日預測（天氣預設中性）</div>
         )}
         <div className="text-slate-500 mt-1">{d.level}</div>
       </div>
@@ -311,11 +352,16 @@ function IndexHistoryChart({ history, isLoading }: {
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-amber-400" />
           <span className="text-sm font-bold text-amber-300">過去 14 天指數走勢</span>
+          {tomorrow && (
+            <span className="text-xs text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 rounded-full px-2 py-0.5">
+              明日 {tomorrow.compositeScore.toFixed(1)}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <span className="w-2 h-2 rounded-full bg-slate-500 inline-block" /> 已購彩 {purchaseDays.length} 天
-            {winDays.length > 0 && <><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /> 中獎 {winDays.length} 天</>}
+            {winDays.length > 0 && <><span className="text-amber-400">★</span> 中獎 {winDays.length} 天</>}
           </div>
           <span className="text-slate-500 text-xs">{showChart ? "▲" : "▼"}</span>
         </div>
@@ -327,8 +373,8 @@ function IndexHistoryChart({ history, isLoading }: {
           animate={{ opacity: 1, height: "auto" }}
           className="mt-4"
         >
-          <ResponsiveContainer width="100%" height={180}>
-            <LineChart data={history} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <ResponsiveContainer width="100%" height={190}>
+            <LineChart data={chartData} margin={{ top: 10, right: 40, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
               <XAxis
                 dataKey="displayDate"
@@ -345,6 +391,7 @@ function IndexHistoryChart({ history, isLoading }: {
                 label={{ value: `均 ${avg.toFixed(1)}`, position: "right", fontSize: 9, fill: "#475569" }}
               />
               <ReferenceLine y={7} stroke="#f59e0b" strokeDasharray="2 2" strokeOpacity={0.4} />
+              {/* 實際指數線（過去 14 天） */}
               <Line
                 type="monotone"
                 dataKey="score"
@@ -352,7 +399,21 @@ function IndexHistoryChart({ history, isLoading }: {
                 strokeWidth={2}
                 dot={<CustomDot />}
                 activeDot={{ r: 5, fill: "#f59e0b" }}
+                connectNulls={false}
               />
+              {/* 明日預測虛線 */}
+              {tomorrow && (
+                <Line
+                  type="monotone"
+                  dataKey="tomorrowScore"
+                  stroke="#22d3ee"
+                  strokeWidth={2}
+                  strokeDasharray="5 4"
+                  dot={{ r: 5, fill: "#22d3ee", stroke: "#1e293b", strokeWidth: 2 }}
+                  activeDot={{ r: 6, fill: "#22d3ee" }}
+                  connectNulls={true}
+                />
+              )}
             </LineChart>
           </ResponsiveContainer>
           <div className="flex items-center gap-4 mt-3 text-xs text-slate-500">
@@ -361,12 +422,16 @@ function IndexHistoryChart({ history, isLoading }: {
               <span>購彩指數</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-slate-500" />
-              <span>已購彩（未中）</span>
+              <div className="w-3 h-0.5 bg-cyan-400" style={{ borderTop: '2px dashed #22d3ee', height: 0 }} />
+              <span>明日預測</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-amber-400" />
-              <span>🏆 中獎</span>
+              <div className="w-2 h-2 rounded-full bg-slate-500" />
+              <span>已購彩</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-amber-400 text-sm">★</span>
+              <span>中獎</span>
             </div>
           </div>
           <p className="text-xs text-slate-600 mt-2">＊可回頭驗證：高指數日（≥7）是否真的比較容易中獎？</p>
@@ -772,8 +837,10 @@ export default function LotteryOracle() {
               score: d.compositeScore,
               level: d.levelLabel,
               hasPurchase: d.hasPurchase,
+              hasWin: d.hasWin ?? false,
               winAmount: d.wonCount > 0 ? d.wonCount * 100 : 0,
             }))}
+            tomorrow={indexHistoryQuery.data?.tomorrow}
             isLoading={indexHistoryQuery.isLoading}
           />
         </motion.div>

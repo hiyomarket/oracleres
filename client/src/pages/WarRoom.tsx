@@ -256,20 +256,35 @@ export default function WarRoom() {
               const weekday = getTaiwanWeekday(offset);
               const isToday = offset === 0;
               const isSelected = selectedOffset === offset;
+              // 查詢本週購彩指數，標記最佳日
+              const weeklyScore = data?.weeklyLotteryScores?.find(s => s.date === dateStr);
+              const isBestDay = weeklyScore?.isBest === true;
               return (
                 <button
                   key={offset}
                   onClick={() => setSelectedOffset(offset)}
-                  className={`flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-xl border transition-all duration-200 min-w-[52px] ${
+                  className={`relative flex-shrink-0 flex flex-col items-center px-3 py-2 rounded-xl border transition-all duration-200 min-w-[52px] ${
                     isSelected
                       ? 'border-amber-400 bg-amber-400/20 text-amber-300'
+                      : isBestDay
+                      ? 'border-yellow-400/60 bg-yellow-400/10 text-white'
                       : isToday
                       ? 'border-white/30 bg-white/10 text-white'
                       : 'border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/70'
                   }`}
+                  style={isBestDay && !isSelected ? { boxShadow: '0 0 10px 2px rgba(251,191,36,0.35)' } : undefined}
                 >
+                  {/* 最旺購彩日金色光暈 */}
+                  {isBestDay && (
+                    <span
+                      className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-xs bg-yellow-400 text-black font-bold rounded-full px-1.5 leading-5"
+                      style={{ fontSize: '9px', whiteSpace: 'nowrap' }}
+                    >
+                      最旺
+                    </span>
+                  )}
                   <span className="text-xs font-medium">週{WEEKDAY_NAMES[weekday]}</span>
-                  <span className={`text-lg font-bold leading-tight ${isSelected ? 'text-amber-300' : ''}`}>{dayNum}</span>
+                  <span className={`text-lg font-bold leading-tight ${isSelected ? 'text-amber-300' : isBestDay ? 'text-yellow-300' : ''}`}>{dayNum}</span>
                   {isToday && (
                     <span className="text-xs text-amber-400/80 font-semibold">今日</span>
                   )}
@@ -278,6 +293,16 @@ export default function WarRoom() {
                   )}
                   {!isToday && offset > 0 && (
                     <span className="text-xs text-white/30">預測</span>
+                  )}
+                  {/* 購彩分數小標記 */}
+                  {weeklyScore && (
+                    <span className={`text-xs font-medium mt-0.5 ${
+                      weeklyScore.compositeScore >= 8 ? 'text-yellow-400' :
+                      weeklyScore.compositeScore >= 6.5 ? 'text-amber-400' :
+                      weeklyScore.compositeScore >= 5 ? 'text-white/40' : 'text-red-400/60'
+                    }`}>
+                      {weeklyScore.compositeScore.toFixed(1)}
+                    </span>
                   )}
                 </button>
               );
