@@ -5,7 +5,9 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { castOracle } from "./lib/oracleAlgorithm";
 import { getFullDateInfo } from "./lib/lunarCalendar";
-import { saveOracleSession, getOracleHistory } from "./db";
+import { getMoonPhase } from "./lib/moonPhase";
+import { getAllHourEnergies, getCurrentHourEnergy, getBestHours, getWorstHours } from "./lib/hourlyEnergy";
+import { saveOracleSession, getOracleHistory, getOracleStats } from "./db";
 import { notifyOwner } from "./_core/notification";
 
 export const appRouter = router({
@@ -127,7 +129,6 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
 
     /**
      * 語音轉文字（使用 Web Speech API，前端處理）
-     * 此端點用於後端關鍵詞分析預處理
      */
     analyzeVoiceQuery: publicProcedure
       .input(z.object({ text: z.string().max(500) }))
@@ -135,6 +136,46 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
         const { analyzeQuery } = await import('./lib/oracleAlgorithm');
         const analysis = analyzeQuery(input.text);
         return analysis;
+      }),
+
+    /**
+     * 獲取全天 12 時辰能量預覽
+     */
+    hourlyEnergy: publicProcedure.query(async () => {
+      const dateInfo = getFullDateInfo();
+      const dayStem = dateInfo.dayPillar.stem;
+      const allHours = getAllHourEnergies(dayStem);
+      const currentHour = getCurrentHourEnergy(dayStem);
+      const bestHours = getBestHours(dayStem);
+      const worstHours = getWorstHours(dayStem);
+      return {
+        dayStem,
+        dayBranch: dateInfo.dayPillar.branch,
+        allHours,
+        currentHour,
+        bestHours,
+        worstHours,
+        dateString: dateInfo.dateString,
+      };
+    }),
+
+    /**
+     * 獲取當前月相信息
+     */
+    moonPhase: publicProcedure.query(async () => {
+      return getMoonPhase();
+    }),
+
+    /**
+     * 獲取神諭統計數據
+     */
+    stats: publicProcedure
+      .input(z.object({
+        userId: z.number().optional(),
+      }).optional())
+      .query(async ({ ctx, input }) => {
+        const userId = input?.userId ?? ctx.user?.id;
+        return getOracleStats(userId);
       }),
   }),
 });

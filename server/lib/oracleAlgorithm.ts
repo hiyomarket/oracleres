@@ -7,6 +7,8 @@
  */
 
 import { getFullDateInfo, type FullDateInfo } from './lunarCalendar';
+import { getMoonPhase, type MoonPhaseInfo } from './moonPhase';
+import { getCurrentHourEnergy, type HourEnergyInfo } from './hourlyEnergy';
 
 export type OracleResult = 'sheng' | 'xiao' | 'yin' | 'li';
 // 聖杯(sheng): 一正一反 → 神明同意
@@ -31,6 +33,8 @@ export interface OracleCastResult {
   weights: OracleWeights;
   queryAnalysis: QueryAnalysis;
   dateInfo: FullDateInfo;
+  moonPhase: MoonPhaseInfo;
+  currentHourEnergy: HourEnergyInfo;
   isSpecialEgg: boolean;
   interpretation: string;
   energyResonance: string;
@@ -152,6 +156,53 @@ function applyDailyEnergyWeight(weights: OracleWeights, dateInfo: FullDateInfo):
     adjusted.sheng += 25;
     adjusted.yin -= 15;
     adjusted.xiao -= 10;
+  }
+
+  return normalizeWeights(adjusted);
+}
+
+/**
+ * 根據月相調整權重（滿月加成）
+ */
+function applyMoonPhaseWeight(weights: OracleWeights, moonPhase: MoonPhaseInfo): OracleWeights {
+  if (moonPhase.shengBonus <= 0) return weights;
+
+  const adjusted = { ...weights };
+  adjusted.sheng += moonPhase.shengBonus;
+  // 從陰杯扣除（滿月時神明更願意回應）
+  adjusted.yin -= Math.ceil(moonPhase.shengBonus * 0.7);
+  adjusted.xiao -= Math.floor(moonPhase.shengBonus * 0.3);
+
+  return normalizeWeights(adjusted);
+}
+
+/**
+ * 根據當前時辰能量調整權重
+ * 時辰能量分數 0-100，以50為基準進行調整
+ */
+function applyHourEnergyWeight(weights: OracleWeights, hourEnergy: HourEnergyInfo): OracleWeights {
+  const adjusted = { ...weights };
+  const deviation = hourEnergy.energyScore - 50; // -50 到 +50
+
+  if (deviation > 0) {
+    // 吉時：聖杯提升
+    const bonus = Math.round(deviation * 0.25); // 最多 +12.5
+    adjusted.sheng += bonus;
+    adjusted.yin -= Math.ceil(bonus * 0.6);
+    adjusted.xiao -= Math.floor(bonus * 0.4);
+  } else if (deviation < 0) {
+    // 凶時：陰杯提升
+    const penalty = Math.round(Math.abs(deviation) * 0.2); // 最多 +10
+    adjusted.yin += penalty;
+    adjusted.sheng -= Math.ceil(penalty * 0.7);
+    adjusted.xiao -= Math.floor(penalty * 0.3);
+  }
+
+  // 巳時（出生時辰）特殊加成
+  if (hourEnergy.isBirthHour) {
+    adjusted.sheng += 8;
+    adjusted.yin -= 5;
+    adjusted.xiao -= 3;
   }
 
   return normalizeWeights(adjusted);
@@ -300,10 +351,13 @@ function generateEnergyResonance(dateInfo: FullDateInfo, queryAnalysis: QueryAna
 
 /**
  * 主算法：執行天命共振擲筊
+ * 四層加權：日柱能量 → 時辰能量 → 月相加成 → 問題類型
  */
 export function castOracle(query: string, date?: Date): OracleCastResult {
   const dateInfo = getFullDateInfo(date);
   const queryAnalysis = analyzeQuery(query);
+  const moonPhase = getMoonPhase(date);
+  const currentHourEnergy = getCurrentHourEnergy(dateInfo.dayPillar.stem);
 
   // 檢查立筊彩蛋
   const isSpecialEgg = checkSpecialEgg(dateInfo);
@@ -313,22 +367,30 @@ export function castOracle(query: string, date?: Date): OracleCastResult {
       weights: BASE_WEIGHTS,
       queryAnalysis,
       dateInfo,
+      moonPhase,
+      currentHourEnergy,
       isSpecialEgg: true,
       interpretation: '天命昭昭，無須再問。此事神明自有定奪。',
       energyResonance: `今日逢${dateInfo.hourInfo.isChougHour ? '丑時' : '丑月'}，天命寶庫開啟，紫微星光照耀，此乃天命之示現。`,
     };
   }
 
-  // 步驟一：從基礎權重開始
+  // 第一層：從基礎權重開始
   let weights = { ...BASE_WEIGHTS };
 
-  // 步驟二：應用每日能量權重
+  // 第二層：應用日柱能量權重
   weights = applyDailyEnergyWeight(weights, dateInfo);
 
-  // 步驟三：應用問題類型權重
+  // 第三層：應用當前時辰能量權重（精細化）
+  weights = applyHourEnergyWeight(weights, currentHourEnergy);
+
+  // 第四層：應用月相加成
+  weights = applyMoonPhaseWeight(weights, moonPhase);
+
+  // 第五層：應用問題類型權重
   weights = applyQueryTypeWeight(weights, queryAnalysis);
 
-  // 步驟四：生成最終結果
+  // 生成最終結果
   const result = generateResult(weights);
 
   const interpretation = generateInterpretation(result, queryAnalysis, dateInfo);
@@ -339,6 +401,8 @@ export function castOracle(query: string, date?: Date): OracleCastResult {
     weights,
     queryAnalysis,
     dateInfo,
+    moonPhase,
+    currentHourEnergy,
     isSpecialEgg: false,
     interpretation,
     energyResonance,

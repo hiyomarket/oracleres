@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql, count } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -112,4 +112,77 @@ export async function getOracleHistory(userId?: number, limit = 20): Promise<Ora
 export async function getLatestOracleSession(userId?: number): Promise<OracleSession | null> {
   const sessions = await getOracleHistory(userId, 1);
   return sessions[0] || null;
+}
+
+/**
+ * 獲取神諭統計數據
+ */
+export async function getOracleStats(userId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  // 基礎過濾條件
+  const baseWhere = userId ? eq(oracleSessions.userId, userId) : undefined;
+
+  // 結果分布
+  const resultCounts = await db
+    .select({
+      result: oracleSessions.result,
+      count: count(),
+    })
+    .from(oracleSessions)
+    .where(baseWhere)
+    .groupBy(oracleSessions.result);
+
+  // 問題類型分布
+  const queryTypeCounts = await db
+    .select({
+      queryType: oracleSessions.queryType,
+      count: count(),
+    })
+    .from(oracleSessions)
+    .where(baseWhere)
+    .groupBy(oracleSessions.queryType);
+
+  // 能量等級分布
+  const energyCounts = await db
+    .select({
+      energyLevel: oracleSessions.energyLevel,
+      count: count(),
+    })
+    .from(oracleSessions)
+    .where(baseWhere)
+    .groupBy(oracleSessions.energyLevel);
+
+  // 每月擲筊次數（最近 12 個月）
+  const monthlyRaw = await db
+    .select({
+      month: sql<string>`DATE_FORMAT(createdAt, '%Y-%m')`,
+      count: count(),
+    })
+    .from(oracleSessions)
+    .where(baseWhere)
+    .groupBy(sql`DATE_FORMAT(createdAt, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(createdAt, '%Y-%m') DESC`)
+    .limit(12);
+
+  // 總次數
+  const totalResult = await db
+    .select({ total: count() })
+    .from(oracleSessions)
+    .where(baseWhere);
+
+  const total = totalResult[0]?.total ?? 0;
+
+  // 最近 10 筆記錄
+  const recentSessions = await getOracleHistory(userId, 10);
+
+  return {
+    total,
+    resultCounts,
+    queryTypeCounts,
+    energyCounts,
+    monthlyCounts: monthlyRaw.reverse(), // 按時間正序
+    recentSessions,
+  };
 }
