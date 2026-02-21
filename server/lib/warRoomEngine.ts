@@ -9,6 +9,12 @@
  * - 手串推薦引擎：依天干地支細節推薦，每日組合不同
  */
 import { FAVORABLE_ELEMENTS, UNFAVORABLE_ELEMENTS, ELEMENT_COLORS as PROFILE_ELEMENT_COLORS } from "./userProfile";
+import {
+  OUTFIT_STRATEGY_BY_TENGOD,
+  OUTFIT_STYLE_BY_STEM,
+  STEM_PERSONALITY as STEM_PERSONALITY_MAP,
+  MOON_PHASE_OUTFIT_MODIFIER as MOON_OUTFIT_MOD,
+} from "./outfitStrategy";
 
 // ─── 塔羅牌資料庫 ───────────────────────────────────────────────
 export const TAROT_CARDS: Record<number, {
@@ -89,104 +95,6 @@ const STEM_YIN_YANG: Record<string, "陽" | "陰"> = {
   己: "陰", 庚: "陽", 辛: "陰", 壬: "陽", 癸: "陰",
 };
 
-// ─── 天干個性描述（用於穿搭文案差異化）─────────────────────────
-const STEM_PERSONALITY: Record<string, string> = {
-  甲: "剛直挺拔", 乙: "柔韌蔓延", 丙: "光明熱烈", 丁: "溫潤細膩",
-  戊: "厚重穩固", 己: "滋養包容", 庚: "銳利決斷", 辛: "精緻純淨",
-  壬: "奔騰浩蕩", 癸: "靜謐深邃",
-};
-
-// ─── 穿搭款式庫（依天干個性差異化）─────────────────────────────
-const OUTFIT_STYLE_BY_STEM: Record<string, { topStyle: string; bottomStyle: string; accessory: string }> = {
-  甲: { topStyle: "挺括感的立領或西裝領上衣", bottomStyle: "直筒或寬管褲，展現大器", accessory: "木質或皮革配件" },
-  乙: { topStyle: "流線感的V領或開襟上衣", bottomStyle: "A字裙或寬鬆長褲，輕盈飄逸", accessory: "植物系或藤編配件" },
-  丙: { topStyle: "亮色系或有光澤感的上衣", bottomStyle: "修身直筒褲，展現自信", accessory: "金屬光澤配件" },
-  丁: { topStyle: "柔和色調的針織或棉麻上衣", bottomStyle: "柔軟質地的長褲或裙子", accessory: "溫潤玉石或木質配件" },
-  戊: { topStyle: "厚實感的翻領或立領上衣", bottomStyle: "寬版褲或工裝風格", accessory: "大地色系皮革配件" },
-  己: { topStyle: "舒適包覆感的圓領或船領上衣", bottomStyle: "寬鬆舒適的休閒褲", accessory: "布藝或陶瓷配件" },
-  庚: { topStyle: "俐落感的V領或無領上衣", bottomStyle: "修身直筒褲，展現決斷力", accessory: "金屬感配件" },
-  辛: { topStyle: "精緻感的高領或細節豐富的上衣", bottomStyle: "剪裁精良的直筒或小腳褲", accessory: "銀色或白色系配件" },
-  壬: { topStyle: "流動感的寬鬆上衣或外套", bottomStyle: "寬鬆飄逸的長褲或長裙", accessory: "深色系或海洋風配件" },
-  癸: { topStyle: "低調質感的素色或暗紋上衣", bottomStyle: "沉穩色調的長褲", accessory: "深色系低調配件" },
-};
-
-// ─── 十神穿搭策略（決定顏色比重）────────────────────────────────
-const OUTFIT_STRATEGY_BY_TENGOD: Record<string, {
-  topColor: string; topElement: string; topReason: string;
-  bottomColor: string; bottomElement: string; bottomReason: string;
-  shoesColor: string; shoesElement: string; shoesReason: string;
-  summary: string;
-}> = {
-  食神: {
-    topColor: "朱紅/火焰橙", topElement: "火", topReason: "食神日甲木化火，上半身著火色強化才華輸出，讓創意能量從心口流出",
-    bottomColor: "土黃/駝色", bottomElement: "土", bottomReason: "下半身土色穩固財星，讓才華能量落地變現，防止能量過度洩散",
-    shoesColor: "白色/銀色", shoesElement: "金", shoesReason: "鞋著金色接地，以金洩火的循環保持能量平衡，步伐穩健有力",
-    summary: "食神日才華全開，上紅下黃配白鞋，是最強的天命共振穿搭，讓你的光芒自然流露。",
-  },
-  傷官: {
-    topColor: "橙色/珊瑚紅", topElement: "火", topReason: "傷官日破繭之火，上半身著暖橙色展現突破氣場，吸引注意力",
-    bottomColor: "土黃/卡其", bottomElement: "土", bottomReason: "下半身卡其色穩固根基，在突破的同時保持腳踏實地",
-    shoesColor: "淺金/米白", shoesElement: "金", shoesReason: "鞋著淺金色，金的銳利為傷官的突破提供精準方向",
-    summary: "傷官日鋒芒畢露，上橙下卡其配淺金鞋，展現你的獨特個性與突破力。",
-  },
-  偏財: {
-    topColor: "橙色/火焰橙", topElement: "火", topReason: "偏財日機遇入局，上半身著橙色吸引財富能量，展現主動魅力",
-    bottomColor: "土黃/棕褐", bottomElement: "土", bottomReason: "下半身棕褐色厚積財星，讓偏財能量有地方落腳，不會轉瞬即逝",
-    shoesColor: "白色/香檳金", shoesElement: "金", shoesReason: "鞋著香檳金色，金的光澤吸引財富，步步踩出財運",
-    summary: "偏財日財星入局，上橙下棕配香檳金鞋，主動出擊的最佳財運穿搭。",
-  },
-  正財: {
-    topColor: "珊瑚紅/磚紅", topElement: "火", topReason: "正財日穩健積累，上半身著沉穩的磚紅色，展現可信賴的專業形象",
-    bottomColor: "駝色/米白", bottomElement: "土", bottomReason: "下半身駝色穩重大方，財星能量踏實落地，長期積累的最佳配色",
-    shoesColor: "白色/珍珠白", shoesElement: "金", shoesReason: "鞋著珍珠白，純淨的金能量讓每一步都走得穩健踏實",
-    summary: "正財日穩健積累，磚紅上衣配駝色下裝搭珍珠白鞋，展現你的專業與可靠。",
-  },
-  七殺: {
-    topColor: "朱紅/緋紅", topElement: "火", topReason: "七殺日壓力入局，上半身著強烈的朱紅色，以食神之火制七殺之金，化壓力為動力",
-    bottomColor: "土黃/沙色", bottomElement: "土", bottomReason: "下半身沙色穩固陣地，土能量為你提供抵禦壓力的根基",
-    shoesColor: "白色/銀色", shoesElement: "金", shoesReason: "鞋著銀色，以金的銳利應對七殺的挑戰，步伐堅定不移",
-    summary: "七殺日以火制金，朱紅上衣配沙色下裝搭銀鞋，展現你在壓力下的強大氣場。",
-  },
-  正官: {
-    topColor: "磚紅/深橙", topElement: "火", topReason: "正官日規範護身，上半身著深沉的磚紅色，展現成熟穩重的專業形象",
-    bottomColor: "駝色/棕褐", bottomElement: "土", bottomReason: "下半身棕褐色正式大方，土的穩重讓你在官場中如魚得水",
-    shoesColor: "白色/米白", shoesElement: "金", shoesReason: "鞋著米白色，純淨的金能量讓你的每一步都符合規範",
-    summary: "正官日官運加持，磚紅上衣配棕褐下裝搭米白鞋，展現你的專業與誠信。",
-  },
-  偏印: {
-    topColor: "橙色/暖黃橙", topElement: "火", topReason: "偏印日深水靜流，上半身著暖橙色點亮靈感，將深層思考轉化為創意火花",
-    bottomColor: "土黃/米白", bottomElement: "土", bottomReason: "下半身米白色清爽，讓思維保持清晰，不被過多能量干擾",
-    shoesColor: "淺金/白色", shoesElement: "金", shoesReason: "鞋著淺金色，金的精準讓你的洞察力有落地的方向",
-    summary: "偏印日智慧沉澱，暖橙上衣配米白下裝搭淺金鞋，適合深度思考與靈感創作。",
-  },
-  正印: {
-    topColor: "珊瑚紅/橙色", topElement: "火", topReason: "正印日貴人相助，上半身著溫暖的珊瑚紅，展現親和力，吸引貴人能量",
-    bottomColor: "駝色/土黃", bottomElement: "土", bottomReason: "下半身土色穩重，讓貴人看到你的可靠與踏實",
-    shoesColor: "白色/米白", shoesElement: "金", shoesReason: "鞋著米白色，純淨的金能量讓你散發出值得信賴的氣質",
-    summary: "正印日貴人加持，珊瑚紅上衣配駝色下裝搭米白鞋，展現你的親和力與可靠性。",
-  },
-  比肩: {
-    topColor: "火焰橙/橙色", topElement: "火", topReason: "比肩日自強不息，上半身著鮮明的橙色展現個人特色，讓你在競爭中脫穎而出",
-    bottomColor: "土黃/卡其", bottomElement: "土", bottomReason: "下半身卡其色穩固根基，在展現自我的同時保持接地氣",
-    shoesColor: "白色/銀色", shoesElement: "金", shoesReason: "鞋著銀色，金的銳利讓你在競爭中保持清醒的判斷力",
-    summary: "比肩日獨立前行，橙色上衣配卡其下裝搭銀鞋，以個人實力展現你的獨特價值。",
-  },
-  劫財: {
-    topColor: "磚紅/深珊瑚", topElement: "火", topReason: "劫財日守住根基，上半身著沉穩的磚紅色，低調但不失力量感",
-    bottomColor: "棕褐/駝色", bottomElement: "土", bottomReason: "下半身棕褐色厚重穩固，守住財星根基，防止能量外洩",
-    shoesColor: "白色/米白", shoesElement: "金", shoesReason: "鞋著米白色，金的收斂特性幫助你在劫財日守住核心資產",
-    summary: "劫財日低調守財，磚紅上衣配棕褐下裝搭米白鞋，以沉穩氣場保護你的核心能量。",
-  },
-};
-
-// ─── 月相對穿搭的影響 ─────────────────────────────────────────────
-const MOON_PHASE_OUTFIT_MODIFIER: Record<string, string> = {
-  新月: "新月之日，萬象更新。建議在主色系中加入一件白色或淺色單品，象徵新的開始。",
-  上弦月: "上弦月能量上升，可在配件上選擇有光澤感的材質（如金屬、珍珠），呼應月亮的成長能量。",
-  滿月: "滿月能量最強！今日可大膽嘗試更鮮豔的火色系（如正紅、橙紅），讓你的光芒與月亮共鳴。",
-  下弦月: "下弦月能量收斂，建議整體穿搭偏向低調沉穩，以大地色系為主，專注於內在積累。",
-  殘月: "殘月之日，以靜制動。選擇舒適、低調的穿搭，為下一個月相周期蓄積能量。",
-};
 
 /**
  * 根據天干、十神、月相生成差異化穿搭建議
@@ -203,6 +111,8 @@ export function generateOutfitAdvice(
   bottom: { color: string; element: string; reason: string };
   shoes: { color: string; element: string; reason: string };
   summary: string;
+  accentColor?: string;
+  energyTag?: string;
   moonNote?: string;
   stemNote?: string;
 } {
@@ -213,10 +123,10 @@ export function generateOutfitAdvice(
   const stemStyle = OUTFIT_STYLE_BY_STEM[dayStem || "甲"] || OUTFIT_STYLE_BY_STEM["甲"];
 
   // 月相修飾語（第三維度）
-  const moonNote = moonPhase ? MOON_PHASE_OUTFIT_MODIFIER[moonPhase] : undefined;
+  const moonNote = moonPhase ? MOON_OUTFIT_MOD[moonPhase] : undefined;
 
   // 天干個性備注
-  const stemPersonality = dayStem ? STEM_PERSONALITY[dayStem] : undefined;
+  const stemPersonality = dayStem ? STEM_PERSONALITY_MAP[dayStem] : undefined;
   const stemNote = stemPersonality
     ? `今日${dayStem}日，天干之氣「${stemPersonality}」，款式建議：${stemStyle.topStyle}搭配${stemStyle.bottomStyle}，配件選擇${stemStyle.accessory}。`
     : undefined;
@@ -239,6 +149,8 @@ export function generateOutfitAdvice(
       reason: strategy.shoesReason,
     },
     summary: strategy.summary,
+    accentColor: strategy.accentColor,
+    energyTag: strategy.energyTag,
     moonNote,
     stemNote,
   };

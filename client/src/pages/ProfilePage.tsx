@@ -26,48 +26,48 @@ const FOUR_PILLARS = [
   },
   {
     pillar: "月柱",
-    heavenlyStem: "癸",
+    heavenlyStem: "乙",
     earthlyBranch: "亥",
-    stemElement: "水",
+    stemElement: "木",
     branchElement: "水",
-    stemColor: "#60a5fa",
+    stemColor: "#4ade80",
     branchColor: "#60a5fa",
-    note: "癸亥月・傷官",
+    note: "乙亥月・劫財",
   },
   {
     pillar: "日柱",
-    heavenlyStem: "庚",
-    earthlyBranch: "午",
-    stemElement: "金",
-    branchElement: "火",
-    stemColor: "#e5e7eb",
-    branchColor: "#f97316",
-    note: "庚午日・日主",
+    heavenlyStem: "甲",
+    earthlyBranch: "子",
+    stemElement: "木",
+    branchElement: "水",
+    stemColor: "#4ade80",
+    branchColor: "#60a5fa",
+    note: "甲子日・日主（甲木）",
   },
   {
     pillar: "時柱",
-    heavenlyStem: "庚",
+    heavenlyStem: "己",
     earthlyBranch: "巳",
-    stemElement: "金",
+    stemElement: "土",
     branchElement: "火",
-    stemColor: "#e5e7eb",
+    stemColor: "#d97706",
     branchColor: "#f97316",
-    note: "庚巳時・比肩",
+    note: "己巳時・正財",
   },
 ];
 
 const FIVE_ELEMENTS_DATA = [
-  { name: "水", value: 48, color: "#60a5fa", icon: "💧", desc: "過旺・忌神" },
-  { name: "木", value: 32, color: "#4ade80", icon: "🌿", desc: "過旺・忌神" },
-  { name: "土", value: 10, color: "#d97706", icon: "🌍", desc: "用神・補強" },
-  { name: "火", value: 7, color: "#f97316", icon: "🔥", desc: "用神・首要" },
-  { name: "金", value: 3, color: "#d1d5db", icon: "⚪", desc: "日主・身弱" },
+  { name: "木", value: 42, color: "#4ade80", icon: "🌳", desc: "過旺・忘神（比劫）" },
+  { name: "水", value: 35, color: "#60a5fa", icon: "💧", desc: "過旺・忘神（印星）" },
+  { name: "火", value: 11, color: "#f97316", icon: "🔥", desc: "用神首要（食傷）—補火第一優先" },
+  { name: "土", value: 9, color: "#d97706", icon: "🌍", desc: "喜神（財星）—補土第二優先" },
+  { name: "金", value: 4, color: "#d1d5db", icon: "⚪", desc: "喜神（官殺）—補金第三優先" },
 ];
 
 const LUCKY_STRATEGY = [
-  { rank: 1, element: "火", icon: "🔥", role: "官殺・制衡忌神", desc: "補充行動力與熱情，制衡過旺水木，點燃財星", color: "#f97316" },
-  { rank: 2, element: "土", icon: "🌍", role: "印星・生扶日主", desc: "穩固根基，吸收水木能量，滋養庚金日主", color: "#d97706" },
-  { rank: 3, element: "金", icon: "⚪", role: "比劫・強化日主", desc: "補充日主庚金能量，增強決策力與執行力", color: "#9ca3af" },
+  { rank: 1, element: "火", icon: "🔥", role: "食傷・洩木暖局", desc: "洩木生財的唯一關鍵，補充行動力與曝光度，點燃財星（土）", color: "#f97316" },
+  { rank: 2, element: "土", icon: "🌍", role: "財星・築壩擋水", desc: "甲木日主的財星，築壩擋水為木提供根基，落地變現實財富", color: "#d97706" },
+  { rank: 3, element: "金", icon: "⚪", role: "官殺・劈木生火", desc: "劈木生火的機制，提供決斷力與收斂性，防護邊界、建立規則", color: "#9ca3af" },
 ];
 
 const ZIWEI_PALACES = [
@@ -168,7 +168,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-center md:justify-start gap-3 mb-1">
                 <h1 className="text-3xl font-bold text-orange-400">{PROFILE.name}</h1>
                 <span className="text-sm bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/30">
-                  庚金日主・身弱
+                  甲木日主・水大木漂
                 </span>
               </div>
               <p className="text-gray-400 text-sm mb-3">{PROFILE.occupation}</p>
@@ -195,7 +195,7 @@ export default function ProfilePage() {
             <div className="flex-shrink-0 flex flex-col gap-2 text-center">
               <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-3">
                 <div className="text-xs text-gray-400 mb-1">核心格局</div>
-                <div className="text-orange-300 font-bold">身弱・食傷財旺</div>
+                <div className="text-orange-300 font-bold">水大木漂・寒木盼火</div>
               </div>
               <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-2">
                 <div className="text-xs text-gray-400 mb-0.5">命宮主星</div>
@@ -303,7 +303,7 @@ export default function ProfilePage() {
               <span>🎯</span> 終身補運策略
             </h2>
             <p className="text-xs text-gray-400 mb-4">
-              庚金日主身弱，水木過旺，需以火土金補強。此策略終身不變，每日穿搭、手串、行動皆依此優先級執行。
+              甲木日主，水木過旺（共占 77%），需以火洩木補強，土筑壩擋水，金制木清源。此策略終身不變，每日穿搭、手串、飲食、行動皆依此優先級執行。
             </p>
             <div className="space-y-3">
               {LUCKY_STRATEGY.map((s) => (
@@ -331,8 +331,8 @@ export default function ProfilePage() {
             <div className="mt-4 bg-red-900/20 border border-red-500/30 rounded-lg p-3">
               <div className="text-xs text-red-400 font-bold mb-1">⚠️ 忌神（避免）</div>
               <div className="flex gap-3 text-xs text-gray-400">
-                <span>💧 水（48%・過旺）</span>
-                <span>🌿 木（32%・過旺）</span>
+                <span>💧 水（35%・過旺）</span>
+                <span>🌿 木（42%・過旺）</span>
               </div>
             </div>
           </div>
