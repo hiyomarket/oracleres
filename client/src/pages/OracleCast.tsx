@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { MoonBlock } from "@/components/MoonBlock";
@@ -14,7 +14,7 @@ import { Streamdown } from "streamdown";
 import { SharedNav } from "@/components/SharedNav";
 
 type CastPhase = 'idle' | 'animating' | 'result';
-type CastMode = 'single' | 'triple'; // 單擲 vs 三聖杯連擲
+type CastMode = 'single' | 'triple';
 
 // ─── 音效生成器 ──────────────────────────────────────────────────────────────
 
@@ -77,7 +77,6 @@ function playWoodKnock(audioCtx: AudioContext, delay = 0) {
   noiseSource.start(time);
 }
 
-// 三聖杯確認音效（清脆三連擊）
 function playTripleConfirmSound(audioCtx: AudioContext) {
   [0, 0.3, 0.6].forEach(delay => playWoodKnock(audioCtx, delay));
 }
@@ -157,7 +156,7 @@ function TripleProgress({ current, results }: { current: number; results: string
   };
 
   return (
-    <div className="flex items-center justify-center gap-4 mb-4">
+    <div className="flex items-center justify-center gap-4">
       {[0, 1, 2].map((i) => (
         <div key={i} className="flex flex-col items-center gap-1">
           <motion.div
@@ -194,16 +193,23 @@ export default function OracleCast() {
   const [castResult, setCastResult] = useState<any>(null);
   const [leftFace, setLeftFace] = useState<BlockFace>('front');
   const [rightFace, setRightFace] = useState<BlockFace>('front');
-  const [showHistory, setShowHistory] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
-  const [showMoonPhase, setShowMoonPhase] = useState(false);
   const [llmInsight, setLlmInsight] = useState<string | null>(null);
   const [showInsight, setShowInsight] = useState(false);
+  // 最近3筆歷史問題（本地持久化）
+  const [recentQueries, setRecentQueries] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('oracle_recent_queries');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // 三聖杯連擲狀態
-  const [tripleCount, setTripleCount] = useState(0);      // 當前第幾擲（0-2）
-  const [tripleResults, setTripleResults] = useState<string[]>([]); // 每擲結果
-  const [tripleConfirmed, setTripleConfirmed] = useState(false);    // 是否三次皆聖杯
+  const [tripleCount, setTripleCount] = useState(0);
+  const [tripleResults, setTripleResults] = useState<string[]>([]);
+  const [tripleConfirmed, setTripleConfirmed] = useState(false);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const { user } = useAuth();
@@ -235,6 +241,17 @@ export default function OracleCast() {
     return () => document.removeEventListener('click', initAudio);
   }, []);
 
+  // 儲存問題到最近記錄
+  const saveQueryToRecent = useCallback((q: string) => {
+    if (!q.trim()) return;
+    setRecentQueries(prev => {
+      const filtered = prev.filter(item => item !== q.trim());
+      const updated = [q.trim(), ...filtered].slice(0, 3);
+      try { localStorage.setItem('oracle_recent_queries', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  }, []);
+
   // 設定筊杯面向
   const setFacesFromResult = useCallback((result: string) => {
     if (result === 'sheng') { setLeftFace('front'); setRightFace('back'); }
@@ -253,6 +270,7 @@ export default function OracleCast() {
     }
     try {
       const result = await castMutation.mutateAsync({ query });
+      saveQueryToRecent(query);
       setTimeout(() => {
         setFacesFromResult(result.result);
         setCastResult(result);
@@ -262,9 +280,9 @@ export default function OracleCast() {
       console.error('Cast failed:', err);
       setPhase('idle');
     }
-  }, [query, castMutation, setFacesFromResult]);
+  }, [query, castMutation, setFacesFromResult, saveQueryToRecent]);
 
-  // 三聖杯連擲 - 執行單次
+  // 三聖杯連擲
   const executeTripleCast = useCallback(async (castIndex: number, prevResults: string[]) => {
     setPhase('animating');
     if (audioCtxRef.current) {
@@ -274,22 +292,20 @@ export default function OracleCast() {
     }
     try {
       const result = await castMutation.mutateAsync({ query });
+      if (castIndex === 0) saveQueryToRecent(query);
       setTimeout(() => {
         setFacesFromResult(result.result);
         const newResults = [...prevResults, result.result];
         setTripleResults(newResults);
 
         if (result.result !== 'sheng') {
-          // 非聖杯：三聖杯失敗，顯示此次結果
           setCastResult(result);
           setPhase('result');
           setTripleCount(0);
         } else if (castIndex < 2) {
-          // 聖杯但未到三次：繼續
           setTripleCount(castIndex + 1);
           setPhase('idle');
         } else {
-          // 三次皆聖杯！
           setTripleConfirmed(true);
           setCastResult({ ...result, isTripleConfirmed: true });
           setPhase('result');
@@ -302,7 +318,7 @@ export default function OracleCast() {
       console.error('Cast failed:', err);
       setPhase('idle');
     }
-  }, [query, castMutation, setFacesFromResult]);
+  }, [query, castMutation, setFacesFromResult, saveQueryToRecent]);
 
   const handleCast = useCallback(async () => {
     if (phase !== 'idle') return;
@@ -316,7 +332,6 @@ export default function OracleCast() {
   const handleReset = useCallback(() => {
     setPhase('idle');
     setCastResult(null);
-    setQuery('');
     setLeftFace('front');
     setRightFace('front');
     setTripleCount(0);
@@ -324,6 +339,7 @@ export default function OracleCast() {
     setTripleConfirmed(false);
     setLlmInsight(null);
     setShowInsight(false);
+    // 注意：不清空 query，讓使用者可以修改後再問
   }, []);
 
   const handleDeepRead = useCallback(async () => {
@@ -365,102 +381,279 @@ export default function OracleCast() {
     return '🔥 開始擲筊';
   };
 
+  // 是否顯示登入提示
+  const showLoginPrompt = !user;
+
   return (
     <div className="min-h-screen oracle-bg relative">
       <BackgroundParticles />
-
       <SharedNav currentPage="oracle" />
 
       <div className="relative z-10 container mx-auto px-4 pb-12">
         <div className="max-w-2xl mx-auto">
 
-          {/* 主標題 */}
-          <AnimatePresence mode="wait">
-            {phase !== 'result' && (
-              <motion.div
-                className="text-center mb-6 pt-2"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-              >
-                <h1 className="text-3xl md:text-4xl font-black oracle-text-gradient tracking-widest mb-1">
-                  天命共振
-                </h1>
-                <p className="text-xs text-muted-foreground tracking-[0.3em]">
-                  蘇祐震先生專屬神諭系統
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* ═══ 區塊一：筊杯動畫區（置頂，始終顯示） ═══ */}
+          <div className="glass-card rounded-2xl overflow-hidden mb-4 mt-2">
+            {/* 頂部標題列 */}
+            <div className="flex items-center justify-between px-5 pt-4 pb-2">
+              <div>
+                <h1 className="text-xl font-black oracle-text-gradient tracking-widest">天命共振</h1>
+                <p className="text-[10px] text-muted-foreground tracking-[0.25em]">蘇祐震先生專屬神諭系統</p>
+              </div>
+              {/* 擲筊模式切換 */}
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => { setCastMode('single'); setTripleCount(0); setTripleResults([]); }}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                    castMode === 'single'
+                      ? 'border-amber-600/60 bg-amber-900/30 text-amber-300'
+                      : 'border-border/30 text-muted-foreground hover:border-border/60'
+                  }`}
+                >
+                  🎋 單擲
+                </button>
+                <button
+                  onClick={() => { setCastMode('triple'); setTripleCount(0); setTripleResults([]); }}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all border ${
+                    castMode === 'triple'
+                      ? 'border-amber-600/60 bg-amber-900/30 text-amber-300'
+                      : 'border-border/30 text-muted-foreground hover:border-border/60'
+                  }`}
+                >
+                  🔴🔴🔴 三聖杯
+                </button>
+              </div>
+            </div>
 
-          {/* 能量面板區（idle 時顯示） */}
-          <AnimatePresence>
-            {phase === 'idle' && (
-              <motion.div
-                className="mb-5 space-y-3"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                {/* 每日能量 + 月相（並排） */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <DailyEnergyPanel />
-                  <MoonPhaseDisplay compact />
-                </div>
+            {/* 三聖杯進度（連擲模式） */}
+            <AnimatePresence>
+              {castMode === 'triple' && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="px-5 py-3 border-t border-border/20 bg-amber-900/10"
+                >
+                  <TripleProgress current={tripleCount} results={tripleResults} />
+                  {tripleCount > 0 && (
+                    <p className="text-xs text-amber-400 text-center mt-2">
+                      已得 {tripleCount} 次聖杯，再得 {3 - tripleCount} 次即確認！
+                    </p>
+                  )}
+                  {tripleCount === 0 && (
+                    <p className="text-[10px] text-muted-foreground text-center mt-2">
+                      傳統擲筊需三次皆得聖杯，方為神明真正應允
+                    </p>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                {/* 時辰能量時間軸（可展開） */}
-                <div>
-                  <button
-                    onClick={() => setShowTimeline(!showTimeline)}
-                    className="w-full text-xs text-muted-foreground hover:text-amber-400 transition-colors py-2 border border-border/30 rounded-xl hover:border-amber-600/30 mb-2"
+            {/* 筊杯動畫主區 */}
+            <div className="relative px-5 py-6 text-center">
+              {/* 狀態文字 */}
+              <div className="text-xs text-muted-foreground tracking-widest mb-4 h-4">
+                {phase === 'animating' ? (
+                  <motion.span animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1, repeat: Infinity }}>
+                    神明感應中...
+                  </motion.span>
+                ) : phase === 'result' ? (
+                  <span className="text-amber-400/70">擲筊完成 · 問題已記錄</span>
+                ) : (
+                  '靜心，默念所問之事'
+                )}
+              </div>
+
+              {/* 筊杯 */}
+              <div className="flex justify-center gap-10 mb-6 min-h-[140px] items-end">
+                <motion.div
+                  animate={phase === 'animating' ? {
+                    y: [0, -140, -110, 0],
+                    x: [0, -45, -30, 0],
+                    rotate: [0, 200, 310, 0],
+                  } : {}}
+                  transition={phase === 'animating' ? {
+                    duration: 1.2,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                  } : {}}
+                >
+                  <MoonBlock face={phase === 'result' ? leftFace : 'front'} size="lg" />
+                </motion.div>
+                <motion.div
+                  animate={phase === 'animating' ? {
+                    y: [0, -140, -110, 0],
+                    x: [0, 45, 30, 0],
+                    rotate: [0, -200, -310, 0],
+                  } : {}}
+                  transition={phase === 'animating' ? {
+                    duration: 1.2,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                    delay: 0.05,
+                  } : {}}
+                >
+                  <MoonBlock face={phase === 'result' ? rightFace : 'back'} size="lg" />
+                </motion.div>
+              </div>
+
+              {/* 能量光環（動畫中） */}
+              <AnimatePresence>
+                {phase === 'animating' && (
+                  <motion.div
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                   >
-                    {showTimeline ? '▲ 收起時辰能量' : '⏰ 展開全天時辰能量預覽'}
-                  </button>
-                  <AnimatePresence>
-                    {showTimeline && (
+                    {[1, 2, 3].map((i) => (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.4 }}
-                      >
-                        <HourlyEnergyTimeline />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                        key={i}
+                        className="absolute rounded-full border border-amber-500/30"
+                        style={{ width: 100 + i * 40, height: 100 + i * 40 }}
+                        animate={{ scale: [1, 2], opacity: [0.6, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
+                      />
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-          {/* 主要內容區 */}
-          <AnimatePresence mode="wait">
-            {phase === 'result' && castResult ? (
-              <div key="result">
-                {/* 三聖杯確認特效 */}
-                {tripleConfirmed && (
+              {/* 三聖杯確認特效 */}
+              <AnimatePresence>
+                {tripleConfirmed && phase === 'result' && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="mb-4 p-4 bg-amber-900/30 border border-amber-500/60 rounded-2xl text-center"
+                    exit={{ opacity: 0 }}
+                    className="mb-3 p-3 bg-amber-900/30 border border-amber-500/60 rounded-xl"
                   >
                     <motion.div
-                      className="text-3xl mb-2"
+                      className="text-2xl mb-1"
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 1, repeat: 3 }}
                     >
                       🎊
                     </motion.div>
-                    <p className="text-amber-300 font-bold tracking-wider text-sm">
-                      三聖杯確認！
-                    </p>
-                    <p className="text-amber-400/80 text-xs mt-1">
-                      神明三度應允，此事天命已定，可放心前行。
+                    <p className="text-amber-300 font-bold tracking-wider text-xs">
+                      三聖杯確認！神明三度應允，此事天命已定。
                     </p>
                   </motion.div>
                 )}
+              </AnimatePresence>
+
+              {/* 擲筊按鈕 */}
+              {phase !== 'result' && (
+                <button
+                  onClick={handleCast}
+                  disabled={phase !== 'idle'}
+                  className="flame-button px-10 py-3.5 rounded-full text-base font-black tracking-widest shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {castButtonLabel()}
+                </button>
+              )}
+
+              {/* 結果後：重新擲筊按鈕 */}
+              {phase === 'result' && (
+                <button
+                  onClick={handleReset}
+                  className="px-8 py-3 rounded-full text-sm font-semibold tracking-wider border border-amber-600/40 bg-amber-900/20 text-amber-300 hover:bg-amber-900/40 transition-all"
+                >
+                  ↩ 再問一次
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ═══ 區塊二：問題輸入欄（固定顯示，始終可見） ═══ */}
+          <div className="glass-card rounded-2xl p-4 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs text-muted-foreground tracking-widest">
+                請在此處簡述您所問之事
+              </label>
+              {isListening && (
+                <span className="text-xs text-red-400 animate-pulse">正在聆聽...</span>
+              )}
+            </div>
+
+            {/* 輸入框 */}
+            <div className="relative">
+              <textarea
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="例如：我近期的事業發展是否順利？此項目是否值得投入？"
+                className="w-full bg-white/5 border border-border/50 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:border-amber-600/50 transition-colors leading-relaxed pr-10"
+                rows={2}
+              />
+              <button
+                onClick={isListening ? stopListening : startListening}
+                className={`absolute right-3 bottom-3 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                  isListening ? 'bg-red-500/80 animate-pulse' : 'bg-white/10 hover:bg-white/20'
+                }`}
+                title={isListening ? '停止語音輸入' : '語音輸入'}
+              >
+                <span className="text-xs">{isListening ? '⏹' : '🎤'}</span>
+              </button>
+            </div>
+
+            {/* 最近3筆歷史問題快速重選 */}
+            {recentQueries.length > 0 && (
+              <div className="mt-3">
+                <div className="text-[10px] text-muted-foreground/60 mb-1.5 tracking-wider">最近詢問（點擊快速填入）</div>
+                <div className="space-y-1.5">
+                  {recentQueries.map((q, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setQuery(q)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all border group ${
+                        query === q
+                          ? 'border-amber-600/50 bg-amber-900/25 text-amber-300'
+                          : 'border-border/20 bg-white/3 text-muted-foreground hover:border-amber-600/30 hover:bg-amber-900/15 hover:text-amber-300/80'
+                      }`}
+                    >
+                      <span className="text-[10px] text-muted-foreground/40 mr-2">#{i + 1}</span>
+                      <span className="line-clamp-1">{q}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 問卜指引 */}
+            {queryGuide && (
+              <div className="mt-3 pt-3 border-t border-border/20 flex items-start gap-2">
+                <span className="text-sm flex-shrink-0">🧭</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-[10px] font-semibold text-amber-400 tracking-wider">問卜指引</span>
+                    <span className="text-[10px] text-muted-foreground">{queryGuide.currentHour} · {queryGuide.energyLabel}</span>
+                    {queryGuide.isFullMoon && <span className="text-[10px] text-amber-300">🌕 滿月</span>}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground/80 leading-relaxed">{queryGuide.guidanceText}</p>
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {queryGuide.bestTopics.map((topic: string, i: number) => (
+                      <button
+                        key={i}
+                        onClick={() => setQuery(prev => prev ? prev : topic)}
+                        className="text-[10px] px-2 py-0.5 bg-amber-900/30 border border-amber-600/30 rounded-full text-amber-400 hover:bg-amber-900/50 transition-colors"
+                      >
+                        {topic}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ═══ 區塊三：結果顯示 ═══ */}
+          <AnimatePresence>
+            {phase === 'result' && castResult && (
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mb-4"
+              >
                 <OracleResult
                   result={castResult.result}
                   interpretation={castResult.interpretation}
@@ -473,7 +666,7 @@ export default function OracleCast() {
                 />
 
                 {/* LLM 深度解讀 */}
-                <div className="mt-4">
+                <div className="mt-3">
                   {!showInsight ? (
                     <button
                       onClick={handleDeepRead}
@@ -511,284 +704,131 @@ export default function OracleCast() {
                     </motion.div>
                   )}
                 </div>
-              </div>
-            ) : (
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ═══ 區塊四：能量面板（idle 時顯示） ═══ */}
+          <AnimatePresence>
+            {phase !== 'animating' && (
               <motion.div
-                key="cast"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
+                className="mb-4 space-y-3"
               >
-                {/* 擲筊模式切換 */}
-                <div className="glass-card rounded-2xl p-4 mb-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs text-muted-foreground tracking-wider">擲筊模式</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => { setCastMode('single'); setTripleCount(0); setTripleResults([]); }}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wider transition-all border ${
-                        castMode === 'single'
-                          ? 'border-amber-600/60 bg-amber-900/30 text-amber-300'
-                          : 'border-border/30 text-muted-foreground hover:border-border/60'
-                      }`}
-                    >
-                      🎋 單次擲筊
-                      <div className="text-[10px] font-normal mt-0.5 opacity-70">一擲定奪</div>
-                    </button>
-                    <button
-                      onClick={() => { setCastMode('triple'); setTripleCount(0); setTripleResults([]); }}
-                      className={`py-2.5 px-3 rounded-xl text-xs font-semibold tracking-wider transition-all border ${
-                        castMode === 'triple'
-                          ? 'border-amber-600/60 bg-amber-900/30 text-amber-300'
-                          : 'border-border/30 text-muted-foreground hover:border-border/60'
-                      }`}
-                    >
-                      🔴🔴🔴 三聖杯連擲
-                      <div className="text-[10px] font-normal mt-0.5 opacity-70">三次皆聖才算應允</div>
-                    </button>
-                  </div>
+                {/* 每日能量 + 月相 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <DailyEnergyPanel />
+                  <MoonPhaseDisplay compact />
                 </div>
 
-                {/* 三聖杯進度（連擲模式） */}
-                {castMode === 'triple' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="glass-card rounded-2xl p-4 mb-4"
+                {/* 時辰能量時間軸（可展開） */}
+                <div>
+                  <button
+                    onClick={() => setShowTimeline(!showTimeline)}
+                    className="w-full text-xs text-muted-foreground hover:text-amber-400 transition-colors py-2 border border-border/30 rounded-xl hover:border-amber-600/30 mb-2"
                   >
-                    <p className="text-xs text-muted-foreground text-center mb-3 tracking-wider">
-                      傳統擲筊需三次皆得聖杯，方為神明真正應允
-                    </p>
-                    <TripleProgress current={tripleCount} results={tripleResults} />
-                    {tripleCount > 0 && (
-                      <p className="text-xs text-amber-400 text-center mt-2">
-                        已得 {tripleCount} 次聖杯，再得 {3 - tripleCount} 次即確認！
-                      </p>
-                    )}
-                  </motion.div>
-                )}
-
-                {/* 問卜指引 */}
-                {queryGuide && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="glass-card rounded-2xl p-4 mb-4 border border-amber-600/20"
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-lg flex-shrink-0">🧭</span>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-xs font-semibold text-amber-400 tracking-wider">問卜指引</span>
-                          <span className="text-xs text-muted-foreground">{queryGuide.currentHour} · {queryGuide.energyLabel}</span>
-                          {queryGuide.isFullMoon && <span className="text-xs text-amber-300">🌕 滿月</span>}
-                        </div>
-                        <p className="text-xs text-muted-foreground/80 leading-relaxed">{queryGuide.guidanceText}</p>
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          {queryGuide.bestTopics.map((topic: string, i: number) => (
-                            <span key={i} className="text-[10px] px-2 py-0.5 bg-amber-900/30 border border-amber-600/30 rounded-full text-amber-400">
-                              {topic}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* 問題輸入區 */}
-                <div className="glass-card rounded-2xl p-5 mb-5">
-                  <label className="block text-xs text-muted-foreground tracking-widest mb-3">
-                    請在此處簡述您所問之事
-                  </label>
-                  <div className="relative">
-                    <textarea
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="例如：我近期的事業發展是否順利？此項目是否值得投入？"
-                      className="w-full bg-white/5 border border-border/50 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:border-amber-600/50 transition-colors leading-relaxed"
-                      rows={3}
-                      disabled={phase !== 'idle'}
-                    />
-                    <button
-                      onClick={isListening ? stopListening : startListening}
-                      className={`absolute right-3 bottom-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                        isListening ? 'bg-red-500/80 animate-pulse' : 'bg-white/10 hover:bg-white/20'
-                      }`}
-                      title={isListening ? '停止語音輸入' : '語音輸入'}
-                    >
-                      <span className="text-sm">{isListening ? '⏹' : '🎤'}</span>
-                    </button>
-                  </div>
-                  {isListening && (
-                    <p className="text-xs text-red-400 mt-2 animate-pulse">
-                      正在聆聽... 請說出您的問題
-                    </p>
-                  )}
-                </div>
-
-                {/* 筊杯展示區 */}
-                <div className="glass-card rounded-2xl p-8 mb-5 text-center relative overflow-hidden">
-                  <div className="text-xs text-muted-foreground tracking-widest mb-6">
-                    {phase === 'animating' ? '神明感應中...' : '靜心，默念所問之事'}
-                  </div>
-
-                  <div className="flex justify-center gap-10 mb-6 min-h-[160px] items-end">
-                    <motion.div
-                      animate={phase === 'animating' ? {
-                        y: [0, -160, -120, 0],
-                        x: [0, -50, -35, 0],
-                        rotate: [0, 200, 310, 0],
-                      } : {}}
-                      transition={phase === 'animating' ? {
-                        duration: 1.2,
-                        ease: [0.25, 0.46, 0.45, 0.94],
-                      } : {}}
-                    >
-                      <MoonBlock face={phase === 'result' ? leftFace : 'front'} size="lg" />
-                    </motion.div>
-                    <motion.div
-                      animate={phase === 'animating' ? {
-                        y: [0, -160, -120, 0],
-                        x: [0, 50, 35, 0],
-                        rotate: [0, -200, -310, 0],
-                      } : {}}
-                      transition={phase === 'animating' ? {
-                        duration: 1.2,
-                        ease: [0.25, 0.46, 0.45, 0.94],
-                        delay: 0.05,
-                      } : {}}
-                    >
-                      <MoonBlock face={phase === 'result' ? rightFace : 'back'} size="lg" />
-                    </motion.div>
-                  </div>
-
-                  {/* 能量光環（動畫中） */}
+                    {showTimeline ? '▲ 收起時辰能量' : '⏰ 展開全天時辰能量預覽'}
+                  </button>
                   <AnimatePresence>
-                    {phase === 'animating' && (
+                    {showTimeline && (
                       <motion.div
-                        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.4 }}
                       >
-                        {[1, 2, 3].map((i) => (
-                          <motion.div
-                            key={i}
-                            className="absolute rounded-full border border-amber-500/30"
-                            style={{ width: 100 + i * 40, height: 100 + i * 40 }}
-                            animate={{ scale: [1, 2], opacity: [0.6, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
-                          />
-                        ))}
+                        <HourlyEnergyTimeline />
                       </motion.div>
                     )}
                   </AnimatePresence>
-
-                  {/* 擲筊按鈕 */}
-                  <button
-                    onClick={handleCast}
-                    disabled={phase !== 'idle'}
-                    className="flame-button px-12 py-4 rounded-full text-lg font-black tracking-widest shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {castButtonLabel()}
-                  </button>
-                </div>
-
-                {/* 命理提示 */}
-                <div className="text-center mb-6">
-                  <p className="text-xs text-muted-foreground/50 tracking-wider">
-                    此系統基於蘇先生八字命格「甲子・乙亥・甲子・己巳」
-                  </p>
-                  <p className="text-xs text-muted-foreground/40 mt-1 tracking-wider">
-                    水木之身，以火為用神，每次擲筊皆與天命共振
-                  </p>
-                </div>
-
-                {/* 快速功能入口 */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {[
-                    { path: '/war-room', icon: '⚔️', label: '今日作戰室', desc: '流日分析' },
-                    { path: '/profile', icon: '🔮', label: '命格身份證', desc: '八字紫微' },
-                    { path: '/calendar', icon: '📅', label: '天命日曆', desc: '節氣宜忌' },
-                    { path: '/weekly', icon: '📈', label: '命理週報', desc: 'ROI走勢' },
-                    { path: '/lottery', icon: '🎰', label: '選號日誌', desc: '天命選號' },
-                    { path: '/stats', icon: '📊', label: '擲筊統計', desc: '年度分析' },
-                  ].map((item) => (
-                    <button
-                      key={item.path}
-                      onClick={() => navigate(item.path)}
-                      className="flex flex-col items-center gap-1 p-3 rounded-xl bg-white/5 border border-border/20 hover:bg-white/10 hover:border-amber-600/30 transition-all group"
-                    >
-                      <span className="text-lg group-hover:scale-110 transition-transform">{item.icon}</span>
-                      <span className="text-[11px] font-medium text-slate-300 group-hover:text-amber-300 transition-colors">{item.label}</span>
-                      <span className="text-[9px] text-muted-foreground/50">{item.desc}</span>
-                    </button>
-                  ))}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* 神諭歷史記錄 */}
-          <AnimatePresence>
-            {showHistory && history && history.length > 0 && (
-              <motion.div
-                className="mt-5 glass-card rounded-2xl p-5"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.4 }}
+          {/* ═══ 區塊五：快速功能入口 ═══ */}
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {[
+              { path: '/war-room', icon: '⚔️', label: '今日作戰室', desc: '流日分析' },
+              { path: '/profile', icon: '🔮', label: '命格身份證', desc: '八字紫微' },
+              { path: '/calendar', icon: '📅', label: '天命日曆', desc: '節氣宜忌' },
+              { path: '/weekly', icon: '📈', label: '命理週報', desc: 'ROI走勢' },
+              { path: '/lottery', icon: '🎰', label: '選號日誌', desc: '天命選號' },
+              { path: '/stats', icon: '📊', label: '擲筊統計', desc: '年度分析' },
+            ].map((item) => (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                className="flex flex-col items-center gap-1 p-3 rounded-xl bg-white/5 border border-border/20 hover:bg-white/10 hover:border-amber-600/30 transition-all group"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold tracking-widest oracle-text-gradient">
-                    神諭記錄
-                  </h3>
-                  <button
-                    onClick={() => setShowHistory(false)}
-                    className="text-muted-foreground hover:text-foreground text-xs"
-                  >
-                    收起
-                  </button>
-                </div>
-                <div className="space-y-3">
-                  {history.map((session) => (
-                    <div key={session.id} className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
-                      <div className="text-lg flex-shrink-0">
-                        {session.result === 'sheng' ? '🔴' :
-                         session.result === 'xiao' ? '🟤' :
-                         session.result === 'yin' ? '⚫' : '✨'}
+                <span className="text-lg group-hover:scale-110 transition-transform">{item.icon}</span>
+                <span className="text-[11px] font-medium text-slate-300 group-hover:text-amber-300 transition-colors">{item.label}</span>
+                <span className="text-[9px] text-muted-foreground/50">{item.desc}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* ═══ 區塊六：神諭歷史記錄（可展開） ═══ */}
+          {history && history.length > 0 && (
+            <details className="glass-card rounded-2xl overflow-hidden mb-4">
+              <summary className="px-5 py-3 text-xs text-muted-foreground hover:text-amber-400 cursor-pointer tracking-wider select-none flex items-center justify-between">
+                <span>📜 神諭歷史記錄（最近 {history.length} 筆）</span>
+                <span className="text-[10px] opacity-60">點擊展開</span>
+              </summary>
+              <div className="px-5 pb-4 space-y-2 border-t border-border/20 pt-3">
+                {history.map((session) => (
+                  <div key={session.id} className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
+                    <div className="text-base flex-shrink-0">
+                      {session.result === 'sheng' ? '🔴' :
+                       session.result === 'xiao' ? '🟤' :
+                       session.result === 'yin' ? '⚫' : '✨'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-semibold text-amber-400">
+                          {resultTypeMap[session.result]}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {session.dayPillarStem}{session.dayPillarBranch}日
+                        </span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-semibold text-amber-400">
-                            {resultTypeMap[session.result]}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {session.dayPillarStem}{session.dayPillarBranch}日
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate">{session.query}</p>
-                        <p className="text-xs text-muted-foreground/60 mt-1">
+                      <p className="text-xs text-muted-foreground truncate">{session.query}</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-[10px] text-muted-foreground/60">
                           {new Date(session.createdAt).toLocaleDateString('zh-TW', {
                             month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
                           })}
                         </p>
+                        {session.query && (
+                          <button
+                            onClick={() => setQuery(session.query)}
+                            className="text-[10px] text-amber-500/60 hover:text-amber-400 transition-colors"
+                          >
+                            重用此問題
+                          </button>
+                        )}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
                 <button
                   onClick={() => navigate('/stats')}
-                  className="w-full mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors py-2 border border-amber-600/30 rounded-xl"
+                  className="w-full mt-2 text-xs text-amber-400 hover:text-amber-300 transition-colors py-2 border border-amber-600/30 rounded-xl"
                 >
                   📊 查看完整統計分析
                 </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </details>
+          )}
+
+          {/* 命理提示 */}
+          <div className="text-center mb-4">
+            <p className="text-[10px] text-muted-foreground/40 tracking-wider">
+              甲子・乙亥・甲子・己巳 · 水木之身，以火為用神
+            </p>
+          </div>
 
         </div>
       </div>
