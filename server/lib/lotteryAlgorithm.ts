@@ -7,6 +7,7 @@
 import { getDayPillar, HEAVENLY_STEMS, EARTHLY_BRANCHES } from "./lunarCalendar";
 import { getMoonPhase } from "./moonPhase";
 import { getCurrentHourEnergy } from "./hourlyEnergy";
+import { LUCKY_NUMBER_WEIGHTS, LOTTERY_ELEMENT_BOOST } from "./userProfile";
 
 // ============================================================
 // 五行數字對應表（傳統命理學）
@@ -26,22 +27,9 @@ export const WUXING_NUMBERS: Record<string, number[]> = {
   water: [6],
 };
 
-// 蘇先生命格：甲木日主
-// 用神（最喜）：火 > 土 > 金
-// 忌神（最忌）：水 > 木（過旺）
-// 基礎號碼權重
-const BASE_WEIGHTS: Record<number, number> = {
-  0: 8,  // 土（財星，喜）
-  1: 4,  // 木/水（身強，中性偏忌）
-  2: 10, // 火（用神，最喜）
-  3: 5,  // 木（身強，中性）
-  4: 7,  // 金（喜神，決斷）
-  5: 8,  // 土（財星，喜）
-  6: 3,  // 水（忌神，降權）
-  7: 10, // 火（用神，最喜）
-  8: 5,  // 木（身強，中性）
-  9: 7,  // 金（喜神，決斷）
-};
+// 蘇先生命格：甲木日主（詳見 userProfile.ts）
+// 基礎號碼權重—— 統一從 userProfile.LUCKY_NUMBER_WEIGHTS 引用
+const BASE_WEIGHTS = LUCKY_NUMBER_WEIGHTS;
 
 // 天干五行對應
 const STEM_ELEMENT: Record<string, string> = {
@@ -62,14 +50,8 @@ const BRANCH_ELEMENT: Record<string, string> = {
   戌: "earth", 亥: "water",
 };
 
-// 五行吉凶對蘇先生的影響
-const ELEMENT_BOOST: Record<string, number> = {
-  fire: 3,   // 用神，大吉，加成最高
-  earth: 2,  // 喜神，吉，加成次之
-  metal: 1,  // 喜神，小吉
-  wood: 0,   // 中性（身強不需補）
-  water: -2, // 忌神，降權
-};
+// 五行對彩券號碼的加成分數—— 統一從 userProfile.LOTTERY_ELEMENT_BOOST 引用
+const ELEMENT_BOOST = LOTTERY_ELEMENT_BOOST;
 
 export interface LotteryResult {
   numbers: number[];           // 主要推薦號碼（6個，0-9）

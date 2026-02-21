@@ -8,6 +8,7 @@
 
 import { HEAVENLY_STEMS, EARTHLY_BRANCHES, STEM_ELEMENT, BRANCH_ELEMENT } from './lunarCalendar';
 import type { EnergyLevel } from './lunarCalendar';
+import { HOUR_ELEMENT_SCORES, SPECIAL_HOUR_BONUS } from './userProfile';
 
 // ─── 時辰基礎資料 ───────────────────────────────────────────────────────────
 
@@ -105,24 +106,18 @@ function calculateHourEnergy(
   const woodCount = elements.filter(e => e === '木').length;
   const metalCount = elements.filter(e => e === '金').length;
 
-  // 計算吉凶分數（蘇先生視角）
-  // 火：+30分/個，土：+20分/個，金：±5分/個，水：-25分/個，木：-20分/個
+  // 使用 userProfile 的 HOUR_ELEMENT_SCORES 計算吉凶分數
   let score = 50; // 基礎分
-  score += fireCount * 30;
-  score += earthCount * 20;
-  score += metalCount * 5;
-  score -= waterCount * 25;
-  score -= woodCount * 20;
+  score += fireCount * HOUR_ELEMENT_SCORES['火'];
+  score += earthCount * HOUR_ELEMENT_SCORES['土'];
+  score += metalCount * HOUR_ELEMENT_SCORES['金'];
+  score += waterCount * HOUR_ELEMENT_SCORES['水']; // 已為負數
+  score += woodCount * HOUR_ELEMENT_SCORES['木'];   // 已為負數
   score = Math.max(5, Math.min(100, score));
 
-  // 特殊時辰加成
-  // 巳時（蘇先生出生時辰，己巳時柱）：天生共鳴
-  if (branch === '巳') {
-    score = Math.min(100, score + 15);
-  }
-  // 丑時（命盤丑宮有紫微、破軍等重要星曜）：神秘加成
-  if (branch === '丑') {
-    score = Math.min(100, score + 10);
+  // 特殊時辰加成（從 userProfile.SPECIAL_HOUR_BONUS 引用）
+  if (SPECIAL_HOUR_BONUS[branch]) {
+    score = Math.min(100, score + SPECIAL_HOUR_BONUS[branch]);
   }
 
   let energyLevel: EnergyLevel;

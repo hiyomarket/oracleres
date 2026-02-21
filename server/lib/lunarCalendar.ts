@@ -1,7 +1,9 @@
 /**
  * 農曆天干地支轉換算法
  * 用於「天命共振」擲筊系統 - 蘇祐震先生專屬
+ * 命格常數統一從 userProfile.ts 引用
  */
+import { DAY_ELEMENT_SCORES, SPECIAL_HOUR_BONUS } from "./userProfile";
 
 export const HEAVENLY_STEMS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
 export const EARTHLY_BRANCHES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
@@ -24,7 +26,7 @@ export const BRANCH_ELEMENT: Record<string, string> = {
   '戌': '土', '亥': '水',
 };
 
-// 蘇先生命格：喜火、土；忌水、木；金複雜
+// 蘇先生命格：喜火、土；忘水、木；金複雜（詳見 userProfile.ts）
 export type EnergyLevel = 'excellent' | 'good' | 'neutral' | 'challenging' | 'complex';
 
 export interface DayPillar {
@@ -123,8 +125,9 @@ function calculateEnergyLevel(
   const woodCount = elements.filter(e => e === '木').length;
   const metalCount = elements.filter(e => e === '金').length;
 
-  const auspiciousScore = fireCount * 2 + earthCount * 1.5;
-  const challengingScore = waterCount * 2 + woodCount * 1.5;
+  // 使用 userProfile 的 DAY_ELEMENT_SCORES 計算吉凶分數
+  const auspiciousScore = fireCount * Math.abs(DAY_ELEMENT_SCORES['火']) + earthCount * Math.abs(DAY_ELEMENT_SCORES['土']);
+  const challengingScore = waterCount * Math.abs(DAY_ELEMENT_SCORES['水']) + woodCount * Math.abs(DAY_ELEMENT_SCORES['木']);
   const metalScore = metalCount;
 
   let energyLevel: EnergyLevel;

@@ -1,7 +1,9 @@
 /**
  * 八字十神計算引擎
  * 基於甲木日主（蘇祐震先生），計算流日天干地支與本命的十神關係
+ * 命格常數統一從 userProfile.ts 引用
  */
+import { DAY_MASTER_STEM, DAY_MASTER_ELEMENT, DAY_MASTER_YIN_YANG } from "./userProfile";
 
 // 天干五行對應
 export const STEM_ELEMENT: Record<string, string> = {
@@ -29,10 +31,8 @@ const CONTROLS: Record<string, string> = {
   木: "土", 土: "水", 水: "火", 火: "金", 金: "木",
 };
 
-// 日主：甲木（陽木）
-const DAY_MASTER_STEM = "甲";
-const DAY_MASTER_ELEMENT = "木";
-const DAY_MASTER_YY = "陽";
+// 日主：甲木（陽木）—— 統一從 userProfile.ts 引用，確保全系統一致
+const DAY_MASTER_YY = DAY_MASTER_YIN_YANG;
 
 /**
  * 計算十神關係

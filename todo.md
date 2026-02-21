@@ -169,3 +169,17 @@
 ## 測試 v2.0
 - [x] warRoom.test.ts （35 項測試全部通過）
 - [x] 總計 66 項測試全部通過
+
+## 功能增強 v2.1 - 命格常數統一化
+
+### 建立命格常數聲明檔案
+- [x] 建立 server/lib/userProfile.ts（集中宣告甲木日主所有命格參數）
+- [x] lunarCalendar.ts 引用 userProfile 命格常數
+- [x] hourlyEnergy.ts 引用 userProfile 命格常數
+- [x] lotteryAlgorithm.ts 引用 userProfile 命格常數
+- [x] warRoomEngine.ts 引用 userProfile 命格常數
+- [x] storeResonance.ts 引用 userProfile 命格常數
+- [x] tenGods.ts 引用 userProfile 命格常數
+- [x] oracleAlgorithm.ts 引用 userProfile 命格常數
+- [x] TypeScript 編譯零錯誤，66 項測試全部通過
+- [x] 儲存 V2.1 checkpoint

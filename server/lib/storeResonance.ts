@@ -3,19 +3,19 @@
  * 根據蘇祐震先生的命格（甲木/水木旺/用神火土）
  * 結合流日天干地支、流時、方位五行、門牌號碼、店名字義
  * 計算每家彩券行的「天命共振指數」
+ * 命格常數統一從 userProfile.ts 引用
  */
+import { ELEMENT_WEIGHTS_EN } from "./userProfile";
 
 export type WuXing = 'wood' | 'fire' | 'earth' | 'metal' | 'water';
 
-// ── 蘇先生命格常數 ──────────────────────────────────────────
-// 用神：火（最喜）、土（喜）
-// 忌神：水（忌）、木（過旺忌）、金（次忌）
+// ── 蘇先生命格常數—— 統一從 userProfile.ELEMENT_WEIGHTS_EN 引用 ───────────────────────────
 const DESTINY_WEIGHTS: Record<WuXing, number> = {
-  fire:  1.5,   // 用神，最大加成
-  earth: 1.3,   // 喜神，次要加成
-  metal: 0.9,   // 中性偏忌
-  wood:  0.7,   // 過旺，略忌
-  water: 0.6,   // 忌神，減分
+  fire:  ELEMENT_WEIGHTS_EN.fire,   // 用神，最大加成
+  earth: ELEMENT_WEIGHTS_EN.earth,  // 喜神，次要加成
+  metal: ELEMENT_WEIGHTS_EN.metal,  // 中性偏喜
+  wood:  ELEMENT_WEIGHTS_EN.wood,   // 過旺，略忘
+  water: ELEMENT_WEIGHTS_EN.water,  // 忘神，減分
 };
 
 // ── 方位 → 五行對應 ─────────────────────────────────────────

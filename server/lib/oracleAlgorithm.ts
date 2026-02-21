@@ -9,6 +9,7 @@
 import { getFullDateInfo, type FullDateInfo } from './lunarCalendar';
 import { getMoonPhase, type MoonPhaseInfo } from './moonPhase';
 import { getCurrentHourEnergy, type HourEnergyInfo } from './hourlyEnergy';
+import { FAVORABLE_ELEMENTS, UNFAVORABLE_ELEMENTS } from './userProfile';
 
 export type OracleResult = 'sheng' | 'xiao' | 'yin' | 'li';
 // 聖杯(sheng): 一正一反 → 神明同意

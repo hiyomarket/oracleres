@@ -1,7 +1,9 @@
 /**
  * 今日作戰室核心引擎
  * 整合塔羅流日、穿搭建議、手串推薦、財運羅盤
+ * 命格常數統一從 userProfile.ts 引用
  */
+import { FAVORABLE_ELEMENTS, UNFAVORABLE_ELEMENTS, ELEMENT_COLORS as PROFILE_ELEMENT_COLORS } from "./userProfile";
 
 // ─── 塔羅牌資料庫 ───────────────────────────────────────────────
 export const TAROT_CARDS: Record<number, {
@@ -63,13 +65,13 @@ export function calculateTarotDailyCard(month: number, day: number): {
   };
 }
 
-// ─── 五行顏色對應 ─────────────────────────────────────────────────
-const ELEMENT_COLORS: Record<string, { colors: string[]; hex: string[] }> = {
+// ─── 五行顏色對應 // ─── 五行顏色對應（從 userProfile 引用）───────────────────────────
+const ELEMENT_COLORS_DETAIL: Record<string, { colors: string[]; hex: string[] }> = {
   木: { colors: ["翠綠", "草綠", "青色", "橄欖綠"], hex: ["#2d6a4f", "#52b788", "#74c69d", "#40916c"] },
   火: { colors: ["朱紅", "橙色", "火焰橙", "珊瑚紅"], hex: ["#e63946", "#f4a261", "#e76f51", "#c1121f"] },
   土: { colors: ["土黃", "駝色", "米白", "棕褐"], hex: ["#c9a84c", "#d4a373", "#e9c46a", "#a0785a"] },
   金: { colors: ["白色", "銀色", "米白", "淺金"], hex: ["#ffffff", "#c0c0c0", "#f5f5f5", "#d4af37"] },
-  水: { colors: ["深藍", "黑色", "深灰", "靛藍"], hex: ["#023e8a", "#03045e", "#1b1b2f", "#264653"] },
+  水: { colors: ["深藍", "黑色", "深灰", "靖藍"], hex: ["#023e8a", "#03045e", "#1b1b2f", "#264653"] },
 };
 
 /**
@@ -87,7 +89,7 @@ export function generateOutfitAdvice(dailyElement: string, dailyScore: number): 
   // 今日能量強（火土金日）→ 強化用神色
   // 今日能量弱（水木日）→ 補充用神色，避免忌神色
 
-  const isAuspicious = ["火", "土", "金"].includes(dailyElement);
+  const isAuspicious = FAVORABLE_ELEMENTS.includes(dailyElement as typeof FAVORABLE_ELEMENTS[number]);
 
   if (dailyElement === "火" || dailyScore >= 8) {
     return {
