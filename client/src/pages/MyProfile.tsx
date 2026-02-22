@@ -48,6 +48,8 @@ export default function MyProfile() {
     dayMasterElement: "" as "" | "fire" | "earth" | "metal" | "wood" | "water",
     favorableElements: "",
     unfavorableElements: "",
+    occupation: "",
+    birthLunar: "",
     notes: "",
   });
 
@@ -67,6 +69,8 @@ export default function MyProfile() {
         dayMasterElement: (profile.dayMasterElement as any) ?? "",
         favorableElements: profile.favorableElements ?? "",
         unfavorableElements: profile.unfavorableElements ?? "",
+        occupation: (profile as any).occupation ?? "",
+        birthLunar: (profile as any).birthLunar ?? "",
         notes: profile.notes ?? "",
       });
     }
@@ -102,6 +106,8 @@ export default function MyProfile() {
       dayMasterElement: form.dayMasterElement || undefined,
       favorableElements: form.favorableElements || undefined,
       unfavorableElements: form.unfavorableElements || undefined,
+      occupation: (form as any).occupation || undefined,
+      birthLunar: (form as any).birthLunar || undefined,
       notes: form.notes || undefined,
     });
   };
@@ -186,6 +192,26 @@ export default function MyProfile() {
                 value={form.birthPlace}
                 onChange={e => setForm(f => ({ ...f, birthPlace: e.target.value }))}
                 placeholder="例：台北市、台中市"
+                className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/60"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-slate-400 mb-1 block">農曆生日（選填）</label>
+              <input
+                type="text"
+                value={(form as any).birthLunar}
+                onChange={e => setForm(f => ({ ...f, birthLunar: e.target.value }))}
+                placeholder="例：甲子年 閏十月 初四日"
+                className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/60"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-slate-400 mb-1 block">職業（選填）</label>
+              <input
+                type="text"
+                value={(form as any).occupation}
+                onChange={e => setForm(f => ({ ...f, occupation: e.target.value }))}
+                placeholder="例：行銷 / 攝影 / 產品經理"
                 className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/60"
               />
             </div>

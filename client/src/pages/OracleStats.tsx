@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { SharedNav } from "@/components/SharedNav";
+import { usePermissions } from "@/hooks/usePermissions";
+import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, Legend, LineChart, Line, CartesianGrid
@@ -84,7 +86,11 @@ function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent
 }
 
 export default function OracleStats() {
+  const { hasFeature, isAdmin } = usePermissions();
   const { data: stats, isLoading } = trpc.oracle.stats.useQuery(undefined);
+  const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
+  const { data: me } = trpc.auth.me.useQuery(undefined, { staleTime: 60000 });
+  const displayName = profile?.displayName ?? me?.name ?? '您';
 
   if (isLoading) {
     return (
@@ -141,8 +147,8 @@ export default function OracleStats() {
   return (
     <div className="min-h-screen oracle-bg">
       <SharedNav currentPage="stats" />
-      {/* 頂部標題 */}
-      <div className="relative z-10 px-4 md:px-8 py-6 pb-20 md:pb-6 oracle-page-content">
+      {!isAdmin && !hasFeature("stats") && <FeatureLockedCard feature="stats" />}
+      {(isAdmin || hasFeature("stats")) && <div className="relative z-10 px-4 md:px-8 py-6 pb-20 md:pb-6 oracle-page-content">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -154,7 +160,7 @@ export default function OracleStats() {
               神諭資料庫
             </h1>
             <p className="text-xs text-muted-foreground tracking-[0.3em]">
-              蘇祐震先生的天命洞察統計
+              {displayName} 的天命洞察統計
             </p>
           </div>
 
@@ -393,6 +399,7 @@ export default function OracleStats() {
           )}
         </motion.div>
       </div>
+      }
     </div>
   );
 }

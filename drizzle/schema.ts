@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, tinyint, bigint } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, tinyint, bigint, uniqueIndex } from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -223,6 +223,10 @@ export const userProfiles = mysqlTable("user_profiles", {
   favorableElements: varchar("favorableElements", { length: 100 }),
   // 忌神五行（逗號分隔）
   unfavorableElements: varchar("unfavorableElements", { length: 100 }),
+  // 職業
+  occupation: varchar("occupation", { length: 200 }),
+  // 農曆生日（例：甲子年 閏十月 初四日）
+  birthLunar: varchar("birthLunar", { length: 100 }),
   // 個人備註
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -251,6 +255,53 @@ export const inviteCodes = mysqlTable("invite_codes", {
   expiresAt: timestamp("expiresAt"),
   usedAt: timestamp("usedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  // 命格預填（可選）
+  presetDisplayName: varchar("presetDisplayName", { length: 100 }),
+  presetBirthDate: varchar("presetBirthDate", { length: 12 }),
+  presetBirthTime: varchar("presetBirthTime", { length: 8 }),
+  presetDayMasterElement: varchar("presetDayMasterElement", { length: 20 }),
+  presetFavorableElements: varchar("presetFavorableElements", { length: 100 }),
+  presetUnfavorableElements: varchar("presetUnfavorableElements", { length: 100 }),
 });
 export type InviteCode = typeof inviteCodes.$inferSelect;
 export type InsertInviteCode = typeof inviteCodes.$inferInsert;
+
+/**
+ * 使用者功能權限資料表
+ * 主帳號可對每位使用者設定可用的功能模組與使用截止日期
+ * 
+ * 功能模組清單：
+ *   oracle            - 擲筊（天命問卦）
+ *   lottery           - 選號（天命選號）
+ *   calendar          - 日曆（命理日曆）
+ *   warroom           - 作戰室（基礎入口）
+ *   warroom_divination - 作戰室 > 天命問掛
+ *   warroom_outfit    - 作戰室 > 穿搭手串
+ *   warroom_wealth    - 作戰室 > 財運羅盤
+ *   warroom_dietary   - 作戰室 > 飲食建議
+ *   weekly            - 週報
+ *   stats             - 統計
+ *   profile           - 命格資料
+ */
+export const userPermissions = mysqlTable("user_permissions", {
+  id: int("id").autoincrement().primaryKey(),
+  // 被授權的使用者
+  userId: int("userId").notNull(),
+  // 功能模組 ID（見上方清單）
+  feature: varchar("feature", { length: 50 }).notNull(),
+  // 是否啟用（0=關閉, 1=開啟）
+  enabled: tinyint("enabled").default(1).notNull(),
+  // 使用截止日期（null 表示永久有效）
+  expiresAt: timestamp("expiresAt"),
+  // 備註（主帳號可填寫說明）
+  note: varchar("note", { length: 200 }),
+  // 授權者（主帳號 userId）
+  grantedBy: int("grantedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  // 每位使用者每個功能只有一筆記錄
+  uniqueUserFeature: uniqueIndex("user_feature_idx").on(table.userId, table.feature),
+}));
+export type UserPermission = typeof userPermissions.$inferSelect;
+export type InsertUserPermission = typeof userPermissions.$inferInsert;

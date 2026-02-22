@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { accountRouter } from "./routers/account";
+import { permissionsRouter } from "./routers/permissions";
 import { getDailyTenGodAnalysis, getTenGod } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -10,7 +11,9 @@ import { castOracle } from "./lib/oracleAlgorithm";
 import { getFullDateInfo, getTaiwanHour, getTaiwanDate } from "./lib/lunarCalendar";
 import { getMoonPhase } from "./lib/moonPhase";
 import { getAllHourEnergies, getCurrentHourEnergy, getBestHours, getWorstHours } from "./lib/hourlyEnergy";
-import { saveOracleSession, getOracleHistory, getOracleStats, saveLotterySession, getLotteryHistory, getLotteryStats } from "./db";
+import { getDb, saveOracleSession, getOracleHistory, getOracleStats, saveLotterySession, getLotteryHistory, getLotteryStats } from "./db";
+import { userProfiles } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
 import { generateLotteryNumbers, generateLotterySets, generateScratchStrategies, analyzeAddressWuxing } from "./lib/lotteryAlgorithm";
 import { invokeLLM } from "./_core/llm";
@@ -28,6 +31,7 @@ import {
 export const appRouter = router({
   system: systemRouter,
   account: accountRouter,
+  permissions: permissionsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -209,6 +213,7 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
           humidity: z.number().optional(),
           weatherElement: z.string().optional(), // fire/water/wood/metal/earth
         }).optional(),
+        profileUserId: z.number().int().optional(), // 切換命格（主帳號專屬）
       }).optional())
       .mutation(async ({ ctx, input }) => {
         // 支援指定日期，預設今日
@@ -222,9 +227,48 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
           now = getTaiwanDate();
         }
         // V3.0：將天氣和地址選項傳入引擎，真正影響選號
+        // 命格切換：若指定 profileUserId，查詢該使用者的命格資料
+        let customBaseWeights: Record<number, number> | undefined;
+        let customElementBoost: Record<string, number> | undefined;
+        if (input?.profileUserId) {
+          try {
+            const db = await getDb();
+            if (db) {
+              const profileRows = await db.select().from(userProfiles)
+                .where(eq(userProfiles.userId, input.profileUserId)).limit(1);
+              const profile = profileRows[0];
+              if (profile?.dayMasterElement) {
+                const favElements = profile.favorableElements?.split(',').map(e => e.trim()).filter(Boolean) ?? [];
+                const unfavElements = profile.unfavorableElements?.split(',').map(e => e.trim()).filter(Boolean) ?? [];
+                // 依命格計算動態五行加成
+                const allElements = ['fire', 'earth', 'metal', 'wood', 'water'];
+                customElementBoost = Object.fromEntries(allElements.map(el => {
+                  if (favElements.includes(el)) return [el, 3];
+                  if (unfavElements.includes(el)) return [el, -2];
+                  return [el, 0];
+                }));
+                // 依五行加成計算基礎權重
+                const WUXING_MAP: Record<string, number[]> = {
+                  wood: [1, 3, 8], fire: [2, 7], earth: [0, 5], metal: [4, 9], water: [6]
+                };
+                customBaseWeights = {};
+                for (let i = 0; i <= 9; i++) {
+                  const el = allElements.find(e => WUXING_MAP[e]?.includes(i)) ?? 'earth';
+                  if (favElements.includes(el)) customBaseWeights[i] = 10;
+                  else if (unfavElements.includes(el)) customBaseWeights[i] = 3;
+                  else customBaseWeights[i] = 6;
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('[Lottery] Failed to load profile for userId', input.profileUserId, e);
+          }
+        }
         const lotteryOptions = {
           weatherElement: input?.weather?.weatherElement,
           useWeather: !!(input?.weather?.weatherElement),
+          customBaseWeights,
+          customElementBoost,
         };
         const result = generateLotteryNumbers(now, lotteryOptions);
         const sets = generateLotterySets(now, lotteryOptions);

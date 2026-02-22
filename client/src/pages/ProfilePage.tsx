@@ -1,20 +1,11 @@
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { SharedNav } from "@/components/SharedNav";
+import { usePermissions } from "@/hooks/usePermissions";
+import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { ChevronDown, ChevronUp, Star, TrendingUp, AlertTriangle, Zap } from "lucide-react";
-
-// ─── 蘇祐震命格常數 ──────────────────────────────────────────────
-
-const PROFILE = {
-  name: "蘇祐震",
-  gender: "男",
-  birthDate: "1984年11月26日（陽曆）",
-  birthLunar: "甲子年 閏十月 初四日（農曆）",
-  birthTime: "上午 10:09（巳時）",
-  birthPlace: "台灣 花蓮縣 玉里鎮",
-  occupation: "行銷 / 攝影 / 產品經理",
-};
 
 const FOUR_PILLARS = [
   {
@@ -299,6 +290,10 @@ function YearlyForecastSection() {
 }
 
 export default function ProfilePage() {
+  const { hasFeature, isAdmin } = usePermissions();
+  const { user } = useAuth();
+  const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
+  const displayName = profile?.displayName ?? user?.name ?? '您';
   const [birthdayInfo, setBirthdayInfo] = useState<{
     daysUntil: number;
     thisYearDate: string;
@@ -364,7 +359,8 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 pb-16">
       <SharedNav currentPage="profile" />
-      {/* 頂部英雄區 */}
+      {!isAdmin && !hasFeature("profile") && <FeatureLockedCard feature="profile" />}
+      {(isAdmin || hasFeature("profile")) && <>
       <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-950 to-black border-b border-orange-500/20">
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-4 left-8 text-8xl font-bold text-orange-400 select-none">命</div>
@@ -381,28 +377,30 @@ export default function ProfilePage() {
             {/* 基本資料 */}
             <div className="flex-1 text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start gap-3 mb-1">
-                <h1 className="text-3xl font-bold text-orange-400">{PROFILE.name}</h1>
+                <h1 className="text-3xl font-bold text-orange-400">{displayName}</h1>
+                {profile?.dayMasterElement && (
                 <span className="text-sm bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/30">
-                  甲木日主・水大木漂
+                  {profile.dayMasterElement}日主
                 </span>
+                )}
               </div>
-              <p className="text-gray-400 text-sm mb-3">{PROFILE.occupation}</p>
+              {profile?.occupation && <p className="text-gray-400 text-sm mb-3">{profile.occupation}</p>}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                 <div className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">📅</span>
-                  <span>{PROFILE.birthDate}</span>
+                  <span>{profile?.birthDate ?? '未設定'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">🌙</span>
-                  <span>{PROFILE.birthLunar}</span>
+                  <span>{profile?.birthLunar ?? '未設定'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">⏰</span>
-                  <span>{PROFILE.birthTime}</span>
+                  <span>{profile?.birthTime ?? '未設定'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">📍</span>
-                  <span>{PROFILE.birthPlace}</span>
+                  <span>{profile?.birthPlace ?? '未設定'}</span>
                 </div>
               </div>
             </div>
@@ -704,9 +702,10 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-        </section>
-
+         </section>
       </div>
+    </>
+    }
     </div>
   );
 }

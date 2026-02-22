@@ -12,6 +12,8 @@ import { useLocation } from "wouter";
 import type { BlockFace } from "@/components/MoonBlock";
 import { Streamdown } from "streamdown";
 import { SharedNav } from "@/components/SharedNav";
+import { usePermissions } from "@/hooks/usePermissions";
+import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 
 type CastPhase = 'idle' | 'animating' | 'result';
 type CastMode = 'single' | 'triple';
@@ -187,6 +189,7 @@ function TripleProgress({ current, results }: { current: number; results: string
 // ─── 主頁面 ───────────────────────────────────────────────────────────────────
 
 export default function OracleCast() {
+  const { hasFeature, isAdmin } = usePermissions();
   const [query, setQuery] = useState('');
   const [phase, setPhase] = useState<CastPhase>('idle');
   const [castMode, setCastMode] = useState<CastMode>('single');
@@ -214,6 +217,8 @@ export default function OracleCast() {
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const { user } = useAuth();
+  const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
+  const displayName = profile?.displayName ?? user?.name ?? '您';
   const [, navigate] = useLocation();
 
   const castMutation = trpc.oracle.cast.useMutation();
@@ -389,8 +394,8 @@ export default function OracleCast() {
     <div className="min-h-screen oracle-bg relative">
       <BackgroundParticles />
       <SharedNav currentPage="oracle" />
-
-      <div className="relative z-10 container mx-auto px-4 pb-12 oracle-page-content">
+      {!isAdmin && !hasFeature("oracle") && <FeatureLockedCard feature="oracle" />}
+      {(isAdmin || hasFeature("oracle")) && <div className="relative z-10 container mx-auto px-4 pb-12 oracle-page-content">
         <div className="max-w-2xl mx-auto">
 
           {/* ═══ 區塊一：筊杯動畫區（置頂，始終顯示） ═══ */}
@@ -399,7 +404,7 @@ export default function OracleCast() {
             <div className="flex items-center justify-between px-5 pt-4 pb-2">
               <div>
                 <h1 className="text-xl font-black oracle-text-gradient tracking-widest">天命共振</h1>
-                <p className="text-[10px] text-muted-foreground tracking-[0.25em]">蘇祐震先生專屬神諭系統</p>
+                <p className="text-[10px] text-muted-foreground tracking-[0.25em]">{displayName} 專屬神諭系統</p>
               </div>
               {/* 擲筊模式切換 */}
               <div className="flex gap-1.5">
@@ -906,14 +911,17 @@ export default function OracleCast() {
           )}
 
           {/* 命理提示 */}
+          {profile && (profile.yearPillar || profile.dayMasterElement) && (
           <div className="text-center mb-4">
             <p className="text-[10px] text-muted-foreground/40 tracking-wider">
-              甲子・乙亥・甲子・己巳 · 水木之身，以火為用神
+              {[profile.yearPillar, profile.monthPillar, profile.dayPillar, profile.hourPillar].filter(Boolean).join('・')}
+              {profile.dayMasterElement && ` · ${profile.dayMasterElement}日主`}
             </p>
           </div>
+          )}
 
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

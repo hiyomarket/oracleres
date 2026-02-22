@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { SharedNav } from "@/components/SharedNav";
+import { usePermissions } from "@/hooks/usePermissions";
+import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 import { TopicAdvicePanel } from "@/components/TopicAdvicePanel";
 import { Zap, Bell, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -89,6 +91,7 @@ function getTaiwanWeekday(offsetDays = 0): number {
 const WEEKDAY_NAMES = ["日", "一", "二", "三", "四", "五", "六"];
 
 export default function WarRoom() {
+  const { hasFeature, isAdmin } = usePermissions();
   // 七日選擇器：0=今天，1=明天，...，-1=昨天
   const [selectedOffset, setSelectedOffset] = useState(0);
   const selectedDate = getTaiwanDateStr(selectedOffset);
@@ -238,8 +241,8 @@ export default function WarRoom() {
       </div>
 
       <SharedNav currentPage="warRoom" />
-
-      <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 pb-24 relative z-10 oracle-page-content">
+      {!isAdmin && !hasFeature("warroom") && <FeatureLockedCard feature="warroom" />}
+      {(isAdmin || hasFeature("warroom")) && <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 pb-24 relative z-10 oracle-page-content">
 
         {/* ═══ 模塊A：頂部核心數據看板 ═══ */}
         <motion.div
@@ -540,6 +543,7 @@ export default function WarRoom() {
 
           {/* ═══ 塔羅流日 ═══ */}
           {activeTab === "tarot" && (
+            !isAdmin && !hasFeature("warroom_divination") ? <FeatureLockedCard feature="warroom_divination" /> :
             <motion.div
               key="tarot"
               initial={{ opacity: 0, x: -20 }}
@@ -589,6 +593,7 @@ export default function WarRoom() {
 
           {/* ═══ 穿搭手串 ═══ */}
           {activeTab === "outfit" && (
+            !isAdmin && !hasFeature("warroom_outfit") ? <FeatureLockedCard feature="warroom_outfit" /> :
             <motion.div
               key="outfit"
               initial={{ opacity: 0, x: -20 }}
@@ -712,7 +717,7 @@ export default function WarRoom() {
                 </SectionCard>
 
                 {/* ── 飲食建議（V9.0 新增）── */}
-                <SectionCard title="今日飲食建議" icon="🍽️">
+                {(isAdmin || hasFeature("warroom_dietary")) && <SectionCard title="今日飲食建議" icon="🍽️">
                   <div className="space-y-3">
                     {/* 補充食物 */}
                     {data.dietary?.supplements?.map((item: { element: string; priority: number; foods: string[]; advice: string }, i: number) => (
@@ -757,7 +762,7 @@ export default function WarRoom() {
                       <NearbyRestaurants supplements={data.dietary.supplements} todayDirections={data.todayDirections} />
                     )}
                   </div>
-                </SectionCard>
+                </SectionCard>}
               </div>
 
               {/* ── 手串矩陣（V9.0 加權五行驅動）── */}
@@ -849,6 +854,7 @@ export default function WarRoom() {
           )}
           {/* ═══ 財運羅盤 ═══ */}
           {activeTab === "wealth" && (
+            !isAdmin && !hasFeature("warroom_wealth") ? <FeatureLockedCard feature="warroom_wealth" /> :
             <motion.div
               key="wealth"
               initial={{ opacity: 0, x: -20 }}
@@ -994,6 +1000,7 @@ export default function WarRoom() {
         </AnimatePresence>
 
         {/* ═══ 天命問卜 ═══ */}
+        {(isAdmin || hasFeature("warroom_divination")) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1002,6 +1009,7 @@ export default function WarRoom() {
         >
           <TopicAdvicePanel selectedDate={selectedDate} />
         </motion.div>
+        )}
 
         {/* ═══ 底部快捷按鈕 ═══ */}
         <motion.div
@@ -1029,6 +1037,7 @@ export default function WarRoom() {
         </motion.div>
 
       </main>
+      }
     </div>
   );
 }

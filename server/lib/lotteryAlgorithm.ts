@@ -258,6 +258,9 @@ export interface DynamicLotteryInput {
   addressElement?: string;
   useWeather?: boolean;
   useAddress?: boolean;
+  // 命格覆寫（子帳號命格切換）
+  customBaseWeights?: Record<number, number>; // 0-9 數字基礎權重
+  customElementBoost?: Record<string, number>; // 五行加成覆寫
 }
 
 /**
@@ -337,16 +340,18 @@ export function generateLotteryNumbers(
   }
 
   // ── 維度一：命格基礎分 ────────────────────────────────────
+  const effectiveBaseWeights = options.customBaseWeights ?? BASE_WEIGHTS;
+  const effectiveElementBoost = options.customElementBoost ?? ELEMENT_BOOST;
   for (let i = 0; i <= 9; i++) {
-    baseScores[i] = BASE_WEIGHTS[i] ?? 5;
+    baseScores[i] = effectiveBaseWeights[i] ?? 5;
   }
 
   // ── 維度二：流日十神策略 ──────────────────────────────────
   // 天干五行加成（主）
-  const stemBoost = ELEMENT_BOOST[stemEl] ?? 0;
+  const stemBoost = effectiveElementBoost[stemEl] ?? 0;
   WUXING_NUMBERS[stemEl]?.forEach(n => { tenGodBonus[n] += stemBoost * 1.5; });
   // 地支五行加成（次）
-  const branchBoost = ELEMENT_BOOST[branchEl] ?? 0;
+  const branchBoost = effectiveElementBoost[branchEl] ?? 0;
   WUXING_NUMBERS[branchEl]?.forEach(n => { tenGodBonus[n] += branchBoost * 0.8; });
   // 十神策略加成（核心差異化）
   Object.entries(tenGodStrategy.boost).forEach(([el, val]) => {
@@ -434,12 +439,12 @@ export function generateLotteryNumbers(
   const weatherScore = options.useWeather ? (WEATHER_BOOST[weatherEl] ?? 0) * 0.3 : 0;
   const luckScore = Math.min(10, Math.max(1,
     tenGodScore * 0.5 +
-    (ELEMENT_BOOST[stemEl] ?? 0) * 0.5 +
-    (ELEMENT_BOOST[hourStemEl] ?? 0) * 0.3 +
+    (effectiveElementBoost[stemEl] ?? 0) * 0.5 +
+    (effectiveElementBoost[hourStemEl] ?? 0) * 0.3 +
     moonScore + weatherScore + 3
   ));
 
-  const todayElement = (ELEMENT_BOOST[stemEl] ?? 0) >= (ELEMENT_BOOST[branchEl] ?? 0) ? stemEl : branchEl;
+  const todayElement = (effectiveElementBoost[stemEl] ?? 0) >= (effectiveElementBoost[branchEl] ?? 0) ? stemEl : branchEl;
 
   const wuxingBreakdown = {
     fire:  mainNumbers.filter(n => WUXING_NUMBERS.fire.includes(n)),

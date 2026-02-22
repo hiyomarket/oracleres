@@ -560,3 +560,61 @@
 - [x] 前端：SharedNav 使用者下拉選單（我的命格資料、帳號管理、登出）
 - [x] App.tsx 加入新路由並套用 AccessGate
 - [x] TypeScript 零錯誤
+
+## 重要待辦 v3.0 - 動態命格去個人化（商業化必要條件）
+- [ ] 全站搜尋「蘇祐震」「蘇先生」「1984」等寫死字串，逐一替換為動態讀取登入者 userProfiles
+- [ ] server/lib/userProfile.ts：將寫死的甲木日主命格常數改為從登入者 userProfiles 動態讀取
+- [ ] server/lib/lotteryAlgorithm.ts：確保所有命格參數都從 DynamicLotteryInput 傳入，不依賴 userProfile.ts 常數
+- [ ] server/routers/warRoom.ts：dailyReport 等 API 改為依登入者命格動態計算（讀取 ctx.user 的 userProfiles）
+- [ ] ProfilePage.tsx：PROFILE 常數（名字/生日/職業）改為讀取登入者 userProfiles 資料
+- [ ] ProfilePage.tsx：FOUR_PILLARS、FIVE_ELEMENTS_DATA、LUCKY_STRATEGY 等改為依 userProfiles.dayMasterElement/favorableElements 動態計算
+- [ ] ProfilePage.tsx：ZIWEI_PALACES、TAROT_PROFILE 等改為依使用者命格動態生成（LLM 輔助）
+- [ ] 新使用者首次登入時，若 userProfiles 為空，引導填寫命格資料後才能使用完整功能
+- [ ] 主帳號（管理員）可查看/編輯所有使用者的命格資料
+
+## 功能增強 v2.32 - 帳號系統深化（邀請碼綁定命格 + 子帳號命格同步 + 使用統計）
+- [x] schema：inviteCodes 加入命格預填欄位（presetDisplayName/presetDayMaster/presetFavorable/presetUnfavorable）
+- [x] schema：userProfiles 完整命格欄位（dayMasterElement/favorableElements/unfavorableElements/birthDate/birthPlace/birthHour/fourPillars）
+- [x] account.ts：createInviteCode 加入命格預填欄位
+- [x] account.ts：useInviteCode 啟用時自動建立 userProfiles 記錄（若邀請碼有命格預填）
+- [x] account.ts：listUsers 回傳 profile 資料（含命格摘要）
+- [x] account.ts：getUserStats API（各使用者擲筊/選號/購彩日誌統計）
+- [x] lotteryAlgorithm.ts：DynamicLotteryInput 加入 customLuckyWeights/customElementBoost/customSpecialHourBonus
+- [x] lotteryAlgorithm.ts：generateLotteryNumbers 支援動態命格覆寫
+- [x] routers.ts lottery.generate：加入 profileUserId 參數，查詢 userProfiles 動態計算命格權重
+- [x] LotteryOracle.tsx：加入命格切換 UI（主帳號可選擇為哪位成員選號）
+- [x] AccountManager.tsx：完善邀請碼管理（含命格預填表單）+ 使用者統計卡片
+- [x] MyProfile.tsx：命格資料填寫頁面完善（喜用神五行按鈕選擇器 + 已填資料摘要卡片）
+
+## 功能增強 v2.35 - 商業化功能權限管控系統
+- [x] schema：user_permissions 資料表（userId/featureId/enabled/expiresAt/note）
+- [x] db:push：user_permissions 資料表建立
+- [x] permissions.ts：後端 API（getMyPermissions/setPermission/setPermissionsBatch/listAllPermissions）
+- [x] routers.ts：掛載 permissionsRouter
+- [x] usePermissions.ts：前端 hook（hasFeature/isAdmin/isLoading）
+- [x] FeatureLockedCard.tsx：無權限時顯示的升級提示卡片
+- [x] SharedNav.tsx：依權限隱藏無法使用的導覽項目 + 加入「權限管理」入口
+- [x] PermissionManager.tsx：主帳號功能權限管理頁面（各使用者功能開關 + 使用天數設定）
+- [x] App.tsx：加入 /permission-manager 路由
+- [x] LotteryOracle.tsx：加入 usePermissions 權限檢查（lottery 功能）
+- [x] OracleCalendar.tsx：加入 usePermissions 權限檢查（calendar 功能）
+- [x] WeeklyReport.tsx：加入 usePermissions 權限檢查（weekly 功能）
+- [x] OracleStats.tsx：加入 usePermissions 權限檢查（stats 功能）
+- [x] WarRoom.tsx：加入 usePermissions 權限檢查（warroom 功能）
+- [x] ProfilePage.tsx：加入 usePermissions 權限檢查（profile 功能）
+- [ ] OracleCast.tsx：加入 usePermissions 權限檢查（oracle 功能）
+- [ ] 作戰室子功能（天命問卜/穿搭手串/財運羅盤/飲食建議）加入子功能級權限檢查
+- [x] OracleCast.tsx：加入 usePermissions 權限檢查（oracle 功能）
+- [x] 作戰室子功能（天命問卜/穿搭手串/財運羅盤/飲食建議）加入子功能級權限檢查
+
+## 功能增強 v2.36 - 商業化去個人化（前端動態名稱）
+- [x] SharedNav.tsx：UserMenu 改為優先顯示 profile.displayName（而非 OAuth user.name）
+- [x] OracleStats.tsx：移除硬編碼「蘇祐震」，改為讀取 trpc.account.getProfile
+- [x] OracleCast.tsx：移除硬編碼八字資訊，改為讀取 trpc.account.getProfile
+- [x] PurifyMind.tsx：移除硬編碼名稱和八字，改為讀取 trpc.account.getProfile
+- [x] ProfilePage.tsx：移除 PROFILE 常數，改為讀取 trpc.account.getProfile
+- [x] MyProfile.tsx：新增農曆生日（birthLunar）和職業（occupation）欄位
+- [x] schema：user_profiles 新增 occupation 和 birthLunar 欄位
+- [x] account.ts：saveProfile 加入 occupation 和 birthLunar 欄位
+- [ ] server/lib/userProfile.ts：後端算法常數改為從登入者 userProfiles 動態讀取（warRoom.dailyReport 等）
+- [ ] 新使用者首次登入時，若 userProfiles 為空，引導填寫命格資料後才能使用完整功能

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 interface PurifyMindProps {
   onReady: () => void;
@@ -109,6 +111,10 @@ function FloatingParticle({ x, delay }: { x: number; delay: number }) {
 export default function PurifyMind({ onReady }: PurifyMindProps) {
   const [showButton, setShowButton] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const { user } = useAuth();
+  const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
+  const displayName = profile?.displayName ?? user?.name;
+  const fourPillars = [profile?.yearPillar, profile?.monthPillar, profile?.dayPillar, profile?.hourPillar].filter(Boolean).join('・');
 
   useEffect(() => {
     const timer = setTimeout(() => setShowButton(true), 2000);
@@ -195,7 +201,7 @@ export default function PurifyMind({ onReady }: PurifyMindProps) {
                 天命共振
               </h1>
               <div className="text-sm text-muted-foreground tracking-[0.3em]">
-                蘇祐震先生專屬神諭系統
+                {displayName ? `${displayName} 專屬神諭系統` : '天命共振神諭系統'}
               </div>
             </motion.div>
 
@@ -256,12 +262,16 @@ export default function PurifyMind({ onReady }: PurifyMindProps) {
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 1.5 }}
             >
-              <p className="text-xs text-muted-foreground/60 tracking-widest">
-                甲子・乙亥・甲子・己巳
-              </p>
-              <p className="text-xs text-muted-foreground/40 mt-1 tracking-wider">
-                水木之身，以火為用神
-              </p>
+              {fourPillars && (
+                <p className="text-xs text-muted-foreground/60 tracking-widest">
+                  {fourPillars}
+                </p>
+              )}
+              {profile?.dayMasterElement && (
+                <p className="text-xs text-muted-foreground/40 mt-1 tracking-wider">
+                  {profile.dayMasterElement}日主
+                </p>
+              )}
             </motion.div>
           </div>
         </motion.div>

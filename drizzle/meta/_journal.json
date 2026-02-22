@@ -71,6 +71,27 @@
       "when": 1771764371835,
       "tag": "0009_curly_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1771772428238,
+      "tag": "0010_massive_rockslide",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1771772898893,
+      "tag": "0011_slow_vision",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1771774568436,
+      "tag": "0012_third_sentinel",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,8 @@ import {
 } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, Target, Clock, Award } from "lucide-react";
 import { SharedNav } from "@/components/SharedNav";
+import { usePermissions } from "@/hooks/usePermissions";
+import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 
 // ─── 時辰順序與中文名稱 ───────────────────────────────────────────
 const HOUR_BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
@@ -54,6 +56,7 @@ function HourTooltip({ active, payload }: any) {
 
 // ─── 主元件 ───────────────────────────────────────────────────────
 export default function WeeklyReport() {
+  const { hasFeature, isAdmin } = usePermissions();
   const [roiRange, setRoiRange] = useState<"7" | "14" | "30">("30");
 
   // 刮刮樂統計（時辰命中率）
@@ -127,8 +130,8 @@ export default function WeeklyReport() {
       </div>
 
       <SharedNav currentPage="weekly" />
-
-      <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 pb-24 md:pb-8 oracle-page-content">
+      {!isAdmin && !hasFeature("weekly") && <FeatureLockedCard feature="weekly" />}
+      {(isAdmin || hasFeature("weekly")) && <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 pb-24 md:pb-8 oracle-page-content">
 
         {/* 標題 */}
         <motion.div
@@ -424,6 +427,7 @@ export default function WeeklyReport() {
           </>
         )}
       </div>
+      }
     </div>
   );
 }

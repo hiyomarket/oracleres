@@ -4,10 +4,13 @@
  * 功能：可選日期制選號、天氣狀況納入分析、彩券能量指數、GPS 地圖搜尋彩券行
  */
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { SharedNav } from "@/components/SharedNav";
 import { ScratchJournal } from "@/components/ScratchJournal";
+import { usePermissions } from "@/hooks/usePermissions";
+import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 import { LotteryResultChecker } from "@/components/LotteryResultChecker";
 import {
   Sparkles, RefreshCw, Clock, ChevronDown, ChevronUp,
@@ -549,6 +552,7 @@ type LotteryData = {
 };
 
 export default function LotteryOracle() {
+  const { hasFeature, isAdmin } = usePermissions();
   const [result, setResult] = useState<LotteryData | null>(null);
   const [isRevealing, setIsRevealing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -560,6 +564,17 @@ export default function LotteryOracle() {
   const [selectedDate, setSelectedDate] = useState(getTodayString());
   const isToday = selectedDate === getTodayString();
 
+  // 命格切換（主帳號專屬）
+  const { user } = useAuth();
+  const [selectedProfileUserId, setSelectedProfileUserId] = useState<number | undefined>(undefined);
+  const listUsersQuery = trpc.account.listUsers.useQuery(undefined, {
+    enabled: user?.role === 'admin',
+    staleTime: 60000,
+  });
+  const usersWithProfile = useMemo(() => {
+    if (!listUsersQuery.data) return [];
+    return listUsersQuery.data.filter((u: any) => u.profile?.dayMasterElement);
+  }, [listUsersQuery.data]);
   // 天氣狀態
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [weatherIncluded, setWeatherIncluded] = useState(false);
@@ -668,6 +683,7 @@ export default function LotteryOracle() {
         saveRecord: isToday,
         targetDate: selectedDate,
         weather: weatherInput,
+        profileUserId: selectedProfileUserId,
       });
     }, 800);
   }, [generateMutation, selectedDate, weatherIncluded, weatherQuery.data, isToday]);
@@ -705,7 +721,10 @@ export default function LotteryOracle() {
       </div>
 
       <SharedNav currentPage="lottery" />
-
+      {!isAdmin && !hasFeature("lottery") && (
+        <FeatureLockedCard feature="lottery" />
+      )}
+      {(isAdmin || hasFeature("lottery")) && (
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 oracle-page-content">
 
         {/* 標題區 */}
@@ -769,6 +788,43 @@ export default function LotteryOracle() {
             </button>
           </div>
 
+          {/* 命格切換（主帳號專屬） */}
+          {user?.role === 'admin' && usersWithProfile.length > 0 && (
+            <div className="mt-4">
+              <div className="text-xs text-slate-400 mb-2">為誰選號</div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setSelectedProfileUserId(undefined)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    selectedProfileUserId === undefined
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      : 'bg-slate-800/60 text-slate-400 border border-slate-700/40 hover:border-amber-500/30'
+                  }`}
+                >
+                  ✦ 我自己
+                </button>
+                {usersWithProfile.map((u: any) => (
+                  <button
+                    key={u.id}
+                    onClick={() => setSelectedProfileUserId(u.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      selectedProfileUserId === u.id
+                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+                        : 'bg-slate-800/60 text-slate-400 border border-slate-700/40 hover:border-purple-500/30'
+                    }`}
+                  >
+                    {u.profile?.displayName ?? u.name?.split(' ')[0] ?? `用戶${u.id}`}
+                  </button>
+                ))}
+              </div>
+              {selectedProfileUserId && (
+                <div className="mt-2 text-xs text-purple-400 flex items-center gap-1.5">
+                  <Sparkles className="w-3 h-3" />
+                  已切換至 {usersWithProfile.find((u: any) => u.id === selectedProfileUserId)?.profile?.displayName ?? '成員'} 的命格選號
+                </div>
+              )}
+            </div>
+          )}
           {/* 天氣資訊 */}
           <div className="mt-4">
             {!userLocation ? (
@@ -1235,14 +1291,13 @@ export default function LotteryOracle() {
           className="mt-6 bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm"
         >
           <ScratchJournal />
-        </motion.div>
-
+         </motion.div>
       </div>
+      )}
     </div>
   );
 }
-
-// ── 彩券行風水分析（三維度：方位40% + 地名20% + 類型40%）────────────────────
+// ── 彩券行風水分析析（三維度：方位40% + 地名20% + 類型40%）────────────────────
 import { MapView } from "@/components/Map";
 const FS_MOUNTAINS = [
   { min:352.5,max:360,m:"壬",e:"水"},{min:0,max:7.5,m:"壬",e:"水"},{min:7.5,max:22.5,m:"子",e:"水"},{min:22.5,max:37.5,m:"癸",e:"水"},

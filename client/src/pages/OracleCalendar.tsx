@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { ChevronLeft, ChevronRight, CalendarDays, Sun, Moon, MapPin, Clock } from "lucide-react";
 import { SharedNav } from "@/components/SharedNav";
+import { usePermissions } from "@/hooks/usePermissions";
+import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 
 // 節氣資料（2025-2027年）
 const SOLAR_TERMS: Record<string, string> = {
@@ -135,6 +137,7 @@ interface DayData {
 }
 
 export default function OracleCalendar() {
+  const { hasFeature, isAdmin } = usePermissions();
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth() + 1);
@@ -207,8 +210,8 @@ export default function OracleCalendar() {
       </div>
 
       <SharedNav currentPage="calendar" />
-
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-6 pb-24 md:pb-8 oracle-page-content">
+      {!isAdmin && !hasFeature("calendar") && <FeatureLockedCard feature="calendar" />}
+      {(isAdmin || hasFeature("calendar")) && <div className="relative z-10 max-w-6xl mx-auto px-4 py-6 pb-24 md:pb-8 oracle-page-content">
         {/* 標題 */}
         <motion.div className="text-center mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="text-xs tracking-[0.3em] text-teal-500/70 mb-2 uppercase">Oracle Resonance · Calendar</div>
@@ -626,6 +629,7 @@ export default function OracleCalendar() {
           </div>
         </div>
       </div>
+      }
     </div>
   );
 }
