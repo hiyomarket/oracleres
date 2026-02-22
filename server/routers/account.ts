@@ -439,4 +439,79 @@ export const accountRouter = router({
         .where(eq(userProfiles.userId, input.userId)).limit(1);
       return rows[0] ?? null;
     }),
+
+  /**
+   * 主帳號刪除指定用戶帳號（包含所有關聯資料）
+   * 將刪除：users、userProfiles、oracleSessions、lotterySessions、
+   *           lotteryResults、scratchLogs、braceletWearLogs、favoriteStores
+   */
+  deleteUser: protectedProcedure
+    .input(z.object({ userId: z.number().int() }))
+    .mutation(async ({ input, ctx }) => {
+      if (!isOwner(ctx.user.openId, ctx.user.role)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "僅主帳號可刪除用戶" });
+      }
+      // 不允許刪除自己
+      if (input.userId === ctx.user.id) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "不能刪除自己的帳號" });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const { braceletWearLogs, favoriteStores, lotteryResults, userPermissions, inviteCodes: inviteCodesTable } = await import("../../drizzle/schema");
+
+      // 依序刪除關聯資料
+      await Promise.all([
+        db.delete(userProfiles).where(eq(userProfiles.userId, input.userId)),
+        db.delete(oracleSessions).where(eq(oracleSessions.userId, input.userId)),
+        db.delete(lotterySessions).where(eq(lotterySessions.userId, input.userId)),
+        db.delete(lotteryResults).where(eq(lotteryResults.userId, input.userId)),
+        db.delete(scratchLogs).where(eq(scratchLogs.userId, input.userId)),
+        db.delete(braceletWearLogs).where(eq(braceletWearLogs.userId, input.userId)),
+        db.delete(favoriteStores).where(eq(favoriteStores.userId, input.userId)),
+        db.delete(userPermissions).where(eq(userPermissions.userId, input.userId)),
+        // 將對應的邀請碼標記為未使用（保留邀請碼記錄）
+        db.update(inviteCodesTable)
+          .set({ usedBy: null, isUsed: 0, usedAt: null })
+          .where(eq(inviteCodesTable.usedBy, input.userId)),
+      ]);
+      // 最後刪除用戶本身
+      await db.delete(users).where(eq(users.id, input.userId));
+
+      return { success: true };
+    }),
+
+  /**
+   * 用戶自行刪除自己的帳號（保障用戶權益）
+   * 將刪除登入者自己的所有資料，並清除 session
+   */
+  deleteSelf: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      // 主帳號不允許自刪（避免意外刪除系統管理帳號）
+      if (isOwner(ctx.user.openId, ctx.user.role)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "主帳號不能自行刪除" });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const { braceletWearLogs, favoriteStores, lotteryResults, userPermissions, inviteCodes: inviteCodesTable } = await import("../../drizzle/schema");
+
+      const userId = ctx.user.id;
+      await Promise.all([
+        db.delete(userProfiles).where(eq(userProfiles.userId, userId)),
+        db.delete(oracleSessions).where(eq(oracleSessions.userId, userId)),
+        db.delete(lotterySessions).where(eq(lotterySessions.userId, userId)),
+        db.delete(lotteryResults).where(eq(lotteryResults.userId, userId)),
+        db.delete(scratchLogs).where(eq(scratchLogs.userId, userId)),
+        db.delete(braceletWearLogs).where(eq(braceletWearLogs.userId, userId)),
+        db.delete(favoriteStores).where(eq(favoriteStores.userId, userId)),
+        db.delete(userPermissions).where(eq(userPermissions.userId, userId)),
+        db.update(inviteCodesTable)
+          .set({ usedBy: null, isUsed: 0, usedAt: null })
+          .where(eq(inviteCodesTable.usedBy, userId)),
+      ]);
+      await db.delete(users).where(eq(users.id, userId));
+
+      return { success: true };
+    }),
 });

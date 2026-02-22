@@ -12,7 +12,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
 import {
   Users, Key, Plus, Trash2, Copy, Check, ChevronDown, ChevronUp,
-  Shield, UserCheck, UserX, Calendar, Clock, Loader2, ArrowLeft,
+  Shield, UserCheck, UserX, Calendar, Clock, Loader2, ArrowLeft, AlertTriangle,
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -30,6 +30,18 @@ export default function AccountManager() {
   const [expiresInDays, setExpiresInDays] = useState<number | undefined>(undefined);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [expandedUser, setExpandedUser] = useState<number | null>(null);
+  const [confirmDeleteUserId, setConfirmDeleteUserId] = useState<number | null>(null);
+  const [confirmDeleteName, setConfirmDeleteName] = useState<string>("");
+  const utils = trpc.useUtils();
+
+  const deleteUser = trpc.account.deleteUser.useMutation({
+    onSuccess: () => {
+      toast.success(`帳號「${confirmDeleteName}」已刪除`);
+      setConfirmDeleteUserId(null);
+      utils.account.listUsers.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
   const createCode = trpc.account.createInviteCode.useMutation({
     onSuccess: (res) => {
@@ -242,11 +254,24 @@ export default function AccountManager() {
                     </div>
                     <p className="text-xs text-slate-500 truncate">{u.email ?? "無郵件"}</p>
                   </div>
-                  {expandedUser === u.id ? (
-                    <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
-                  )}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteUserId(u.id);
+                        setConfirmDeleteName(u.name ?? "未命名");
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-red-500/20 transition-colors text-slate-600 hover:text-red-400"
+                      title="刪除此帳號"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    {expandedUser === u.id ? (
+                      <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
+                    )}
+                  </div>
                 </button>
                 <AnimatePresence>
                   {expandedUser === u.id && (
@@ -265,6 +290,58 @@ export default function AccountManager() {
           </div>
         </section>
       </div>
+
+      {/* ── 刪除確認對話框 ── */}
+      <AnimatePresence>
+        {confirmDeleteUserId !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+            onClick={() => setConfirmDeleteUserId(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-slate-900 border border-red-500/30 rounded-2xl p-6 max-w-sm w-full space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">確認刪除帳號</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">此操作無法復原</p>
+                </div>
+              </div>
+              <p className="text-sm text-slate-300">
+                確定要刪除 <span className="text-red-400 font-semibold">「{confirmDeleteName}」</span> 的帳號嗎？
+                <br />
+                <span className="text-xs text-slate-500">包含所有命格資料、擲筊記錄、選號記錄等將一併刪除。</span>
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDeleteUserId(null)}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-700/50 text-slate-300 text-sm hover:bg-slate-700 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => deleteUser.mutate({ userId: confirmDeleteUserId! })}
+                  disabled={deleteUser.isPending}
+                  className="flex-1 py-2.5 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-500 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {deleteUser.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                  確認刪除
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

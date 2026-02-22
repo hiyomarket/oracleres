@@ -13,9 +13,9 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
 import {
   User, Save, ArrowLeft, Loader2, Sparkles,
-  RefreshCw, MapPin, Calendar, ChevronDown, ChevronUp
+  RefreshCw, MapPin, Calendar, ChevronDown, ChevronUp, AlertTriangle, Trash2
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 const BIRTH_HOUR_OPTIONS = [
   { value: 0,  label: "子時", desc: "23:00–01:00" },
@@ -81,6 +81,8 @@ export default function MyProfile() {
 
   const [showHourPicker, setShowHourPicker] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [, navigate] = useLocation();
 
   // 載入現有資料
   useEffect(() => {
@@ -97,6 +99,14 @@ export default function MyProfile() {
       });
     }
   }, [profile]);
+
+  const deleteSelf = trpc.account.deleteSelf.useMutation({
+    onSuccess: () => {
+      toast.success("帳號已刪除，即將登出");
+      setTimeout(() => { navigate("/"); window.location.reload(); }, 1200);
+    },
+    onError: (err) => toast.error(err.message),
+  });
 
   // 儲存基本資料（不含八字計算）
   const saveProfile = trpc.account.saveProfile.useMutation({
@@ -391,6 +401,48 @@ export default function MyProfile() {
             <p className="text-xs text-slate-600 text-center">
               修改出生日期或時辰後，點擊「重新推算」更新命格
             </p>
+          )}
+        </section>
+
+        {/* ── 危險區域：刪除帳號 ── */}
+        <section className="border border-red-500/20 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-400" />
+            <h2 className="text-sm font-semibold text-red-400">危險區域</h2>
+          </div>
+          <p className="text-xs text-slate-500">
+            刪除帳號將永久移除您的所有資料，包含命格資料、擲筊記錄、選號記錄等。此操作無法復原。
+          </p>
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 text-sm hover:bg-red-500/10 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              刪除我的帳號
+            </button>
+          ) : (
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 space-y-3">
+              <p className="text-sm text-red-300 font-medium">確定要刪除帳號嗎？此操作無法復原。</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-2 rounded-xl bg-slate-700/50 text-slate-300 text-sm hover:bg-slate-700 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={() => deleteSelf.mutate()}
+                  disabled={deleteSelf.isPending}
+                  className="flex-1 py-2 rounded-xl bg-red-600 text-white text-sm font-medium hover:bg-red-500 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {deleteSelf.isPending
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Trash2 className="w-3.5 h-3.5" />}
+                  確認刪除
+                </button>
+              </div>
+            </div>
           )}
         </section>
       </div>

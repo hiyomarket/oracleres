@@ -731,3 +731,45 @@
 - [x] Onboarding 完成後呼叫 notifyOwner 發送 Mail 通知（首次建立時通知）
 - [x] TypeScript 零錯誤，78 項測試全部通過
 - [x] 儲存 V2.43 checkpoint
+
+## 功能改造 v2.44 - 通知功能改為發給每位登入用戶自己的 Mail
+
+- [ ] 研究 Manus 通知 API 是否支援發給指定用戶（非只有 Owner）
+- [ ] 晨報推播（warRoom.notifyBestHour）改為發給當前登入用戶的 Mail
+- [ ] Onboarding 完成通知：發給主帳號（Owner）知道有新用戶完成設定（保留 notifyOwner）
+- [ ] 評估每日晨報是否可讓每位用戶自行訂閱（設定頁面加入「訂閱晨報」開關）
+- [ ] TypeScript 零錯誤，測試全部通過
+- [ ] 儲存 V2.44 checkpoint
+
+## 功能審查 v2.45 - 全系統命格來源全面審查與修正
+
+- [ ] 審查 calendar.monthly / calendar.dayDetail API（日曆頁）是否使用登入者動態命格
+- [ ] 審查 oracle.cast / oracle.dailyEnergy / oracle.hourlyEnergy 是否使用登入者動態命格
+- [ ] 審查 weeklyReport.sevenDays 是否使用登入者動態命格
+- [ ] 審查 warRoom.hourlyEnergy 是否使用登入者動態命格
+- [ ] 審查 lottery.generate / lottery.bestTime 是否使用登入者動態命格
+- [ ] 修正所有仍使用硬編碼或 userProfile.ts 預設命格的 API
+- [ ] TypeScript 零錯誤，測試全部通過
+- [ ] 儲存 V2.45 checkpoint
+
+## 功能修正 v2.46 - 全系統命格動態化 + 通知發給用戶自己
+
+- [ ] 研究 Manus 通知 API 是否支援發給指定用戶（非僅 Owner）
+- [ ] 修正 weeklyReport.sevenDays：改為 protectedProcedure，使用登入者動態命格計算七天能量分數
+- [ ] 修正 calendar.monthly：購彩指數 ELEMENT_ZH_SCORE 改為根據登入者喜忌神動態計算
+- [ ] 修正 insight.deepRead：LLM prompt 改為動態讀取登入者命格（移除硬編碼「蘇发震先生」）
+- [ ] 通知功能改為發給每位用戶自己的 Manus Mail（晨報、最佳時辰通知等）
+- [ ] TypeScript 零錯誤，測試全部通過
+- [ ] 儲存 V2.46 checkpoint
+
+## 功能新增 v2.47 - 主帳號刪除用戶帳號權限
+
+- [ ] 後端新增 admin.deleteUser API（adminProcedure，刪除用戶及其所有關聯資料）
+- [ ] 前端帳號管理頁面（AccountManager.tsx）新增刪除按鈕和確認對話框
+- [ ] 刪除時同步刪除 userProfiles、oracleSessions、lotterySessions 等關聯資料
+- [ ] TypeScript 零錯誤，測試全部通過
+- [ ] 儲存 V2.47 checkpoint
+
+- [x] 後端新增 account.deleteSelf API（用戶自行刪除自己的帳號及所有資料）
+- [x] 前端 MyProfile 頁底部新增「刪除帳號」入口（紅色危險區塊，需二次確認）
+- [x] 刪除後清除 session cookie 並重導向至登入頁
