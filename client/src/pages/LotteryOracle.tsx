@@ -8,6 +8,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { SharedNav } from "@/components/SharedNav";
+import { ProfileIncompleteBanner } from "@/components/ProfileIncompleteBanner";
 import { ScratchJournal } from "@/components/ScratchJournal";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
@@ -721,6 +722,7 @@ export default function LotteryOracle() {
       </div>
 
       <SharedNav currentPage="lottery" />
+      <ProfileIncompleteBanner featureName="天命選號" />
       {!isAdmin && !hasFeature("lottery") && (
         <FeatureLockedCard feature="lottery" />
       )}

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { accountRouter } from "./routers/account";
 import { permissionsRouter } from "./routers/permissions";
-import { getDailyTenGodAnalysis, getTenGod } from "./lib/tenGods";
+import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
@@ -11,7 +11,7 @@ import { castOracle } from "./lib/oracleAlgorithm";
 import { getFullDateInfo, getTaiwanHour, getTaiwanDate } from "./lib/lunarCalendar";
 import { getMoonPhase } from "./lib/moonPhase";
 import { getAllHourEnergies, getCurrentHourEnergy, getBestHours, getWorstHours } from "./lib/hourlyEnergy";
-import { getDb, saveOracleSession, getOracleHistory, getOracleStats, saveLotterySession, getLotteryHistory, getLotteryStats } from "./db";
+import { getDb, saveOracleSession, getOracleHistory, getOracleStats, saveLotterySession, getLotteryHistory, getLotteryStats, getUserProfileForEngine } from "./db";
 import { userProfiles } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
@@ -1452,12 +1452,14 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
     /**
      * 今日作戰室完整報告
      */
-    dailyReport: publicProcedure
+    dailyReport: protectedProcedure
       .input(z.object({
         // 指定日期（ISO 字串，例如 "2026-02-22"），不傳則為今日
         date: z.string().optional(),
       }).optional())
-      .query(async ({ input }) => {
+      .query(async ({ input, ctx }) => {
+      // 動態讀取登入用戶的命格資料
+      const engineProfile = await getUserProfileForEngine(ctx.user.id);
       // 若傳入指定日期，直接解析年月日（避免伺服器時區轉換問題）
       // 否則使用當前台灣時間
       const realNow = new Date();
@@ -1497,13 +1499,16 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
       // 2. 月相
       const moonInfo = getMoonPhase(now);
 
-      // 3. 八字十神分析
-      const tenGodAnalysis = getDailyTenGodAnalysis(dayPillar.stem, dayPillar.branch);
-
+      // 3. 八字十神分析（動態版：使用登入用戶的日主命格）
+      const tenGodAnalysis = getDailyTenGodAnalysisDynamic(
+        dayPillar.stem,
+        dayPillar.branch,
+        engineProfile.dayMasterElement,
+        engineProfile.dayMasterYinYang
+      );
       // 4. 塔羅流日
       const tarot = calculateTarotDailyCard(month, day);
-
-       // 5. 加權五行計算（V9.0：本命30% + 環境70%）
+       // 5. 加權五行計算（V9.0：本命30% + 環境五行70%）
       const envElements = calculateEnvironmentElements(
         yearPillar.stem,
         yearPillar.branch,
@@ -1512,7 +1517,8 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
         dayPillar.stem,
         dayPillar.branch,
       );
-      const wuxingResult = calculateWeightedElements(envElements);
+      // 動態版：傳入登入用戶的本命五行比例
+      const wuxingResult = calculateWeightedElements(envElements, engineProfile.natalElementRatio);
       const elementOverview = generateElementOverview(wuxingResult);
       // 5b. 穿搭建議（V9.0：加權五行驅動）
       const outfit = generateOutfitAdviceV9(wuxingResult);
@@ -1530,9 +1536,9 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
       );
       // 覆蓋 lotteryIndex：使用六維加權算法（偏財×0.4 + 日柱×0.3 + 月相×0.1 + 天氣×0.1 + 時辰×0.05 + 塔羅×0.05）
       {
-        const { FAVORABLE_ELEMENTS } = await import('./lib/userProfile');
-        const tenGodLotteryMap: Record<string, number> = {
-          偏財: 9, 正財: 7, 食神: 8, 傷官: 6,
+        // 動態版：使用登入用戶的喜用神五行
+        const FAVORABLE_ELEMENTS = engineProfile.favorableElements;
+        const tenGodLotteryMap: Record<string, number> = {     偏財: 9, 正財: 7, 食神: 8, 傷官: 6,
           七殺: 4, 正官: 5, 比肩: 3, 劫財: 2,
           偏印: 4, 正印: 5,
         };
@@ -1590,12 +1596,13 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
         };
       }> = [];
       {
-        const { FAVORABLE_ELEMENTS: FAV_EL } = await import('./lib/userProfile');
+        // 動態版：使用登入用戶的喜用神五行
+        const FAV_EL = engineProfile.favorableElements;
         const calcWeekDayScore = (d: Date) => {
           const di = getFullDateInfo(d);
           const mi = getMoonPhase(d);
           const he = getCurrentHourEnergy(di.dayPillar.stem);
-          const tg = getTenGod(di.dayPillar.stem);
+          const tg = getTenGodDynamic(di.dayPillar.stem, engineProfile.dayMasterElement, engineProfile.dayMasterYinYang);
           const tc = calculateTarotDailyCard(d.getMonth() + 1, d.getDate());
           const tgMap: Record<string, number> = {
             偏財: 9, 正財: 7, 食神: 8, 傷官: 6,

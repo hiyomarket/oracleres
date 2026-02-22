@@ -12,6 +12,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import { KeyRound, LogIn, Loader2, ShieldCheck, Sparkles } from "lucide-react";
+import { OnboardingModal } from "./OnboardingModal";
 
 interface AccessGateProps {
   children: React.ReactNode;
@@ -128,6 +129,26 @@ export function AccessGate({ children }: AccessGateProps) {
     );
   }
 
-  // 已啟用（或主帳號）→ 顯示正常內容
-  return <>{children}</>;
+  // 已啟用（或主帳號）→ 檢查命格資料是否已填寫
+  const { data: profileData, isLoading: profileLoading } = trpc.account.getProfile.useQuery(
+    undefined,
+    { enabled: !!(accountStatus?.isActivated || accountStatus?.isOwner) }
+  );
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+
+  // 已啟用且命格未填寫（且未被略過）
+  const needsOnboarding =
+    !profileLoading &&
+    !onboardingDismissed &&
+    profileData !== undefined &&
+    !profileData?.displayName;
+
+  return (
+    <>
+      {children}
+      {needsOnboarding && (
+        <OnboardingModal onComplete={() => setOnboardingDismissed(true)} />
+      )}
+    </>
+  );
 }

@@ -31,11 +31,33 @@ const CONTROLS: Record<string, string> = {
   木: "土", 土: "水", 水: "火", 火: "金", 金: "木",
 };
 
-// 日主：甲木（陽木）—— 統一從 userProfile.ts 引用，確保全系統一致
+/// 日主：甲木（陽木）—— 統一從 userProfile.ts 引用，確保全系統一致（靜態版，向後相容）
 const DAY_MASTER_YY = DAY_MASTER_YIN_YANG;
-
 /**
- * 計算十神關係
+ * 計算十神關係（動態版，支援任意日主）
+ * @param targetStem 目標天干（流日天干）
+ * @param dayMasterElement 日主五行（例：木）
+ * @param dayMasterYinYang 日主陰陽（例：陽）
+ * @returns 十神名稱
+ */
+export function getTenGodDynamic(
+  targetStem: string,
+  dayMasterElement: string,
+  dayMasterYinYang: string
+): string {
+  const targetElement = STEM_ELEMENT[targetStem];
+  const targetYY = STEM_YIN_YANG[targetStem];
+  if (!targetElement || !targetYY) return "未知";
+  const isSameYY = targetYY === dayMasterYinYang;
+  if (targetElement === dayMasterElement) return isSameYY ? "比肩" : "劫財";
+  if (GENERATES[dayMasterElement] === targetElement) return isSameYY ? "食神" : "傷官";
+  if (CONTROLS[dayMasterElement] === targetElement) return isSameYY ? "偏財" : "正財";
+  if (CONTROLS[targetElement] === dayMasterElement) return isSameYY ? "七殺" : "正官";
+  if (GENERATES[targetElement] === dayMasterElement) return isSameYY ? "偏印" : "正印";
+  return "未知";
+}
+/**
+ * 計算十神關係（靜態版，使用預設甲木日主）
  * @param targetStem 目標天干（流日天干）
  * @returns 十神名稱
  */
@@ -180,6 +202,36 @@ export function getBranchTenGods(branch: string): Array<{ stem: string; tenGod: 
   }));
 }
 
+/**
+ * 計算今日整體十神能量評分（動態版，支援任意日主）
+ */
+export function getDailyTenGodAnalysisDynamic(
+  dayStem: string,
+  dayBranch: string,
+  dayMasterElement: string,
+  dayMasterYinYang: string
+): ReturnType<typeof getDailyTenGodAnalysis> {
+  const mainTenGod = getTenGodDynamic(dayStem, dayMasterElement, dayMasterYinYang);
+  const mainMeaning = TEN_GOD_MEANING[mainTenGod] || TEN_GOD_MEANING["比肩"];
+  const mainScore = mainMeaning.score;
+  const hiddenStems = BRANCH_HIDDEN_STEMS[dayBranch] || [];
+  const branchTenGods = hiddenStems.map(stem => ({
+    stem,
+    tenGod: getTenGodDynamic(stem, dayMasterElement, dayMasterYinYang),
+  }));
+  let branchScore = 0;
+  branchTenGods.forEach((btg, idx) => {
+    const meaning = TEN_GOD_MEANING[btg.tenGod];
+    if (meaning) {
+      const weights = [0.5, 0.3, 0.2];
+      branchScore += meaning.score * (weights[idx] || 0.1);
+    }
+  });
+  const overallScore = Math.round(mainScore * 0.6 + branchScore * 0.4);
+  const coreConflict = generateCoreConflict(mainTenGod, branchTenGods);
+  const heroScript = generateHeroScript(mainTenGod, dayStem, dayBranch, overallScore);
+  return { mainTenGod, mainScore, mainMeaning, branchTenGods, overallScore, coreConflict, heroScript };
+}
 /**
  * 計算今日整體十神能量評分（基於天干+地支藏干）
  */

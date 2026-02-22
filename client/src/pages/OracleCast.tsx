@@ -12,6 +12,7 @@ import { useLocation } from "wouter";
 import type { BlockFace } from "@/components/MoonBlock";
 import { Streamdown } from "streamdown";
 import { SharedNav } from "@/components/SharedNav";
+import { ProfileIncompleteBanner } from "@/components/ProfileIncompleteBanner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 
@@ -394,6 +395,7 @@ export default function OracleCast() {
     <div className="min-h-screen oracle-bg relative">
       <BackgroundParticles />
       <SharedNav currentPage="oracle" />
+      <ProfileIncompleteBanner featureName="擲筊選號" />
       {!isAdmin && !hasFeature("oracle") && <FeatureLockedCard feature="oracle" />}
       {(isAdmin || hasFeature("oracle")) && <div className="relative z-10 container mx-auto px-4 pb-12 oracle-page-content">
         <div className="max-w-2xl mx-auto">

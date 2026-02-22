@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { ChevronLeft, ChevronRight, CalendarDays, Sun, Moon, MapPin, Clock } from "lucide-react";
 import { SharedNav } from "@/components/SharedNav";
+import { ProfileIncompleteBanner } from "@/components/ProfileIncompleteBanner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 
@@ -210,6 +211,7 @@ export default function OracleCalendar() {
       </div>
 
       <SharedNav currentPage="calendar" />
+      <ProfileIncompleteBanner featureName="天命曆" />
       {!isAdmin && !hasFeature("calendar") && <FeatureLockedCard feature="calendar" />}
       {(isAdmin || hasFeature("calendar")) && <div className="relative z-10 max-w-6xl mx-auto px-4 py-6 pb-24 md:pb-8 oracle-page-content">
         {/* 標題 */}

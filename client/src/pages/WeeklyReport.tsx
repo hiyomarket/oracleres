@@ -7,6 +7,7 @@ import {
 } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, Target, Clock, Award } from "lucide-react";
 import { SharedNav } from "@/components/SharedNav";
+import { ProfileIncompleteBanner } from "@/components/ProfileIncompleteBanner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 
@@ -130,6 +131,7 @@ export default function WeeklyReport() {
       </div>
 
       <SharedNav currentPage="weekly" />
+      <ProfileIncompleteBanner featureName="週報" />
       {!isAdmin && !hasFeature("weekly") && <FeatureLockedCard feature="weekly" />}
       {(isAdmin || hasFeature("weekly")) && <div className="relative z-10 max-w-3xl mx-auto px-4 py-8 pb-24 md:pb-8 oracle-page-content">
 

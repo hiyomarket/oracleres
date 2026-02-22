@@ -572,3 +572,155 @@ export async function getBraceletWearStats(userId: number | undefined): Promise<
     totalWears: Number(r.totalWears),
   }));
 }
+
+// ─── 命格引擎輔助函式 ─────────────────────────────────────────────────────────
+
+/**
+ * 動態命格資料（供後端算法引擎使用）
+ * 若用戶已填寫 userProfiles，使用其資料；否則退回預設甲木命格
+ */
+export interface EngineProfile {
+  /** 日主天干（例：甲） */
+  dayMasterStem: string;
+  /** 日主五行（例：木） */
+  dayMasterElement: string;
+  /** 日主陰陽（例：陽） */
+  dayMasterYinYang: "陽" | "陰";
+  /** 本命五行比例（0~1，加總為1） */
+  natalElementRatio: Record<string, number>;
+  /** 喜用神五行（中文，例：["火","土","金"]） */
+  favorableElements: string[];
+  /** 忌神五行（中文） */
+  unfavorableElements: string[];
+  /** 喜用神五行（英文，例：["fire","earth","metal"]） */
+  favorableElementsEn: string[];
+  /** 是否使用預設命格（用戶未填寫時為 true） */
+  isDefault: boolean;
+}
+
+/** 五行中英文對照 */
+const ZH_TO_EN: Record<string, string> = {
+  木: "wood", 火: "fire", 土: "earth", 金: "metal", 水: "water",
+};
+
+/** 天干五行對照 */
+const STEM_ELEMENT_MAP: Record<string, string> = {
+  甲: "木", 乙: "木", 丙: "火", 丁: "火", 戊: "土",
+  己: "土", 庚: "金", 辛: "金", 壬: "水", 癸: "水",
+};
+
+/** 天干陰陽對照 */
+const STEM_YIN_YANG_MAP: Record<string, "陽" | "陰"> = {
+  甲: "陽", 乙: "陰", 丙: "陽", 丁: "陰", 戊: "陽",
+  己: "陰", 庚: "陽", 辛: "陰", 壬: "陽", 癸: "陰",
+};
+
+/** 預設命格（甲木，蘇先生命格，作為系統 fallback） */
+const DEFAULT_ENGINE_PROFILE: EngineProfile = {
+  dayMasterStem: "甲",
+  dayMasterElement: "木",
+  dayMasterYinYang: "陽",
+  natalElementRatio: { 木: 0.42, 水: 0.35, 火: 0.11, 土: 0.09, 金: 0.04 },
+  favorableElements: ["火", "土", "金"],
+  unfavorableElements: ["水", "木"],
+  favorableElementsEn: ["fire", "earth", "metal"],
+  isDefault: true,
+};
+
+/**
+ * 從資料庫讀取指定用戶的命格資料，供後端算法引擎使用
+ * 若用戶未填寫命格資料，退回預設甲木命格
+ */
+export async function getUserProfileForEngine(userId: number): Promise<EngineProfile> {
+  const db = await getDb();
+  if (!db) return { ...DEFAULT_ENGINE_PROFILE };
+
+  try {
+    const { userProfiles } = await import("../drizzle/schema");
+    const rows = await db.select().from(userProfiles)
+      .where(eq(userProfiles.userId, userId))
+      .limit(1);
+
+    if (rows.length === 0 || !rows[0].dayMasterElement) {
+      return { ...DEFAULT_ENGINE_PROFILE };
+    }
+
+    const profile = rows[0];
+
+    // 解析日主天干（從四柱日柱取得，例："甲子" → "甲"）
+    const dayPillarStem = profile.dayPillar ? profile.dayPillar[0] : null;
+    const dayMasterStem = dayPillarStem && STEM_ELEMENT_MAP[dayPillarStem] ? dayPillarStem : "甲";
+    const dayMasterElement = STEM_ELEMENT_MAP[dayMasterStem] || "木";
+    const dayMasterYinYang = STEM_YIN_YANG_MAP[dayMasterStem] || "陽";
+
+    // 解析喜用神（逗號分隔的英文，例："fire,earth,metal"）
+    const favorableElementsEn = profile.favorableElements
+      ? profile.favorableElements.split(",").map(s => s.trim()).filter(Boolean)
+      : DEFAULT_ENGINE_PROFILE.favorableElementsEn;
+
+    // 轉換為中文
+    const EN_TO_ZH: Record<string, string> = {
+      wood: "木", fire: "火", earth: "土", metal: "金", water: "水",
+    };
+    const favorableElements = favorableElementsEn.map(e => EN_TO_ZH[e] || e).filter(Boolean);
+
+    const unfavorableElementsEn = profile.unfavorableElements
+      ? profile.unfavorableElements.split(",").map(s => s.trim()).filter(Boolean)
+      : DEFAULT_ENGINE_PROFILE.favorableElementsEn.filter(e => !favorableElementsEn.includes(e));
+    const unfavorableElements = unfavorableElementsEn.map(e => EN_TO_ZH[e] || e).filter(Boolean);
+
+    // 本命五行比例：目前從四柱推算較複雜，暫時根據日主五行給出合理預設
+    // 未來可擴充為完整的八字五行計算
+    const natalElementRatio = buildNatalRatioFromDayMaster(dayMasterElement, favorableElements);
+
+    return {
+      dayMasterStem,
+      dayMasterElement,
+      dayMasterYinYang,
+      natalElementRatio,
+      favorableElements,
+      unfavorableElements,
+      favorableElementsEn,
+      isDefault: false,
+    };
+  } catch {
+    return { ...DEFAULT_ENGINE_PROFILE };
+  }
+}
+
+/**
+ * 根據日主五行和喜用神，推算合理的本命五行比例
+ * 這是一個簡化的估算，實際應由完整八字計算
+ */
+function buildNatalRatioFromDayMaster(
+  dayMasterElement: string,
+  favorableElements: string[]
+): Record<string, number> {
+  // 預設均等分布
+  const base: Record<string, number> = { 木: 0.20, 火: 0.20, 土: 0.20, 金: 0.20, 水: 0.20 };
+
+  // 日主五行本身偏強（身強格局）
+  base[dayMasterElement] = Math.min(0.40, (base[dayMasterElement] || 0.20) + 0.15);
+
+  // 生日主的五行也偏強（印星）
+  const GENERATES: Record<string, string> = {
+    木: "水", 火: "木", 土: "火", 金: "土", 水: "金",
+  };
+  const generatorEl = GENERATES[dayMasterElement];
+  if (generatorEl) base[generatorEl] = Math.min(0.35, (base[generatorEl] || 0.20) + 0.10);
+
+  // 喜用神五行偏弱（需補）
+  for (const el of favorableElements) {
+    if (base[el] !== undefined) {
+      base[el] = Math.max(0.04, (base[el] || 0.10) - 0.05);
+    }
+  }
+
+  // 正規化為加總 1
+  const total = Object.values(base).reduce((a, b) => a + b, 0);
+  for (const el of Object.keys(base)) {
+    base[el] = Math.round((base[el] / total) * 100) / 100;
+  }
+
+  return base;
+}

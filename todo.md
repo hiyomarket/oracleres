@@ -618,3 +618,32 @@
 - [x] account.ts：saveProfile 加入 occupation 和 birthLunar 欄位
 - [ ] server/lib/userProfile.ts：後端算法常數改為從登入者 userProfiles 動態讀取（warRoom.dailyReport 等）
 - [ ] 新使用者首次登入時，若 userProfiles 為空，引導填寫命格資料後才能使用完整功能
+
+## 功能增強 v2.37 - 後端算法去個人化 + Onboarding + 命格提示橫幅
+
+### 後端算法去個人化
+- [ ] warRoom.dailyReport 改為 protectedProcedure，從 ctx.user 動態讀取 userProfiles
+- [ ] 建立 getUserProfileForEngine() 輔助函式（讀取 DB 命格，若無則退回 userProfile.ts 預設值）
+- [ ] warRoom 相關 API（dailyReport/topicAdvice/notifyBestHour）全部改用動態命格
+- [ ] lottery.generate 確認已支援動態命格（profileUserId 參數）
+
+### 首次登入 Onboarding 引導流程
+- [ ] 建立 OnboardingModal.tsx（命格資料未填寫時的精簡填寫彈窗）
+- [ ] App.tsx 加入全域 Onboarding 觸發邏輯（登入後檢查 userProfiles 是否為空）
+- [ ] Onboarding 填寫完成後自動關閉並刷新頁面
+
+### 命格資料完整性提示橫幅
+- [ ] 建立 ProfileIncompleteBar.tsx（命格未填寫時顯示的頂部提示橫幅）
+- [ ] OracleCast、WarRoom、LotteryOracle 三個核心功能頁面加入提示橫幅
+- [ ] 點擊橫幅連結至 /my-profile 頁面
+
+## 功能增強 v2.38 - 商業化三項建議完成
+
+- [x] 後端算法去個人化：warRoom.dailyReport 改為 protectedProcedure，動態讀取 ctx.user 的命格（dayMasterElement、favorableElements、natalRatio）
+- [x] 新增 getUserProfileForEngine() 輔助函式（db.ts），從 userProfiles 讀取命格，未填寫時退回甲木預設值
+- [x] 新增 getDailyTenGodAnalysisDynamic() 和 getTenGodDynamic()（tenGods.ts），支援任意日主的動態計算
+- [x] 修改 calculateWeightedElements() 接受可選的動態 natalRatio 參數（wuxingEngine.ts）
+- [x] Onboarding Modal：新增 OnboardingModal.tsx 組件，登入且啟用但 displayName 未填寫時自動彈出引導填寫命格資料
+- [x] 整合 OnboardingModal 到 AccessGate.tsx，全站生效
+- [x] 新增 ProfileIncompleteBanner.tsx 組件（命格資料完整性提示橫幅）
+- [x] 在 WarRoom、OracleCast、LotteryOracle、OracleCalendar、WeeklyReport 五個主要功能頁面加入 ProfileIncompleteBanner

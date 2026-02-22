@@ -272,16 +272,20 @@ export interface EnergyLevel {
 
 /**
  * 計算加權五行比例
+ * @param env 環境五行比例
+ * @param dynamicNatalRatio 可選：動態本命五行比例（用戶個人命格），若不傳則使用預設甲木命格
  */
 export function calculateWeightedElements(
-  env: ElementRatio
+  env: ElementRatio,
+  dynamicNatalRatio?: Record<string, number>
 ): WeightedElementResult {
+  const natalSource = dynamicNatalRatio || NATAL_ELEMENT_RATIO;
   const natal: ElementRatio = {
-    木: NATAL_ELEMENT_RATIO.木,
-    火: NATAL_ELEMENT_RATIO.火,
-    土: NATAL_ELEMENT_RATIO.土,
-    金: NATAL_ELEMENT_RATIO.金,
-    水: NATAL_ELEMENT_RATIO.水,
+    木: natalSource['木'] ?? NATAL_ELEMENT_RATIO.木,
+    火: natalSource['火'] ?? NATAL_ELEMENT_RATIO.火,
+    土: natalSource['土'] ?? NATAL_ELEMENT_RATIO.土,
+    金: natalSource['金'] ?? NATAL_ELEMENT_RATIO.金,
+    水: natalSource['水'] ?? NATAL_ELEMENT_RATIO.水,
   };
 
   const weighted: ElementRatio = {

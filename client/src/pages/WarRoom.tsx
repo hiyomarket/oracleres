@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { SharedNav } from "@/components/SharedNav";
+import { ProfileIncompleteBanner } from "@/components/ProfileIncompleteBanner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 import { TopicAdvicePanel } from "@/components/TopicAdvicePanel";
@@ -241,6 +242,7 @@ export default function WarRoom() {
       </div>
 
       <SharedNav currentPage="warRoom" />
+      <ProfileIncompleteBanner featureName="作戰室" />
       {!isAdmin && !hasFeature("warroom") && <FeatureLockedCard feature="warroom" />}
       {(isAdmin || hasFeature("warroom")) && <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 pb-24 relative z-10 oracle-page-content">
 
