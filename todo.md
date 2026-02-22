@@ -433,3 +433,12 @@
 - [x] 前端：作戰室七日切換列標記本週最佳購彩日（金色光暈 + 「最旺」標籤 + 分數小字）
 - [x] TypeScript 零錯誤，78 項測試全部通過
 - [x] 儲存 V2.19 checkpoint
+
+## 功能增強 v2.20 - 本週最旺時辰橫幅 + 通知 Mail
+
+- [x] 後端：weeklyLotteryScores 最佳日加入 bestHour（時辰名、displayTime、energyScore、weekdayName）
+- [x] 前端：七日切換列下方加入本週最旺時辰橫幅（週X + 時辰 + 時間 + 日綜指數）
+- [x] 前端：橫幅右側加入「通知 Mail」按鈕，點擊後呼叫 notifyOwner，發送後變成綠色「已發送」狀態
+- [x] 後端：新增 warRoom.notifyBestHour procedure，組裝通知內容並呼叫 notifyOwner
+- [x] TypeScript 零錯誤，78 項測試全部通過
+- [x] 儲存 V2.20 checkpoint

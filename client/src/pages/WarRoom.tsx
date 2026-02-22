@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { SharedNav } from "@/components/SharedNav";
 import { TopicAdvicePanel } from "@/components/TopicAdvicePanel";
+import { Zap, Bell, CheckCircle } from "lucide-react";
+import { toast } from "sonner";
 
 // 五行顏色映射
 const WUXING_COLORS: Record<string, { bg: string; border: string; text: string; glow: string }> = {
@@ -141,6 +143,20 @@ export default function WarRoom() {
       date: selectedDate,
     });
   };
+
+  // 本週最旺時辰通知
+  const [notified, setNotified] = useState(false);
+  const notifyBestHourMutation = trpc.warRoom.notifyBestHour.useMutation({
+    onSuccess: (res) => {
+      if (res.success) {
+        setNotified(true);
+        toast.success('通知已發送到 Mail ！');
+      } else {
+        toast.error('發送失敗，請稍後再試');
+      }
+    },
+    onError: () => toast.error('發送失敗，請稍後再試'),
+  });
 
   // 手串佩戴記錄
   const utils = trpc.useUtils();
@@ -308,6 +324,65 @@ export default function WarRoom() {
               );
             })}
           </div>
+
+          {/* 本週最旺時辰橫幅 */}
+          {(() => {
+            const bestEntry = data?.weeklyLotteryScores?.find(s => s.isBest);
+            if (!bestEntry?.bestHour) return null;
+            const { bestHour, compositeScore, dateLabel } = bestEntry;
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-yellow-400/30 bg-yellow-400/8 px-4 py-2.5"
+                style={{ background: 'linear-gradient(90deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.04) 100%)' }}
+              >
+                {/* 左側：雷電圖示 + 文字 */}
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Zap className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <span className="text-yellow-300 text-xs font-bold tracking-wide">本週最旺購彩時機</span>
+                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                      <span className="text-white font-semibold text-sm">{bestHour.weekdayName}</span>
+                      <span className="text-yellow-200 font-bold text-sm">{bestHour.chineseName}</span>
+                      <span className="text-white/50 text-xs">{bestHour.displayTime}</span>
+                      <span className="text-yellow-400/80 text-xs">&#x2022; 日綜 {compositeScore.toFixed(1)}</span>
+                    </div>
+                  </div>
+                </div>
+                {/* 右側：通知按鈕 */}
+                <button
+                  onClick={() => {
+                    if (notified || notifyBestHourMutation.isPending) return;
+                    notifyBestHourMutation.mutate({
+                      bestDayLabel: bestHour.weekdayName,
+                      bestHourName: bestHour.chineseName,
+                      displayTime: bestHour.displayTime,
+                      compositeScore,
+                      energyScore: bestHour.energyScore,
+                      dateLabel,
+                    });
+                  }}
+                  disabled={notified || notifyBestHourMutation.isPending}
+                  className={`flex-shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                    notified
+                      ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 cursor-default'
+                      : notifyBestHourMutation.isPending
+                      ? 'bg-yellow-400/10 border border-yellow-400/30 text-yellow-400/50 cursor-wait'
+                      : 'bg-yellow-400/15 border border-yellow-400/40 text-yellow-300 hover:bg-yellow-400/25 active:scale-95'
+                  }`}
+                >
+                  {notified ? (
+                    <><CheckCircle className="w-3.5 h-3.5" /> 已發送</>
+                  ) : notifyBestHourMutation.isPending ? (
+                    <><span className="animate-spin inline-block w-3.5 h-3.5 border-2 border-yellow-400/50 border-t-yellow-400 rounded-full" /> 發送中</>
+                  ) : (
+                    <><Bell className="w-3.5 h-3.5" /> 通知 Mail</>
+                  )}
+                </button>
+              </motion.div>
+            );
+          })()}
 
           {/* 核心數據橫排 */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3 mb-4">
