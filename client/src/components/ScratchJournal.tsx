@@ -361,6 +361,37 @@ export function ScratchJournal() {
                 </div>
               )}
 
+              {/* 風水等級中獎率統計 */}
+              {(stats as any).byFengShui?.length > 0 && (
+                <div>
+                  <p className="text-xs text-slate-500 mb-2">🧭 風水地場等級中獎率回港</p>
+                  <div className="space-y-1.5">
+                    {(stats as any).byFengShui.map((f: { grade: string; total: number; won: number; winRate: number }) => {
+                      const gradeColors: Record<string, string> = {
+                        "大吉": "bg-amber-500/20 text-amber-400 border-amber-500/40",
+                        "吉":   "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
+                        "平":   "bg-slate-600/30 text-slate-400 border-slate-600/40",
+                        "凶":   "bg-orange-500/20 text-orange-400 border-orange-500/40",
+                        "大凶": "bg-red-500/20 text-red-400 border-red-500/40",
+                      };
+                      const barColors: Record<string, string> = {
+                        "大吉": "bg-amber-500", "吉": "bg-emerald-500", "平": "bg-slate-500", "凶": "bg-orange-500", "大凶": "bg-red-500",
+                      };
+                      return (
+                        <div key={f.grade} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border text-xs ${gradeColors[f.grade] ?? "bg-slate-700/40 text-slate-400 border-slate-600/40"}`}>
+                          <span className="w-8 font-bold shrink-0">{f.grade}</span>
+                          <div className="flex-1 h-1.5 bg-black/20 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full ${barColors[f.grade] ?? "bg-slate-500"}`} style={{ width: `${Math.min(f.winRate * 3, 100)}%` }} />
+                          </div>
+                          <span className="w-10 text-right shrink-0 font-bold">{f.winRate}%</span>
+                          <span className="text-[10px] opacity-60 shrink-0">{f.won}/{f.total}筆</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-slate-600 mt-1.5">∗ 風水等級資料來自彩券行 GPS 地圖選店時的風水分析結果</p>
+                </div>
+              )}
               {stats.byDenomination.length === 0 && (
                 <p className="text-slate-500 text-sm text-center py-2">尚無統計數據，開始記錄後即可查看分析</p>
               )}

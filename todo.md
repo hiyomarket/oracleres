@@ -518,3 +518,45 @@
 - [x] UI 更新：顯示主導五行和總分/100
 - [x] TypeScript 零錯誤
 - [ ] 儲存 V2.24b checkpoint
+
+## 功能增強 v2.25 - 風水分析三項延伸功能
+- [ ] 彩券行 GPS 地圖整合三維度風水分析（ScratchAnalysisWithMap 標記氣泡顯示風水等級）
+- [ ] 餐廳清單加入「距離優先 / 風水優先」排序切換按鈕（NearbyRestaurants）
+- [ ] schema 加入 fengShuiGrade + fengShuiScore 欄位（scratch_logs 資料表）
+- [ ] routers.ts addScratchLog 接受 fengShuiGrade + fengShuiScore 參數
+- [ ] getScratchStats 加入各風水等級中獎率統計（大吉/吉/平/凶/大凶）
+- [ ] ScratchJournal 新增記錄時可輸入風水等級，統計面板加入風水等級中獎率圖表
+- [ ] TypeScript 零錯誤，測試全部通過
+- [ ] 儲存 V2.25 checkpoint
+
+## 功能增強 v2.30 - 帳號系統（主帳號 + 子帳號 + 命格資料 + 強制登入保護）
+- [ ] schema：users 擴充 role（owner/member）+ userProfiles 資料表（姓名/出生地/出生時間/八字/五行命格）
+- [ ] schema：inviteCodes 資料表（邀請碼/使用狀態/建立者/過期時間）
+- [ ] db.ts：getUserProfile / upsertUserProfile / createInviteCode / useInviteCode / listMembers / revokeMember
+- [ ] routers.ts：account.getProfile / account.saveProfile / account.createInvite / account.listMembers / account.revokeMember
+- [ ] 前端：App.tsx 加入全域強制登入保護（未登入一律跳轉登入頁）
+- [ ] 前端：AccountPage.tsx（主帳號管理頁：成員清單、邀請碼產生、撤銷權限）
+- [ ] 前端：ProfilePage.tsx（個人命格資料填寫：姓名/出生地/出生時間/五行命格）
+- [ ] 前端：系統各功能讀取當前使用者命格資料（取代硬編碼的蘇先生命格）
+- [ ] TypeScript 零錯誤，測試全部通過
+- [ ] 儲存 V2.30 checkpoint
+
+## 功能增強 v2.30 - 帳號系統（主帳號 + 子帳號 + 命格資料 + 強制登入）
+- [x] schema：新增 user_profiles 資料表（姓名/出生地/出生日期/出生時間/四柱/五行命格/備註）
+- [x] schema：新增 invite_codes 資料表（邀請碼/標籤/有效期/使用狀態/使用者）
+- [x] db:push 推送兩個新資料表
+- [x] 後端：account.getStatus（登入狀態/主帳號/啟用狀態/命格資料）
+- [x] 後端：account.useInviteCode（受邀者啟用帳號）
+- [x] 後端：account.createInviteCode（主帳號產生邀請碼）
+- [x] 後端：account.listInviteCodes（主帳號查看邀請碼列表）
+- [x] 後端：account.revokeInviteCode（主帳號撤銷邀請碼）
+- [x] 後端：account.listUsers（主帳號查看使用者列表）
+- [x] 後端：account.getProfile（取得個人命格資料）
+- [x] 後端：account.saveProfile（儲存/更新個人命格資料）
+- [x] 後端：account.getProfileByUserId（主帳號查看指定使用者命格資料）
+- [x] 前端：AccessGate 全站守衛（未登入→登入頁、未啟用→邀請碼輸入頁、已啟用→正常內容）
+- [x] 前端：AccountManager 頁面（/account-manager，主帳號專屬）
+- [x] 前端：MyProfile 頁面（/my-profile，個人命格資料填寫）
+- [x] 前端：SharedNav 使用者下拉選單（我的命格資料、帳號管理、登出）
+- [x] App.tsx 加入新路由並套用 AccessGate
+- [x] TypeScript 零錯誤

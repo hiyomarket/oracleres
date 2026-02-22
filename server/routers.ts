@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
+import { accountRouter } from "./routers/account";
 import { getDailyTenGodAnalysis, getTenGod } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -26,6 +27,7 @@ import {
 
 export const appRouter = router({
   system: systemRouter,
+  account: accountRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -550,6 +552,8 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
         wonAmount: z.number().int().min(0).default(0),
         note: z.string().max(300).optional(),
         purchasedAt: z.number().int(),
+        fengShuiGrade: z.string().max(10).optional(),
+        fengShuiScore: z.number().int().min(0).max(100).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const { addScratchLog } = await import('./db');
@@ -563,6 +567,8 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
           wonAmount: input.wonAmount,
           note: input.note,
           purchasedAt: input.purchasedAt,
+          fengShuiGrade: input.fengShuiGrade,
+          fengShuiScore: input.fengShuiScore,
         });
         return { id, success: true };
       }),
@@ -1934,3 +1940,5 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
   }),
 });
 export type AppRouter = typeof appRouter;
+// Re-export for type inference
+export { accountRouter };

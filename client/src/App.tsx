@@ -11,29 +11,30 @@ import OracleCalendar from "@/pages/OracleCalendar";
 import WeeklyReport from "@/pages/WeeklyReport";
 import WarRoom from "@/pages/WarRoom";
 import ProfilePage from "@/pages/ProfilePage";
+import AccountManager from "@/pages/AccountManager";
+import MyProfile from "@/pages/MyProfile";
+import { AccessGate } from "@/components/AccessGate";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/stats"} component={OracleStats} />
-      <Route path={"/lottery"} component={LotteryOracle} />
-      <Route path={"/calendar"} component={OracleCalendar} />
-      <Route path={"/weekly"} component={WeeklyReport} />
-      <Route path={"/war-room"} component={WarRoom} />
-      <Route path={"/profile"} component={ProfilePage} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+    <AccessGate>
+      <Switch>
+        <Route path={"/"} component={Home} />
+        <Route path={"/stats"} component={OracleStats} />
+        <Route path={"/lottery"} component={LotteryOracle} />
+        <Route path={"/calendar"} component={OracleCalendar} />
+        <Route path={"/weekly"} component={WeeklyReport} />
+        <Route path={"/war-room"} component={WarRoom} />
+        <Route path={"/profile"} component={ProfilePage} />
+        <Route path={"/account-manager"} component={AccountManager} />
+        <Route path={"/my-profile"} component={MyProfile} />
+        <Route path={"/404"} component={NotFound} />
+        {/* Final fallback route */}
+        <Route component={NotFound} />
+      </Switch>
+    </AccessGate>
   );
 }
-
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
   return (

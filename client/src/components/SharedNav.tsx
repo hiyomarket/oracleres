@@ -1,8 +1,10 @@
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { useState, useRef, useEffect } from "react";
+import { User, Settings, LogOut, ChevronDown } from "lucide-react";
 
 type NavPage = "oracle" | "lottery" | "calendar" | "stats" | "weekly" | "warRoom" | "profile";
 
@@ -19,6 +21,77 @@ const NAV_ITEMS: { id: NavPage; path: string; icon: string; label: string }[] = 
   { id: "stats",    path: "/stats",    icon: "📊", label: "統計" },
   { id: "profile",  path: "/profile",  icon: "🔮", label: "命格" },
 ];
+
+/** 使用者頭像下拉選單 */
+function UserMenu({ user }: { user: { name?: string | null; openId?: string } }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const { data: status } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
+  const logoutMutation = trpc.auth.logout.useMutation({
+    onSuccess: () => { window.location.href = "/"; },
+  });
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 hover:bg-slate-800/60 rounded-xl px-2 py-1 transition-colors"
+      >
+        <div className="w-7 h-7 rounded-full bg-amber-900/40 border border-amber-600/40 flex items-center justify-center text-xs text-amber-400">
+          {user.name?.[0] ?? "?"}
+        </div>
+        <span className="text-xs text-slate-400 hidden sm:block max-w-[80px] truncate">{user.name}</span>
+        <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1.5 w-48 bg-slate-900 border border-slate-700/60 rounded-2xl shadow-xl overflow-hidden z-50">
+          <div className="px-3 py-2.5 border-b border-slate-800">
+            <p className="text-xs font-medium text-white truncate">{user.name}</p>
+            {status?.isOwner && (
+              <p className="text-[10px] text-amber-400 mt-0.5">✦ 主帳號</p>
+            )}
+          </div>
+          <div className="py-1">
+            <Link
+              href="/my-profile"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+            >
+              <User className="w-3.5 h-3.5 text-blue-400" />
+              我的命格資料
+            </Link>
+            {status?.isOwner && (
+              <Link
+                href="/account-manager"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+              >
+                <Settings className="w-3.5 h-3.5 text-purple-400" />
+                帳號管理
+              </Link>
+            )}
+            <button
+              onClick={() => logoutMutation.mutate()}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              登出
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function SharedNav({ currentPage }: SharedNavProps) {
   const [, navigate] = useLocation();
@@ -107,12 +180,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
               登入
             </a>
           ) : (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 hidden sm:block">{user.name}</span>
-              <div className="w-7 h-7 rounded-full bg-amber-900/40 border border-amber-600/40 flex items-center justify-center text-xs text-amber-400">
-                {user.name?.[0] ?? "?"}
-              </div>
-            </div>
+            <UserMenu user={user} />
           )}
         </div>
       </nav>

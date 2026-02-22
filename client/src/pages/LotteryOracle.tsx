@@ -1242,16 +1242,56 @@ export default function LotteryOracle() {
   );
 }
 
-// ── 地址分析 + GPS 地圖 + 面額選號（整合組件）────────────────────────────────
+// ── 彩券行風水分析（三維度：方位40% + 地名20% + 類型40%）────────────────────
 import { MapView } from "@/components/Map";
-
+const FS_MOUNTAINS = [
+  { min:352.5,max:360,m:"壬",e:"水"},{min:0,max:7.5,m:"壬",e:"水"},{min:7.5,max:22.5,m:"子",e:"水"},{min:22.5,max:37.5,m:"癸",e:"水"},
+  {min:37.5,max:52.5,m:"丑",e:"土"},{min:52.5,max:67.5,m:"艮",e:"土"},{min:67.5,max:82.5,m:"寅",e:"木"},{min:82.5,max:97.5,m:"甲",e:"木"},
+  {min:97.5,max:112.5,m:"卯",e:"木"},{min:112.5,max:127.5,m:"乙",e:"木"},{min:127.5,max:142.5,m:"辰",e:"土"},{min:142.5,max:157.5,m:"巽",e:"木"},
+  {min:157.5,max:172.5,m:"巳",e:"火"},{min:172.5,max:187.5,m:"丙",e:"火"},{min:187.5,max:202.5,m:"午",e:"火"},{min:202.5,max:217.5,m:"丁",e:"火"},
+  {min:217.5,max:232.5,m:"未",e:"土"},{min:232.5,max:247.5,m:"坤",e:"土"},{min:247.5,max:262.5,m:"申",e:"金"},{min:262.5,max:277.5,m:"庚",e:"金"},
+  {min:277.5,max:292.5,m:"酉",e:"金"},{min:292.5,max:307.5,m:"辛",e:"金"},{min:307.5,max:322.5,m:"戌",e:"土"},{min:322.5,max:337.5,m:"乾",e:"金"},
+  {min:337.5,max:352.5,m:"亥",e:"水"},
+];
+const FS_NAME_MAP: Record<string,string> = {
+  木:"木",林:"木",森:"木",竹:"木",草:"木",花:"木",葉:"木",青:"木",綠:"木",春:"木",東:"木",甲:"木",乙:"木",寅:"木",卯:"木",
+  火:"火",炎:"火",燦:"火",熱:"火",光:"火",明:"火",南:"火",丙:"火",丁:"火",午:"火",巳:"火",紅:"火",橙:"火",暖:"火",
+  土:"土",地:"土",山:"土",石:"土",城:"土",坡:"土",岡:"土",丘:"土",嶺:"土",中:"土",黃:"土",戊:"土",己:"土",辰:"土",未:"土",戌:"土",丑:"土",
+  金:"金",銀:"金",鐵:"金",鋼:"金",銅:"金",白:"金",西:"金",庚:"金",辛:"金",申:"金",酉:"金",乾:"金",
+  水:"水",海:"水",河:"水",湖:"水",溪:"水",泉:"水",北:"水",壬:"水",癸:"水",子:"水",亥:"水",黑:"水",藍:"水",冬:"水",
+};
+const FS_SCORE: Record<string,number> = {火:100,土:85,金:70,木:30,水:20};
+const FS_GRADE_CFG: Record<string,{label:string;color:string;emoji:string}> = {
+  大吉:{label:"大吉",color:"#f59e0b",emoji:"✦"},
+  吉:{label:"吉",color:"#22c55e",emoji:"◎"},
+  平:{label:"平",color:"#94a3b8",emoji:"○"},
+  凶:{label:"凶",color:"#f97316",emoji:"△"},
+  大凶:{label:"大凶",color:"#ef4444",emoji:"✕"},
+};
+function calcStoreFengShui(uLat:number,uLng:number,sLat:number,sLng:number,name:string,addr:string) {
+  const dLng=(sLng-uLng)*Math.PI/180;
+  const la1=uLat*Math.PI/180,la2=sLat*Math.PI/180;
+  const y=Math.sin(dLng)*Math.cos(la2);
+  const x=Math.cos(la1)*Math.sin(la2)-Math.sin(la1)*Math.cos(la2)*Math.cos(dLng);
+  const deg=((Math.atan2(y,x)*180/Math.PI)+360)%360;
+  const mtn=FS_MOUNTAINS.find(m=>deg>=m.min&&deg<m.max)??{m:"子",e:"水"};
+  const cnt:Record<string,number>={木:0,火:0,土:0,金:0,水:0};
+  for(const c of `${name} ${addr}`) if(FS_NAME_MAP[c]) cnt[FS_NAME_MAP[c]]++;
+  const nameEl=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0][1]>0?Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0][0]:"土";
+  const total=Math.round((FS_SCORE[mtn.e]??50)*0.40+(FS_SCORE[nameEl]??50)*0.20+(FS_SCORE["土"])*0.40);
+  let grade:"大吉"|"吉"|"平"|"凶"|"大凶";
+  if(total>=85)grade="大吉";else if(total>=70)grade="吉";else if(total>=50)grade="平";else if(total>=35)grade="凶";else grade="大凶";
+  return {total,grade,mountain:mtn.m,bearingEl:mtn.e,nameEl,deg:Math.round(deg)};
+}
+// ─────────────────────────────────────────────────────────────────────────────
 function ScratchAnalysisWithMap({ selectedDate, weatherElement, addressElement }: { selectedDate: string; weatherElement?: string; addressElement?: string }) {
   const [address, setAddress] = useState("");
   const [inputAddress, setInputAddress] = useState("");
   const [showMap, setShowMap] = useState(false);
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [markers, setMarkers] = useState<google.maps.marker.AdvancedMarkerElement[]>([]);
-  const [selectedStore, setSelectedStore] = useState<{ name: string; address: string } | null>(null);
+  const [selectedStore, setSelectedStore] = useState<{ name: string; address: string; fengShuiGrade?: string; fengShuiScore?: number } | null>(null);
+  const [mapUserLoc, setMapUserLoc] = useState<{lat:number;lng:number}|null>(null);
   const [expandedDenom, setExpandedDenom] = useState<number | null>(100);
   const { data: strategies } = trpc.lottery.scratchStrategies.useQuery(
     { targetDate: selectedDate, weatherElement, addressElement, useWeather: !!weatherElement, useAddress: !!addressElement },
@@ -1268,43 +1308,62 @@ function ScratchAnalysisWithMap({ selectedDate, weatherElement, addressElement }
     setInputAddress(address.trim());
   };
 
-  // 地圖初始化：搜尋附近台灣彩券行
+  // 地圖初始化：搜尋附近台灣彩券行 + 風水分析
   const handleMapReady = useCallback((map: google.maps.Map) => {
     setMapInstance(map);
-    // 清除舊標記
     markers.forEach(m => { m.map = null; });
     setMarkers([]);
-
-    const service = new google.maps.places.PlacesService(map);
-    const request = {
-      query: "台灣彩券",
-      fields: ["name", "geometry", "formatted_address"],
-    };
-    service.textSearch(request, (results, status) => {
-      if (status !== google.maps.places.PlacesServiceStatus.OK || !results) return;
-      const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
-      results.slice(0, 20).forEach((place) => {
-        if (!place.geometry?.location) return;
-        const markerEl = document.createElement("div");
-        markerEl.innerHTML = `<div style="background:#f59e0b;color:#000;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.4)">🎰 ${place.name}</div>`;
-        const marker = new google.maps.marker.AdvancedMarkerElement({
-          map,
-          position: place.geometry.location,
-          content: markerEl,
-          title: place.name,
+    const doSearch = (userPos: {lat:number;lng:number}|null) => {
+      const service = new google.maps.places.PlacesService(map);
+      service.textSearch({ query: "台灣彩券" }, (results, status) => {
+        if (status !== google.maps.places.PlacesServiceStatus.OK || !results) return;
+        const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
+        results.slice(0, 20).forEach((place) => {
+          if (!place.geometry?.location) return;
+          let markerHtml: string;
+          let fsData: ReturnType<typeof calcStoreFengShui> | null = null;
+          if (userPos) {
+            const sLat = place.geometry.location.lat();
+            const sLng = place.geometry.location.lng();
+            fsData = calcStoreFengShui(userPos.lat, userPos.lng, sLat, sLng, place.name ?? "", place.formatted_address ?? "");
+            const gc = FS_GRADE_CFG[fsData.grade];
+            markerHtml = `<div style="background:${gc.color};color:#000;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer">${gc.emoji} ${place.name} <span style="font-size:10px;opacity:0.85">${fsData.grade}${fsData.total}</span></div>`;
+          } else {
+            markerHtml = `<div style="background:#f59e0b;color:#000;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.4)">🎰 ${place.name}</div>`;
+          }
+          const markerEl = document.createElement("div");
+          markerEl.innerHTML = markerHtml;
+          const marker = new google.maps.marker.AdvancedMarkerElement({ map, position: place.geometry.location, content: markerEl, title: place.name });
+          marker.addListener("click", () => {
+            const addr = place.formatted_address ?? place.name ?? "";
+            setSelectedStore({ name: place.name ?? "", address: addr, fengShuiGrade: fsData?.grade, fengShuiScore: fsData?.total });
+            setAddress(addr);
+            setInputAddress(addr);
+            setShowMap(false);
+            const gradeLabel = fsData ? `（風水${fsData.grade} ${fsData.total}分）` : "";
+            toast.success(`已選擇：${place.name}${gradeLabel}`);
+          });
+          newMarkers.push(marker);
         });
-        marker.addListener("click", () => {
-          const addr = place.formatted_address ?? place.name ?? "";
-          setSelectedStore({ name: place.name ?? "", address: addr });
-          setAddress(addr);
-          setInputAddress(addr);
-          setShowMap(false);
-          toast.success(`已選擇：${place.name}`);
-        });
-        newMarkers.push(marker);
+        setMarkers(newMarkers);
       });
-      setMarkers(newMarkers);
-    });
+    };
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setMapUserLoc(userPos);
+          map.setCenter(userPos);
+          const el = document.createElement("div");
+          el.innerHTML = `<div style="background:#6366f1;color:#fff;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:bold;box-shadow:0 2px 8px rgba(0,0,0,0.5)">📍 您在這裡</div>`;
+          new google.maps.marker.AdvancedMarkerElement({ map, position: userPos, content: el });
+          doSearch(userPos);
+        },
+        () => doSearch(null)
+      );
+    } else {
+      doSearch(null);
+    }
   }, [markers]);
 
   const ELEMENT_COLORS_LOCAL: Record<string, { bg: string; text: string; border: string; label: string; emoji: string }> = {
@@ -1334,7 +1393,19 @@ function ScratchAnalysisWithMap({ selectedDate, weatherElement, addressElement }
         {selectedStore && (
           <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">
             <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">已選擇：{selectedStore.name}（{selectedStore.address}）</span>
+            <span className="truncate flex-1">已選擇：{selectedStore.name}（{selectedStore.address}）</span>
+            {selectedStore.fengShuiGrade && (
+              <span
+                className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border"
+                style={{
+                  color: FS_GRADE_CFG[selectedStore.fengShuiGrade]?.color ?? '#94a3b8',
+                  borderColor: (FS_GRADE_CFG[selectedStore.fengShuiGrade]?.color ?? '#94a3b8') + '60',
+                  background: (FS_GRADE_CFG[selectedStore.fengShuiGrade]?.color ?? '#94a3b8') + '18',
+                }}
+              >
+                {FS_GRADE_CFG[selectedStore.fengShuiGrade]?.emoji} {selectedStore.fengShuiGrade} {selectedStore.fengShuiScore}分
+              </span>
+            )}
           </div>
         )}
 

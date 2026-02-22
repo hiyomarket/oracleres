@@ -155,6 +155,10 @@ export const scratchLogs = mysqlTable("scratch_logs", {
   wonAmount: int("wonAmount").default(0),
   // 備註
   note: varchar("note", { length: 300 }),
+  // 風水地場等級（大吉/吉/平/凶/大凶）
+  fengShuiGrade: varchar("fengShuiGrade", { length: 10 }),
+  // 風水分數（0-100）
+  fengShuiScore: int("fengShuiScore"),
   // 購買時間（UTC timestamp）
   purchasedAt: bigint("purchasedAt", { mode: "number" }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -187,3 +191,66 @@ export const braceletWearLogs = mysqlTable("bracelet_wear_logs", {
 });
 export type BraceletWearLog = typeof braceletWearLogs.$inferSelect;
 export type InsertBraceletWearLog = typeof braceletWearLogs.$inferInsert;
+
+/**
+ * 使用者個人命格資料表
+ * 儲存每位使用者的八字/五行命格等重要資訊，用於個人化風水分析
+ */
+export const userProfiles = mysqlTable("user_profiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  // 姓名
+  displayName: varchar("displayName", { length: 100 }),
+  // 出生地（城市/縣市）
+  birthPlace: varchar("birthPlace", { length: 100 }),
+  // 出生年月日（YYYY-MM-DD）
+  birthDate: varchar("birthDate", { length: 12 }),
+  // 出生時間（HH:MM，24小時制）
+  birthTime: varchar("birthTime", { length: 8 }),
+  // 出生時辰（地支，例：申）
+  birthHour: varchar("birthHour", { length: 4 }),
+  // 年柱（例：甲子）
+  yearPillar: varchar("yearPillar", { length: 8 }),
+  // 月柱（例：丙寅）
+  monthPillar: varchar("monthPillar", { length: 8 }),
+  // 日柱（例：庚午）
+  dayPillar: varchar("dayPillar", { length: 8 }),
+  // 時柱（例：壬申）
+  hourPillar: varchar("hourPillar", { length: 8 }),
+  // 日主五行（fire/earth/metal/wood/water）
+  dayMasterElement: varchar("dayMasterElement", { length: 20 }),
+  // 喜用神五行（逗號分隔，例：fire,earth）
+  favorableElements: varchar("favorableElements", { length: 100 }),
+  // 忌神五行（逗號分隔）
+  unfavorableElements: varchar("unfavorableElements", { length: 100 }),
+  // 個人備註
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertUserProfile = typeof userProfiles.$inferInsert;
+
+/**
+ * 邀請碼資料表
+ * 主帳號（owner）可產生邀請碼，受邀者使用後才能進入系統
+ */
+export const inviteCodes = mysqlTable("invite_codes", {
+  id: int("id").autoincrement().primaryKey(),
+  // 邀請碼（8位英數字）
+  code: varchar("code", { length: 16 }).notNull().unique(),
+  // 建立者（主帳號 userId）
+  createdBy: int("createdBy").notNull(),
+  // 使用者（受邀者 userId，null 表示尚未使用）
+  usedBy: int("usedBy"),
+  // 備註（例：給誰的邀請碼）
+  label: varchar("label", { length: 100 }),
+  // 是否已使用
+  isUsed: tinyint("isUsed").default(0).notNull(),
+  // 過期時間（null 表示永不過期）
+  expiresAt: timestamp("expiresAt"),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type InviteCode = typeof inviteCodes.$inferSelect;
+export type InsertInviteCode = typeof inviteCodes.$inferInsert;

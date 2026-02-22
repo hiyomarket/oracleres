@@ -57,6 +57,20 @@
       "when": 1771682582798,
       "tag": "0007_nervous_lifeguard",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1771764215900,
+      "tag": "0008_awesome_giant_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1771764371835,
+      "tag": "0009_curly_clint_barton",
+      "breakpoints": true
     }
   ]
 }

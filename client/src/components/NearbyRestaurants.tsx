@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { MapView } from "@/components/Map";
 
 // 五行 → Google Maps 搜尋關鍵字（台灣在地化）
@@ -275,6 +275,7 @@ export function NearbyRestaurants({ supplements, todayDirections }: Props) {
   const [showMap, setShowMap] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [filterAuspicious, setFilterAuspicious] = useState(false);
+  const [sortMode, setSortMode] = useState<"distance" | "fengshui">("distance");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
 
@@ -416,9 +417,14 @@ export function NearbyRestaurants({ supplements, todayDirections }: Props) {
   );
 
   const topElements = supplements.slice(0, 2).map((s) => s.element);
-  const displayedRestaurants = filterAuspicious
-    ? restaurants.filter((r) => r.isAuspicious)
-    : restaurants;
+  const displayedRestaurants = useMemo(() => {
+    let list = filterAuspicious ? restaurants.filter((r) => r.isAuspicious) : [...restaurants];
+    if (sortMode === "fengshui") {
+      list = list.sort((a, b) => (b.fengShui?.totalScore ?? 0) - (a.fengShui?.totalScore ?? 0));
+    }
+    // distance mode: already sorted by distance from handleSearch
+    return list;
+  }, [restaurants, filterAuspicious, sortMode]);
 
   // 建立正確的 Google Maps 搜尋 URL
   const buildMapsUrl = (r: Restaurant): string => {
@@ -463,7 +469,7 @@ export function NearbyRestaurants({ supplements, todayDirections }: Props) {
         )}
         {phase === "done" && (
           <button
-            onClick={() => { setPhase("idle"); setShowMap(false); setRestaurants([]); setFilterAuspicious(false); setExpandedId(null); }}
+            onClick={() => { setPhase("idle"); setShowMap(false); setRestaurants([]); setFilterAuspicious(false); setSortMode("distance"); setExpandedId(null); }}
             className="text-xs text-white/30 hover:text-white/50 transition-colors flex-shrink-0"
           >
             重新搜尋
@@ -483,6 +489,18 @@ export function NearbyRestaurants({ supplements, todayDirections }: Props) {
             🌸 {todayDirections.xi}
           </span>
           <div className="ml-auto flex items-center gap-1.5">
+            {/* 排序模式切換 */}
+            <button
+              onClick={() => setSortMode(sortMode === "distance" ? "fengshui" : "distance")}
+              className={`text-[10px] px-2 py-1 rounded-lg border transition-all ${
+                sortMode === "fengshui"
+                  ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
+                  : "bg-white/5 border-white/10 text-white/40"
+              }`}
+              title={sortMode === "fengshui" ? "目前：風水優先排序，點擊切換為距離優先" : "目前：距離優先排序，點擊切換為風水優先"}
+            >
+              {sortMode === "fengshui" ? "🧭 風水優先" : "📏 距離優先"}
+            </button>
             <button
               onClick={() => setFilterAuspicious(!filterAuspicious)}
               className={`text-[10px] px-2 py-1 rounded-lg border transition-all ${

@@ -429,12 +429,13 @@ export async function getScratchLogs(userId?: number): Promise<ScratchLog[]> {
 export async function getScratchStats(userId?: number): Promise<{
   byDenomination: { denomination: number; total: number; won: number; totalInvested: number; totalWon: number }[];
   byHour: { hour: string; total: number; won: number }[];
+  byFengShui: { grade: string; total: number; won: number; winRate: number }[];
   totalInvested: number;
   totalWon: number;
   winRate: number;
 }> {
   const db = await getDb();
-  const empty = { byDenomination: [], byHour: [], totalInvested: 0, totalWon: 0, winRate: 0 };
+  const empty = { byDenomination: [], byHour: [], byFengShui: [], totalInvested: 0, totalWon: 0, winRate: 0 };
   if (!db) return empty;
 
   const whereClause = userId ? eq(scratchLogs.userId, userId) : undefined;
@@ -459,6 +460,14 @@ export async function getScratchStats(userId?: number): Promise<{
   }).from(scratchLogs)
     .where(whereClause)
     .groupBy(scratchLogs.purchaseHour);
+  // 按風水等級統計
+  const fengShuiRows = await db.select({
+    grade: scratchLogs.fengShuiGrade,
+    total: count(),
+    won: sql<number>`SUM(${scratchLogs.isWon})`,
+  }).from(scratchLogs)
+    .where(whereClause)
+    .groupBy(scratchLogs.fengShuiGrade);
 
   const byDenomination = denomRows.map(r => ({
     denomination: r.denomination,
@@ -468,21 +477,29 @@ export async function getScratchStats(userId?: number): Promise<{
     totalWon: Number(r.totalWon ?? 0),
   }));
 
-  const byHour = hourRows
+   const byHour = hourRows
     .filter(r => r.hour)
     .map(r => ({
       hour: r.hour ?? "",
       total: Number(r.total),
       won: Number(r.won ?? 0),
     }));
-
+  // 風水等級排序：大吉 > 吉 > 平 > 凶 > 大凶 > 無記錄
+  const GRADE_ORDER = ["大吉", "吉", "平", "凶", "大凶"];
+  const byFengShui = fengShuiRows
+    .filter(r => r.grade)
+    .map(r => {
+      const t = Number(r.total);
+      const w = Number(r.won ?? 0);
+      return { grade: r.grade ?? "", total: t, won: w, winRate: t > 0 ? Math.round((w / t) * 100) : 0 };
+    })
+    .sort((a, b) => GRADE_ORDER.indexOf(a.grade) - GRADE_ORDER.indexOf(b.grade));
   const totalInvested = byDenomination.reduce((s, r) => s + r.totalInvested, 0);
   const totalWon = byDenomination.reduce((s, r) => s + r.totalWon, 0);
   const totalCount = byDenomination.reduce((s, r) => s + r.total, 0);
   const totalWonCount = byDenomination.reduce((s, r) => s + r.won, 0);
   const winRate = totalCount > 0 ? Math.round((totalWonCount / totalCount) * 100) : 0;
-
-  return { byDenomination, byHour, totalInvested, totalWon, winRate };
+  return { byDenomination, byHour, byFengShui, totalInvested, totalWon, winRate };
 }
 
 // ── 手串佩戴記錄 ─────────────────────────────────────────────────────────────
