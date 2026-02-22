@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { sendMorningBriefing } from "../lib/morningBriefing";
+import { checkAndNotifyFestival } from "../lib/festivalNotification";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -94,3 +95,31 @@ function startMorningBriefingScheduler() {
 }
 
 startMorningBriefingScheduler();
+
+/**
+ * 農曆節日通知排程：台灣時間每日 23:00 檢查明天是否為農曆節日
+ * 若是則發送 Mail 通知
+ */
+let lastFestivalCheckDate = "";
+
+function startFestivalNotificationScheduler() {
+  console.log("[FestivalNotification] Scheduler started. Will check daily at 23:00 Taiwan time.");
+  setInterval(async () => {
+    try {
+      const twNow = new Date(Date.now() + 8 * 60 * 60 * 1000);
+      const twHour = twNow.getUTCHours();
+      const twMinute = twNow.getUTCMinutes();
+      const twDateStr = twNow.toISOString().split('T')[0];
+      // 台灣時間 23:00 ~ 23:04 且今日尚未檢查
+      if (twHour === 23 && twMinute < 5 && lastFestivalCheckDate !== twDateStr) {
+        lastFestivalCheckDate = twDateStr;
+        console.log(`[FestivalNotification] Checking festival for tomorrow (${twDateStr})`);
+        await checkAndNotifyFestival();
+      }
+    } catch (err) {
+      console.error("[FestivalNotification] Scheduler error:", err);
+    }
+  }, 60 * 1000); // 每分鐘檢查
+}
+
+startFestivalNotificationScheduler();

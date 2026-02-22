@@ -5,6 +5,7 @@ import { SharedNav } from "@/components/SharedNav";
 import { TopicAdvicePanel } from "@/components/TopicAdvicePanel";
 import { Zap, Bell, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { NearbyRestaurants } from "@/components/NearbyRestaurants";
 
 // 五行顏色映射
 const WUXING_COLORS: Record<string, { bg: string; border: string; text: string; glow: string }> = {
@@ -750,6 +751,10 @@ export default function WarRoom() {
                           </div>
                         ))}
                       </div>
+                    )}
+                    {/* GPS 命理推薦餐廳 */}
+                    {data.dietary?.supplements && data.dietary.supplements.length > 0 && (
+                      <NearbyRestaurants supplements={data.dietary.supplements} />
                     )}
                   </div>
                 </SectionCard>

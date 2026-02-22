@@ -283,6 +283,8 @@ export default function OracleCalendar() {
                   const weekday = new Date(viewYear, viewMonth - 1, day.date).getDay();
                   const isSunday = weekday === 0;
                   const isSaturday = weekday === 6;
+                  const isBestLottery = !!(day as any).isBestLotteryDay;
+                  const lotteryScore = (day as any).lotteryScore as number | undefined;
 
                   // 農曆顯示：節氣 > 節日 > 農曆日期
                   const lunarDisplay = solarTerm || day.festival || day.lunarDayName || '';
@@ -301,6 +303,7 @@ export default function OracleCalendar() {
                           ? 'bg-purple-900/15 border-purple-700/30 hover:border-purple-600'
                           : 'bg-slate-900/40 border-slate-800/50 hover:border-slate-700'}
                         ${todayFlag ? 'ring-1 ring-amber-400/60' : ''}
+                        ${isBestLottery && !selected ? 'ring-1 ring-yellow-400/70 shadow-[0_0_6px_rgba(250,204,21,0.3)]' : ''}
                       `}
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.97 }}
@@ -324,13 +327,20 @@ export default function OracleCalendar() {
                       }`}>
                         {lunarDisplay}
                       </div>
-                      {/* 能量點 + 月相 + 月柱切換 */}
+                      {/* 能量點 + 月相 + 月柱切換 + 最佳購彩分數 */}
                       <div className="flex items-center gap-0.5 mt-0.5">
                         <div className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
                         {day.isFullMoon && <span className="text-[8px]">🌕</span>}
                         {day.isNewMoon && <span className="text-[8px]">🌑</span>}
                         {hasMonthPillar && <span className="text-[7px] text-purple-400">柱</span>}
+                        {isBestLottery && lotteryScore !== undefined && (
+                          <span className="text-[8px] text-yellow-400 font-bold ml-auto">{lotteryScore}</span>
+                        )}
                       </div>
+                      {/* 最佳購彩日角標 */}
+                      {isBestLottery && (
+                        <div className="absolute top-0.5 right-0.5 text-[7px] text-yellow-400 leading-none">★</div>
+                      )}
                     </motion.button>
                   );
                 })}
@@ -345,6 +355,7 @@ export default function OracleCalendar() {
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span>大吉</span>
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>吉</span>
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block"></span>凶</span>
+              <span className="flex items-center gap-1"><span className="text-yellow-400 text-[10px]">★</span>本月最佳購彩日</span>
             </div>
           </div>
 

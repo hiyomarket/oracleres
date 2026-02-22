@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { SharedNav } from "@/components/SharedNav";
 
@@ -145,7 +146,80 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
   return null;
 };
 
+// 農曆生日資訊（蘇祝震 1984/11/26 農曆閏十月初四）
+// 2026 年農曆閏十月初四 對應阳曆：需查表
+// 2026 年農曆十月初一 = 11/9，閏十月初一 = 12/9，初四 = 12/12
+const LUNAR_BIRTHDAY_SOLAR: Record<number, { month: number; day: number }> = {
+  2024: { month: 12, day: 5 },  // 2024 年農曆閏十月初四 = 12/5
+  2025: { month: 11, day: 23 }, // 2025 年農曆十月初四 = 11/23
+  2026: { month: 12, day: 12 }, // 2026 年農曆閏十月初四 = 12/12
+  2027: { month: 12, day: 2 },  // 2027 年農曆十月初四 = 12/2
+  2028: { month: 11, day: 20 }, // 2028 年農曆十月初四 = 11/20
+};
+
 export default function ProfilePage() {
+  const [birthdayInfo, setBirthdayInfo] = useState<{
+    daysUntil: number;
+    thisYearDate: string;
+    realAge: number;
+    nominalAge: number;
+    isPast: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    // 取台灣時間 UTC+8
+    const now = new Date();
+    const twMs = now.getTime() + 8 * 60 * 60 * 1000;
+    const twNow = new Date(twMs);
+    const todayYear = twNow.getUTCFullYear();
+    const todayMonth = twNow.getUTCMonth() + 1;
+    const todayDay = twNow.getUTCDate();
+    const todayNum = todayYear * 10000 + todayMonth * 100 + todayDay;
+
+    // 實歲：尚未過生日則 -1
+    const birthYear = 1984;
+    const birthMonth = 11;
+    const birthDay = 26;
+    let realAge = todayYear - birthYear;
+    if (todayMonth < birthMonth || (todayMonth === birthMonth && todayDay < birthDay)) {
+      realAge -= 1;
+    }
+    // 虛歲：實歲 + 1
+    const nominalAge = realAge + 1;
+
+    // 農曆生日倒數：找本年農曆生日對應阳曆
+    const thisYearBirthday = LUNAR_BIRTHDAY_SOLAR[todayYear];
+    if (thisYearBirthday) {
+      const bdNum = todayYear * 10000 + thisYearBirthday.month * 100 + thisYearBirthday.day;
+      let daysUntil: number;
+      let isPast = false;
+      if (bdNum >= todayNum) {
+        // 未到
+        const bdDate = new Date(Date.UTC(todayYear, thisYearBirthday.month - 1, thisYearBirthday.day));
+        const todayDate = new Date(Date.UTC(todayYear, todayMonth - 1, todayDay));
+        daysUntil = Math.round((bdDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+      } else {
+        // 已過，找明年
+        isPast = true;
+        const nextYearBirthday = LUNAR_BIRTHDAY_SOLAR[todayYear + 1];
+        if (nextYearBirthday) {
+          const bdDate = new Date(Date.UTC(todayYear + 1, nextYearBirthday.month - 1, nextYearBirthday.day));
+          const todayDate = new Date(Date.UTC(todayYear, todayMonth - 1, todayDay));
+          daysUntil = Math.round((bdDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+        } else {
+          daysUntil = 0;
+        }
+      }
+      setBirthdayInfo({
+        daysUntil,
+        thisYearDate: `${todayYear}年${thisYearBirthday.month}月${thisYearBirthday.day}日`,
+        realAge,
+        nominalAge,
+        isPast,
+      });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 pb-16">
       <SharedNav currentPage="profile" />
@@ -431,10 +505,14 @@ export default function ProfilePage() {
                 <div className="text-xs text-gray-500">太陽（雙忌）・事業轉型期</div>
               </div>
               <div className="text-center">
-                <div className="text-xs text-gray-400 mb-1">當前年齡</div>
-                <div className="text-2xl font-bold text-amber-400">41歲</div>
-                <div className="text-sm text-gray-300 mt-1">流年對應</div>
-                <div className="text-xs text-gray-500">流年 5、17、29、41、53、65</div>
+                <div className="text-xs text-gray-400 mb-1">實歲 / 虛歲</div>
+                <div className="text-2xl font-bold text-amber-400">
+                  {birthdayInfo ? `${birthdayInfo.realAge}歲` : '41歲'}
+                </div>
+                <div className="text-sm text-gray-300 mt-1">
+                  虛歲 {birthdayInfo ? birthdayInfo.nominalAge : 42}歲
+                </div>
+                <div className="text-xs text-gray-500">流年 5、5、7、29、41、53、65</div>
               </div>
               <div className="text-center">
                 <div className="text-xs text-gray-400 mb-1">大限宮位</div>
@@ -445,8 +523,43 @@ export default function ProfilePage() {
             </div>
             <div className="mt-4 bg-amber-900/20 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-300">
               <span className="font-bold">大限提示：</span>
-              官祿宮大限（45-54歲），太陽雙忌入官祿，事業面臨挑戰與轉型。宜以「火土」補強，強化個人品牌與創業能量，避免依賴傳統職場路徑。
+              官禄宮大限（45-54歲），太陽雙忘入官禄，事業面臨挑戰與轉型。宜以「火土」補強，強化個人品牌與創業能量，避免依賴傳統職場路徑。
             </div>
+            {/* 農曆生日倒數橫幅 */}
+            {birthdayInfo && (
+              <div className="mt-3 bg-gradient-to-r from-purple-900/30 to-pink-900/20 border border-purple-500/30 rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🎂</span>
+                  <div>
+                    <div className="text-xs text-purple-300 font-bold">農曆生日（閏十月初四）</div>
+                    <div className="text-xs text-gray-400">
+                      {birthdayInfo.isPast
+                        ? `今年已過，明年農曆生日：${LUNAR_BIRTHDAY_SOLAR[(new Date().getFullYear() + 1)]?.month ?? '?'}月${LUNAR_BIRTHDAY_SOLAR[(new Date().getFullYear() + 1)]?.day ?? '?'}日`
+                        : `今年農曆生日：${birthdayInfo.thisYearDate}`
+                      }
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-purple-300">
+                      {birthdayInfo.daysUntil === 0 ? '生日快樂！' : `${birthdayInfo.daysUntil} 天`}
+                    </div>
+                    <div className="text-[10px] text-gray-500">距農曆生日</div>
+                  </div>
+                  <div className="w-px h-8 bg-purple-500/30" />
+                  <div className="text-center">
+                    <div className="text-sm font-bold text-amber-300">實歲 {birthdayInfo.realAge}歲</div>
+                    <div className="text-[10px] text-gray-500">虛歲 {birthdayInfo.nominalAge}歲</div>
+                  </div>
+                  <div className="w-px h-8 bg-purple-500/30" />
+                  <div className="text-center">
+                    <div className="text-sm font-bold text-gray-300">屬鼠</div>
+                    <div className="text-[10px] text-gray-500">甲子年生</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
