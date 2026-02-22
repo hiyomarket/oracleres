@@ -721,3 +721,13 @@
 - [x] 後端 warRoom.topicAdvice 改為 protectedProcedure，LLM prompt 改用動態命格（移除硬編碼「蘇祐震甲木日主」）
 - [x] wuxingEngine.ts 移除硬編碼「甲木日主」文字
 - [x] TypeScript 零錯誤，78 項測試全部通過
+
+## 功能修正 v2.43 - 命格頁完善 + 動態化 + 提示 + 通知
+
+- [x] 主帳號（isOwner）命格頁：直接顯示靜態命格資料（甲木日主、四柱、五行比例等），不顯示「尚未建立命格檔案」提示
+- [x] ProfilePage 動態化：其他用戶從 DB 讀取自己的四柱和五行比例顯示（有資料則顯示，無資料則顯示引導設定）
+- [x] 作戰室加入「命格未設定，分析結果僅供參考」提示卡片（非主帳號且 dayMasterElement 為空時）
+- [x] 選號頁加入「命格未設定，分析結果僅供參」提示卡片（ProfileIncompleteBanner 已存在）
+- [x] Onboarding 完成後呼叫 notifyOwner 發送 Mail 通知（首次建立時通知）
+- [x] TypeScript 零錯誤，78 項測試全部通過
+- [x] 儲存 V2.43 checkpoint

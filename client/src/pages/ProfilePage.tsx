@@ -8,6 +8,54 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { ChevronDown, ChevronUp, TrendingUp, AlertTriangle, Zap, Settings, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 
+// ─── 主帳號靜態命格資料（蘇祐震 V9.0 歸正版）────────────────────────────────
+const OWNER_STATIC_PROFILE = {
+  displayName: "蘇祐震",
+  occupation: "行銷 / 攝影 / 產品經理",
+  birthDate: "1984-11-26",
+  birthLunar: "甲子年 閏十月 初四日",
+  birthTime: "上午 10:09（巳時）",
+  birthPlace: "台灣 花蓮縣 玉里鎮",
+  yearPillar: "甲子",
+  monthPillar: "乙亥",
+  dayPillar: "甲子",
+  hourPillar: "己巳",
+  dayMasterElement: "wood" as const,
+  favorableElements: "fire,earth,metal",
+  unfavorableElements: "water,wood",
+  notes: "水大木漂，寒木盼火。命盤中水、木能量極旺（合計超過75%），金極弱，火、土不足。\n終身補運策略：🔥 火（食傷・洩木生財）→ 🌍 土（財星・落地變現）→ ⚪ 金（官殺・制身立規）",
+  // 靜態五行比例（V9.0 歸正版）
+  staticFiveElements: [
+    { name: "木", value: 42, color: "#4ade80", icon: "🌳", desc: "過旺・忌神" },
+    { name: "水", value: 35, color: "#60a5fa", icon: "💧", desc: "過旺・忌神" },
+    { name: "火", value: 11, color: "#f97316", icon: "🔥", desc: "用神・補強優先" },
+    { name: "土", value: 9,  color: "#d97706", icon: "🌍", desc: "用神・補強優先" },
+    { name: "金", value: 4,  color: "#9ca3af", icon: "⚪", desc: "喜神・適量補充" },
+  ],
+  // 紫微斗數十二宮
+  ziwei: [
+    { palace: "命宮",  position: "午", stars: "巨門・地空",          note: "石中隱玉格" },
+    { palace: "兄弟宮", position: "巳", stars: "廉貞祿・貪狼權・文昌・天馬", note: "" },
+    { palace: "夫妻宮", position: "辰", stars: "太陰權・地劫",        note: "" },
+    { palace: "子女宮", position: "卯", stars: "天府・擎羊・鈴星",    note: "" },
+    { palace: "財帛宮", position: "寅", stars: "祿存・天同・天梁",    note: "" },
+    { palace: "疾厄宮", position: "丑", stars: "紫微科・破軍權・左右・魁鉞・陀羅", note: "" },
+    { palace: "遷移宮", position: "子", stars: "天機權祿",            note: "" },
+    { palace: "僕役宮", position: "亥", stars: "廉貞祿・貪狼忌",     note: "" },
+    { palace: "官祿宮", position: "戌", stars: "太陽雙忌",           note: "" },
+    { palace: "田宅宮", position: "酉", stars: "武曲・七殺・文曲",   note: "" },
+    { palace: "福德宮", position: "申", stars: "天同・天梁祿",       note: "" },
+    { palace: "父母宮", position: "未", stars: "天相・天鉞・火星",   note: "" },
+  ],
+  // 生命靈數與塔羅原型
+  tarot: {
+    outer: { num: 8,  name: "力量",     element: "🔥" },
+    middle: { num: 10, name: "命運之輪", element: "🔥" },
+    inner: { num: 5,  name: "教皇",     element: "🌍" },
+    soul: { num: 22,  name: "愚者",     element: "💨" },
+  },
+};
+
 // ─── 天干地支五行對應表 ──────────────────────────────────────────────────────
 const STEM_ELEMENT: Record<string, string> = {
   甲: "木", 乙: "木", 丙: "火", 丁: "火", 戊: "土",
@@ -273,12 +321,17 @@ function IncompleteProfilePrompt({ message }: { message: string }) {
 export default function ProfilePage() {
   const { hasFeature, isAdmin } = usePermissions();
   const { user } = useAuth();
+  const { data: accountStatus } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
+  const isOwner = !!(accountStatus?.isOwner);
   const { data: profile, isLoading: profileLoading } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
-  const displayName = profile?.displayName ?? user?.name ?? '您';
 
-  // ─── 動態計算年齡（從 profile.birthDate）────────────────────────────────
+  // 主帳號使用靜態資料，其他用戶使用 DB 動態資料
+  const effectiveProfile = isOwner ? OWNER_STATIC_PROFILE : profile;
+  const displayName = isOwner ? OWNER_STATIC_PROFILE.displayName : (profile?.displayName ?? user?.name ?? '您');
+
+  // ─── 動態計算年齡（從 effectiveProfile.birthDate）──────────────────────────
   const ageInfo = useMemo(() => {
-    const birthDateStr = profile?.birthDate;
+    const birthDateStr = effectiveProfile?.birthDate;
     if (!birthDateStr) return null;
     const [byStr, bmStr, bdStr] = birthDateStr.split("-");
     const by = parseInt(byStr), bm = parseInt(bmStr), bd = parseInt(bdStr);
@@ -290,15 +343,15 @@ export default function ProfilePage() {
     let realAge = ty - by;
     if (tm < bm || (tm === bm && td < bd)) realAge -= 1;
     return { realAge, nominalAge: realAge + 1, birthYear: by };
-  }, [profile?.birthDate]);
+  }, [effectiveProfile?.birthDate]);
 
   // ─── 動態生成四柱資料 ────────────────────────────────────────────────────
   const fourPillarsData = useMemo(() => {
     const pillars = [
-      { label: "年柱", raw: profile?.yearPillar },
-      { label: "月柱", raw: profile?.monthPillar },
-      { label: "日柱", raw: profile?.dayPillar },
-      { label: "時柱", raw: profile?.hourPillar },
+      { label: "年柱", raw: effectiveProfile?.yearPillar },
+      { label: "月柱", raw: effectiveProfile?.monthPillar },
+      { label: "日柱", raw: effectiveProfile?.dayPillar },
+      { label: "時柱", raw: effectiveProfile?.hourPillar },
     ];
     const hasPillars = pillars.some(p => p.raw);
     if (!hasPillars) return null;
@@ -317,33 +370,36 @@ export default function ProfilePage() {
         note: isDay ? `${raw}・日主（${stemEl}）` : raw ?? "",
       };
     });
-  }, [profile?.yearPillar, profile?.monthPillar, profile?.dayPillar, profile?.hourPillar]);
+  }, [effectiveProfile?.yearPillar, effectiveProfile?.monthPillar, effectiveProfile?.dayPillar, effectiveProfile?.hourPillar]);
 
-  // ─── 動態生成五行比例 ────────────────────────────────────────────────────
+  // ─── 動態生成五行比例（主帳號使用靜態資料）──────────────────────────────────
   const fiveElementsData = useMemo(() => {
+    if (isOwner) return OWNER_STATIC_PROFILE.staticFiveElements;
     return estimateFiveElements(
       profile?.yearPillar, profile?.monthPillar, profile?.dayPillar, profile?.hourPillar,
       profile?.favorableElements, profile?.unfavorableElements,
     );
-  }, [profile?.yearPillar, profile?.monthPillar, profile?.dayPillar, profile?.hourPillar, profile?.favorableElements, profile?.unfavorableElements]);
+  }, [isOwner, profile?.yearPillar, profile?.monthPillar, profile?.dayPillar, profile?.hourPillar, profile?.favorableElements, profile?.unfavorableElements]);
 
   // ─── 動態生成補運策略 ────────────────────────────────────────────────────
   const luckyStrategyData = useMemo(() => {
-    if (!profile?.favorableElements) return null;
-    return buildLuckyStrategy(profile.favorableElements, profile.unfavorableElements ?? "");
-  }, [profile?.favorableElements, profile?.unfavorableElements]);
+    const fav = effectiveProfile?.favorableElements;
+    if (!fav) return null;
+    return buildLuckyStrategy(fav, effectiveProfile?.unfavorableElements ?? "");
+  }, [effectiveProfile?.favorableElements, effectiveProfile?.unfavorableElements]);
 
   // ─── 日主標籤 ────────────────────────────────────────────────────────────
   const dayMasterLabel = useMemo(() => {
-    if (profile?.dayMasterElement) return DAY_MASTER_LABEL[profile.dayMasterElement] ?? profile.dayMasterElement;
-    if (profile?.dayPillar) {
-      const parsed = parsePillar(profile.dayPillar);
+    if (effectiveProfile?.dayMasterElement) return DAY_MASTER_LABEL[effectiveProfile.dayMasterElement] ?? effectiveProfile.dayMasterElement;
+    if (effectiveProfile?.dayPillar) {
+      const parsed = parsePillar(effectiveProfile.dayPillar);
       if (parsed) return `${parsed.stem}${STEM_ELEMENT[parsed.stem] ?? ""}`;
     }
     return null;
-  }, [profile?.dayMasterElement, profile?.dayPillar]);
+  }, [effectiveProfile?.dayMasterElement, effectiveProfile?.dayPillar]);
 
-  const hasBasicProfile = !!(profile?.displayName || profile?.birthDate);
+  // 主帳號永遠有完整資料，其他用戶才需要判斷
+  const hasBasicProfile = isOwner || !!(profile?.displayName || profile?.birthDate);
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 pb-16">
@@ -374,33 +430,33 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
-              {profile?.occupation && <p className="text-gray-400 text-sm mb-3">{profile.occupation}</p>}
+              {effectiveProfile?.occupation && <p className="text-gray-400 text-sm mb-3">{effectiveProfile.occupation}</p>}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                 <div className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">📅</span>
-                  <span>{profile?.birthDate ?? '未設定'}</span>
+                  <span>{effectiveProfile?.birthDate ?? '未設定'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">🌙</span>
-                  <span>{profile?.birthLunar ?? '未設定'}</span>
+                  <span>{effectiveProfile?.birthLunar ?? '未設定'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">⏰</span>
-                  <span>{profile?.birthTime ?? '未設定'}</span>
+                  <span>{effectiveProfile?.birthTime ?? '未設定'}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">📍</span>
-                  <span>{profile?.birthPlace ?? '未設定'}</span>
+                  <span>{effectiveProfile?.birthPlace ?? '未設定'}</span>
                 </div>
               </div>
             </div>
             {/* 核心格局標籤 */}
             <div className="flex-shrink-0 flex flex-col gap-2 text-center">
-              {profile?.favorableElements ? (
+              {effectiveProfile?.favorableElements ? (
                 <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-3">
                   <div className="text-xs text-gray-400 mb-1">喜用神</div>
                   <div className="text-orange-300 font-bold">
-                    {profile.favorableElements.split(",").map(e => ELEMENT_ZH[e.trim()] ?? e.trim()).join("・")}
+                    {effectiveProfile.favorableElements.split(",").map(e => ELEMENT_ZH[e.trim()] ?? e.trim()).join("・")}
                   </div>
                 </div>
               ) : (
@@ -409,11 +465,11 @@ export default function ProfilePage() {
                   <div className="text-gray-500 text-sm">未設定</div>
                 </div>
               )}
-              {profile?.unfavorableElements && (
+              {effectiveProfile?.unfavorableElements && (
                 <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2">
                   <div className="text-xs text-gray-400 mb-0.5">忌神</div>
                   <div className="text-red-300 font-bold text-sm">
-                    {profile.unfavorableElements.split(",").map(e => ELEMENT_ZH[e.trim()] ?? e.trim()).join("・")}
+                    {effectiveProfile.unfavorableElements.split(",").map(e => ELEMENT_ZH[e.trim()] ?? e.trim()).join("・")}
                   </div>
                 </div>
               )}
@@ -430,8 +486,8 @@ export default function ProfilePage() {
 
       <div className="container max-w-5xl mx-auto px-4 py-8 space-y-8">
 
-        {/* ─── 命格未填寫提示 ─── */}
-        {!profileLoading && !hasBasicProfile && (
+        {/* ─── 命格未填寫提示（主帳號不顯示）─── */}
+        {!isOwner && !profileLoading && !hasBasicProfile && (
           <div className="bg-amber-900/10 border border-amber-500/30 rounded-xl p-5 flex flex-col sm:flex-row items-center gap-4">
             <div className="text-3xl">🌟</div>
             <div className="flex-1 text-center sm:text-left">
@@ -606,48 +662,98 @@ export default function ProfilePage() {
                   <div className="text-xs text-gray-400 mb-1">出生年份</div>
                   <div className="text-2xl font-bold text-orange-400">{ageInfo.birthYear}</div>
                   <div className="text-sm text-gray-300 mt-1">
-                    {profile?.yearPillar ? `${profile.yearPillar}年` : "年柱未填寫"}
+                    {effectiveProfile?.yearPillar ? `${effectiveProfile.yearPillar}年` : "年柱未填寫"}
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-xs text-gray-400 mb-1">農曆生日</div>
-                  <div className="text-lg font-bold text-purple-400">{profile?.birthLunar ?? "未設定"}</div>
-                  <div className="text-sm text-gray-300 mt-1">{profile?.birthDate ?? ""}</div>
+                  <div className="text-lg font-bold text-purple-400">{effectiveProfile?.birthLunar ?? "未設定"}</div>
+                  <div className="text-sm text-gray-300 mt-1">{effectiveProfile?.birthDate ?? ""}</div>
                 </div>
               </div>
             ) : (
               <div className="mb-4 text-center text-gray-500 text-sm py-2">填寫出生日期以顯示年齡資訊</div>
             )}
-            <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-300 mb-4">
-              <span className="font-bold">提示：</span>
-              大限、紫微斗數、生命靈數等進階算命功能需要完整的生辰八字資料，請至命格設定頁填寫完整資料後，系統將自動計算個人化分析。
-            </div>
+            {!isOwner && (
+              <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-300 mb-4">
+                <span className="font-bold">提示：</span>
+                大限、紫微斗數、生命靈數等進階算命功能需要完整的生辰八字資料，請至命格設定頁填寫完整資料後，系統將自動計算個人化分析。
+              </div>
+            )}
             {/* ─── 五年流年流月分析 ─── */}
             <YearlyForecastSection />
           </div>
         </section>
 
+        {/* ─── 紫微斗數十二宮（主帳號專屬）─── */}
+        {isOwner && (
+          <section>
+            <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
+              <span>⭐</span> 紫微斗數十二宮
+            </h2>
+            <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {OWNER_STATIC_PROFILE.ziwei.map((z) => (
+                  <div key={z.palace} className="bg-gray-800/50 border border-gray-700/30 rounded-lg p-2.5 text-center">
+                    <div className="text-xs text-gray-400 mb-1">{z.palace}</div>
+                    <div className="text-sm font-bold text-amber-300">{z.position}</div>
+                    <div className="text-xs text-gray-300 mt-1 leading-tight">{z.stars}</div>
+                    {z.note && <div className="text-xs text-orange-400 mt-1 font-medium">{z.note}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ─── 生命靈數與塔羅原型（主帳號專屬）─── */}
+        {isOwner && (
+          <section>
+            <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
+              <span>🎴</span> 生命靈數與塔羅原型
+            </h2>
+            <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {([
+                  { label: "外層靈數（生日展現）", ...OWNER_STATIC_PROFILE.tarot.outer },
+                  { label: "中層靈數（天賦使命）", ...OWNER_STATIC_PROFILE.tarot.middle },
+                  { label: "內層靈數（靈魂渴望）", ...OWNER_STATIC_PROFILE.tarot.inner },
+                  { label: "靈魂數（生命主題）", ...OWNER_STATIC_PROFILE.tarot.soul },
+                ] as Array<{ label: string; num: number; name: string; element: string }>).map((t) => (
+                  <div key={t.label} className="bg-gray-800/50 border border-gray-700/30 rounded-xl p-4 text-center">
+                    <div className="text-xs text-gray-400 mb-2">{t.label}</div>
+                    <div className="text-3xl font-bold text-orange-400 mb-1">{t.num}</div>
+                    <div className="text-sm font-bold text-gray-200">{t.element} {t.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ─── 備注欄位 ─── */}
-        {profile?.notes && (
+        {effectiveProfile?.notes && (
           <section>
             <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
               <span>📋</span> 命格備注
             </h2>
             <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
-              <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{profile.notes}</p>
+              <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{effectiveProfile.notes}</p>
             </div>
           </section>
         )}
 
-        {/* ─── 前往設定按鈕 ─── */}
-        <div className="flex justify-center pt-4">
-          <Link href="/my-profile">
-            <span className="inline-flex items-center gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/40 rounded-xl px-6 py-3 text-sm font-medium transition-colors cursor-pointer">
-              <Settings className="w-4 h-4" />
-              編輯命格資料
-            </span>
-          </Link>
-        </div>
+        {/* ─── 前往設定按鈕（主帳號不顯示，其他用戶顯示）─── */}
+        {!isOwner && (
+          <div className="flex justify-center pt-4">
+            <Link href="/my-profile">
+              <span className="inline-flex items-center gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/40 rounded-xl px-6 py-3 text-sm font-medium transition-colors cursor-pointer">
+                <Settings className="w-4 h-4" />
+                編輯命格資料
+              </span>
+            </Link>
+          </div>
+        )}
 
       </div>
     </>
