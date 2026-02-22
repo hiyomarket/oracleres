@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { SharedNav } from "@/components/SharedNav";
+import { trpc } from "@/lib/trpc";
+import { ChevronDown, ChevronUp, Star, TrendingUp, AlertTriangle, Zap } from "lucide-react";
 
 // ─── 蘇祐震命格常數 ──────────────────────────────────────────────
 
@@ -156,6 +158,145 @@ const LUNAR_BIRTHDAY_SOLAR: Record<number, { month: number; day: number }> = {
   2027: { month: 12, day: 2 },  // 2027 年農曆十月初四 = 12/2
   2028: { month: 11, day: 20 }, // 2028 年農曆十月初四 = 11/20
 };
+
+// ─── 流年等級顏色 ────────────────────────────────────────────────
+const LEVEL_COLOR: Record<string, string> = {
+  "大吉": "text-yellow-300 border-yellow-400/50 bg-yellow-900/20",
+  "吉": "text-green-300 border-green-400/50 bg-green-900/20",
+  "平": "text-gray-300 border-gray-500/50 bg-gray-800/20",
+  "凶": "text-red-300 border-red-400/50 bg-red-900/20",
+  "大凶": "text-red-400 border-red-500/50 bg-red-900/30",
+};
+const LEVEL_BADGE: Record<string, string> = {
+  "大吉": "bg-yellow-500/20 text-yellow-300 border border-yellow-500/40",
+  "吉": "bg-green-500/20 text-green-300 border border-green-500/40",
+  "平": "bg-gray-600/20 text-gray-400 border border-gray-600/40",
+  "凶": "bg-red-500/20 text-red-300 border border-red-500/40",
+  "大凶": "bg-red-700/20 text-red-400 border border-red-700/40",
+};
+const MONTH_NAMES = ["正月","二月","三月","四月","五月","六月","七月","八月","九月","十月","冬月","臘月"];
+
+function YearlyForecastSection() {
+  const { data, isLoading } = trpc.profile.yearlyAnalysis.useQuery();
+  const [expandedYear, setExpandedYear] = useState<number | null>(null);
+  const currentYear = new Date().getFullYear();
+
+  if (isLoading) {
+    return (
+      <div className="mt-4 animate-pulse space-y-2">
+        {[1,2,3].map(i => (
+          <div key={i} className="h-16 bg-gray-800/50 rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+  if (!data || data.length === 0) return null;
+
+  return (
+    <div className="mt-4 space-y-2">
+      <div className="flex items-center gap-2 mb-3">
+        <TrendingUp className="w-4 h-4 text-cyan-400" />
+        <span className="text-sm font-bold text-cyan-300">2026–2030 五年流年流月分析</span>
+        <span className="text-xs text-gray-500">（紫微斗數式四化推算）</span>
+      </div>
+      {data.map((yr) => {
+        const isCurrentYear = yr.year === currentYear;
+        const isExpanded = expandedYear === yr.year;
+        const levelCls = LEVEL_COLOR[yr.overallLevel] ?? LEVEL_COLOR["平"];
+        const badgeCls = LEVEL_BADGE[yr.overallLevel] ?? LEVEL_BADGE["平"];
+        return (
+          <div key={yr.year} className={`border rounded-xl overflow-hidden transition-all ${
+            isCurrentYear ? "border-cyan-500/60 bg-cyan-900/10" : "border-gray-700/50 bg-gray-800/20"
+          }`}>
+            {/* 年度標題列 */}
+            <button
+              className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition-colors"
+              onClick={() => setExpandedYear(isExpanded ? null : yr.year)}
+            >
+              {/* 年份與干支 */}
+              <div className="flex-shrink-0 w-16 text-center">
+                <div className={`text-base font-bold ${isCurrentYear ? "text-cyan-300" : "text-gray-200"}`}>
+                  {yr.year}
+                </div>
+                <div className="text-[10px] text-gray-500">{yr.pillar}</div>
+              </div>
+              {/* 塔羅牌 */}
+              <div className="flex-shrink-0 text-center w-12">
+                <div className="text-lg">{yr.tarot.element}</div>
+                <div className="text-[10px] text-gray-400">{yr.tarot.name}</div>
+              </div>
+              {/* 年度主題 */}
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-gray-200 font-medium truncate">{yr.yearTheme}</div>
+                <div className="text-[10px] text-gray-500 mt-0.5 truncate">{yr.opportunities}</div>
+              </div>
+              {/* 等級與展開按鈕 */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${badgeCls}`}>
+                  {yr.overallLevel}
+                </span>
+                <span className="text-xs text-gray-500">{yr.overallScore.toFixed(1)}</span>
+                {isExpanded
+                  ? <ChevronUp className="w-4 h-4 text-gray-500" />
+                  : <ChevronDown className="w-4 h-4 text-gray-500" />}
+              </div>
+            </button>
+            {/* 展開內容 */}
+            {isExpanded && (
+              <div className="border-t border-gray-700/50 p-3 space-y-3">
+                {/* 四化 */}
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { key: "hua_lu", label: "化禄", color: "text-yellow-300", icon: "★" },
+                    { key: "hua_quan", label: "化權", color: "text-orange-300", icon: "▲" },
+                    { key: "hua_ke", label: "化科", color: "text-blue-300", icon: "◆" },
+                    { key: "hua_ji", label: "化忌", color: "text-red-400", icon: "✖" },
+                  ] as const).map(({ key, label, color, icon }) => {
+                    const t = yr.fourTransformations[key];
+                    return (
+                      <div key={key} className="bg-gray-900/40 rounded-lg p-2">
+                        <div className={`text-xs font-bold ${color} mb-1`}>{icon} {label}</div>
+                        <div className="text-xs text-gray-200">{t.star} 入{t.palace}</div>
+                        <div className="text-[10px] text-gray-500 mt-0.5">{t.meaning}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* 注意事項 */}
+                <div className="flex items-start gap-2 bg-red-900/10 border border-red-500/20 rounded-lg p-2">
+                  <AlertTriangle className="w-3 h-3 text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-[11px] text-red-300">{yr.cautions}</div>
+                </div>
+                {/* 12 月流月分析 */}
+                <div>
+                  <div className="flex items-center gap-1 mb-2">
+                    <Zap className="w-3 h-3 text-amber-400" />
+                    <span className="text-xs text-amber-300 font-bold">逐月流月分析</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {yr.months.map((m, idx) => {
+                      const mBadge = LEVEL_BADGE[m.level] ?? LEVEL_BADGE["平"];
+                      return (
+                        <div key={idx} className="bg-gray-900/50 rounded-lg p-2 text-center">
+                          <div className="text-[10px] text-gray-400">{MONTH_NAMES[idx]}</div>
+                          <div className="text-xs text-gray-200 font-mono">{m.pillar}</div>
+                          <div className={`text-[10px] mt-0.5 px-1 py-0.5 rounded-full inline-block ${mBadge}`}>
+                            {m.level}
+                          </div>
+                          <div className="text-[10px] text-gray-500 mt-1 leading-tight">{m.focus}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function ProfilePage() {
   const [birthdayInfo, setBirthdayInfo] = useState<{
@@ -525,6 +666,8 @@ export default function ProfilePage() {
               <span className="font-bold">大限提示：</span>
               官禄宮大限（45-54歲），太陽雙忘入官禄，事業面臨挑戰與轉型。宜以「火土」補強，強化個人品牌與創業能量，避免依賴傳統職場路徑。
             </div>
+            {/* ─── 五年流年流月分析 ─── */}
+            <YearlyForecastSection />
             {/* 農曆生日倒數橫幅 */}
             {birthdayInfo && (
               <div className="mt-3 bg-gradient-to-r from-purple-900/30 to-pink-900/20 border border-purple-500/30 rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">

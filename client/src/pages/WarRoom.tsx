@@ -754,7 +754,7 @@ export default function WarRoom() {
                     )}
                     {/* GPS 命理推薦餐廳 */}
                     {data.dietary?.supplements && data.dietary.supplements.length > 0 && (
-                      <NearbyRestaurants supplements={data.dietary.supplements} />
+                      <NearbyRestaurants supplements={data.dietary.supplements} todayDirections={data.todayDirections} />
                     )}
                   </div>
                 </SectionCard>

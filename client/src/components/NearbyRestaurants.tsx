@@ -4,43 +4,245 @@ import { MapView } from "@/components/Map";
 // 五行 → Google Maps 搜尋關鍵字（台灣在地化）
 const ELEMENT_KEYWORDS: Record<string, { keywords: string[]; label: string; emoji: string; color: string }> = {
   土: {
-    keywords: ["甜點", "米食", "台灣料理", "蛋糕甜食"],
+    keywords: ["甜點", "米食", "台灣料理", "蛋糕甜食", "根莖類料理"],
     label: "補土（甜食/米食）",
     emoji: "🌍",
     color: "text-amber-400 border-amber-500/40 bg-amber-950/20",
   },
   金: {
-    keywords: ["豆腐", "日式料理", "清淡料理", "白肉"],
+    keywords: ["豆腐", "日式料理", "清淡料理", "白肉", "豆漿"],
     label: "補金（白色食物）",
     emoji: "⚪",
     color: "text-slate-300 border-slate-400/40 bg-slate-800/30",
   },
   火: {
-    keywords: ["燒烤", "辛辣料理", "麻辣", "烤肉"],
+    keywords: ["燒烤", "辛辣料理", "麻辣", "烤肉", "韓式料理"],
     label: "補火（辛辣/燒烤）",
     emoji: "🔥",
     color: "text-red-400 border-red-500/40 bg-red-950/20",
   },
   水: {
-    keywords: ["海鮮", "湯品", "火鍋", "清湯"],
+    keywords: ["海鮮", "湯品", "火鍋", "清湯", "壽司"],
     label: "補水（湯品/海鮮）",
     emoji: "🌊",
     color: "text-blue-400 border-blue-500/40 bg-blue-950/20",
   },
   木: {
-    keywords: ["蔬食", "素食", "沙拉", "健康餐"],
+    keywords: ["蔬食", "素食", "沙拉", "健康餐", "輕食"],
     label: "補木（蔬食/健康）",
     emoji: "🌿",
     color: "text-emerald-400 border-emerald-500/40 bg-emerald-950/20",
   },
 };
 
+// 方向 → 方位角範圍（用於判斷餐廳是否在吉方）
+const DIRECTION_BEARING: Record<string, { min: number; max: number; label: string }> = {
+  "正東": { min: 67.5, max: 112.5, label: "正東" },
+  "東南": { min: 112.5, max: 157.5, label: "東南" },
+  "正南": { min: 157.5, max: 202.5, label: "正南" },
+  "西南": { min: 202.5, max: 247.5, label: "西南" },
+  "正西": { min: 247.5, max: 292.5, label: "正西" },
+  "西北": { min: 292.5, max: 337.5, label: "西北" },
+  "正北": { min: 337.5, max: 360, label: "正北（上）" },
+  "東北": { min: 22.5, max: 67.5, label: "東北" },
+};
+
+// 計算兩點之間的方位角（0-360度，0=正北）
+function calcBearing(from: { lat: number; lng: number }, to: { lat: number; lng: number }): number {
+  const dLng = (to.lng - from.lng) * Math.PI / 180;
+  const lat1 = from.lat * Math.PI / 180;
+  const lat2 = to.lat * Math.PI / 180;
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+}
+
+// 判斷方位角是否在指定方向範圍內
+function isInDirection(bearing: number, directionName: string): boolean {
+  const dir = DIRECTION_BEARING[directionName];
+  if (!dir) return false;
+  // 正北特殊處理（跨越360/0度）
+  if (directionName === "正北") {
+    return bearing >= 337.5 || bearing < 22.5;
+  }
+  return bearing >= dir.min && bearing < dir.max;
+}
+
 // 計算命理匹配分數（1-5星）
-function calcMatchScore(element: string, priority: number): number {
-  // 優先級越高（數字越小）→ 匹配度越高
+function calcMatchScore(priority: number): number {
   if (priority === 1) return 5;
   if (priority === 2) return 4;
   return 3;
+}
+
+// Haversine 距離計算（公尺）
+function calcDistance(from: { lat: number; lng: number }, to: { lat: number; lng: number }): number {
+  const R = 6371000;
+  const dLat = (to.lat - from.lat) * Math.PI / 180;
+  const dLng = (to.lng - from.lng) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(from.lat * Math.PI / 180) * Math.cos(to.lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+// ─── 風水分析（前端版，不依賴後端 API）────────────────────────────
+
+const BEARING_ELEMENT_MAP = [
+  { min: 337.5, max: 360,   element: "水", mountain: "壬" },
+  { min: 0,     max: 7.5,   element: "水", mountain: "子" },
+  { min: 7.5,   max: 22.5,  element: "水", mountain: "癸" },
+  { min: 22.5,  max: 37.5,  element: "土", mountain: "丑" },
+  { min: 37.5,  max: 52.5,  element: "土", mountain: "艮" },
+  { min: 52.5,  max: 67.5,  element: "木", mountain: "寅" },
+  { min: 67.5,  max: 82.5,  element: "木", mountain: "甲" },
+  { min: 82.5,  max: 97.5,  element: "木", mountain: "卯" },
+  { min: 97.5,  max: 112.5, element: "木", mountain: "乙" },
+  { min: 112.5, max: 127.5, element: "土", mountain: "辰" },
+  { min: 127.5, max: 142.5, element: "木", mountain: "巽" },
+  { min: 142.5, max: 157.5, element: "火", mountain: "巳" },
+  { min: 157.5, max: 172.5, element: "火", mountain: "丙" },
+  { min: 172.5, max: 187.5, element: "火", mountain: "午" },
+  { min: 187.5, max: 202.5, element: "火", mountain: "丁" },
+  { min: 202.5, max: 217.5, element: "土", mountain: "未" },
+  { min: 217.5, max: 232.5, element: "土", mountain: "坤" },
+  { min: 232.5, max: 247.5, element: "金", mountain: "申" },
+  { min: 247.5, max: 262.5, element: "金", mountain: "庚" },
+  { min: 262.5, max: 277.5, element: "金", mountain: "酉" },
+  { min: 277.5, max: 292.5, element: "金", mountain: "辛" },
+  { min: 292.5, max: 307.5, element: "土", mountain: "戌" },
+  { min: 307.5, max: 322.5, element: "金", mountain: "乾" },
+  { min: 322.5, max: 337.5, element: "水", mountain: "亥" },
+];
+
+function getBearingElementLocal(bearing: number): { element: string; mountain: string } {
+  const b = ((bearing % 360) + 360) % 360;
+  if (b >= 337.5 || b < 7.5) return { element: "水", mountain: "子" };
+  const entry = BEARING_ELEMENT_MAP.find((m) => b >= m.min && b < m.max);
+  return entry ? { element: entry.element, mountain: entry.mountain } : { element: "土", mountain: "中" };
+}
+
+const NAME_ELEMENT_CHARS: Record<string, string> = {
+  木: "木", 林: "木", 森: "木", 樹: "木", 桃: "木", 梅: "木", 柳: "木",
+  松: "木", 竹: "木", 草: "木", 花: "木", 葉: "木", 茶: "木", 菜: "木",
+  蔬: "木", 綠: "木", 青: "木", 春: "木", 東: "木", 甲: "木", 乙: "木",
+  芳: "木", 苑: "木", 荷: "木", 蓮: "木", 蘭: "木", 橘: "木", 楓: "木",
+  火: "火", 炎: "火", 焰: "火", 燈: "火", 燒: "火", 烤: "火", 炸: "火",
+  日: "火", 陽: "火", 光: "火", 明: "火", 熱: "火", 南: "火", 丙: "火",
+  丁: "火", 巳: "火", 午: "火", 紅: "火", 赤: "火", 朱: "火", 彩: "火",
+  星: "火", 晶: "火", 暖: "火", 煌: "火", 輝: "火",
+  土: "土", 地: "土", 山: "土", 岡: "土", 岩: "土", 石: "土", 坡: "土",
+  城: "土", 鄉: "土", 里: "土", 村: "土", 田: "土", 農: "土", 穀: "土",
+  黃: "土", 戊: "土", 己: "土", 辰: "土", 戌: "土", 丑: "土",
+  未: "土", 坤: "土", 艮: "土", 中: "土", 央: "土", 原: "土",
+  金: "金", 銀: "金", 鐵: "金", 鋼: "金", 銅: "金", 鑫: "金", 鎮: "金",
+  刀: "金", 劍: "金", 鋒: "金", 利: "金", 鑽: "金", 珠: "金", 玉: "金",
+  白: "金", 西: "金", 庚: "金", 辛: "金", 申: "金", 酉: "金", 乾: "金",
+  水: "水", 海: "水", 河: "水", 江: "水", 湖: "水", 泉: "水", 溪: "水",
+  流: "水", 波: "水", 洋: "水", 潮: "水", 漁: "水", 魚: "水", 蝦: "水",
+  蟹: "水", 貝: "水", 冰: "水", 雪: "水", 北: "水", 壬: "水", 癸: "水",
+  亥: "水", 子: "水", 黑: "水", 藍: "水", 深: "水", 清: "水", 涼: "水",
+};
+
+function analyzeNameElementLocal(name: string): string {
+  const counts: Record<string, number> = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 };
+  for (const char of name) {
+    if (NAME_ELEMENT_CHARS[char]) counts[NAME_ELEMENT_CHARS[char]]++;
+  }
+  let max = 0, dominant = "土";
+  for (const [el, cnt] of Object.entries(counts)) {
+    if (cnt > max) { max = cnt; dominant = el; }
+  }
+  return dominant;
+}
+
+const BUSINESS_KEYWORDS_FS: Array<{ keywords: string[]; element: string }> = [
+  { element: "火", keywords: ["燒烤", "烤肉", "麻辣", "辣", "韓式", "炭烤", "鐵板", "熱炒", "炸", "煎", "鍋貼", "薑母鴨", "羊肉爐", "麻辣鍋", "咖哩", "印度", "泰式", "串燒"] },
+  { element: "土", keywords: ["甜點", "蛋糕", "甜食", "糕點", "麵包", "烘焙", "珍珠奶茶", "台灣", "台式", "米食", "飯糰", "便當", "自助餐", "滷肉飯", "牛肉麵", "小吃", "夜市", "傳統", "古早味"] },
+  { element: "金", keywords: ["日式", "壽司", "生魚片", "豆腐", "清淡", "白肉", "雞肉", "沙拉", "輕食", "健康", "有機", "素食", "蔬食", "豆漿", "清蒸", "白切", "涼拌", "拉麵", "烏龍"] },
+  { element: "水", keywords: ["海鮮", "魚", "蝦", "蟹", "貝", "生蠔", "龍蝦", "湯", "火鍋", "涮涮鍋", "清湯", "骨頭湯", "雞湯", "魚湯", "粥", "湯麵", "冷麵", "冰品", "冷飲"] },
+  { element: "木", keywords: ["蔬食", "素食", "沙拉", "健康", "輕食", "有機", "生機", "蔬果", "蔬菜", "綠色", "植物", "全素", "純素", "養生", "纖維", "低卡"] },
+];
+
+function analyzeBusinessElementLocal(name: string, keyword: string): string {
+  const combined = `${name} ${keyword}`;
+  const scores: Record<string, number> = { 木: 0, 火: 0, 土: 0, 金: 0, 水: 0 };
+  for (const { keywords, element } of BUSINESS_KEYWORDS_FS) {
+    for (const kw of keywords) {
+      if (combined.includes(kw)) scores[element]++;
+    }
+  }
+  let max = 0, dominant = "土";
+  for (const [el, cnt] of Object.entries(scores)) {
+    if (cnt > max) { max = cnt; dominant = el; }
+  }
+  return dominant;
+}
+
+// 五行匹配分數（針對蘇先生：火>土>金>木>水）
+const ELEMENT_MATCH_SCORE: Record<string, number> = {
+  火: 100, 土: 85, 金: 70, 木: 30, 水: 20,
+};
+
+const GRADE_CONFIG: Record<string, { label: string; color: string; emoji: string }> = {
+  大吉: { label: "大吉", color: "text-amber-300 bg-amber-500/15 border-amber-500/40", emoji: "✦" },
+  吉:   { label: "吉",   color: "text-green-400 bg-green-500/10 border-green-500/30",  emoji: "◎" },
+  平:   { label: "平",   color: "text-white/40 bg-white/5 border-white/10",            emoji: "○" },
+  凶:   { label: "凶",   color: "text-orange-400 bg-orange-500/10 border-orange-500/30", emoji: "△" },
+  大凶: { label: "大凶", color: "text-red-400 bg-red-500/10 border-red-500/30",        emoji: "✕" },
+};
+
+interface FengShuiResult {
+  totalScore: number;
+  grade: "大吉" | "吉" | "平" | "凶" | "大凶";
+  bearingElement: string;
+  bearingMountain: string;
+  bearingDeg: number;
+  nameElement: string;
+  businessElement: string;
+  dominantElement: string;
+}
+
+function calcFengShui(
+  userLat: number, userLng: number,
+  restLat: number, restLng: number,
+  name: string, address: string, keyword: string
+): FengShuiResult {
+  const dLng = (restLng - userLng) * Math.PI / 180;
+  const lat1 = userLat * Math.PI / 180;
+  const lat2 = restLat * Math.PI / 180;
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  const bearingDeg = ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+
+  const { element: bearingEl, mountain } = getBearingElementLocal(bearingDeg);
+  const nameEl = analyzeNameElementLocal(`${name} ${address}`);
+  const businessEl = analyzeBusinessElementLocal(name, keyword);
+
+  const bearingScore = ELEMENT_MATCH_SCORE[bearingEl] ?? 50;
+  const nameScore = ELEMENT_MATCH_SCORE[nameEl] ?? 50;
+  const businessScore = ELEMENT_MATCH_SCORE[businessEl] ?? 50;
+  const totalScore = Math.round(bearingScore * 0.40 + nameScore * 0.20 + businessScore * 0.40);
+
+  const contributions = [
+    { el: bearingEl, val: bearingScore * 0.40 },
+    { el: nameEl,    val: nameScore * 0.20 },
+    { el: businessEl, val: businessScore * 0.40 },
+  ].sort((a, b) => b.val - a.val);
+  const dominantElement = contributions[0].el;
+
+  let grade: FengShuiResult["grade"];
+  if (totalScore >= 85) grade = "大吉";
+  else if (totalScore >= 70) grade = "吉";
+  else if (totalScore >= 50) grade = "平";
+  else if (totalScore >= 35) grade = "凶";
+  else grade = "大凶";
+
+  return {
+    totalScore, grade,
+    bearingElement: bearingEl, bearingMountain: mountain, bearingDeg: Math.round(bearingDeg),
+    nameElement: nameEl, businessElement: businessEl, dominantElement,
+  };
 }
 
 interface Restaurant {
@@ -50,22 +252,30 @@ interface Restaurant {
   rating: number;
   userRatingsTotal: number;
   distance?: number;
+  bearing?: number;
   element: string;
   matchScore: number;
   keyword: string;
   placeId: string;
+  isAuspicious: boolean; // 是否在吉方
+  lat?: number;
+  lng?: number;
+  fengShui?: FengShuiResult;
 }
 
 interface Props {
   supplements: Array<{ element: string; priority: number; foods: string[] }>;
+  todayDirections?: { xi: string; fu: string; cai: string }; // 今日吉方
 }
 
-export function NearbyRestaurants({ supplements }: Props) {
+export function NearbyRestaurants({ supplements, todayDirections }: Props) {
   const [phase, setPhase] = useState<"idle" | "locating" | "searching" | "done" | "error">("idle");
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
   const [showMap, setShowMap] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [filterAuspicious, setFilterAuspicious] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
 
   const handleSearch = useCallback(() => {
@@ -97,68 +307,104 @@ export function NearbyRestaurants({ supplements }: Props) {
         const results: Restaurant[] = [];
         const seen = new Set<string>();
 
-        // 依優先級搜尋前兩個需補五行
+        // 依優先級搜尋前兩個需補五行，每個五行搜尋多個關鍵字以確保至少8筆
         const topSupplements = supplements.slice(0, 2);
 
         for (const sup of topSupplements) {
           const info = ELEMENT_KEYWORDS[sup.element];
           if (!info) continue;
 
-          // 取第一個關鍵字搜尋
-          const keyword = info.keywords[0];
+          // 搜尋前3個關鍵字，確保結果足夠
+          const keywordsToSearch = info.keywords.slice(0, 3);
 
-          const { Place } = await google.maps.importLibrary("places") as google.maps.PlacesLibrary;
-          const request = {
-            textQuery: keyword,
-            fields: ["id", "displayName", "formattedAddress", "rating", "userRatingCount", "location"],
-            locationBias: {
-              center: userLocation,
-              radius: 1000,
-            },
-            maxResultCount: 5,
-            language: "zh-TW",
-          };
+          for (const keyword of keywordsToSearch) {
+            if (results.length >= 12) break; // 最多搜尋12筆
 
-          const { places } = await Place.searchByText(request);
+            const { Place } = await google.maps.importLibrary("places") as google.maps.PlacesLibrary;
+            const request = {
+              textQuery: `${keyword} 餐廳`,
+              fields: ["id", "displayName", "formattedAddress", "rating", "userRatingCount", "location"],
+              locationBias: {
+                center: userLocation,
+                radius: 2000, // 擴大到2km確保有足夠結果
+              },
+              maxResultCount: 8,
+              language: "zh-TW",
+            };
 
-          for (const place of places) {
-            if (!place.id || seen.has(place.id)) continue;
-            seen.add(place.id);
+            try {
+              const { places } = await Place.searchByText(request);
 
-            // 計算距離（Haversine）
-            let distance: number | undefined;
-            if (place.location) {
-              const lat2 = place.location.lat();
-              const lng2 = place.location.lng();
-              const R = 6371000;
-              const dLat = ((lat2 - userLocation.lat) * Math.PI) / 180;
-              const dLng = ((lng2 - userLocation.lng) * Math.PI) / 180;
-              const a =
-                Math.sin(dLat / 2) ** 2 +
-                Math.cos((userLocation.lat * Math.PI) / 180) *
-                  Math.cos((lat2 * Math.PI) / 180) *
-                  Math.sin(dLng / 2) ** 2;
-              distance = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+              for (const place of places) {
+                if (!place.id || seen.has(place.id)) continue;
+                seen.add(place.id);
+
+                const lat2 = place.location?.lat();
+                const lng2 = place.location?.lng();
+                let distance: number | undefined;
+                let bearing: number | undefined;
+                let isAuspicious = false;
+
+                let fengShui: FengShuiResult | undefined;
+                if (lat2 !== undefined && lng2 !== undefined) {
+                  const to = { lat: lat2, lng: lng2 };
+                  distance = calcDistance(userLocation, to);
+                  bearing = calcBearing(userLocation, to);
+                  // 判斷是否在今日財神方（吉方）
+                  if (todayDirections) {
+                    isAuspicious =
+                      isInDirection(bearing, todayDirections.cai) ||
+                      isInDirection(bearing, todayDirections.xi);
+                  }
+                  // 計算風水地塊三維度分析
+                  fengShui = calcFengShui(
+                    userLocation.lat, userLocation.lng,
+                    lat2, lng2,
+                    place.displayName ?? "",
+                    place.formattedAddress ?? "",
+                    keyword
+                  );
+                }
+                results.push({
+                  id: place.id,
+                  name: place.displayName ?? "未知餐廳",
+                  address: place.formattedAddress ?? "",
+                  rating: place.rating ?? 0,
+                  userRatingsTotal: place.userRatingCount ?? 0,
+                  distance,
+                  bearing,
+                  element: sup.element,
+                  matchScore: calcMatchScore(sup.priority),
+                  keyword,
+                  placeId: place.id,
+                  isAuspicious,
+                  lat: lat2,
+                  lng: lng2,
+                  fengShui,
+                });
+              }
+            } catch {
+              // 單個關鍵字搜尋失敗，繼續下一個
             }
-
-            results.push({
-              id: place.id,
-              name: place.displayName ?? "未知餐廳",
-              address: place.formattedAddress ?? "",
-              rating: place.rating ?? 0,
-              userRatingsTotal: place.userRatingCount ?? 0,
-              distance,
-              element: sup.element,
-              matchScore: calcMatchScore(sup.element, sup.priority),
-              keyword,
-              placeId: place.id,
-            });
           }
         }
 
-        // 依命理匹配分數 + 評分排序
-        results.sort((a, b) => b.matchScore - a.matchScore || b.rating - a.rating);
-        setRestaurants(results.slice(0, 8));
+        // 依距離從近到遠排序（主要排序），吉方優先（次要排序）
+        results.sort((a, b) => {
+          // 吉方優先（同距離段內）
+          if (a.isAuspicious !== b.isAuspicious) {
+            const distA = a.distance ?? 9999;
+            const distB = b.distance ?? 9999;
+            // 只有在距離差距不超過500m時，才讓吉方優先
+            if (Math.abs(distA - distB) < 500) {
+              return a.isAuspicious ? -1 : 1;
+            }
+          }
+          // 主要按距離排序
+          return (a.distance ?? 9999) - (b.distance ?? 9999);
+        });
+
+        setRestaurants(results.slice(0, 12)); // 最多顯示12筆（至少8筆）
         setPhase("done");
       } catch (err) {
         console.error(err);
@@ -166,16 +412,30 @@ export function NearbyRestaurants({ supplements }: Props) {
         setErrorMsg("搜尋餐廳時發生錯誤，請稍後再試。");
       }
     },
-    [userLocation, supplements]
+    [userLocation, supplements, todayDirections]
   );
 
   const topElements = supplements.slice(0, 2).map((s) => s.element);
+  const displayedRestaurants = filterAuspicious
+    ? restaurants.filter((r) => r.isAuspicious)
+    : restaurants;
+
+  // 建立正確的 Google Maps 搜尋 URL
+  const buildMapsUrl = (r: Restaurant): string => {
+    if (r.lat !== undefined && r.lng !== undefined) {
+      // 使用座標 + 名稱搜尋（最可靠）
+      const query = encodeURIComponent(r.name);
+      return `https://www.google.com/maps/search/?api=1&query=${query}&query_place_id=${r.placeId}`;
+    }
+    // 備用：用名稱搜尋
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name)}`;
+  };
 
   return (
     <div className="mt-4 rounded-xl border border-white/10 bg-white/3 overflow-hidden">
       {/* 標題列 */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-base">📍</span>
           <span className="text-sm font-semibold text-white/80">附近命理推薦餐廳</span>
           {topElements.length > 0 && (
@@ -191,25 +451,51 @@ export function NearbyRestaurants({ supplements }: Props) {
         {phase === "idle" && (
           <button
             onClick={handleSearch}
-            className="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg transition-all"
+            className="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3 py-1.5 rounded-lg transition-all flex-shrink-0"
           >
             🔍 尋找附近餐廳
           </button>
         )}
         {(phase === "locating" || phase === "searching") && (
-          <span className="text-xs text-white/40 animate-pulse">
+          <span className="text-xs text-white/40 animate-pulse flex-shrink-0">
             {phase === "locating" ? "📡 取得定位中..." : "🔍 搜尋餐廳中..."}
           </span>
         )}
         {phase === "done" && (
           <button
-            onClick={() => { setPhase("idle"); setShowMap(false); setRestaurants([]); }}
-            className="text-xs text-white/30 hover:text-white/50 transition-colors"
+            onClick={() => { setPhase("idle"); setShowMap(false); setRestaurants([]); setFilterAuspicious(false); setExpandedId(null); }}
+            className="text-xs text-white/30 hover:text-white/50 transition-colors flex-shrink-0"
           >
             重新搜尋
           </button>
         )}
       </div>
+
+      {/* 吉方篩選列（有結果時顯示） */}
+      {phase === "done" && todayDirections && (
+        <div className="flex items-center gap-3 px-4 py-2 border-b border-white/5 bg-white/2">
+          <span className="text-[10px] text-white/40">今日財神方：</span>
+          <span className="text-[10px] text-amber-300 font-medium">
+            💰 {todayDirections.cai}
+          </span>
+          <span className="text-[10px] text-white/40">喜神方：</span>
+          <span className="text-[10px] text-rose-300 font-medium">
+            🌸 {todayDirections.xi}
+          </span>
+          <div className="ml-auto flex items-center gap-1.5">
+            <button
+              onClick={() => setFilterAuspicious(!filterAuspicious)}
+              className={`text-[10px] px-2 py-1 rounded-lg border transition-all ${
+                filterAuspicious
+                  ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                  : "bg-white/5 border-white/10 text-white/40"
+              }`}
+            >
+              {filterAuspicious ? "✦ 吉方優先" : "○ 吉方優先"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 錯誤訊息 */}
       {phase === "error" && (
@@ -228,33 +514,46 @@ export function NearbyRestaurants({ supplements }: Props) {
       )}
 
       {/* 餐廳清單 */}
-      {phase === "done" && restaurants.length > 0 && (
+      {phase === "done" && displayedRestaurants.length > 0 && (
         <div className="divide-y divide-white/5">
-          {restaurants.map((r, i) => {
+          {displayedRestaurants.map((r, i) => {
             const info = ELEMENT_KEYWORDS[r.element];
-            const stars = "★".repeat(r.matchScore) + "☆".repeat(5 - r.matchScore);
+            const mapsUrl = buildMapsUrl(r);
+            const fs = r.fengShui;
+            const gradeConfig = fs ? GRADE_CONFIG[fs.grade] : null;
+            const isExpanded = expandedId === r.id;
             return (
-              <div key={r.id} className="px-4 py-3 hover:bg-white/3 transition-colors">
+              <div key={r.id} className={`px-4 py-3 hover:bg-white/3 transition-colors ${r.isAuspicious ? "border-l-2 border-amber-500/40" : ""}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs text-white/30 font-mono w-4">{i + 1}</span>
+                    {/* 第一行：序號 + 名稱 + 吉方標籤 */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs text-white/30 font-mono w-4 flex-shrink-0">{i + 1}</span>
                       <span className="text-sm font-medium text-white/85 truncate">{r.name}</span>
+                      {r.isAuspicious && (
+                        <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex-shrink-0">吉方</span>
+                      )}
                     </div>
+                    {/* 第二行：五行標籤 + 風水等級 + 評分 + 距離 */}
                     <div className="flex items-center gap-2 ml-6 flex-wrap">
-                      {/* 命理匹配標籤 */}
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${info?.color ?? ''}`}>
                         {info?.emoji} {info?.label}
                       </span>
-                      {/* 命理匹配星數 */}
-                      <span className="text-[10px] text-amber-400/80">{stars}</span>
-                      {/* Google 評分 */}
+                      {/* 風水匹配等級（可點擊展開詳情） */}
+                      {fs && gradeConfig && (
+                        <button
+                          onClick={() => setExpandedId(isExpanded ? null : r.id)}
+                          className={`text-[10px] px-1.5 py-0.5 rounded border transition-all hover:opacity-80 ${gradeConfig.color}`}
+                          title="點擊查看風水三維度分析"
+                        >
+                          {gradeConfig.emoji} 風水{gradeConfig.label} {fs.totalScore}分
+                        </button>
+                      )}
                       {r.rating > 0 && (
                         <span className="text-[10px] text-white/40">
                           ⭐ {r.rating.toFixed(1)} ({r.userRatingsTotal > 999 ? '999+' : r.userRatingsTotal})
                         </span>
                       )}
-                      {/* 距離 */}
                       {r.distance !== undefined && (
                         <span className="text-[10px] text-white/30">
                           📏 {r.distance < 1000 ? `${r.distance}m` : `${(r.distance / 1000).toFixed(1)}km`}
@@ -264,13 +563,53 @@ export function NearbyRestaurants({ supplements }: Props) {
                     {r.address && (
                       <p className="text-[10px] text-white/25 ml-6 mt-0.5 truncate">{r.address}</p>
                     )}
+                    {/* 風水三維度詳情展開面板 */}
+                    {isExpanded && fs && (
+                      <div className="ml-6 mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
+                        <p className="text-[10px] font-semibold text-white/60 mb-1">🧭 風水地塊三維度分析</p>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <div className="text-center p-1.5 rounded bg-white/5 border border-white/8">
+                            <div className="text-[9px] text-white/40 mb-0.5">方位（40%）</div>
+                            <div className="text-[11px] font-bold text-white/70">{fs.bearingMountain}山</div>
+                            <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.bearingElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
+                              {fs.bearingElement}氣 {fs.bearingDeg}°
+                            </div>
+                          </div>
+                          <div className="text-center p-1.5 rounded bg-white/5 border border-white/8">
+                            <div className="text-[9px] text-white/40 mb-0.5">地名（20%）</div>
+                            <div className="text-[11px] font-bold text-white/70">字根</div>
+                            <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.nameElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
+                              {fs.nameElement}屬
+                            </div>
+                          </div>
+                          <div className="text-center p-1.5 rounded bg-white/5 border border-white/8">
+                            <div className="text-[9px] text-white/40 mb-0.5">類型（40%）</div>
+                            <div className="text-[11px] font-bold text-white/70">料理</div>
+                            <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.businessElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
+                              {fs.businessElement}屬
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between pt-1 border-t border-white/8">
+                          <span className="text-[10px] text-white/40">
+                            主導五行：
+                            <span className={`font-semibold ml-1 ${ELEMENT_KEYWORDS[fs.dominantElement]?.color?.split(' ')[0] ?? 'text-white/60'}`}>
+                              {fs.dominantElement}
+                            </span>
+                          </span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${gradeConfig?.color ?? ''}`}>
+                            {gradeConfig?.emoji} {fs.grade} {fs.totalScore}/100
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {/* Google Maps 連結 */}
                   <a
-                    href={`https://www.google.com/maps/place/?q=place_id:${r.placeId}`}
+                    href={mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-shrink-0 text-[10px] text-blue-400/60 hover:text-blue-400 transition-colors mt-1"
+                    className="flex-shrink-0 text-[10px] text-blue-400/70 hover:text-blue-300 transition-colors mt-1 border border-blue-500/20 hover:border-blue-400/40 px-2 py-1 rounded-lg bg-blue-500/5 hover:bg-blue-500/10"
                   >
                     地圖 →
                   </a>
@@ -281,16 +620,18 @@ export function NearbyRestaurants({ supplements }: Props) {
         </div>
       )}
 
-      {phase === "done" && restaurants.length === 0 && (
+      {phase === "done" && displayedRestaurants.length === 0 && (
         <div className="px-4 py-4 text-xs text-white/40 text-center">
-          附近 1km 內未找到符合命理的餐廳，請嘗試擴大範圍。
+          {filterAuspicious
+            ? "吉方範圍內未找到符合命理的餐廳，請關閉吉方篩選查看全部結果。"
+            : "附近 2km 內未找到符合命理的餐廳，請嘗試重新搜尋。"}
         </div>
       )}
 
       {/* 說明文字 */}
       {phase === "idle" && (
         <div className="px-4 py-3 text-[10px] text-white/25 leading-relaxed">
-          依今日五行缺乏能量，推薦附近命理相符的餐廳。點擊「尋找附近餐廳」後需允許位置存取。
+          依今日五行缺乏能量，推薦附近命理相符的餐廳。清單依距離由近到遠排序，可開啟「吉方優先」篩選今日財神方的餐廳。點擊「尋找附近餐廳」後需允許位置存取。
         </div>
       )}
     </div>
