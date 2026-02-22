@@ -2,6 +2,7 @@
  * 月相計算算法
  * 用於「天命共振」擲筊系統 - 月相視覺元素與滿月加成
  */
+import { solarToLunar } from './lunarConverter';
 
 export type MoonPhaseType =
   | 'new_moon'       // 新月（朔）
@@ -58,7 +59,9 @@ export function getMoonPhase(date?: Date): MoonPhaseInfo {
   const phase = getPhaseType(age, SYNODIC_MONTH);
   const phaseInfo = PHASE_CONFIG[phase];
 
-  const lunarDay = Math.round(age) + 1;
+  // 使用正確農曆轉換取得農曆日（而非天文月齡估算）
+  const lunarInfo = solarToLunar(now);
+  const lunarDay = lunarInfo.lunarDay;
   const castInfluence = generateCastInfluence(phase, phaseInfo.shengBonus);
 
   return {

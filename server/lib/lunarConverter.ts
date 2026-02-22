@@ -44,47 +44,46 @@ const LUNAR_MONTH_DATA: Record<number, number[]> = {
     20251220, // 十二月初一
   ],
   2026: [
-    20260119, // 正月初一（丙午年）
-    20260218, // 二月初一
-    20260320, // 三月初一
-    20260419, // 四月初一
-    20260518, // 五月初一
-    20260617, // 六月初一
-    20260716, // 七月初一
-    20260815, // 八月初一
-    20260913, // 九月初一
-    20261013, // 十月初一
-    20261111, // 十一月初一
-    20261211, // 十二月初一
+    20260217, // 正月初一（丙午年）※ 春節 2/17
+    20260319, // 二月初一
+    20260417, // 三月初一
+    20260517, // 四月初一
+    20260615, // 五月初一
+    20260714, // 六月初一
+    20260813, // 七月初一
+    20260911, // 八月初一
+    20261010, // 九月初一
+    20261109, // 十月初一（冬月）
+    20261209, // 十一月初一（臘月）
+    20270108, // 十二月初一（跨年至2027/1/8）
   ],
   2027: [
-    20270110, // 正月初一（丁未年）
-    20270209, // 二月初一
-    20270311, // 三月初一
-    20270410, // 四月初一
-    20270509, // 五月初一
-    20270607, // 閏五月初一（2027年有閏五月）
-    20270707, // 六月初一
-    20270806, // 七月初一
-    20270904, // 八月初一
-    20271004, // 九月初一
-    20271103, // 十月初一
-    20271202, // 十一月初一
-    20280101, // 十二月初一
+    20270206, // 正月初一（丁未年）※ 春節 2/6
+    20270308, // 二月初一
+    20270407, // 三月初一
+    20270506, // 四月初一
+    20270605, // 五月初一
+    20270704, // 六月初一
+    20270802, // 七月初一
+    20270901, // 八月初一
+    20270930, // 九月初一
+    20271029, // 十月初一
+    20271128, // 十一月初一（冬月）
+    20271228, // 十二月初一（臘月）
   ],
   2028: [
-    20280131, // 正月初一（戊申年）
-    20280229, // 二月初一
-    20280329, // 三月初一
-    20280428, // 四月初一
-    20280527, // 五月初一
-    20280625, // 六月初一
-    20280725, // 七月初一
-    20280823, // 八月初一
-    20280921, // 九月初一
-    20281021, // 十月初一
-    20281119, // 十一月初一
-    20281219, // 十二月初一
+    20280126, // 正月初一（戊申年）※ 春節 1/26
+    20280225, // 二月初一
+    20280326, // 三月初一
+    20280425, // 四月初一
+    20280524, // 五月初一
+    20280623, // 閏五月初一（2028年有閏五月）
+    20280722, // 六月初一
+    20280820, // 七月初一
+    20280919, // 八月初一
+    20281018, // 九月初一
+    20281116, // 十月初一
+    20281216, // 十一月初一（冬月）
   ],
 };
 
@@ -152,6 +151,20 @@ function daysDiff(a: Date, b: Date): number {
   return Math.round((a.getTime() - b.getTime()) / (24 * 60 * 60 * 1000));
 }
 
+/**
+ * 計算兩個純日期（年月日）之間的天數差（不依賴時區）
+ */
+function daysDiffByYMD(y1: number, m1: number, d1: number, y2: number, m2: number, d2: number): number {
+  // 用儲存日期的天數計算（Julian Day Number 简化版）
+  const toJD = (y: number, m: number, d: number) => {
+    const a = Math.floor((14 - m) / 12);
+    const yy = y + 4800 - a;
+    const mm = m + 12 * a - 3;
+    return d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+  };
+  return toJD(y1, m1, d1) - toJD(y2, m2, d2);
+}
+
 export interface LunarDate {
   lunarYear: number;       // 農曆年（西元）
   lunarMonth: number;      // 農曆月（1-12）
@@ -165,56 +178,54 @@ export interface LunarDate {
 }
 
 /**
- * 西元日期轉農曆日期
- * @param date 西元日期
+ * 西元日期轉農曆日期（年月日數字版，不依賴時區）
+ * @param year 西元年
+ * @param month 月（1-12）
+ * @param day 日
  */
-export function solarToLunar(date: Date): LunarDate {
-  const year = date.getFullYear();
-  
-  // 找到對應年份的農曆月份資料
-  // 先嘗試當年，若找不到則嘗試前一年
+export function solarToLunarByYMD(year: number, month: number, day: number): LunarDate {
   let lunarYear = year;
   let monthData = LUNAR_MONTH_DATA[year];
   
   if (!monthData) {
-    // 沒有資料時，用簡化算法估算
-    return estimateLunarDate(date);
+    return estimateLunarDate(new Date(year, month - 1, day));
   }
   
-  // 找出當前日期屬於哪個農曆月
-  const dateNum = year * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+  const dateNum = year * 10000 + month * 100 + day;
   
   let lunarMonthIndex = -1;
   let lunarDay = 1;
   
-  // 從最後一個月往前找
   for (let i = monthData.length - 1; i >= 0; i--) {
     if (dateNum >= monthData[i]) {
       lunarMonthIndex = i;
-      const monthStart = numToDate(monthData[i]);
-      lunarDay = daysDiff(date, monthStart) + 1;
+      const my = Math.floor(monthData[i] / 10000);
+      const mm = Math.floor((monthData[i] % 10000) / 100);
+      const md = monthData[i] % 100;
+      lunarDay = daysDiffByYMD(year, month, day, my, mm, md) + 1;
       break;
     }
   }
   
-  // 如果在當年正月初一之前，屬於上一年的農曆
   if (lunarMonthIndex === -1) {
     lunarYear = year - 1;
     const prevYearData = LUNAR_MONTH_DATA[lunarYear];
     if (prevYearData) {
       lunarMonthIndex = prevYearData.length - 1;
-      const monthStart = numToDate(prevYearData[lunarMonthIndex]);
-      lunarDay = daysDiff(date, monthStart) + 1;
+      const lastEntry = prevYearData[lunarMonthIndex];
+      const my = Math.floor(lastEntry / 10000);
+      const mm = Math.floor((lastEntry % 10000) / 100);
+      const md = lastEntry % 100;
+      lunarDay = daysDiffByYMD(year, month, day, my, mm, md) + 1;
       monthData = prevYearData;
     } else {
-      return estimateLunarDate(date);
+      return estimateLunarDate(new Date(year, month - 1, day));
     }
   }
-  
-  const lunarMonth = lunarMonthIndex + 1; // 1-based
+
+  const lunarMonth = lunarMonthIndex + 1;
   const lunarMonthName = lunarMonth <= 12 ? LUNAR_MONTH_NAMES[lunarMonth - 1] : `閏${LUNAR_MONTH_NAMES[lunarMonth - 13]}`;
   const lunarDayName = LUNAR_DAY_NAMES[lunarDay] || `${lunarDay}日`;
-  
   const festivalKey = `${lunarMonth}-${lunarDay}`;
   const festival = LUNAR_FESTIVALS[festivalKey] || null;
   const deityBirthday = DEITY_BIRTHDAYS[festivalKey] || null;
@@ -233,12 +244,25 @@ export function solarToLunar(date: Date): LunarDate {
 }
 
 /**
+ * 西元日期轉農曆日期（Date 物件版，請傳入台灣時間的 Date）
+ * @param date 西元日期（建議傳入 getTaiwanDate() 的結果）
+ */
+export function solarToLunar(date: Date): LunarDate {
+  // 使用 getUTCFullYear/Month/Date 確保在 UTC 伺服器上正確讀取台灣時間
+  // （呼叫方應傳入 getTaiwanDate() 的結果，即 UTC+8 的 Date 物件）
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
+  return solarToLunarByYMD(year, month, day);
+}
+
+/**
  * 估算農曆日期（當沒有精確資料時的備用方案）
  * 使用簡化的農曆週期算法
  */
 function estimateLunarDate(date: Date): LunarDate {
-  // 以2026年1月19日（丙午年正月初一）為基準
-  const BASE_DATE = new Date(2026, 0, 19); // 2026-01-19
+  // 以2026年2月17日（丙午年正月初一）為基準（已更正）
+  const BASE_DATE = new Date(2026, 1, 17); // 2026-02-17
   const BASE_LUNAR_YEAR = 2026;
   const BASE_LUNAR_MONTH = 1;
   const BASE_LUNAR_DAY = 1;

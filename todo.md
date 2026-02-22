@@ -442,3 +442,14 @@
 - [x] 後端：新增 warRoom.notifyBestHour procedure，組裝通知內容並呼叫 notifyOwner
 - [x] TypeScript 零錯誤，78 項測試全部通過
 - [x] 儲存 V2.20 checkpoint
+
+## Bug 修正 v2.21 - 農曆換算偏差（差一天）
+
+- [x] 調查根本原因：LUNAR_MONTH_DATA 2026年資料全部错誤（春節寫成 1/19，實際為 2/17）
+- [x] 修正 2026、2027、2028 年農曆月份初一日期（香港天文台+dijizhoum雙重驗證）
+- [x] 修正 moonPhase.ts：lunarDay 改用 solarToLunar 取得，不再用天文月齡估算
+- [x] 新增 solarToLunarByYMD 純數字版，使用 Julian Day Number 計算，從根本解決 UTC 伺服器時區偷差
+- [x] 修正 estimateLunarDate 基準日（2026/1/19 改為 2026/2/17）
+- [x] 日曆月份查詢改用 solarToLunarByYMD，月相計算改用 Date.UTC
+- [x] 驗算確認：2026/2/22 = 正月初六✔，78 項測試全部通過
+- [x] 儲存 V2.21 checkpoint
