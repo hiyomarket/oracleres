@@ -9,14 +9,37 @@ import { ELEMENT_WEIGHTS_EN } from "./userProfile";
 
 export type WuXing = 'wood' | 'fire' | 'earth' | 'metal' | 'water';
 
-// ── 蘇先生命格常數—— 統一從 userProfile.ELEMENT_WEIGHTS_EN 引用 ───────────────────────────
-const DESTINY_WEIGHTS: Record<WuXing, number> = {
-  fire:  ELEMENT_WEIGHTS_EN.fire,   // 用神，最大加成
-  earth: ELEMENT_WEIGHTS_EN.earth,  // 喜神，次要加成
-  metal: ELEMENT_WEIGHTS_EN.metal,  // 中性偏喜
-  wood:  ELEMENT_WEIGHTS_EN.wood,   // 過旺，略忘
-  water: ELEMENT_WEIGHTS_EN.water,  // 忘神，減分
+/** 預設命格權重（甲木命格，作為 fallback） */
+const DEFAULT_DESTINY_WEIGHTS: Record<WuXing, number> = {
+  fire:  ELEMENT_WEIGHTS_EN.fire,
+  earth: ELEMENT_WEIGHTS_EN.earth,
+  metal: ELEMENT_WEIGHTS_EN.metal,
+  wood:  ELEMENT_WEIGHTS_EN.wood,
+  water: ELEMENT_WEIGHTS_EN.water,
 };
+
+/** 向後相容：保留靜態常數供其他內部函式使用 */
+const DESTINY_WEIGHTS = DEFAULT_DESTINY_WEIGHTS;
+
+/**
+ * 根據用戶命格動態計算五行權重
+ * @param favorableElementsEn 喜用神英文陣列（例：["fire","earth","metal"]）
+ */
+export function buildDestinyWeightsFromProfile(
+  favorableElementsEn: string[]
+): Record<WuXing, number> {
+  const allElements: WuXing[] = ['fire', 'earth', 'metal', 'wood', 'water'];
+  const weights: Record<WuXing, number> = { fire: 1.0, earth: 1.0, metal: 1.0, wood: 1.0, water: 1.0 };
+  const favorableSet = new Set(favorableElementsEn);
+  for (const el of allElements) {
+    if (favorableSet.has(el)) {
+      weights[el] = 1.4; // 喜用神：加成
+    } else {
+      weights[el] = 0.65; // 忌神：減分
+    }
+  }
+  return weights;
+}
 
 // ── 方位 → 五行對應 ─────────────────────────────────────────
 // 東木、南火、西金、北水、中土
@@ -186,7 +209,9 @@ export function scoreNearbyStores(
   userLng: number,
   dayElement: WuXing,
   hourElement: WuXing,
+  dynamicWeights?: Record<WuXing, number>,
 ): ScoredStore[] {
+  const weights = dynamicWeights ?? DEFAULT_DESTINY_WEIGHTS;
   const elementNames: Record<WuXing, string> = {
     wood: '木', fire: '火', earth: '土', metal: '金', water: '水',
   };
@@ -201,9 +226,9 @@ export function scoreNearbyStores(
     const dailyBonus = getDailyHourBonus(dayElement, hourElement);
 
     // 各項分數（滿分各25分）
-    const bearingScore   = DESTINY_WEIGHTS[bearingElement]   * 18;
-    const addressScore   = DESTINY_WEIGHTS[addressAnalysis.element] * 18;
-    const nameScore      = DESTINY_WEIGHTS[nameAnalysis.element]    * 18;
+    const bearingScore   = weights[bearingElement]   * 18;
+    const addressScore   = weights[addressAnalysis.element] * 18;
+    const nameScore      = weights[nameAnalysis.element]    * 18;
     const dailyScore     = dailyBonus.bonus * 16;
 
     // 距離加成（越近越好，最多+6分）
@@ -221,9 +246,9 @@ export function scoreNearbyStores(
 
     // 建立推薦理由
     const reasons: string[] = [];
-    reasons.push(`方位${bearingLabel}（${elementNames[bearingElement]}）：${DESTINY_WEIGHTS[bearingElement] >= 1.3 ? '✦ 吉方' : DESTINY_WEIGHTS[bearingElement] <= 0.7 ? '△ 略忌' : '○ 中性'}`);
-    reasons.push(addressAnalysis.explanation + `：${DESTINY_WEIGHTS[addressAnalysis.element] >= 1.3 ? '✦ 吉數' : '○ 普通'}`);
-    reasons.push(nameAnalysis.explanation + `：${DESTINY_WEIGHTS[nameAnalysis.element] >= 1.3 ? '✦ 吉名' : '○ 普通'}`);
+    reasons.push(`方位${bearingLabel}（${elementNames[bearingElement]}）：${weights[bearingElement] >= 1.3 ? '✦ 吉方' : weights[bearingElement] <= 0.7 ? '△ 略忌' : '○ 中性'}`);
+    reasons.push(addressAnalysis.explanation + `：${weights[addressAnalysis.element] >= 1.3 ? '✦ 吉數' : '○ 普通'}`);
+    reasons.push(nameAnalysis.explanation + `：${weights[nameAnalysis.element] >= 1.3 ? '✦ 吉名' : '○ 普通'}`);
     reasons.push(dailyBonus.explanation);
 
     // 一句推薦語

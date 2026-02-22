@@ -647,3 +647,12 @@
 - [x] 整合 OnboardingModal 到 AccessGate.tsx，全站生效
 - [x] 新增 ProfileIncompleteBanner.tsx 組件（命格資料完整性提示橫幅）
 - [x] 在 WarRoom、OracleCast、LotteryOracle、OracleCalendar、WeeklyReport 五個主要功能頁面加入 ProfileIncompleteBanner
+
+## 功能增強 v2.39 - 進階商業化三項功能
+
+- [ ] 後端算法全面去個人化：lotteryAlgorithm.ts 接受動態命格參數
+- [ ] 後端算法全面去個人化：storeResonance.ts 接受動態命格參數
+- [ ] 後端算法全面去個人化：hourlyEnergy.ts 接受動態命格參數
+- [ ] 對應路由（oracle.cast、warRoom.hourlyEnergy 等）改為 protectedProcedure 並傳入動態命格
+- [ ] Onboarding 完成後觸發歡迎通知給管理員（notifyOwner）
+- [ ] ProfilePage.tsx 動態化：從 userProfiles 讀取命格資料，動態顯示五行圓餅圖和八字四柱

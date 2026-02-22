@@ -15,6 +15,7 @@ import { ENV } from "../_core/env";
 import { getDb } from "../db";
 import { inviteCodes, userProfiles, users, oracleSessions, lotterySessions, scratchLogs } from "../../drizzle/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
+import { notifyOwner } from "../_core/notification";
 
 // ── 工具函數 ──────────────────────────────────────────────────────────────────
 
@@ -294,20 +295,37 @@ export const accountRouter = router({
       birthLunar: z.string().max(100).optional(),
       notes: z.string().max(2000).optional(),
     }))
-    .mutation(async ({ input, ctx }) => {
+     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      const existing = await db.select({ id: userProfiles.id })
+      const existing = await db.select({ id: userProfiles.id, displayName: userProfiles.displayName })
         .from(userProfiles).where(eq(userProfiles.userId, ctx.user.id)).limit(1);
+      const isFirstTime = existing.length === 0;
       if (existing.length > 0) {
         await db.update(userProfiles).set({ ...input, updatedAt: new Date() })
           .where(eq(userProfiles.userId, ctx.user.id));
       } else {
         await db.insert(userProfiles).values({ ...input, userId: ctx.user.id });
       }
-      return { success: true };
+      // 首次填寫命格資料時，通知管理員
+      if (isFirstTime && (input.displayName || input.dayMasterElement)) {
+        const userName = input.displayName ?? ctx.user.name ?? `用戶 #${ctx.user.id}`;
+        const dayMasterLabel = input.dayMasterElement
+          ? `（日主：${{ fire: '丙丁火', earth: '戊己土', metal: '庚辛金', wood: '甲乙木', water: '壬癸水' }[input.dayMasterElement] ?? input.dayMasterElement}）`
+          : '';
+        const favorableLabel = input.favorableElements
+          ? `，喜用神：${input.favorableElements}` : '';
+        try {
+          await notifyOwner({
+            title: `✨ 新用戶命格設定完成`,
+            content: `${userName} 已完成命格檔案設定${dayMasterLabel}${favorableLabel}。天命共振系統已為其開啟個人化分析。`,
+          });
+        } catch (e) {
+          console.warn('[Account] Failed to notify owner:', e);
+        }
+      }
+      return { success: true, isFirstTime };
     }),
-
   /**
    * 主帳號查看指定使用者的命格資料
    */

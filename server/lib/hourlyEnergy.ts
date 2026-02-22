@@ -10,6 +10,14 @@ import { HEAVENLY_STEMS, EARTHLY_BRANCHES, STEM_ELEMENT, BRANCH_ELEMENT, getTaiw
 import type { EnergyLevel } from './lunarCalendar';
 import { HOUR_ELEMENT_SCORES, SPECIAL_HOUR_BONUS } from './userProfile';
 
+/** 可選的動態命格分數覆寫（供商業化多用戶使用） */
+export interface DynamicHourProfile {
+  /** 五行對時辰分數的加減（例：{ 火: 30, 土: 20, 金: 5, 水: -25, 木: -20 }） */
+  hourElementScores?: Record<string, number>;
+  /** 特殊時辰加成（例：{ 巳: 15, 丑: 10 }） */
+  specialHourBonus?: Record<string, number>;
+}
+
 // ─── 時辰基礎資料 ───────────────────────────────────────────────────────────
 
 export interface HourBranch {
@@ -89,7 +97,8 @@ function calculateHourEnergy(
   stemElement: string,
   branchElement: string,
   branch: string,
-  stem: string
+  stem: string,
+  dynamicProfile?: DynamicHourProfile
 ): {
   energyLevel: EnergyLevel;
   energyScore: number;
@@ -106,18 +115,20 @@ function calculateHourEnergy(
   const woodCount = elements.filter(e => e === '木').length;
   const metalCount = elements.filter(e => e === '金').length;
 
-  // 使用 userProfile 的 HOUR_ELEMENT_SCORES 計算吉凶分數
+  // 使用動態命格分數（若有）或退回靜態 userProfile 常數
+  const hourScores = dynamicProfile?.hourElementScores ?? HOUR_ELEMENT_SCORES;
+  const specialBonus = dynamicProfile?.specialHourBonus ?? SPECIAL_HOUR_BONUS;
   let score = 50; // 基礎分
-  score += fireCount * HOUR_ELEMENT_SCORES['火'];
-  score += earthCount * HOUR_ELEMENT_SCORES['土'];
-  score += metalCount * HOUR_ELEMENT_SCORES['金'];
-  score += waterCount * HOUR_ELEMENT_SCORES['水']; // 已為負數
-  score += woodCount * HOUR_ELEMENT_SCORES['木'];   // 已為負數
+  score += fireCount  * (hourScores['火'] ?? 0);
+  score += earthCount * (hourScores['土'] ?? 0);
+  score += metalCount * (hourScores['金'] ?? 0);
+  score += waterCount * (hourScores['水'] ?? 0);
+  score += woodCount  * (hourScores['木'] ?? 0);
   score = Math.max(5, Math.min(100, score));
 
-  // 特殊時辰加成（從 userProfile.SPECIAL_HOUR_BONUS 引用）
-  if (SPECIAL_HOUR_BONUS[branch]) {
-    score = Math.min(100, score + SPECIAL_HOUR_BONUS[branch]);
+  // 特殊時辰加成
+  if (specialBonus[branch]) {
+    score = Math.min(100, score + specialBonus[branch]);
   }
 
   let energyLevel: EnergyLevel;
@@ -181,6 +192,71 @@ function calculateHourEnergy(
 // ─── 主要 API ────────────────────────────────────────────────────────────────
 
 /**
+ * 「動態命格版」：獲取指定時辰的能量信息（支援任意命格）
+ */
+export function getHourEnergyDynamic(
+  dayStem: string,
+  hourIndex: number,
+  dynamicProfile?: DynamicHourProfile,
+  currentHour?: number
+): HourEnergyInfo {
+  const hourBranch = HOUR_BRANCHES[hourIndex];
+  const stem = getHourStem(dayStem, hourIndex);
+  const stemElement = STEM_ELEMENT[stem] ?? '未知';
+
+  const energyData = calculateHourEnergy(stemElement, hourBranch.branchElement, hourBranch.branch, stem, dynamicProfile);
+
+  const now = currentHour ?? getTaiwanHour();
+  let isCurrentHour = false;
+  if (hourBranch.startHour === 23) {
+    isCurrentHour = now === 23 || now === 0;
+  } else {
+    isCurrentHour = now >= hourBranch.startHour && now < hourBranch.endHour;
+  }
+
+  return {
+    branch: hourBranch.branch,
+    branchElement: hourBranch.branchElement,
+    stem,
+    stemElement,
+    chineseName: hourBranch.chineseName,
+    displayTime: hourBranch.displayTime,
+    startHour: hourBranch.startHour,
+    endHour: hourBranch.endHour,
+    isCurrentHour,
+    isSpecialChou: hourBranch.branch === '丑',
+    isBirthHour: hourBranch.branch === '巳',
+    ...energyData,
+  };
+}
+
+/**
+ * 「動態命格版」：獲取全天12時辰能量預覽（支援任意命格）
+ */
+export function getAllHourEnergiesDynamic(
+  dayStem: string,
+  dynamicProfile?: DynamicHourProfile,
+  currentHour?: number
+): HourEnergyInfo[] {
+  return HOUR_BRANCHES.map((_, index) => getHourEnergyDynamic(dayStem, index, dynamicProfile, currentHour));
+}
+
+/**
+ * 「動態命格版」：獲取當前時辰能量（支援任意命格）
+ */
+export function getCurrentHourEnergyDynamic(dayStem: string, dynamicProfile?: DynamicHourProfile): HourEnergyInfo {
+  const hour = getTaiwanHour();
+  let hourIndex: number;
+  if (hour === 23 || hour === 0) {
+    hourIndex = 0;
+  } else {
+    hourIndex = Math.floor((hour + 1) / 2);
+  }
+  hourIndex = Math.min(11, Math.max(0, hourIndex));
+  return getHourEnergyDynamic(dayStem, hourIndex, dynamicProfile, hour);
+}
+
+/**
  * 獲取指定時辰的能量信息
  */
 export function getHourEnergy(dayStem: string, hourIndex: number, currentHour?: number): HourEnergyInfo {
@@ -188,7 +264,7 @@ export function getHourEnergy(dayStem: string, hourIndex: number, currentHour?: 
   const stem = getHourStem(dayStem, hourIndex);
   const stemElement = STEM_ELEMENT[stem] ?? '未知';
 
-  const energyData = calculateHourEnergy(stemElement, hourBranch.branchElement, hourBranch.branch, stem);
+  const energyData = calculateHourEnergy(stemElement, hourBranch.branchElement, hourBranch.branch, stem, undefined);
 
   // 判斷是否為當前時辰（使用台灣時間 UTC+8）
   const now = currentHour ?? getTaiwanHour();
