@@ -14,13 +14,13 @@ interface SharedNavProps {
 }
 
 const NAV_ITEMS: { id: NavPage; featureId: FeatureId; path: string; icon: string; label: string }[] = [
-  { id: "oracle",   featureId: "oracle",   path: "/",         icon: "☯",  label: "擲筊" },
+  { id: "profile",  featureId: "profile",  path: "/",         icon: "🔮", label: "命格" },
+  { id: "oracle",   featureId: "oracle",   path: "/oracle",   icon: "☯",  label: "擲筊" },
   { id: "lottery",  featureId: "lottery",  path: "/lottery",  icon: "🎰", label: "選號" },
   { id: "calendar", featureId: "calendar", path: "/calendar", icon: "📅", label: "日曆" },
   { id: "warRoom",  featureId: "warroom",  path: "/war-room", icon: "⚔️", label: "作戰室" },
   { id: "weekly",   featureId: "weekly",   path: "/weekly",   icon: "📈", label: "週報" },
   { id: "stats",    featureId: "stats",    path: "/stats",    icon: "📊", label: "統計" },
-  { id: "profile",  featureId: "profile",  path: "/profile",  icon: "🔮", label: "命格" },
 ];
 
 /** 使用者頭像下拉選單 */

@@ -692,3 +692,32 @@
 - [x] SharedNav.tsx UserMenu：主帳號隱藏「我的命格資料」選單項目
 - [x] ProfileIncompleteBanner.tsx：主帳號不顯示命格未完整提示橫幅
 - [x] 78 項測試全部通過，TypeScript 零錯誤
+
+## 功能修正 v2.42 - 動態命格全面整合 + 主帳號 Onboarding 豁免
+
+- [ ] AccessGate.tsx / OnboardingModal：主帳號（isOwner）不觸發 Onboarding 彈窗
+- [ ] 確認 warRoom.dailyReport 已使用 ctx.user 動態命格（getUserProfileForEngine）
+- [ ] 確認 warRoom.topicAdvice 已使用 ctx.user 動態命格
+- [ ] 確認 warRoom.hourlyEnergy 已使用 ctx.user 動態命格
+- [ ] 確認 lottery.generate 已使用 ctx.user 動態命格
+- [ ] 確認 oracle.cast 已使用 ctx.user 動態命格
+- [ ] 確認 oracle.dailyEnergy 已使用 ctx.user 動態命格
+- [ ] 確認 oracle.hourlyEnergy 已使用 ctx.user 動態命格
+
+## 功能修正 v2.42（更新）
+
+- [ ] 首頁（/）改為預設顯示命格功能頁（/profile），擲筊改為 /oracle 路由
+- [ ] AccessGate.tsx：主帳號（isOwner）不觸發 Onboarding 彈窗
+- [ ] warRoom.purchaseAdvice 和 lottery.indexHistory 改為 protectedProcedure，使用動態命格取代靜態 FAVORABLE_ELEMENTS
+- [ ] 確認 oracle.cast 和 oracle.dailyEnergy 也使用動態命格
+
+## 功能修正 v2.42 - 動態命格全面整合 + 主帳號 Onboarding 豁免
+
+- [x] 首頁（/）改為顯示命格身份證（ProfilePage），擲筊移至 /oracle
+- [x] SharedNav 更新路由（命格 → /，擲筊 → /oracle）
+- [x] AccessGate：主帳號（isOwner）不觸發 Onboarding 彈窗
+- [x] 後端 lottery.purchaseAdvice 改為 protectedProcedure，使用登入者動態命格計算喜忌分數
+- [x] 後端 lottery.indexHistory 改為 protectedProcedure，使用登入者動態命格計算分數
+- [x] 後端 warRoom.topicAdvice 改為 protectedProcedure，LLM prompt 改用動態命格（移除硬編碼「蘇祐震甲木日主」）
+- [x] wuxingEngine.ts 移除硬編碼「甲木日主」文字
+- [x] TypeScript 零錯誤，78 項測試全部通過

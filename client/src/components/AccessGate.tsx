@@ -138,9 +138,10 @@ export function AccessGate({ children }: AccessGateProps) {
     );
   }
 
-  // 已啟用且命格未填寫（且未被略過）
+  // 已啟用且命格未填寫（且未被略過）；主帳號不需要 Onboarding
   const needsOnboarding =
     isActivated &&
+    !accountStatus?.isOwner &&
     !profileLoading &&
     !onboardingDismissed &&
     profileData !== undefined &&
