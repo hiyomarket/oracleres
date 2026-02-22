@@ -24,6 +24,15 @@ export function AccessGate({ children }: AccessGateProps) {
     trpc.account.getStatus.useQuery(undefined, { retry: false });
   const [inviteCode, setInviteCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+
+  // ✅ 所有 Hook 必須在條件式 return 之前呼叫
+  const isActivated = !!(accountStatus?.isActivated || accountStatus?.isOwner);
+  const { data: profileData, isLoading: profileLoading } = trpc.account.getProfile.useQuery(
+    undefined,
+    { enabled: isActivated && !authLoading && !statusLoading }
+  );
+
   const useCodeMutation = trpc.account.useInviteCode.useMutation({
     onSuccess: (res) => {
       toast.success(res.message);
@@ -129,15 +138,9 @@ export function AccessGate({ children }: AccessGateProps) {
     );
   }
 
-  // 已啟用（或主帳號）→ 檢查命格資料是否已填寫
-  const { data: profileData, isLoading: profileLoading } = trpc.account.getProfile.useQuery(
-    undefined,
-    { enabled: !!(accountStatus?.isActivated || accountStatus?.isOwner) }
-  );
-  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
-
   // 已啟用且命格未填寫（且未被略過）
   const needsOnboarding =
+    isActivated &&
     !profileLoading &&
     !onboardingDismissed &&
     profileData !== undefined &&
