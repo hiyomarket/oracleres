@@ -1,88 +1,112 @@
 /**
  * OnboardingModal.tsx
- * 首次登入引導彈窗：命格資料未填寫時，引導用戶填寫最關鍵的命格資訊
- * 採用精簡版表單（3步驟），填寫完成後自動關閉
+ * 首次登入引導彈窗：用戶只需填寫姓名、出生年月日時辰、出生地
+ * 系統自動推算四柱八字、五行命格、喜忌神
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Sparkles, ChevronRight, ChevronLeft, Check, Loader2, User, Calendar, Flame } from "lucide-react";
+import {
+  Sparkles, ChevronRight, ChevronLeft, Check, Loader2,
+  User, Calendar, MapPin, Wand2
+} from "lucide-react";
 
 interface OnboardingModalProps {
   onComplete: () => void;
 }
 
-const ELEMENT_OPTIONS = [
-  { value: "wood", label: "木", emoji: "🌳", desc: "甲、乙日主" },
-  { value: "fire", label: "火", emoji: "🔥", desc: "丙、丁日主" },
-  { value: "earth", label: "土", emoji: "🌍", desc: "戊、己日主" },
-  { value: "metal", label: "金", emoji: "⚪", desc: "庚、辛日主" },
-  { value: "water", label: "水", emoji: "🌊", desc: "壬、癸日主" },
-] as const;
+const BIRTH_HOUR_OPTIONS = [
+  { value: 0,  label: "子時", desc: "23:00–01:00" },
+  { value: 1,  label: "丑時", desc: "01:00–03:00" },
+  { value: 2,  label: "寅時", desc: "03:00–05:00" },
+  { value: 3,  label: "卯時", desc: "05:00–07:00" },
+  { value: 4,  label: "辰時", desc: "07:00–09:00" },
+  { value: 5,  label: "巳時", desc: "09:00–11:00" },
+  { value: 6,  label: "午時", desc: "11:00–13:00" },
+  { value: 7,  label: "未時", desc: "13:00–15:00" },
+  { value: 8,  label: "申時", desc: "15:00–17:00" },
+  { value: 9,  label: "酉時", desc: "17:00–19:00" },
+  { value: 10, label: "戌時", desc: "19:00–21:00" },
+  { value: 11, label: "亥時", desc: "21:00–23:00" },
+];
 
-const FAVORABLE_OPTIONS = [
-  { value: "wood", label: "木", emoji: "🌳" },
-  { value: "fire", label: "火", emoji: "🔥" },
-  { value: "earth", label: "土", emoji: "🌍" },
-  { value: "metal", label: "金", emoji: "⚪" },
-  { value: "water", label: "水", emoji: "🌊" },
-] as const;
+const ELEMENT_COLORS: Record<string, string> = {
+  wood:  "text-green-400",
+  fire:  "text-red-400",
+  earth: "text-yellow-500",
+  metal: "text-slate-300",
+  water: "text-blue-400",
+};
 
 export function OnboardingModal({ onComplete }: OnboardingModalProps) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     displayName: "",
-    birthDate: "",
-    dayMasterElement: "" as "" | "wood" | "fire" | "earth" | "metal" | "water",
-    favorableElements: [] as string[],
+    birthDate: "",       // YYYY-MM-DD，空字串表示未填
+    birthHour: null as number | null,   // 0-11 時辰索引，null = 不確定
+    birthPlace: "",
   });
+  // 是否已點擊「推算命格」並進入步驟3
+  const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const utils = trpc.useUtils();
-  const saveProfile = trpc.account.saveProfile.useMutation({
+
+  // previewBazi 是 query，只在 showPreview && birthDate 有值時才啟用
+  const previewQuery = trpc.account.previewBazi.useQuery(
+    {
+      birthDate: form.birthDate || "2000-01-01", // 提供 fallback 避免 TS 報錯
+      hourIndex: form.birthHour !== null ? form.birthHour : undefined,
+    },
+    {
+      enabled: showPreview && form.birthDate.length === 10,
+      retry: false,
+    }
+  );
+
+  const calculateAndSave = trpc.account.calculateAndSaveBazi.useMutation({
     onSuccess: () => {
       utils.account.getProfile.invalidate();
-      toast.success("命格資料已儲存！天命共振系統已為您個人化。");
+      toast.success("命格推算完成！天命共振系統已為您個人化。");
       onComplete();
     },
-    onError: (err) => {
+    onError: (err: { message: string }) => {
       toast.error("儲存失敗：" + err.message);
       setSaving(false);
     },
   });
 
-  const toggleFavorable = (val: string) => {
-    setForm(f => ({
-      ...f,
-      favorableElements: f.favorableElements.includes(val)
-        ? f.favorableElements.filter(e => e !== val)
-        : [...f.favorableElements, val],
-    }));
+  const handleCalculate = () => {
+    if (!form.birthDate) {
+      toast.error("請填寫出生日期");
+      return;
+    }
+    setShowPreview(true);
+    setStep(3);
   };
 
   const handleSubmit = () => {
-    if (!form.displayName.trim()) {
-      toast.error("請填寫您的姓名");
+    if (!form.birthDate) {
+      toast.error("請填寫出生日期");
       return;
     }
     setSaving(true);
-    saveProfile.mutate({
+    calculateAndSave.mutate({
+      birthDate: form.birthDate,
+      hourIndex: form.birthHour !== null ? form.birthHour : undefined,
       displayName: form.displayName.trim() || undefined,
-      birthDate: form.birthDate || undefined,
-      dayMasterElement: form.dayMasterElement || undefined,
-      favorableElements: form.favorableElements.length > 0
-        ? form.favorableElements.join(",")
-        : undefined,
+      birthPlace: form.birthPlace.trim() || undefined,
     });
   };
 
   const canNext = () => {
     if (step === 1) return form.displayName.trim().length > 0;
-    if (step === 2) return true; // 出生日期可選填
-    if (step === 3) return true; // 命格可選填
     return true;
   };
+
+  const baziPreview = previewQuery.data;
+  const isLoadingPreview = showPreview && previewQuery.isLoading;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
@@ -111,7 +135,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
             </div>
             <h2 className="text-xl font-bold text-white">建立您的命格檔案</h2>
             <p className="text-slate-400 text-sm mt-1">
-              填寫命格資料，讓系統為您提供個人化的天命分析
+              只需填寫基本資料，系統將自動推算您的四柱八字與命格
             </p>
           </div>
 
@@ -146,7 +170,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
               </motion.div>
             )}
 
-            {/* 步驟 2：出生日期 */}
+            {/* 步驟 2：出生資料 */}
             {step === 2 && (
               <motion.div
                 key="step2"
@@ -157,24 +181,65 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
               >
                 <div className="flex items-center gap-2 text-amber-400 text-sm font-medium mb-3">
                   <Calendar className="w-4 h-4" />
-                  <span>步驟 2 / 3：出生日期（選填）</span>
+                  <span>步驟 2 / 3：出生資料</span>
                 </div>
+
+                {/* 出生日期 */}
                 <div>
-                  <label className="text-xs text-slate-400 mb-1.5 block">出生日期</label>
+                  <label className="text-xs text-slate-400 mb-1.5 block">出生日期 *</label>
                   <input
                     type="date"
                     value={form.birthDate}
                     onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))}
                     className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/60 text-sm"
                   />
-                  <p className="text-xs text-slate-500 mt-1.5">
-                    出生日期用於計算更精確的命格分析，可稍後在「我的命格」頁面補填
+                </div>
+
+                {/* 出生時辰 */}
+                <div>
+                  <label className="text-xs text-slate-400 mb-2 block">出生時辰（選填）</label>
+                  <div className="grid grid-cols-4 gap-1.5 max-h-40 overflow-y-auto pr-1">
+                    {BIRTH_HOUR_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setForm(f => ({
+                          ...f,
+                          birthHour: f.birthHour === opt.value ? null : opt.value,
+                        }))}
+                        className={`flex flex-col items-center gap-0.5 p-2 rounded-xl border text-xs transition-all ${
+                          form.birthHour === opt.value
+                            ? "border-amber-500/60 bg-amber-500/10 text-amber-300"
+                            : "border-slate-700/50 bg-slate-800/40 text-slate-400 hover:border-slate-600"
+                        }`}
+                      >
+                        <span className="font-medium">{opt.label}</span>
+                        <span className="text-[10px] opacity-60">{opt.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-600 mt-1.5">
+                    時辰影響時柱推算，不確定可略過
                   </p>
+                </div>
+
+                {/* 出生地 */}
+                <div>
+                  <label className="text-xs text-slate-400 mb-1.5 block">
+                    <MapPin className="w-3 h-3 inline mr-1" />
+                    出生地（選填）
+                  </label>
+                  <input
+                    type="text"
+                    value={form.birthPlace}
+                    onChange={e => setForm(f => ({ ...f, birthPlace: e.target.value }))}
+                    placeholder="例：台北市、高雄市"
+                    className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500/60 text-sm"
+                  />
                 </div>
               </motion.div>
             )}
 
-            {/* 步驟 3：命格設定 */}
+            {/* 步驟 3：命格推算結果 */}
             {step === 3 && (
               <motion.div
                 key="step3"
@@ -184,71 +249,81 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 className="space-y-4"
               >
                 <div className="flex items-center gap-2 text-amber-400 text-sm font-medium mb-3">
-                  <Flame className="w-4 h-4" />
-                  <span>步驟 3 / 3：命格設定（選填）</span>
+                  <Wand2 className="w-4 h-4" />
+                  <span>步驟 3 / 3：您的命格推算結果</span>
                 </div>
 
-                {/* 日主五行 */}
-                <div>
-                  <label className="text-xs text-slate-400 mb-2 block">日主五行</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {ELEMENT_OPTIONS.map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setForm(f => ({
-                          ...f,
-                          dayMasterElement: f.dayMasterElement === opt.value ? "" : opt.value,
-                        }))}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-xs transition-all ${
-                          form.dayMasterElement === opt.value
-                            ? "border-amber-500/60 bg-amber-500/10 text-amber-300"
-                            : "border-slate-700/50 bg-slate-800/40 text-slate-400 hover:border-slate-600"
-                        }`}
-                      >
-                        <span className="text-lg">{opt.emoji}</span>
-                        <span>{opt.label}</span>
-                      </button>
-                    ))}
+                {isLoadingPreview ? (
+                  <div className="flex flex-col items-center justify-center py-8 gap-3">
+                    <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+                    <p className="text-slate-400 text-sm">正在推算您的命格...</p>
                   </div>
-                  <p className="text-xs text-slate-600 mt-1">
-                    日主即您八字中「日柱天干」的五行屬性
-                  </p>
-                </div>
+                ) : baziPreview ? (
+                  <div className="space-y-3">
+                    {/* 四柱八字 */}
+                    <div className="bg-slate-800/40 rounded-2xl p-4 border border-slate-700/30">
+                      <p className="text-xs text-slate-400 mb-2">四柱八字</p>
+                      <div className="grid grid-cols-4 gap-2 text-center">
+                        {[
+                          { label: "年柱", value: baziPreview.yearPillar },
+                          { label: "月柱", value: baziPreview.monthPillar },
+                          { label: "日柱", value: baziPreview.dayPillar },
+                          { label: "時柱", value: baziPreview.hourPillar },
+                        ].map(col => (
+                          <div key={col.label} className="bg-slate-900/60 rounded-xl p-2">
+                            <p className="text-[10px] text-slate-500 mb-1">{col.label}</p>
+                            <p className="text-sm font-bold text-amber-300">{col.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
 
-                {/* 喜用神 */}
-                <div>
-                  <label className="text-xs text-slate-400 mb-2 block">喜用神五行（可多選）</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {FAVORABLE_OPTIONS.map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => toggleFavorable(opt.value)}
-                        className={`flex flex-col items-center gap-1 p-2 rounded-xl border text-xs transition-all ${
-                          form.favorableElements.includes(opt.value)
-                            ? "border-green-500/60 bg-green-500/10 text-green-300"
-                            : "border-slate-700/50 bg-slate-800/40 text-slate-400 hover:border-slate-600"
-                        }`}
-                      >
-                        <span className="text-lg">{opt.emoji}</span>
-                        <span>{opt.label}</span>
-                      </button>
-                    ))}
+                    {/* 日主與喜忌 */}
+                    {(() => {
+                      const ELEMENT_ZH_MAP: Record<string, string> = {
+                        wood: '木', fire: '火', earth: '土', metal: '金', water: '水'
+                      };
+                      const dmZh = ELEMENT_ZH_MAP[baziPreview.dayMasterElement] ?? baziPreview.dayMasterElement;
+                      const favZh = baziPreview.favorableElements
+                        .split(',').map(e => ELEMENT_ZH_MAP[e] ?? e).join('、');
+                      const unfavZh = baziPreview.unfavorableElements
+                        .split(',').map(e => ELEMENT_ZH_MAP[e] ?? e).join('、');
+                      return (
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="bg-slate-800/40 rounded-xl p-3 border border-slate-700/30 text-center">
+                            <p className="text-[10px] text-slate-500 mb-1">日主五行</p>
+                            <p className={`text-sm font-bold ${ELEMENT_COLORS[baziPreview.dayMasterElement] ?? 'text-white'}`}>
+                              {baziPreview.dayMasterStem}（{dmZh}）
+                            </p>
+                          </div>
+                          <div className="bg-slate-800/40 rounded-xl p-3 border border-green-500/20 text-center">
+                            <p className="text-[10px] text-slate-500 mb-1">喜用神</p>
+                            <p className="text-sm font-bold text-green-400">{favZh}</p>
+                          </div>
+                          <div className="bg-slate-800/40 rounded-xl p-3 border border-red-500/20 text-center">
+                            <p className="text-[10px] text-slate-500 mb-1">忌神</p>
+                            <p className="text-sm font-bold text-red-400">{unfavZh}</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    <p className="text-xs text-slate-500 bg-slate-800/30 rounded-xl p-3">
+                      ✨ 系統已根據您的出生資料推算出命格，所有分析將以此為基礎個人化呈現。
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-600 mt-1">
-                    喜用神是您命格中最需要補充的五行能量
-                  </p>
-                </div>
-
-                <p className="text-xs text-slate-500 bg-slate-800/40 rounded-xl p-3">
-                  💡 不確定命格？可先略過，稍後在「我的命格」頁面詳細填寫，或諮詢命理師後再填入。
-                </p>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 gap-3">
+                    <p className="text-slate-400 text-sm">推算失敗，請返回重試</p>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
 
           {/* 按鈕區 */}
           <div className="flex gap-3 mt-6">
-            {step > 1 && (
+            {step > 1 && step < 3 && (
               <button
                 onClick={() => setStep(s => s - 1)}
                 className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-700/50 text-slate-400 text-sm hover:border-slate-600 transition-colors"
@@ -258,16 +333,29 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
               </button>
             )}
 
-            {step < 3 ? (
+            {step === 1 && (
               <button
-                onClick={() => setStep(s => s + 1)}
+                onClick={() => setStep(2)}
                 disabled={!canNext()}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-500 text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40"
               >
                 下一步
                 <ChevronRight className="w-4 h-4" />
               </button>
-            ) : (
+            )}
+
+            {step === 2 && (
+              <button
+                onClick={handleCalculate}
+                disabled={!form.birthDate}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-500 text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-40"
+              >
+                <Wand2 className="w-4 h-4" />
+                推算我的命格
+              </button>
+            )}
+
+            {step === 3 && baziPreview && (
               <button
                 onClick={handleSubmit}
                 disabled={saving}
@@ -276,8 +364,18 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 {saving ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> 儲存中...</>
                 ) : (
-                  <><Check className="w-4 h-4" /> 完成設定</>
+                  <><Check className="w-4 h-4" /> 確認並完成設定</>
                 )}
+              </button>
+            )}
+
+            {step === 3 && !baziPreview && !isLoadingPreview && (
+              <button
+                onClick={() => { setShowPreview(false); setStep(2); }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-slate-700/50 text-slate-400 text-sm hover:border-slate-600 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                返回重試
               </button>
             )}
           </div>

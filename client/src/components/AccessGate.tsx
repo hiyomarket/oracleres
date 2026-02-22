@@ -131,7 +131,7 @@ export function AccessGate({ children }: AccessGateProps) {
             </button>
           </div>
           <p className="text-slate-600 text-xs text-center">
-            沒有邀請碼？請聯繫系統管理員取得
+            沒有邀請碼？請聯繫客服取得
           </p>
         </motion.div>
       </div>

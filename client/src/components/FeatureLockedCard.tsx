@@ -30,7 +30,7 @@ export function FeatureLockedCard({ feature, description, className = "" }: Feat
 
         {/* 說明 */}
         <p className="text-sm text-slate-400 leading-relaxed mb-6">
-          {description ?? `您目前尚未開通「${label}」功能的使用權限。請聯繫系統管理員開通此功能。`}
+          {description ?? `您目前尚未開通「${label}」功能的使用權限。請聯繫客服開通此功能。`}
         </p>
 
         {/* 裝飾線 */}

@@ -327,6 +327,104 @@ export const accountRouter = router({
       return { success: true, isFirstTime };
     }),
   /**
+   * 推算八字命格（不儲存，僅回傳推算結果供前端預覽）
+   * hourIndex: 0-11 對應十二時辰（子丑寅卯辰巳午未申酉戌亥）
+   */
+  previewBazi: protectedProcedure
+    .input(z.object({
+      birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '請輸入 YYYY-MM-DD 格式'),
+      hourIndex: z.number().int().min(0).max(11).optional(),
+    }))
+    .query(async ({ input }) => {
+      const { calculateBazi } = await import('../lib/baziCalculator');
+      const HOUR_INDEX_TO_TIME = [
+        '00:30', '02:30', '04:30', '06:30', '08:30', '10:30',
+        '12:30', '14:30', '16:30', '18:30', '20:30', '22:30'
+      ];
+      const birthTime = input.hourIndex !== undefined
+        ? HOUR_INDEX_TO_TIME[input.hourIndex]
+        : '12:00';
+      return calculateBazi(input.birthDate, birthTime);
+    }),
+
+  /**
+   * 推算八字並儲存到用戶命格資料
+   * hourIndex: 0-11 對應十二時辰（子丑寅卯辰巳午未申酉戌亥）
+   */
+  calculateAndSaveBazi: protectedProcedure
+    .input(z.object({
+      birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '請輸入 YYYY-MM-DD 格式'),
+      hourIndex: z.number().int().min(0).max(11).optional(),
+      displayName: z.string().max(50).optional(),
+      birthPlace: z.string().max(100).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { calculateBazi } = await import('../lib/baziCalculator');
+      const HOUR_INDEX_TO_TIME = [
+        '00:30', '02:30', '04:30', '06:30', '08:30', '10:30',
+        '12:30', '14:30', '16:30', '18:30', '20:30', '22:30'
+      ];
+      const birthTime = input.hourIndex !== undefined
+        ? HOUR_INDEX_TO_TIME[input.hourIndex]
+        : '12:00';
+      const result = calculateBazi(input.birthDate, birthTime);
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '資料庫連線失敗' });
+      const existing = await db.select({ id: userProfiles.id })
+        .from(userProfiles).where(eq(userProfiles.userId, ctx.user.id)).limit(1);
+      const baziData = {
+        yearPillar: result.yearPillar,
+        monthPillar: result.monthPillar,
+        dayPillar: result.dayPillar,
+        hourPillar: result.hourPillar,
+        dayMasterElement: result.dayMasterElement as 'fire' | 'earth' | 'metal' | 'wood' | 'water',
+        favorableElements: result.favorableElements,
+        unfavorableElements: result.unfavorableElements,
+        natalWood: result.elementRatio.wood,
+        natalFire: result.elementRatio.fire,
+        natalEarth: result.elementRatio.earth,
+        natalMetal: result.elementRatio.metal,
+        natalWater: result.elementRatio.water,
+      };
+      // 將時辰索引轉為存儲用的 birthDate/birthTime
+      const birthDateStr = input.birthDate;
+      const birthTimeStr = birthTime; // 已由 hourIndex 轉換
+      if (existing.length > 0) {
+        await db.update(userProfiles).set({
+          ...baziData,
+          birthDate: birthDateStr,
+          birthTime: birthTimeStr,
+          ...(input.displayName ? { displayName: input.displayName } : {}),
+          ...(input.birthPlace ? { birthPlace: input.birthPlace } : {}),
+          updatedAt: new Date(),
+        }).where(eq(userProfiles.userId, ctx.user.id));
+      } else {
+        await db.insert(userProfiles).values({
+          userId: ctx.user.id,
+          ...baziData,
+          birthDate: birthDateStr,
+          birthTime: birthTimeStr,
+          displayName: input.displayName,
+          birthPlace: input.birthPlace,
+          createdAt: new Date(),
+        });
+      }
+      // 首次建立檔案時通知主帳號
+      if (existing.length === 0) {
+        const userName = input.displayName ?? ctx.user.name ?? `用戶 #${ctx.user.id}`;
+        try {
+          await notifyOwner({
+            title: `✨ 新用戶命格設定完成`,
+            content: `${userName} 已完成命格檔案設定（日主：${baziData.dayMasterElement}，喜用神：${baziData.favorableElements}）。天命共振系統已為其開啟個人化分析。`,
+          });
+        } catch (e) {
+          console.warn('[Account] Failed to notify owner:', e);
+        }
+      }
+      return { success: true, bazi: result };
+    }),
+
+  /**
    * 主帳號查看指定使用者的命格資料
    */
   getProfileByUserId: protectedProcedure

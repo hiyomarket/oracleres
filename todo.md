@@ -656,3 +656,39 @@
 - [ ] 對應路由（oracle.cast、warRoom.hourlyEnergy 等）改為 protectedProcedure 並傳入動態命格
 - [ ] Onboarding 完成後觸發歡迎通知給管理員（notifyOwner）
 - [ ] ProfilePage.tsx 動態化：從 userProfiles 讀取命格資料，動態顯示五行圓餅圖和八字四柱
+
+## 緊急修正 v2.40 - 多用戶商業化問題
+
+- [ ] 清空 MyProfile 表單預填值（不應顯示任何人的資料）
+- [ ] Onboarding 改為只填姓名/生日時辰/出生地，系統自動推算四柱八字與五行命格
+- [ ] 後端新增八字推算 API（根據出生年月日時辰推算四柱、五行比例、喜忌神）
+- [ ] 作戰室：命格未填寫時顯示「請先完成命格設定」提示，不使用他人命格計算
+
+## 緊急修正 v2.40 - 多用戶商業化 + 隱私保護
+
+- [ ] 清除資料庫中蘇先生的個人命格資料（避免其他用戶看到他人資料）
+- [ ] 全站掃描並移除「主帳號可查看」等隱私疑慮文字
+- [ ] 後端建立 account.calculateBazi API（生日時辰 → 四柱八字、五行比例、喜忌神自動推算）
+- [ ] 重設計 Onboarding：只填姓名/生日時辰/出生地，系統自動推算命格，移除手動填寫八字欄位
+- [ ] 重設計 MyProfile：移除手動填寫四柱/日主/喜忌神欄位，改為顯示系統推算結果
+- [ ] 作戰室：命格未填寫時顯示「請先完成命格設定」提示，不使用預設命格計算
+
+## 緊急修正 v2.41 - 用戶體驗重設計
+
+- [ ] 改寫 OnboardingModal：只填姓名/生日/出生地，系統自動推算命格（移除手動選五行）
+- [ ] 改寫 MyProfile 表單：移除手動填寫八字欄位，改為填生日後自動推算
+- [ ] 修正作戰室：非主帳號且命格未填寫時顯示「請先完成命格設定」提示
+- [ ] 重設計首頁：其他用戶進入後首頁顯示命格功能（命格身份證）
+- [ ] 底部導覽列：顯示所有功能並標示鎖定狀態（🔒），提示「請聯繫客服開通」
+
+## 功能修正 v2.41 完成項目
+
+- [x] 後端 account.previewBazi 改為接受 hourIndex（0-11 時辰索引）而非 HH:MM 字串
+- [x] 後端 account.calculateAndSaveBazi 改為接受 hourIndex（0-11 時辰索引）
+- [x] 修正 OnboardingModal.tsx TypeScript 錯誤（dayMasterElementChinese 不存在 → 改用 dayMasterStem + ELEMENT_ZH_MAP）
+- [x] 改寫 MyProfile.tsx：移除手動填寫四柱/日主/喜忌神欄位，改為填生日後自動推算
+- [x] MyProfile.tsx：出生時辰改為 12 時辰選擇器（子/丑/寅...亥）
+- [x] MyProfile.tsx：顯示系統推算的四柱八字、日主五行、喜忌神（唯讀）
+- [x] SharedNav.tsx UserMenu：主帳號隱藏「我的命格資料」選單項目
+- [x] ProfileIncompleteBanner.tsx：主帳號不顯示命格未完整提示橫幅
+- [x] 78 項測試全部通過，TypeScript 零錯誤

@@ -64,14 +64,17 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string } })
             )}
           </div>
           <div className="py-1">
-            <Link
-              href="/my-profile"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
-            >
-              <User className="w-3.5 h-3.5 text-blue-400" />
-              我的命格資料
-            </Link>
+            {/* 非主帳號才顯示「我的命格資料」（主帳號的命格資料在命格功能頁已有完整呈現） */}
+            {!status?.isOwner && (
+              <Link
+                href="/my-profile"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+              >
+                <User className="w-3.5 h-3.5 text-blue-400" />
+                我的命格資料
+              </Link>
+            )}
             {status?.isOwner && (
               <>
                 <Link

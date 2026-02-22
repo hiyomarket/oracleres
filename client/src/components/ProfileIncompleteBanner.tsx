@@ -17,9 +17,13 @@ interface ProfileIncompleteBannerProps {
 export function ProfileIncompleteBanner({ featureName }: ProfileIncompleteBannerProps) {
   const [dismissed, setDismissed] = useState(false);
   const { data: profile, isLoading } = trpc.account.getProfile.useQuery();
+  const { data: status, isLoading: statusLoading } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
 
   // 載入中或已關閉不顯示
-  if (isLoading || dismissed) return null;
+  if (isLoading || statusLoading || dismissed) return null;
+
+  // 主帳號不顯示提示（主帳號的命格資料已內建於系統中）
+  if (status?.isOwner) return null;
 
   // 判斷命格資料是否完整（至少需要 dayMasterElement 和 favorableElements）
   const isComplete = !!(profile?.dayMasterElement && profile?.favorableElements);
