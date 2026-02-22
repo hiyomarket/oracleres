@@ -27,8 +27,11 @@ function generateCode(): string {
   return code;
 }
 
-/** 判斷當前使用者是否為主帳號（owner） */
-function isOwner(openId: string): boolean {
+/** 判斷當前使用者是否為主帳號（owner）
+ * 優先用 role='admin'，備用 OWNER_OPEN_ID 比對
+ */
+function isOwner(openId: string, role?: string | null): boolean {
+  if (role === "admin") return true;
   return ENV.ownerOpenId !== "" && openId === ENV.ownerOpenId;
 }
 
@@ -54,7 +57,7 @@ export const accountRouter = router({
     if (!ctx.user) {
       return { isLoggedIn: false, isOwner: false, isActivated: false, hasProfile: false };
     }
-    const owner = isOwner(ctx.user.openId);
+    const owner = isOwner(ctx.user.openId, ctx.user.role);
     const activated = owner || await getUserInviteStatus(ctx.user.id);
     const db = await getDb();
     let hasProfile = false;
@@ -84,7 +87,7 @@ export const accountRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "資料庫連線失敗" });
       // 已是主帳號，不需要邀請碼
-      if (isOwner(ctx.user.openId)) return { success: true, message: "主帳號無需邀請碼" };
+      if (isOwner(ctx.user.openId, ctx.user.role)) return { success: true, message: "主帳號無需邀請碼" };
       // 已經啟用過
       const alreadyActivated = await getUserInviteStatus(ctx.user.id);
       if (alreadyActivated) return { success: true, message: "帳號已啟用" };
@@ -118,7 +121,7 @@ export const accountRouter = router({
       expiresInDays: z.number().int().min(1).max(365).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      if (!isOwner(ctx.user.openId)) {
+      if (!isOwner(ctx.user.openId, ctx.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "僅主帳號可產生邀請碼" });
       }
       const db = await getDb();
@@ -148,7 +151,7 @@ export const accountRouter = router({
    * 取得所有邀請碼列表（主帳號專屬）
    */
   listInviteCodes: protectedProcedure.query(async ({ ctx }) => {
-    if (!isOwner(ctx.user.openId)) {
+    if (!isOwner(ctx.user.openId, ctx.user.role)) {
       throw new TRPCError({ code: "FORBIDDEN", message: "僅主帳號可查看邀請碼" });
     }
     const db = await getDb();
@@ -164,7 +167,7 @@ export const accountRouter = router({
   revokeInviteCode: protectedProcedure
     .input(z.object({ id: z.number().int() }))
     .mutation(async ({ input, ctx }) => {
-      if (!isOwner(ctx.user.openId)) {
+      if (!isOwner(ctx.user.openId, ctx.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN", message: "僅主帳號可撤銷邀請碼" });
       }
       const db = await getDb();
@@ -182,7 +185,7 @@ export const accountRouter = router({
    * 取得使用者列表（主帳號專屬）
    */
   listUsers: protectedProcedure.query(async ({ ctx }) => {
-    if (!isOwner(ctx.user.openId)) {
+    if (!isOwner(ctx.user.openId, ctx.user.role)) {
       throw new TRPCError({ code: "FORBIDDEN", message: "僅主帳號可查看使用者列表" });
     }
     const db = await getDb();
@@ -202,8 +205,8 @@ export const accountRouter = router({
     usedCodes.forEach(r => { if (r.usedBy) activatedUserIds.add(r.usedBy); });
     return allUsers.map(u => ({
       ...u,
-      isOwner: isOwner(u.id.toString()), // will be fixed below
-      isActivated: isOwner(ctx.user.openId) || activatedUserIds.has(u.id),
+      isOwner: u.role === "admin",
+      isActivated: isOwner(ctx.user.openId, ctx.user.role) || activatedUserIds.has(u.id),
     }));
   }),
 
@@ -260,7 +263,7 @@ export const accountRouter = router({
   getProfileByUserId: protectedProcedure
     .input(z.object({ userId: z.number().int() }))
     .query(async ({ input, ctx }) => {
-      if (!isOwner(ctx.user.openId)) {
+      if (!isOwner(ctx.user.openId, ctx.user.role)) {
         throw new TRPCError({ code: "FORBIDDEN" });
       }
       const db = await getDb();

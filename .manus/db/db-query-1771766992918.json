@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, openId, name, role FROM users;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, openId, name, role FROM users;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "7Z9jZkytF3XZxjRyRZwn75",
+      "name": "photographer WilliamWei",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\trole\n1\t7Z9jZkytF3XZxjRyRZwn75\tphotographer WilliamWei\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 1608
+}
