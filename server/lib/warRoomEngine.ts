@@ -50,58 +50,70 @@ export const TAROT_CARDS: Record<number, {
 };
 
 /**
- * 計算塔羅流日（蘇先生專屬：中間個性10 + 當月 + 當日數字和）
+ * 計算生命靈數中間個性（外在個性）
+ * 規則：出生月份數字相加（≥10才相加）+ 出生日期數字相加（≥10才相加），若>22再歸約
  */
-export function calculateTarotDailyCard(month: number, day: number): {
+export function calculateMiddlePersonality(birthMonth: number, birthDay: number): number {
+  const monthSum = birthMonth >= 10 ? Math.floor(birthMonth / 10) + (birthMonth % 10) : birthMonth;
+  const daySum = birthDay >= 10 ? Math.floor(birthDay / 10) + (birthDay % 10) : birthDay;
+  const raw = monthSum + daySum;
+  return raw > 22 ? String(raw).split('').map(Number).reduce((a, b) => a + b, 0) : raw;
+}
+
+/**
+ * 計算塔羅流日（動態版：根據用戶出生月日計算中間個性）
+ * @param month 今日月份
+ * @param day 今日日期
+ * @param birthMonth 用戶出生月份（可選，未提供則使用預設值10）
+ * @param birthDay 用戶出生日期（可選，未提供則使用預設值26）
+ */
+export function calculateTarotDailyCard(
+  month: number,
+  day: number,
+  birthMonth?: number,
+  birthDay?: number
+): {
   cardNumber: number;
   card: typeof TAROT_CARDS[number];
   calculation: string;
+  middlePersonality: number;
 } {
-  // 正確計算規則（蒸祈校正版 V9.0）：
-  // 1. 月份 < 10 直接用原數；≥ 10 才將兩位數字相加（如 10→1+0=1, 11→1+1=2, 12→1+2=3）
-  // 2. 日期 < 23 直接用原數；≥ 23 才將兩位數字相加（如 23→2+3=5, 29→2+9=11）
+  // 動態計算中間個性：有出生月日則動態計算，否則使用預設值10（蘇先生的中間個性）
+  const middlePersonality = (birthMonth && birthDay)
+    ? calculateMiddlePersonality(birthMonth, birthDay)
+    : 10;
+  // 計算流日塔羅牌：
+  // 1. 月份 < 10 直接用原數；≥ 10 才將兩位數字相加
+  // 2. 日期 < 23 直接用原數；≥ 23 才將兩位數字相加
   // 3. 月日小計若 > 22 則將其各位數字相加归約
-  // 4. 中間個性(10) + 月日小計 = 總和，若 > 22 則將總和各位數字相加归約
-  // 範例：2/21 → 月(2) + 日(21) = 23 → 2+3=5 → 10+5=15 → 1+5=6（戀人）✓
-  // 正確計算流程（V9.0 校正版）：
-  // 步驟1：月份處理（<10 不變，≥10 兩位相加）
-  // 步驟2：日期處理（<23 不變，≥23 兩位相加）
-  // 步驟3：月日小計，若>22 則將小計各位數字相加归約
-  // 步驟4：10 + 歸約後的月日小計 = 總和，若>22 則將總和各位數字相加归約
-  // 規則：只有超過22才需要相加，不超過22的結果直接保留
-  // 範例：2/21 → 月(2)+日(21)=23 → 2+3=5 → 10+5=15（惡魔，不再归約）✓
+  // 4. 中間個性 + 月日小計 = 總和，若 > 22 則將總和各位數字相加归約
   const monthSum = month >= 10 ? Math.floor(month / 10) + (month % 10) : month;
   const daySum = day >= 23 ? Math.floor(day / 10) + (day % 10) : day;
   const rawSubTotal = monthSum + daySum;
-  // 月日小計若>22，將小計各位數字相加归約
   const reducedSub = rawSubTotal > 22
     ? String(rawSubTotal).split('').map(Number).reduce((a, b) => a + b, 0)
     : rawSubTotal;
-  const total = 10 + reducedSub;
+  const total = middlePersonality + reducedSub;
   let cardNumber = total;
-  // 總和>22 才归約
   if (cardNumber > 22) {
     const digits = String(cardNumber).split('').map(Number);
     cardNumber = digits.reduce((a, b) => a + b, 0);
   }
-  // 特殊處理：0 = 小愚者（未走卡巴拉之樹），22 = 大愚者（已走完卡巴拉之樹）
-  if (cardNumber === 0) cardNumber = 0; // 保留 0，小愚者
-
-  // 生成計算説明文字
+  if (cardNumber === 0) cardNumber = 0;
   let calcSteps = `月(${monthSum}) + 日(${daySum}) = ${rawSubTotal}`;
   if (rawSubTotal > 22) calcSteps += ` → ${String(rawSubTotal).split('').join('+')}=${reducedSub}`;
-  calcSteps += ` → 10+${reducedSub}=${total}`;
+  calcSteps += ` → ${middlePersonality}+${reducedSub}=${total}`;
   if (total > 22) calcSteps += ` → ${String(total).split('').join('+')}=${cardNumber}`;
   calcSteps += ` → ${cardNumber}號`;
-
   return {
     cardNumber,
     card: TAROT_CARDS[cardNumber] || TAROT_CARDS[22],
-    calculation: `中間個性(10) + ${calcSteps}`,
+    calculation: `中間個性(${middlePersonality}) + ${calcSteps}`,
+    middlePersonality,
   };
 }
 
-// ─── 五行顏色對應（細緻版）───────────────────────────────────────
+// ─── 五行顏色對應（細致版）───────────────────────────────────────
 const ELEMENT_COLORS_DETAIL: Record<string, { colors: string[]; hex: string[] }> = {
   木: { colors: ["翠綠", "草綠", "青色", "橄欖綠"], hex: ["#2d6a4f", "#52b788", "#74c69d", "#40916c"] },
   火: { colors: ["朱紅", "橙色", "火焰橙", "珊瑚紅", "緋紅", "磚紅"], hex: ["#e63946", "#f4a261", "#e76f51", "#c1121f", "#d62828", "#bc4749"] },

@@ -115,6 +115,67 @@ function buildLuckyStrategy(favorableElements: string, unfavorableElements: stri
   return { strategy, unfav: unfav.map(e => ELEMENT_ZH[e] ?? e) };
 }
 
+// ─── 生命靈數計算函數 ─────────────────────────────────────────────────────────
+const TAROT_CARDS: Record<number, { name: string; element: string }> = {
+  1: { name: "魔術師", element: "🔥" },
+  2: { name: "女祭司", element: "💧" },
+  3: { name: "女皇", element: "🌍" },
+  4: { name: "皇帝", element: "🌳" },
+  5: { name: "教皇", element: "🌍" },
+  6: { name: "戀人", element: "🌬️" },
+  7: { name: "戰車", element: "💧" },
+  8: { name: "力量", element: "🔥" },
+  9: { name: "隱士", element: "🌍" },
+  10: { name: "命運之輪", element: "🔥" },
+  11: { name: "正義", element: "🌬️" },
+  12: { name: "倒吊人", element: "💧" },
+  13: { name: "死神", element: "🌊" },
+  14: { name: "節制", element: "🔥" },
+  15: { name: "惡魔", element: "🌍" },
+  16: { name: "高塔", element: "🔥" },
+  17: { name: "星星", element: "🌬️" },
+  18: { name: "月亮", element: "💧" },
+  19: { name: "太陽", element: "🔥" },
+  20: { name: "審判", element: "🔥" },
+  21: { name: "世界", element: "🌍" },
+  22: { name: "愚者", element: "💨" },
+};
+function reduceToSingleDigitOrMaster(n: number): number {
+  while (n > 22) {
+    const s = n.toString().split('').reduce((a, d) => a + parseInt(d), 0);
+    n = s;
+  }
+  return n;
+}
+function calcLifeNumbers(birthDate: string): { outer: { num: number; name: string; element: string }; middle: { num: number; name: string; element: string }; inner: { num: number; name: string; element: string }; soul: { num: number; name: string; element: string } } | null {
+  const parts = birthDate.split('-');
+  if (parts.length !== 3) return null;
+  const [yStr, mStr, dStr] = parts;
+  const y = parseInt(yStr), m = parseInt(mStr), d = parseInt(dStr);
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+  // 外層靈數（生日展現）= 出生日期各位數相加
+  const outerRaw = d.toString().split('').reduce((a, c) => a + parseInt(c), 0);
+  const outer = reduceToSingleDigitOrMaster(outerRaw);
+  // 中層靈數（天賦使命）= 出生月份各位數 + 出生日期各位數相加
+  const middleRaw = m.toString().split('').reduce((a, c) => a + parseInt(c), 0)
+    + d.toString().split('').reduce((a, c) => a + parseInt(c), 0);
+  const middle = reduceToSingleDigitOrMaster(middleRaw);
+  // 內層靈數（靈魂渴望）= 出生年份各位數相加
+  const innerRaw = y.toString().split('').reduce((a, c) => a + parseInt(c), 0);
+  const inner = reduceToSingleDigitOrMaster(innerRaw);
+  // 靈魂數（生命主題）= 年 + 月 + 日 全部數字相加
+  const soulRaw = y.toString().split('').reduce((a, c) => a + parseInt(c), 0)
+    + m.toString().split('').reduce((a, c) => a + parseInt(c), 0)
+    + d.toString().split('').reduce((a, c) => a + parseInt(c), 0);
+  const soul = reduceToSingleDigitOrMaster(soulRaw);
+  const getCard = (n: number) => TAROT_CARDS[n] ?? { name: `第${n}號`, element: "✨" };
+  return {
+    outer: { num: outer, ...getCard(outer) },
+    middle: { num: middle, ...getCard(middle) },
+    inner: { num: inner, ...getCard(inner) },
+    soul: { num: soul, ...getCard(soul) },
+  };
+}
 // ─── 根據四柱估算五行比例 ────────────────────────────────────────────────────
 function estimateFiveElements(
   yearPillar?: string | null,
@@ -706,30 +767,36 @@ export default function ProfilePage() {
           </section>
         )}
 
-        {/* ─── 生命靈數與塔羅原型（主帳號專屬）─── */}
-        {isOwner && (
-          <section>
-            <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
-              <span>🎴</span> 生命靈數與塔羅原型
-            </h2>
-            <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {([
-                  { label: "外層靈數（生日展現）", ...OWNER_STATIC_PROFILE.tarot.outer },
-                  { label: "中層靈數（天賦使命）", ...OWNER_STATIC_PROFILE.tarot.middle },
-                  { label: "內層靈數（靈魂渴望）", ...OWNER_STATIC_PROFILE.tarot.inner },
-                  { label: "靈魂數（生命主題）", ...OWNER_STATIC_PROFILE.tarot.soul },
-                ] as Array<{ label: string; num: number; name: string; element: string }>).map((t) => (
-                  <div key={t.label} className="bg-gray-800/50 border border-gray-700/30 rounded-xl p-4 text-center">
-                    <div className="text-xs text-gray-400 mb-2">{t.label}</div>
-                    <div className="text-3xl font-bold text-orange-400 mb-1">{t.num}</div>
-                    <div className="text-sm font-bold text-gray-200">{t.element} {t.name}</div>
-                  </div>
-                ))}
+        {/* ─── 生命靈數與塔羅原型（有出生日期的用戶都顯示）─── */}
+        {(() => {
+          const birthDateStr = effectiveProfile?.birthDate;
+          const lifeNums = birthDateStr ? calcLifeNumbers(birthDateStr) : null;
+          if (!lifeNums) return null;
+          const cards = [
+            { label: "外層靈數（生日展現）", ...lifeNums.outer },
+            { label: "中層靈數（天賦使命）", ...lifeNums.middle },
+            { label: "內層靈數（靈魂渴望）", ...lifeNums.inner },
+            { label: "靈魂數（生命主題）", ...lifeNums.soul },
+          ];
+          return (
+            <section>
+              <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
+                <span>🎴</span> 生命靈數與塔羅原型
+              </h2>
+              <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {cards.map((t) => (
+                    <div key={t.label} className="bg-gray-800/50 border border-gray-700/30 rounded-xl p-4 text-center">
+                      <div className="text-xs text-gray-400 mb-2">{t.label}</div>
+                      <div className="text-3xl font-bold text-orange-400 mb-1">{t.num}</div>
+                      <div className="text-sm font-bold text-gray-200">{t.element} {t.name}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
-        )}
+            </section>
+          );
+        })()}
 
         {/* ─── 備注欄位 ─── */}
         {effectiveProfile?.notes && (

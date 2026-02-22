@@ -594,6 +594,12 @@ export interface EngineProfile {
   unfavorableElements: string[];
   /** 喜用神五行（英文，例：["fire","earth","metal"]） */
   favorableElementsEn: string[];
+  /** 出生日期（YYYY-MM-DD 格式） */
+  birthDate: string | null;
+  /** 出生月份（1-12） */
+  birthMonth: number | null;
+  /** 出生日（1-31） */
+  birthDay: number | null;
   /** 是否使用預設命格（用戶未填寫時為 true） */
   isDefault: boolean;
 }
@@ -624,6 +630,9 @@ const DEFAULT_ENGINE_PROFILE: EngineProfile = {
   favorableElements: ["火", "土", "金"],
   unfavorableElements: ["水", "木"],
   favorableElementsEn: ["fire", "earth", "metal"],
+  birthDate: "1984-11-26",
+  birthMonth: 11,
+  birthDay: 26,
   isDefault: true,
 };
 
@@ -673,6 +682,17 @@ export async function getUserProfileForEngine(userId: number): Promise<EnginePro
     // 未來可擴充為完整的八字五行計算
     const natalElementRatio = buildNatalRatioFromDayMaster(dayMasterElement, favorableElements);
 
+    // 解析出生日期
+    const birthDateStr = profile.birthDate || null;
+    let birthMonth: number | null = null;
+    let birthDay: number | null = null;
+    if (birthDateStr) {
+      const parts = birthDateStr.split('-');
+      if (parts.length >= 3) {
+        birthMonth = parseInt(parts[1]) || null;
+        birthDay = parseInt(parts[2]) || null;
+      }
+    }
     return {
       dayMasterStem,
       dayMasterElement,
@@ -681,6 +701,9 @@ export async function getUserProfileForEngine(userId: number): Promise<EnginePro
       favorableElements,
       unfavorableElements,
       favorableElementsEn,
+      birthDate: birthDateStr,
+      birthMonth,
+      birthDay,
       isDefault: false,
     };
   } catch {

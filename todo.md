@@ -773,3 +773,20 @@
 - [x] 後端新增 account.deleteSelf API（用戶自行刪除自己的帳號及所有資料）
 - [x] 前端 MyProfile 頁底部新增「刪除帳號」入口（紅色危險區塊，需二次確認）
 - [x] 刪除後清除 session cookie 並重導向至登入頁
+
+## 功能修正 v2.48 - 作戰室動態化 + 通知Mail隱藏 + MyProfile修正
+
+- [ ] 作戰室塔羅流日牌：移除計算方式顯示文字（僅主帳號可見），確認生日來源是登入者自己的
+- [ ] 作戰室全天時辰能量時間軸：確認跟著登入者自己的生辰八字走
+- [ ] 作戰室「通知 Mail」按鈕：非主帳號用戶隱藏此按鈕
+- [ ] 作戰室生命靈數與塔羅原型：根據登入者出生日期動態計算（非靜態主帳號資料）
+- [ ] MyProfile 頁標題：顯示用戶自填的 displayName，而非 Manus 帳號名
+- [ ] MyProfile 農曆生日 placeholder：改為通用說明文字，移除「甲子年 閏十月 初四日」
+- [ ] 帳號管理頁顯示用戶最後登入時間
+
+## 功能修正 v2.49 - AccountManager 最後登入時間 + 確認動態化狀態
+- [x] AccountManager 用戶卡片顯示最後登入時間（lastSignedIn 欄位）
+- [x] 確認 ProfilePage 生命靈數已動態化（所有用戶基於自己的 birthDate 計算）
+- [x] 確認 War Room 時辰能量已動態化（登入用戶使用個人喜用神計算）
+- [x] TypeScript 零錯誤，78 項測試全部通過
+- [x] 儲存 V2.49 checkpoint

@@ -177,7 +177,7 @@ export default function MyProfile() {
           </Link>
           <div>
             <h1 className="text-lg font-bold text-white">個人命格資料</h1>
-            <p className="text-xs text-slate-500">{user?.name}</p>
+            <p className="text-xs text-slate-500">{form.displayName || user?.name}</p>
           </div>
         </div>
       </div>
@@ -248,7 +248,7 @@ export default function MyProfile() {
               type="text"
               value={form.birthLunar}
               onChange={e => setForm(f => ({ ...f, birthLunar: e.target.value }))}
-              placeholder="例：甲子年 閏十月 初四日"
+              placeholder="例：甲子年 十月 初一日"
               className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/60"
             />
           </div>

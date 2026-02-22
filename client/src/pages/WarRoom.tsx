@@ -93,6 +93,8 @@ const WEEKDAY_NAMES = ["日", "一", "二", "三", "四", "五", "六"];
 
 export default function WarRoom() {
   const { hasFeature, isAdmin } = usePermissions();
+  const { data: accountStatus } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
+  const isOwner = accountStatus?.isOwner ?? false;
   // 七日選擇器：0=今天，1=明天，...，-1=昨天
   const [selectedOffset, setSelectedOffset] = useState(0);
   const selectedDate = getTaiwanDateStr(selectedOffset);
@@ -356,8 +358,8 @@ export default function WarRoom() {
                     </div>
                   </div>
                 </div>
-                {/* 右側：通知按鈕 */}
-                <button
+                {/* 右側：通知按鈕（僅主帳號顯示） */}
+                {isOwner && <button
                   onClick={() => {
                     if (notified || notifyBestHourMutation.isPending) return;
                     notifyBestHourMutation.mutate({
@@ -385,7 +387,7 @@ export default function WarRoom() {
                   ) : (
                     <><Bell className="w-3.5 h-3.5" /> 通知 Mail</>
                   )}
-                </button>
+                </button>}
               </motion.div>
             );
           })()}
@@ -572,7 +574,7 @@ export default function WarRoom() {
                   <div className="flex-1 space-y-3">
                     <div>
                       <div className="text-amber-400 font-bold text-xl">{data.tarot.name}</div>
-                      <div className="text-white/50 text-sm mt-1">計算方式：{data.tarot.calculation}</div>
+                      {isOwner && <div className="text-white/50 text-sm mt-1">計算方式：{data.tarot.calculation}</div>}
                     </div>
                     <div className="flex gap-2 flex-wrap">
                       {data.tarot.keywords.map((kw: string, i: number) => (

@@ -253,6 +253,12 @@ export default function AccountManager() {
                       )}
                     </div>
                     <p className="text-xs text-slate-500 truncate">{u.email ?? "無郵件"}</p>
+                    {u.lastSignedIn && (
+                      <p className="text-xs text-slate-600 flex items-center gap-1 mt-0.5">
+                        <Clock className="w-3 h-3 shrink-0" />
+                        最後登入：{new Date(u.lastSignedIn).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <button
