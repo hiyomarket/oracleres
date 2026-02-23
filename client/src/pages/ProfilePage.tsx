@@ -160,13 +160,13 @@ function calcLifeNumbers(birthDate: string): { outer: { num: number; name: strin
   const middleRaw = m.toString().split('').reduce((a, c) => a + parseInt(c), 0)
     + d.toString().split('').reduce((a, c) => a + parseInt(c), 0);
   const middle = reduceToSingleDigitOrMaster(middleRaw);
-  // 內層靈數（靈魂渴望）= 出生年份各位數相加
-  const innerRaw = y.toString().split('').reduce((a, c) => a + parseInt(c), 0);
-  const inner = reduceToSingleDigitOrMaster(innerRaw);
-  // 靈魂數（生命主題）= 年 + 月 + 日 全部數字相加
-  const soulRaw = y.toString().split('').reduce((a, c) => a + parseInt(c), 0)
+  // 內層靈數（靈魂渴望）= 年 + 月 + 日 全部數字相加
+  const innerRaw = y.toString().split('').reduce((a, c) => a + parseInt(c), 0)
     + m.toString().split('').reduce((a, c) => a + parseInt(c), 0)
     + d.toString().split('').reduce((a, c) => a + parseInt(c), 0);
+  const inner = reduceToSingleDigitOrMaster(innerRaw);
+  // 靈魂數（生命主題）= 出生年份各位數相加
+  const soulRaw = y.toString().split('').reduce((a, c) => a + parseInt(c), 0);
   const soul = reduceToSingleDigitOrMaster(soulRaw);
   const getCard = (n: number) => TAROT_CARDS[n] ?? { name: `第${n}號`, element: "✨" };
   return {
@@ -799,16 +799,48 @@ export default function ProfilePage() {
         })()}
 
         {/* ─── 備注欄位 ─── */}
-        {effectiveProfile?.notes && (
-          <section>
-            <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
-              <span>📋</span> 命格備注
-            </h2>
-            <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
-              <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{effectiveProfile.notes}</p>
-            </div>
-          </section>
-        )}
+        {(() => {
+          const notesText = effectiveProfile?.notes;
+          // 若無 notes，根據命格資料自動生成建議文字
+          const autoNotes = (() => {
+            if (notesText) return notesText;
+            const ep = effectiveProfile as typeof OWNER_STATIC_PROFILE | (typeof profile & Record<string, unknown>) | null | undefined;
+            if (!ep) return null;
+            const fav = (ep.favorableElements ?? '').split(',').map((e: string) => ELEMENT_ZH[e.trim()] ?? e.trim()).filter(Boolean);
+            const unfav = (ep.unfavorableElements ?? '').split(',').map((e: string) => ELEMENT_ZH[e.trim()] ?? e.trim()).filter(Boolean);
+            const dm = ep.dayMasterElement ? (ELEMENT_ZH[ep.dayMasterElement] ?? ep.dayMasterElement) : null;
+            if (!fav.length && !unfav.length && !dm) return null;
+            const lines: string[] = [];
+            if (dm) lines.push(`日主五行：${dm}`);
+            if (fav.length) {
+              const favStr = fav.map((el: string) => {
+                const roleInfo = ELEMENT_ROLES[el];
+                return roleInfo ? `${el}（${roleInfo.role}）` : el;
+              }).join('、');
+              lines.push(`喜用神：${favStr}`);
+            }
+            if (unfav.length) lines.push(`忌神：${unfav.join('、')}`);
+            if (fav.length) {
+              const strategy = fav.map((el: string) => {
+                const roleInfo = ELEMENT_ROLES[el];
+                return roleInfo ? `${ELEMENT_ICONS[el] ?? ''}${el}（${roleInfo.desc}）` : el;
+              }).join('\n');
+              lines.push(`\n補運建議：\n${strategy}`);
+            }
+            return lines.join('\n');
+          })();
+          if (!autoNotes) return null;
+          return (
+            <section>
+              <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
+                <span>📋</span> 命格備注
+              </h2>
+              <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
+                <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{autoNotes}</p>
+              </div>
+            </section>
+          );
+        })()}
 
         {/* ─── 前往設定按鈕（主帳號不顯示，其他用戶顯示）─── */}
         {!isOwner && (

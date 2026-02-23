@@ -938,19 +938,6 @@ export default function WarRoom() {
               exit={{ opacity: 0, x: 20 }}
               className="space-y-4"
             >
-              {/* 最佳時辰 */}
-              <SectionCard title="今日最佳時辰" icon="⭐">
-                <div className="grid grid-cols-3 gap-3">
-                  {data.hourEnergy.bestHours.map((h: { name: string; branch: string; stem: string; score: number; displayTime: string }, i: number) => (
-                    <div key={i} className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-3 text-center">
-                      <div className="text-amber-300 font-bold">{h.name}</div>
-                      <div className="text-white/50 text-xs">{h.displayTime}</div>
-                      <div className="text-amber-400 text-sm font-semibold mt-1">{h.score}/10</div>
-                    </div>
-                  ))}
-                </div>
-              </SectionCard>
-
               {/* 全天時辰表 */}
               <SectionCard title="全天時辰能量時間軸" icon="🕐">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">

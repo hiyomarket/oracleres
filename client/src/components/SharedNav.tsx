@@ -181,7 +181,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
 
         {/* 右側：通知 + 登入/用戶 */}
         <div className="flex items-center gap-2">
-          {user && (
+          {user && isAdmin && (
             <button
               onClick={() => notifyMutation.mutate()}
               disabled={notifyMutation.isPending}

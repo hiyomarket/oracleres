@@ -224,7 +224,6 @@ export default function OracleCast() {
 
   const castMutation = trpc.oracle.cast.useMutation();
   const { data: history } = trpc.oracle.history.useQuery({ limit: 10 });
-  const notifyMutation = trpc.oracle.notifyDailyEnergy.useMutation();
   const { data: queryGuide } = trpc.insight.queryGuide.useQuery();
   const deepReadMutation = trpc.insight.deepRead.useMutation({
     onSuccess: (data) => {
@@ -361,15 +360,6 @@ export default function OracleCast() {
       interpretation: castResult.interpretation,
     });
   }, [castResult, query, deepReadMutation]);
-
-  const handleNotify = useCallback(async () => {
-    try {
-      await notifyMutation.mutateAsync();
-      alert('今日能量通知已發送！');
-    } catch {
-      alert('通知發送失敗，請稍後再試。');
-    }
-  }, [notifyMutation]);
 
   const resultTypeMap: Record<string, string> = {
     sheng: '聖杯', xiao: '笑杯', yin: '陰杯', li: '立筊',

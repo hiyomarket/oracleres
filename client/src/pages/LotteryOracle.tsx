@@ -747,8 +747,26 @@ export default function LotteryOracle() {
             以命格五行為引，以天干地支為鑰，開啟您的財運密碼
           </p>
         </motion.div>
-
-        {/* ── 日期選擇器 ────────────────────────────────────────────────── */}
+        {/* ── 免責聲明警語 ───────────────────────────────────────────── */}
+        <motion.div
+          className="bg-amber-950/40 border border-amber-500/30 rounded-2xl p-4 mb-6"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-amber-400 text-lg shrink-0 mt-0.5">⚠️</span>
+            <div>
+              <p className="text-amber-300 text-xs font-bold mb-1 tracking-wide">重要聲明 · 僅供參考</p>
+              <p className="text-amber-200/70 text-xs leading-relaxed">
+                本功能依據個人命格五行與天干地支推算，提供選號靈感參考。樂透彩券涉及一群人的集體大運，影響因素複雜，
+                <strong className="text-amber-300">無法保證中獎</strong>，亦不構成任何投資或購買建議。
+                請量力而為，理性購彩，切勿沉迷。
+              </p>
+            </div>
+          </div>
+        </motion.div>
+        {/* ── 日期選擇器器 ────────────────────────────────────────────────── */}
         <motion.div
           className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm mb-6"
           initial={{ opacity: 0, y: 20 }}
