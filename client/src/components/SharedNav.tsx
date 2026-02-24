@@ -15,11 +15,11 @@ interface SharedNavProps {
 
 // 主導覽列項目（週報/統計已移至個人下拉選單）
 const NAV_ITEMS: { id: NavPage; featureId: FeatureId; path: string; icon: string; label: string }[] = [
-  { id: "profile",  featureId: "profile",  path: "/",         icon: "🔮", label: "命格" },
+  { id: "profile",  featureId: "profile",  path: "/profile",  icon: "🔮", label: "命格" },
   { id: "oracle",   featureId: "oracle",   path: "/oracle",   icon: "☯",  label: "擲筊" },
   { id: "lottery",  featureId: "lottery",  path: "/lottery",  icon: "🎰", label: "選號" },
   { id: "calendar", featureId: "calendar", path: "/calendar", icon: "📅", label: "日曆" },
-  { id: "warRoom",  featureId: "warroom",  path: "/war-room", icon: "⚔️", label: "作戰室" },
+  { id: "warRoom",  featureId: "warroom",  path: "/",         icon: "⚔️", label: "每日運勢" },
 ];
 
 /** 使用者頭像下拉選單 */
@@ -171,123 +171,127 @@ export function SharedNav({ currentPage }: SharedNavProps) {
 
   return (
     <>
-      {/* ─── 頂部導覽列（桌機 + 手機） ─── */}
-      <nav className="sticky top-0 z-50 flex items-center justify-between px-4 md:px-6 py-3 border-b border-white/5 backdrop-blur-md bg-[#050d14]/90">
-        {/* 左側：Logo */}
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 group"
-            title="返回首頁"
-          >
-            <span className="text-amber-400 text-base group-hover:scale-110 transition-transform">☯</span>
-            <span
-              className="font-bold tracking-widest text-sm hidden sm:block"
-              style={{
-                background: "linear-gradient(135deg, #f59e0b, #ef4444)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
+      {/* ─── 頂部導覽列（桌機 + 手機）：Logo + 右側用戶 ─── */}
+      <nav className="sticky top-0 z-50 border-b border-white/5 backdrop-blur-md bg-[#050d14]/90">
+        {/* 第一行：Logo + 用戶 */}
+        <div className="flex items-center justify-between px-4 md:px-6 py-3">
+          {/* 左側：Logo */}
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-2 group"
+              title="返回首頁"
             >
-              天命共振
-            </span>
-          </button>
+              <span className="text-amber-400 text-base group-hover:scale-110 transition-transform">☯</span>
+              <span
+                className="font-bold tracking-widest text-sm"
+                style={{
+                  background: "linear-gradient(135deg, #f59e0b, #ef4444)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                天命共振
+              </span>
+            </button>
 
-          {/* 當前頁面麵包屑（手機也顯示） */}
-          {currentPage !== "oracle" && (
+            {/* 當前頁面麵包屑 */}
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <span>/</span>
               <span className="text-slate-400">
-                {NAV_ITEMS.find(n => n.id === currentPage)?.label}
+                {NAV_ITEMS.find(n => n.id === currentPage)?.label ?? currentPage}
               </span>
             </div>
-          )}
+          </div>
+
+          {/* 右側：通知 + 登入/用戶 */}
+          <div className="flex items-center gap-2 shrink-0">
+            {user && isAdmin && (
+              <button
+                onClick={() => notifyMutation.mutate()}
+                disabled={notifyMutation.isPending}
+                className="text-xs text-slate-400 hover:text-amber-400 transition-colors p-1.5 rounded-lg border border-transparent hover:border-amber-600/30"
+                title="推送今日能量通知"
+              >
+                📬
+              </button>
+            )}
+            {!user ? (
+              <a
+                href={getLoginUrl()}
+                className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all"
+                style={{
+                  background: "linear-gradient(135deg, #f59e0b, #ef4444)",
+                  color: "#000",
+                }}
+              >
+                登入
+              </a>
+            ) : (
+              <UserMenu user={user} />
+            )}
+          </div>
         </div>
 
-        {/* 中間：頁面導航（桌機顯示，支援左右滑動，圖示放大 20%） */}
-        <div className="hidden md:flex items-center overflow-x-auto scrollbar-none gap-1 mx-4 flex-1 justify-center">
-          {visibleNavItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => navigate(item.path)}
-              className={`
-                flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0
-                ${currentPage === item.id
-                  ? "bg-amber-900/40 border border-amber-600/50 text-amber-300"
-                  : "text-slate-400 hover:text-amber-400 hover:bg-white/5 border border-transparent"
-                }
-              `}
-            >
-              {/* 圖示放大 20%（原 text-xs ≈ 12px → 14.4px） */}
-              <span className="text-[14px] leading-none">{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* 右側：通知 + 登入/用戶 */}
-        <div className="flex items-center gap-2 shrink-0">
-          {user && isAdmin && (
-            <button
-              onClick={() => notifyMutation.mutate()}
-              disabled={notifyMutation.isPending}
-              className="text-xs text-slate-400 hover:text-amber-400 transition-colors p-1.5 rounded-lg border border-transparent hover:border-amber-600/30"
-              title="推送今日能量通知"
-            >
-              📬
-            </button>
-          )}
-          {!user ? (
-            <a
-              href={getLoginUrl()}
-              className="text-xs px-3 py-1.5 rounded-lg font-semibold transition-all"
-              style={{
-                background: "linear-gradient(135deg, #f59e0b, #ef4444)",
-                color: "#000",
-              }}
-            >
-              登入
-            </a>
-          ) : (
-            <UserMenu user={user} />
-          )}
-        </div>
-      </nav>
-
-      {/* ─── 手機底部固定導覽列（支援左右滑動，圖示放大 20%） ─── */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#050d14]/97 backdrop-blur-xl border-t border-white/10 safe-area-bottom">
-        <div
-          className="flex items-stretch overflow-x-auto scrollbar-none"
-          style={{ WebkitOverflowScrolling: "touch" }}
-        >
-          {visibleNavItems.map((item) => {
-            const isActive = currentPage === item.id;
-            return (
+        {/* 第二行：功能導覽列（桌機 + 手機，統一在頂部，支援左右滑動） */}
+        <div className="border-t border-white/5">
+          {/* 桌機：居中顯示 */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto scrollbar-none gap-1 px-4 py-1.5">
+            {visibleNavItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => navigate(item.path)}
                 className={`
-                  relative flex flex-col items-center justify-center gap-0.5
-                  shrink-0 px-4 py-2.5 min-h-[60px] min-w-[68px] transition-all active:scale-95
-                  ${isActive ? "text-amber-400" : "text-slate-500"}
+                  flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all shrink-0
+                  ${currentPage === item.id
+                    ? "bg-amber-900/40 border border-amber-600/50 text-amber-300"
+                    : "text-slate-400 hover:text-amber-400 hover:bg-white/5 border border-transparent"
+                  }
                 `}
               >
-                {/* 當前頁高亮背景 */}
-                {isActive && (
-                  <span className="absolute inset-x-1 top-1 bottom-1 rounded-xl bg-amber-900/25 border border-amber-700/30" />
-                )}
-                {/* 圖示放大 20%（原 18px → 22px） */}
-                <span className={`relative text-[22px] leading-none transition-transform ${isActive ? 'scale-110' : ''}`}>
-                  {item.icon}
-                </span>
-                <span className={`relative text-[10px] font-medium leading-none tracking-wide mt-0.5 ${isActive ? 'text-amber-400' : 'text-slate-500'}`}>
-                  {item.label}
-                </span>
+                {/* 圖示放大 1 倍（原 14px → 28px） */}
+                <span className="text-[28px] leading-none">{item.icon}</span>
+                <span>{item.label}</span>
               </button>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* 手機：居中顯示，支援左右滑動 */}
+          <div
+            className="md:hidden flex items-center justify-center overflow-x-auto scrollbar-none px-2 py-1"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
+            {/* 使用 inline-flex 讓項目可以超出容器觸發滑動，同時 justify-center 讓少量項目居中 */}
+            <div className="flex items-center gap-1 min-w-max mx-auto">
+              {visibleNavItems.map((item) => {
+                const isActive = currentPage === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => navigate(item.path)}
+                    className={`
+                      relative flex flex-col items-center justify-center gap-1
+                      shrink-0 px-3 py-2 min-w-[64px] rounded-xl transition-all active:scale-95
+                      ${isActive
+                        ? "bg-amber-900/25 border border-amber-700/30 text-amber-400"
+                        : "text-slate-500 border border-transparent"
+                      }
+                    `}
+                  >
+                    {/* 圖示放大 1 倍（原 22px → 44px） */}
+                    <span className={`text-[44px] leading-none transition-transform ${isActive ? 'scale-105' : ''}`}>
+                      {item.icon}
+                    </span>
+                    <span className={`text-[10px] font-medium leading-none tracking-wide ${isActive ? 'text-amber-400' : 'text-slate-500'}`}>
+                      {item.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </div>
+      </nav>
     </>
   );
 }

@@ -21,7 +21,7 @@ function Router() {
   return (
     <AccessGate>
       <Switch>
-        <Route path={"/"} component={ProfilePage} />
+        <Route path={"/"} component={WarRoom} />
         <Route path={"/oracle"} component={Home} />
         <Route path={"/stats"} component={OracleStats} />
         <Route path={"/lottery"} component={LotteryOracle} />

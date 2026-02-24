@@ -227,7 +227,7 @@ export default function WarRoom() {
       <div className="min-h-screen bg-[#0a0f1a] flex flex-col">
           <SharedNav currentPage="warRoom" />
         <main className="flex-1 flex items-center justify-center">
-          <p className="text-red-400">無法載入今日作戰室，請稍後再試</p>
+          <p className="text-red-400">無法載入今日運勢，請稍後再試</p>
         </main>
       </div>
     );
@@ -244,7 +244,7 @@ export default function WarRoom() {
       </div>
 
       <SharedNav currentPage="warRoom" />
-      <ProfileIncompleteBanner featureName="作戰室" />
+      <ProfileIncompleteBanner featureName="每日運勢" />
       {!isAdmin && !hasFeature("warroom") && <FeatureLockedCard feature="warroom" />}
       {(isAdmin || hasFeature("warroom")) && <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 pb-24 relative z-10 oracle-page-content">
 
@@ -258,7 +258,7 @@ export default function WarRoom() {
           <div className="flex items-start justify-between mb-4 gap-2">
             <div className="min-w-0">
               <h1 className="text-xl md:text-2xl font-bold text-white tracking-wide">
-                ⚔️ {isViewingToday ? "今日作戰室" : `${data.date.gregorian.replace(/\d{4}年/, '')}作戰室`}
+                ⚔️ {isViewingToday ? "今日運勢" : `${data.date.gregorian.replace(/\d{4}年/, '')}運勢`}
               </h1>
               <p className="text-white/40 text-xs mt-1 tracking-widest hidden sm:block">WAR ROOM · ORACLE RESONANCE</p>
             </div>
