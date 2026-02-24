@@ -15,6 +15,7 @@ import AccountManager from "@/pages/AccountManager";
 import MyProfile from "@/pages/MyProfile";
 import PermissionManager from "@/pages/PermissionManager";
 import { AccessGate } from "@/components/AccessGate";
+import AddToHome from "@/pages/AddToHome";
 
 function Router() {
   return (
@@ -31,6 +32,7 @@ function Router() {
         <Route path={"/account-manager"} component={AccountManager} />
         <Route path={"/my-profile"} component={MyProfile} />
         <Route path={"/permission-manager"} component={PermissionManager} />
+        <Route path={"/add-to-home"} component={AddToHome} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
