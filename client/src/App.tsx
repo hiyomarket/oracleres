@@ -17,6 +17,7 @@ import { AccessGate } from "@/components/AccessGate";
 import AddToHome from "@/pages/AddToHome";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
+import AdminBusinessHub from "@/pages/AdminBusinessHub";
 import { DailySigninModal } from "@/components/DailySigninModal";
 
 function Router() {
@@ -35,6 +36,7 @@ function Router() {
         <Route path={"/permission-manager"} component={PermissionManager} />
         <Route path={"/admin/dashboard"} component={AdminDashboard} />
         <Route path={"/admin/users"} component={AdminUsers} />
+        <Route path={"/admin/business-hub"} component={AdminBusinessHub} />
         <Route path={"/add-to-home"} component={AddToHome} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}

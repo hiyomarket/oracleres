@@ -7,12 +7,15 @@ import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, tinyint, bi
 export const plans = mysqlTable("plans", {
   id: varchar("id", { length: 50 }).primaryKey(), // 'basic', 'advanced', 'professional'
   name: varchar("name", { length: 100 }).notNull(), // '基礎方案', '進階方案', '專業方案'
-  // 價格（以分為單位，0 = 免費）
-  price: int("price").notNull().default(0),
+  // 價格（DECIMAL，0 = 免費）
+  price: decimal("price", { precision: 10, scale: 2 }).notNull().default("0"),
   // 等級（用於權限比較，數字越大權限越高）
   level: int("level").notNull().default(1),
   description: text("description"),
+  // 是否啟用此方案
+  isActive: tinyint("isActive").notNull().default(1),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type Plan = typeof plans.$inferSelect;
 export type InsertPlan = typeof plans.$inferInsert;
@@ -33,6 +36,85 @@ export const features = mysqlTable("features", {
 });
 export type Feature = typeof features.$inferSelect;
 export type InsertFeature = typeof features.$inferInsert;
+
+/**
+ * 功能模塊資料表（鳳凰計畫 - 新商業邏輯核心）
+ * 定義系統中所有可獨立授權的「功能模塊」，是新的「產品」單位
+ */
+export const modules = mysqlTable("modules", {
+  id: varchar("id", { length: 50 }).primaryKey(), // 'module_profile', 'module_lottery'
+  name: varchar("name", { length: 100 }).notNull(), // '【命格】', '【天命選號】'
+  description: text("description"),
+  icon: varchar("icon", { length: 10 }), // '🔮'
+  // 分類：core=基礎免費模塊, addon=選購加値模塊
+  category: mysqlEnum("category", ["core", "addon"]).notNull().default("addon"),
+  // 用於後台拖拽排序的序位
+  sortOrder: int("sortOrder").notNull().default(0),
+  // 關鍵欄位：儲存舊 features 表 id 的陣列，建立新舊權限體系的映射關係
+  containedFeatures: json("containedFeatures").$type<string[]>().notNull().default([]),
+  // 是否啟用
+  isActive: tinyint("isActive").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Module = typeof modules.$inferSelect;
+export type InsertModule = typeof modules.$inferInsert;
+
+/**
+ * 方案-模塊關聯表（鳳凰計畫）
+ * 多對多關聯表，描述一個方案包含了哪些功能模塊
+ */
+export const planModules = mysqlTable("plan_modules", {
+  id: int("id").autoincrement().primaryKey(),
+  planId: varchar("planId", { length: 50 }).notNull(),
+  moduleId: varchar("moduleId", { length: 50 }).notNull(),
+}, (table) => ({
+  uniquePlanModule: uniqueIndex("plan_module_idx").on(table.planId, table.moduleId),
+}));
+export type PlanModule = typeof planModules.$inferSelect;
+export type InsertPlanModule = typeof planModules.$inferInsert;
+
+/**
+ * 行銷活動資料表（鳳凰計畫）
+ * 定義各種行銷活動，如折扣、贈送等
+ */
+export const campaigns = mysqlTable("campaigns", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(), // '周年慶折扣'
+  startDate: timestamp("startDate").notNull(),
+  endDate: timestamp("endDate").notNull(),
+  isActive: tinyint("isActive").notNull().default(1),
+  // 規則類型：discount=折扣, giveaway=贈送
+  ruleType: mysqlEnum("ruleType", ["discount", "giveaway"]).notNull(),
+  // 規則目標，例如 { "target_type": "plan", "target_id": "advanced_599" }
+  ruleTarget: json("ruleTarget").$type<{ target_type: string; target_id?: string }>().notNull(),
+  // 規則內容，例如 { "discount_percentage": 0.8 } 或 { "giveaway_module_id": "module_lottery", "duration_days": 30 }
+  ruleValue: json("ruleValue").$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Campaign = typeof campaigns.$inferSelect;
+export type InsertCampaign = typeof campaigns.$inferInsert;
+
+/**
+ * 用戶訂閱表（鳳凰計畫 - 取代舊權限設定的核心）
+ * 記錄每個用戶當前訂閱了哪個方案，以及任何額外的、單獨購買的模塊
+ */
+export const userSubscriptions = mysqlTable("user_subscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  // 用戶當前訂閱的主方案 ID（nullable）
+  planId: varchar("planId", { length: 50 }),
+  // 主方案的到期日（null = 永久有效）
+  planExpiresAt: timestamp("planExpiresAt"),
+  // 為用戶特殊追加的模塊及其到期日
+  // 例如 [{ "module_id": "module_outfit", "expires_at": "2027-01-01" }]
+  customModules: json("customModules").$type<Array<{ module_id: string; expires_at: string | null }>>(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type InsertUserSubscription = typeof userSubscriptions.$inferInsert;
 
 /**
  * 積分流水帳資料表

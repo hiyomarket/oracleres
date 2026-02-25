@@ -31,6 +31,12 @@ const NAV_ITEMS = [
     label: "權限管理",
     desc: "功能模組開關",
   },
+  {
+    href: "/admin/business-hub",
+    icon: "💰",
+    label: "商業中心",
+    desc: "模塊、方案、行銷",
+  },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {

@@ -931,3 +931,28 @@
 - [x] 用戶管理預設排序為最後上線降序（後端已有 ORDER BY lastSignedIn DESC）
 - [x] PermissionManager 全面升級：即時搜尋、統一截止日期控制器、快速續約、緊湊網格佈局、分類篩選+批量勾選
 - [x] PermissionManager 套用 AdminLayout 側邊欄
+
+## 鳳凰計畫 - SaaS 商業邏輯重構
+
+### 資料庫 Schema
+- [ ] 新增 modules 表（功能模塊：id/name/description/icon/category/sort_order/contained_features）
+- [ ] 改造 plans 表（新增 level/is_active 欄位）
+- [ ] 新增 plan_modules 表（方案-模塊多對多關聯）
+- [ ] 新增 campaigns 表（行銷活動：rule_type/rule_target/rule_value）
+- [ ] 新增 user_subscriptions 表（用戶訂閱：plan_id/plan_expires_at/custom_modules）
+
+### 後端 API
+- [ ] 建立 server/routers/businessHub.ts（admin 保護路由）
+- [ ] businessHub.modules.list / updateOrder
+- [ ] businessHub.plans.list / create / update
+- [ ] businessHub.campaigns.list / create / update
+- [ ] 建立 server/PermissionService.ts（hasAccess 統一權限檢查）
+
+### 前端「商業中心」
+- [ ] 安裝 dnd-kit 拖拽庫
+- [ ] 建立 /admin/business-hub 頁面（Tabs 佈局）
+- [ ] 頁籤一：模塊管理器（拖拽排序）
+- [ ] 頁籤二：方案與定價（卡片+模塊複選框）
+- [ ] 頁籤三：行銷活動（折扣/贈送規則編輯器）
+- [ ] AdminLayout 側邊欄加入「商業中心」入口
+- [ ] App.tsx 加入 /admin/business-hub 路由
