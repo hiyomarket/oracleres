@@ -1,11 +1,19 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
 import { sdk } from "./sdk";
+import { hasAccess, type AccessResult } from "../PermissionService";
+
+// PermissionService 注入到 ctx 的小工具函數
+export const permissionService = {
+  checkAccess: (userId: number, featureId: string): Promise<AccessResult> =>
+    hasAccess(userId, featureId),
+};
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
   res: CreateExpressContextOptions["res"];
   user: User | null;
+  permissionService: typeof permissionService;
 };
 
 export async function createContext(
@@ -24,5 +32,6 @@ export async function createContext(
     req: opts.req,
     res: opts.res,
     user,
+    permissionService,
   };
 }

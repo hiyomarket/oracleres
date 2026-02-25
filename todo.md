@@ -956,3 +956,30 @@
 - [ ] 頁籤三：行銷活動（折扣/贈送規則編輯器）
 - [ ] AdminLayout 側邊欄加入「商業中心」入口
 - [ ] App.tsx 加入 /admin/business-hub 路由
+
+## 鳳凰計畫 Phase 2 - SaaS 訂閱系統完整實作
+
+### 資料庫（已於 Phase 1 完成）
+- [x] 新增 subscription_logs 表（審計日誌：operatorId/targetUserId/action/details）
+- [x] 新增 redemption_codes 表（兌換碼：campaignId/code/isUsed/isVoided/usedBy/usedAt）
+- [x] users 表新增 availableDiscounts 欄位（JSON 折扣券儲存）
+
+### 後端 API
+- [x] businessHub.assignSubscription（完整指派訂閱：主方案+自訂模塊+審計日誌+同步users表）
+- [x] businessHub.listSubscriptionLogs（查看訂閱審計日誌）
+- [x] businessHub.generateRedemptionCodes（批量產生兌換碼，支援前置碼）
+- [x] businessHub.listRedemptionCodes（列出活動兌換碼）
+- [x] businessHub.voidRedemptionCode（作廢兌換碼）
+- [x] businessHub.redeemCode（用戶兌換碼，支援 giveaway/discount 兩種規則）
+
+### 前端
+- [x] AdminUsers：展開詳情加入「管理訂閱」按鈕
+- [x] AdminUsers：訂閱管理 Modal（方案選擇/到期日/自訂模塊/備注）
+- [x] SharedNav：用戶下拉選單加入「輸入兌換碼」入口（展開式輸入框）
+- [x] AdminBusinessHub：行銷活動卡片下方加入兌換碼管理面板
+- [x] 兌換碼面板：產生碼（前置碼+數量）、即時顯示新碼（可點擊複製）、碼列表（可作廢）
+
+### 品質保證
+- [x] TypeScript 零錯誤
+- [x] 91 項測試全部通過
+- [x] 儲存 Phase 2 checkpoint

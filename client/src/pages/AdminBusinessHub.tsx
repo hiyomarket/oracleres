@@ -723,7 +723,128 @@ function PlansTab() {
   );
 }
 
-// ─── Campaigns Tab ───────────────────────────────────────────────────────────
+// ─── Redemption Codes Panel ─────────────────────────────────────────
+function RedemptionCodesPanel({ campaignId, campaignName }: { campaignId: number; campaignName: string }) {
+  const utils = trpc.useUtils();
+  const { data: codes = [], isLoading } = trpc.businessHub.listRedemptionCodes.useQuery({ campaignId });
+  const [prefix, setPrefix] = useState("");
+  const [count, setCount] = useState("1");
+  const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
+
+  const generateMutation = trpc.businessHub.generateRedemptionCodes.useMutation({
+    onSuccess: (data) => {
+      utils.businessHub.listRedemptionCodes.invalidate({ campaignId });
+      setGeneratedCodes(data.codes);
+      toast.success(`已產生 ${data.codes.length} 組兌換碼`);
+    },
+    onError: (err) => toast.error(`產生失敗：${err.message}`),
+  });
+
+  const voidMutation = trpc.businessHub.voidRedemptionCode.useMutation({
+    onSuccess: () => {
+      utils.businessHub.listRedemptionCodes.invalidate({ campaignId });
+      toast.success("已作廢兌換碼");
+    },
+  });
+
+  const usedCount = codes.filter(c => c.isUsed).length;
+  const voidedCount = codes.filter(c => c.isVoided).length;
+  const availableCount = codes.filter(c => !c.isUsed && !c.isVoided).length;
+
+  return (
+    <div className="mt-4 border-t border-slate-700/50 pt-4">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-sm font-medium text-amber-300">🎫 兌換碼管理</p>
+          <p className="text-xs text-slate-500">活動：{campaignName}</p>
+        </div>
+        <div className="flex gap-3 text-xs">
+          <span className="text-green-400">可用 {availableCount}</span>
+          <span className="text-amber-400">已用 {usedCount}</span>
+          <span className="text-slate-600">作廢 {voidedCount}</span>
+        </div>
+      </div>
+
+      {/* 產生碼區塊 */}
+      <div className="flex gap-2 mb-3">
+        <Input
+          placeholder="前置碼（選填）"
+          value={prefix}
+          onChange={e => setPrefix(e.target.value.toUpperCase())}
+          className="bg-slate-900/60 border-slate-700 text-slate-200 text-xs w-32"
+        />
+        <Input
+          type="number"
+          min="1"
+          max="100"
+          value={count}
+          onChange={e => setCount(e.target.value)}
+          className="bg-slate-900/60 border-slate-700 text-slate-200 text-xs w-20"
+        />
+        <Button
+          size="sm"
+          onClick={() => generateMutation.mutate({ campaignId, prefix, count: parseInt(count) || 1 })}
+          disabled={generateMutation.isPending}
+          className="bg-amber-600 hover:bg-amber-700 text-black text-xs shrink-0"
+        >
+          {generateMutation.isPending ? "產生中..." : "產生碼"}
+        </Button>
+      </div>
+
+      {/* 剛產生的碼（方便複製） */}
+      {generatedCodes.length > 0 && (
+        <div className="mb-3 p-3 bg-green-900/20 border border-green-700/40 rounded-lg">
+          <p className="text-xs text-green-400 font-medium mb-2">剛產生的兌換碼：</p>
+          <div className="flex flex-wrap gap-1.5">
+            {generatedCodes.map(code => (
+              <code
+                key={code}
+                className="text-xs bg-slate-900 px-2 py-1 rounded font-mono text-green-300 cursor-pointer hover:bg-slate-800"
+                onClick={() => { navigator.clipboard.writeText(code); toast.success("已複製"); }}
+              >
+                {code}
+              </code>
+            ))}
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1">點擊碼可複製</p>
+        </div>
+      )}
+
+      {/* 碼列表 */}
+      {isLoading ? (
+        <div className="text-xs text-slate-500 py-2">載入中...</div>
+      ) : codes.length === 0 ? (
+        <div className="text-xs text-slate-600 italic py-2">尚無兌換碼</div>
+      ) : (
+        <div className="max-h-48 overflow-y-auto space-y-1">
+          {codes.map(c => (
+            <div key={c.id} className={`flex items-center justify-between px-2 py-1 rounded text-xs ${
+              c.isVoided ? "opacity-30" : c.isUsed ? "opacity-60" : ""
+            }`}>
+              <code className={`font-mono ${
+                c.isVoided ? "text-slate-600 line-through" : c.isUsed ? "text-slate-400" : "text-slate-200"
+              }`}>{c.code}</code>
+              <div className="flex items-center gap-2">
+                {c.isUsed && <span className="text-amber-400">已使用</span>}
+                {c.isVoided && <span className="text-slate-600">已作廢</span>}
+                {!c.isUsed && !c.isVoided && (
+                  <button
+                    onClick={() => voidMutation.mutate({ id: c.id })}
+                    className="text-red-500 hover:text-red-400 text-[10px]"
+                  >
+                    作廢
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Campaigns Tab ───────────────────────────────────────────────
 function CampaignsTab() {
   const utils = trpc.useUtils();
   const { data: campaigns = [], isLoading } = trpc.businessHub.listCampaigns.useQuery();
@@ -849,6 +970,8 @@ function CampaignsTab() {
                     {c.isActive ? "停用" : "啟用"}
                   </Button>
                 </div>
+                {/* 兌換碼管理區塊 */}
+                <RedemptionCodesPanel campaignId={c.id} campaignName={c.name} />
               </div>
             );
           })}

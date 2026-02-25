@@ -4,7 +4,7 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
-import { User, Settings, LogOut, ChevronDown, ShieldCheck, BarChart2, Ticket, Smartphone, LayoutDashboard, Star, Coins } from "lucide-react";
+import { User, Settings, LogOut, ChevronDown, ShieldCheck, BarChart2, Ticket, Smartphone, LayoutDashboard, Star, Coins, Gift } from "lucide-react";
 import { usePermissions, type FeatureId } from "@/hooks/usePermissions";
 
 type NavPage = "oracle" | "lottery" | "calendar" | "stats" | "weekly" | "warRoom" | "profile";
@@ -21,6 +21,74 @@ const NAV_ITEMS: { id: NavPage; featureId: FeatureId; path: string; icon: string
   { id: "calendar", featureId: "calendar", path: "/calendar", icon: "📅", label: "日曆" },
   { id: "warRoom",  featureId: "warroom",  path: "/",         icon: "⚔️", label: "每日運勢" },
 ];
+
+/** 兌換碼輸入元件（嵌入下拉選單中） */
+function RedeemCodeEntry({ onClose }: { onClose: () => void }) {
+  const [code, setCode] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const redeemMutation = trpc.businessHub.redeemCode.useMutation({
+    onSuccess: (data) => {
+      toast.success(`🎁 兌換成功！${data.reward}`);
+      setCode("");
+      setExpanded(false);
+      onClose();
+    },
+    onError: (err) => {
+      toast.error(`兌換失敗：${err.message}`);
+    },
+  });
+
+  const handleRedeem = () => {
+    const trimmed = code.trim();
+    if (!trimmed) return;
+    redeemMutation.mutate({ code: trimmed });
+  };
+
+  return (
+    <div className="mx-3 my-1">
+      {!expanded ? (
+        <button
+          onClick={() => setExpanded(true)}
+          className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-300 hover:bg-amber-500/10 hover:text-amber-300 rounded-xl transition-colors"
+        >
+          <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+            <Gift className="w-3.5 h-3.5 text-amber-400" />
+          </div>
+          輸入兌換碼
+        </button>
+      ) : (
+        <div className="bg-slate-800/60 rounded-xl p-3 border border-amber-500/20">
+          <p className="text-xs text-amber-400 font-medium mb-2 flex items-center gap-1">
+            <Gift className="w-3 h-3" /> 兌換碼
+          </p>
+          <div className="flex gap-2">
+            <input
+              autoFocus
+              value={code}
+              onChange={e => setCode(e.target.value.toUpperCase())}
+              onKeyDown={e => e.key === "Enter" && handleRedeem()}
+              placeholder="輸入兌換碼..."
+              className="flex-1 bg-slate-900/80 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 placeholder:text-slate-600 outline-none focus:border-amber-500/50 font-mono tracking-wider"
+            />
+            <button
+              onClick={handleRedeem}
+              disabled={redeemMutation.isPending || !code.trim()}
+              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-40 text-black text-xs font-bold rounded-lg transition-colors"
+            >
+              {redeemMutation.isPending ? "..." : "兌換"}
+            </button>
+          </div>
+          <button
+            onClick={() => { setExpanded(false); setCode(""); }}
+            className="mt-1.5 text-[10px] text-slate-600 hover:text-slate-400 transition-colors"
+          >
+            取消
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** 使用者頭像下拉選單 */
 function UserMenu({ user }: { user: { name?: string | null; openId?: string } }) {
@@ -188,6 +256,9 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string } })
                 </Link>
               </>
             )}
+
+            {/* 兌換碼入口 */}
+            <RedeemCodeEntry onClose={() => setOpen(false)} />
 
             {/* 登出 */}
             <div className="mx-4 my-1.5 border-t border-slate-700/50" />

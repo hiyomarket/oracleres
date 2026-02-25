@@ -1,17 +1,22 @@
 /**
  * 商業中心 Router（鳳凰計畫）
  * 提供管理員對 modules / plans / plan_modules / campaigns 的 CRUD 操作
+ * 以及 assignSubscription、redemptionCodes、redeemCode 等完整商業邏輯
  */
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb } from "../db";
+import { randomBytes } from "crypto";
 import {
   modules,
   plans,
   planModules,
   campaigns,
   userSubscriptions,
+  subscriptionLogs,
+  redemptionCodes,
+  users,
 } from "../../drizzle/schema";
 import { eq, asc, desc } from "drizzle-orm";
 
@@ -49,10 +54,7 @@ export const businessHubRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.insert(modules).values({
-        ...input,
-        isActive: 1,
-      });
+      await db.insert(modules).values({ ...input, isActive: 1 });
       return { success: true };
     }),
 
@@ -85,10 +87,7 @@ export const businessHubRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       for (const item of input) {
-        await db
-          .update(modules)
-          .set({ sortOrder: item.sortOrder })
-          .where(eq(modules.id, item.id));
+        await db.update(modules).set({ sortOrder: item.sortOrder }).where(eq(modules.id, item.id));
       }
       return { success: true };
     }),
@@ -109,15 +108,11 @@ export const businessHubRouter = router({
   listPlans: adminProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-
     const allPlans = await db.select().from(plans).orderBy(asc(plans.level));
     const allPlanModules = await db.select().from(planModules);
     const allModules = await db.select().from(modules).where(eq(modules.isActive, 1));
-
     return allPlans.map((plan) => {
-      const moduleIds = allPlanModules
-        .filter((pm) => pm.planId === plan.id)
-        .map((pm) => pm.moduleId);
+      const moduleIds = allPlanModules.filter((pm) => pm.planId === plan.id).map((pm) => pm.moduleId);
       const includedModules = allModules.filter((m) => moduleIds.includes(m.id));
       return { ...plan, modules: includedModules };
     });
@@ -138,16 +133,10 @@ export const businessHubRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-
       const { moduleIds, ...planData } = input;
       await db.insert(plans).values({ ...planData, isActive: 1 });
-
-      // 建立方案-模塊關聯
       for (const moduleId of moduleIds) {
-        await db
-          .insert(planModules)
-          .values({ planId: input.id, moduleId })
-          .catch(() => {}); // ignore duplicate
+        await db.insert(planModules).values({ planId: input.id, moduleId }).catch(() => {});
       }
       return { success: true };
     }),
@@ -168,20 +157,14 @@ export const businessHubRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-
       const { id, moduleIds, ...planData } = input;
       if (Object.keys(planData).length > 0) {
         await db.update(plans).set(planData).where(eq(plans.id, id));
       }
-
-      // 重新設定模塊關聯
       if (moduleIds !== undefined) {
         await db.delete(planModules).where(eq(planModules.planId, id));
         for (const moduleId of moduleIds) {
-          await db
-            .insert(planModules)
-            .values({ planId: id, moduleId })
-            .catch(() => {});
+          await db.insert(planModules).values({ planId: id, moduleId }).catch(() => {});
         }
       }
       return { success: true };
@@ -234,9 +217,7 @@ export const businessHubRouter = router({
         endDate: z.string().optional(),
         isActive: z.number().int().min(0).max(1).optional(),
         ruleType: z.enum(["discount", "giveaway"]).optional(),
-        ruleTarget: z
-          .object({ target_type: z.string(), target_id: z.string().optional() })
-          .optional(),
+        ruleTarget: z.object({ target_type: z.string(), target_id: z.string().optional() }).optional(),
         ruleValue: z.record(z.string(), z.unknown()).optional(),
       })
     )
@@ -269,45 +250,184 @@ export const businessHubRouter = router({
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      const [sub] = await db
-        .select()
-        .from(userSubscriptions)
-        .where(eq(userSubscriptions.userId, input.userId));
+      const [sub] = await db.select().from(userSubscriptions).where(eq(userSubscriptions.userId, input.userId));
       return sub ?? null;
     }),
 
-  /** 設定用戶訂閱方案 */
-  setUserPlan: adminProcedure
-    .input(
-      z.object({
-        userId: z.number().int(),
-        planId: z.string().nullable(),
-        planExpiresAt: z.string().nullable(),
-      })
-    )
-    .mutation(async ({ input }) => {
+  /**
+   * 完整指派訂閱（鳳凰計畫核心 API）
+   * 支援：指派主方案 + 追加自訂模塊 + 寫入審計日誌 + 同步 users 表
+   */
+  assignSubscription: adminProcedure
+    .input(z.object({
+      userId: z.number().int(),
+      planId: z.string().nullable(),
+      planExpiresAt: z.string().nullable(),
+      customModules: z.array(z.object({
+        module_id: z.string(),
+        expires_at: z.string().nullable(),
+      })).optional().default([]),
+      note: z.string().max(500).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-
       const expiresAt = input.planExpiresAt ? new Date(input.planExpiresAt) : null;
-
-      const [existing] = await db
-        .select()
-        .from(userSubscriptions)
-        .where(eq(userSubscriptions.userId, input.userId));
-
+      const [existing] = await db.select().from(userSubscriptions).where(eq(userSubscriptions.userId, input.userId));
       if (existing) {
-        await db
-          .update(userSubscriptions)
-          .set({ planId: input.planId, planExpiresAt: expiresAt })
+        await db.update(userSubscriptions)
+          .set({ planId: input.planId, planExpiresAt: expiresAt, customModules: input.customModules })
           .where(eq(userSubscriptions.userId, input.userId));
       } else {
         await db.insert(userSubscriptions).values({
           userId: input.userId,
           planId: input.planId,
           planExpiresAt: expiresAt,
+          customModules: input.customModules,
         });
       }
+      // 同步 users 表（讓前端 ctx.user 能立即反映）
+      await db.update(users)
+        .set({ planId: input.planId ?? "basic", planExpiresAt: expiresAt })
+        .where(eq(users.id, input.userId));
+      // 寫入審計日誌
+      await db.insert(subscriptionLogs).values({
+        operatorId: ctx.user.id,
+        targetUserId: input.userId,
+        action: "assign",
+        details: {
+          planId: input.planId,
+          expiresAt: input.planExpiresAt,
+          customModules: input.customModules,
+          note: input.note,
+        },
+      });
       return { success: true };
+    }),
+
+  /** 查看訂閱審計日誌 */
+  listSubscriptionLogs: adminProcedure
+    .input(z.object({
+      targetUserId: z.number().int().optional(),
+      limit: z.number().int().min(1).max(100).default(50),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const rows = await db.select().from(subscriptionLogs)
+        .orderBy(desc(subscriptionLogs.createdAt))
+        .limit(input.limit);
+      return rows;
+    }),
+
+  // ─── Redemption Codes ───────────────────────────────────────────────────
+
+  /** 為指定行銷活動產生一批兌換碼 */
+  generateRedemptionCodes: adminProcedure
+    .input(z.object({
+      campaignId: z.number().int(),
+      prefix: z.string().max(20).default(""),
+      count: z.number().int().min(1).max(100).default(1),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const codes: string[] = [];
+      for (let i = 0; i < input.count; i++) {
+        const suffix = randomBytes(3).toString("hex").toUpperCase();
+        const code = input.prefix ? `${input.prefix.toUpperCase()}-${suffix}` : suffix;
+        codes.push(code);
+      }
+      await db.insert(redemptionCodes).values(codes.map(code => ({ campaignId: input.campaignId, code })));
+      return { success: true, codes };
+    }),
+
+  /** 列出某行銷活動的所有兌換碼 */
+  listRedemptionCodes: adminProcedure
+    .input(z.object({ campaignId: z.number().int() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      return db.select().from(redemptionCodes)
+        .where(eq(redemptionCodes.campaignId, input.campaignId))
+        .orderBy(desc(redemptionCodes.createdAt));
+    }),
+
+  /** 作廢兌換碼 */
+  voidRedemptionCode: adminProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(redemptionCodes).set({ isVoided: 1 }).where(eq(redemptionCodes.id, input.id));
+      return { success: true };
+    }),
+
+  // ─── User: Redeem Code (前台) ────────────────────────────────────────────
+
+  /**
+   * 用戶兌換碼（protectedProcedure，非 admin）
+   * 兌換成功後根據行銷活動規則給予對應權益：
+   * - giveaway：追加 customModules
+   * - discount：存入 users.availableDiscounts
+   */
+  redeemCode: protectedProcedure
+    .input(z.object({ code: z.string().trim() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const now = new Date();
+      const upperCode = input.code.toUpperCase();
+      // 1. 查找兌換碼
+      const [rc] = await db.select().from(redemptionCodes)
+        .where(eq(redemptionCodes.code, upperCode))
+        .limit(1);
+      if (!rc) throw new TRPCError({ code: "NOT_FOUND", message: "找不到此兌換碼" });
+      if (rc.isVoided) throw new TRPCError({ code: "BAD_REQUEST", message: "此兌換碼已作廢" });
+      if (rc.isUsed) throw new TRPCError({ code: "BAD_REQUEST", message: "此兌換碼已被使用" });
+      // 2. 查找對應行銷活動
+      const [campaign] = await db.select().from(campaigns)
+        .where(eq(campaigns.id, rc.campaignId))
+        .limit(1);
+      if (!campaign) throw new TRPCError({ code: "NOT_FOUND", message: "找不到對應活動" });
+      if (!campaign.isActive) throw new TRPCError({ code: "BAD_REQUEST", message: "此活動已結束" });
+      if (campaign.endDate && campaign.endDate < now)
+        throw new TRPCError({ code: "BAD_REQUEST", message: "此活動已過期" });
+      // 3. 標記兌換碼已使用
+      await db.update(redemptionCodes)
+        .set({ isUsed: 1, usedBy: ctx.user.id, usedAt: now })
+        .where(eq(redemptionCodes.id, rc.id));
+      // 4. 根據規則給予權益
+      const ruleType = campaign.ruleType;
+      const ruleValue = campaign.ruleValue as Record<string, unknown>;
+      let reward = "";
+      if (ruleType === "giveaway") {
+        const moduleId = ruleValue.giveaway_module_id as string;
+        const expiresAt = (ruleValue.expires_at as string | null) ?? null;
+        const [sub] = await db.select().from(userSubscriptions)
+          .where(eq(userSubscriptions.userId, ctx.user.id));
+        const existingCustom = (sub?.customModules as Array<{ module_id: string; expires_at: string | null }> ?? []);
+        const already = existingCustom.find(m => m.module_id === moduleId);
+        if (!already) {
+          const newCustom = [...existingCustom, { module_id: moduleId, expires_at: expiresAt }];
+          if (sub) {
+            await db.update(userSubscriptions)
+              .set({ customModules: newCustom })
+              .where(eq(userSubscriptions.userId, ctx.user.id));
+          } else {
+            await db.insert(userSubscriptions).values({ userId: ctx.user.id, customModules: newCustom });
+          }
+        }
+        reward = `已解鎖模塊：${moduleId}`;
+      } else if (ruleType === "discount") {
+        const discountPct = ruleValue.discount_percentage as number;
+        const expiresAt = (ruleValue.expires_at as string | null) ?? null;
+        const [u] = await db.select().from(users).where(eq(users.id, ctx.user.id));
+        const existing = (u?.availableDiscounts ?? []) as Array<{ campaign_id: number; discount_percentage?: number; expires_at: string | null }>;
+        const newDiscounts = [...existing, { campaign_id: campaign.id, discount_percentage: discountPct, expires_at: expiresAt }];
+        await db.update(users).set({ availableDiscounts: newDiscounts }).where(eq(users.id, ctx.user.id));
+        reward = `已獲得 ${Math.round((1 - discountPct) * 100)}% 折扣券`;
+      }
+      return { success: true, reward, campaignName: campaign.name };
     }),
 });

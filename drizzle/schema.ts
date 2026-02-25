@@ -146,6 +146,9 @@ export const users = mysqlTable("users", {
   planExpiresAt: timestamp("planExpiresAt"),
   // 積分餘額
   pointsBalance: int("pointsBalance").notNull().default(0),
+  // 折扣券暫存（JSON 陣列，待支付系統接入時使用）
+  // 例如 [{ "campaign_id": 1, "discount_percentage": 0.8, "expires_at": "2027-01-01" }]
+  availableDiscounts: json("availableDiscounts").$type<Array<{ campaign_id: number; discount_percentage?: number; expires_at: string | null }>>(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -424,6 +427,48 @@ export type InsertInviteCode = typeof inviteCodes.$inferInsert;
  *   stats             - 統計
  *   profile           - 命格資料
  */
+/**
+ * 訂閱操作審計日誌表（鳳凰計畫）
+ * 記錄每次管理員為用戶指派方案的操作，供未來審計追溯
+ */
+export const subscriptionLogs = mysqlTable("subscription_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  // 操作者（管理員 userId）
+  operatorId: int("operatorId").notNull(),
+  // 目標用戶 userId
+  targetUserId: int("targetUserId").notNull(),
+  // 操作類型：assign=指派方案, revoke=撤銷方案, add_module=追加模塊, remove_module=移除模塊
+  action: varchar("action", { length: 50 }).notNull(),
+  // 操作詳情（JSON，記錄 planId、expiresAt、customModules 等）
+  details: json("details").$type<Record<string, unknown>>(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type SubscriptionLog = typeof subscriptionLogs.$inferSelect;
+export type InsertSubscriptionLog = typeof subscriptionLogs.$inferInsert;
+
+/**
+ * 兌換碼資料表（鳳凰計畫 - 行銷活動兌換碼）
+ * 每個行銷活動可產生多個兌換碼，用戶兌換後獲得對應權益
+ */
+export const redemptionCodes = mysqlTable("redemption_codes", {
+  id: int("id").autoincrement().primaryKey(),
+  // 關聯的行銷活動 ID
+  campaignId: int("campaignId").notNull(),
+  // 兌換碼（唯一，人類可讀，如 ANNIVERSARY-A8X7）
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  // 是否已被使用
+  isUsed: tinyint("isUsed").notNull().default(0),
+  // 使用者 userId（null = 尚未使用）
+  usedBy: int("usedBy"),
+  // 使用時間
+  usedAt: timestamp("usedAt"),
+  // 是否已作廢（管理員手動作廢）
+  isVoided: tinyint("isVoided").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type RedemptionCode = typeof redemptionCodes.$inferSelect;
+export type InsertRedemptionCode = typeof redemptionCodes.$inferInsert;
+
 export const userPermissions = mysqlTable("user_permissions", {
   id: int("id").autoincrement().primaryKey(),
   // 被授權的使用者
