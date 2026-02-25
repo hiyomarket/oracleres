@@ -889,3 +889,17 @@
 - [x] 修復活躍時段分析查詢
 - [x] 修復方案分佈查詢
 - [x] 修復用戶篩選列表查詢
+
+## Bug 修正 - /account-manager 和 /permissions 頁面錯誤
+
+- [ ] 診斷 /account-manager 頁面錯誤
+- [ ] 診斷 /permissions 頁面錯誤
+- [ ] 修復兩個頁面的所有錯誤
+
+## 管理後台架構重整
+
+- [x] 建立 AdminLayout 側邊欄組件（儀表板/用戶管理/權限管理）
+- [x] 建立 /admin/users 用戶管理頁面（篩選器+分頁+積分/方案顯示）
+- [x] AdminDashboard 套用 AdminLayout 側邊欄
+- [x] 更新 App.tsx 路由（加入 /admin/users）
+- [x] 修正 AdminDashboard 快速操作卡片連結

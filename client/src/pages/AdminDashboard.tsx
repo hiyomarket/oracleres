@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { SharedNav } from "@/components/SharedNav";
+import { AdminLayout } from "@/components/AdminLayout";
 import {
   BarChart,
   Bar,
@@ -79,9 +79,7 @@ export default function AdminDashboard() {
   }));
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-white oracle-page-content">
-      <SharedNav currentPage="oracle" />
-
+    <AdminLayout>
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* 標題 */}
         <div className="mb-8">
@@ -232,7 +230,7 @@ export default function AdminDashboard() {
 
         {/* 快速操作 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link href="/account-manager">
+          <Link href="/admin/users">
             <div className="bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 hover:border-amber-500/50 rounded-xl p-5 cursor-pointer transition-all duration-200 group">
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-2xl">👤</span>
@@ -241,7 +239,7 @@ export default function AdminDashboard() {
               <p className="text-sm text-slate-400">查看所有用戶、篩選方案、管理積分與權限</p>
             </div>
           </Link>
-          <Link href="/permissions">
+          <Link href="/permission-manager">
             <div className="bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 hover:border-amber-500/50 rounded-xl p-5 cursor-pointer transition-all duration-200 group">
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-2xl">🔑</span>
@@ -252,10 +250,9 @@ export default function AdminDashboard() {
           </Link>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
-
 function KpiCard({
   label,
   value,
