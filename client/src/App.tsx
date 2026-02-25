@@ -11,7 +11,6 @@ import OracleCalendar from "@/pages/OracleCalendar";
 import WeeklyReport from "@/pages/WeeklyReport";
 import WarRoom from "@/pages/WarRoom";
 import ProfilePage from "@/pages/ProfilePage";
-import AccountManager from "@/pages/AccountManager";
 import MyProfile from "@/pages/MyProfile";
 import PermissionManager from "@/pages/PermissionManager";
 import { AccessGate } from "@/components/AccessGate";
@@ -31,7 +30,6 @@ function Router() {
         <Route path={"/weekly"} component={WeeklyReport} />
         <Route path={"/war-room"} component={WarRoom} />
         <Route path={"/profile"} component={ProfilePage} />
-        <Route path={"/account-manager"} component={AccountManager} />
         <Route path={"/my-profile"} component={MyProfile} />
         <Route path={"/permission-manager"} component={PermissionManager} />
         <Route path={"/admin/dashboard"} component={AdminDashboard} />

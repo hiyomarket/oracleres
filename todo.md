@@ -869,3 +869,15 @@
 - [x] 建立 DailySigninModal 彈窗組件（自動彈出、動畫、積分領取）
 - [x] App.tsx 層級整合：登入後偵測未簽到自動彈出
 - [x] 移除 WarRoom 頁面的嵌入式 DailySignin 橫幅
+
+## Bug 修正 - AccountManager 巢狀 button 錯誤
+
+- [x] 修復 AccountManager.tsx 中 button 內含 button 的 DOM 巢狀錯誤
+
+## 主帳號選單重新設計 + 舊帳號管理移除
+
+- [x] 找出並讀取主帳號下拉選單組件
+- [x] 重新設計主帳號選單（視覺升級、加入管理員儀表板入口）
+- [x] 移除選單中舊的「帳號管理」連結
+- [x] 移除 App.tsx 中舊 AccountManager 路由
+- [x] 修復 AccountManager 巢狀 button 錯誤（外層 button 改為 div）

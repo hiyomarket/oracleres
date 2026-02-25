@@ -4,7 +4,7 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
-import { User, Settings, LogOut, ChevronDown, ShieldCheck, BarChart2, Ticket, Smartphone } from "lucide-react";
+import { User, Settings, LogOut, ChevronDown, ShieldCheck, BarChart2, Ticket, Smartphone, LayoutDashboard, Star, Coins } from "lucide-react";
 import { usePermissions, type FeatureId } from "@/hooks/usePermissions";
 
 type NavPage = "oracle" | "lottery" | "calendar" | "stats" | "weekly" | "warRoom" | "profile";
@@ -28,6 +28,7 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string } })
   const ref = useRef<HTMLDivElement>(null);
   const { data: status } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
   const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
+  const { data: pointsData } = trpc.points.getBalance.useQuery(undefined, { staleTime: 30000 });
   const { hasFeature } = usePermissions();
   const displayName = profile?.displayName || user.name;
   const logoutMutation = trpc.auth.logout.useMutation({
@@ -44,107 +45,159 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string } })
 
   const canSeeWeekly = status?.isOwner || hasFeature("weekly");
   const canSeeStats  = status?.isOwner || hasFeature("stats");
+  const points = pointsData?.balance ?? 0;
 
   return (
     <div ref={ref} className="relative">
+      {/* 觸發按鈕 */}
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 hover:bg-slate-800/60 rounded-xl px-2 py-1 transition-colors"
+        className="flex items-center gap-1.5 hover:bg-slate-800/60 rounded-xl px-2 py-1.5 transition-colors group"
       >
-        <div className="w-7 h-7 rounded-full bg-amber-900/40 border border-amber-600/40 flex items-center justify-center text-xs text-amber-400">
-          {displayName?.[0] ?? "?"}
+        <div className="relative">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-900/60 to-amber-700/30 border border-amber-600/50 flex items-center justify-center text-xs font-bold text-amber-300">
+            {displayName?.[0]?.toUpperCase() ?? "?"}
+          </div>
+          {status?.isOwner && (
+            <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 border border-[#0a0a0f] flex items-center justify-center">
+              <Star className="w-1.5 h-1.5 text-black" fill="black" />
+            </div>
+          )}
         </div>
-        <span className="text-xs text-slate-400 hidden sm:block max-w-[80px] truncate">{displayName}</span>
-        <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`} />
+        <span className="text-xs text-slate-400 hidden sm:block max-w-[80px] truncate group-hover:text-slate-200 transition-colors">{displayName}</span>
+        <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-56 bg-slate-900 border border-slate-700/60 rounded-2xl shadow-xl overflow-hidden z-50">
-          {/* 用戶資訊 */}
-          <div className="px-3 py-2.5 border-b border-slate-800">
-            <p className="text-xs font-medium text-white truncate">{displayName}</p>
-            {status?.isOwner && (
-              <p className="text-[10px] text-amber-400 mt-0.5">✦ 主帳號</p>
-            )}
+        <div className="absolute right-0 top-full mt-2 w-64 bg-[#0f1117] border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-50">
+
+          {/* 用戶資訊區塊 */}
+          <div className="px-4 py-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border-b border-slate-700/40">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-800/60 to-amber-600/30 border border-amber-600/40 flex items-center justify-center text-sm font-bold text-amber-300 shrink-0">
+                {displayName?.[0]?.toUpperCase() ?? "?"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{displayName}</p>
+                {status?.isOwner ? (
+                  <p className="text-[10px] text-amber-400 flex items-center gap-1 mt-0.5">
+                    <Star className="w-2.5 h-2.5" fill="currentColor" />
+                    主帳號
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-slate-500 mt-0.5">一般會員</p>
+                )}
+              </div>
+              {/* 積分顯示 */}
+              {points > 0 && (
+                <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2 py-1 shrink-0">
+                  <Coins className="w-3 h-3 text-amber-400" />
+                  <span className="text-xs font-bold text-amber-400">{points}</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="py-1">
+          <div className="py-1.5">
+
             {/* 非主帳號：我的命格資料 */}
             {!status?.isOwner && (
               <Link
                 href="/my-profile"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
               >
-                <User className="w-3.5 h-3.5 text-blue-400" />
+                <div className="w-7 h-7 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
+                  <User className="w-3.5 h-3.5 text-blue-400" />
+                </div>
                 我的命格資料
               </Link>
             )}
 
-            {/* 刮刮樂驗證（原：週報） */}
+            {/* 刷刷樂驗證 */}
             {canSeeWeekly && (
               <Link
                 href="/weekly"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
               >
-                <Ticket className="w-3.5 h-3.5 text-emerald-400" />
-                刮刮樂驗證
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
+                  <Ticket className="w-3.5 h-3.5 text-emerald-400" />
+                </div>
+                刷刷樂驗證
               </Link>
             )}
 
-            {/* 擲筊分析（原：統計） */}
+            {/* 擲筊分析 */}
             {canSeeStats && (
               <Link
                 href="/stats"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
               >
-                <BarChart2 className="w-3.5 h-3.5 text-violet-400" />
+                <div className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center shrink-0">
+                  <BarChart2 className="w-3.5 h-3.5 text-violet-400" />
+                </div>
                 擲筊分析
               </Link>
             )}
 
-            {/* 加入主畫面教學 */}
+            {/* 加入手機主畫面 */}
             <Link
               href="/add-to-home"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
             >
-              <Smartphone className="w-3.5 h-3.5 text-sky-400" />
+              <div className="w-7 h-7 rounded-lg bg-sky-500/15 flex items-center justify-center shrink-0">
+                <Smartphone className="w-3.5 h-3.5 text-sky-400" />
+              </div>
               加入手機主畫面
             </Link>
 
-            {/* 主帳號專屬 */}
+            {/* 主帳號專屬管理區 */}
             {status?.isOwner && (
               <>
-                <div className="mx-3 my-1 border-t border-slate-800" />
+                <div className="mx-4 my-1.5 border-t border-slate-700/50" />
+                <p className="px-4 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">管理區</p>
+
+                {/* 管理員儀表板 */}
                 <Link
-                  href="/account-manager"
+                  href="/admin/dashboard"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-amber-500/10 hover:text-amber-300 transition-colors group/item"
                 >
-                  <Settings className="w-3.5 h-3.5 text-purple-400" />
-                  帳號管理
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0 group-hover/item:bg-amber-500/25 transition-colors">
+                    <LayoutDashboard className="w-3.5 h-3.5 text-amber-400" />
+                  </div>
+                  <div className="flex-1">
+                    <span>管理員儀表板</span>
+                    <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">新</span>
+                  </div>
                 </Link>
+
+                {/* 功能權限管理 */}
                 <Link
                   href="/permission-manager"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
                 >
-                  <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                  <div className="w-7 h-7 rounded-lg bg-green-500/15 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
+                  </div>
                   功能權限管理
                 </Link>
               </>
             )}
 
             {/* 登出 */}
-            <div className="mx-3 my-1 border-t border-slate-800" />
+            <div className="mx-4 my-1.5 border-t border-slate-700/50" />
             <button
               onClick={() => logoutMutation.mutate()}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <div className="w-7 h-7 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+                <LogOut className="w-3.5 h-3.5" />
+              </div>
               登出
             </button>
           </div>

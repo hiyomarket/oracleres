@@ -142,10 +142,8 @@ export default function AccountManager() {
             <h1 className="text-lg font-bold text-white">帳號管理</h1>
             <p className="text-xs text-slate-500">主帳號：{user?.name}</p>
           </div>
-          <Link href="/admin/dashboard">
-            <button className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-400 text-xs border border-amber-500/30 hover:bg-amber-500/30 transition-colors">
-              儀表板
-            </button>
+          <Link href="/admin/dashboard" className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-400 text-xs border border-amber-500/30 hover:bg-amber-500/30 transition-colors">
+            儀表板
           </Link>
         </div>
       </div>
@@ -419,9 +417,12 @@ export default function AccountManager() {
             ) : (
               userList.map(u => (
                 <div key={u.id} className="bg-slate-800/40 border border-slate-700/50 rounded-2xl overflow-hidden">
-                  <button
+                  <div
                     onClick={() => setExpandedUser(expandedUser === u.id ? null : u.id)}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-800/60 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-800/60 transition-colors cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && setExpandedUser(expandedUser === u.id ? null : u.id)}
                   >
                     <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-white shrink-0">
                       {(u.name ?? "?")[0]}
@@ -475,7 +476,7 @@ export default function AccountManager() {
                         <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
                       )}
                     </div>
-                  </button>
+                  </div>
                   <AnimatePresence>
                     {expandedUser === u.id && (
                       <motion.div
