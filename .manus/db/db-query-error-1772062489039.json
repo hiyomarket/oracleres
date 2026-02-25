@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO modules (id, name, icon, description, nav_path, sort_order, is_visible, is_active, requires_feature, created_at, updated_at)\nSELECT 'module_diet', '飲食羅盤', '🍽️', '以今日五行能量，提供飲食建議與附近餐廳推薦', '/diet', 45, 1, 1, 'warroom_dietary', UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000\nWHERE NOT EXISTS (SELECT 1 FROM modules WHERE id = 'module_diet');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute INSERT INTO modules (id, name, icon, description, nav_path, sort_order, is_visible, is_active, requires_feature, created_at, updated_at)\nSELECT 'module_diet', '飲食羅盤', '🍽️', '以今日五行能量，提供飲食建議與附近餐廳推薦', '/diet', 45, 1, 1, 'warroom_dietary', UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000\nWHERE NOT EXISTS (SELECT 1 FROM modules WHERE id = 'module_diet');",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'nav_path' in 'field list'"
+  ]
+}

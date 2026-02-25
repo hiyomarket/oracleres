@@ -43,7 +43,7 @@ function SectionCard({ title, icon, children, className = "" }: { title: string;
   );
 }
 
-type ActiveTab = "wuxing" | "outfit" | "diet" | "bracelet";
+type ActiveTab = "outfit" | "bracelet";
 
 export default function OutfitPage() {
   const { hasFeature, isAdmin } = usePermissions();
@@ -80,9 +80,7 @@ export default function OutfitPage() {
 
   const TABS: { key: ActiveTab; label: string; icon: string; feature?: string }[] = [
     { key: "outfit", label: "穿搭建議", icon: "👗", feature: "warroom_outfit" },
-    { key: "diet", label: "飲食羅盤", icon: "🍽️", feature: "warroom_dietary" },
     { key: "bracelet", label: "手串矩陣", icon: "📿", feature: "warroom_outfit" },
-    { key: "wuxing", label: "五行總覽", icon: "⚖️" },
   ];
 
   return (
@@ -94,7 +92,7 @@ export default function OutfitPage() {
           <h1 className="text-2xl font-bold text-amber-300 flex items-center gap-2">
             <span>✨</span> 補運穿搭
           </h1>
-          <p className="text-white/40 text-sm mt-1">以今日五行能量，為你量身打造穿搭與飲食策略</p>
+          <p className="text-white/40 text-sm mt-1">以今日五行能量，為你量身打造穿搭策略</p>
         </motion.div>
 
         {/* 日期選擇器 */}
@@ -145,67 +143,55 @@ export default function OutfitPage() {
         ) : !data ? (
           <div className="text-center py-12 text-white/30">無法載入今日能量資料</div>
         ) : (
-          <AnimatePresence mode="wait">
-            {/* 五行加權總覽 */}
-            {activeTab === "wuxing" && (
-              <motion.div key="wuxing" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                <SectionCard title="今日五行加權總覽" icon="⚖️">
-                  <div className="space-y-2">
-                    <div className="rounded-xl bg-white/5 border border-white/10 p-3 mb-3">
-                      <p className="text-white/60 text-xs">
-                        計算公式：<span className="text-amber-300 font-mono">今日加權 = 本命×30% + 環境×70%</span>
-                      </p>
-                    </div>
-                    {data.elementOverview && (data.elementOverview as { element: string; natalPct: number; envPct: number; weightedPct: number; energyLevel: { stars: number; level: string } }[]).length > 0 && (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="text-white/30 border-b border-white/10">
-                              <th className="text-left py-2 pr-3">五行</th>
-                              <th className="text-right py-2 pr-3">本命%</th>
-                              <th className="text-right py-2 pr-3">環境%</th>
-                              <th className="text-right py-2 pr-3">加權%</th>
-                              <th className="text-left pl-3 py-2">能量</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {(data.elementOverview as { element: string; natalPct: number; envPct: number; weightedPct: number; energyLevel: { stars: number; level: string } }[]).map((row, i) => {
-                              const colors = WUXING_COLORS[row.element] ?? { bg: "", border: "", text: "text-white" };
-                              return (
-                                <tr key={i} className={`border-b border-white/5 ${colors.bg}`}>
-                                  <td className={`py-2 pr-3 font-bold ${colors.text}`}>{row.element}</td>
-                                  <td className="text-right py-2 pr-3 text-white/50">{row.natalPct}%</td>
-                                  <td className="text-right py-2 pr-3 text-white/50">{row.envPct}%</td>
-                                  <td className={`text-right py-2 pr-3 font-semibold ${row.weightedPct >= 25 ? "text-amber-400" : row.weightedPct >= 15 ? "text-emerald-400" : "text-red-400"}`}>
-                                    {row.weightedPct}%
-                                  </td>
-                                  <td className="pl-3 py-2">
-                                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                      row.energyLevel.stars >= 4 ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" :
-                                      row.energyLevel.stars >= 3 ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30" :
-                                      "bg-red-500/20 text-red-300 border border-red-500/30"
-                                    }`}>
-                                      {row.energyLevel.level}
-                                    </span>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                    {data.wuxing?.coreContradiction && (
-                      <div className="rounded-xl bg-amber-950/20 border border-amber-500/20 p-3 mt-2">
-                        <span className="text-amber-400 text-xs font-semibold">⚡ 今日核心矛盾：</span>
-                        <span className="text-amber-300/80 text-xs ml-2">{data.wuxing.coreContradiction}</span>
-                      </div>
-                    )}
-                  </div>
-                </SectionCard>
-              </motion.div>
-            )}
+          <>
+        {/* ═══ 五行加權總覽（常駐顯示）═══ */}
+        {data && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
+            <SectionCard title="今日五行加權總覽" icon="⚖️">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-white/40 border-b border-white/10">
+                      <th className="text-left py-2 pr-3">五行</th>
+                      <th className="text-right py-2 px-2">本命</th>
+                      <th className="text-right py-2 px-2">環境</th>
+                      <th className="text-right py-2 px-2 font-bold text-amber-300/80">加權</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.wuxing && ["木","火","土","金","水"].map((el) => {
+                      const natal = data.wuxing.natal?.[el as keyof typeof data.wuxing.natal] ?? 0;
+                      const env = data.wuxing.environment?.[el as keyof typeof data.wuxing.environment] ?? 0;
+                      const w = data.wuxing.weighted?.[el as keyof typeof data.wuxing.weighted] ?? 0;
+                      const isStrong = el === data.wuxing.dominantElement;
+                      const isWeak = el === data.wuxing.weakestElement;
+                      return (
+                        <tr key={el} className={`border-b border-white/5 ${isStrong ? "bg-amber-500/5" : isWeak ? "bg-blue-500/5" : ""}`}>
+                          <td className="py-2 pr-3 font-semibold text-white/80">{el}</td>
+                          <td className="text-right py-2 px-2 text-white/50">{(natal * 100).toFixed(0)}%</td>
+                          <td className="text-right py-2 px-2 text-white/50">{(env * 100).toFixed(0)}%</td>
+                          <td className={`text-right py-2 px-2 font-bold ${isStrong ? "text-amber-400" : isWeak ? "text-blue-400" : "text-white/70"}`}>
+                            {(w * 100).toFixed(0)}%
+                            {isStrong && <span className="ml-1 text-amber-500">↑</span>}
+                            {isWeak && <span className="ml-1 text-blue-500">↓</span>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {data.wuxing?.coreContradiction && (
+                <div className="mt-3 flex items-start gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <span className="text-amber-400 text-sm">⚡</span>
+                  <span className="text-amber-300/80 text-xs ml-2">{data.wuxing.coreContradiction}</span>
+                </div>
+              )}
+            </SectionCard>
+          </motion.div>
+        )}
 
+          <AnimatePresence mode="wait">
             {/* 穿搭建議 */}
             {activeTab === "outfit" && (
               !isAdmin && !hasFeature("warroom_outfit") ? (
@@ -260,60 +246,6 @@ export default function OutfitPage() {
             )}
 
             {/* 飲食建議 */}
-            {activeTab === "diet" && (
-              !isAdmin && !hasFeature("warroom_dietary") ? (
-                <motion.div key="diet-locked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <FeatureLockedCard feature="warroom_dietary" />
-                </motion.div>
-              ) : (
-                <motion.div key="diet" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                  <SectionCard title="今日飲食建議" icon="🍽️">
-                    <div className="space-y-3">
-                      {data.dietary?.supplements?.map((item: { element: string; priority: number; foods: string[]; advice: string }, i: number) => (
-                        <div key={i} className={`rounded-xl border p-3 ${
-                          item.element === "火" ? "bg-red-950/20 border-red-500/20" :
-                          item.element === "土" ? "bg-amber-950/20 border-amber-500/20" :
-                          item.element === "金" ? "bg-slate-800/40 border-slate-500/20" :
-                          "bg-emerald-950/20 border-emerald-500/20"
-                        }`}>
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className={`text-xs font-semibold ${
-                              item.element === "火" ? "text-red-400" :
-                              item.element === "土" ? "text-amber-400" :
-                              item.element === "金" ? "text-slate-300" : "text-emerald-400"
-                            }`}>
-                              {item.element === "火" ? "🔥" : item.element === "土" ? "🌍" : item.element === "金" ? "⚪" : "🌊"} 補{item.element}食物（優先級#{item.priority}）
-                            </span>
-                          </div>
-                          <p className="text-white/60 text-xs leading-relaxed mb-2">{item.advice}</p>
-                          <div className="flex flex-wrap gap-1">
-                            {item.foods.map((food: string, fi: number) => (
-                              <span key={fi} className="text-xs bg-white/10 text-white/60 px-2 py-0.5 rounded-full">{food}</span>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                      {data.dietary?.avoid && data.dietary.avoid.length > 0 && (
-                        <div className="rounded-xl bg-slate-800/40 border border-slate-500/20 p-3">
-                          <div className="text-slate-400 text-xs font-semibold mb-2">⚠️ 今日少吃</div>
-                          {data.dietary.avoid.map((item: { element: string; foods: string[]; reason: string }, i: number) => (
-                            <div key={i} className="mb-2">
-                              <p className="text-slate-300 text-xs">{item.element}屬食物：{item.foods.slice(0, 4).join("、")}</p>
-                              <p className="text-slate-500 text-xs mt-0.5">{item.reason}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {data.dietary?.supplements && data.dietary.supplements.length > 0 && (
-                        <NearbyRestaurants supplements={data.dietary.supplements} todayDirections={data.todayDirections} />
-                      )}
-                    </div>
-                  </SectionCard>
-                </motion.div>
-              )
-            )}
-
-            {/* 手串矩陣 */}
             {activeTab === "bracelet" && (
               !isAdmin && !hasFeature("warroom_outfit") ? (
                 <motion.div key="bracelet-locked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -398,6 +330,7 @@ export default function OutfitPage() {
               )
             )}
           </AnimatePresence>
+          </>
         )}
       </main>
     </div>

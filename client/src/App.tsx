@@ -18,6 +18,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
 import AdminBusinessHub from "@/pages/AdminBusinessHub";
 import OutfitPage from "@/pages/OutfitPage";
+import DietPage from "@/pages/DietPage";
 import DivinationPage from "@/pages/DivinationPage";
 import LuckCyclePage from "@/pages/LuckCyclePage";
 import { DailySigninModal } from "@/components/DailySigninModal";
@@ -39,6 +40,7 @@ function Router() {
         <Route path={"/admin/users"} component={AdminUsers} />
         <Route path={"/admin/business-hub"} component={AdminBusinessHub} />
         <Route path={"/outfit"} component={OutfitPage} />
+        <Route path={"/diet"} component={DietPage} />
         <Route path={"/divination"} component={DivinationPage} />
         <Route path={"/luck-cycle"} component={LuckCyclePage} />
         <Route path={"/add-to-home"} component={AddToHome} />

@@ -19,7 +19,9 @@ const FALLBACK_NAV = [
   { id: "module_oracle",   navPath: "/oracle",   icon: "☯️", name: "擲筊",    hasAccess: true },
   { id: "module_lottery",  navPath: "/lottery",  icon: "🎰", name: "選號",    hasAccess: true },
   { id: "module_calendar", navPath: "/calendar", icon: "📅", name: "日曆",    hasAccess: true },
-  { id: "module_warroom",  navPath: "/",         icon: "⚔️", name: "每日運勢", hasAccess: true },
+  { id: "module_warroom",  navPath: "/",         icon: "⚔️", name: "每日運勢", hasAccess: true, isCentral: true },
+  { id: "module_outfit",   navPath: "/outfit",   icon: "👗", name: "補運穿搭", hasAccess: true },
+  { id: "module_diet",     navPath: "/diet",     icon: "🍽️", name: "飲食羅盤", hasAccess: true },
 ];
 
 /** 兌換碼輸入元件（嵌入下拉選單中） */

@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO modules (id, name, icon, description, category, sortOrder, containedFeatures, navPath, isActive, isCentral)\nSELECT 'module_diet', '飲食羅盤', '🍽️', '以今日五行能量，提供飲食建議與附近餐廳推薦', 'addon', 45, '[\"warroom_dietary\"]', '/diet', 1, 0\nWHERE NOT EXISTS (SELECT 1 FROM modules WHERE id = 'module_diet');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute INSERT INTO modules (id, name, icon, description, category, sortOrder, containedFeatures, navPath, isActive, isCentral)\nSELECT 'module_diet', '飲食羅盤', '🍽️', '以今日五行能量，提供飲食建議與附近餐廳推薦', 'addon', 45, '[\"warroom_dietary\"]', '/diet', 1, 0\nWHERE NOT EXISTS (SELECT 1 FROM modules WHERE id = 'module_diet');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1666
+}

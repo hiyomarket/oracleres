@@ -1046,3 +1046,13 @@
 - [x] 靈數篩選器加入塔羅牌名
 - [x] 模塊管理器升級為 @dnd-kit 樹狀視圖拖拽排序
 - [x] 91 項測試全部通過，TypeScript 零錯誤
+
+## 鳳凰計畫 Phase 4 修正 - 2026-02-26（沙盒重置後重新套用）
+- [x] WarRoom.tsx 清理：移除 outfit/wealth Tab 及底部快捷按鈕，修復 JSX 結構，移除 ModuleCarousel 重複引用
+- [x] WarRoom.tsx Tab 精簡為 3 個：英雄劇本、塔羅流日、時辰能量
+- [x] OutfitPage.tsx 重構：五行加權總覽移至頂部常駐顯示，移除飲食 Tab，Tab 精簡為穿搭建議+手串矩陣
+- [x] 新建 DietPage.tsx（/diet 獨立飲食羅盤頁面）
+- [x] App.tsx 加入 /diet 路由
+- [x] 資料庫新增 module_diet 模塊（navPath=/diet, icon=🍽️, sortOrder=45）
+- [x] SharedNav FALLBACK_NAV 更新：加入 outfit 和 diet 模塊，warroom 設為 isCentral
+- [x] TypeScript 零錯誤驗證通過
