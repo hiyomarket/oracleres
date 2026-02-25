@@ -17,6 +17,7 @@ import PermissionManager from "@/pages/PermissionManager";
 import { AccessGate } from "@/components/AccessGate";
 import AddToHome from "@/pages/AddToHome";
 import AdminDashboard from "@/pages/AdminDashboard";
+import { DailySigninModal } from "@/components/DailySigninModal";
 
 function Router() {
   return (
@@ -52,6 +53,7 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
+          <DailySigninModal />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

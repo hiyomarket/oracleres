@@ -9,7 +9,6 @@ import { TopicAdvicePanel } from "@/components/TopicAdvicePanel";
 import { Zap, Bell, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { NearbyRestaurants } from "@/components/NearbyRestaurants";
-import { DailySignin } from "@/components/DailySignin";
 
 // 五行顏色映射
 const WUXING_COLORS: Record<string, { bg: string; border: string; text: string; glow: string }> = {
@@ -248,11 +247,6 @@ export default function WarRoom() {
       <ProfileIncompleteBanner featureName="每日運勢" />
       {!isAdmin && !hasFeature("warroom") && <FeatureLockedCard feature="warroom" />}
       {(isAdmin || hasFeature("warroom")) && <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 pb-24 relative z-10 oracle-page-content">
-
-        {/* ═══ 每日簽到 ═══ */}
-        <div className="mb-4">
-          <DailySignin />
-        </div>
 
         {/* ═══ 模塊A：頂部核心數據看板 ═══ */}
         <motion.div

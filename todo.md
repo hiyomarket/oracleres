@@ -863,3 +863,9 @@
 ### 測試
 - [x] 積分系統 vitest 測試（13 個測試案例）
 - [x] 91 項測試全部通過，TypeScript 零錯誤
+
+## 每日簽到彈窗改版
+
+- [x] 建立 DailySigninModal 彈窗組件（自動彈出、動畫、積分領取）
+- [x] App.tsx 層級整合：登入後偵測未簽到自動彈出
+- [x] 移除 WarRoom 頁面的嵌入式 DailySignin 橫幅
