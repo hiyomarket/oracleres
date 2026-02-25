@@ -1,6 +1,6 @@
-import { eq, desc, sql, count, and } from "drizzle-orm";
+import { eq, desc, sql, count, and, lte, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession, lotterySessions, InsertLotterySession, LotterySession, lotteryResults, InsertLotteryResult, LotteryResult, favoriteStores, InsertFavoriteStore, scratchLogs, InsertScratchLog, ScratchLog, braceletWearLogs, InsertBraceletWearLog, BraceletWearLog } from "../drizzle/schema";
+import { InsertUser, users, oracleSessions, InsertOracleSession, OracleSession, lotterySessions, InsertLotterySession, LotterySession, lotteryResults, InsertLotteryResult, LotteryResult, favoriteStores, InsertFavoriteStore, scratchLogs, InsertScratchLog, ScratchLog, braceletWearLogs, InsertBraceletWearLog, BraceletWearLog, campaigns, userSubscriptions } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -72,6 +72,72 @@ export async function getUserByOpenId(openId: string) {
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * 自動迎新：對新用戶套用默認迎新活動的獎勵
+ * 在 OAuth 回調建立新用戶後呼叫此函數
+ * 如果沒有設定默認迎新活動，會靜默返回
+ */
+export async function applyDefaultOnboardingCampaign(userId: number): Promise<{ applied: boolean; campaignName?: string }> {
+  const db = await getDb();
+  if (!db) return { applied: false };
+  try {
+    const now = new Date();
+    // 查詢是否有有效的默認迎新活動
+    const [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(
+        and(
+          eq(campaigns.isDefaultOnboarding, 1),
+          eq(campaigns.isActive, 1),
+          lte(campaigns.startDate, now),
+          gte(campaigns.endDate, now)
+        )
+      )
+      .limit(1);
+    if (!campaign) return { applied: false };
+    const ruleType = campaign.ruleType;
+    const ruleValue = campaign.ruleValue as Record<string, unknown>;
+    if (ruleType === 'giveaway') {
+      const moduleId = ruleValue.giveaway_module_id as string;
+      if (!moduleId) return { applied: false };
+      // 計算到期日
+      const durationDays = (ruleValue.duration_days as number) || 0;
+      const expiresAt = durationDays > 0
+        ? new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+      // 查詢用戶訂閱記錄
+      const [sub] = await db.select().from(userSubscriptions).where(eq(userSubscriptions.userId, userId));
+      const existingCustom = (sub?.customModules as Array<{ module_id: string; expires_at: string | null }> ?? []);
+      const already = existingCustom.find(m => m.module_id === moduleId);
+      if (!already) {
+        const newCustom = [...existingCustom, { module_id: moduleId, expires_at: expiresAt }];
+        if (sub) {
+          await db.update(userSubscriptions).set({ customModules: newCustom }).where(eq(userSubscriptions.userId, userId));
+        } else {
+          await db.insert(userSubscriptions).values({ userId, customModules: newCustom });
+        }
+      }
+      console.log(`[Onboarding] Applied campaign "${campaign.name}" (module: ${moduleId}) to user #${userId}`);
+      return { applied: true, campaignName: campaign.name };
+    } else if (ruleType === 'discount') {
+      // 貼上折扣券
+      const discountPct = ruleValue.discount_percentage as number;
+      const expiresAt = (ruleValue.expires_at as string | null) ?? null;
+      const [u] = await db.select().from(users).where(eq(users.id, userId));
+      const existing = (u?.availableDiscounts ?? []) as Array<{ campaign_id: number; discount_percentage?: number; expires_at: string | null }>;
+      const newDiscounts = [...existing, { campaign_id: campaign.id, discount_percentage: discountPct, expires_at: expiresAt }];
+      await db.update(users).set({ availableDiscounts: newDiscounts }).where(eq(users.id, userId));
+      console.log(`[Onboarding] Applied discount campaign "${campaign.name}" to user #${userId}`);
+      return { applied: true, campaignName: campaign.name };
+    }
+    return { applied: false };
+  } catch (error) {
+    console.error('[Onboarding] Failed to apply default campaign:', error);
+    return { applied: false };
+  }
 }
 
 /**

@@ -12,6 +12,28 @@ import {
   User, Calendar, MapPin, Wand2
 } from "lucide-react";
 
+// ─── 農曆即時換算提示元件 ────────────────────────────────────────────────────
+function LunarDateHint({ solarDate }: { solarDate: string }) {
+  const { data, isFetching } = trpc.utils.toLunar.useQuery(
+    { date: solarDate },
+    { enabled: !!solarDate && solarDate.length === 10 }
+  );
+  if (!solarDate || solarDate.length < 10) {
+    return (
+      <p className="text-xs text-slate-600 mt-1.5 pl-1">輸入陽曆生日後將自動換算農曆</p>
+    );
+  }
+  if (isFetching) {
+    return <p className="text-xs text-amber-500/60 mt-1.5 pl-1 animate-pulse">換算農曆中...</p>;
+  }
+  if (!data?.lunarString) return null;
+  return (
+    <p className="text-xs text-amber-400/80 mt-1.5 pl-1">
+      🌙 {data.lunarString}
+    </p>
+  );
+}
+
 interface OnboardingModalProps {
   onComplete: () => void;
 }
@@ -193,6 +215,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
                     onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))}
                     className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/60 text-sm"
                   />
+                  <LunarDateHint solarDate={form.birthDate} />
                 </div>
 
                 {/* 出生時辰 */}

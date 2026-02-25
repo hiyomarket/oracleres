@@ -96,6 +96,9 @@ export const campaigns = mysqlTable("campaigns", {
   ruleTarget: json("ruleTarget").$type<{ target_type: string; target_id?: string }>().notNull(),
   // 規則內容，例如 { "discount_percentage": 0.8 } 或 { "giveaway_module_id": "module_lottery", "duration_days": 30 }
   ruleValue: json("ruleValue").$type<Record<string, unknown>>().notNull(),
+  // 是否為默認迎新活動（最多只能有一個為 true）
+  // 新用戶首次登錄時，系統將自動套用此活動的獎勵
+  isDefaultOnboarding: tinyint("isDefaultOnboarding").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

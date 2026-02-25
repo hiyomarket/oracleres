@@ -64,6 +64,7 @@ type Campaign = {
   startDate: Date;
   endDate: Date;
   isActive: number;
+  isDefaultOnboarding: number;
   ruleType: "discount" | "giveaway";
   ruleTarget: { target_type: string; target_id?: string };
   ruleValue: Record<string, unknown>;
@@ -1014,7 +1015,18 @@ function CampaignsTab() {
       toast.success("已更新");
     },
   });
-
+  const setDefaultOnboardingMutation = trpc.businessHub.setDefaultOnboarding.useMutation({
+    onSuccess: () => {
+      utils.businessHub.listCampaigns.invalidate();
+      toast.success("✨ 已設定為默認迎新活動！新用戶首次登錄將自動獲得此活動獎勵。");
+    },
+  });
+  const clearDefaultOnboardingMutation = trpc.businessHub.clearDefaultOnboarding.useMutation({
+    onSuccess: () => {
+      utils.businessHub.listCampaigns.invalidate();
+      toast.success("已取消默認迎新活動設定");
+    },
+  });
   const formatDate = (d: Date) =>
     new Date(d).toLocaleDateString("zh-TW", {
       year: "numeric",
@@ -1087,6 +1099,11 @@ function CampaignsTab() {
                       >
                         {c.ruleType === "discount" ? "折扣" : "贈送"}
                       </Badge>
+                      {c.isDefaultOnboarding === 1 && (
+                        <Badge className="bg-amber-500/20 border border-amber-500 text-amber-300 text-xs">
+                          🎟️ 迎新活動
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-xs text-slate-400">
                       {formatDate(c.startDate)} — {formatDate(c.endDate)}
@@ -1097,18 +1114,39 @@ function CampaignsTab() {
                         : `贈送模塊: ${ruleValue.giveaway_module_id ?? "—"} / ${ruleValue.duration_days ?? "∞"} 天`}
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={`border-slate-600 shrink-0 ${
-                      c.isActive ? "text-red-400 hover:text-red-300" : "text-green-400 hover:text-green-300"
-                    }`}
-                    onClick={() =>
-                      updateMutation.mutate({ id: c.id, isActive: c.isActive ? 0 : 1 })
-                    }
-                  >
-                    {c.isActive ? "停用" : "啟用"}
-                  </Button>
+                  <div className="flex flex-col gap-1.5 shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={`border-slate-600 ${
+                        c.isActive ? "text-red-400 hover:text-red-300" : "text-green-400 hover:text-green-300"
+                      }`}
+                      onClick={() =>
+                        updateMutation.mutate({ id: c.id, isActive: c.isActive ? 0 : 1 })
+                      }
+                    >
+                      {c.isActive ? "停用" : "啟用"}
+                    </Button>
+                    {c.isDefaultOnboarding === 1 ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-amber-600 text-amber-400 hover:text-amber-300 text-xs"
+                        onClick={() => clearDefaultOnboardingMutation.mutate({ id: c.id })}
+                      >
+                        取消迎新
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-slate-600 text-slate-400 hover:text-amber-300 hover:border-amber-500 text-xs"
+                        onClick={() => setDefaultOnboardingMutation.mutate({ id: c.id })}
+                      >
+                        設為迎新
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 {/* 兌換碼管理區塊 */}
                 <RedemptionCodesPanel campaignId={c.id} campaignName={c.name} />

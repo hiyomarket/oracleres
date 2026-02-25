@@ -18,7 +18,7 @@ import {
   redemptionCodes,
   users,
 } from "../../drizzle/schema";
-import { eq, asc, desc } from "drizzle-orm";
+import { eq, asc, desc, and, ne } from "drizzle-orm";
 import { hasAccess } from "../PermissionService";
 
 // Admin guard middleware
@@ -506,5 +506,39 @@ export const businessHubRouter = router({
         successCount++;
       }
       return { success: true, count: successCount };
+    }),
+
+  /**
+   * 設定指定行銷活動為默認迎新活動
+   * 同時清除其他活動的 isDefaultOnboarding，確保唯一性
+   */
+  setDefaultOnboarding: adminProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      // 先清除所有其他活動的 isDefaultOnboarding
+      await db.update(campaigns)
+        .set({ isDefaultOnboarding: 0 })
+        .where(ne(campaigns.id, input.id));
+      // 設定目標活動為默認迎新
+      await db.update(campaigns)
+        .set({ isDefaultOnboarding: 1 })
+        .where(eq(campaigns.id, input.id));
+      return { success: true };
+    }),
+
+  /**
+   * 取消默認迎新活動設定
+   */
+  clearDefaultOnboarding: adminProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(campaigns)
+        .set({ isDefaultOnboarding: 0 })
+        .where(eq(campaigns.id, input.id));
+      return { success: true };
     }),
 });

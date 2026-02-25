@@ -11,7 +11,8 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { castOracle } from "./lib/oracleAlgorithm";
-import { getFullDateInfo, getTaiwanHour, getTaiwanDate } from "./lib/lunarCalendar";
+import { getFullDateInfo, getTaiwanHour, getTaiwanDate, getYearPillar } from "./lib/lunarCalendar";
+import { solarToLunarByYMD } from "./lib/lunarConverter";
 import { getMoonPhase } from "./lib/moonPhase";
 import { getAllHourEnergies, getCurrentHourEnergy, getBestHours, getWorstHours, getAllHourEnergiesDynamic, getCurrentHourEnergyDynamic } from "./lib/hourlyEnergy";
 import { getDb, saveOracleSession, getOracleHistory, getOracleStats, saveLotterySession, getLotteryHistory, getLotteryStats, getUserProfileForEngine } from "./db";
@@ -2108,6 +2109,67 @@ ${profileDesc}
       const { getBraceletWearStats } = await import('./db');
       return getBraceletWearStats(ctx.user?.id);
     }),
+  }),
+
+  /**
+   * 工具類 API
+   */
+  utils: router({
+    /**
+     * 陽曆轉農曆：接收産曆日期，返回格式化的農曆字串
+     * 例如："2000-01-01" → "農曆：己卯年十二月巭五"
+     */
+    toLunar: publicProcedure
+      .input(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "請提供 YYYY-MM-DD 格式日期") }))
+      .query(async ({ input }) => {
+        const [year, month, day] = input.date.split("-").map(Number);
+        try {
+          // 使用 lunar-typescript 進行精確農曆換算（1900-2100 年）
+          const { Solar } = await import('lunar-typescript');
+          const solar = Solar.fromYmd(year, month, day);
+          const lunar = solar.getLunar();
+          const lunarYear = lunar.getYear();
+          const lunarMonthNum = lunar.getMonth();
+          const isLeap = lunarMonthNum < 0;
+          const absMonth = Math.abs(lunarMonthNum);
+          const yearGanzhi = lunar.getYearInGanZhi();
+          const monthChinese = lunar.getMonthInChinese();
+          const dayChinese = lunar.getDayInChinese();
+          const leapPrefix = isLeap ? '閏' : '';
+          const lunarStr = `農曆：${yearGanzhi}年${leapPrefix}${monthChinese}月${dayChinese}`;
+          return {
+            lunarString: lunarStr,
+            lunarYear,
+            lunarMonth: absMonth,
+            lunarDay: lunar.getDay(),
+            lunarMonthName: `${leapPrefix}${monthChinese}月`,
+            lunarDayName: dayChinese,
+            isLeapMonth: isLeap,
+            yearGanzhi,
+            festival: lunar.getFestivals().join('') || null,
+            deityBirthday: null,
+          };
+        } catch {
+          // 備用：回落到內建轉換
+          const lunar = solarToLunarByYMD(year, month, day);
+          const yearPillar = getYearPillar(lunar.lunarYear);
+          const yearName = `${yearPillar.stem}${yearPillar.branch}`;
+          const leapPrefix = lunar.isLeapMonth ? '閏' : '';
+          const lunarStr = `農曆：${yearName}年${leapPrefix}${lunar.lunarMonthName}${lunar.lunarDayName}`;
+          return {
+            lunarString: lunarStr,
+            lunarYear: lunar.lunarYear,
+            lunarMonth: lunar.lunarMonth,
+            lunarDay: lunar.lunarDay,
+            lunarMonthName: lunar.lunarMonthName,
+            lunarDayName: lunar.lunarDayName,
+            isLeapMonth: lunar.isLeapMonth,
+            yearGanzhi: yearName,
+            festival: lunar.festival,
+            deityBirthday: lunar.deityBirthday,
+          };
+        }
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

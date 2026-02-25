@@ -1056,3 +1056,15 @@
 - [x] 資料庫新增 module_diet 模塊（navPath=/diet, icon=🍽️, sortOrder=45）
 - [x] SharedNav FALLBACK_NAV 更新：加入 outfit 和 diet 模塊，warroom 設為 isCentral
 - [x] TypeScript 零錯誤驗證通過
+
+## 鳳凰計畫 Phase 5 - 自動化迎新與體驗升華（2026-02-26 完成）
+
+- [x] campaigns 表新增 isDefaultOnboarding 欄位（boolean，唯一性約束）
+- [x] db.ts 新增 applyDefaultOnboardingCampaign 函數（支援 giveaway/discount 兩種活動類型）
+- [x] oauth.ts 在新用戶首次登入後自動觸發迎新活動套用
+- [x] businessHub router 新增 setDefaultOnboarding / clearDefaultOnboarding 程序
+- [x] AdminBusinessHub CampaignsTab 新增「設為迎新活動」按鈕與橘色標籤
+- [x] 安裝 lunar-typescript 套件（支援 1900-2100 年精確農曆換算）
+- [x] routers.ts 新增 utils.toLunar 程序（使用 lunar-typescript 精確換算）
+- [x] MyProfile 出生日期輸入框下方新增農曆即時換算顯示
+- [x] OnboardingModal 出生日期輸入框下方新增農曆即時換算顯示

@@ -28,6 +28,10 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
+      // 在 upsert 前先查詢是否為新用戶（用於迎新活動觸發）
+      const existingUser = await db.getUserByOpenId(userInfo.openId);
+      const isNewUser = !existingUser;
+
       await db.upsertUser({
         openId: userInfo.openId,
         name: userInfo.name || null,
@@ -35,6 +39,18 @@ export function registerOAuthRoutes(app: Express) {
         loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
         lastSignedIn: new Date(),
       });
+
+      // 新用戶：自動套用默認迎新活動
+      if (isNewUser) {
+        // 取得剛建立的用戶 ID
+        const newUser = await db.getUserByOpenId(userInfo.openId);
+        if (newUser) {
+          const result = await db.applyDefaultOnboardingCampaign(newUser.id);
+          if (result.applied) {
+            console.log(`[OAuth] New user #${newUser.id} received onboarding campaign: ${result.campaignName}`);
+          }
+        }
+      }
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
         name: userInfo.name || "",
