@@ -2,6 +2,8 @@ import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { accountRouter } from "./routers/account";
 import { permissionsRouter } from "./routers/permissions";
+import { dashboardRouter } from "./routers/dashboard";
+import { pointsRouter } from "./routers/points";
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -32,6 +34,8 @@ export const appRouter = router({
   system: systemRouter,
   account: accountRouter,
   permissions: permissionsRouter,
+  dashboard: dashboardRouter,
+  points: pointsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

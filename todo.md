@@ -812,3 +812,54 @@
 - [ ] 作戰室改名為「每日運勢」並設為首頁
 - [x] 修正分頁標題（<title>）為「天命共振 - 命理能量系統」
 - [x] 修正 OG/網站預覽描述為面向大眾的文案
+
+## 商業化第一階段 v2.53 - 儀表板、用戶洞察與積分激勵基礎建設
+
+### 資料庫 Schema 擴充
+- [ ] 新增 plans 資料表（會員方案：basic/advanced/professional）
+- [ ] 新增 features 資料表（功能模組管理，含所需方案等級）
+- [ ] 新增 pointsTransactions 資料表（積分流水帳）
+- [ ] 擴充 users 表：加入 planId、planExpiresAt、pointsBalance 欄位
+- [ ] 擴充 userProfiles 表：加入 lifePathNumber 欄位（生命靈數，用於篩選）
+- [ ] 執行 pnpm db:push 遷移
+
+### 後端 API
+- [ ] 新增 dashboard.getKpis（管理員：總用戶數、活躍用戶、方案分佈）
+- [ ] 新增 dashboard.getHourlyActivity（管理員：24小時活躍時段分析）
+- [ ] 新增 account.listUsersFiltered（管理員：進階篩選+分頁用戶列表）
+- [ ] 新增 points.getSigninStatus（用戶：查詢今日是否已簽到）
+- [ ] 新增 points.claimDailyPoints（用戶：每日簽到領取10積分）
+
+### 前端頁面
+- [ ] 新增管理員儀表板頁面 /admin/dashboard（KPI 卡片 + 活躍時段圖表）
+- [ ] 升級帳號管理頁面：加入篩選器（生命靈數/方案/最後上線）
+- [ ] 升級帳號管理頁面：用戶卡片顯示方案和積分餘額
+- [ ] 升級帳號管理頁面：加入分頁功能
+- [ ] 新增每日簽到組件（放在每日運勢頁面顯眼處）
+- [ ] 簽到組件邏輯：未簽到顯示可點擊按鈕，已簽到顯示灰色已完成狀態
+
+## 商業化第一階段 v2.53 - 儀表板、用戶洞察與積分系統
+
+### 資料庫擴充
+- [x] 新增 plans（會員方案）資料表（basic/advanced/professional）
+- [x] 新增 features（功能模組）資料表
+- [x] 新增 pointsTransactions（積分流水帳）資料表
+- [x] 擴充 users 表：planId、planExpiresAt、pointsBalance 欄位
+- [x] 擴充 userProfiles 表：lifePathNumber 欄位
+- [x] 植入預設 plans 資料（3 個方案）
+
+### 後端 API
+- [x] 管理員儀表板 KPI API（總用戶、活躍、方案分佈、積分統計）
+- [x] 24 小時活躍時段分析 API（台灣時間，近 30 天）
+- [x] 進階用戶篩選 API（生命靈數/方案/最後上線/名稱搜尋 + 分頁）
+- [x] 每日簽到 API（每日限一次，+10 積分）
+- [x] 積分餘額查詢 API + 最近交易記錄
+
+### 前端頁面
+- [x] 管理員儀表板頁面（/admin/dashboard）
+- [x] 帳號管理頁面升級：方案/積分顯示、篩選器、分頁
+- [x] DailySignin 每日簽到組件（嵌入每日運勢頁面）
+
+### 測試
+- [x] 積分系統 vitest 測試（13 個測試案例）
+- [x] 91 項測試全部通過，TypeScript 零錯誤

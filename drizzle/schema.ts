@@ -1,4 +1,55 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, tinyint, bigint, uniqueIndex } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, tinyint, bigint, uniqueIndex, decimal } from "drizzle-orm/mysql-core";
+
+/**
+ * 會員方案資料表
+ * 定義系統中的訂閱方案等級
+ */
+export const plans = mysqlTable("plans", {
+  id: varchar("id", { length: 50 }).primaryKey(), // 'basic', 'advanced', 'professional'
+  name: varchar("name", { length: 100 }).notNull(), // '基礎方案', '進階方案', '專業方案'
+  // 價格（以分為單位，0 = 免費）
+  price: int("price").notNull().default(0),
+  // 等級（用於權限比較，數字越大權限越高）
+  level: int("level").notNull().default(1),
+  description: text("description"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type Plan = typeof plans.$inferSelect;
+export type InsertPlan = typeof plans.$inferInsert;
+
+/**
+ * 功能模組資料表
+ * 定義系統中每個可授權的功能，以及所需的最低方案等級
+ */
+export const features = mysqlTable("features", {
+  id: varchar("id", { length: 50 }).primaryKey(), // 'oracle', 'lottery', 'calendar', 'warroom', etc.
+  name: varchar("name", { length: 100 }).notNull(), // '擲筊', '選號', '命理日曆'
+  description: text("description"),
+  // 所需最低方案等級（對應 plans.level）
+  requiredPlanLevel: int("requiredPlanLevel").notNull().default(1),
+  // 是否啟用此功能管理（false = 所有人皆可用）
+  isManaged: tinyint("isManaged").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type Feature = typeof features.$inferSelect;
+export type InsertFeature = typeof features.$inferInsert;
+
+/**
+ * 積分流水帳資料表
+ * 記錄每次積分的增加（如每日簽到）和減少（如兌換功能）
+ */
+export const pointsTransactions = mysqlTable("points_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // 正數為獲得，負數為消耗
+  amount: int("amount").notNull(),
+  // 類型：daily_signin / feature_redemption / admin_grant / admin_deduct
+  type: varchar("type", { length: 50 }).notNull(),
+  description: varchar("description", { length: 200 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type PointsTransaction = typeof pointsTransactions.$inferSelect;
+export type InsertPointsTransaction = typeof pointsTransactions.$inferInsert;
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -7,6 +58,12 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  // 當前方案 ID（對應 plans.id）
+  planId: varchar("planId", { length: 50 }).notNull().default("basic"),
+  // 方案到期日（null = 永久有效，適用基礎免費方案）
+  planExpiresAt: timestamp("planExpiresAt"),
+  // 積分餘額
+  pointsBalance: int("pointsBalance").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -229,6 +286,8 @@ export const userProfiles = mysqlTable("user_profiles", {
   birthLunar: varchar("birthLunar", { length: 100 }),
   // 個人備註
   notes: text("notes"),
+  // 生命靈數（用於管理員篩選，計算自 birthDate）
+  lifePathNumber: int("lifePathNumber"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
