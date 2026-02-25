@@ -1,4 +1,21 @@
 import { useState, useRef } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -26,6 +43,9 @@ type Module = {
   sortOrder: number;
   containedFeatures: string[];
   isActive: number;
+  navPath?: string | null;
+  isCentral?: number;
+  parentId?: string | null;
 };
 
 type Plan = {
@@ -49,11 +69,85 @@ type Campaign = {
   ruleValue: Record<string, unknown>;
 };
 
+// ─── Sortable Module Row Component ───────────────────────────────────────────
+function SortableModuleRow({
+  m,
+  depth,
+  allModules,
+  onEdit,
+  onToggle,
+}: {
+  m: Module;
+  depth: number;
+  allModules: Module[];
+  onEdit: (m: Module) => void;
+  onToggle: (m: Module) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: m.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  const parentName = m.parentId ? allModules.find(x => x.id === m.parentId)?.name : null;
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+        isDragging ? "border-amber-500 bg-slate-700" : "border-slate-700 bg-slate-800/50 hover:border-slate-600"
+      } ${!m.isActive ? "opacity-40" : ""}`}
+      {...(depth > 0 ? {} : {})}
+    >
+      {/* 層級縮排 */}
+      {depth > 0 && <div className="w-6 shrink-0 flex items-center">
+        <div className="w-3 h-px bg-slate-600" />
+        <div className="w-0 h-3 border-l border-slate-600" style={{ marginLeft: -1, marginTop: -12 }} />
+      </div>}
+      {/* 拖拽手柄 */}
+      <div
+        className="cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300 shrink-0"
+        {...attributes}
+        {...listeners}
+      >
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z" />
+        </svg>
+      </div>
+      <span className="text-2xl w-8 text-center shrink-0">{m.icon || "📦"}</span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-medium text-white">{m.name}</span>
+          <Badge
+            variant="outline"
+            className={m.category === "core" ? "border-blue-500 text-blue-400 text-xs" : "border-purple-500 text-purple-400 text-xs"}
+          >
+            {m.category === "core" ? "核心" : "加値"}
+          </Badge>
+          {m.isCentral ? <Badge variant="outline" className="border-amber-500 text-amber-400 text-xs">☀️中心</Badge> : null}
+          {parentName && <span className="text-[10px] text-slate-500">└ 屬於 {parentName}</span>}
+        </div>
+        <p className="text-xs text-slate-400 truncate">{m.description}</p>
+        <div className="flex gap-3 text-xs text-slate-500">
+          {m.navPath && <span className="text-indigo-400">{m.navPath}</span>}
+          <span>關聯: {(m.containedFeatures as string[]).join(", ") || "無"}</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <Switch checked={!!m.isActive} onCheckedChange={() => onToggle(m)} />
+        <Button variant="ghost" size="sm" onClick={() => onEdit(m)} className="text-slate-400 hover:text-white">
+          編輯
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Module Manager Tab ──────────────────────────────────────────────────────
 function ModuleManagerTab() {
   const utils = trpc.useUtils();
   const { data: modules = [], isLoading } = trpc.businessHub.listModules.useQuery();
-  const [dragId, setDragId] = useState<string | null>(null);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newModule, setNewModule] = useState({
@@ -80,43 +174,54 @@ function ModuleManagerTab() {
     },
   });
 
-  const [localModules, setLocalModules] = useState<Module[]>([]);
-  const orderedModules = localModules.length > 0 ? localModules : (modules as Module[]);
+  const [orderedIds, setOrderedIds] = useState<string[]>([]);
+  const allModules = modules as Module[];
+  const displayIds = orderedIds.length > 0 ? orderedIds : allModules.map(m => m.id);
+  const orderedModules = displayIds.map(id => allModules.find(m => m.id === id)).filter(Boolean) as Module[];
 
-  const handleDragStart = (id: string) => setDragId(id);
-  const handleDragOver = (e: React.DragEvent, targetId: string) => {
-    e.preventDefault();
-    if (!dragId || dragId === targetId) return;
-    const items = [...orderedModules];
-    const fromIdx = items.findIndex((m) => m.id === dragId);
-    const toIdx = items.findIndex((m) => m.id === targetId);
-    const [moved] = items.splice(fromIdx, 1);
-    items.splice(toIdx, 0, moved);
-    setLocalModules(items);
-  };
-  const handleDrop = async () => {
-    if (localModules.length === 0) return;
-    const updates = localModules.map((m, i) => ({ id: m.id, sortOrder: i + 1 }));
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = displayIds.indexOf(active.id as string);
+    const newIndex = displayIds.indexOf(over.id as string);
+    const newIds = arrayMove(displayIds, oldIndex, newIndex);
+    setOrderedIds(newIds);
+    const updates = newIds.map((id, i) => ({ id, sortOrder: i + 1 }));
     await reorderMutation.mutateAsync(updates);
     utils.businessHub.listModules.invalidate();
-    setDragId(null);
   };
 
   const toggleActive = (m: Module) => {
     updateMutation.mutate({ id: m.id, isActive: m.isActive ? 0 : 1 });
   };
 
+  // Build tree: roots first, then children indented
+  const roots = orderedModules.filter(m => !m.parentId);
+  const children = (parentId: string) => orderedModules.filter(m => m.parentId === parentId);
+  const flatTree: Array<{ m: Module; depth: number }> = [];
+  for (const root of roots) {
+    flatTree.push({ m: root, depth: 0 });
+    for (const child of children(root.id)) {
+      flatTree.push({ m: child, depth: 1 });
+    }
+  }
+  // Modules with unknown parents (orphans)
+  const orphans = orderedModules.filter(m => m.parentId && !allModules.find(x => x.id === m.parentId));
+  for (const o of orphans) flatTree.push({ m: o, depth: 0 });
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-amber-400">功能模塊管理器</h2>
-          <p className="text-sm text-slate-400">拖拽調整排序，切換啟用狀態</p>
+          <p className="text-sm text-slate-400">拖拽調整排序，支持父子層級結構</p>
         </div>
-        <Button
-          onClick={() => setShowCreateDialog(true)}
-          className="bg-amber-500 hover:bg-amber-600 text-black"
-        >
+        <Button onClick={() => setShowCreateDialog(true)} className="bg-amber-500 hover:bg-amber-600 text-black">
           + 新增模塊
         </Button>
       </div>
@@ -124,57 +229,23 @@ function ModuleManagerTab() {
       {isLoading ? (
         <div className="text-slate-400 text-center py-8">載入中...</div>
       ) : (
-        <div className="space-y-2">
-          {orderedModules.map((m) => (
-            <div
-              key={m.id}
-              draggable
-              onDragStart={() => handleDragStart(m.id)}
-              onDragOver={(e) => handleDragOver(e, m.id)}
-              onDrop={handleDrop}
-              className={`flex items-center gap-3 p-3 rounded-lg border cursor-grab active:cursor-grabbing transition-all ${
-                dragId === m.id
-                  ? "opacity-50 border-amber-500"
-                  : "border-slate-700 bg-slate-800/50 hover:border-slate-600"
-              } ${!m.isActive ? "opacity-40" : ""}`}
-            >
-              <span className="text-2xl w-8 text-center">{m.icon || "📦"}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-white">{m.name}</span>
-                  <Badge
-                    variant="outline"
-                    className={
-                      m.category === "core"
-                        ? "border-blue-500 text-blue-400 text-xs"
-                        : "border-purple-500 text-purple-400 text-xs"
-                    }
-                  >
-                    {m.category === "core" ? "核心" : "加值"}
-                  </Badge>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={displayIds} strategy={verticalListSortingStrategy}>
+            <div className="space-y-1.5">
+              {flatTree.map(({ m, depth }) => (
+                <div key={m.id} style={{ paddingLeft: depth * 24 }}>
+                  <SortableModuleRow
+                    m={m}
+                    depth={depth}
+                    allModules={allModules}
+                    onEdit={setEditingModule}
+                    onToggle={toggleActive}
+                  />
                 </div>
-                <p className="text-xs text-slate-400 truncate">{m.description}</p>
-                <p className="text-xs text-slate-500">
-                  關聯功能: {(m.containedFeatures as string[]).join(", ") || "無"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Switch
-                  checked={!!m.isActive}
-                  onCheckedChange={() => toggleActive(m)}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setEditingModule(m)}
-                  className="text-slate-400 hover:text-white"
-                >
-                  編輯
-                </Button>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* Edit Dialog */}
@@ -247,6 +318,45 @@ function ModuleManagerTab() {
                   className="bg-slate-800 border-slate-600 text-white"
                 />
               </div>
+              <div>
+                <label className="text-sm text-slate-400">導航路徑 (navPath)，如 /oracle</label>
+                <Input
+                  value={editingModule.navPath || ""}
+                  onChange={(e) =>
+                    setEditingModule({ ...editingModule, navPath: e.target.value })
+                  }
+                  placeholder="/oracle（空白=不顯示於主導航）"
+                  className="bg-slate-800 border-slate-600 text-white"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="text-sm text-slate-400">是否為中央焦點（眾星拱月「太陽」）</label>
+                <input
+                  type="checkbox"
+                  checked={!!editingModule.isCentral}
+                  onChange={(e) =>
+                    setEditingModule({ ...editingModule, isCentral: e.target.checked ? 1 : 0 })
+                  }
+                  className="w-4 h-4 accent-amber-500"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-slate-400">父模塊（層級歸屬）</label>
+                <select
+                  value={editingModule.parentId || ""}
+                  onChange={(e) =>
+                    setEditingModule({ ...editingModule, parentId: e.target.value || null })
+                  }
+                  className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white text-sm"
+                >
+                  <option value="">無（頂層模塊）</option>
+                  {allModules
+                    .filter(x => x.id !== editingModule.id)
+                    .map(x => (
+                      <option key={x.id} value={x.id}>{x.icon} {x.name}</option>
+                    ))}
+                </select>
+              </div>
             </div>
           )}
           <DialogFooter>
@@ -264,6 +374,9 @@ function ModuleManagerTab() {
                   icon: editingModule.icon || undefined,
                   category: editingModule.category,
                   containedFeatures: editingModule.containedFeatures as string[],
+                  navPath: editingModule.navPath || undefined,
+                  isCentral: editingModule.isCentral,
+                  parentId: editingModule.parentId ?? null,
                 });
                 setEditingModule(null);
               }}

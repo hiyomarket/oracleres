@@ -56,6 +56,10 @@ export const modules = mysqlTable("modules", {
   navPath: varchar("navPath", { length: 100 }).default(""),
   // 是否啟用
   isActive: tinyint("isActive").notNull().default(1),
+  // 是否為中央焦點模塊（眾星拱月佈局中的「太陽」）
+  isCentral: tinyint("isCentral").notNull().default(0),
+  // 父模塊 ID（建立父子層級關係，null = 頂層模塊）
+  parentId: varchar("parentId", { length: 50 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

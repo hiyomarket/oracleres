@@ -102,6 +102,9 @@ export const businessHubRouter = router({
         sortOrder: z.number().int().optional(),
         containedFeatures: z.array(z.string()).optional(),
         isActive: z.number().int().min(0).max(1).optional(),
+        navPath: z.string().max(100).optional(),
+        isCentral: z.number().int().min(0).max(1).optional(),
+        parentId: z.string().max(50).nullable().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -462,5 +465,46 @@ export const businessHubRouter = router({
         reward = `已獲得 ${Math.round((1 - discountPct) * 100)}% 折扣券`;
       }
       return { success: true, reward, campaignName: campaign.name };
+    }),
+
+  /** 批量指派訂閱方案（多選用戶同時指派） */
+  batchAssignSubscription: adminProcedure
+    .input(z.object({
+      userIds: z.array(z.number().int()).min(1).max(100),
+      planId: z.string().nullable(),
+      planExpiresAt: z.string().nullable(),
+      note: z.string().max(500).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const expiresAt = input.planExpiresAt ? new Date(input.planExpiresAt) : null;
+      let successCount = 0;
+      for (const userId of input.userIds) {
+        const [existing] = await db.select().from(userSubscriptions).where(eq(userSubscriptions.userId, userId));
+        if (existing) {
+          await db.update(userSubscriptions)
+            .set({ planId: input.planId, planExpiresAt: expiresAt })
+            .where(eq(userSubscriptions.userId, userId));
+        } else {
+          await db.insert(userSubscriptions).values({
+            userId,
+            planId: input.planId,
+            planExpiresAt: expiresAt,
+            customModules: [],
+          });
+        }
+        await db.update(users)
+          .set({ planId: input.planId ?? "basic", planExpiresAt: expiresAt })
+          .where(eq(users.id, userId));
+        await db.insert(subscriptionLogs).values({
+          operatorId: ctx.user.id,
+          targetUserId: userId,
+          action: "batch_assign",
+          details: { planId: input.planId, expiresAt: input.planExpiresAt, note: input.note },
+        });
+        successCount++;
+      }
+      return { success: true, count: successCount };
     }),
 });

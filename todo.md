@@ -1013,3 +1013,36 @@
 - [x] 兌換碼 CSV 匯出（RedemptionCodesPanel 加入匯出按鈕，含 BOM 支援中文）
 - [x] 每日 09:00 到期提醒排程（server/lib/expiryReminder.ts + server/_core/index.ts 整合）
 - [x] TypeScript 零錯誤，91 項測試全部通過
+
+## 鳳凰計畫 Phase 4 - 體驗革命與架構深化
+
+- [ ] DB：modules 表加入 navPath / is_central / parent_id 欄位
+- [ ] BusinessHub 模塊編輯彈窗加入 navPath 輸入框與 is_central 開關
+- [ ] 新建 /outfit 補運穿搭獨立頁面（遷移作戰室手串矩陣+穿搭建議+五行總覽）
+- [ ] 新建 /diet 飲食羅盤獨立頁面（遷移作戰室飲食建議+五行總覽）
+- [ ] 新建 /divination 天命問卜獨立頁面（遷移作戰室天命問卜組件）
+- [ ] 新建 /luck-cycle 大限流年獨立頁面（遷移命格頁流年分析）
+- [ ] 清除作戰室/命格頁中已遷移的舊組件代碼
+- [ ] 首頁輪播導航革命（Embla Carousel + Cover Flow 效果）
+- [ ] is_central 眾星拱月佈局（中央固定模塊 + 左右輪播）
+- [ ] AdminUsers 批量訂閱 checkbox + 批量 assignSubscription API
+- [ ] AdminUsers lastSignedIn 精確到分鐘顯示
+- [ ] 靈數篩選器加入塔羅牌名（靈數1魔術師...靈數9隱者）
+- [ ] BusinessHub 模塊父子層級樹狀視圖 + 拖拽排序
+- [ ] parent_id 後端 API（updateModuleParent）
+- [ ] TypeScript 零錯誤，測試全部通過
+- [ ] 儲存 Phase 4 checkpoint
+
+## 鳳凰計畫 Phase 4 - 體驗革命與架構深化
+
+- [x] DB 升級：modules 表加入 is_central / parent_id
+- [x] BusinessHub 模塊編輯彈窗加入 navPath 輸入框、isCentral 開關、parentId 選單
+- [x] 新建 /outfit 獨立頁面（補運穿搭 + 手串推薦）
+- [x] 新建 /divination 獨立頁面（天命問卜）
+- [x] 新建 /luck-cycle 獨立頁面（大限流年）
+- [x] 首頁 Cover Flow 輪播導航（Embla Carousel + ModuleCarousel 組件）
+- [x] 批量訂閱 checkbox + batchAssignSubscription API
+- [x] lastSignedIn 精確到分鐘顯示
+- [x] 靈數篩選器加入塔羅牌名
+- [x] 模塊管理器升級為 @dnd-kit 樹狀視圖拖拽排序
+- [x] 91 項測試全部通過，TypeScript 零錯誤

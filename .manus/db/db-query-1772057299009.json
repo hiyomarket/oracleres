@@ -1,0 +1,9 @@
+{
+  "query": "\nUPDATE modules SET navPath = '/outfit' WHERE id = 'module_outfit';\nUPDATE modules SET navPath = '/divination' WHERE id = 'module_divination';\nUPDATE modules SET navPath = '/luck-cycle' WHERE id = 'module_yearly';\nUPDATE modules SET isCentral = 1 WHERE id = 'module_warroom';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nUPDATE modules SET navPath = '/outfit' WHERE id = 'module_outfit';\nUPDATE modules SET navPath = '/divination' WHERE id = 'module_divination';\nUPDATE modules SET navPath = '/luck-cycle' WHERE id = 'module_yearly';\nUPDATE modules SET isCentral = 1 WHERE id = 'module_warroom';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2225
+}
