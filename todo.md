@@ -881,3 +881,11 @@
 - [x] 移除選單中舊的「帳號管理」連結
 - [x] 移除 App.tsx 中舊 AccountManager 路由
 - [x] 修復 AccountManager 巢狀 button 錯誤（外層 button 改為 div）
+
+## Bug 修正 - 管理員儀表板 KPI 全部顯示 0
+
+- [x] 診斷 dashboard router 查詢錯誤原因
+- [x] 修復 KPI 查詢（總用戶、已啟用、本週新增、今日活躍）
+- [x] 修復活躍時段分析查詢
+- [x] 修復方案分佈查詢
+- [x] 修復用戶篩選列表查詢

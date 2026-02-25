@@ -56,8 +56,8 @@ export const dashboardRouter = router({
     ] = await Promise.all([
       // 總用戶數
       db.select({ count: sql<number>`COUNT(*)` }).from(users),
-      // 已啟用用戶數（使用過邀請碼 + admin）
-      db.select({ count: sql<number>`COUNT(DISTINCT userId)` })
+      // 已啟用用戶數（使用過邀請碼的用戶）—— 欄位是 usedBy 不是 userId
+      db.select({ count: sql<number>`COUNT(DISTINCT usedBy)` })
         .from(inviteCodes)
         .where(and(eq(inviteCodes.isUsed, 1), isNotNull(inviteCodes.usedBy))),
       // 本週新增用戶數
@@ -84,7 +84,10 @@ export const dashboardRouter = router({
     ]);
 
     const totalUsers = Number(totalUsersRows[0]?.count ?? 0);
-    const activatedUsers = Number(activatedUsersRows[0]?.count ?? 0);
+    // admin 本人也計入已啟用，加上 admin 數量
+    const adminCount = await db.select({ count: sql<number>`COUNT(*)` }).from(users).where(eq(users.role, "admin"));
+    const activatedByInvite = Number(activatedUsersRows[0]?.count ?? 0);
+    const activatedUsers = Math.min(totalUsers, activatedByInvite + Number(adminCount[0]?.count ?? 0));
     const newUsersThisWeek = Number(newUsersThisWeekRows[0]?.count ?? 0);
     const todayActive = Number(todayActiveRows[0]?.count ?? 0);
     const totalPointsGranted = Number(totalPointsGrantedRows[0]?.total ?? 0);
@@ -93,7 +96,7 @@ export const dashboardRouter = router({
     // 方案分佈轉為物件
     const planDist: Record<string, number> = { basic: 0, advanced: 0, professional: 0 };
     for (const row of planDistRows) {
-      planDist[row.planId] = Number(row.count);
+      if (row.planId) planDist[row.planId] = Number(row.count);
     }
 
     return {
