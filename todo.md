@@ -903,3 +903,31 @@
 - [x] AdminDashboard 套用 AdminLayout 側邊欄
 - [x] 更新 App.tsx 路由（加入 /admin/users）
 - [x] 修正 AdminDashboard 快速操作卡片連結
+
+## 大型升級 - 邀請碼移除 + 靈數邏輯 + 用戶管理 + 權限管理升級
+
+- [ ] 移除邀請碼保護鎖（AccessGate、後端驗證、相關 UI）
+- [ ] 修正生命靈數計算邏輯（塔羅牌 0-22 體系，超過22才相加）
+- [ ] 「內層靈數」改名「主要靈數」，改為中層靈數+年度靈數
+- [ ] 更新 /profile 頁面靈數顯示與計算
+- [ ] /admin/users 靈數篩選改為 0-22 共23個數字
+- [ ] 用戶管理預設排序：最後上線降序
+- [ ] 用戶管理列表直接顯示最後上線時間（不需展開）
+- [ ] PermissionManager 全局即時搜尋（前端驅動）
+- [ ] PermissionManager 統一截止日期選擇器
+- [ ] PermissionManager 快速續約按鈕（+1個月/+3個月/+1年）
+- [ ] PermissionManager 緊湊網格佈局（2-3欄）
+- [ ] PermissionManager 分類篩選按鈕 + 全選此分類
+- [ ] PermissionManager 功能開關自動套用統一截止日期
+
+## 大型升級 v2.53 - 邀請碼移除 + 靈數邏輯 + 用戶管理 + 權限管理升級
+
+- [x] 移除邀請碼保護鎖（AccessGate 改為純登入閘）
+- [x] 後端 getStatus 修正為所有登入用戶 isActivated=true
+- [x] 生命靈數計算改為塔羅牌 0-22 體系（超過22才相加）
+- [x] 「內層靈數」改名「主要靈數」
+- [x] /admin/users 生命靈數篩選擴展為 0-22（含靈數 0 小愚者標籤）
+- [x] 後端 listUsersFiltered lifePathNumber 範圍改為 min(0) max(22)
+- [x] 用戶管理預設排序為最後上線降序（後端已有 ORDER BY lastSignedIn DESC）
+- [x] PermissionManager 全面升級：即時搜尋、統一截止日期控制器、快速續約、緊湊網格佈局、分類篩選+批量勾選
+- [x] PermissionManager 套用 AdminLayout 側邊欄

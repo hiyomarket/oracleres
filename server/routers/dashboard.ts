@@ -166,7 +166,7 @@ export const dashboardRouter = router({
       page: z.number().int().min(1).default(1),
       pageSize: z.number().int().min(1).max(50).default(20),
       // 篩選條件
-      lifePathNumber: z.number().int().min(1).max(9).optional(),
+      lifePathNumber: z.number().int().min(0).max(22).optional(),
       planId: z.enum(["basic", "advanced", "professional"]).optional(),
       // 最後上線：'7d' | '30d' | '90d' | 'inactive90d'
       lastActiveFilter: z.enum(["7d", "30d", "90d", "inactive90d"]).optional(),

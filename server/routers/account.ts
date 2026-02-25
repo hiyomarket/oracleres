@@ -59,7 +59,8 @@ export const accountRouter = router({
       return { isLoggedIn: false, isOwner: false, isActivated: false, hasProfile: false };
     }
     const owner = isOwner(ctx.user.openId, ctx.user.role);
-    const activated = owner || await getUserInviteStatus(ctx.user.id);
+    // 開放式系統：所有已登入用戶均視為已啟用，不需邀請碼
+    const activated = true;
     const db = await getDb();
     let hasProfile = false;
     if (db) {

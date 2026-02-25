@@ -32,7 +32,8 @@ const LAST_ACTIVE_OPTIONS = [
 
 const LIFE_PATH_OPTIONS = [
   { value: "all", label: "全部靈數" },
-  ...Array.from({ length: 9 }, (_, i) => ({
+  { value: "0",   label: "靈數 0（小愚者）" },
+  ...Array.from({ length: 22 }, (_, i) => ({
     value: String(i + 1),
     label: `靈數 ${i + 1}`,
   })),

@@ -51,8 +51,8 @@ const OWNER_STATIC_PROFILE = {
   tarot: {
     outer: { num: 8,  name: "力量",     element: "🔥" },
     middle: { num: 10, name: "命運之輪", element: "🔥" },
-    inner: { num: 5,  name: "教皇",     element: "🌍" },
-    soul: { num: 22,  name: "愚者",     element: "💨" },
+    primary: { num: 16, name: "高塔",     element: "🔥" },
+    soul: { num: 6,  name: "戀人",     element: "🌬️" },
   },
 };
 
@@ -147,32 +147,38 @@ function reduceToSingleDigitOrMaster(n: number): number {
   }
   return n;
 }
-function calcLifeNumbers(birthDate: string): { outer: { num: number; name: string; element: string }; middle: { num: number; name: string; element: string }; inner: { num: number; name: string; element: string }; soul: { num: number; name: string; element: string } } | null {
+function calcLifeNumbers(birthDate: string): { outer: { num: number; name: string; element: string }; middle: { num: number; name: string; element: string }; primary: { num: number; name: string; element: string }; soul: { num: number; name: string; element: string } } | null {
   const parts = birthDate.split('-');
   if (parts.length !== 3) return null;
   const [yStr, mStr, dStr] = parts;
   const y = parseInt(yStr), m = parseInt(mStr), d = parseInt(dStr);
   if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
-  // 外層靈數（生日展現）= 出生日期各位數相加
+
+  // 外層靈數（生日展現）= 出生日期各位數相加，超過22才繼續相加
   const outerRaw = d.toString().split('').reduce((a, c) => a + parseInt(c), 0);
   const outer = reduceToSingleDigitOrMaster(outerRaw);
-  // 中層靈數（天賦使命）= 出生月份各位數 + 出生日期各位數相加
+
+  // 中層靈數（天賦使命）= 月份各位數 + 日期各位數相加，超過22才繼續相加
   const middleRaw = m.toString().split('').reduce((a, c) => a + parseInt(c), 0)
     + d.toString().split('').reduce((a, c) => a + parseInt(c), 0);
   const middle = reduceToSingleDigitOrMaster(middleRaw);
-  // 內層靈數（靈魂渴望）= 年 + 月 + 日 全部數字相加
-  const innerRaw = y.toString().split('').reduce((a, c) => a + parseInt(c), 0)
-    + m.toString().split('').reduce((a, c) => a + parseInt(c), 0)
-    + d.toString().split('').reduce((a, c) => a + parseInt(c), 0);
-  const inner = reduceToSingleDigitOrMaster(innerRaw);
-  // 靈魂數（生命主題）= 出生年份各位數相加
-  const soulRaw = y.toString().split('').reduce((a, c) => a + parseInt(c), 0);
-  const soul = reduceToSingleDigitOrMaster(soulRaw);
+
+  // 年度靈數 = 年份各位數相加，超過22才繼續相加
+  const yearRaw = y.toString().split('').reduce((a, c) => a + parseInt(c), 0);
+  const yearNum = reduceToSingleDigitOrMaster(yearRaw);
+
+  // 主要靈數（靈魂渴望）= 中層靈數 + 年度靈數，超過22才繼續相加
+  const primaryRaw = middle + yearNum;
+  const primary = reduceToSingleDigitOrMaster(primaryRaw);
+
+  // 靈魂數（生命主題）= 年度靈數（與主要靈數共用年份計算）
+  const soul = yearNum;
+
   const getCard = (n: number) => TAROT_CARDS[n] ?? { name: `第${n}號`, element: "✨" };
   return {
     outer: { num: outer, ...getCard(outer) },
     middle: { num: middle, ...getCard(middle) },
-    inner: { num: inner, ...getCard(inner) },
+    primary: { num: primary, ...getCard(primary) },
     soul: { num: soul, ...getCard(soul) },
   };
 }
@@ -775,7 +781,7 @@ export default function ProfilePage() {
           const cards = [
             { label: "外層靈數（生日展現）", ...lifeNums.outer },
             { label: "中層靈數（天賦使命）", ...lifeNums.middle },
-            { label: "內層靈數（靈魂渴望）", ...lifeNums.inner },
+            { label: "主要靈數（靈魂渴望）", ...lifeNums.primary },
             { label: "靈魂數（生命主題）", ...lifeNums.soul },
           ];
           return (
