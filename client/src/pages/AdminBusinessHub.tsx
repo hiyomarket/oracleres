@@ -765,6 +765,33 @@ function RedemptionCodesPanel({ campaignId, campaignName }: { campaignId: number
         </div>
       </div>
 
+      {/* CSV 匯出按鈕 */}
+      {codes.length > 0 && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={() => {
+              const rows = [["code", "status", "usedAt", "usedBy"]];
+              codes.forEach(c => rows.push([
+                c.code,
+                c.isVoided ? "已作廢" : c.isUsed ? "已使用" : "可用",
+                c.usedAt ? new Date(c.usedAt).toLocaleString("zh-TW") : "",
+                String(c.usedBy ?? ""),
+              ]));
+              const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
+              const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url; a.download = `${campaignName}-兌換碼.csv`; a.click();
+              URL.revokeObjectURL(url);
+              toast.success("已匯出 CSV");
+            }}
+            className="text-xs text-slate-400 hover:text-amber-400 transition-colors flex items-center gap-1"
+          >
+            ↓ 匯出 CSV
+          </button>
+        </div>
+      )}
+
       {/* 產生碼區塊 */}
       <div className="flex gap-2 mb-3">
         <Input

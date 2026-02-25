@@ -23,6 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { ChevronDown } from "lucide-react";
 
 const PLAN_LABELS: Record<string, { label: string; color: string }> = {
   basic:        { label: "基礎", color: "bg-slate-600 text-slate-200" },
@@ -82,6 +83,75 @@ function formatRelative(dateStr: string | Date | null | undefined) {
 }
 
 // ─── 訂閱管理 Modal ─────────────────────────────────────────────────────────
+
+/** 訂閱日誌展開面板 */
+function SubscriptionLogsPanel({ userId }: { userId: number }) {
+  const [open, setOpen] = useState(false);
+  const { data: logs, isLoading } = trpc.businessHub.listSubscriptionLogs.useQuery(
+    { targetUserId: userId, limit: 20 },
+    { enabled: open, staleTime: 10000 }
+  );
+
+  const actionLabel: Record<string, string> = {
+    assign_plan: "指派方案",
+    remove_plan: "移除方案",
+    add_module: "加模塊",
+    remove_module: "移模塊",
+    redeem: "兌換碼",
+  };
+
+  return (
+    <div className="flex-1">
+      <button
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors"
+      >
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+        訂閱記錄
+      </button>
+      {open && (
+        <div className="mt-2 bg-slate-800/60 rounded-xl border border-slate-700/40 overflow-hidden">
+          {isLoading ? (
+            <div className="px-3 py-2 text-xs text-slate-500">載入中...</div>
+          ) : !logs || logs.length === 0 ? (
+            <div className="px-3 py-2 text-xs text-slate-500">尚無訂閱記錄</div>
+          ) : (
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-slate-700/40">
+                  <th className="px-3 py-1.5 text-left text-slate-500 font-normal">時間</th>
+                  <th className="px-3 py-1.5 text-left text-slate-500 font-normal">動作</th>
+                  <th className="px-3 py-1.5 text-left text-slate-500 font-normal">詳情</th>
+                  <th className="px-3 py-1.5 text-left text-slate-500 font-normal">備注</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id} className="border-b border-slate-700/20 last:border-0">
+                    <td className="px-3 py-1.5 text-slate-400 whitespace-nowrap">
+                      {new Date(log.createdAt).toLocaleDateString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                    <td className="px-3 py-1.5">
+                      <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 text-[10px]">
+                        {actionLabel[log.action] ?? log.action}
+                      </span>
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-300 max-w-[120px] truncate">
+                      {log.details ? JSON.stringify(log.details).slice(0, 40) : "-"}
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-500 max-w-[100px] truncate">
+                      {(log.details as { note?: string } | null)?.note ?? "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface SubscriptionModalProps {
   user: { id: number; name: string | null; planId: string | null; planExpiresAt: Date | null };
@@ -494,8 +564,9 @@ export default function AdminUsers() {
                           </div>
                         </div>
                       </div>
-                      {/* 管理訂閱按鈕 */}
-                      <div className="flex justify-end">
+                      {/* 操作列 */}
+                      <div className="flex items-center justify-between gap-2">
+                        <SubscriptionLogsPanel userId={u.id} />
                         <Button
                           size="sm"
                           onClick={(e) => {
@@ -507,7 +578,7 @@ export default function AdminUsers() {
                               planExpiresAt: u.planExpiresAt ? new Date(u.planExpiresAt) : null,
                             });
                           }}
-                          className="bg-amber-600/80 hover:bg-amber-600 text-black text-xs font-semibold"
+                          className="bg-amber-600/80 hover:bg-amber-600 text-black text-xs font-semibold shrink-0"
                         >
                           🎫 管理訂閱
                         </Button>

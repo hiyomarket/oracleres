@@ -15,7 +15,7 @@ import { getFullDateInfo, getTaiwanHour, getTaiwanDate } from "./lib/lunarCalend
 import { getMoonPhase } from "./lib/moonPhase";
 import { getAllHourEnergies, getCurrentHourEnergy, getBestHours, getWorstHours, getAllHourEnergiesDynamic, getCurrentHourEnergyDynamic } from "./lib/hourlyEnergy";
 import { getDb, saveOracleSession, getOracleHistory, getOracleStats, saveLotterySession, getLotteryHistory, getLotteryStats, getUserProfileForEngine } from "./db";
-import { userProfiles } from "../drizzle/schema";
+import { userProfiles, userSubscriptions, plans } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
 import { generateLotteryNumbers, generateLotterySets, generateScratchStrategies, analyzeAddressWuxing } from "./lib/lotteryAlgorithm";
@@ -39,7 +39,34 @@ export const appRouter = router({
   points: pointsRouter,
   businessHub: businessHubRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query(async (opts) => {
+      const user = opts.ctx.user;
+      if (!user) return null;
+      // 查詢訂閱方案名稱
+      try {
+        const db = await getDb();
+        if (db) {
+          const [sub] = await db
+            .select({ planId: userSubscriptions.planId, planExpiresAt: userSubscriptions.planExpiresAt })
+            .from(userSubscriptions)
+            .where(eq(userSubscriptions.userId, user.id));
+          if (sub?.planId) {
+            const now = new Date();
+            const expired = sub.planExpiresAt && sub.planExpiresAt < now;
+            if (!expired) {
+              const [plan] = await db
+                .select({ name: plans.name })
+                .from(plans)
+                .where(eq(plans.id, sub.planId));
+              if (plan) {
+                return { ...user, planName: plan.name };
+              }
+            }
+          }
+        }
+      } catch (_) { /* 靜默失敗，回覆基礎用戶資訊 */ }
+      return { ...user, planName: null };
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });

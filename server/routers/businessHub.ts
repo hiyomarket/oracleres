@@ -19,6 +19,7 @@ import {
   users,
 } from "../../drizzle/schema";
 import { eq, asc, desc } from "drizzle-orm";
+import { hasAccess } from "../PermissionService";
 
 // Admin guard middleware
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -30,6 +31,37 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 
 export const businessHubRouter = router({
   // ─── Modules ────────────────────────────────────────────────────────────
+
+  /**
+   * 前台導航 API：返回當前用戶可見的模塊列表（依 sort_order 排序）
+   * 每個模塊包含 hasAccess 判斷用戶是否有權限
+   */
+  getVisibleNav: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    const allModules = await db
+      .select()
+      .from(modules)
+      .where(eq(modules.isActive, 1))
+      .orderBy(asc(modules.sortOrder));
+    // 對每個模塊檢查權限：取第一個 containedFeature 作為代表
+    const result = await Promise.all(
+      allModules.map(async (m) => {
+        const features = m.containedFeatures as string[];
+        // admin 永遠有權限
+        if (ctx.user.role === "admin") {
+          return { ...m, hasAccess: true };
+        }
+        if (features.length === 0) {
+          return { ...m, hasAccess: true };
+        }
+        // 檢查第一個 feature（代表模塊主要入口權限）
+        const access = await hasAccess(ctx.user.id, features[0]);
+        return { ...m, hasAccess: access.hasAccess };
+      })
+    );
+    return result;
+  }),
 
   /** 取得所有功能模塊 */
   listModules: adminProcedure.query(async () => {
@@ -314,9 +346,10 @@ export const businessHubRouter = router({
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      const rows = await db.select().from(subscriptionLogs)
-        .orderBy(desc(subscriptionLogs.createdAt))
-        .limit(input.limit);
+      const query = db.select().from(subscriptionLogs);
+      const rows = input.targetUserId
+        ? await query.where(eq(subscriptionLogs.targetUserId, input.targetUserId)).orderBy(desc(subscriptionLogs.createdAt)).limit(input.limit)
+        : await query.orderBy(desc(subscriptionLogs.createdAt)).limit(input.limit);
       return rows;
     }),
 

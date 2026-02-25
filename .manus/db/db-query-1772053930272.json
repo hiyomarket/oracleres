@@ -1,0 +1,9 @@
+{
+  "query": "\nUPDATE modules SET navPath = '/profile'  WHERE id = 'module_profile';\nUPDATE modules SET navPath = '/oracle'   WHERE id = 'module_oracle';\nUPDATE modules SET navPath = '/'         WHERE id = 'module_warroom';\nUPDATE modules SET navPath = '/lottery'  WHERE id = 'module_lottery';\nUPDATE modules SET navPath = '/calendar' WHERE id = 'module_calendar';\nUPDATE modules SET navPath = ''          WHERE id = 'module_outfit';\nUPDATE modules SET navPath = ''          WHERE id = 'module_wealth';\nUPDATE modules SET navPath = '/weekly'   WHERE id = 'module_weekly';\nUPDATE modules SET navPath = '/stats'    WHERE id = 'module_stats';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nUPDATE modules SET navPath = '/profile'  WHERE id = 'module_profile';\nUPDATE modules SET navPath = '/oracle'   WHERE id = 'module_oracle';\nUPDATE modules SET navPath = '/'         WHERE id = 'module_warroom';\nUPDATE modules SET navPath = '/lottery'  WHERE id = 'module_lottery';\nUPDATE modules SET navPath = '/calendar' WHERE id = 'module_calendar';\nUPDATE modules SET navPath = ''          WHERE id = 'module_outfit';\nUPDATE modules SET navPath = ''          WHERE id = 'module_wealth';\nUPDATE modules SET navPath = '/weekly'   WHERE id = 'module_weekly';\nUPDATE modules SET navPath = '/stats'    WHERE id = 'module_stats';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3502
+}

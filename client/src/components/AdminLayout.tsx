@@ -1,7 +1,7 @@
 /**
  * AdminLayout.tsx
  * 管理後台統一側邊欄佈局
- * - 三個導覽連結：儀表板 / 用戶管理 / 權限管理
+ * - 導覽連結：儀表板 / 用戶管理 / 商業中心
  * - 響應式：桌面側邊欄 + 行動版頂部 Tab
  */
 import { useLocation, Link } from "wouter";
@@ -24,12 +24,6 @@ const NAV_ITEMS = [
     icon: "👤",
     label: "用戶管理",
     desc: "查看、篩選、積分",
-  },
-  {
-    href: "/permission-manager",
-    icon: "🔑",
-    label: "權限管理",
-    desc: "功能模組開關",
   },
   {
     href: "/admin/business-hub",

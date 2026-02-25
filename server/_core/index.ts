@@ -9,6 +9,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { sendMorningBriefing } from "../lib/morningBriefing";
 import { checkAndNotifyFestival } from "../lib/festivalNotification";
+import { checkExpiringSubscriptions } from "../lib/expiryReminder";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -123,3 +124,30 @@ function startFestivalNotificationScheduler() {
 }
 
 startFestivalNotificationScheduler();
+
+/**
+ * 訂閱到期提醒：台灣時間每日 09:00 檢查 7 天內即將到期用戶
+ */
+let lastExpiryCheckDate = "";
+
+function startExpiryReminderScheduler() {
+  console.log("[ExpiryReminder] Scheduler started. Will check daily at 09:00 Taiwan time.");
+  setInterval(async () => {
+    try {
+      const twNow = new Date(Date.now() + 8 * 60 * 60 * 1000);
+      const twHour = twNow.getUTCHours();
+      const twMinute = twNow.getUTCMinutes();
+      const twDateStr = twNow.toISOString().split('T')[0];
+      // 台灣時間 09:00 ~ 09:04 且今日尚未檢查
+      if (twHour === 9 && twMinute < 5 && lastExpiryCheckDate !== twDateStr) {
+        lastExpiryCheckDate = twDateStr;
+        console.log(`[ExpiryReminder] Running expiry check for ${twDateStr}`);
+        await checkExpiringSubscriptions();
+      }
+    } catch (err) {
+      console.error("[ExpiryReminder] Scheduler error:", err);
+    }
+  }, 60 * 1000); // 每分鐘檢查
+}
+
+startExpiryReminderScheduler();

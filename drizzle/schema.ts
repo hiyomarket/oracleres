@@ -52,6 +52,8 @@ export const modules = mysqlTable("modules", {
   sortOrder: int("sortOrder").notNull().default(0),
   // 關鍵欄位：儲存舊 features 表 id 的陣列，建立新舊權限體系的映射關係
   containedFeatures: json("containedFeatures").$type<string[]>().notNull().default([]),
+  // 前台導航路徑（如 /oracle, /lottery, /，空白=不顯示在主導航）
+  navPath: varchar("navPath", { length: 100 }).default(""),
   // 是否啟用
   isActive: tinyint("isActive").notNull().default(1),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

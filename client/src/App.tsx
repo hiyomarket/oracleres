@@ -12,7 +12,6 @@ import WeeklyReport from "@/pages/WeeklyReport";
 import WarRoom from "@/pages/WarRoom";
 import ProfilePage from "@/pages/ProfilePage";
 import MyProfile from "@/pages/MyProfile";
-import PermissionManager from "@/pages/PermissionManager";
 import { AccessGate } from "@/components/AccessGate";
 import AddToHome from "@/pages/AddToHome";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -33,7 +32,6 @@ function Router() {
         <Route path={"/war-room"} component={WarRoom} />
         <Route path={"/profile"} component={ProfilePage} />
         <Route path={"/my-profile"} component={MyProfile} />
-        <Route path={"/permission-manager"} component={PermissionManager} />
         <Route path={"/admin/dashboard"} component={AdminDashboard} />
         <Route path={"/admin/users"} component={AdminUsers} />
         <Route path={"/admin/business-hub"} component={AdminBusinessHub} />

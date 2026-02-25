@@ -239,13 +239,13 @@ export default function AdminDashboard() {
               <p className="text-sm text-slate-400">查看所有用戶、篩選方案、管理積分與權限</p>
             </div>
           </Link>
-          <Link href="/permission-manager">
+          <Link href="/admin/business-hub">
             <div className="bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 hover:border-amber-500/50 rounded-xl p-5 cursor-pointer transition-all duration-200 group">
               <div className="flex items-center gap-3 mb-2">
-                <span className="text-2xl">🔑</span>
-                <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors">功能權限管理</h3>
+                <span className="text-2xl">💰</span>
+                <h3 className="font-semibold text-white group-hover:text-amber-400 transition-colors">商業中心</h3>
               </div>
-              <p className="text-sm text-slate-400">設定每位用戶可使用的功能模組與截止日期</p>
+              <p className="text-sm text-slate-400">管理模塊、方案、訂閱指派與行銷活動</p>
             </div>
           </Link>
         </div>

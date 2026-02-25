@@ -7,19 +7,19 @@ import { useState, useRef, useEffect } from "react";
 import { User, Settings, LogOut, ChevronDown, ShieldCheck, BarChart2, Ticket, Smartphone, LayoutDashboard, Star, Coins, Gift } from "lucide-react";
 import { usePermissions, type FeatureId } from "@/hooks/usePermissions";
 
-type NavPage = "oracle" | "lottery" | "calendar" | "stats" | "weekly" | "warRoom" | "profile";
+type NavPage = string;
 
 interface SharedNavProps {
   currentPage: NavPage;
 }
 
-// 主導覽列項目（週報/統計已移至個人下拉選單）
-const NAV_ITEMS: { id: NavPage; featureId: FeatureId; path: string; icon: string; label: string }[] = [
-  { id: "profile",  featureId: "profile",  path: "/profile",  icon: "🔮", label: "命格" },
-  { id: "oracle",   featureId: "oracle",   path: "/oracle",   icon: "☯",  label: "擲筊" },
-  { id: "lottery",  featureId: "lottery",  path: "/lottery",  icon: "🎰", label: "選號" },
-  { id: "calendar", featureId: "calendar", path: "/calendar", icon: "📅", label: "日曆" },
-  { id: "warRoom",  featureId: "warroom",  path: "/",         icon: "⚔️", label: "每日運勢" },
+// 靜態備援（API 載入前避免閃爍）
+const FALLBACK_NAV = [
+  { id: "module_profile",  navPath: "/profile",  icon: "🔮", name: "命格",    hasAccess: true },
+  { id: "module_oracle",   navPath: "/oracle",   icon: "☯️", name: "擲筊",    hasAccess: true },
+  { id: "module_lottery",  navPath: "/lottery",  icon: "🎰", name: "選號",    hasAccess: true },
+  { id: "module_calendar", navPath: "/calendar", icon: "📅", name: "日曆",    hasAccess: true },
+  { id: "module_warroom",  navPath: "/",         icon: "⚔️", name: "每日運勢", hasAccess: true },
 ];
 
 /** 兌換碼輸入元件（嵌入下拉選單中） */
@@ -91,7 +91,7 @@ function RedeemCodeEntry({ onClose }: { onClose: () => void }) {
 }
 
 /** 使用者頭像下拉選單 */
-function UserMenu({ user }: { user: { name?: string | null; openId?: string } }) {
+function UserMenu({ user }: { user: { name?: string | null; openId?: string; planName?: string | null } }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { data: status } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
@@ -153,7 +153,9 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string } })
                     主帳號
                   </p>
                 ) : (
-                  <p className="text-[10px] text-slate-500 mt-0.5">一般會員</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: user.planName ? '#f59e0b' : undefined, opacity: user.planName ? 1 : 0.5 }}>
+                    {user.planName ?? "一般會員"}
+                  </p>
                 )}
               </div>
               {/* 積分顯示 */}
@@ -243,17 +245,7 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string } })
                   </div>
                 </Link>
 
-                {/* 功能權限管理 */}
-                <Link
-                  href="/permission-manager"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
-                >
-                  <div className="w-7 h-7 rounded-lg bg-green-500/15 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
-                  </div>
-                  功能權限管理
-                </Link>
+
               </>
             )}
 
@@ -281,17 +273,25 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string } })
 export function SharedNav({ currentPage }: SharedNavProps) {
   const [, navigate] = useLocation();
   const { user } = useAuth();
-  const { hasFeature, isAdmin, isLoading: permLoading } = usePermissions();
+  const { isAdmin } = usePermissions();
   const notifyMutation = trpc.oracle.notifyDailyEnergy.useMutation({
     onSuccess: () => toast.success("今日能量通知已發送！"),
     onError: () => toast.error("通知發送失敗，請稍後再試。"),
   });
 
-  // 過濾出有權限的導覽項目（admin 顯示全部；載入中也顯示全部避免閃爍）
-  const visibleNavItems = NAV_ITEMS.filter(item => {
-    if (permLoading || isAdmin) return true;
-    return hasFeature(item.featureId);
-  });
+  // 取得用戶完整資訊（包含 planName）
+  const { data: meData } = trpc.auth.me.useQuery(undefined, { staleTime: 60000 });
+
+  // 動態導航：從後端取模塊列表（包含 hasAccess 權限判斷）
+  const { data: navModules, isLoading: navLoading } = trpc.businessHub.getVisibleNav.useQuery(
+    undefined,
+    { staleTime: 30000, retry: 1, enabled: !!user }
+  );
+
+  // 只顯示有 navPath 的模塊（空白 navPath = 不在主導航顯示）
+  const visibleNavItems = navLoading || !navModules
+    ? FALLBACK_NAV
+    : navModules.filter(m => m.navPath && m.navPath.length > 0);
 
   return (
     <>
@@ -323,7 +323,9 @@ export function SharedNav({ currentPage }: SharedNavProps) {
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
               <span>/</span>
               <span className="text-slate-400">
-                {NAV_ITEMS.find(n => n.id === currentPage)?.label ?? currentPage}
+                {visibleNavItems.find(n => (n as { navPath: string }).navPath === location.pathname || n.id === currentPage)
+                  ? ((visibleNavItems.find(n => (n as { navPath: string }).navPath === location.pathname || n.id === currentPage) as { name?: string; label?: string }).name ?? currentPage)
+                  : currentPage}
               </span>
             </div>
           </div>
@@ -352,7 +354,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                 登入
               </a>
             ) : (
-              <UserMenu user={user} />
+              <UserMenu user={{ ...user, planName: (meData as { planName?: string | null } | null)?.planName ?? null }} />
             )}
           </div>
         </div>
@@ -361,23 +363,35 @@ export function SharedNav({ currentPage }: SharedNavProps) {
         <div className="border-t border-white/5">
           {/* 桌機：居中顯示 */}
           <div className="hidden md:flex items-center justify-center overflow-x-auto scrollbar-none gap-1 px-4 py-1.5">
-            {visibleNavItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => navigate(item.path)}
-                className={`
-                  flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all shrink-0
-                  ${currentPage === item.id
-                    ? "bg-amber-900/40 border border-amber-600/50 text-amber-300"
-                    : "text-slate-400 hover:text-amber-400 hover:bg-white/5 border border-transparent"
-                  }
-                `}
-              >
-                {/* 圖示放大 1 倍（原 14px → 28px） */}
-                <span className="text-[28px] leading-none">{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            ))}
+            {visibleNavItems.map((item) => {
+              const navPath = (item as { navPath: string }).navPath ?? (item as { path?: string }).path ?? "/";
+              const label = (item as { name?: string; label?: string }).name ?? (item as { label?: string }).label ?? "";
+              const locked = !item.hasAccess;
+              const isActive = navPath === "/" ? currentPage === "warRoom" || currentPage === "" : location.pathname === navPath;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (locked) { toast.error("此功能需要升級方案才能使用"); return; }
+                    navigate(navPath);
+                  }}
+                  title={locked ? "鎖定—需要升級方案" : label}
+                  className={`
+                    flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all shrink-0
+                    ${locked
+                      ? "text-slate-600 border border-transparent cursor-not-allowed opacity-50"
+                      : isActive
+                        ? "bg-amber-900/40 border border-amber-600/50 text-amber-300"
+                        : "text-slate-400 hover:text-amber-400 hover:bg-white/5 border border-transparent"
+                    }
+                  `}
+                >
+                  <span className="text-[28px] leading-none">{item.icon ?? "🔒"}</span>
+                  <span>{label}</span>
+                  {locked && <span className="text-[10px] ml-0.5">🔒</span>}
+                </button>
+              );
+            })}
           </div>
 
           {/* 手機：居中顯示，支援左右滑動 */}
@@ -388,26 +402,33 @@ export function SharedNav({ currentPage }: SharedNavProps) {
             {/* 使用 inline-flex 讓項目可以超出容器觸發滑動，同時 justify-center 讓少量項目居中 */}
             <div className="flex items-center gap-1 min-w-max mx-auto">
               {visibleNavItems.map((item) => {
-                const isActive = currentPage === item.id;
+                const navPath = (item as { navPath: string }).navPath ?? "/";
+                const label = (item as { name?: string; label?: string }).name ?? (item as { label?: string }).label ?? "";
+                const locked = !item.hasAccess;
+                const isActive = navPath === "/" ? currentPage === "warRoom" || currentPage === "" : location.pathname === navPath;
                 return (
                   <button
                     key={item.id}
-                    onClick={() => navigate(item.path)}
+                    onClick={() => {
+                      if (locked) { toast.error("此功能需要升級方案才能使用"); return; }
+                      navigate(navPath);
+                    }}
                     className={`
                       relative flex flex-col items-center justify-center gap-1
                       shrink-0 px-3 py-2 min-w-[64px] rounded-xl transition-all active:scale-95
-                      ${isActive
-                        ? "bg-amber-900/25 border border-amber-700/30 text-amber-400"
-                        : "text-slate-500 border border-transparent"
+                      ${locked
+                        ? "opacity-40 cursor-not-allowed border border-transparent"
+                        : isActive
+                          ? "bg-amber-900/25 border border-amber-700/30 text-amber-400"
+                          : "text-slate-500 border border-transparent"
                       }
                     `}
                   >
-                    {/* 圖示放大 1 倍（原 22px → 44px） */}
                     <span className={`text-[44px] leading-none transition-transform ${isActive ? 'scale-105' : ''}`}>
-                      {item.icon}
+                      {item.icon ?? "🔒"}
                     </span>
                     <span className={`text-[10px] font-medium leading-none tracking-wide ${isActive ? 'text-amber-400' : 'text-slate-500'}`}>
-                      {item.label}
+                      {label}{locked ? "🔒" : ""}
                     </span>
                   </button>
                 );

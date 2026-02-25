@@ -983,3 +983,33 @@
 - [x] TypeScript 零錯誤
 - [x] 91 項測試全部通過
 - [x] 儲存 Phase 2 checkpoint
+
+## 鳳凰計畫 Phase 3 - 模塊化接管全系統
+
+### 後端
+- [ ] 新增 modules.getVisibleNav API（依 sort_order 返回模塊列表 + hasAccess 布爾值）
+- [ ] 重構 auth.me：加入 planName 欄位（從 user_subscriptions + plans 查詢）
+- [ ] 強制替換所有後端路由的舊權限邏輯為 PermissionService.checkAccess
+- [ ] 移除 /permission-manager 相關後端 API
+
+### 前端
+- [ ] SharedNav 動態導航重構（從 modules.getVisibleNav 取列表，hasAccess=false 顯示鎖定）
+- [ ] UserMenu 顯示 planName 會員身份（取代寫死「一般會員」）
+- [ ] 退役 /permission-manager：移除 AdminLayout 側邊欄入口、刪除頁面組件
+- [ ] 訂閱日誌分頁（AdminUsers 展開詳情加入「訂閱記錄」Tab）
+- [ ] 兌換碼 CSV 匯出按鈕（AdminBusinessHub 兌換碼面板）
+- [ ] 每日到期提醒排程（後端定時任務，7天內到期 notifyOwner）
+
+## 鳳凰計畫 Phase 3 - 模塊化接管全系統
+
+- [x] modules 表加入 navPath 欄位（DB 遷移完成）
+- [x] 後端 modules.getVisibleNav API（依 PermissionService 判斷 hasAccess）
+- [x] auth.me 加入 planName 欄位（從 user_subscriptions + plans 查詢）
+- [x] permissions.myFeatures 改用 PermissionService（廢棄舊 user_permissions 表查詢）
+- [x] SharedNav 動態導航重構（從 getVisibleNav API 取模塊列表，依 hasAccess 顯示鎖定/正常狀態）
+- [x] UserMenu 顯示 planName 會員身份（取代寫死的「一般會員」）
+- [x] 退役 /permission-manager（移除路由、刪除頁面檔案、移除 AdminLayout 側邊欄入口、AdminDashboard 快捷卡片改為商業中心）
+- [x] 訂閱日誌展開面板（AdminUsers 展開詳情加入 SubscriptionLogsPanel）
+- [x] 兌換碼 CSV 匯出（RedemptionCodesPanel 加入匯出按鈕，含 BOM 支援中文）
+- [x] 每日 09:00 到期提醒排程（server/lib/expiryReminder.ts + server/_core/index.ts 整合）
+- [x] TypeScript 零錯誤，91 項測試全部通過

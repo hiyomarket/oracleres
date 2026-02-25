@@ -20,6 +20,7 @@ import { router, protectedProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import { userPermissions, users } from "../../drizzle/schema";
 import { eq, and, inArray } from "drizzle-orm";
+import { hasAccess } from "../PermissionService";
 
 // 所有功能模組定義
 export const ALL_FEATURES = [
@@ -89,13 +90,28 @@ export async function hasFeature(userId: number, userRole: string | null, featur
 
 export const permissionsRouter = router({
   /**
-   * 取得當前使用者的有效功能清單（前端用於顯示/隱藏功能）
+   * 「新版」取得當前使用者的有效功能清單
+   * 已全面改為調用 PermissionService，不再查詢舊 user_permissions 表
    */
   myFeatures: protectedProcedure.query(async ({ ctx }) => {
-    const features = await getUserFeatures(ctx.user.id, ctx.user.role ?? null);
+    if (isAdmin(ctx.user)) {
+      return {
+        features: ALL_FEATURES.map(f => f.id) as FeatureId[],
+        isAdmin: true,
+        allFeatures: ALL_FEATURES,
+      };
+    }
+    // 對每個 feature 調用 PermissionService
+    const results = await Promise.all(
+      ALL_FEATURES.map(async (f) => {
+        const access = await hasAccess(ctx.user.id, f.id);
+        return access.hasAccess ? f.id as FeatureId : null;
+      })
+    );
+    const features = results.filter((f): f is FeatureId => f !== null);
     return {
       features,
-      isAdmin: isAdmin(ctx.user),
+      isAdmin: false,
       allFeatures: ALL_FEATURES,
     };
   }),
