@@ -1,0 +1,217 @@
+{
+  "query": "SELECT u.id, u.name, up.dayMasterElement, up.dayPillar, up.favorableElements, up.unfavorableElements, up.birthDate FROM users u LEFT JOIN user_profiles up ON u.id = up.userId ORDER BY u.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT u.id, u.name, up.dayMasterElement, up.dayPillar, up.favorableElements, up.unfavorableElements, up.birthDate FROM users u LEFT JOIN user_profiles up ON u.id = up.userId ORDER BY u.id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "photographer WilliamWei",
+      "dayMasterElement": "NULL",
+      "dayPillar": "NULL",
+      "favorableElements": "NULL",
+      "unfavorableElements": "NULL",
+      "birthDate": "NULL"
+    },
+    {
+      "id": "540175",
+      "name": "庭瑀 胡",
+      "dayMasterElement": "water",
+      "dayPillar": "壬申",
+      "favorableElements": "water,metal",
+      "unfavorableElements": "wood,fire",
+      "birthDate": "1995-12-07"
+    },
+    {
+      "id": "660061",
+      "name": "justffff",
+      "dayMasterElement": "earth",
+      "dayPillar": "己未",
+      "favorableElements": "earth,fire",
+      "unfavorableElements": "metal,water",
+      "birthDate": "1983-11-27"
+    },
+    {
+      "id": "660067",
+      "name": "bee77426",
+      "dayMasterElement": "metal",
+      "dayPillar": "辛亥",
+      "favorableElements": "metal,earth",
+      "unfavorableElements": "water,wood",
+      "birthDate": "1988-04-26"
+    },
+    {
+      "id": "690036",
+      "name": "禮揚 陳",
+      "dayMasterElement": "wood",
+      "dayPillar": "甲子",
+      "favorableElements": "fire,earth",
+      "unfavorableElements": "wood,water",
+      "birthDate": "2001-01-01"
+    },
+    {
+      "id": "690067",
+      "name": "學成 呂",
+      "dayMasterElement": "water",
+      "dayPillar": "癸亥",
+      "favorableElements": "water,metal",
+      "unfavorableElements": "wood,fire",
+      "birthDate": "1991-08-21"
+    },
+    {
+      "id": "690118",
+      "name": "金育 蘇",
+      "dayMasterElement": "fire",
+      "dayPillar": "丁丑",
+      "favorableElements": "fire,wood",
+      "unfavorableElements": "earth,metal",
+      "birthDate": "1959-12-21"
+    },
+    {
+      "id": "750001",
+      "name": "弘達 張",
+      "dayMasterElement": "metal",
+      "dayPillar": "庚午",
+      "favorableElements": "water,wood",
+      "unfavorableElements": "metal,earth",
+      "birthDate": "1982-10-14"
+    },
+    {
+      "id": "810024",
+      "name": "靜茹 王",
+      "dayMasterElement": "water",
+      "dayPillar": "癸丑",
+      "favorableElements": "water,metal",
+      "unfavorableElements": "wood,fire",
+      "birthDate": "1969-02-07"
+    },
+    {
+      "id": "1260042",
+      "name": "心怡 蘇",
+      "dayMasterElement": "wood",
+      "dayPillar": "乙亥",
+      "favorableElements": "fire,earth",
+      "unfavorableElements": "wood,water",
+      "birthDate": "1993-02-23"
+    },
+    {
+      "id": "1290011",
+      "name": "健哲 毛",
+      "dayMasterElement": "earth",
+      "dayPillar": "戊申",
+      "favorableElements": "metal,water",
+      "unfavorableElements": "earth,fire",
+      "birthDate": "1990-04-13"
+    },
+    {
+      "id": "1290021",
+      "name": "倍稼 蘇",
+      "dayMasterElement": "fire",
+      "dayPillar": "丙午",
+      "favorableElements": "fire,wood",
+      "unfavorableElements": "earth,metal",
+      "birthDate": "1991-02-05"
+    },
+    {
+      "id": "1320007",
+      "name": "沛 蘇",
+      "dayMasterElement": "fire",
+      "dayPillar": "丁卯",
+      "favorableElements": "fire,wood",
+      "unfavorableElements": "earth,metal",
+      "birthDate": "1991-12-23"
+    },
+    {
+      "id": "1500001",
+      "name": "sxt.dacy",
+      "dayMasterElement": "metal",
+      "dayPillar": "庚午",
+      "favorableElements": "water,wood",
+      "unfavorableElements": "metal,earth",
+      "birthDate": "1989-05-10"
+    },
+    {
+      "id": "1500116",
+      "name": "eva072897",
+      "dayMasterElement": "metal",
+      "dayPillar": "辛亥",
+      "favorableElements": "metal,earth",
+      "unfavorableElements": "water,wood",
+      "birthDate": "1984-09-14"
+    },
+    {
+      "id": "1590008",
+      "name": "俊龍 蘇",
+      "dayMasterElement": "fire",
+      "dayPillar": "丙戌",
+      "favorableElements": "fire,wood",
+      "unfavorableElements": "earth,metal",
+      "birthDate": "1991-01-16"
+    },
+    {
+      "id": "1590036",
+      "name": "淑如",
+      "dayMasterElement": "fire",
+      "dayPillar": "丙戌",
+      "favorableElements": "fire,wood",
+      "unfavorableElements": "earth,metal",
+      "birthDate": "1990-07-20"
+    },
+    {
+      "id": "1590141",
+      "name": ". Freya",
+      "dayMasterElement": "earth",
+      "dayPillar": "己未",
+      "favorableElements": "metal,water",
+      "unfavorableElements": "earth,fire",
+      "birthDate": "1988-01-05"
+    },
+    {
+      "id": "1590249",
+      "name": "Ada Chiu",
+      "dayMasterElement": "earth",
+      "dayPillar": "己丑",
+      "favorableElements": "metal,water",
+      "unfavorableElements": "earth,fire",
+      "birthDate": "1985-06-19"
+    },
+    {
+      "id": "1800001",
+      "name": "kai770425",
+      "dayMasterElement": "metal",
+      "dayPillar": "庚戌",
+      "favorableElements": "water,wood",
+      "unfavorableElements": "metal,earth",
+      "birthDate": "1988-04-25"
+    },
+    {
+      "id": "2130001",
+      "name": "菈爾 克",
+      "dayMasterElement": "earth",
+      "dayPillar": "己亥",
+      "favorableElements": "earth,fire",
+      "unfavorableElements": "metal,water",
+      "birthDate": "1990-10-01"
+    },
+    {
+      "id": "2970001",
+      "name": "lynn lin",
+      "dayMasterElement": "metal",
+      "dayPillar": "庚申",
+      "favorableElements": "water,wood",
+      "unfavorableElements": "metal,earth",
+      "birthDate": "1978-04-28"
+    },
+    {
+      "id": "3180097",
+      "name": "祐震 蘇",
+      "dayMasterElement": "earth",
+      "dayPillar": "己未",
+      "favorableElements": "metal,water",
+      "unfavorableElements": "earth,fire",
+      "birthDate": "1988-01-05"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdayMasterElement\tdayPillar\tfavorableElements\tunfavorableElements\tbirthDate\n1\tphotographer WilliamWei\tNULL\tNULL\tNULL\tNULL\tNULL\n540175\t庭瑀 胡\twater\t壬申\twater,metal\twood,fire\t1995-12-07\n660061\tjustffff\tearth\t己未\tearth,fire\tmetal,water\t1983-11-27\n660067\tbee77426\tmetal\t辛亥\tmetal,earth\twater,wood\t1988-04-26\n690036\t禮揚 陳\twood\t甲子\tfire,earth\twood,water\t2001-01-01\n690067\t學成 呂\twater\t癸亥\twater,metal\twood,fire\t1991-08-21\n690118\t金育 蘇\tfire\t丁丑\tfire,wood\tearth,metal\t1959-12-21\n750001\t弘達 張\tmetal\t庚午\twater,wood\tmetal,earth\t1982-10-14\n810024\t靜茹 王\twater\t癸丑\twater,metal\twood,fire\t1969-02-07\n1260042\t心怡 蘇\twood\t乙亥\tfire,earth\twood,water\t1993-02-23\n1290011\t健哲 毛\tearth\t戊申\tmetal,water\tearth,fire\t1990-04-13\n1290021\t倍稼 蘇\tfire\t丙午\tfire,wood\tearth,metal\t1991-02-05\n1320007\t沛 蘇\tfire\t丁卯\tfire,wood\tearth,metal\t1991-12-23\n1500001\tsxt.dacy\tmetal\t庚午\twater,wood\tmetal,earth\t1989-05-10\n1500116\teva072897\tmetal\t辛亥\tmetal,earth\twater,wood\t1984-09-14\n1590008\t俊龍 蘇\tfire\t丙戌\tfire,wood\tearth,metal\t1991-01-16\n1590036\t淑如\tfire\t丙戌\tfire,wood\tearth,metal\t1990-07-20\n1590141\t. Freya\tearth\t己未\tmetal,water\tearth,fire\t1988-01-05\n1590249\tAda Chiu\tearth\t己丑\tmetal,water\tearth,fire\t1985-06-19\n1800001\tkai770425\tmetal\t庚戌\twater,wood\tmetal,earth\t1988-04-25\n2130001\t菈爾 克\tearth\t己亥\tearth,fire\tmetal,water\t1990-10-01\n2970001\tlynn lin\tmetal\t庚申\twater,wood\tmetal,earth\t1978-04-28\n3180097\t祐震 蘇\tearth\t己未\tmetal,water\tearth,fire\t1988-01-05\n",
+  "stderr": "",
+  "execution_time_ms": 1653
+}

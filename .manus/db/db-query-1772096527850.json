@@ -1,0 +1,194 @@
+{
+  "query": "SELECT u.id, u.name, up.dayPillar, up.dayMasterElement, up.favorableElements, up.unfavorableElements FROM users u LEFT JOIN user_profiles up ON u.id = up.userId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT u.id, u.name, up.dayPillar, up.dayMasterElement, up.favorableElements, up.unfavorableElements FROM users u LEFT JOIN user_profiles up ON u.id = up.userId;",
+  "rows": [
+    {
+      "id": "540175",
+      "name": "庭瑀 胡",
+      "dayPillar": "壬申",
+      "dayMasterElement": "water",
+      "favorableElements": "water,metal",
+      "unfavorableElements": "wood,fire"
+    },
+    {
+      "id": "660061",
+      "name": "justffff",
+      "dayPillar": "己未",
+      "dayMasterElement": "earth",
+      "favorableElements": "earth,fire",
+      "unfavorableElements": "metal,water"
+    },
+    {
+      "id": "690036",
+      "name": "禮揚 陳",
+      "dayPillar": "甲子",
+      "dayMasterElement": "wood",
+      "favorableElements": "fire,earth",
+      "unfavorableElements": "wood,water"
+    },
+    {
+      "id": "690118",
+      "name": "金育 蘇",
+      "dayPillar": "丁丑",
+      "dayMasterElement": "fire",
+      "favorableElements": "fire,wood",
+      "unfavorableElements": "earth,metal"
+    },
+    {
+      "id": "690067",
+      "name": "學成 呂",
+      "dayPillar": "癸亥",
+      "dayMasterElement": "water",
+      "favorableElements": "water,metal",
+      "unfavorableElements": "wood,fire"
+    },
+    {
+      "id": "750001",
+      "name": "弘達 張",
+      "dayPillar": "庚午",
+      "dayMasterElement": "metal",
+      "favorableElements": "water,wood",
+      "unfavorableElements": "metal,earth"
+    },
+    {
+      "id": "660067",
+      "name": "bee77426",
+      "dayPillar": "辛亥",
+      "dayMasterElement": "metal",
+      "favorableElements": "metal,earth",
+      "unfavorableElements": "water,wood"
+    },
+    {
+      "id": "810024",
+      "name": "靜茹 王",
+      "dayPillar": "癸丑",
+      "dayMasterElement": "water",
+      "favorableElements": "water,metal",
+      "unfavorableElements": "wood,fire"
+    },
+    {
+      "id": "1290011",
+      "name": "健哲 毛",
+      "dayPillar": "戊申",
+      "dayMasterElement": "earth",
+      "favorableElements": "metal,water",
+      "unfavorableElements": "earth,fire"
+    },
+    {
+      "id": "1290021",
+      "name": "倍稼 蘇",
+      "dayPillar": "丙午",
+      "dayMasterElement": "fire",
+      "favorableElements": "fire,wood",
+      "unfavorableElements": "earth,metal"
+    },
+    {
+      "id": "1320007",
+      "name": "沛 蘇",
+      "dayPillar": "丁卯",
+      "dayMasterElement": "fire",
+      "favorableElements": "fire,wood",
+      "unfavorableElements": "earth,metal"
+    },
+    {
+      "id": "1500001",
+      "name": "sxt.dacy",
+      "dayPillar": "庚午",
+      "dayMasterElement": "metal",
+      "favorableElements": "water,wood",
+      "unfavorableElements": "metal,earth"
+    },
+    {
+      "id": "1500116",
+      "name": "eva072897",
+      "dayPillar": "辛亥",
+      "dayMasterElement": "metal",
+      "favorableElements": "metal,earth",
+      "unfavorableElements": "water,wood"
+    },
+    {
+      "id": "1590008",
+      "name": "俊龍 蘇",
+      "dayPillar": "丙戌",
+      "dayMasterElement": "fire",
+      "favorableElements": "fire,wood",
+      "unfavorableElements": "earth,metal"
+    },
+    {
+      "id": "1590036",
+      "name": "淑如",
+      "dayPillar": "丙戌",
+      "dayMasterElement": "fire",
+      "favorableElements": "fire,wood",
+      "unfavorableElements": "earth,metal"
+    },
+    {
+      "id": "1590141",
+      "name": ". Freya",
+      "dayPillar": "己未",
+      "dayMasterElement": "earth",
+      "favorableElements": "metal,water",
+      "unfavorableElements": "earth,fire"
+    },
+    {
+      "id": "1590249",
+      "name": "Ada Chiu",
+      "dayPillar": "己丑",
+      "dayMasterElement": "earth",
+      "favorableElements": "metal,water",
+      "unfavorableElements": "earth,fire"
+    },
+    {
+      "id": "1800001",
+      "name": "kai770425",
+      "dayPillar": "庚戌",
+      "dayMasterElement": "metal",
+      "favorableElements": "water,wood",
+      "unfavorableElements": "metal,earth"
+    },
+    {
+      "id": "2130001",
+      "name": "菈爾 克",
+      "dayPillar": "己亥",
+      "dayMasterElement": "earth",
+      "favorableElements": "earth,fire",
+      "unfavorableElements": "metal,water"
+    },
+    {
+      "id": "1260042",
+      "name": "心怡 蘇",
+      "dayPillar": "乙亥",
+      "dayMasterElement": "wood",
+      "favorableElements": "fire,earth",
+      "unfavorableElements": "wood,water"
+    },
+    {
+      "id": "2970001",
+      "name": "lynn lin",
+      "dayPillar": "庚申",
+      "dayMasterElement": "metal",
+      "favorableElements": "water,wood",
+      "unfavorableElements": "metal,earth"
+    },
+    {
+      "id": "3180097",
+      "name": "祐震 蘇",
+      "dayPillar": "己未",
+      "dayMasterElement": "earth",
+      "favorableElements": "metal,water",
+      "unfavorableElements": "earth,fire"
+    },
+    {
+      "id": "1",
+      "name": "photographer WilliamWei",
+      "dayPillar": "NULL",
+      "dayMasterElement": "NULL",
+      "favorableElements": "NULL",
+      "unfavorableElements": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdayPillar\tdayMasterElement\tfavorableElements\tunfavorableElements\n540175\t庭瑀 胡\t壬申\twater\twater,metal\twood,fire\n660061\tjustffff\t己未\tearth\tearth,fire\tmetal,water\n690036\t禮揚 陳\t甲子\twood\tfire,earth\twood,water\n690118\t金育 蘇\t丁丑\tfire\tfire,wood\tearth,metal\n690067\t學成 呂\t癸亥\twater\twater,metal\twood,fire\n750001\t弘達 張\t庚午\tmetal\twater,wood\tmetal,earth\n660067\tbee77426\t辛亥\tmetal\tmetal,earth\twater,wood\n810024\t靜茹 王\t癸丑\twater\twater,metal\twood,fire\n1290011\t健哲 毛\t戊申\tearth\tmetal,water\tearth,fire\n1290021\t倍稼 蘇\t丙午\tfire\tfire,wood\tearth,metal\n1320007\t沛 蘇\t丁卯\tfire\tfire,wood\tearth,metal\n1500001\tsxt.dacy\t庚午\tmetal\twater,wood\tmetal,earth\n1500116\teva072897\t辛亥\tmetal\tmetal,earth\twater,wood\n1590008\t俊龍 蘇\t丙戌\tfire\tfire,wood\tearth,metal\n1590036\t淑如\t丙戌\tfire\tfire,wood\tearth,metal\n1590141\t. Freya\t己未\tearth\tmetal,water\tearth,fire\n1590249\tAda Chiu\t己丑\tearth\tmetal,water\tearth,fire\n1800001\tkai770425\t庚戌\tmetal\twater,wood\tmetal,earth\n2130001\t菈爾 克\t己亥\tearth\tearth,fire\tmetal,water\n1260042\t心怡 蘇\t乙亥\twood\tfire,earth\twood,water\n2970001\tlynn lin\t庚申\tmetal\twater,wood\tmetal,earth\n3180097\t祐震 蘇\t己未\tearth\tmetal,water\tearth,fire\n1\tphotographer WilliamWei\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1618
+}

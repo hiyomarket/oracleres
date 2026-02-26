@@ -716,11 +716,14 @@ export async function getUserProfileForEngine(userId: number): Promise<EnginePro
       .where(eq(userProfiles.userId, userId))
       .limit(1);
 
-    if (rows.length === 0 || !rows[0].dayMasterElement) {
+    if (rows.length === 0) {
       return { ...DEFAULT_ENGINE_PROFILE };
     }
-
     const profile = rows[0];
+    // 如果用戶完全沒有命格資料（連 dayPillar 都沒有），才退回預設
+    if (!profile.dayPillar && !profile.dayMasterElement && !profile.favorableElements) {
+      return { ...DEFAULT_ENGINE_PROFILE };
+    };
 
     // 解析日主天干（從四柱日柱取得，例："甲子" → "甲"）
     const dayPillarStem = profile.dayPillar ? profile.dayPillar[0] : null;

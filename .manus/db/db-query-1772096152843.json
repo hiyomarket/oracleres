@@ -1,0 +1,55 @@
+{
+  "query": "SELECT u.id, u.name, up.dayMasterElement, up.dayPillar, up.favorableElements, up.unfavorableElements, up.birthDate FROM users u LEFT JOIN user_profiles up ON u.id = up.userId ORDER BY u.id LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT u.id, u.name, up.dayMasterElement, up.dayPillar, up.favorableElements, up.unfavorableElements, up.birthDate FROM users u LEFT JOIN user_profiles up ON u.id = up.userId ORDER BY u.id LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "photographer WilliamWei",
+      "dayMasterElement": "NULL",
+      "dayPillar": "NULL",
+      "favorableElements": "NULL",
+      "unfavorableElements": "NULL",
+      "birthDate": "NULL"
+    },
+    {
+      "id": "540175",
+      "name": "庭瑀 胡",
+      "dayMasterElement": "water",
+      "dayPillar": "壬申",
+      "favorableElements": "water,metal",
+      "unfavorableElements": "wood,fire",
+      "birthDate": "1995-12-07"
+    },
+    {
+      "id": "660061",
+      "name": "justffff",
+      "dayMasterElement": "earth",
+      "dayPillar": "己未",
+      "favorableElements": "earth,fire",
+      "unfavorableElements": "metal,water",
+      "birthDate": "1983-11-27"
+    },
+    {
+      "id": "660067",
+      "name": "bee77426",
+      "dayMasterElement": "metal",
+      "dayPillar": "辛亥",
+      "favorableElements": "metal,earth",
+      "unfavorableElements": "water,wood",
+      "birthDate": "1988-04-26"
+    },
+    {
+      "id": "690036",
+      "name": "禮揚 陳",
+      "dayMasterElement": "wood",
+      "dayPillar": "甲子",
+      "favorableElements": "fire,earth",
+      "unfavorableElements": "wood,water",
+      "birthDate": "2001-01-01"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdayMasterElement\tdayPillar\tfavorableElements\tunfavorableElements\tbirthDate\n1\tphotographer WilliamWei\tNULL\tNULL\tNULL\tNULL\tNULL\n540175\t庭瑀 胡\twater\t壬申\twater,metal\twood,fire\t1995-12-07\n660061\tjustffff\tearth\t己未\tearth,fire\tmetal,water\t1983-11-27\n660067\tbee77426\tmetal\t辛亥\tmetal,earth\twater,wood\t1988-04-26\n690036\t禮揚 陳\twood\t甲子\tfire,earth\twood,water\t2001-01-01\n",
+  "stderr": "",
+  "execution_time_ms": 1648
+}

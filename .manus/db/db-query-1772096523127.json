@@ -1,0 +1,55 @@
+{
+  "query": "SELECT u.id, u.name, up.dayPillar, up.dayMasterElement, up.favorableElements, up.unfavorableElements, up.birthDate FROM users u LEFT JOIN user_profiles up ON u.id = up.userId LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT u.id, u.name, up.dayPillar, up.dayMasterElement, up.favorableElements, up.unfavorableElements, up.birthDate FROM users u LEFT JOIN user_profiles up ON u.id = up.userId LIMIT 5;",
+  "rows": [
+    {
+      "id": "540175",
+      "name": "庭瑀 胡",
+      "dayPillar": "壬申",
+      "dayMasterElement": "water",
+      "favorableElements": "water,metal",
+      "unfavorableElements": "wood,fire",
+      "birthDate": "1995-12-07"
+    },
+    {
+      "id": "660061",
+      "name": "justffff",
+      "dayPillar": "己未",
+      "dayMasterElement": "earth",
+      "favorableElements": "earth,fire",
+      "unfavorableElements": "metal,water",
+      "birthDate": "1983-11-27"
+    },
+    {
+      "id": "690036",
+      "name": "禮揚 陳",
+      "dayPillar": "甲子",
+      "dayMasterElement": "wood",
+      "favorableElements": "fire,earth",
+      "unfavorableElements": "wood,water",
+      "birthDate": "2001-01-01"
+    },
+    {
+      "id": "660067",
+      "name": "bee77426",
+      "dayPillar": "辛亥",
+      "dayMasterElement": "metal",
+      "favorableElements": "metal,earth",
+      "unfavorableElements": "water,wood",
+      "birthDate": "1988-04-26"
+    },
+    {
+      "id": "1",
+      "name": "photographer WilliamWei",
+      "dayPillar": "NULL",
+      "dayMasterElement": "NULL",
+      "favorableElements": "NULL",
+      "unfavorableElements": "NULL",
+      "birthDate": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdayPillar\tdayMasterElement\tfavorableElements\tunfavorableElements\tbirthDate\n540175\t庭瑀 胡\t壬申\twater\twater,metal\twood,fire\t1995-12-07\n660061\tjustffff\t己未\tearth\tearth,fire\tmetal,water\t1983-11-27\n690036\t禮揚 陳\t甲子\twood\tfire,earth\twood,water\t2001-01-01\n660067\tbee77426\t辛亥\tmetal\tmetal,earth\twater,wood\t1988-04-26\n1\tphotographer WilliamWei\tNULL\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1647
+}

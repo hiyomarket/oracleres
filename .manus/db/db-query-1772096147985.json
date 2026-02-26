@@ -1,0 +1,17 @@
+{
+  "query": "SELECT u.id, u.name, up.dayMasterElement, up.favorableElements, up.unfavorableElements FROM users u LEFT JOIN user_profiles up ON u.id = up.userId WHERE up.dayMasterElement IS NULL OR up.userId IS NULL ORDER BY u.id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT u.id, u.name, up.dayMasterElement, up.favorableElements, up.unfavorableElements FROM users u LEFT JOIN user_profiles up ON u.id = up.userId WHERE up.dayMasterElement IS NULL OR up.userId IS NULL ORDER BY u.id LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "photographer WilliamWei",
+      "dayMasterElement": "NULL",
+      "favorableElements": "NULL",
+      "unfavorableElements": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdayMasterElement\tfavorableElements\tunfavorableElements\n1\tphotographer WilliamWei\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1663
+}

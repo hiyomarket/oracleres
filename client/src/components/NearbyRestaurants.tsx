@@ -357,19 +357,26 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
   const [maxDistance, setMaxDistance] = useState(2000);
   const [minFengShuiScore, setMinFengShuiScore] = useState(0);
   const [filterElement, setFilterElement] = useState<string | null>(null);
-  // 分類多選（空陣列 = 全部）
-  const [filterCategories, setFilterCategories] = useState<string[]>([]);
-  // 價格多選（空陣列 = 全部）
+   // 分類單選（null = 全部）— 點選分類後立即重新搜尋
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  // 用 ref 記錄最新分類，供 handleMapReady 讀取（避免 stale closure）
+  const filterCategoryRef = useRef<string | null>(null);
+  // 價格多選（空陣列 = 全部）— 前端過濾，不需重新搜尋
   const [filterPriceLevels, setFilterPriceLevels] = useState<number[]>([]);
   // 分享狀態
   const [sharingId, setSharingId] = useState<string | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
 
-  const handleSearch = useCallback(() => {
+  // 分類單選切換：點選後更新 ref 並立即重新搜尋
+  const handleCategorySelect = useCallback((categoryId: string | null) => {
+    const newCat = categoryId === "all" ? null : categoryId;
+    setFilterCategory(newCat);
+    filterCategoryRef.current = newCat;
+    // 立即觸發重新搜尋
     setPhase("locating");
     setRestaurants([]);
     setErrorMsg("");
-
+    setFilterSheetOpen(false);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -385,6 +392,25 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
     );
   }, []);
 
+  const handleSearch = useCallback(() => {
+    setPhase("locating");
+    setRestaurants([]);
+    setErrorMsg("");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLocation(loc);
+        setPhase("searching");
+        setShowMap(true);
+      },
+      (err) => {
+        setPhase("error");
+        setErrorMsg(`無法取得定位：${err.message}。請確認已允許位置存取。`);
+      },
+      { timeout: 10000, maximumAge: 60000 }
+    );
+  }, []);;
+
   const handleMapReady = useCallback(
     async (map: google.maps.Map) => {
       mapRef.current = map;
@@ -393,12 +419,11 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
       try {
         const results: Restaurant[] = [];
         const seen = new Set<string>();
-        // 取得當前選中的分類設定（支援多選）
-        const activeCategoryTags = filterCategories.length > 0
-          ? CATEGORY_TAGS.filter((c) => filterCategories.includes(c.id))
-          : [];
-        // 單選時使用第一個分類（用於 textSuffix 和 includedType）
-        const activeCategoryTag = activeCategoryTags.length === 1 ? activeCategoryTags[0] : null;
+        // 取得當前選中的分類（單選）— 使用 ref 避免 stale closure
+        const activeCatId = filterCategoryRef.current;
+        const activeCategoryTag = activeCatId
+          ? CATEGORY_TAGS.find((c) => c.id === activeCatId) ?? null
+          : null;
 
         // 依優先級搜尋前兩個需補五行，每個五行搜尋多個關鍵字以確保至少8筆
         const topSupplements = supplements.slice(0, 2);
@@ -521,7 +546,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         setErrorMsg("搜尋餐廳時發生錯誤，請稍後再試。");
       }
     },
-    [userLocation, supplements, todayDirections, elementMatchScore, filterCategories]
+    [userLocation, supplements, todayDirections, elementMatchScore]
   );
 
   const topElements = supplements.slice(0, 2).map((s) => s.element);
@@ -545,16 +570,9 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
     maxDistance < 2000,
     minFengShuiScore > 0,
     !!filterElement,
-    filterCategories.length > 0,
+    !!filterCategory,
     filterPriceLevels.length > 0,
   ].filter(Boolean).length;
-  // 切換分類選擇（多選模式：點「全部」清空，點其他分類加入/移除）
-  const toggleCategory = (id: string) => {
-    if (id === "all") { setFilterCategories([]); return; }
-    setFilterCategories((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
-  };
   // 切換價格選擇（多選）
   const togglePrice = (id: number) => {
     setFilterPriceLevels((prev) =>
@@ -680,16 +698,16 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                   <SheetTitle className="text-white text-base">進階篩選</SheetTitle>
                 </SheetHeader>
                 <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
-                  {/* 分類標籤多選 */}
+                  {/* 分類標籤單選 — 點選後立即重新搜尋 */}
                   <div>
-                    <p className="text-sm font-medium text-white/80 mb-2.5">🍽️ 餐廳分類（可多選）</p>
+                    <p className="text-sm font-medium text-white/80 mb-2.5">🍽️ 餐廳分類（點選即搜尋）</p>
                     <div className="flex flex-wrap gap-1.5">
                       {CATEGORY_TAGS.map((cat) => {
-                        const isActive = cat.id === "all" ? filterCategories.length === 0 : filterCategories.includes(cat.id);
+                        const isActive = cat.id === "all" ? filterCategory === null : filterCategory === cat.id;
                         return (
                           <button
                             key={cat.id}
-                            onClick={() => toggleCategory(cat.id)}
+                            onClick={() => handleCategorySelect(cat.id)}
                             className={`text-xs px-2.5 py-1.5 rounded-full border transition-all ${
                               isActive
                                 ? "bg-amber-500/20 border-amber-400/50 text-amber-300"
@@ -701,9 +719,9 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                         );
                       })}
                     </div>
-                    {filterCategories.length > 0 && (
+                    {filterCategory && (
                       <p className="text-[10px] text-amber-400/60 mt-1.5">
-                        ❖ 已選 {filterCategories.length} 種分類，重新搜尋後生效（可多選）
+                        ❖ 已選分類：{CATEGORY_TAGS.find(c => c.id === filterCategory)?.label}，正在重新搜尋中...
                       </p>
                     )}
                   </div>
@@ -781,7 +799,8 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                       setMaxDistance(2000);
                       setMinFengShuiScore(0);
                       setFilterElement(null);
-                      setFilterCategories([]);
+                      setFilterCategory(null);
+                      filterCategoryRef.current = null;
                       setFilterPriceLevels([]);
                     }}
                       className="w-full py-2 text-sm text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-colors">

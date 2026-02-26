@@ -470,16 +470,18 @@ export interface OutfitAdviceV9 {
   energyTag: string;
 }
 
-export function generateOutfitAdviceV9(result: WeightedElementResult): OutfitAdviceV9 {
+export function generateOutfitAdviceV9(result: WeightedElementResult, supplementPriority?: string[]): OutfitAdviceV9 {
   const { weighted, levels, coreContradiction } = result;
 
-  // 確定補運策略：依終身優先級（火>土>金）
+  // 使用動態傳入的補運優先級，沒有則 fallback 到常數
+  const priority = supplementPriority && supplementPriority.length > 0 ? supplementPriority : [...SUPPLEMENT_PRIORITY];
+
   // 找出最需要補充的五行（優先級中最弱的）
-  let primarySupplement = "火";
-  let secondarySupplement = "土";
+  let primarySupplement = priority[0] ?? "火";
+  let secondarySupplement = priority[1] ?? "土";
 
   // 按補運優先級，找出最弱的
-  for (const el of SUPPLEMENT_PRIORITY) {
+  for (const el of priority) {
     if (weighted[el as keyof ElementRatio] < 0.15) {
       primarySupplement = el;
       break;
@@ -487,16 +489,16 @@ export function generateOutfitAdviceV9(result: WeightedElementResult): OutfitAdv
   }
 
   // 次要補充：在優先級中找第二弱的
-  for (const el of SUPPLEMENT_PRIORITY) {
+  for (const el of priority) {
     if (el !== primarySupplement && weighted[el as keyof ElementRatio] < 0.25) {
       secondarySupplement = el;
       break;
     }
   }
 
-  // 如果主要補充是火，次要是土（最常見情況）
+  // 如果主次相同，取下一個優先級
   if (primarySupplement === secondarySupplement) {
-    secondarySupplement = SUPPLEMENT_PRIORITY.find(el => el !== primarySupplement) || "土";
+    secondarySupplement = priority.find(el => el !== primarySupplement) ?? "土";
   }
 
   // 找出過旺的五行（需要避開）
@@ -617,36 +619,36 @@ export interface DietaryAdvice {
   targetElement: string;
 }
 
-export function generateDietaryAdvice(result: WeightedElementResult): DietaryAdvice {
+export function generateDietaryAdvice(result: WeightedElementResult, supplementPriority?: string[]): DietaryAdvice {
   const { weighted } = result;
-
+  // 使用動態傳入的補運優先級，沒有則 fallback 到常數
+  const priority = supplementPriority && supplementPriority.length > 0 ? supplementPriority : [...SUPPLEMENT_PRIORITY];
   // 按補運優先級，推薦缺乏的五行食物
   const supplements = [];
-  for (const el of SUPPLEMENT_PRIORITY) {
+  for (const el of priority) {
     const pct = Math.round(weighted[el as keyof ElementRatio] * 100);
     if (pct < 20) {
       supplements.push({
         element: el,
-        priority: SUPPLEMENT_PRIORITY.indexOf(el) + 1,
+        priority: priority.indexOf(el) + 1,
         foods: ELEMENT_FOODS[el] || [],
         advice: generateFoodAdvice(el, pct),
       });
     }
   }
-
   // 如果沒有明顯缺乏，推薦最高優先級
   if (supplements.length === 0) {
+    const topEl = priority[0] ?? "火";
     supplements.push({
-      element: "火",
+      element: topEl,
       priority: 1,
-      foods: ELEMENT_FOODS["火"],
-      advice: "今日能量充沛，可享用辛辣刺激食物來強化食神才華能量。",
+      foods: ELEMENT_FOODS[topEl] || [],
+      advice: `今日能量充沛，可享用${topEl}系食物來強化今日能量。`,
     });
   }
-
-  // 過旺的五行要避開
+  // 過旺的五行要避開（排除用戶的補運優先級五行）
   const avoid = Object.entries(weighted)
-    .filter(([el, v]) => v >= 0.35 && !SUPPLEMENT_PRIORITY.includes(el as any))
+    .filter(([el, v]) => v >= 0.35 && !priority.includes(el))
     .map(([el]) => ({
       element: el,
       foods: ELEMENT_FOODS[el] || [],
@@ -693,31 +695,30 @@ export interface BraceletRecommendationV9 {
   coreGoal: string;
 }
 
-export function recommendBraceletsV9(result: WeightedElementResult): BraceletRecommendationV9 {
+export function recommendBraceletsV9(result: WeightedElementResult, supplementPriority?: string[]): BraceletRecommendationV9 {
   const { weighted, coreContradiction } = result;
-
+  // 使用動態傳入的補運優先級，沒有則 fallback 到常數
+  const priority = supplementPriority && supplementPriority.length > 0 ? supplementPriority : [...SUPPLEMENT_PRIORITY];
   // 左手：補充最需要的五行（按補運優先級找最弱的）
-  let leftElement = "火";
-  for (const el of SUPPLEMENT_PRIORITY) {
+  let leftElement = priority[0] ?? "火";
+  for (const el of priority) {
     if (weighted[el as keyof ElementRatio] < 0.15) {
       leftElement = el;
       break;
     }
   }
-
   // 右手：補充次要需要的五行
-  let rightElement = "土";
-  for (const el of SUPPLEMENT_PRIORITY) {
+  let rightElement = priority[1] ?? "土";
+  for (const el of priority) {
     if (el !== leftElement && weighted[el as keyof ElementRatio] < 0.25) {
       rightElement = el;
       break;
     }
   }
-
   // 如果左右相同，取下一個優先級
   if (leftElement === rightElement) {
-    const idx = SUPPLEMENT_PRIORITY.indexOf(rightElement as any);
-    rightElement = SUPPLEMENT_PRIORITY[(idx + 1) % SUPPLEMENT_PRIORITY.length];
+    const idx = priority.indexOf(rightElement);
+    rightElement = priority[(idx + 1) % priority.length] ?? priority[0] ?? "土";
   }
 
   // 從手串資料庫選擇對應五行的手串

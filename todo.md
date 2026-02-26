@@ -1122,3 +1122,14 @@
 - [x] 搜尋時動態傳入 includedType 和 priceLevel 篩選條件至 Places API
 - [x] 進階篩選 Sheet 整合分類+價格+距離+補運分數+五行+吉方篩選
 - [x] 分享功能（navigator.share / clipboard）含補運指數和 hashtag
+
+## 飲食羅盤 Bug 修復（2026-02-26）
+
+- [x] 修復 wuxingEngine.ts SUPPLEMENT_PRIORITY 硬資料：generateDietaryAdvice / generateOutfitAdviceV9 / recommendBraceletsV9 三函數改為接受動態 supplementPriority 參數
+- [x] 修復 routers.ts dailyReport：呼叫三函數時傳入 engineProfile.favorableElements，不再使用蘇先生的硬常數
+- [x] 修復 db.ts getUserProfileForEngine：當 dayMasterElement 為空但 dayPillar 有資料時，嘗試從 dayPillar 推算，不直接退回 DEFAULT
+- [x] 修復 NearbyRestaurants 篩選器：分類改為單選模式，點選後立即觸發重新搜尋（使用 filterCategoryRef 避免 stale closure）
+- [x] 修復 handleMapReady：使用 filterCategoryRef.current 讀取最新分類，不再依賴 filterCategories state
+- [x] 移除 toggleCategory 多選函數，改為 handleCategorySelect 單選函數（點選即搜尋）
+- [x] 價格篩選保持前端過濾（不需重新搜尋 API）
+- [x] TypeScript 零錯誤，91 項測試全部通過
