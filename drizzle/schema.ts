@@ -625,11 +625,33 @@ export const restaurantCategories = mysqlTable("restaurant_categories", {
   enabled: tinyint("enabled").notNull().default(1),
   // 是否為系統預設（系統預設不可刪除）
   isDefault: tinyint("isDefault").notNull().default(0),
+  // 時段自動啟用：是否開啟時段控制
+  scheduleEnabled: tinyint("scheduleEnabled").notNull().default(0),
+  // 時段起始小時（0-23，例：18 代表 18:00）
+  scheduleStartHour: int("scheduleStartHour").notNull().default(0),
+  // 時段結束小時（0-23，例：23 代表 23:59）
+  scheduleEndHour: int("scheduleEndHour").notNull().default(23),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type RestaurantCategory = typeof restaurantCategories.$inferSelect;
 export type InsertRestaurantCategory = typeof restaurantCategories.$inferInsert;
+
+// ============================================================
+// 後台管理：能量規則歷史快照表
+// ============================================================
+export const auraRuleHistory = mysqlTable("aura_rule_history", {
+  id: int("id").autoincrement().primaryKey(),
+  // 快照標籤（管理員自訂名稱，例：「調整手串權重 v2」）
+  snapshotLabel: varchar("snapshotLabel", { length: 100 }).notNull(),
+  // 快照資料（JSON 字串，儲存當時所有規則的完整副本）
+  snapshotData: text("snapshotData").notNull(),
+  // 建立者（admin user id）
+  createdBy: varchar("createdBy", { length: 100 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AuraRuleHistory = typeof auraRuleHistory.$inferSelect;
+export type InsertAuraRuleHistory = typeof auraRuleHistory.$inferInsert;
 
 // ============================================================
 // 後台管理：自訂手串/配飾資料庫
@@ -654,6 +676,8 @@ export const customBracelets = mysqlTable("custom_bracelets", {
   sortOrder: int("sortOrder").notNull().default(99),
   // 是否為系統內建（內建不可刪除）
   isBuiltin: tinyint("isBuiltin").notNull().default(0),
+  // 建議搭配：JSON 陣列，存其他手串/配飾的 code（例：["HS-B","HS-C"]）
+  pairingItems: text("pairingItems"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

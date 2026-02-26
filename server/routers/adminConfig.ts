@@ -16,8 +16,9 @@ import {
   auraEngineConfig,
   restaurantCategories,
   customBracelets,
+  auraRuleHistory,
 } from "../../drizzle/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, desc } from "drizzle-orm";
 
 // ============================================================
 // 預設 Aura Engine 計算規則（首次使用時自動初始化）
@@ -413,5 +414,137 @@ export const adminConfigRouter = router({
       }
     }
     return { success: true, synced, message: `已同步 ${synced} 個內建手串` };
+  }),
+
+  /** 更新手串建議搭配清單 */
+  updateBraceletPairing: protectedProcedure
+    .input(z.object({
+      id: z.number().int().positive(),
+      pairingItems: z.array(z.string()).max(10),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      requireAdmin(ctx);
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(customBracelets)
+        .set({ pairingItems: JSON.stringify(input.pairingItems) })
+        .where(eq(customBracelets.id, input.id));
+      return { success: true };
+    }),
+
+  // ============================================================
+  // Aura Engine 規則歷史快照
+  // ============================================================
+
+  /** 建立当前規則快照 */
+  snapshotAuraRules: protectedProcedure
+    .input(z.object({ label: z.string().min(1).max(100) }))
+    .mutation(async ({ ctx, input }) => {
+      requireAdmin(ctx);
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      // 取得目前所有規則
+      const rules = await db.select().from(auraEngineConfig).orderBy(asc(auraEngineConfig.id));
+      await db.insert(auraRuleHistory).values({
+        snapshotLabel: input.label,
+        snapshotData: JSON.stringify(rules),
+        createdBy: ctx.user?.openId ?? "admin",
+      });
+      return { success: true, message: `快照「${input.label}」建立成功` };
+    }),
+
+  /** 取得歷史快照列表（最新 20 筆） */
+  getAuraRuleHistory: protectedProcedure.query(async ({ ctx }) => {
+    requireAdmin(ctx);
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    const history = await db.select({
+      id: auraRuleHistory.id,
+      snapshotLabel: auraRuleHistory.snapshotLabel,
+      createdBy: auraRuleHistory.createdBy,
+      createdAt: auraRuleHistory.createdAt,
+    }).from(auraRuleHistory)
+      .orderBy(desc(auraRuleHistory.createdAt))
+      .limit(20);
+    return history;
+  }),
+
+  /** 還原指定快照的規則值 */
+  restoreAuraRuleSnapshot: protectedProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      requireAdmin(ctx);
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [snapshot] = await db.select().from(auraRuleHistory).where(eq(auraRuleHistory.id, input.id)).limit(1);
+      if (!snapshot) throw new TRPCError({ code: "NOT_FOUND", message: "快照不存在" });
+      const rules = JSON.parse(snapshot.snapshotData) as Array<{ id: number; configValue: string }>;
+      for (const rule of rules) {
+        await db.update(auraEngineConfig)
+          .set({ configValue: rule.configValue })
+          .where(eq(auraEngineConfig.id, rule.id));
+      }
+      return { success: true, message: `已還原到「${snapshot.snapshotLabel}」` };
+    }),
+
+  /** 刪除快照 */
+  deleteAuraRuleSnapshot: protectedProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      requireAdmin(ctx);
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.delete(auraRuleHistory).where(eq(auraRuleHistory.id, input.id));
+      return { success: true };
+    }),
+
+  // ============================================================
+  // 餐廳分類時段設定
+  // ============================================================
+
+  /** 更新分類時段設定 */
+  updateCategorySchedule: protectedProcedure
+    .input(z.object({
+      id: z.number().int().positive(),
+      scheduleEnabled: z.boolean(),
+      scheduleStartHour: z.number().int().min(0).max(23),
+      scheduleEndHour: z.number().int().min(0).max(23),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      requireAdmin(ctx);
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(restaurantCategories).set({
+        scheduleEnabled: input.scheduleEnabled ? 1 : 0,
+        scheduleStartHour: input.scheduleStartHour,
+        scheduleEndHour: input.scheduleEndHour,
+      }).where(eq(restaurantCategories.id, input.id));
+      return { success: true };
+    }),
+
+  /** 取得當前時段有效的餐廳分類（前台使用） */
+  getScheduledActiveCategories: protectedProcedure.query(async ({ ctx }) => {
+    await ensureRestaurantCategoriesInitialized();
+    const db = await getDb();
+    if (!db) return [];
+    const all = await db.select().from(restaurantCategories).orderBy(asc(restaurantCategories.sortOrder));
+    const currentHour = new Date().getHours();
+    return all
+      .filter(c => {
+        if (c.enabled !== 1) return false;
+        if (c.scheduleEnabled !== 1) return true; // 未開啟時段控制，常時顯示
+        // 跨日時段（例：22-04）
+        if (c.scheduleStartHour > c.scheduleEndHour) {
+          return currentHour >= c.scheduleStartHour || currentHour <= c.scheduleEndHour;
+        }
+        return currentHour >= c.scheduleStartHour && currentHour <= c.scheduleEndHour;
+      })
+      .map(c => ({
+        id: c.categoryId,
+        label: c.label,
+        emoji: c.emoji,
+        types: JSON.parse(c.types) as string[],
+        textSuffix: c.textSuffix ?? undefined,
+      }));
   }),
 });

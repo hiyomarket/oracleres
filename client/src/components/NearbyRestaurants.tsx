@@ -356,9 +356,10 @@ interface Props {
 }
 
 export function NearbyRestaurants({ supplements, todayDirections, favorableElements, unfavorableElements, weatherEnabled, weatherElement }: Props) {
-  // 從後台動態讀取餐廳分類（fallback 到硬編碼預設值）
-  const { data: dbCategories } = trpc.adminConfig.getActiveRestaurantCategories.useQuery(undefined, {
+  // 從後台動態讀取餐廳分類（包含時段控制，fallback 到硬編碼預設値）
+  const { data: dbCategories } = trpc.adminConfig.getScheduledActiveCategories.useQuery(undefined, {
     staleTime: 5 * 60 * 1000, // 5 分鐘快取
+    refetchInterval: 60 * 1000, // 每分鐘重新檢查時段變化
     retry: false,
   });
   const categoryTags = useMemo(() => {

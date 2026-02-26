@@ -1389,3 +1389,44 @@
 - [x] NearbyRestaurants 改為從 API 動態讀取分類（fallback 到硬編碼預設值）
 - [x] auraEngine simulateOutfit 改為從 DB 讀取 CATEGORY_WEIGHTS（fallback 已實作）（fallback 到預設值）
 - [x] getOutfitSimulatorData 手串列表合併 custom_bracelets（透過 syncBuiltinBracelets）
+
+## 功能增強 v4.4 - 後台管理邏輯計算三項擴充（2026-02-27）
+
+### 資料庫
+- [ ] custom_bracelets 新增 pairingItems 欄位（JSON 陣列，存建議搭配的手串/配飾 code 清單）
+- [ ] 新增 aura_rule_history 表（儲存每次規則快照：snapshot_label / snapshot_data / created_at）
+- [ ] restaurant_categories 新增 scheduleEnabled / scheduleStartHour / scheduleEndHour 欄位
+
+### 後端 adminConfig router 擴充
+- [ ] adminConfig.updateBraceletPairing - 更新手串建議搭配清單
+- [ ] adminConfig.snapshotAuraRules - 手動建立規則快照
+- [ ] adminConfig.getAuraRuleHistory - 取得歷史快照列表
+- [ ] adminConfig.restoreAuraRuleSnapshot - 還原指定快照
+- [ ] adminConfig.deleteAuraRuleSnapshot - 刪除快照
+- [ ] adminConfig.updateCategorySchedule - 更新分類時段設定
+
+### 前端 AdminLogicConfig 頁面更新
+- [ ] Tab 2 手串管理：新增「建議搭配」多選欄位（從現有手串清單選擇）
+- [ ] Tab 1 能量規則：新增「歷史版本」側邊抽屜，顯示快照列表 + 還原按鈕
+- [ ] Tab 3 餐廳分類：每個分類新增時段設定（啟用開關 + 起始/結束小時選擇器）
+
+### 前台整合
+- [ ] NearbyRestaurants 根據當前時段過濾分類（scheduleEnabled=true 且當前時間不在範圍內則隱藏）
+
+## 功能增強 v4.4 - 後台管理邏輯計算三項擴充（完成）
+
+- [x] DB schema 新增 custom_bracelets.pairingItems 欄位
+- [x] DB schema 新增 restaurant_categories 三個時段欄位（scheduleEnabled/StartHour/EndHour）
+- [x] DB schema 新增 aura_rule_history 歷史快照表
+- [x] adminConfig.updateBraceletPairing API（更新手串建議搭配）
+- [x] adminConfig.snapshotAuraRules API（建立規則快照）
+- [x] adminConfig.getAuraRuleHistory API（取得歷史列表）
+- [x] adminConfig.restoreAuraRuleSnapshot API（一鍵還原）
+- [x] adminConfig.deleteAuraRuleSnapshot API（刪除快照）
+- [x] adminConfig.updateCategorySchedule API（更新時段設定）
+- [x] adminConfig.getScheduledActiveCategories API（時段過濾後的分類）
+- [x] BraceletsTab 新增「建議搭配」欄位（列表顯示 + 表單輸入）
+- [x] AuraRulesTab 新增「歷史版本」側邊抽屜（建立/還原/刪除快照）
+- [x] RestaurantCategoriesTab 新增時段控制 UI（列表顯示 + 表單設定）
+- [x] NearbyRestaurants 改用 getScheduledActiveCategories（每分鐘自動刷新）
+- [x] 153 項測試全部通過，TypeScript 零錯誤

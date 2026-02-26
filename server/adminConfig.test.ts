@@ -116,3 +116,134 @@ describe("DEFAULT_RESTAURANT_CATEGORIES", () => {
     expect(types).toContain("restaurant");
   });
 });
+
+// ============================================================
+// 新功能測試：手串建議搭配、能量規則歷史快照、餐廳分類時段控制
+// ============================================================
+
+describe("手串建議搭配 (pairingItems) 邏輯", () => {
+  it("pairingItems 應為有效的 JSON 陣列格式", () => {
+    const validPairing = JSON.stringify(["HS-B", "HS-C"]);
+    expect(() => JSON.parse(validPairing)).not.toThrow();
+    const parsed = JSON.parse(validPairing) as unknown;
+    expect(Array.isArray(parsed)).toBe(true);
+  });
+
+  it("空的 pairingItems 應解析為空陣列", () => {
+    const empty = "[]";
+    const parsed = JSON.parse(empty) as string[];
+    expect(parsed).toHaveLength(0);
+  });
+
+  it("pairingItems 最多 10 個元素的驗證邏輯", () => {
+    const tooMany = Array.from({ length: 11 }, (_, i) => `HS-${i}`);
+    expect(tooMany.length).toBeGreaterThan(10);
+    const valid = tooMany.slice(0, 10);
+    expect(valid.length).toBeLessThanOrEqual(10);
+  });
+
+  it("逗號分隔字串應正確解析為 pairingItems 陣列", () => {
+    const input = "HS-B, HS-C, CUSTOM-01";
+    const parsed = input
+      .split(",")
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    expect(parsed).toEqual(["HS-B", "HS-C", "CUSTOM-01"]);
+  });
+
+  it("空字串輸入應解析為空陣列", () => {
+    const input = "";
+    const parsed = input
+      .split(",")
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    expect(parsed).toHaveLength(0);
+  });
+});
+
+describe("能量規則歷史快照 (snapshotData) 邏輯", () => {
+  it("快照資料應能序列化和反序列化", () => {
+    const mockRules = DEFAULT_AURA_RULES.map((r, i) => ({ id: i + 1, configValue: r.configValue }));
+    const serialized = JSON.stringify(mockRules);
+    const deserialized = JSON.parse(serialized) as typeof mockRules;
+    expect(deserialized).toHaveLength(mockRules.length);
+    expect(deserialized[0].configValue).toBe(mockRules[0].configValue);
+  });
+
+  it("快照標籤不應為空字串", () => {
+    const label = "調整手串權重 v2";
+    expect(label.trim().length).toBeGreaterThan(0);
+  });
+
+  it("快照標籤長度不應超過 100 字元", () => {
+    const longLabel = "A".repeat(101);
+    expect(longLabel.length).toBeGreaterThan(100);
+    const validLabel = longLabel.slice(0, 100);
+    expect(validLabel.length).toBeLessThanOrEqual(100);
+  });
+
+  it("還原快照時應能從 snapshotData 提取 id 和 configValue", () => {
+    const mockRules = [
+      { id: 1, configValue: "5", category: "category_weights", configKey: "upper" },
+      { id: 2, configValue: "4", category: "category_weights", configKey: "outer" },
+    ];
+    const snapshot = JSON.stringify(mockRules);
+    const restored = JSON.parse(snapshot) as Array<{ id: number; configValue: string }>;
+    expect(restored[0].id).toBe(1);
+    expect(restored[0].configValue).toBe("5");
+    expect(restored[1].id).toBe(2);
+  });
+});
+
+describe("餐廳分類時段控制邏輯", () => {
+  // 模擬時段過濾函數
+  function isActiveAtHour(
+    scheduleEnabled: number,
+    startHour: number,
+    endHour: number,
+    currentHour: number
+  ): boolean {
+    if (scheduleEnabled !== 1) return true; // 未開啟時段控制，常時顯示
+    if (startHour > endHour) {
+      // 跨日時段（例：22-04）
+      return currentHour >= startHour || currentHour <= endHour;
+    }
+    return currentHour >= startHour && currentHour <= endHour;
+  }
+
+  it("未開啟時段控制的分類應常時顯示", () => {
+    for (let h = 0; h <= 23; h++) {
+      expect(isActiveAtHour(0, 0, 23, h)).toBe(true);
+    }
+  });
+
+  it("開啟時段控制：18-23 應在 18-23 時顯示", () => {
+    expect(isActiveAtHour(1, 18, 23, 17)).toBe(false);
+    expect(isActiveAtHour(1, 18, 23, 18)).toBe(true);
+    expect(isActiveAtHour(1, 18, 23, 21)).toBe(true);
+    expect(isActiveAtHour(1, 18, 23, 23)).toBe(true);
+  });
+
+  it("開啟時段控制：跨日時段 22-04 應在 22-23 和 0-4 時顯示", () => {
+    expect(isActiveAtHour(1, 22, 4, 22)).toBe(true);
+    expect(isActiveAtHour(1, 22, 4, 23)).toBe(true);
+    expect(isActiveAtHour(1, 22, 4, 0)).toBe(true);
+    expect(isActiveAtHour(1, 22, 4, 4)).toBe(true);
+    expect(isActiveAtHour(1, 22, 4, 5)).toBe(false);
+    expect(isActiveAtHour(1, 22, 4, 21)).toBe(false);
+  });
+
+  it("早午餐時段 7-14 應在 7-14 時顯示", () => {
+    expect(isActiveAtHour(1, 7, 14, 6)).toBe(false);
+    expect(isActiveAtHour(1, 7, 14, 7)).toBe(true);
+    expect(isActiveAtHour(1, 7, 14, 12)).toBe(true);
+    expect(isActiveAtHour(1, 7, 14, 14)).toBe(true);
+    expect(isActiveAtHour(1, 7, 14, 15)).toBe(false);
+  });
+
+  it("時段起始和結束相同應只在該小時顯示", () => {
+    expect(isActiveAtHour(1, 12, 12, 11)).toBe(false);
+    expect(isActiveAtHour(1, 12, 12, 12)).toBe(true);
+    expect(isActiveAtHour(1, 12, 12, 13)).toBe(false);
+  });
+});

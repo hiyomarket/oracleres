@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 // ============================================================
 // 分類標籤中文對應
@@ -57,6 +58,7 @@ const ELEMENT_COLORS: Record<string, string> = {
 function AuraRulesTab() {
   const utils = trpc.useUtils();
   const { data: grouped, isLoading } = trpc.adminConfig.getAuraRules.useQuery();
+  const { data: history, isLoading: historyLoading } = trpc.adminConfig.getAuraRuleHistory.useQuery();
 
   const updateRule = trpc.adminConfig.updateAuraRule.useMutation({
     onSuccess: () => {
@@ -74,7 +76,33 @@ function AuraRulesTab() {
     onError: (e) => toast.error(`重置失敗：${e.message}`),
   });
 
+  const snapshot = trpc.adminConfig.snapshotAuraRules.useMutation({
+    onSuccess: (data) => {
+      utils.adminConfig.getAuraRuleHistory.invalidate();
+      toast.success(data.message);
+      setSnapshotLabel("");
+    },
+    onError: (e) => toast.error(`建立快照失敗：${e.message}`),
+  });
+
+  const restore = trpc.adminConfig.restoreAuraRuleSnapshot.useMutation({
+    onSuccess: (data) => {
+      utils.adminConfig.getAuraRules.invalidate();
+      toast.success(data.message);
+    },
+    onError: (e) => toast.error(`還原失敗：${e.message}`),
+  });
+
+  const deleteSnapshot = trpc.adminConfig.deleteAuraRuleSnapshot.useMutation({
+    onSuccess: () => {
+      utils.adminConfig.getAuraRuleHistory.invalidate();
+      toast.success("快照已刪除");
+    },
+    onError: (e) => toast.error(`刪除失敗：${e.message}`),
+  });
+
   const [editingValues, setEditingValues] = useState<Record<number, string>>({});
+  const [snapshotLabel, setSnapshotLabel] = useState("");
 
   const handleSave = (id: number, value: string) => {
     updateRule.mutate({ id, configValue: value });
@@ -86,17 +114,98 @@ function AuraRulesTab() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-slate-400 text-sm">調整能量模擬器的計算邏輯，變更後即時生效。</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-slate-600 text-slate-300 hover:bg-slate-700"
-          onClick={() => resetRules.mutate()}
-          disabled={resetRules.isPending}
-        >
-          🔄 重置為預設值
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          {/* 建立快照 */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                💾 歷史版本 ({history?.length ?? 0})
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-slate-900 border-slate-700 text-white w-96">
+              <SheetHeader>
+                <SheetTitle className="text-amber-400">能量規則歷史版本</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 space-y-4">
+                {/* 建立新快照 */}
+                <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700 space-y-2">
+                  <p className="text-slate-300 text-xs font-medium">建立當前規則快照</p>
+                  <Input
+                    value={snapshotLabel}
+                    onChange={(e) => setSnapshotLabel(e.target.value)}
+                    placeholder="快照名稱，例：調整手串權重 v2"
+                    className="bg-slate-900 border-slate-600 text-white text-sm"
+                  />
+                  <Button
+                    size="sm"
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+                    onClick={() => snapshotLabel.trim() && snapshot.mutate({ label: snapshotLabel.trim() })}
+                    disabled={snapshot.isPending || !snapshotLabel.trim()}
+                  >
+                    {snapshot.isPending ? "建立中..." : "💾 建立快照"}
+                  </Button>
+                </div>
+
+                {/* 快照列表 */}
+                <div className="space-y-2">
+                  {historyLoading && <p className="text-slate-400 text-sm text-center animate-pulse">載入中...</p>}
+                  {!historyLoading && (history ?? []).length === 0 && (
+                    <p className="text-slate-500 text-sm text-center py-4">尚無快照記錄</p>
+                  )}
+                  {(history ?? []).map((h) => (
+                    <div key={h.id} className="bg-slate-800/40 rounded-lg p-3 border border-slate-700/50">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{h.snapshotLabel}</p>
+                          <p className="text-slate-500 text-xs mt-0.5">
+                            {new Date(h.createdAt).toLocaleString("zh-TW")}
+                          </p>
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-xs border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                            onClick={() => {
+                              if (confirm(`確定還原到「${h.snapshotLabel}」？當前規則將被覆蓋。`))
+                                restore.mutate({ id: h.id });
+                            }}
+                            disabled={restore.isPending}
+                          >
+                            還原
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                            onClick={() => {
+                              if (confirm("確定刪除此快照？"))
+                                deleteSnapshot.mutate({ id: h.id });
+                            }}
+                          >
+                            🗑️
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-slate-600 text-slate-300 hover:bg-slate-700"
+            onClick={() => resetRules.mutate()}
+            disabled={resetRules.isPending}
+          >
+            🔄 重置為預設値
+          </Button>
+        </div>
       </div>
 
       {Object.entries(grouped ?? {}).map(([category, rules]) => (
@@ -178,6 +287,7 @@ interface BraceletFormData {
   color: string;
   functionDesc: string;
   tacticalRoles: Record<string, string>;
+  pairingItems: string[]; // 建議搭配的手串 code 陣列
   sortOrder: number;
   enabled: boolean;
 }
@@ -216,22 +326,34 @@ function BraceletsTab() {
     onError: (e) => toast.error(`操作失敗：${e.message}`),
   });
 
+  const updatePairing = trpc.adminConfig.updateBraceletPairing.useMutation({
+    onSuccess: () => {
+      utils.adminConfig.getCustomBracelets.invalidate();
+      toast.success("建議搭配已更新");
+    },
+    onError: (e) => toast.error(`更新失敗：${e.message}`),
+  });
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<BraceletFormData>({
     code: "", name: "", element: "火", color: "", functionDesc: "",
-    tacticalRoles: {}, sortOrder: 99, enabled: true,
+    tacticalRoles: {}, pairingItems: [], sortOrder: 99, enabled: true,
   });
   const [tacticalRoleInput, setTacticalRoleInput] = useState("");
+  const [pairingInput, setPairingInput] = useState(""); // 逗號分隔的 code 字串
 
   const openNew = () => {
-    setForm({ code: "", name: "", element: "火", color: "", functionDesc: "", tacticalRoles: {}, sortOrder: 99, enabled: true });
+    setForm({ code: "", name: "", element: "火", color: "", functionDesc: "", tacticalRoles: {}, pairingItems: [], sortOrder: 99, enabled: true });
     setTacticalRoleInput("");
+    setPairingInput("");
     setDialogOpen(true);
   };
 
   const openEdit = (b: NonNullable<typeof bracelets>[number]) => {
     let roles: Record<string, string> = {};
     try { roles = JSON.parse(b.tacticalRoles) as Record<string, string>; } catch { /* ignore */ }
+    let pairing: string[] = [];
+    try { pairing = JSON.parse(b.pairingItems ?? "[]") as string[]; } catch { /* ignore */ }
     setForm({
       id: b.id,
       code: b.code,
@@ -240,10 +362,12 @@ function BraceletsTab() {
       color: b.color,
       functionDesc: b.functionDesc,
       tacticalRoles: roles,
+      pairingItems: pairing,
       sortOrder: b.sortOrder,
       enabled: b.enabled === 1,
     });
     setTacticalRoleInput(Object.entries(roles).map(([k, v]) => `${k}:${v}`).join("\n"));
+    setPairingInput(pairing.join(", "));
     setDialogOpen(true);
   };
 
@@ -256,7 +380,20 @@ function BraceletsTab() {
         roles[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
       }
     }
-    upsert.mutate({ ...form, tacticalRoles: roles });
+    // 解析 pairingItems（逗號分隔）
+    const pairing = pairingInput
+      .split(",")
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+    const formWithPairing = { ...form, tacticalRoles: roles, pairingItems: pairing };
+    upsert.mutate(formWithPairing, {
+      onSuccess: () => {
+        // 如果是編輯模式，順便更新 pairingItems
+        if (form.id) {
+          updatePairing.mutate({ id: form.id, pairingItems: pairing });
+        }
+      }
+    });
   };
 
   if (isLoading) {
@@ -324,6 +461,17 @@ function BraceletsTab() {
                       戰術角色：{Object.keys(roles).join("、")}
                     </span>
                   )}
+                  {(() => {
+                    try {
+                      const p = JSON.parse(b.pairingItems ?? "[]") as string[];
+                      if (p.length > 0) return (
+                        <span className="ml-2 text-amber-500/70">
+                          搭配：{p.join("、")}
+                        </span>
+                      );
+                    } catch { /* ignore */ }
+                    return null;
+                  })()}
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -439,6 +587,20 @@ function BraceletsTab() {
               />
             </div>
             <div>
+              <Label className="text-slate-300 text-xs mb-1 block">
+                建議搭配（逗號分隔的手串 code）
+              </Label>
+              <Input
+                value={pairingInput}
+                onChange={(e) => setPairingInput(e.target.value)}
+                placeholder="例：HS-B, HS-C, CUSTOM-01"
+                className="bg-slate-800 border-slate-600 text-white text-sm"
+              />
+              <p className="text-slate-500 text-xs mt-1">
+                輸入其他手串的代碼，逗號分隔，最多 10 個。這些手串會在用戶選擇此手串時被推薦搭配。
+              </p>
+            </div>
+            <div>
               <Label className="text-slate-300 text-xs mb-1 block">排序（越小越前面）</Label>
               <Input
                 type="number"
@@ -480,6 +642,9 @@ interface CategoryFormData {
   textSuffix: string;
   sortOrder: number;
   enabled: boolean;
+  scheduleEnabled: boolean;
+  scheduleStartHour: number;
+  scheduleEndHour: number;
 }
 
 function RestaurantCategoriesTab() {
@@ -508,14 +673,23 @@ function RestaurantCategoriesTab() {
     onError: (e) => toast.error(`操作失敗：${e.message}`),
   });
 
+  const updateSchedule = trpc.adminConfig.updateCategorySchedule.useMutation({
+    onSuccess: () => {
+      utils.adminConfig.getRestaurantCategories.invalidate();
+      toast.success("時段設定已更新");
+    },
+    onError: (e) => toast.error(`更新失敗：${e.message}`),
+  });
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<CategoryFormData>({
     categoryId: "", label: "", emoji: "🍽️", types: '["restaurant"]',
     textSuffix: "", sortOrder: 99, enabled: true,
+    scheduleEnabled: false, scheduleStartHour: 0, scheduleEndHour: 23,
   });
 
   const openNew = () => {
-    setForm({ categoryId: "", label: "", emoji: "🍽️", types: '["restaurant"]', textSuffix: "", sortOrder: 99, enabled: true });
+    setForm({ categoryId: "", label: "", emoji: "🍽️", types: '["restaurant"]', textSuffix: "", sortOrder: 99, enabled: true, scheduleEnabled: false, scheduleStartHour: 0, scheduleEndHour: 23 });
     setDialogOpen(true);
   };
 
@@ -529,6 +703,9 @@ function RestaurantCategoriesTab() {
       textSuffix: c.textSuffix ?? "",
       sortOrder: c.sortOrder,
       enabled: c.enabled === 1,
+      scheduleEnabled: c.scheduleEnabled === 1,
+      scheduleStartHour: c.scheduleStartHour,
+      scheduleEndHour: c.scheduleEndHour,
     });
     setDialogOpen(true);
   };
@@ -551,6 +728,18 @@ function RestaurantCategoriesTab() {
       textSuffix: form.textSuffix || undefined,
       sortOrder: form.sortOrder,
       enabled: form.enabled,
+    }, {
+      onSuccess: () => {
+        // 如果是編輯模式，順便更新時段設定
+        if (form.id) {
+          updateSchedule.mutate({
+            id: form.id,
+            scheduleEnabled: form.scheduleEnabled,
+            scheduleStartHour: form.scheduleStartHour,
+            scheduleEndHour: form.scheduleEndHour,
+          });
+        }
+      }
     });
   };
 
@@ -603,6 +792,14 @@ function RestaurantCategoriesTab() {
                 types: {c.types}
                 {c.textSuffix && <span className="ml-2 text-slate-400">後綴: 「{c.textSuffix}」</span>}
               </div>
+              {c.scheduleEnabled === 1 && (
+                <div className="text-xs mt-0.5">
+                  <span className="text-blue-400/80">
+                    ⏰ 時段控制：{c.scheduleStartHour}:00 – {c.scheduleEndHour}:59
+                    {c.scheduleStartHour > c.scheduleEndHour && <span className="ml-1 text-slate-500">(跨日)</span>}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <Switch
@@ -713,6 +910,48 @@ function RestaurantCategoriesTab() {
                 onChange={(e) => setForm(p => ({ ...p, sortOrder: parseInt(e.target.value) || 99 }))}
                 className="bg-slate-800 border-slate-600 text-white text-sm w-24"
               />
+            </div>
+
+            {/* 時段自動啟用/停用 */}
+            <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-slate-300 text-xs font-medium">時段控制</Label>
+                  <p className="text-slate-500 text-xs mt-0.5">開啟後，此分類僅在指定時段顯示給用戶</p>
+                </div>
+                <Switch
+                  checked={form.scheduleEnabled}
+                  onCheckedChange={(v) => setForm(p => ({ ...p, scheduleEnabled: v }))}
+                />
+              </div>
+              {form.scheduleEnabled && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-slate-400 text-xs mb-1 block">開始小時（0–23）</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={23}
+                      value={form.scheduleStartHour}
+                      onChange={(e) => setForm(p => ({ ...p, scheduleStartHour: parseInt(e.target.value) || 0 }))}
+                      className="bg-slate-900 border-slate-600 text-white text-sm"
+                    />
+                    <p className="text-slate-500 text-xs mt-0.5">例：18 = 18:00</p>
+                  </div>
+                  <div>
+                    <Label className="text-slate-400 text-xs mb-1 block">結束小時（0–23）</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={23}
+                      value={form.scheduleEndHour}
+                      onChange={(e) => setForm(p => ({ ...p, scheduleEndHour: parseInt(e.target.value) || 23 }))}
+                      className="bg-slate-900 border-slate-600 text-white text-sm"
+                    />
+                    <p className="text-slate-500 text-xs mt-0.5">例：23 = 23:59（跨日時結束 &lt; 開始）</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
