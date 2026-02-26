@@ -238,7 +238,7 @@ function PurchaseAdviceCard({ data, isLoading }: {
             </div>
           ))}
           <div className="text-xs text-slate-600 pt-1">
-            ＊偏財指數(40%) + 日柱(30%) + 月相(10%) + 天氣(10%) + 時辰(5%) + 塔羅(5%)
+            ＊綜合多維天命指標計算
           </div>
         </motion.div>
       )}

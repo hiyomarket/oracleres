@@ -242,7 +242,8 @@ function calcFengShui(
   userLat: number, userLng: number,
   restLat: number, restLng: number,
   name: string, address: string, keyword: string,
-  elementMatchScore: Record<string, number> = DEFAULT_ELEMENT_MATCH_SCORE
+  elementMatchScore: Record<string, number> = DEFAULT_ELEMENT_MATCH_SCORE,
+  weatherEl?: string
 ): FengShuiResult {
   const dLng = (restLng - userLng) * Math.PI / 180;
   const lat1 = userLat * Math.PI / 180;
@@ -257,7 +258,18 @@ function calcFengShui(
   const bearingScore = elementMatchScore[bearingEl] ?? 50;
   const nameScore = elementMatchScore[nameEl] ?? 50;
   const businessScore = elementMatchScore[businessEl] ?? 50;
-  const totalScore = Math.round(bearingScore * 0.40 + nameScore * 0.20 + businessScore * 0.40);
+
+  // 天氣五行加成：若天氣主導五行與補運五行相符，給予加成
+  let weatherBonus = 0;
+  if (weatherEl) {
+    const weatherScore = elementMatchScore[weatherEl] ?? 50;
+    // 天氣五行加成 = 天氣五行匹配分數的 20% 折算後加成（最多 +10 分）
+    weatherBonus = Math.round((weatherScore - 50) * 0.1);
+  }
+
+  // 三維加權（方位40%+地名20%+類型40%）+ 天氣加成
+  const baseScore = Math.round(bearingScore * 0.40 + nameScore * 0.20 + businessScore * 0.40);
+  const totalScore = Math.max(5, Math.min(100, baseScore + weatherBonus));
 
   const contributions = [
     { el: bearingEl, val: bearingScore * 0.40 },
@@ -291,31 +303,23 @@ const CATEGORY_TAGS: Array<{
   { id: "all", label: "全部", emoji: "🍽️", types: ["restaurant"] },
   { id: "local_snack", label: "小吃", emoji: "🥢", types: ["restaurant"], textSuffix: "小吃" },
   { id: "brunch", label: "早午餐", emoji: "🥞", types: ["breakfast_restaurant"], textSuffix: "早午餐" },
-  { id: "dinner", label: "晚餐", emoji: "🌙", types: ["restaurant"], textSuffix: "晚餐" },
+  { id: "cafe", label: "咖啡廳", emoji: "☕", types: ["cafe"] },
   { id: "afternoon_tea", label: "下午茶", emoji: "🫖", types: ["cafe"], textSuffix: "下午茶" },
-  { id: "cafe", label: "咖啡廳", emoji: "☕", types: ["cafe", "coffee_shop"] },
-  { id: "bar", label: "酒吧", emoji: "🍺", types: ["bar", "pub"] },
-  { id: "pet_friendly", label: "寵物友善", emoji: "🐾", types: ["restaurant"], textSuffix: "寵物友善" },
   { id: "hotpot", label: "火鍋", emoji: "🫕", types: ["restaurant"], textSuffix: "火鍋" },
   { id: "bbq", label: "燒烤", emoji: "🔥", types: ["restaurant"], textSuffix: "燒烤" },
   { id: "sushi", label: "日式料理", emoji: "🍱", types: ["japanese_restaurant"] },
   { id: "korean", label: "韓式料理", emoji: "🥘", types: ["korean_restaurant"] },
-  { id: "vegetarian", label: "蔬食/素食", emoji: "🥗", types: ["vegan_restaurant", "vegetarian_restaurant"] },
-  { id: "dessert", label: "甜點", emoji: "🍰", types: ["dessert_restaurant", "dessert_shop"] },
-  { id: "fast_food", label: "速食", emoji: "🍔", types: ["fast_food_restaurant"] },
+  { id: "chinese", label: "中式料理", emoji: "🥟", types: ["chinese_restaurant"] },
+  { id: "western", label: "西式料理", emoji: "🍝", types: ["restaurant"], textSuffix: "西式餐廳" },
   { id: "noodle", label: "麵食", emoji: "🍜", types: ["noodle_restaurant"] },
   { id: "seafood", label: "海鮮", emoji: "🦞", types: ["seafood_restaurant"] },
-  { id: "chinese", label: "中式料理", emoji: "🥟", types: ["chinese_restaurant"] },
-  { id: "western", label: "西式料理", emoji: "🍝", types: ["american_restaurant", "italian_restaurant", "french_restaurant"] },
+  { id: "dessert", label: "甜點", emoji: "🍰", types: ["dessert_restaurant"] },
+  { id: "vegetarian", label: "素食", emoji: "🥗", types: ["restaurant"], textSuffix: "素食餐廳" },
+  { id: "fast_food", label: "速食", emoji: "🍔", types: ["restaurant"], textSuffix: "連鎖快餐" },
+  { id: "bar", label: "酒吧", emoji: "🍺", types: ["bar"] },
+  { id: "pet_friendly", label: "寵物友善", emoji: "🐾", types: ["restaurant"], textSuffix: "寵物友善餐廳" },
 ];
 
-// 價格標籤定義
-const PRICE_TAGS: Array<{ id: number; label: string; desc: string }> = [
-  { id: 1, label: "$", desc: "平價" },
-  { id: 2, label: "$$", desc: "中價" },
-  { id: 3, label: "$$$", desc: "高價" },
-  { id: 4, label: "$$$$", desc: "奢華" },
-];
 
 interface Restaurant {
   id: string;
@@ -346,9 +350,11 @@ interface Props {
   unfavorableElements?: string[];
   /** 天氣五行加成是否已啟用 */
   weatherEnabled?: boolean;
+  /** 天氣主導五行（中文），例如 "火" */
+  weatherElement?: string;
 }
 
-export function NearbyRestaurants({ supplements, todayDirections, favorableElements, unfavorableElements, weatherEnabled }: Props) {
+export function NearbyRestaurants({ supplements, todayDirections, favorableElements, unfavorableElements, weatherEnabled, weatherElement }: Props) {
   // 依用戶命格動態計算五行匹配分數
   const elementMatchScore = useMemo(
     () => favorableElements && unfavorableElements
@@ -372,7 +378,6 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
   const [filterElement, setFilterElement] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const filterCategoryRef = useRef<string | null>(null);
-  const [filterPriceLevels, setFilterPriceLevels] = useState<number[]>([]);
   const [sharingId, setSharingId] = useState<string | null>(null);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -602,7 +607,8 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                     place.displayName ?? "",
                     place.formattedAddress ?? "",
                     keyword,
-                    elementMatchScore
+                    elementMatchScore,
+                    weatherElement
                   );
                 }
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -676,7 +682,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         setErrorMsg("搜尋餐廳時發生錯誤，請稍後再試。");
       }
     },
-    [supplements, todayDirections, elementMatchScore, drawMarkers]
+    [supplements, todayDirections, elementMatchScore, drawMarkers, weatherElement]
   );
 
   const handleMapReady = useCallback(
@@ -708,15 +714,20 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
     if (filterAuspicious) list = list.filter((r) => r.isAuspicious);
     if (maxDistance < 2000) list = list.filter((r) => (r.distance ?? 9999) <= maxDistance);
     if (minFengShuiScore > 0) list = list.filter((r) => (r.fengShui?.totalScore ?? 0) >= minFengShuiScore);
-    if (filterElement) list = list.filter((r) => r.fengShui?.dominantElement === filterElement);
-    if (filterPriceLevels.length > 0) {
-      list = list.filter((r) => r.priceLevel === undefined || filterPriceLevels.includes(r.priceLevel));
+    if (filterElement) {
+      // 五行屬性篩選：匹配方位、地名、類型三維中任一
+      list = list.filter((r) => {
+        if (!r.fengShui) return false;
+        return r.fengShui.bearingElement === filterElement ||
+               r.fengShui.nameElement === filterElement ||
+               r.fengShui.businessElement === filterElement;
+      });
     }
     if (sortMode === "fengshui") {
       list = list.sort((a, b) => (b.fengShui?.totalScore ?? 0) - (a.fengShui?.totalScore ?? 0));
     }
     return list;
-  }, [restaurants, filterAuspicious, sortMode, maxDistance, minFengShuiScore, filterElement, filterPriceLevels]);
+  }, [restaurants, filterAuspicious, sortMode, maxDistance, minFengShuiScore, filterElement]);
 
   const activeFilterCount = [
     filterAuspicious,
@@ -724,14 +735,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
     minFengShuiScore > 0,
     !!filterElement,
     !!filterCategory,
-    filterPriceLevels.length > 0,
   ].filter(Boolean).length;
-
-  const togglePrice = (id: number) => {
-    setFilterPriceLevels((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
-    );
-  };
 
   const handleShare = async (r: Restaurant) => {
     setSharingId(r.id);
@@ -914,34 +918,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                       </p>
                     )}
                   </div>
-                  {/* 價格標籤多選 */}
-                  <div>
-                    <p className="text-sm font-medium text-white/80 mb-2.5">💰 價格區間（可多選）</p>
-                    <div className="flex gap-2">
-                      {PRICE_TAGS.map((pt) => {
-                        const isActive = filterPriceLevels.includes(pt.id);
-                        return (
-                          <button
-                            key={pt.id}
-                            onClick={() => togglePrice(pt.id)}
-                            className={`flex-1 py-2 rounded-xl border text-center transition-all ${
-                              isActive
-                                ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-300"
-                                : "bg-white/5 border-white/10 text-white/50 hover:border-white/20"
-                            }`}
-                          >
-                            <div className="text-sm font-bold">{pt.label}</div>
-                            <div className="text-[9px] text-white/40 mt-0.5">{pt.desc}</div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {filterPriceLevels.length > 0 && (
-                      <p className="text-[10px] text-white/40 mt-1.5">
-                        ⚠️ 部分餐廳無價格資料，可能不會出現在篩選結果中
-                      </p>
-                    )}
-                  </div>
+
                   {/* 距離滑桿 */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
@@ -990,7 +967,6 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                       setFilterElement(null);
                       setFilterCategory(null);
                       filterCategoryRef.current = null;
-                      setFilterPriceLevels([]);
                     }}
                       className="w-full py-2 text-sm text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-colors">
                       重設所有篩選
@@ -1043,20 +1019,13 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
       {/* 餐廳清單 */}
       {phase === "done" && displayedRestaurants.length > 0 && (
         <div className="p-3 space-y-3">
-          {/* 三維加權說明橫幅 */}
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/8 text-[10px] text-white/40">
-            <span>🧭 補運指數 =</span>
-            <span className="text-white/60">方位五行 × 40%</span>
-            <span>+</span>
-            <span className="text-white/60">地名字根 × 20%</span>
-            <span>+</span>
-            <span className="text-white/60">料理類型 × 40%</span>
-            {weatherEnabled && (
-              <>
-                <span className="ml-1 text-emerald-400/60">✦ 天氣加成已啟用</span>
-              </>
-            )}
-          </div>
+          {/* 天氣加成標籤（僅顯示是否啟用，不暴露公式） */}
+          {weatherEnabled && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/8 text-[10px] text-white/40">
+              <span>🧭 補運指數</span>
+              <span className="ml-1 text-emerald-400/60">❆ 天氣加成已啟用</span>
+            </div>
+          )}
           <AnimatePresence>
           {displayedRestaurants.map((r, i) => {
             const info = ELEMENT_KEYWORDS[r.element];
@@ -1178,21 +1147,21 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                       <p className="text-[10px] font-semibold text-white/50">🧭 風水地塊三維度分析</p>
                       <div className="grid grid-cols-3 gap-2">
                         <div className="text-center p-2 rounded-lg bg-white/5 border border-white/8">
-                          <div className="text-[9px] text-white/40 mb-0.5">方位（40%）</div>
+                          <div className="text-[9px] text-white/40 mb-0.5">方位</div>
                           <div className="text-xs font-bold text-white/70">{fs.bearingMountain}山</div>
                           <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.bearingElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
                             {fs.bearingElement}氣 {fs.bearingDeg}°
                           </div>
                         </div>
                         <div className="text-center p-2 rounded-lg bg-white/5 border border-white/8">
-                          <div className="text-[9px] text-white/40 mb-0.5">地名（20%）</div>
+                          <div className="text-[9px] text-white/40 mb-0.5">地名</div>
                           <div className="text-xs font-bold text-white/70">字根</div>
                           <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.nameElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
                             {fs.nameElement}屬
                           </div>
                         </div>
                         <div className="text-center p-2 rounded-lg bg-white/5 border border-white/8">
-                          <div className="text-[9px] text-white/40 mb-0.5">類型（40%）</div>
+                          <div className="text-[9px] text-white/40 mb-0.5">類型</div>
                           <div className="text-xs font-bold text-white/70">料理</div>
                           <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.businessElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
                             {fs.businessElement}屬

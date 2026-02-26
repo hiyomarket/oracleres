@@ -1,9 +1,9 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { MapView } from "@/components/Map";
 import { FavoriteStores } from "@/components/FavoriteStores";
-import { Star } from "lucide-react";
+import { Star, Map as MapIcon, List } from "lucide-react";
 import { toast } from "sonner";
 
 type WuXing = "wood" | "fire" | "earth" | "metal" | "water";
@@ -30,13 +30,37 @@ interface ScoredStore {
   rank: number;
 }
 
-const ELEMENT_COLORS: Record<WuXing, { text: string; bg: string; border: string; label: string }> = {
-  fire:  { text: "text-orange-400",  bg: "bg-orange-500/15",  border: "border-orange-500/40",  label: "火" },
-  earth: { text: "text-yellow-500",  bg: "bg-yellow-600/15",  border: "border-yellow-600/40",  label: "土" },
-  metal: { text: "text-slate-300",   bg: "bg-slate-400/15",   border: "border-slate-400/40",   label: "金" },
-  wood:  { text: "text-emerald-400", bg: "bg-emerald-500/15", border: "border-emerald-500/40", label: "木" },
-  water: { text: "text-blue-400",    bg: "bg-blue-500/15",    border: "border-blue-500/40",    label: "水" },
+interface BestHour {
+  chineseName: string;
+  displayTime: string;
+  energyLabel: string;
+  energyScore: number;
+  branch: string;
+  isCurrentHour: boolean;
+}
+
+const ELEMENT_COLORS: Record<WuXing, { text: string; bg: string; border: string; label: string; hex: string }> = {
+  fire:  { text: "text-orange-400",  bg: "bg-orange-500/15",  border: "border-orange-500/40",  label: "火", hex: "#f97316" },
+  earth: { text: "text-yellow-500",  bg: "bg-yellow-600/15",  border: "border-yellow-600/40",  label: "土", hex: "#eab308" },
+  metal: { text: "text-slate-300",   bg: "bg-slate-400/15",   border: "border-slate-400/40",   label: "金", hex: "#cbd5e1" },
+  wood:  { text: "text-emerald-400", bg: "bg-emerald-500/15", border: "border-emerald-500/40", label: "木", hex: "#34d399" },
+  water: { text: "text-blue-400",    bg: "bg-blue-500/15",    border: "border-blue-500/40",    label: "水", hex: "#60a5fa" },
 };
+
+// 依共振指數決定標記顏色
+function getMarkerColor(score: number): string {
+  if (score >= 80) return "#f59e0b"; // 金色 - 大吉
+  if (score >= 60) return "#10b981"; // 綠色 - 吉
+  if (score >= 40) return "#3b82f6"; // 藍色 - 平
+  return "#64748b";                  // 灰色 - 弱
+}
+
+function getMarkerLabel(score: number): string {
+  if (score >= 80) return "大吉";
+  if (score >= 60) return "吉";
+  if (score >= 40) return "平";
+  return "弱";
+}
 
 function ResonanceFlames({ count, total = 5 }: { count: number; total?: number }) {
   return (
@@ -65,6 +89,8 @@ function StoreCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const bearingColors = ELEMENT_COLORS[store.bearingElement];
+  const addressColors = ELEMENT_COLORS[store.addressAnalysis.element];
+  const nameColors = ELEMENT_COLORS[store.nameAnalysis.element];
 
   const scoreColor =
     store.resonanceScore >= 80 ? "text-amber-400" :
@@ -139,12 +165,12 @@ function StoreCard({
           {store.rating && <span>⭐ {store.rating.toFixed(1)}</span>}
         </div>
 
-        {/* 展開詳細理由 */}
+        {/* 展開三維分析 */}
         <button
           onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
           className="text-xs text-slate-400 hover:text-amber-400 transition-colors flex items-center gap-1"
         >
-          {expanded ? "▲" : "▼"} 天命分析詳情
+          {expanded ? "▲" : "▼"} 天命三維分析
         </button>
 
         <AnimatePresence>
@@ -156,13 +182,41 @@ function StoreCard({
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="mt-3 space-y-1.5 border-t border-white/5 pt-3">
-                {store.reasons.map((reason, i) => (
-                  <div key={i} className="text-[11px] text-slate-400 flex items-start gap-1.5">
-                    <span className="text-amber-500/60 shrink-0">◆</span>
-                    <span>{reason}</span>
+              <div className="mt-3 border-t border-white/5 pt-3 space-y-3">
+                {/* 三維分析卡片 */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center p-2 rounded-lg bg-white/5 border border-white/8">
+                    <div className="text-[9px] text-white/40 mb-0.5">方位</div>
+                    <div className="text-xs font-bold text-white/70">{store.bearingLabel}山</div>
+                    <div className={`text-[9px] mt-0.5 ${bearingColors.text}`}>
+                      {bearingColors.label}氣 {store.bearingDegree}°
+                    </div>
                   </div>
-                ))}
+                  <div className="text-center p-2 rounded-lg bg-white/5 border border-white/8">
+                    <div className="text-[9px] text-white/40 mb-0.5">門牌</div>
+                    <div className="text-xs font-bold text-white/70">{store.addressAnalysis.digits || "—"}</div>
+                    <div className={`text-[9px] mt-0.5 ${addressColors.text}`}>
+                      {addressColors.label}屬
+                    </div>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-white/5 border border-white/8">
+                    <div className="text-[9px] text-white/40 mb-0.5">店名</div>
+                    <div className="text-xs font-bold text-white/70 truncate">{store.nameAnalysis.matchedKeyword || "字根"}</div>
+                    <div className={`text-[9px] mt-0.5 ${nameColors.text}`}>
+                      {nameColors.label}屬
+                    </div>
+                  </div>
+                </div>
+
+                {/* 分析理由 */}
+                <div className="space-y-1.5">
+                  {store.reasons.map((reason, i) => (
+                    <div key={i} className="text-[11px] text-slate-400 flex items-start gap-1.5">
+                      <span className="text-amber-500/60 shrink-0">◆</span>
+                      <span>{reason}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </motion.div>
           )}
@@ -217,7 +271,11 @@ export function NearbyStores() {
   const [selectedStore, setSelectedStore] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [searchRadius, setSearchRadius] = useState(2000);
+  const [mapVisible, setMapVisible] = useState(true);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+  const mapReadyRef = useRef(false);
 
   const utils = trpc.useUtils();
   const scoreMutation = trpc.lottery.scoreStores.useMutation();
@@ -233,6 +291,108 @@ export function NearbyStores() {
     onError: () => toast.error('收藏失敗，請稍後再試'),
   });
   const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
+
+  // 清除地圖標記
+  const clearMarkers = useCallback(() => {
+    markersRef.current.forEach(m => m.setMap(null));
+    markersRef.current = [];
+    if (infoWindowRef.current) {
+      infoWindowRef.current.close();
+    }
+  }, []);
+
+  // 繪製彩券行標記
+  const drawStoreMarkers = useCallback((map: google.maps.Map, stores: ScoredStore[], userLoc: { lat: number; lng: number }) => {
+    clearMarkers();
+    if (!infoWindowRef.current) {
+      infoWindowRef.current = new google.maps.InfoWindow();
+    }
+
+    // 用戶位置標記
+    const userMarker = new google.maps.Marker({
+      position: new google.maps.LatLng(userLoc.lat, userLoc.lng),
+      map,
+      title: "您的位置",
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: "#6366f1",
+        fillOpacity: 1,
+        strokeColor: "#fff",
+        strokeWeight: 2,
+      },
+      zIndex: 999,
+    });
+    markersRef.current.push(userMarker);
+
+    // 彩券行標記
+    stores.forEach((store) => {
+      const color = getMarkerColor(store.resonanceScore);
+      const label = getMarkerLabel(store.resonanceScore);
+
+      const svgMarker = {
+        url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
+            <filter id="shadow">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.4)"/>
+            </filter>
+            <path d="M18 0C8.06 0 0 8.06 0 18c0 13.5 18 26 18 26S36 31.5 36 18C36 8.06 27.94 0 18 0z"
+              fill="${color}" filter="url(#shadow)"/>
+            <circle cx="18" cy="18" r="11" fill="rgba(0,0,0,0.25)"/>
+            <text x="18" y="15" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="bold" fill="white">${store.resonanceScore}</text>
+            <text x="18" y="25" text-anchor="middle" font-family="sans-serif" font-size="7" fill="rgba(255,255,255,0.85)">${label}</text>
+          </svg>
+        `)}`,
+        scaledSize: new google.maps.Size(36, 44),
+        anchor: new google.maps.Point(18, 44),
+      };
+
+      const marker = new google.maps.Marker({
+        position: new google.maps.LatLng(store.lat, store.lng),
+        map,
+        title: store.name,
+        icon: svgMarker,
+        zIndex: store.resonanceScore,
+      });
+
+      marker.addListener("click", () => {
+        const bearingLabel = ELEMENT_COLORS[store.bearingElement]?.label ?? "";
+        const content = `
+          <div style="background:#1a1a2e;color:#fff;padding:10px 12px;border-radius:10px;min-width:160px;font-family:sans-serif;border:1px solid rgba(255,255,255,0.15)">
+            <div style="font-weight:bold;font-size:13px;margin-bottom:4px">${store.name}</div>
+            <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">${store.address}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span style="font-size:20px;font-weight:900;color:${color}">${store.resonanceScore}</span>
+              <span style="font-size:10px;color:#94a3b8">共振指數</span>
+            </div>
+            <div style="font-size:11px;color:${color};margin-bottom:4px">${store.recommendation}</div>
+            <div style="font-size:10px;color:#64748b">${store.bearingLabel}方 · ${bearingLabel} · ${store.distance < 1000 ? store.distance + "m" : (store.distance / 1000).toFixed(1) + "km"}</div>
+          </div>
+        `;
+        infoWindowRef.current!.setContent(content);
+        infoWindowRef.current!.open(map, marker);
+        setSelectedStore(store.placeId);
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    // 調整地圖視野
+    if (stores.length > 0) {
+      try {
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(new google.maps.LatLng(userLoc.lat, userLoc.lng));
+        stores.forEach(s => bounds.extend(new google.maps.LatLng(s.lat, s.lng)));
+        map.fitBounds(bounds, 50);
+        const listener = google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
+          if (map.getZoom()! > 16) map.setZoom(16);
+        });
+        setTimeout(() => google.maps.event.removeListener(listener), 2000);
+      } catch (e) {
+        console.warn("fitBounds error:", e);
+      }
+    }
+  }, [clearMarkers]);
 
   // 取得 GPS 定位
   const requestLocation = useCallback(() => {
@@ -256,15 +416,13 @@ export function NearbyStores() {
     );
   }, []);
 
-  // 地圖就緒後搜尋附近彩券行
-  const handleMapReady = useCallback(
-    (map: google.maps.Map) => {
-      mapRef.current = map;
-      if (!userLocation) return;
-
+  // 執行搜尋
+  const doSearch = useCallback(
+    (map: google.maps.Map, loc: { lat: number; lng: number }) => {
       setIsSearching(true);
+      clearMarkers();
       const service = new google.maps.places.PlacesService(map);
-      const center = new google.maps.LatLng(userLocation.lat, userLocation.lng);
+      const center = new google.maps.LatLng(loc.lat, loc.lng);
 
       service.nearbySearch(
         {
@@ -283,8 +441,8 @@ export function NearbyStores() {
           const storeList = results.slice(0, 12).map((place) => {
             const lat = place.geometry?.location?.lat() ?? 0;
             const lng = place.geometry?.location?.lng() ?? 0;
-            const dx = (lat - userLocation.lat) * 111000;
-            const dy = (lng - userLocation.lng) * 111000 * Math.cos((userLocation.lat * Math.PI) / 180);
+            const dx = (lat - loc.lat) * 111000;
+            const dy = (lng - loc.lng) * 111000 * Math.cos((loc.lat * Math.PI) / 180);
             const distance = Math.round(Math.sqrt(dx * dx + dy * dy));
 
             return {
@@ -301,15 +459,20 @@ export function NearbyStores() {
 
           setRawStores(storeList);
 
-          // 呼叫後端天命共振評分
           scoreMutation.mutate(
             {
-              userLat: userLocation.lat,
-              userLng: userLocation.lng,
+              userLat: loc.lat,
+              userLng: loc.lng,
               stores: storeList,
             },
             {
-              onSuccess: () => setIsSearching(false),
+              onSuccess: (data) => {
+                setIsSearching(false);
+                // 搜尋完成後繪製標記
+                if (mapRef.current && data.stores) {
+                  drawStoreMarkers(mapRef.current, data.stores as ScoredStore[], loc);
+                }
+              },
               onError: () => {
                 setIsSearching(false);
                 toast.error("天命評分暫時無法使用");
@@ -319,25 +482,38 @@ export function NearbyStores() {
         },
       );
     },
-    [userLocation, scoreMutation, searchRadius],
+    [scoreMutation, searchRadius, clearMarkers, drawStoreMarkers],
+  );
+
+  // 地圖就緒後執行搜尋（只執行一次）
+  const handleMapReady = useCallback(
+    (map: google.maps.Map) => {
+      if (mapReadyRef.current) return;
+      mapReadyRef.current = true;
+      mapRef.current = map;
+      if (userLocation) {
+        doSearch(map, userLocation);
+      }
+    },
+    [userLocation, doSearch],
   );
 
   // 當取得位置後自動觸發地圖搜尋
   useEffect(() => {
     if (userLocation && mapRef.current) {
-      handleMapReady(mapRef.current);
+      doSearch(mapRef.current, userLocation);
     }
-  }, [userLocation, handleMapReady]);
+  }, [userLocation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 搜尋範圍改變時重新搜尋
   const handleRadiusChange = (radius: number) => {
     setSearchRadius(radius);
     setRawStores([]);
     scoreMutation.reset();
+    clearMarkers();
     if (userLocation && mapRef.current) {
-      // 稍後觸發以確保 searchRadius state 已更新
       setTimeout(() => {
-        if (mapRef.current) handleMapReady(mapRef.current);
+        if (mapRef.current && userLocation) doSearch(mapRef.current, userLocation);
       }, 50);
     }
   };
@@ -346,6 +522,10 @@ export function NearbyStores() {
   const dayPillar = scoreMutation.data?.dayPillar;
   const hourPillar = scoreMutation.data?.hourPillar;
   const favorableElements = scoreMutation.data?.favorableElements;
+  const bestHours = (scoreMutation.data as any)?.bestHours as BestHour[] | undefined;
+
+  // Top 3 排行榜
+  const top3 = [...scoredStores].sort((a: ScoredStore, b: ScoredStore) => b.resonanceScore - a.resonanceScore).slice(0, 3);
 
   return (
     <div className="space-y-4">
@@ -409,9 +589,55 @@ export function NearbyStores() {
             </div>
           )}
 
+          {/* 最佳購彩時段推薦 */}
+          {bestHours && bestHours.length > 0 && (
+            <div className="glass-card rounded-xl p-3 border border-amber-500/20">
+              <p className="text-xs font-semibold text-amber-400 mb-2">⏰ 今日最佳購彩時段</p>
+              <div className="grid grid-cols-3 gap-2">
+                {bestHours.map((h, i) => (
+                  <div
+                    key={h.branch}
+                    className={`text-center p-2 rounded-lg border transition-all ${
+                      h.isCurrentHour
+                        ? "bg-amber-500/20 border-amber-500/50"
+                        : "bg-white/5 border-white/10"
+                    }`}
+                  >
+                    {i === 0 && <div className="text-[9px] text-amber-400 mb-0.5">🥇 最佳</div>}
+                    {i === 1 && <div className="text-[9px] text-slate-400 mb-0.5">🥈 次佳</div>}
+                    {i === 2 && <div className="text-[9px] text-slate-500 mb-0.5">🥉 第三</div>}
+                    <div className={`text-xs font-bold ${h.isCurrentHour ? "text-amber-300" : "text-white/70"}`}>
+                      {h.chineseName}
+                    </div>
+                    <div className="text-[9px] text-slate-500">{h.displayTime}</div>
+                    <div className={`text-[9px] mt-0.5 ${
+                      h.energyLabel === "大吉" ? "text-amber-400" :
+                      h.energyLabel === "吉" ? "text-emerald-400" : "text-slate-400"
+                    }`}>{h.energyLabel}</div>
+                    {h.isCurrentHour && (
+                      <div className="text-[8px] text-amber-300 mt-0.5 animate-pulse">● 當前時辰</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 搜尋範圍選擇器 */}
           <div className="glass-card rounded-xl p-3 border border-white/10">
-            <div className="text-[10px] text-slate-500 mb-2">搜尋範圍</div>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[10px] text-slate-500">搜尋範圍</div>
+              {/* 地圖/列表切換 */}
+              {scoredStores.length > 0 && (
+                <button
+                  onClick={() => setMapVisible(!mapVisible)}
+                  className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-white/50 hover:text-white/70 transition-colors"
+                >
+                  {mapVisible ? <List className="w-3 h-3" /> : <MapIcon className="w-3 h-3" />}
+                  {mapVisible ? "隱藏地圖" : "顯示地圖"}
+                </button>
+              )}
+            </div>
             <div className="flex gap-2">
               {RADIUS_OPTIONS.map(opt => (
                 <button
@@ -429,14 +655,26 @@ export function NearbyStores() {
             </div>
           </div>
 
-          {/* 地圖 */}
-          <div className="rounded-2xl overflow-hidden border border-white/10" style={{ height: 220 }}>
-            <MapView
-              onMapReady={handleMapReady}
-              initialCenter={userLocation}
-              initialZoom={15}
-            />
-          </div>
+          {/* 地圖（放大版，360px） */}
+          <AnimatePresence>
+            {mapVisible && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 360, opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden rounded-2xl border border-white/10"
+              >
+                <div style={{ height: 360 }}>
+                  <MapView
+                    onMapReady={handleMapReady}
+                    initialCenter={userLocation}
+                    initialZoom={15}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* 搜尋中 */}
           {(isSearching || scoreMutation.isPending) && (
@@ -453,6 +691,48 @@ export function NearbyStores() {
             </div>
           )}
 
+          {/* 今日最強彩券行排行榜 */}
+          {top3.length > 0 && !isSearching && !scoreMutation.isPending && (
+            <div className="glass-card rounded-xl p-3 border border-amber-600/20">
+              <p className="text-xs font-semibold text-amber-400 mb-2">🏆 今日最強彩券行 Top 3</p>
+              <div className="space-y-2">
+                {top3.map((store: ScoredStore, i) => (
+                  <div
+                    key={store.placeId}
+                    onClick={() => {
+                      setSelectedStore(store.placeId);
+                      if (mapRef.current) {
+                        mapRef.current.panTo(new google.maps.LatLng(store.lat, store.lng));
+                        mapRef.current.setZoom(17);
+                        setMapVisible(true);
+                      }
+                    }}
+                    className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/8 cursor-pointer hover:border-amber-500/30 transition-colors"
+                  >
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                      i === 0 ? "bg-amber-500 text-black" :
+                      i === 1 ? "bg-slate-300 text-black" :
+                      "bg-amber-700 text-white"
+                    }`}>
+                      {i + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-bold text-white truncate">{store.name}</div>
+                      <div className="text-[10px] text-slate-500 truncate">{store.address}</div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className={`text-sm font-black ${
+                        store.resonanceScore >= 80 ? "text-amber-400" :
+                        store.resonanceScore >= 60 ? "text-emerald-400" : "text-blue-400"
+                      }`}>{store.resonanceScore}</div>
+                      <div className="text-[9px] text-slate-500">共振</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 彩券行列表 */}
           {scoredStores.length > 0 && !isSearching && !scoreMutation.isPending && (
             <div className="space-y-3">
@@ -461,7 +741,13 @@ export function NearbyStores() {
                   找到 {scoredStores.length} 家彩券行（{RADIUS_OPTIONS.find(o => o.value === searchRadius)?.label} 內），依天命共振指數排序
                 </p>
                 <button
-                  onClick={requestLocation}
+                  onClick={() => {
+                    if (userLocation && mapRef.current) {
+                      doSearch(mapRef.current, userLocation);
+                    } else {
+                      requestLocation();
+                    }
+                  }}
                   className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
                 >
                   🔄 重新搜尋
@@ -472,9 +758,15 @@ export function NearbyStores() {
                   key={store.placeId}
                   store={store}
                   isSelected={selectedStore === store.placeId}
-                  onClick={() => setSelectedStore(
-                    selectedStore === store.placeId ? null : store.placeId
-                  )}
+                  onClick={() => {
+                    const newSelected = selectedStore === store.placeId ? null : store.placeId;
+                    setSelectedStore(newSelected);
+                    if (newSelected && mapRef.current) {
+                      mapRef.current.panTo(new google.maps.LatLng(store.lat, store.lng));
+                      mapRef.current.setZoom(17);
+                      setMapVisible(true);
+                    }
+                  }}
                   isFavorited={favoritedIds.has(store.placeId)}
                   onFavorite={() => {
                     setFavoritedIds(prev => { const s = new Set(prev); s.add(store.placeId); return s; });
