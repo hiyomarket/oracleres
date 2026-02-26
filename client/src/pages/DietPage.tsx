@@ -1,6 +1,7 @@
 /**
  * 飲食羅盤頁面（鳳凰計畫 Phase 6 全面升級版）
  * 補運指數儀表盤 + planB 切換 + 天氣五行 + 附近餐廳進階篩選
+ * Phase 6+ 強化：天氣授權引導、planB 文案品牌化
  */
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,7 +13,7 @@ import { NearbyRestaurants } from "@/components/NearbyRestaurants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Thermometer, Wind, Droplets, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Thermometer, Wind, Droplets, RefreshCw, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2 } from "lucide-react";
 
 // ─── 工具函數 ─────────────────────────────────────────────────
 function getTaiwanDateStr(offsetDays = 0): string {
@@ -36,6 +37,41 @@ const LABEL_COLOR: Record<string, string> = {
   "應避免": "bg-orange-500/20 text-orange-300 border-orange-500/40",
   "強烈避免": "bg-red-500/20 text-red-300 border-red-500/40",
 };
+
+// planB 共振文案（品牌化）
+const RESONANCE_COPY: Record<string, { high: string; mid: string; low: string }> = {
+  火: {
+    high: "天命共振・火能大旺！辛辣燒烤、咖啡濃茶皆是今日補運利器，點燃你的創意才華。",
+    mid: "火能中性，適量攝取辛辣食物，維持能量平衡即可。",
+    low: "今日火能過旺，建議暫避辛辣刺激，以免耗散精氣。",
+  },
+  土: {
+    high: "財星共振・土能充盈！甜食、碳水、山藥蜂蜜皆能強化財庫，把才華轉化為實際財富。",
+    mid: "土能中性，適量補充甜食與碳水，穩定今日根基。",
+    low: "今日土能相剋，建議減少甜膩食物，以免阻礙能量流動。",
+  },
+  金: {
+    high: "決斷力共振・金能充足！白色食物、銀耳百合、杏仁皆是今日利器，強化判斷力。",
+    mid: "金能中性，適量攝取白色食物，維持清晰思維。",
+    low: "今日金能受剋，建議暫避辛辣金屬感食物，保護能量場。",
+  },
+  木: {
+    high: "生機共振・木能旺盛！綠色蔬菜、酸味食物皆能強化生命力，適合積極行動。",
+    mid: "木能中性，適量攝取蔬菜，維持生機流動。",
+    low: "今日木能為忌，建議減少酸味食物，以免加重能量負擔。",
+  },
+  水: {
+    high: "智慧共振・水能充盈！海鮮、黑色食物、豆類皆能強化智慧，適合深度思考。",
+    mid: "水能中性，適量攝取海鮮豆類，維持思維流暢。",
+    low: "今日水能為忌，建議暫避寒涼食物，以免耗損陽氣。",
+  },
+};
+
+function getResonanceCopy(element: string, score: number): string {
+  const copy = RESONANCE_COPY[element];
+  if (!copy) return score >= 60 ? `${element}系食材今日與天命高度共振，推薦積極攝取。` : score < 0 ? `${element}系食材今日能量相剋，建議減少攝取。` : `${element}系食材今日中性，可適量攝取。`;
+  return score >= 60 ? copy.high : score < 0 ? copy.low : copy.mid;
+}
 
 // ─── 補運指數量表元件 ─────────────────────────────────────────
 function ResonanceGauge({ score, element }: { score: number; element: string }) {
@@ -86,12 +122,67 @@ function WeatherBar({ weather }: {
   );
 }
 
+// ─── 天氣授權引導元件 ─────────────────────────────────────────
+function WeatherPermissionBanner({
+  loading,
+  denied,
+  onRetry,
+}: {
+  loading: boolean;
+  denied: boolean;
+  onRetry: () => void;
+}) {
+  if (loading) {
+    return (
+      <div className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-white/15 text-white/40 text-sm">
+        <RefreshCw className="w-4 h-4 animate-spin" />
+        <span>正在取得位置，啟用天氣五行加成...</span>
+      </div>
+    );
+  }
+
+  if (denied) {
+    return (
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3.5 space-y-2">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <p className="text-sm text-amber-300 font-medium">位置授權被拒絕</p>
+        </div>
+        <p className="text-xs text-white/50 leading-relaxed">
+          開啟位置可啟用「天氣五行加成」，讓補運指數計算更精準（本命30% + 環境50% + 天氣20%）。
+        </p>
+        <p className="text-xs text-white/40 leading-relaxed">
+          請至瀏覽器設定 → 網站設定 → 位置，允許本站存取位置，再點下方按鈕重試。
+        </p>
+        <button
+          onClick={onRetry}
+          className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors mt-1"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          重新嘗試取得位置
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={onRetry}
+      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-white/15 text-white/40 text-sm hover:border-amber-500/30 hover:text-amber-400/70 transition-colors group"
+    >
+      <MapPin className="w-4 h-4 group-hover:text-amber-400/70" />
+      <span>點此開啟位置，啟用天氣五行加成（本命30%+環境50%+天氣20%）</span>
+    </button>
+  );
+}
+
 // ─── 主頁面 ──────────────────────────────────────────────────
 export default function DietPage() {
   const { hasFeature, isAdmin } = usePermissions();
   const [selectedOffset, setSelectedOffset] = useState(0);
   const [userCoords, setUserCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [locationDenied, setLocationDenied] = useState(false);
   const [activePlanTab, setActivePlanTab] = useState<"planA" | "planB">("planA");
 
   const selectedDate = getTaiwanDateStr(selectedOffset);
@@ -102,14 +193,24 @@ export default function DietPage() {
   );
 
   const requestLocation = useCallback(() => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setLocationDenied(true);
+      return;
+    }
     setLocationLoading(true);
+    setLocationDenied(false);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude });
         setLocationLoading(false);
       },
-      () => setLocationLoading(false),
+      (err) => {
+        setLocationLoading(false);
+        // 1 = PERMISSION_DENIED, 2 = POSITION_UNAVAILABLE, 3 = TIMEOUT
+        if (err.code === 1) {
+          setLocationDenied(true);
+        }
+      },
       { timeout: 8000 }
     );
   }, []);
@@ -150,14 +251,23 @@ export default function DietPage() {
           </Button>
         </div>
 
-        {/* 天氣資訊條 */}
-        {weather && <WeatherBar weather={weather} />}
-        {!weather && (
-          <button onClick={requestLocation} disabled={locationLoading}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-white/15 text-white/40 text-sm hover:border-white/30 hover:text-white/60 transition-colors">
-            {locationLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
-            {locationLoading ? "正在取得位置..." : "開啟位置以啟用天氣五行加成（本命30%+環境50%+天氣20%）"}
-          </button>
+        {/* 天氣資訊條 / 授權引導 */}
+        {weather ? (
+          <WeatherBar weather={weather} />
+        ) : (
+          <WeatherPermissionBanner
+            loading={locationLoading}
+            denied={locationDenied}
+            onRetry={requestLocation}
+          />
+        )}
+
+        {/* 天氣加成已啟用提示 */}
+        {weather && userCoords && (
+          <div className="flex items-center gap-2 text-xs text-emerald-400/70">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>天氣五行加成已啟用・三維加權計算中（本命30% · 環境50% · 天氣20%）</span>
+          </div>
         )}
 
         {!isAccessible ? (
@@ -183,10 +293,15 @@ export default function DietPage() {
                         目標補充：<span className={`font-bold ${ELEMENT_BG[targetElement].split(' ')[2]}`}>{ELEMENT_EMOJI[targetElement]} {targetElement}</span>
                       </p>
                     </div>
-                    {weather && (
+                    {weather ? (
                       <div className="text-right">
-                        <p className="text-[10px] text-white/30">三維加權已啟用</p>
+                        <p className="text-[10px] text-emerald-400/60">✦ 三維加權已啟用</p>
                         <p className="text-[10px] text-white/30">本命30% · 環境50% · 天氣20%</p>
+                      </div>
+                    ) : (
+                      <div className="text-right">
+                        <p className="text-[10px] text-amber-400/60">⚠ 天氣維度未啟用</p>
+                        <p className="text-[10px] text-white/30">本命30% · 環境70%</p>
                       </div>
                     )}
                   </div>
@@ -264,7 +379,9 @@ export default function DietPage() {
 
                   {activePlanTab === "planB" && (
                     <div className="space-y-2">
-                      <p className="text-xs text-white/40 mb-3">五行食材對今日補運目標（{ELEMENT_EMOJI[targetElement]}{targetElement}）的共振效果排行</p>
+                      <p className="text-xs text-white/40 mb-3">
+                        ✦ 天命共振五行食材排行・以{ELEMENT_EMOJI[targetElement]}{targetElement}為今日補運核心
+                      </p>
                       {planB.map((item) => (
                         <motion.div key={item.element} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                           className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.03] p-3">
@@ -283,7 +400,9 @@ export default function DietPage() {
                                   background: item.resonanceScore >= 60 ? "#10b981" : item.resonanceScore >= 0 ? "#f59e0b" : "#ef4444",
                                 }} />
                             </div>
-                            <p className="text-[10px] text-white/40 mt-1 truncate">{item.advice}</p>
+                            <p className="text-[10px] text-white/40 mt-1 leading-relaxed line-clamp-2">
+                              {getResonanceCopy(item.element, item.resonanceScore)}
+                            </p>
                           </div>
                           <div className="text-right flex-shrink-0">
                             <span className="text-sm font-bold" style={{

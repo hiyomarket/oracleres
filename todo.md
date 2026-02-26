@@ -1101,3 +1101,24 @@
 - [x] 全面重塑 DietPage（補運指數儀表盤、planB 切換、天氣資訊列、呼吸感版面）
 - [x] 升級 NearbyRestaurants（進階篩選 Sheet、距離/分數/五行/吉方篩選、補運指數圓形進度條、大型視覺卡片、framer-motion 動畫）
 - [x] 修正 NearbyRestaurants ELEMENT_MATCH_SCORE 硬編碼→依用戶喜用神動態計算
+
+## 鳳凰計畫 Phase 6+ - 餐廳篩選系統完整化（2026-02-26）
+- [ ] 後端 map.ts 改造：接收 types/priceLevel 篩選條件傳入 Google Places API
+- [ ] 前端 NearbyRestaurants：完整分類標籤多選（15+類型）和價格標籤多選
+- [ ] 定位授權引導優雅降級（拒絕定位時顯示提示）
+- [ ] planB 故事性文案（今日備選方案敘事）
+- [ ] 餐廳分享功能（生成補運指數圖片卡片）
+
+## 鳳凰計畫 Phase 6+ - 餐廳篩選系統完整化（2026-02-26）
+- [x] NearbyRestaurants 分類標籤多選（19種類型，對應 Google Places API includedTypes）
+- [x] NearbyRestaurants 價格標籤多選（$/$$/$$$/$$$$，對應 priceLevel 1-4）
+- [x] 搜尋時動態傳入 includedType 和 priceLevel 篩選條件至 Places API
+- [x] 進階篩選 Sheet 整合分類+價格+距離+補運分數+五行+吉方篩選
+- [x] 分享功能（navigator.share / clipboard）含補運指數和 hashtag
+
+## 鳳凰計畫 Phase 6+ - 餐廳篩選系統完整化（2026-02-26）
+- [x] NearbyRestaurants 分類標籤多選（19種類型，對應 Google Places API includedTypes）
+- [x] NearbyRestaurants 價格標籤多選（$/$$/$$$/$$$$，對應 priceLevel 1-4）
+- [x] 搜尋時動態傳入 includedType 和 priceLevel 篩選條件至 Places API
+- [x] 進階篩選 Sheet 整合分類+價格+距離+補運分數+五行+吉方篩選
+- [x] 分享功能（navigator.share / clipboard）含補運指數和 hashtag
