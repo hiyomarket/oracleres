@@ -1260,3 +1260,9 @@
 - [x] 折疊卡片最後上線時間顏色修正（text-slate-200）
 - [x] 新用戶首登自動分配基礎方案（OAuth callback 設定 planId=basic）
 - [x] 後台 plan_assign 活動類型支援（BusinessHub campaigns）
+
+## Bug 修復（2026-02-26 第三輪）
+- [x] formatRelative() 時區問題修復：AdminUsers 已加入 Math.abs()，AdminUserGroups 同步修復（防止顯示負數天數）
+- [x] AdminUsers「全選此頁」checkbox 功能確認已存在（全選/取消全選/半選三態）
+- [x] UserGroups 新增成員 Modal 改為預設顯示所有用戶列表（不再需要先輸入搜尋才顯示）
+- [x] UserGroups 新增成員 Modal 用戶列表加入邊框容器，視覺更清晰

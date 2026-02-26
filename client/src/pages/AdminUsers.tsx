@@ -74,8 +74,13 @@ function formatDate(dateStr: string | Date | null | undefined, includeTime = fal
 function formatRelative(dateStr: string | Date | null | undefined) {
   if (!dateStr) return "從未";
   const diff = Date.now() - new Date(dateStr).getTime();
-  const days = Math.floor(diff / 86400000);
-  if (days === 0) return "今天";
+  const absDiff = Math.abs(diff);
+  const minutes = Math.floor(absDiff / 60000);
+  const hours = Math.floor(absDiff / 3600000);
+  const days = Math.floor(absDiff / 86400000);
+  if (minutes < 5) return "剛剛";
+  if (hours < 1) return `${minutes} 分鐘前`;
+  if (hours < 24) return `${hours} 小時前`;
   if (days === 1) return "昨天";
   if (days < 7) return `${days} 天前`;
   if (days < 30) return `${Math.floor(days / 7)} 週前`;
@@ -615,8 +620,45 @@ export default function AdminUsers() {
             </Select>
           </div>
           <div className="mt-2 flex items-center justify-between">
-            <div className="text-xs text-slate-500">
-              共 <span className="text-amber-400 font-medium">{total}</span> 位用戶符合篩選條件
+            <div className="flex items-center gap-3">
+              {/* 全選此頁 */}
+              <div
+                className="flex items-center gap-1.5 cursor-pointer group"
+                onClick={() => {
+                  const allIds = users.map(u => u.id);
+                  const allSelected = allIds.every(id => selectedUserIds.has(id));
+                  setSelectedUserIds(prev => {
+                    const next = new Set(prev);
+                    if (allSelected) {
+                      allIds.forEach(id => next.delete(id));
+                    } else {
+                      allIds.forEach(id => next.add(id));
+                    }
+                    return next;
+                  });
+                }}
+              >
+                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                  users.length > 0 && users.every(u => selectedUserIds.has(u.id))
+                    ? "bg-amber-500 border-amber-500"
+                    : users.some(u => selectedUserIds.has(u.id))
+                    ? "bg-amber-500/40 border-amber-400"
+                    : "border-slate-500 group-hover:border-amber-400"
+                }`}>
+                  {users.length > 0 && users.every(u => selectedUserIds.has(u.id)) && (
+                    <svg className="w-2.5 h-2.5 text-black" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                  {users.some(u => selectedUserIds.has(u.id)) && !users.every(u => selectedUserIds.has(u.id)) && (
+                    <div className="w-2 h-0.5 bg-amber-400" />
+                  )}
+                </div>
+                <span className="text-xs text-slate-400 group-hover:text-slate-200 transition-colors">全選此頁</span>
+              </div>
+              <div className="text-xs text-slate-500">
+                共 <span className="text-amber-400 font-medium">{total}</span> 位用戶符合篩選條件
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-500">每頁顯示</span>

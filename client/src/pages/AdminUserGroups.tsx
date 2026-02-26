@@ -41,8 +41,11 @@ const ICON_OPTIONS = ["👥", "👨‍👩‍👧‍👦", "⭐", "🌙", "🔮"
 function formatRelative(dateStr: string | Date | null | undefined) {
   if (!dateStr) return "從未";
   const diff = Date.now() - new Date(dateStr).getTime();
-  const days = Math.floor(diff / 86400000);
-  if (days === 0) return "今天";
+  const absDiff = Math.abs(diff);
+  const days = Math.floor(absDiff / 86400000);
+  const hours = Math.floor(absDiff / 3600000);
+  if (hours < 1) return "剛剛";
+  if (hours < 24) return `${hours} 小時前`;
   if (days === 1) return "昨天";
   if (days < 7) return `${days} 天前`;
   if (days < 30) return `${Math.floor(days / 7)} 週前`;
@@ -259,9 +262,10 @@ function AddMemberModal({ groupId, groupName, onClose, onSuccess }: AddMemberMod
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
+  // 預設顯示所有用戶，搜尋時過濾
   const { data: usersData } = trpc.dashboard.listUsersFiltered.useQuery(
-    { page: 1, pageSize: 20, searchName: debouncedSearch || undefined },
-    { enabled: debouncedSearch.length > 0 }
+    { page: 1, pageSize: 50, searchName: debouncedSearch || undefined },
+    { staleTime: 30000 }
   );
   const addMutation = trpc.userGroups.addMembers.useMutation({
     onSuccess: (res) => { toast.success(`已新增 ${res.added} 位成員`); onSuccess(); onClose(); },
@@ -296,37 +300,39 @@ function AddMemberModal({ groupId, groupName, onClose, onSuccess }: AddMemberMod
             onChange={e => handleSearchChange(e.target.value)}
             className="bg-slate-800 border-slate-700 text-slate-200"
           />
-          {debouncedSearch && (
-            <div className="max-h-60 overflow-y-auto space-y-1">
-              {(usersData?.users ?? []).length === 0 ? (
-                <div className="text-center py-4 text-slate-500 text-sm">找不到符合的用戶</div>
-              ) : (
-                (usersData?.users ?? []).map(u => (
-                  <div
-                    key={u.id}
-                    onClick={() => toggleUser(u.id)}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                      selectedIds.has(u.id) ? "bg-amber-500/20 border border-amber-500/40" : "bg-slate-800/60 hover:bg-slate-700/60"
-                    }`}
-                  >
-                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${
-                      selectedIds.has(u.id) ? "bg-amber-500 border-amber-500" : "border-slate-500"
-                    }`}>
-                      {selectedIds.has(u.id) && <svg className="w-2.5 h-2.5 text-black" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-xs font-bold text-black shrink-0">
-                      {(u.name ?? "?")[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm text-slate-200 truncate">{u.name ?? "未知用戶"}</div>
-                      <div className="text-xs text-slate-500 truncate">{u.email ?? "—"}</div>
-                    </div>
-                    <div className="text-xs text-slate-500 shrink-0">{u.planId ?? "basic"}</div>
+          <div className="max-h-64 overflow-y-auto space-y-1 border border-slate-700/50 rounded-lg p-1">
+            {!usersData ? (
+              <div className="text-center py-4 text-slate-500 text-sm">載入中...</div>
+            ) : (usersData?.users ?? []).length === 0 ? (
+              <div className="text-center py-4 text-slate-500 text-sm">
+                {debouncedSearch ? "找不到符合的用戶" : "目前沒有用戶"}
+              </div>
+            ) : (
+              (usersData?.users ?? []).map(u => (
+                <div
+                  key={u.id}
+                  onClick={() => toggleUser(u.id)}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                    selectedIds.has(u.id) ? "bg-amber-500/20 border border-amber-500/40" : "bg-slate-800/60 hover:bg-slate-700/60"
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${
+                    selectedIds.has(u.id) ? "bg-amber-500 border-amber-500" : "border-slate-500"
+                  }`}>
+                    {selectedIds.has(u.id) && <svg className="w-2.5 h-2.5 text-black" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
                   </div>
-                ))
-              )}
-            </div>
-          )}
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-xs font-bold text-black shrink-0">
+                    {(u.name ?? "?")[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-slate-200 truncate">{u.name ?? "未知用戶"}</div>
+                    <div className="text-xs text-slate-500 truncate">{u.email ?? "—"}</div>
+                  </div>
+                  <div className="text-xs text-slate-500 shrink-0">{u.planId ?? "basic"}</div>
+                </div>
+              ))
+            )}
+          </div>
           {selectedIds.size > 0 && (
             <div className="text-xs text-amber-400">已選 {selectedIds.size} 位用戶</div>
           )}
