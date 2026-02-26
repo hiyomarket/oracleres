@@ -1520,3 +1520,5 @@
 - [x] OutfitPage: 說明文字（底部小字）也要反映實際折扣後分數，不再寫死「極佳（80分）」
 - [x] WardrobeSelector: 「我的衣櫥」 Tab 手串部位只顯示用戶自己 wardrobe bracelet 分類（不包含系統手串庫）
 - [x] WardrobeSelector: 移除「我的衣櫥」 Tab 中的系統手串庫資料（系統手串庫只在「系統推薦」 Tab 顯示）
+## UI 調整 v4.10 - /diet 地圖放大（2026-02-27）
+- [x] /diet 附近命理推薦餐廣 Google Map 高度放大兩倍（從 240px 改為 480px）

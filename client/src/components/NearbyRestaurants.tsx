@@ -1021,12 +1021,12 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
           {(phase === "searching" || (phase === "done" && mapVisible)) && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 240, opacity: 1 }}
+              animate={{ height: 480, opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
               className="overflow-hidden border-b border-white/10"
             >
-              <div style={{ height: 240 }}>
+              <div style={{ height: 480 }}>
                 <MapView
                   initialCenter={userLocation}
                   initialZoom={15}
