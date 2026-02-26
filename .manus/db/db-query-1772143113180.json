@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, name, navPath FROM modules WHERE id = 'module_wealth';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, navPath FROM modules WHERE id = 'module_wealth';",
+  "rows": [
+    {
+      "id": "module_wealth",
+      "name": "財運羅盤",
+      "navPath": "/wealth"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tnavPath\nmodule_wealth\t財運羅盤\t/wealth\n",
+  "stderr": "",
+  "execution_time_ms": 1591
+}

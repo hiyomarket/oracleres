@@ -1,0 +1,82 @@
+{
+  "query": "SELECT id, name, navPath, isActive FROM modules ORDER BY sortOrder;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, navPath, isActive FROM modules ORDER BY sortOrder;",
+  "rows": [
+    {
+      "id": "module_calendar",
+      "name": "命理日曆",
+      "navPath": "/calendar",
+      "isActive": "1"
+    },
+    {
+      "id": "module_divination",
+      "name": "天命問卜",
+      "navPath": "/divination",
+      "isActive": "1"
+    },
+    {
+      "id": "module_profile",
+      "name": "命格身份證",
+      "navPath": "/profile",
+      "isActive": "1"
+    },
+    {
+      "id": "module_warroom",
+      "name": "每日運勢",
+      "navPath": "/",
+      "isActive": "1"
+    },
+    {
+      "id": "module_oracle",
+      "name": "擲筊問卦",
+      "navPath": "/oracle",
+      "isActive": "1"
+    },
+    {
+      "id": "module_outfit",
+      "name": "手串穿搭",
+      "navPath": "/outfit",
+      "isActive": "1"
+    },
+    {
+      "id": "module_diet",
+      "name": "飲食羅盤",
+      "navPath": "/diet",
+      "isActive": "1"
+    },
+    {
+      "id": "module_lottery",
+      "name": "補運樂透",
+      "navPath": "/lottery",
+      "isActive": "1"
+    },
+    {
+      "id": "module_wealth",
+      "name": "財運羅盤",
+      "navPath": "/lottery",
+      "isActive": "1"
+    },
+    {
+      "id": "module_luck_cycle",
+      "name": "大限流年",
+      "navPath": "/luck-cycle",
+      "isActive": "1"
+    },
+    {
+      "id": "module_weekly",
+      "name": "【週報】天命週報",
+      "navPath": "/weekly",
+      "isActive": "0"
+    },
+    {
+      "id": "module_stats",
+      "name": "【統計】命理統計",
+      "navPath": "/stats",
+      "isActive": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tnavPath\tisActive\nmodule_calendar\t命理日曆\t/calendar\t1\nmodule_divination\t天命問卜\t/divination\t1\nmodule_profile\t命格身份證\t/profile\t1\nmodule_warroom\t每日運勢\t/\t1\nmodule_oracle\t擲筊問卦\t/oracle\t1\nmodule_outfit\t手串穿搭\t/outfit\t1\nmodule_diet\t飲食羅盤\t/diet\t1\nmodule_lottery\t補運樂透\t/lottery\t1\nmodule_wealth\t財運羅盤\t/lottery\t1\nmodule_luck_cycle\t大限流年\t/luck-cycle\t1\nmodule_weekly\t【週報】天命週報\t/weekly\t0\nmodule_stats\t【統計】命理統計\t/stats\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1642
+}

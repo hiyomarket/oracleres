@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name, navPath, isActive, containedFeatures, sortOrder FROM modules WHERE id LIKE '%wealth%' OR name LIKE '%財運%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, navPath, isActive, containedFeatures, sortOrder FROM modules WHERE id LIKE '%wealth%' OR name LIKE '%財運%';",
+  "rows": [
+    {
+      "id": "module_wealth",
+      "name": "財運羅盤",
+      "navPath": "/lottery",
+      "isActive": "1",
+      "containedFeatures": "[\"warroom_wealth\"]",
+      "sortOrder": "9"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tnavPath\tisActive\tcontainedFeatures\tsortOrder\nmodule_wealth\t財運羅盤\t/lottery\t1\t[\"warroom_wealth\"]\t9\n",
+  "stderr": "",
+  "execution_time_ms": 1632
+}

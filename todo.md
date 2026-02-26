@@ -1522,3 +1522,16 @@
 - [x] WardrobeSelector: 移除「我的衣櫥」 Tab 中的系統手串庫資料（系統手串庫只在「系統推薦」 Tab 顯示）
 ## UI 調整 v4.10 - /diet 地圖放大（2026-02-27）
 - [x] /diet 附近命理推薦餐廣 Google Map 高度放大兩倍（從 240px 改為 480px）
+
+## 新功能 v4.11 - 財運羅盤獨立頁面（2026-02-27）
+- [ ] 建立 /wealth 獨立頁面（WealthPage.tsx）
+- [ ] 財運羅盤頁面包含：偏財指數、彩券能量、財神方位、財運分析、今日財運建議
+- [ ] 在 App.tsx 註冊 /wealth 路由
+- [ ] 修正資料庫 module_wealth navPath 從 /lottery 改為 /wealth
+- [ ] SharedNav 加入 /wealth 的漸層色設定
+
+## 新功能 v4.11 - 財運羅盤獨立頁面（2026-02-27）
+- [x] 建立 WealthPage.tsx 獨立頁面（財運羅盤完整功能）
+- [x] 在 App.tsx 註冊 /wealth 路由
+- [x] 修正資料庫 module_wealth 的 navPath 從 /lottery 改為 /wealth
+- [x] 在 ModuleCarousel 加入 /wealth 漸層色彩

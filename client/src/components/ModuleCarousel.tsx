@@ -25,6 +25,7 @@ const MODULE_GRADIENTS: Record<string, string> = {
   "/": "from-amber-900/60 to-orange-900/40",
   "/oracle": "from-purple-900/60 to-indigo-900/40",
   "/lottery": "from-emerald-900/60 to-teal-900/40",
+  "/wealth": "from-yellow-900/60 to-amber-900/40",
   "/calendar": "from-blue-900/60 to-cyan-900/40",
   "/profile": "from-rose-900/60 to-pink-900/40",
   "/outfit": "from-orange-900/60 to-amber-900/40",

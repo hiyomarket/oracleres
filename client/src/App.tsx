@@ -24,6 +24,7 @@ import WardrobePage from "@/pages/WardrobePage";
 import DietPage from "@/pages/DietPage";
 import DivinationPage from "@/pages/DivinationPage";
 import LuckCyclePage from "@/pages/LuckCyclePage";
+import WealthPage from "@/pages/WealthPage";
 import { DailySigninModal } from "@/components/DailySigninModal";
 
 function Router() {
@@ -49,6 +50,7 @@ function Router() {
         <Route path={"/diet"} component={DietPage} />
         <Route path={"/divination"} component={DivinationPage} />
         <Route path={"/luck-cycle"} component={LuckCyclePage} />
+        <Route path={"/wealth"} component={WealthPage} />
         <Route path={"/add-to-home"} component={AddToHome} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
