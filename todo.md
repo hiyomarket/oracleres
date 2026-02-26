@@ -1266,3 +1266,18 @@
 - [x] AdminUsers「全選此頁」checkbox 功能確認已存在（全選/取消全選/半選三態）
 - [x] UserGroups 新增成員 Modal 改為預設顯示所有用戶列表（不再需要先輸入搜尋才顯示）
 - [x] UserGroups 新增成員 Modal 用戶列表加入邊框容器，視覺更清晰
+
+## 功能升級 v3.0 - 累積簽到分級獎勵系統
+
+- [x] 檢查每日簽到積分邏輯（後端固定 10 點，無 streak 追蹤）
+- [x] 資料庫 schema 新增 signinStreak 欄位（users 表）並 db:push
+- [x] 後端升級：calcSigninPoints() 分級（1-5天10點、6-19天15點、20天以上20點）
+- [x] 後端升級：getTaiwanTodayStr / getTaiwanYesterdayStr 工具函數
+- [x] 後端升級：getNextMilestone() 回傳下一里程碑資訊
+- [x] 後端升級：claimDailyPoints 計算 newStreak、更新 lastDailyCheckIn、isStreakMilestone
+- [x] 後端升級：getSigninStatus 回傳 streak / todayPoints / nextMilestone
+- [x] 前端升級：DailySigninModal 三等級視覺化（青銅/白銀/黃金橫幅）
+- [x] 前端升級：連續天數進度條 + 里程碑節點（第1/6/20/30天）
+- [x] 前端升級：里程碑達成特殊慶祝動畫
+- [x] 前端升級：簽到成功後顯示下一里程碑鼓勵提示
+- [x] 測試更新：34 個 points 測試涵蓋分級積分、streak、里程碑計算（112 項全部通過）

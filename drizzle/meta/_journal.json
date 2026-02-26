@@ -169,6 +169,13 @@
       "when": 1772108497669,
       "tag": "0023_zippy_landau",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1772110786927,
+      "tag": "0024_hard_whizzer",
+      "breakpoints": true
     }
   ]
 }

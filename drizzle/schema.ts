@@ -159,6 +159,8 @@ export const users = mysqlTable("users", {
   pointsBalance: int("pointsBalance").notNull().default(0),
   // 最後每日登入領取積分的日期（YYYY-MM-DD）
   lastDailyCheckIn: varchar("lastDailyCheckIn", { length: 10 }),
+  // 連續簽到天數（累積）
+  signinStreak: int("signinStreak").notNull().default(0),
   // 折扣券暫存（JSON 陣列，待支付系統接入時使用）
   // 例如 [{ "campaign_id": 1, "discount_percentage": 0.8, "expires_at": "2027-01-01" }]
   availableDiscounts: json("availableDiscounts").$type<Array<{ campaign_id: number; discount_percentage?: number; expires_at: string | null }>>(),
