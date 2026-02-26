@@ -358,6 +358,7 @@ export const accountRouter = router({
       hourIndex: z.number().int().min(0).max(11).optional(),
       displayName: z.string().max(50).optional(),
       birthPlace: z.string().max(100).optional(),
+      birthLunar: z.string().max(100).optional(), // 前端已有農曆字串可直接傳入，否則後端自動推算
     }))
     .mutation(async ({ input, ctx }) => {
       const { calculateBazi } = await import('../lib/baziCalculator');
@@ -373,6 +374,22 @@ export const accountRouter = router({
       if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '資料庫連線失敗' });
       const existing = await db.select({ id: userProfiles.id })
         .from(userProfiles).where(eq(userProfiles.userId, ctx.user.id)).limit(1);
+      // 計算主要靈數（靈魂渴望）
+      function reduceToMaster(n: number): number {
+        while (n > 22) {
+          n = n.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0);
+        }
+        return n;
+      }
+      const [yStr, mStr, dStr] = input.birthDate.split('-');
+      const _y = parseInt(yStr), _m = parseInt(mStr), _d = parseInt(dStr);
+      const _middleRaw = _m.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0)
+        + _d.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0);
+      const _middle = reduceToMaster(_middleRaw);
+      const _yearRaw = _y.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0);
+      const _yearNum = reduceToMaster(_yearRaw);
+      const _primaryRaw = _middle + _yearNum;
+      const primaryLifeNumber = reduceToMaster(_primaryRaw);
       const baziData = {
         yearPillar: result.yearPillar,
         monthPillar: result.monthPillar,
@@ -386,10 +403,27 @@ export const accountRouter = router({
         natalEarth: result.elementRatio.earth,
         natalMetal: result.elementRatio.metal,
         natalWater: result.elementRatio.water,
+        lifePathNumber: primaryLifeNumber,
       };
       // 將時辰索引轉為存儲用的 birthDate/birthTime
       const birthDateStr = input.birthDate;
       const birthTimeStr = birthTime; // 已由 hourIndex 轉換
+      // 自動推算農曆生日字串（如前端已傳入則直接使用）
+      let birthLunarStr = input.birthLunar ?? null;
+      if (!birthLunarStr) {
+        try {
+          const { solarToLunarByYMD } = await import('../lib/lunarConverter');
+          const { getYearPillar } = await import('../lib/lunarCalendar');
+          const [ly, lm, ld] = input.birthDate.split('-').map(Number);
+          const lunar = solarToLunarByYMD(ly, lm, ld);
+          const yearPillarLunar = getYearPillar(lunar.lunarYear);
+          const yearName = `${yearPillarLunar.stem}${yearPillarLunar.branch}`;
+          const leapPrefix = lunar.isLeapMonth ? '閏' : '';
+          birthLunarStr = `農曆：${yearName}年${leapPrefix}${lunar.lunarMonthName}${lunar.lunarDayName}`;
+        } catch {
+          // 農曆推算失敗不阻斷儲存
+        }
+      }
       if (existing.length > 0) {
         await db.update(userProfiles).set({
           ...baziData,
@@ -397,6 +431,7 @@ export const accountRouter = router({
           birthTime: birthTimeStr,
           ...(input.displayName ? { displayName: input.displayName } : {}),
           ...(input.birthPlace ? { birthPlace: input.birthPlace } : {}),
+          ...(birthLunarStr ? { birthLunar: birthLunarStr } : {}),
           updatedAt: new Date(),
         }).where(eq(userProfiles.userId, ctx.user.id));
       } else {
@@ -407,6 +442,7 @@ export const accountRouter = router({
           birthTime: birthTimeStr,
           displayName: input.displayName,
           birthPlace: input.birthPlace,
+          ...(birthLunarStr ? { birthLunar: birthLunarStr } : {}),
           createdAt: new Date(),
         });
       }

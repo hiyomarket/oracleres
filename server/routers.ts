@@ -5,6 +5,7 @@ import { permissionsRouter } from "./routers/permissions";
 import { dashboardRouter } from "./routers/dashboard";
 import { pointsRouter } from "./routers/points";
 import { businessHubRouter } from "./routers/businessHub";
+import { userGroupsRouter } from "./routers/userGroups";
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -39,6 +40,7 @@ export const appRouter = router({
   dashboard: dashboardRouter,
   points: pointsRouter,
   businessHub: businessHubRouter,
+  userGroups: userGroupsRouter,
   auth: router({
     me: publicProcedure.query(async (opts) => {
       const user = opts.ctx.user;

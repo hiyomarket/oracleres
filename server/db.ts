@@ -132,6 +132,19 @@ export async function applyDefaultOnboardingCampaign(userId: number): Promise<{ 
       await db.update(users).set({ availableDiscounts: newDiscounts }).where(eq(users.id, userId));
       console.log(`[Onboarding] Applied discount campaign "${campaign.name}" to user #${userId}`);
       return { applied: true, campaignName: campaign.name };
+    } else if (ruleType === 'plan_assign') {
+      // 指派方案：將用戶的 planId 設為指定方案
+      const planId = ruleValue.plan_id as string;
+      if (!planId) return { applied: false };
+      const durationDays = (ruleValue.duration_days as number) || 0;
+      const planExpiresAt = durationDays > 0
+        ? new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000)
+        : null;
+      await db.update(users)
+        .set({ planId, ...(planExpiresAt ? { planExpiresAt } : {}) })
+        .where(eq(users.id, userId));
+      console.log(`[Onboarding] Applied plan_assign campaign "${campaign.name}" (plan: ${planId}) to user #${userId}`);
+      return { applied: true, campaignName: campaign.name };
     }
     return { applied: false };
   } catch (error) {

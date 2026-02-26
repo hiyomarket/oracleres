@@ -26,6 +26,12 @@ const NAV_ITEMS = [
     desc: "查看、篩選、積分",
   },
   {
+    href: "/admin/user-groups",
+    icon: "👥",
+    label: "客群分組",
+    desc: "分組、批量管理",
+  },
+  {
     href: "/admin/business-hub",
     icon: "💰",
     label: "商業中心",

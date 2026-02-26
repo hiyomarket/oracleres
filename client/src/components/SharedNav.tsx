@@ -4,8 +4,8 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
-import { User, Settings, LogOut, ChevronDown, ShieldCheck, BarChart2, Ticket, Smartphone, LayoutDashboard, Star, Coins, Gift } from "lucide-react";
-import { usePermissions, type FeatureId } from "@/hooks/usePermissions";
+import { User, LogOut, ChevronDown, Smartphone, LayoutDashboard, Star, Coins, Gift } from "lucide-react";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type NavPage = string;
 
@@ -113,8 +113,7 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const canSeeWeekly = status?.isOwner || hasFeature("weekly");
-  const canSeeStats  = status?.isOwner || hasFeature("stats");
+
   const points = pointsData?.balance ?? 0;
 
   return (
@@ -183,34 +182,6 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
                   <User className="w-3.5 h-3.5 text-blue-400" />
                 </div>
                 我的命格資料
-              </Link>
-            )}
-
-            {/* 刷刷樂驗證 */}
-            {canSeeWeekly && (
-              <Link
-                href="/weekly"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
-              >
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
-                  <Ticket className="w-3.5 h-3.5 text-emerald-400" />
-                </div>
-                刷刷樂驗證
-              </Link>
-            )}
-
-            {/* 擲筊分析 */}
-            {canSeeStats && (
-              <Link
-                href="/stats"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
-              >
-                <div className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center shrink-0">
-                  <BarChart2 className="w-3.5 h-3.5 text-violet-400" />
-                </div>
-                擲筊分析
               </Link>
             )}
 

@@ -65,7 +65,7 @@ type Campaign = {
   endDate: Date;
   isActive: number;
   isDefaultOnboarding: number;
-  ruleType: "discount" | "giveaway";
+  ruleType: "discount" | "giveaway" | "plan_assign";
   ruleTarget: { target_type: string; target_id?: string };
   ruleValue: Record<string, unknown>;
 };
@@ -991,15 +991,18 @@ function CampaignsTab() {
   const { data: campaigns = [], isLoading } = trpc.businessHub.listCampaigns.useQuery();
   const { data: allModules = [] } = trpc.businessHub.listModules.useQuery();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const { data: allPlans = [] } = trpc.businessHub.listPlans.useQuery();
   const [newCampaign, setNewCampaign] = useState({
     name: "",
     startDate: "",
     endDate: "",
-    ruleType: "giveaway" as "discount" | "giveaway",
+    ruleType: "giveaway" as "discount" | "giveaway" | "plan_assign",
     targetType: "all_users",
     giveawayModuleId: "",
     discountPercentage: "80",
     durationDays: "30",
+    planAssignId: "",
+    planAssignDays: "0",
   });
 
   const createMutation = trpc.businessHub.createCampaign.useMutation({
@@ -1094,10 +1097,12 @@ function CampaignsTab() {
                         className={`text-xs ${
                           c.ruleType === "discount"
                             ? "border-orange-500 text-orange-400"
+                            : c.ruleType === "plan_assign"
+                            ? "border-green-500 text-green-400"
                             : "border-blue-500 text-blue-400"
                         }`}
                       >
-                        {c.ruleType === "discount" ? "折扣" : "贈送"}
+                        {c.ruleType === "discount" ? "折扣" : c.ruleType === "plan_assign" ? "指派方案" : "贈送"}
                       </Badge>
                       {c.isDefaultOnboarding === 1 && (
                         <Badge className="bg-amber-500/20 border border-amber-500 text-amber-300 text-xs">
@@ -1111,6 +1116,8 @@ function CampaignsTab() {
                     <p className="text-xs text-slate-500 mt-1">
                       {c.ruleType === "discount"
                         ? `折扣 ${Math.round((1 - Number(ruleValue.discount_percentage ?? 0.8)) * 100)}%`
+                        : c.ruleType === "plan_assign"
+                        ? `指派方案: ${ruleValue.plan_id ?? "—"} / ${ruleValue.duration_days ? `${ruleValue.duration_days}天` : "永久"}`
                         : `贈送模塊: ${ruleValue.giveaway_module_id ?? "—"} / ${ruleValue.duration_days ?? "∞"} 天`}
                     </p>
                   </div>
@@ -1205,17 +1212,44 @@ function CampaignsTab() {
                 onChange={(e) =>
                   setNewCampaign({
                     ...newCampaign,
-                    ruleType: e.target.value as "discount" | "giveaway",
+                    ruleType: e.target.value as "discount" | "giveaway" | "plan_assign",
                   })
                 }
                 className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white"
               >
                 <option value="giveaway">贈送模塊</option>
                 <option value="discount">折扣</option>
+                <option value="plan_assign">指派方案（新用戶迎新）</option>
               </select>
             </div>
 
-            {newCampaign.ruleType === "giveaway" ? (
+            {newCampaign.ruleType === "plan_assign" ? (
+              <>
+                <div>
+                  <label className="text-sm text-slate-400">指派方案</label>
+                  <select
+                    value={newCampaign.planAssignId}
+                    onChange={(e) => setNewCampaign({ ...newCampaign, planAssignId: e.target.value })}
+                    className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white"
+                  >
+                    <option value="">選擇方案...</option>
+                    {(allPlans as Plan[]).map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm text-slate-400">有效天數（0 = 永久）</label>
+                  <Input
+                    type="number"
+                    value={newCampaign.planAssignDays}
+                    onChange={(e) => setNewCampaign({ ...newCampaign, planAssignDays: e.target.value })}
+                    className="bg-slate-800 border-slate-600 text-white"
+                  />
+                </div>
+                <p className="text-xs text-amber-400/70">ℹ️ 設為「預設迎新活動」後，新用戶首次登入將自動獲得此方案</p>
+              </>
+            ) : newCampaign.ruleType === "giveaway" ? (
               <>
                 <div>
                   <label className="text-sm text-slate-400">贈送模塊</label>
@@ -1278,6 +1312,11 @@ function CampaignsTab() {
                     ? {
                         giveaway_module_id: newCampaign.giveawayModuleId,
                         duration_days: parseInt(newCampaign.durationDays) || 0,
+                      }
+                    : newCampaign.ruleType === "plan_assign"
+                    ? {
+                        plan_id: newCampaign.planAssignId,
+                        duration_days: parseInt(newCampaign.planAssignDays) || 0,
                       }
                     : {
                         discount_percentage:

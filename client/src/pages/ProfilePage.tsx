@@ -741,12 +741,6 @@ export default function ProfilePage() {
             ) : (
               <div className="mb-4 text-center text-gray-500 text-sm py-2">填寫出生日期以顯示年齡資訊</div>
             )}
-            {!isOwner && (
-              <div className="bg-amber-900/20 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-300 mb-4">
-                <span className="font-bold">提示：</span>
-                大限、紫微斗數、生命靈數等進階算命功能需要完整的生辰八字資料，請至命格設定頁填寫完整資料後，系統將自動計算個人化分析。
-              </div>
-            )}
             {/* ─── 五年流年流月分析 ─── */}
             <YearlyForecastSection />
           </div>

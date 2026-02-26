@@ -1,0 +1,106 @@
+{
+  "query": "SELECT id, name, icon, navPath, containedFeatures, isActive FROM modules ORDER BY sortOrder LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, icon, navPath, containedFeatures, isActive FROM modules ORDER BY sortOrder LIMIT 20;",
+  "rows": [
+    {
+      "id": "module_warroom",
+      "name": "每日運勢",
+      "icon": "☀️",
+      "navPath": "/",
+      "containedFeatures": "[\"warroom\", \"warroom_divination\"]",
+      "isActive": "1"
+    },
+    {
+      "id": "module_profile",
+      "name": "命格身份證",
+      "icon": "🔮",
+      "navPath": "/profile",
+      "containedFeatures": "[\"profile\"]",
+      "isActive": "1"
+    },
+    {
+      "id": "module_calendar",
+      "name": "命理日曆",
+      "icon": "📅",
+      "navPath": "/calendar",
+      "containedFeatures": "[\"calendar\"]",
+      "isActive": "1"
+    },
+    {
+      "id": "module_oracle",
+      "name": "擲筊問卦",
+      "icon": "☯️",
+      "navPath": "/oracle",
+      "containedFeatures": "[\"oracle\"]",
+      "isActive": "1"
+    },
+    {
+      "id": "module_outfit",
+      "name": "手串穿搭",
+      "icon": "📿",
+      "navPath": "/outfit",
+      "containedFeatures": "[\"warroom_outfit\"]",
+      "isActive": "1"
+    },
+    {
+      "id": "module_diet",
+      "name": "飲食羅盤",
+      "icon": "🍽️",
+      "navPath": "/diet",
+      "containedFeatures": "[\"warroom_dietary\"]",
+      "isActive": "1"
+    },
+    {
+      "id": "module_divination",
+      "name": "天命問卜",
+      "icon": "🌠",
+      "navPath": "/divination",
+      "containedFeatures": "[\"warroom_divination\"]",
+      "isActive": "1"
+    },
+    {
+      "id": "module_lottery",
+      "name": "補運樂透",
+      "icon": "🎰",
+      "navPath": "/lottery",
+      "containedFeatures": "[\"lottery\"]",
+      "isActive": "1"
+    },
+    {
+      "id": "module_wealth",
+      "name": "財運羅盤",
+      "icon": "💰",
+      "navPath": "/?tab=wealth",
+      "containedFeatures": "[\"warroom_wealth\"]",
+      "isActive": "1"
+    },
+    {
+      "id": "module_luck_cycle",
+      "name": "大限流年",
+      "icon": "📅",
+      "navPath": "/luck-cycle",
+      "containedFeatures": "[\"profile\"]",
+      "isActive": "1"
+    },
+    {
+      "id": "module_weekly",
+      "name": "【週報】天命週報",
+      "icon": "📊",
+      "navPath": "/weekly",
+      "containedFeatures": "[\"weekly\"]",
+      "isActive": "0"
+    },
+    {
+      "id": "module_stats",
+      "name": "【統計】命理統計",
+      "icon": "📈",
+      "navPath": "/stats",
+      "containedFeatures": "[\"stats\"]",
+      "isActive": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ticon\tnavPath\tcontainedFeatures\tisActive\nmodule_warroom\t每日運勢\t☀️\t/\t[\"warroom\", \"warroom_divination\"]\t1\nmodule_profile\t命格身份證\t🔮\t/profile\t[\"profile\"]\t1\nmodule_calendar\t命理日曆\t📅\t/calendar\t[\"calendar\"]\t1\nmodule_oracle\t擲筊問卦\t☯️\t/oracle\t[\"oracle\"]\t1\nmodule_outfit\t手串穿搭\t📿\t/outfit\t[\"warroom_outfit\"]\t1\nmodule_diet\t飲食羅盤\t🍽️\t/diet\t[\"warroom_dietary\"]\t1\nmodule_divination\t天命問卜\t🌠\t/divination\t[\"warroom_divination\"]\t1\nmodule_lottery\t補運樂透\t🎰\t/lottery\t[\"lottery\"]\t1\nmodule_wealth\t財運羅盤\t💰\t/?tab=wealth\t[\"warroom_wealth\"]\t1\nmodule_luck_cycle\t大限流年\t📅\t/luck-cycle\t[\"profile\"]\t1\nmodule_weekly\t【週報】天命週報\t📊\t/weekly\t[\"weekly\"]\t0\nmodule_stats\t【統計】命理統計\t📈\t/stats\t[\"stats\"]\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1681
+}

@@ -16,6 +16,7 @@ import { AccessGate } from "@/components/AccessGate";
 import AddToHome from "@/pages/AddToHome";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminUsers from "@/pages/AdminUsers";
+import AdminUserGroups from "@/pages/AdminUserGroups";
 import AdminBusinessHub from "@/pages/AdminBusinessHub";
 import OutfitPage from "@/pages/OutfitPage";
 import DietPage from "@/pages/DietPage";
@@ -38,6 +39,7 @@ function Router() {
         <Route path={"/my-profile"} component={MyProfile} />
         <Route path={"/admin/dashboard"} component={AdminDashboard} />
         <Route path={"/admin/users"} component={AdminUsers} />
+        <Route path={"/admin/user-groups"} component={AdminUserGroups} />
         <Route path={"/admin/business-hub"} component={AdminBusinessHub} />
         <Route path={"/outfit"} component={OutfitPage} />
         <Route path={"/diet"} component={DietPage} />

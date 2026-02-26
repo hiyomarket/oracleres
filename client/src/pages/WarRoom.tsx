@@ -5,7 +5,6 @@ import { SharedNav } from "@/components/SharedNav";
 import { ProfileIncompleteBanner } from "@/components/ProfileIncompleteBanner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
-import { TopicAdvicePanel } from "@/components/TopicAdvicePanel";
 import { Zap, Bell, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { NearbyRestaurants } from "@/components/NearbyRestaurants";
@@ -123,33 +122,6 @@ export default function WarRoom() {
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab, setActiveTab] = useState<"overview" | "tarot" | "hours">("overview");
-
-  // 天命問卜狀態
-  const [topicQuestion, setTopicQuestion] = useState('');
-  const [selectedTopic, setSelectedTopic] = useState<'work' | 'love' | 'health' | 'wealth' | 'decision' | null>(null);
-  const [topicResult, setTopicResult] = useState<{ topicName: string; advice: string | unknown; context: { dayPillar: string; tenGod: string; overallScore: number; tarotCard: string; moonPhase: string } } | null>(null);
-  const [isAskingTopic, setIsAskingTopic] = useState(false);
-
-  const topicAdviceMutation = trpc.warRoom.topicAdvice.useMutation({
-    onSuccess: (result) => {
-      setTopicResult(result);
-      setIsAskingTopic(false);
-    },
-    onError: () => {
-      setIsAskingTopic(false);
-    },
-  });
-
-  const handleTopicAdvice = (topic: 'work' | 'love' | 'health' | 'wealth' | 'decision') => {
-    setSelectedTopic(topic);
-    setTopicResult(null);
-    setIsAskingTopic(true);
-    topicAdviceMutation.mutate({
-      topic,
-      question: topicQuestion.trim() || undefined,
-      date: selectedDate,
-    });
-  };
 
   // 本週最旺時辰通知
   const [notified, setNotified] = useState(false);
@@ -654,17 +626,6 @@ export default function WarRoom() {
           )}
         </AnimatePresence>
 
-        {/* ═══ 天命問卜 ═══ */}
-        {(isAdmin || hasFeature("warroom_divination")) && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="mt-6"
-        >
-          <TopicAdvicePanel selectedDate={selectedDate} />
-        </motion.div>
-        )}
 
         </main>
       )}

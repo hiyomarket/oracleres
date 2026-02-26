@@ -75,7 +75,12 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
   const utils = trpc.useUtils();
 
-  // previewBazi 是 query，只在 showPreview && birthDate 有值時才啟用
+  // 農曆查詢（用於儲存農曆生日字串）
+  const lunarQuery = trpc.utils.toLunar.useQuery(
+    { date: form.birthDate || "2000-01-01" },
+    { enabled: form.birthDate.length === 10, retry: false }
+  );
+  // previewBazi 是 query，只在 showPreview && birthDate 有値時才啟用
   const previewQuery = trpc.account.previewBazi.useQuery(
     {
       birthDate: form.birthDate || "2000-01-01", // 提供 fallback 避免 TS 報錯
@@ -119,6 +124,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
       hourIndex: form.birthHour !== null ? form.birthHour : undefined,
       displayName: form.displayName.trim() || undefined,
       birthPlace: form.birthPlace.trim() || undefined,
+      birthLunar: lunarQuery.data?.lunarString ?? undefined,
     });
   };
 

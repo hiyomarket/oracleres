@@ -164,10 +164,10 @@ export const dashboardRouter = router({
   listUsersFiltered: protectedProcedure
     .input(z.object({
       page: z.number().int().min(1).default(1),
-      pageSize: z.number().int().min(1).max(50).default(20),
+      pageSize: z.number().int().min(1).max(100).default(20),
       // 篩選條件
       lifePathNumber: z.number().int().min(0).max(22).optional(),
-      planId: z.enum(["basic", "advanced", "professional"]).optional(),
+      planId: z.string().max(50).optional(),
       // 最後上線：'7d' | '30d' | '90d' | 'inactive90d'
       lastActiveFilter: z.enum(["7d", "30d", "90d", "inactive90d"]).optional(),
       // 搜尋名稱

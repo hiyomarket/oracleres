@@ -221,7 +221,7 @@ export const businessHubRouter = router({
         name: z.string().min(1).max(200),
         startDate: z.string(),
         endDate: z.string(),
-        ruleType: z.enum(["discount", "giveaway"]),
+        ruleType: z.enum(["discount", "giveaway", "plan_assign"]),
         ruleTarget: z.object({
           target_type: z.string(),
           target_id: z.string().optional(),
@@ -251,7 +251,7 @@ export const businessHubRouter = router({
         startDate: z.string().optional(),
         endDate: z.string().optional(),
         isActive: z.number().int().min(0).max(1).optional(),
-        ruleType: z.enum(["discount", "giveaway"]).optional(),
+        ruleType: z.enum(["discount", "giveaway", "plan_assign"]).optional(),
         ruleTarget: z.object({ target_type: z.string(), target_id: z.string().optional() }).optional(),
         ruleValue: z.record(z.string(), z.unknown()).optional(),
       })

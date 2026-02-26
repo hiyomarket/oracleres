@@ -55,17 +55,11 @@ const LIFE_PATH_OPTIONS = [
   })),
 ];
 
-const PLAN_OPTIONS = [
-  { value: "all",          label: "全部方案" },
-  { value: "basic",        label: "基礎方案" },
-  { value: "advanced",     label: "進階方案" },
-  { value: "professional", label: "專業方案" },
-];
-
-const PLAN_SELECT_OPTIONS = [
-  { value: "basic",        label: "基礎方案" },
-  { value: "advanced",     label: "進階方案" },
-  { value: "professional", label: "專業方案" },
+const PAGE_SIZE_OPTIONS = [
+  { value: 10, label: "每頁 10 人" },
+  { value: 20, label: "每頁 20 人" },
+  { value: 50, label: "每頁 50 人" },
+  { value: 100, label: "每頁 100 人" },
 ];
 
 function formatDate(dateStr: string | Date | null | undefined, includeTime = false) {
@@ -178,6 +172,7 @@ function SubscriptionModal({ user, onClose, onSuccess }: SubscriptionModalProps)
   const [customModules, setCustomModules] = useState<Array<{ module_id: string; expires_at: string | null }>>([]);
 
   const { data: modules } = trpc.businessHub.listModules.useQuery();
+  const { data: plansData } = trpc.businessHub.listPlans.useQuery();
   const { data: currentSub } = trpc.businessHub.getUserSubscription.useQuery({ userId: user.id });
 
   // 初始化 customModules（從現有訂閱載入）
@@ -242,9 +237,9 @@ function SubscriptionModal({ user, onClose, onSuccess }: SubscriptionModalProps)
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700">
-                {PLAN_SELECT_OPTIONS.map(o => (
-                  <SelectItem key={o.value} value={o.value} className="text-slate-200 focus:bg-slate-800">
-                    {o.label}
+                {(plansData ?? []).map((p) => (
+                  <SelectItem key={p.id} value={p.id} className="text-slate-200 focus:bg-slate-800">
+                    {p.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -347,11 +342,14 @@ function SubscriptionModal({ user, onClose, onSuccess }: SubscriptionModalProps)
 
 export default function AdminUsers() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchName, setSearchName] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [planFilter, setPlanFilter] = useState("all");
   const [lifePathFilter, setLifePathFilter] = useState("all");
   const [lastActiveFilter, setLastActiveFilter] = useState("all");
+  // 動態載入方案列表
+  const { data: plansData } = trpc.businessHub.listPlans.useQuery();
   const [expandedUserId, setExpandedUserId] = useState<number | null>(null);
   const [subscriptionModalUser, setSubscriptionModalUser] = useState<{
     id: number;
@@ -397,8 +395,8 @@ export default function AdminUsers() {
   const { data, isLoading, refetch } = trpc.dashboard.listUsersFiltered.useQuery(
     {
       page,
-      pageSize: 15,
-      planId: planFilter === "all" ? undefined : planFilter as "basic" | "advanced" | "professional",
+      pageSize,
+      planId: planFilter === "all" ? undefined : planFilter,
       lifePathNumber: lifePathFilter === "all" ? undefined : Number(lifePathFilter),
       lastActiveFilter: lastActiveFilter === "all" ? undefined : lastActiveFilter as "7d" | "30d" | "90d" | "inactive90d",
       searchName: debouncedSearch || undefined,
@@ -457,9 +455,10 @@ export default function AdminUsers() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700">
-                {PLAN_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value} className="text-slate-200 focus:bg-slate-800">
-                    {o.label}
+                <SelectItem value="all" className="text-slate-200 focus:bg-slate-800">全部方案</SelectItem>
+                {(plansData ?? []).map((p) => (
+                  <SelectItem key={p.id} value={p.id} className="text-slate-200 focus:bg-slate-800">
+                    {p.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -489,8 +488,25 @@ export default function AdminUsers() {
               </SelectContent>
             </Select>
           </div>
-          <div className="mt-2 text-xs text-slate-500">
-            共 <span className="text-amber-400 font-medium">{total}</span> 位用戶符合篩選條件
+          <div className="mt-2 flex items-center justify-between">
+            <div className="text-xs text-slate-500">
+              共 <span className="text-amber-400 font-medium">{total}</span> 位用戶符合篩選條件
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">每頁顯示</span>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="bg-slate-900/60 border-slate-700 text-slate-200 text-xs h-7 w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-slate-700">
+                  {PAGE_SIZE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={String(o.value)} className="text-slate-200 focus:bg-slate-800 text-xs">
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -509,7 +525,8 @@ export default function AdminUsers() {
         ) : (
           <div className="space-y-2">
             {users.map((u) => {
-              const planInfo = PLAN_LABELS[u.planId ?? "basic"] ?? PLAN_LABELS.basic;
+              const dynamicPlan = (plansData ?? []).find(p => p.id === (u.planId ?? 'basic'));
+              const planInfo = PLAN_LABELS[u.planId ?? "basic"] ?? { label: dynamicPlan?.name ?? u.planId ?? 'basic', color: 'bg-slate-600 text-slate-200' };
               const isExpanded = expandedUserId === u.id;
               return (
                 <div
@@ -572,7 +589,7 @@ export default function AdminUsers() {
                     </div>
 
                     {/* 最後上線 */}
-                    <div className="text-right shrink-0 hidden md:block w-20">
+                    <div className="text-right shrink-0 w-20">
                       <div className="text-xs text-slate-400">
                         {formatRelative(u.lastSignedIn)}
                       </div>
@@ -594,8 +611,13 @@ export default function AdminUsers() {
                           <div className="text-slate-300 font-mono">#{u.id}</div>
                         </div>
                         <div>
-                          <div className="text-slate-500 mb-0.5">已啟用</div>
-                          <div className="text-slate-300">{u.isActivated ? "✅ 已啟用" : "❌ 未啟用"}</div>
+                          <div className="text-slate-500 mb-0.5">方案</div>
+                          <div className={`font-medium ${
+                            u.planId === 'professional' ? 'text-purple-400' :
+                            u.planId === 'advanced' ? 'text-orange-400' : 'text-slate-300'
+                          }`}>
+                            {(plansData ?? []).find(p => p.id === (u.planId ?? 'basic'))?.name ?? (u.planId ?? 'basic')}
+                          </div>
                         </div>
                         <div>
                           <div className="text-slate-500 mb-0.5">積分餘額</div>
@@ -626,7 +648,7 @@ export default function AdminUsers() {
                         <div>
                           <div className="text-slate-500 mb-0.5">角色</div>
                           <div className={u.role === "admin" ? "text-amber-400 font-medium" : "text-slate-300"}>
-                            {u.role === "admin" ? "管理員" : "一般用戶"}
+                            {u.role === "admin" ? "👑 管理員" : (plansData ?? []).find(p => p.id === (u.planId ?? 'basic'))?.name ?? "一般用戶"}
                           </div>
                         </div>
                       </div>
@@ -707,8 +729,8 @@ export default function AdminUsers() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-slate-700">
-                  {PLAN_SELECT_OPTIONS.map(o => (
-                    <SelectItem key={o.value} value={o.value} className="text-slate-200 focus:bg-slate-800">{o.label}</SelectItem>
+                  {(plansData ?? []).map((p) => (
+                    <SelectItem key={p.id} value={p.id} className="text-slate-200 focus:bg-slate-800">{p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -90,8 +90,8 @@ export const campaigns = mysqlTable("campaigns", {
   startDate: timestamp("startDate").notNull(),
   endDate: timestamp("endDate").notNull(),
   isActive: tinyint("isActive").notNull().default(1),
-  // 規則類型：discount=折扣, giveaway=贈送
-  ruleType: mysqlEnum("ruleType", ["discount", "giveaway"]).notNull(),
+  // 規則類型：discount=折扣, giveaway=贈送模塊, plan_assign=指派方案
+  ruleType: mysqlEnum("ruleType", ["discount", "giveaway", "plan_assign"]).notNull(),
   // 規則目標，例如 { "target_type": "plan", "target_id": "advanced_599" }
   ruleTarget: json("ruleTarget").$type<{ target_type: string; target_id?: string }>().notNull(),
   // 規則內容，例如 { "discount_percentage": 0.8 } 或 { "giveaway_module_id": "module_lottery", "duration_days": 30 }
@@ -500,3 +500,43 @@ export const userPermissions = mysqlTable("user_permissions", {
 }));
 export type UserPermission = typeof userPermissions.$inferSelect;
 export type InsertUserPermission = typeof userPermissions.$inferInsert;
+
+/**
+ * 客群分組資料表
+ * 管理員可建立分組，將用戶分配到不同群組進行批量管理
+ */
+export const userGroups = mysqlTable("user_groups", {
+  id: int("id").autoincrement().primaryKey(),
+  // 分組名稱（例：家人群組、靈數1群組）
+  name: varchar("name", { length: 100 }).notNull(),
+  // 分組描述
+  description: text("description"),
+  // 分組顏色標籤（用於 UI 顯示）
+  color: varchar("color", { length: 30 }).default("amber"),
+  // 分組圖示 emoji
+  icon: varchar("icon", { length: 10 }).default("👥"),
+  // 建立者（管理員 userId）
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UserGroup = typeof userGroups.$inferSelect;
+export type InsertUserGroup = typeof userGroups.$inferInsert;
+
+/**
+ * 客群分組成員資料表
+ * 記錄每個用戶屬於哪些分組
+ */
+export const userGroupMembers = mysqlTable("user_group_members", {
+  id: int("id").autoincrement().primaryKey(),
+  groupId: int("groupId").notNull(),
+  userId: int("userId").notNull(),
+  // 備注（例：這位是我媽媽）
+  note: varchar("note", { length: 200 }),
+  addedBy: int("addedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  uniqueGroupUser: uniqueIndex("group_user_idx").on(table.groupId, table.userId),
+}));
+export type UserGroupMember = typeof userGroupMembers.$inferSelect;
+export type InsertUserGroupMember = typeof userGroupMembers.$inferInsert;
