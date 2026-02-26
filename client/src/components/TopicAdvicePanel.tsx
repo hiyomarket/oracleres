@@ -92,13 +92,24 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
       <div className="p-5">
         {/* 問題輸入 */}
         <div className="mb-4">
-          <input
-            type="text"
-            value={topicQuestion}
-            onChange={(e) => setTopicQuestion(e.target.value)}
-            placeholder="輸入具體問題（可不填）… 例：這項合作適合推進嗎？"
-            className="w-full bg-slate-800/60 border border-slate-600/50 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={topicQuestion}
+              onChange={(e) => setTopicQuestion(e.target.value)}
+              placeholder="輸入具體問題（可不填）… 例：這項合作適合推進嗎？"
+              className="w-full bg-slate-800/60 border border-slate-600/50 rounded-xl px-4 py-2.5 pr-10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/60 transition-colors"
+            />
+            {topicQuestion && (
+              <button
+                onClick={() => setTopicQuestion('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center bg-white/10 hover:bg-red-500/30 hover:text-red-400 transition-all"
+                title="清除輸入"
+              >
+                <span className="text-sm text-slate-400 leading-none">×</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 主題選擇 */}

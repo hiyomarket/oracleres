@@ -376,6 +376,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
   const [maxDistance, setMaxDistance] = useState(2000);
   const [minFengShuiScore, setMinFengShuiScore] = useState(0);
   const [filterElement, setFilterElement] = useState<string | null>(null);
+  const filterElementRef = useRef<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const filterCategoryRef = useRef<string | null>(null);
   const [sharingId, setSharingId] = useState<string | null>(null);
@@ -543,26 +544,26 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
       try {
         const results: Restaurant[] = [];
         const seen = new Set<string>();
-        const activeCatId = filterCategoryRef.current;
+          const activeCatId = filterCategoryRef.current;
         const activeCategoryTag = activeCatId
           ? CATEGORY_TAGS.find((c) => c.id === activeCatId) ?? null
           : null;
-
-        const topSupplements = supplements.slice(0, 2);
-
-        for (const sup of topSupplements) {
+        const activeElementFilter = filterElementRef.current;
+        // 若有五行篩選，使用該五行的關鍵字；否則用今日補運五行
+        const searchSupplements = activeElementFilter
+          ? [{ element: activeElementFilter, priority: 1 }]
+          : supplements.slice(0, 2);
+        for (const sup of searchSupplements) {
           const info = ELEMENT_KEYWORDS[sup.element];
           if (!info) continue;
-
-          const keywordsToSearch = info.keywords.slice(0, 3);
-
+          const keywordsToSearch = info.keywords.slice(0, 4);
           for (const keyword of keywordsToSearch) {
-            if (results.length >= 12) break;
-
+            if (results.length >= 20) break;
             const { Place } = await google.maps.importLibrary("places") as google.maps.PlacesLibrary;
+            // 優先使用分類文字後綴，否則直接用關鍵字搜尋（不加「餐廳」以提高覆蓋率）
             const searchText = activeCategoryTag?.textSuffix
-              ? `${keyword} ${activeCategoryTag.textSuffix}`
-              : `${keyword} 餐廳`;
+              ? `${activeCategoryTag.textSuffix}`
+              : keyword;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const request: any = {
               textQuery: searchText,
@@ -571,13 +572,15 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                 center: loc,
                 radius: 2000,
               },
-              maxResultCount: 8,
+              maxResultCount: 10,
               language: "zh-TW",
             };
-            if (activeCategoryTag && activeCategoryTag.id !== "all" && activeCategoryTag.types.length > 0) {
+            // 只有確定支援的 includedType 才加入（避免結果為空）
+            const RELIABLE_TYPES = ["cafe", "bar", "japanese_restaurant", "korean_restaurant", "chinese_restaurant"];
+            if (activeCategoryTag && activeCategoryTag.id !== "all" &&
+                RELIABLE_TYPES.includes(activeCategoryTag.types[0])) {
               request.includedType = activeCategoryTag.types[0];
             }
-
             try {
               const { places } = await Place.searchByText(request);
 
@@ -652,7 +655,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
           return (a.distance ?? 9999) - (b.distance ?? 9999);
         });
 
-        const finalResults = results.slice(0, 12);
+        const finalResults = results.slice(0, 20);
         setRestaurants(finalResults);
         setPhase("done");
 
@@ -942,7 +945,17 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                     <p className="text-sm font-medium text-white/80 mb-2">☯️ 五行屬性</p>
                     <div className="flex flex-wrap gap-2">
                       {[null, "火", "土", "金", "木", "水"].map((el) => (
-                        <button key={el ?? "all"} onClick={() => setFilterElement(el)}
+                        <button key={el ?? "all"} onClick={() => {
+                          filterElementRef.current = el;
+                          setFilterElement(el);
+                          setFilterSheetOpen(false);
+                          if (mapRef.current && userLocation) {
+                            setPhase("searching");
+                            setRestaurants([]);
+                            setErrorMsg("");
+                            setSearchTrigger((n) => n + 1);
+                          }
+                        }}
                           className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
                             filterElement === el ? "bg-white/20 border-white/40 text-white" : "bg-white/5 border-white/10 text-white/50"
                           }`}>
@@ -965,8 +978,14 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                       setMaxDistance(2000);
                       setMinFengShuiScore(0);
                       setFilterElement(null);
+                      filterElementRef.current = null;
                       setFilterCategory(null);
                       filterCategoryRef.current = null;
+                      if (mapRef.current && userLocation) {
+                        setPhase("searching");
+                        setRestaurants([]);
+                        setSearchTrigger((n) => n + 1);
+                      }
                     }}
                       className="w-full py-2 text-sm text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-colors">
                       重設所有篩選

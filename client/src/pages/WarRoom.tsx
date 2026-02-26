@@ -121,7 +121,7 @@ export default function WarRoom() {
     : data?.wealthCompass?.lotteryAdvice ?? '';
 
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [activeTab, setActiveTab] = useState<"overview" | "tarot" | "hours">("overview");
+  // Tab 已移除，改為垂直排列
 
   // 本週最旺時辰通知
   const [notified, setNotified] = useState(false);
@@ -226,20 +226,27 @@ export default function WarRoom() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          {/* 標題列 */}
-          <div className="flex items-start justify-between mb-4 gap-2">
-            <div className="min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold text-white tracking-wide">
+          {/* 標題列 - 桌機版英雄式佈局 */}
+          <div className="flex items-start justify-between mb-6 gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-3xl md:text-5xl font-black text-white tracking-wide leading-tight">
                 ⚔️ {isViewingToday ? "今日運勢" : `${data.date.gregorian.replace(/\d{4}年/, '')}運勢`}
               </h1>
-              <p className="text-white/40 text-xs mt-1 tracking-widest hidden sm:block">WAR ROOM · ORACLE RESONANCE</p>
+              <p className="text-white/40 text-xs mt-2 tracking-[0.3em]">WAR ROOM · ORACLE RESONANCE</p>
+              <div className="flex items-center gap-3 mt-3 flex-wrap">
+                <span className={`text-sm font-semibold px-3 py-1 rounded-full border ${wuxingTheme.border} ${wuxingTheme.bg} ${wuxingTheme.text}`}>
+                  {data.tenGod.main} · {data.tenGod.role}
+                </span>
+                <span className="text-white/40 text-sm">{data.date.dayPillar}日柱</span>
+                <span className="text-white/30 text-sm hidden md:inline">{data.date.yearPillar} · {data.date.monthPillar} · {data.date.dayPillar}</span>
+              </div>
             </div>
             <div className="text-right shrink-0">
               {isViewingToday && (
-                <div className="text-amber-400 font-mono text-base md:text-lg">{timeStr}</div>
+                <div className="text-amber-400 font-mono text-2xl md:text-4xl font-bold tabular-nums">{timeStr}</div>
               )}
-              <div className="text-white/40 text-xs">{data.date.gregorian}</div>
-              <div className="text-white/40 text-xs">週{data.date.weekday}</div>
+              <div className="text-white/50 text-sm mt-1">{data.date.gregorian}</div>
+              <div className="text-white/40 text-xs">週{data.date.weekday} · 農曆{data.date.lunar}</div>
             </div>
           </div>
 
@@ -425,206 +432,140 @@ export default function WarRoom() {
           </div>
         </motion.div>
 
-        {/* ═══ 分頁切換 ═══ */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          {([
-            { key: "overview", label: "🌳 英雄劇本" },
-            { key: "tarot", label: "🃏 塔羅流日" },
-            { key: "hours", label: "⏰ 時辰能量" },
-          ] as const).map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`shrink-0 px-3 py-2 rounded-full text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === tab.key
-                  ? "bg-amber-500/20 border border-amber-500/50 text-amber-300"
-                  : "bg-white/5 border border-white/10 text-white/50 hover:text-white/70"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        {/* ═══ 垂直排列區塊：本日天命格言 + 十神分析 + 月相 + 塔羅流日 + 時辰能量 ═══ */}
+        <div className="space-y-6">
+          {/* ═══ 本日天命格言 ═══ */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <div className={`rounded-2xl border ${wuxingTheme.border} ${wuxingTheme.bg} p-6 shadow-lg`}>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">🌳</span>
+                <h3 className="text-base font-bold text-white/90 tracking-widest">本日天命格言</h3>
+                <span className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border ${wuxingTheme.border} ${wuxingTheme.bg} ${wuxingTheme.text}`}>
+                  {data.date.dayPillar}日 · {data.tenGod.main}當令
+                </span>
+              </div>
+              <p className="text-white text-base md:text-lg leading-relaxed font-medium">{data.heroScript}</p>
+            </div>
+          </motion.div>
 
-        <AnimatePresence mode="wait">
-          {/* ═══ 模塊B：英雄劇本 + 十神分析 ═══ */}
-          {activeTab === "overview" && (
-            <motion.div
-              key="overview"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-            >
-              {/* 英雄劇本 */}
-              <SectionCard title="今日英雄劇本" icon="🌳" className="md:col-span-2">
-                <div className={`rounded-xl border ${wuxingTheme.border} ${wuxingTheme.bg} p-4`}>
-                  <div className={`text-xs font-semibold ${wuxingTheme.text} mb-3`}>
-                    {data.date.dayPillar}日 · {data.tenGod.main}當令 · {data.tenGod.role}
-                  </div>
-                  <p className="text-white/90 leading-relaxed text-sm">{data.heroScript}</p>
+          {/* ═══ 十神能量 + 月相 並排 ═══ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SectionCard title="十神能量分析" icon="☯️">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-white/60 text-sm">主十神</span>
+                  <span className={`font-bold text-lg ${wuxingTheme.text}`}>{data.tenGod.main}</span>
                 </div>
-              </SectionCard>
-
-              {/* 十神能量 */}
-              <SectionCard title="十神能量分析" icon="☯️">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/60 text-sm">主十神</span>
-                    <span className={`font-bold text-lg ${wuxingTheme.text}`}>{data.tenGod.main}</span>
-                  </div>
-                  <div className="text-white/80 text-sm">{data.tenGod.energy}</div>
-                  <ScoreBar score={data.tenGod.score} />
-                  <p className="text-white/60 text-xs">{data.tenGod.advice}</p>
-                  {data.tenGod.branchGods.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-white/10">
-                      <div className="text-white/40 text-xs mb-2">地支藏干</div>
-                      <div className="flex gap-2 flex-wrap">
-                        {data.tenGod.branchGods.map((bg, i) => (
-                          <span key={i} className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/70">
-                            {bg.stem} → {bg.tenGod}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </SectionCard>
-
-              {/* 月相影響 */}
-              <SectionCard title="月相能量" icon={data.moon.emoji}>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-white font-medium">{data.moon.phase}</span>
-                    <span className="text-white/50 text-sm">農曆第{data.moon.lunarDay}日</span>
-                  </div>
-                  <div className="w-full bg-white/10 rounded-full h-2">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-slate-400 to-white"
-                      style={{ width: `${data.moon.illumination}%` }}
-                    />
-                  </div>
-                  <p className="text-white/60 text-xs">{data.moon.castInfluence}</p>
-                  {data.moon.isFullMoon && (
-                    <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-amber-300 text-xs">
-                      ✨ 滿月加持：今日聖杯機率 +10%
-                    </div>
-                  )}
-                </div>
-              </SectionCard>
-            </motion.div>
-          )}
-
-          {/* ═══ 塔羅流日 ═══ */}
-          {activeTab === "tarot" && (
-            !isAdmin && !hasFeature("warroom_divination") ? <FeatureLockedCard feature="warroom_divination" /> :
-            <motion.div
-              key="tarot"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-            >
-              <SectionCard title="今日塔羅流日牌" icon="🃏" className="md:col-span-2">
-                <div className="flex flex-col md:flex-row gap-6 items-start">
-                  {/* 塔羅牌視覺 */}
-                  <div className="shrink-0 mx-auto md:mx-0">
-                    <motion.div
-                      initial={{ rotateY: 90 }}
-                      animate={{ rotateY: 0 }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
-                      className="w-32 h-48 rounded-xl border-2 border-amber-500/50 bg-gradient-to-b from-amber-950/60 to-slate-900/60 flex flex-col items-center justify-center shadow-xl shadow-amber-500/10"
-                    >
-                      <div className="text-4xl mb-2">{data.tarot.element === "火" ? "🔥" : data.tarot.element === "水" ? "💧" : data.tarot.element === "土" ? "🌍" : data.tarot.element === "風" ? "🌪️" : "⭐"}</div>
-                      <div className="text-amber-300 font-bold text-center text-sm px-2">{data.tarot.name}</div>
-                      <div className="text-amber-500/60 text-xs mt-1">第 {data.tarot.cardNumber} 號</div>
-                    </motion.div>
-                  </div>
-                  {/* 塔羅解讀 */}
-                  <div className="flex-1 space-y-3">
-                    <div>
-                      <div className="text-amber-400 font-bold text-xl">{data.tarot.name}</div>
-                      {isOwner && <div className="text-white/50 text-sm mt-1">計算方式：{data.tarot.calculation}</div>}
-                    </div>
+                <div className="text-white/80 text-sm">{data.tenGod.energy}</div>
+                <ScoreBar score={data.tenGod.score} />
+                <p className="text-white/60 text-xs">{data.tenGod.advice}</p>
+                {data.tenGod.branchGods.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <div className="text-white/40 text-xs mb-2">地支藏干</div>
                     <div className="flex gap-2 flex-wrap">
-                      {data.tarot.keywords.map((kw: string, i: number) => (
-                        <span key={i} className="px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">{kw}</span>
+                      {data.tenGod.branchGods.map((bg, i) => (
+                        <span key={i} className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/70">
+                          {bg.stem} → {bg.tenGod}
+                        </span>
                       ))}
                     </div>
-                    <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-                      <div className="text-white/40 text-xs mb-2">今日能量</div>
-                      <p className="text-white/80 text-sm">{data.tarot.energy}</p>
-                    </div>
-                    <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-4">
-                      <div className="text-amber-400/70 text-xs mb-2">行動建議</div>
-                      <p className="text-white/80 text-sm">{data.tarot.advice}</p>
-                    </div>
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+            <SectionCard title="月相能量" icon={data.moon.emoji}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-white font-medium">{data.moon.phase}</span>
+                  <span className="text-white/50 text-sm">農曆第{data.moon.lunarDay}日</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div className="h-full rounded-full bg-gradient-to-r from-slate-400 to-white" style={{ width: `${data.moon.illumination}%` }} />
+                </div>
+                <p className="text-white/60 text-xs">{data.moon.castInfluence}</p>
+                {data.moon.isFullMoon && (
+                  <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-amber-300 text-xs">
+                    ✨ 滿月加持：今日聖杯機率 +10%
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+          </div>
+
+          {/* ═══ 塔羅流日 ═══ */}
+          {(!isAdmin && !hasFeature("warroom_divination")) ? <FeatureLockedCard feature="warroom_divination" /> : (
+            <SectionCard title="今日塔羅流日" icon="🃏">
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                <div className="shrink-0 mx-auto md:mx-0">
+                  <motion.div
+                    initial={{ rotateY: 90 }}
+                    animate={{ rotateY: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="w-32 h-48 rounded-xl border-2 border-amber-500/50 bg-gradient-to-b from-amber-950/60 to-slate-900/60 flex flex-col items-center justify-center shadow-xl shadow-amber-500/10"
+                  >
+                    <div className="text-4xl mb-2">{data.tarot.element === "火" ? "🔥" : data.tarot.element === "水" ? "💧" : data.tarot.element === "土" ? "🌍" : data.tarot.element === "風" ? "🌪️" : "⭐"}</div>
+                    <div className="text-amber-300 font-bold text-center text-sm px-2">{data.tarot.name}</div>
+                    <div className="text-amber-500/60 text-xs mt-1">第 {data.tarot.cardNumber} 號</div>
+                  </motion.div>
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <div className="text-amber-400 font-bold text-xl">{data.tarot.name}</div>
+                    {isOwner && <div className="text-white/50 text-sm mt-1">計算方式：{data.tarot.calculation}</div>}
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    {data.tarot.keywords.map((kw: string, i: number) => (
+                      <span key={i} className="px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">{kw}</span>
+                    ))}
+                  </div>
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+                    <div className="text-white/40 text-xs mb-2">今日能量</div>
+                    <p className="text-white/80 text-sm">{data.tarot.energy}</p>
+                  </div>
+                  <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-4">
+                    <div className="text-amber-400/70 text-xs mb-2">行動建議</div>
+                    <p className="text-white/80 text-sm">{data.tarot.advice}</p>
                   </div>
                 </div>
-              </SectionCard>
-            </motion.div>
+              </div>
+            </SectionCard>
           )}
 
           {/* ═══ 時辰能量 ═══ */}
-          {activeTab === "hours" && (
-            <motion.div
-              key="hours"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="space-y-4"
-            >
-              {/* 全天時辰表 */}
-              <SectionCard title="全天時辰能量時間軸" icon="🕐">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {data.hourEnergy.allHours.map((h: { name: string; branch: string; stem: string; score: number; level: string; label: string; isCurrent: boolean; displayTime: string }, i: number) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.03 }}
-                      className={`rounded-lg p-3 border transition-all ${
-                        h.isCurrent
-                          ? "bg-amber-500/20 border-amber-500/60 shadow-lg shadow-amber-500/10"
-                          : "bg-white/3 border-white/10"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className={`font-medium text-sm ${h.isCurrent ? "text-amber-300" : "text-white/70"}`}>
-                          {h.name} {h.isCurrent && <span className="text-amber-400 text-xs ml-1">●當前</span>}
-                        </span>
-                        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                          h.label === '大吉' ? 'bg-amber-500/20 text-amber-400' :
-                          h.label === '吉' ? 'bg-emerald-500/20 text-emerald-400' :
-                          h.label === '平' ? 'bg-blue-500/20 text-blue-400' :
-                          'bg-red-500/20 text-red-400'
-                        }`}>
-                          {h.label}
-                        </span>
-                      </div>
-                      <div className="text-white/40 text-[10px]">{h.displayTime}</div>
-                      <div className="mt-1.5">
-                        <div className="w-full bg-white/10 rounded-full h-1.5">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${h.score}%` }}
-                            transition={{ duration: 0.8, delay: i * 0.04 }}
-                            className={`h-full rounded-full ${
-                              h.score >= 80 ? 'bg-gradient-to-r from-amber-500 to-orange-400' :
-                              h.score >= 60 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' :
-                              h.score >= 40 ? 'bg-gradient-to-r from-blue-500 to-cyan-400' :
-                              'bg-gradient-to-r from-red-600 to-red-500'
-                            }`}
-                          />
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </SectionCard>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          <SectionCard title="全天時辰能量時間軸" icon="⏰">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {data.hourEnergy.allHours.map((h: { name: string; branch: string; stem: string; score: number; level: string; label: string; isCurrent: boolean; displayTime: string }, i: number) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  className={`rounded-lg p-3 border transition-all ${h.isCurrent ? "bg-amber-500/20 border-amber-500/60 shadow-lg shadow-amber-500/10" : "bg-white/3 border-white/10"}`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className={`font-medium text-sm ${h.isCurrent ? "text-amber-300" : "text-white/70"}`}>
+                      {h.name} {h.isCurrent && <span className="text-amber-400 text-xs ml-1">●當前</span>}
+                    </span>
+                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${h.label === "大吉" ? "bg-amber-500/20 text-amber-400" : h.label === "吉" ? "bg-emerald-500/20 text-emerald-400" : h.label === "平" ? "bg-blue-500/20 text-blue-400" : "bg-red-500/20 text-red-400"}`}>
+                      {h.label}
+                    </span>
+                  </div>
+                  <div className="text-white/40 text-[10px]">{h.displayTime}</div>
+                  <div className="mt-1.5">
+                    <div className="w-full bg-white/10 rounded-full h-1.5">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${h.score}%` }}
+                        transition={{ duration: 0.8, delay: i * 0.04 }}
+                        className={`h-full rounded-full ${h.score >= 80 ? "bg-gradient-to-r from-amber-500 to-orange-400" : h.score >= 60 ? "bg-gradient-to-r from-emerald-500 to-teal-400" : h.score >= 40 ? "bg-gradient-to-r from-blue-500 to-cyan-400" : "bg-gradient-to-r from-red-600 to-red-500"}`}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </SectionCard>
+        </div>
 
 
         </main>

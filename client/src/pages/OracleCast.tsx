@@ -514,6 +514,51 @@ export default function OracleCast() {
                   </motion.div>
                 )}
               </AnimatePresence>
+              {/* 擲筊結果即時顯示（在筊杯下方，不需滚動） */}
+              <AnimatePresence>
+                {phase === 'result' && castResult && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    className={`mb-4 px-5 py-4 rounded-2xl border-2 text-center ${
+                      castResult.result === 'sheng'
+                        ? 'border-amber-400/80 bg-amber-900/40 shadow-[0_0_30px_rgba(251,191,36,0.3)]'
+                        : castResult.result === 'xiao'
+                        ? 'border-orange-400/60 bg-orange-900/30 shadow-[0_0_20px_rgba(251,146,60,0.2)]'
+                        : 'border-slate-500/60 bg-slate-800/40'
+                    }`}
+                  >
+                    <motion.div
+                      className="text-4xl mb-2"
+                      animate={{ scale: [1, 1.3, 1] }}
+                      transition={{ duration: 0.5, repeat: 2 }}
+                    >
+                      {castResult.result === 'sheng' ? '🔴' : castResult.result === 'xiao' ? '🟤' : '⚫'}
+                    </motion.div>
+                    <div className={`text-2xl font-black tracking-widest mb-2 ${
+                      castResult.result === 'sheng' ? 'text-amber-300' :
+                      castResult.result === 'xiao' ? 'text-orange-300' : 'text-slate-400'
+                    }`}>
+                      {castResult.result === 'sheng' ? '✨ 聖杯' :
+                       castResult.result === 'xiao' ? '😄 笑杯' : '🌚 陰杯'}
+                    </div>
+                    <div className={`text-sm font-semibold mb-2 ${
+                      castResult.result === 'sheng' ? 'text-amber-200' :
+                      castResult.result === 'xiao' ? 'text-orange-200' : 'text-slate-400'
+                    }`}>
+                      {castResult.result === 'sheng' ? '神明應允，此事可行' :
+                       castResult.result === 'xiao' ? '神明在笑，請再思慮' : '時機未到，建議稍候'}
+                    </div>
+                    {castResult.interpretation?.summary && (
+                      <p className="text-xs text-white/60 leading-relaxed max-w-xs mx-auto">
+                        {castResult.interpretation.summary}
+                      </p>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* 三聖杯確認特效 */}
               <AnimatePresence>
@@ -577,10 +622,20 @@ export default function OracleCast() {
               <textarea
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="例如：我近期的事業發展是否順利？此項目是否值得投入？"
-                className="w-full bg-white/5 border border-border/50 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:border-amber-600/50 transition-colors leading-relaxed pr-10"
+                placeholder="例如：我近期的事業發展是否順利？此項目是否値得投入？"
+                className="w-full bg-white/5 border border-border/50 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/50 resize-none focus:outline-none focus:border-amber-600/50 transition-colors leading-relaxed pr-20"
                 rows={2}
               />
+              {/* 清除按鈕 */}
+              {query && (
+                <button
+                  onClick={() => setQuery('')}
+                  className="absolute right-12 bottom-3 w-7 h-7 rounded-full flex items-center justify-center bg-white/10 hover:bg-red-500/30 hover:text-red-400 transition-all"
+                  title="清除輸入"
+                >
+                  <span className="text-sm text-slate-400 leading-none">×</span>
+                </button>
+              )}
               <button
                 onClick={isListening ? stopListening : startListening}
                 className={`absolute right-3 bottom-3 w-7 h-7 rounded-full flex items-center justify-center transition-all ${
@@ -827,27 +882,7 @@ export default function OracleCast() {
             )}
           </AnimatePresence>
 
-          {/* ═══ 區塊五：快速功能入口 ═══ */}
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {[
-              { path: '/war-room', icon: '⚔️', label: '今日作戰室', desc: '流日分析' },
-              { path: '/profile', icon: '🔮', label: '命格身份證', desc: '八字紫微' },
-              { path: '/calendar', icon: '📅', label: '天命日曆', desc: '節氣宜忌' },
-              { path: '/weekly', icon: '📈', label: '命理週報', desc: 'ROI走勢' },
-              { path: '/lottery', icon: '🎰', label: '選號日誌', desc: '天命選號' },
-              { path: '/stats', icon: '📊', label: '擲筊統計', desc: '年度分析' },
-            ].map((item) => (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className="flex flex-col items-center gap-1 p-3 rounded-xl bg-white/5 border border-border/20 hover:bg-white/10 hover:border-amber-600/30 transition-all group"
-              >
-                <span className="text-lg group-hover:scale-110 transition-transform">{item.icon}</span>
-                <span className="text-[11px] font-medium text-slate-300 group-hover:text-amber-300 transition-colors">{item.label}</span>
-                <span className="text-[9px] text-muted-foreground/50">{item.desc}</span>
-              </button>
-            ))}
-          </div>
+
 
           {/* ═══ 區塊六：神諭歷史記錄（可展開） ═══ */}
           {history && history.length > 0 && (
