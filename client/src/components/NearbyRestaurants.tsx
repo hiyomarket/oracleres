@@ -3,6 +3,7 @@
  * 升級版：互動地圖標記（顏色依補運等級）、三維加權顯示、天氣五行加成
  */
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { trpc } from "@/lib/trpc";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapView } from "@/components/Map";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -355,6 +356,16 @@ interface Props {
 }
 
 export function NearbyRestaurants({ supplements, todayDirections, favorableElements, unfavorableElements, weatherEnabled, weatherElement }: Props) {
+  // 從後台動態讀取餐廳分類（fallback 到硬編碼預設值）
+  const { data: dbCategories } = trpc.adminConfig.getActiveRestaurantCategories.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000, // 5 分鐘快取
+    retry: false,
+  });
+  const categoryTags = useMemo(() => {
+    if (dbCategories && dbCategories.length > 0) return dbCategories;
+    return CATEGORY_TAGS;
+  }, [dbCategories]);
+
   // 依用戶命格動態計算五行匹配分數
   const elementMatchScore = useMemo(
     () => favorableElements && unfavorableElements
@@ -546,7 +557,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         const seen = new Set<string>();
           const activeCatId = filterCategoryRef.current;
         const activeCategoryTag = activeCatId
-          ? CATEGORY_TAGS.find((c) => c.id === activeCatId) ?? null
+          ? categoryTags.find((c) => c.id === activeCatId) ?? null
           : null;
         const activeElementFilter = filterElementRef.current;
         // 若有五行篩選，使用該五行的關鍵字；否則用今日補運五行
@@ -898,7 +909,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                   <div>
                     <p className="text-sm font-medium text-white/80 mb-2.5">🍽️ 餐廳分類（點選即搜尋）</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {CATEGORY_TAGS.map((cat) => {
+                      {categoryTags.map((cat) => {
                         const isActive = cat.id === "all" ? filterCategory === null : filterCategory === cat.id;
                         return (
                           <button

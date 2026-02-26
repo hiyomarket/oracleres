@@ -183,6 +183,20 @@
       "when": 1772120720627,
       "tag": "0025_icy_thunderbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1772124151454,
+      "tag": "0026_elite_night_thrasher",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "5",
+      "when": 1772124176036,
+      "tag": "0027_spooky_bromley",
+      "breakpoints": true
     }
   ]
 }

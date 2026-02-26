@@ -35,7 +35,13 @@ const NAV_ITEMS = [
     href: "/admin/business-hub",
     icon: "💰",
     label: "商業中心",
-    desc: "模塊、方案、行銷",
+    desc: "模塊、方案、行銀",
+  },
+  {
+    href: "/admin/logic-config",
+    icon: "⚙️",
+    label: "管理邏輯計算",
+    desc: "能量規則、手串、餐廳分類",
   },
 ];
 

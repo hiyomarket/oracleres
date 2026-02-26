@@ -1356,3 +1356,36 @@
 - [x] App.tsx 加入 /wardrobe 路由（WardrobePage）
 - [x] 撰寫 auraEngine.test.ts（13 項測試全部通過）
 - [x] 全部 125 項測試通過，TypeScript 零錯誤
+
+## 功能增強 v4.3 - 後台管理邏輯計算權限（2026-02-27）
+
+### 資料庫
+- [x] 新增 aura_engine_config 表（計算規則 key/value/description/category）
+- [x] 新增 restaurant_categories 表（分類 id/label/emoji/types/textSuffix/sortOrder/enabled）
+- [x] 新增 custom_bracelets 表（管理員自訂手串/配飾 DB）
+- [x] pnpm db:push 推送遷移
+
+### 後端 adminConfig router
+- [x] adminConfig.getAuraRules - 取得所有 aura 計算規則
+- [x] adminConfig.updateAuraRule - 更新單一規則值
+- [x] adminConfig.resetAuraRules - 重置為預設值
+- [x] adminConfig.getRestaurantCategories - 取得所有餐廳分類
+- [x] adminConfig.upsertRestaurantCategory - 新增/更新餐廳分類
+- [x] adminConfig.deleteRestaurantCategory - 刪除餐廳分類
+- [x] adminConfig.reorderRestaurantCategories - 調整排序
+- [x] adminConfig.getCustomBracelets - 取得自訂手串列表
+- [x] adminConfig.upsertCustomBracelet - 新增/更新手串
+- [x] adminConfig.deleteCustomBracelet - 刪除手串
+
+### 前端 AdminLogicConfig 頁面 (/admin/logic-config)
+- [x] AdminLayout 側邊欄新增「管理邏輯計算」入口
+- [x] 建立 AdminLogicConfig.tsx 頁面（三個 Tab：能量模擬器規則 / 手串配飾 / 餐廳分類）
+- [x] Tab 1：能量模擬器規則 - 各部位權重滑桿、加成比例設定、分數上下限
+- [x] Tab 2：手串配飾管理 - 新增/編輯/刪除手串，含五行/顏色/功能欄位
+- [x] Tab 3：餐廳分類管理 - 新增/編輯/刪除分類，拖曳排序，啟用/停用開關
+- [x] App.tsx 加入 /admin/logic-config 路由
+
+### 前台整合
+- [x] NearbyRestaurants 改為從 API 動態讀取分類（fallback 到硬編碼預設值）
+- [x] auraEngine simulateOutfit 改為從 DB 讀取 CATEGORY_WEIGHTS（fallback 已實作）（fallback 到預設值）
+- [x] getOutfitSimulatorData 手串列表合併 custom_bracelets（透過 syncBuiltinBracelets）

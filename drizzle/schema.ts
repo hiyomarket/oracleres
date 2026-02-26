@@ -575,3 +575,87 @@ export const wardrobeItems = mysqlTable("wardrobe_items", {
 });
 export type WardrobeItem = typeof wardrobeItems.$inferSelect;
 export type InsertWardrobeItem = typeof wardrobeItems.$inferInsert;
+
+// ============================================================
+// 後台管理：能量模擬器計算規則設定表
+// ============================================================
+export const auraEngineConfig = mysqlTable("aura_engine_config", {
+  id: int("id").autoincrement().primaryKey(),
+  // 規則分類：category_weights / boost_ratios / score_limits / innate_weights
+  category: varchar("category", { length: 50 }).notNull(),
+  // 規則鍵（例：upper, outer, direct_match_ratio）
+  configKey: varchar("configKey", { length: 80 }).notNull(),
+  // 規則值（JSON 字串，可存數字/物件）
+  configValue: text("configValue").notNull(),
+  // 顯示名稱（中文）
+  label: varchar("label", { length: 100 }).notNull(),
+  // 說明文字
+  description: varchar("description", { length: 300 }),
+  // 值類型：number / json / boolean
+  valueType: varchar("valueType", { length: 20 }).notNull().default("number"),
+  // 最小值（number 類型用）
+  minValue: decimal("minValue", { precision: 10, scale: 2 }),
+  // 最大值（number 類型用）
+  maxValue: decimal("maxValue", { precision: 10, scale: 2 }),
+  // 步進值（number 類型用）
+  step: decimal("step", { precision: 10, scale: 2 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AuraEngineConfig = typeof auraEngineConfig.$inferSelect;
+export type InsertAuraEngineConfig = typeof auraEngineConfig.$inferInsert;
+
+// ============================================================
+// 後台管理：餐廳分類設定表
+// ============================================================
+export const restaurantCategories = mysqlTable("restaurant_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  // 唯一識別碼（例：all, local_snack, brunch）
+  categoryId: varchar("categoryId", { length: 50 }).notNull().unique(),
+  // 顯示名稱（例：全部、小吃、早午餐）
+  label: varchar("label", { length: 50 }).notNull(),
+  // Emoji 圖示
+  emoji: varchar("emoji", { length: 10 }).notNull().default("🍽️"),
+  // Google Places API includedTypes（JSON 陣列字串）
+  types: text("types").notNull(),
+  // 搜尋文字後綴（例：小吃、早午餐）
+  textSuffix: varchar("textSuffix", { length: 50 }),
+  // 排序順序（越小越前面）
+  sortOrder: int("sortOrder").notNull().default(99),
+  // 是否啟用
+  enabled: tinyint("enabled").notNull().default(1),
+  // 是否為系統預設（系統預設不可刪除）
+  isDefault: tinyint("isDefault").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type RestaurantCategory = typeof restaurantCategories.$inferSelect;
+export type InsertRestaurantCategory = typeof restaurantCategories.$inferInsert;
+
+// ============================================================
+// 後台管理：自訂手串/配飾資料庫
+// ============================================================
+export const customBracelets = mysqlTable("custom_bracelets", {
+  id: int("id").autoincrement().primaryKey(),
+  // 手串代碼（例：HS-A、CUSTOM-01）
+  code: varchar("code", { length: 30 }).notNull().unique(),
+  // 名稱
+  name: varchar("name", { length: 100 }).notNull(),
+  // 主要五行屬性（木/火/土/金/水）
+  element: varchar("element", { length: 10 }).notNull(),
+  // 顏色描述
+  color: varchar("color", { length: 100 }).notNull(),
+  // 功能說明
+  functionDesc: varchar("functionDesc", { length: 200 }).notNull(),
+  // 戰術角色（JSON 物件，key 為情境，value 為角色說明）
+  tacticalRoles: text("tacticalRoles").notNull(),
+  // 是否啟用（停用後不出現在推薦清單）
+  enabled: tinyint("enabled").notNull().default(1),
+  // 排序
+  sortOrder: int("sortOrder").notNull().default(99),
+  // 是否為系統內建（內建不可刪除）
+  isBuiltin: tinyint("isBuiltin").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CustomBracelet = typeof customBracelets.$inferSelect;
+export type InsertCustomBracelet = typeof customBracelets.$inferInsert;

@@ -1,0 +1,13 @@
+{
+  "query": "SHOW TABLES LIKE 'aura%'; SHOW TABLES LIKE 'restaurant%'; SHOW TABLES LIKE 'custom%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW TABLES LIKE 'aura%'; SHOW TABLES LIKE 'restaurant%'; SHOW TABLES LIKE 'custom%';",
+  "rows": [
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (aura%)": "aura_engine_config"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_MLF7bLVZzzxdGTPVXTct3c (aura%)\naura_engine_config\n",
+  "stderr": "",
+  "execution_time_ms": 2132
+}

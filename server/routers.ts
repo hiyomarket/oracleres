@@ -3,6 +3,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { accountRouter } from "./routers/account";
 import { permissionsRouter } from "./routers/permissions";
 import { dashboardRouter } from "./routers/dashboard";
+import { adminConfigRouter } from "./routers/adminConfig";
 import { pointsRouter } from "./routers/points";
 import { businessHubRouter } from "./routers/businessHub";
 import { userGroupsRouter } from "./routers/userGroups";
@@ -41,6 +42,7 @@ export const appRouter = router({
   permissions: permissionsRouter,
   wardrobe: wardrobeRouter,
   dashboard: dashboardRouter,
+  adminConfig: adminConfigRouter,
   points: pointsRouter,
   businessHub: businessHubRouter,
   userGroups: userGroupsRouter,
