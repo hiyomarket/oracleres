@@ -19,6 +19,7 @@ import AdminUsers from "@/pages/AdminUsers";
 import AdminUserGroups from "@/pages/AdminUserGroups";
 import AdminBusinessHub from "@/pages/AdminBusinessHub";
 import OutfitPage from "@/pages/OutfitPage";
+import WardrobePage from "@/pages/WardrobePage";
 import DietPage from "@/pages/DietPage";
 import DivinationPage from "@/pages/DivinationPage";
 import LuckCyclePage from "@/pages/LuckCyclePage";
@@ -42,6 +43,7 @@ function Router() {
         <Route path={"/admin/user-groups"} component={AdminUserGroups} />
         <Route path={"/admin/business-hub"} component={AdminBusinessHub} />
         <Route path={"/outfit"} component={OutfitPage} />
+        <Route path={"/wardrobe"} component={WardrobePage} />
         <Route path={"/diet"} component={DietPage} />
         <Route path={"/divination"} component={DivinationPage} />
         <Route path={"/luck-cycle"} component={LuckCyclePage} />

@@ -546,3 +546,32 @@ export const userGroupMembers = mysqlTable("user_group_members", {
 }));
 export type UserGroupMember = typeof userGroupMembers.$inferSelect;
 export type InsertUserGroupMember = typeof userGroupMembers.$inferInsert;
+
+/**
+ * 虛擬衣櫥衣物資料表
+ * 儲存用戶的個人衣物，用於 AI 穿搭建議從衣櫥中挑選
+ */
+export const wardrobeItems = mysqlTable("wardrobe_items", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // 衣物名稱（例：白色棉質上衣、深藍牛仔褲）
+  name: varchar("name", { length: 100 }).notNull(),
+  // 衣物類型：upper（上半身）/ lower（下半身）/ shoes（鞋子）/ outer（外套）/ accessory（配件）
+  category: varchar("category", { length: 30 }).notNull().default("upper"),
+  // 主色系（例：白色、深藍、紅色）
+  color: varchar("color", { length: 50 }).notNull(),
+  // 五行屬性（木/火/土/金/水）
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  // 材質（例：棉、麻、絲、毛、化纖）
+  material: varchar("material", { length: 50 }),
+  // 場合標籤（工作/休閒/正式/運動/約會）
+  occasion: varchar("occasion", { length: 50 }),
+  // 衣物圖片 URL（S3）
+  imageUrl: text("imageUrl"),
+  // 備注
+  note: varchar("note", { length: 200 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type WardrobeItem = typeof wardrobeItems.$inferSelect;
+export type InsertWardrobeItem = typeof wardrobeItems.$inferInsert;

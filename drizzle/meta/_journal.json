@@ -176,6 +176,13 @@
       "when": 1772110786927,
       "tag": "0024_hard_whizzer",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1772120720627,
+      "tag": "0025_icy_thunderbolt",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 /**
- * 神諭穿搭・能量模擬器 V3.0
- * 時辰動態穿搭評分 + 五情境模式切換 + 12時辰能量時間軸
+ * 神諭穿搭・能量模擬器 V4.0
+ * 雙層計分模型 (Innate Aura + Outfit Boost) + 交互式虛擬人台 + 時辰動態 + 情境模式
  */
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,7 +10,11 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 import { OutfitModeSelector, type OutfitMode } from "@/components/OutfitModeSelector";
 import { OutfitHourlyTimeline } from "@/components/OutfitHourlyTimeline";
+import { AuraScoreGauge } from "@/components/outfit/AuraScoreGauge";
+import { InteractiveMannequin, type BodyPart, type OutfitSelection } from "@/components/outfit/InteractiveMannequin";
+import { WardrobeSelector } from "@/components/outfit/WardrobeSelector";
 import { toast } from "sonner";
+import { Link } from "wouter";
 
 // 五行顏色映射
 const WUXING_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
@@ -46,16 +50,57 @@ function SectionCard({ title, icon, children, className = "" }: {
   );
 }
 
-type ActiveTab = "outfit" | "bracelet";
+type ActiveTab = "simulator" | "outfit" | "bracelet";
+
+const DEFAULT_AURA_LEVEL = {
+  label: "計算中",
+  color: "#6B7280",
+  description: "正在讀取您的天命數據...",
+  emoji: "⏳",
+};
 
 export default function OutfitPage() {
   const { hasFeature, isAdmin } = usePermissions();
   const [selectedOffset, setSelectedOffset] = useState(0);
   const selectedDate = getTaiwanDateStr(selectedOffset);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("outfit");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("simulator");
   const [mode, setMode] = useState<OutfitMode>("default");
   const [selectedHourIndex, setSelectedHourIndex] = useState<number | null>(null);
   const prevModeRef = useRef<OutfitMode>(mode);
+
+  // 穿搭選擇狀態
+  const [outfitSelection, setOutfitSelection] = useState<OutfitSelection>({});
+  const [activePart, setActivePart] = useState<BodyPart | null>(null);
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [auraBoostResult, setAuraBoostResult] = useState<{
+    innateAura: number;
+    outfitBoost: number;
+    totalScore: number;
+    auraLevel: { label: string; color: string; description: string; emoji: string };
+    aiComment: string;
+    boostBreakdown: Array<{ category: string; color: string; wuxing: string; points: number; reason: string }>;
+  } | null>(null);
+
+  // V4.0 模擬器初始化資料
+  const { data: simulatorData, isLoading: simLoading } = trpc.warRoom.getOutfitSimulatorData.useQuery(
+    {
+      date: selectedDate,
+      hourBranchIndex: selectedHourIndex ?? undefined,
+      mode,
+    },
+    { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false }
+  );
+
+  // V3.0 時辰動態穿搭 API（用於穿搭建議 Tab）
+  const { data: outfitData, isLoading: outfitLoading, isFetching: outfitFetching } = trpc.warRoom.getOutfitByShichen.useQuery(
+    {
+      date: selectedDate,
+      hourBranchIndex: selectedHourIndex ?? undefined,
+      mode,
+    },
+    { staleTime: 0, refetchOnWindowFocus: false }
+  );
 
   // 原始 dailyReport（用於手串矩陣）
   const { data: dailyData, isLoading: dailyLoading } = trpc.warRoom.dailyReport.useQuery(
@@ -63,18 +108,17 @@ export default function OutfitPage() {
     { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false }
   );
 
-  // V3.0 時辰動態穿搭 API
-  const { data: outfitData, isLoading: outfitLoading, isFetching: outfitFetching } = trpc.warRoom.getOutfitByShichen.useQuery(
-    {
-      date: selectedDate,
-      hourBranchIndex: selectedHourIndex ?? undefined,
-      mode,
+  // simulateOutfit mutation
+  const simulateMutation = trpc.warRoom.simulateOutfit.useMutation({
+    onSuccess: (data) => {
+      setAuraBoostResult(data);
+      setIsSimulating(false);
     },
-    {
-      staleTime: 0,
-      refetchOnWindowFocus: false,
-    }
-  );
+    onError: (e) => {
+      toast.error("模擬失敗：" + e.message);
+      setIsSimulating(false);
+    },
+  });
 
   // 初始化：從 outfitData 取得當前時辰 index
   useEffect(() => {
@@ -87,6 +131,25 @@ export default function OutfitPage() {
   useEffect(() => {
     prevModeRef.current = mode;
   }, [mode]);
+
+  // 穿搭選擇改變時自動觸發模擬
+  useEffect(() => {
+    const hasAnySelection = Object.keys(outfitSelection).length > 0;
+    if (!hasAnySelection || !simulatorData) return;
+
+    const timer = setTimeout(() => {
+      setIsSimulating(true);
+      simulateMutation.mutate({
+        date: selectedDate,
+        hourBranchIndex: selectedHourIndex ?? undefined,
+        mode,
+        outfit: outfitSelection as Record<string, { color: string; wuxing?: string; name?: string }>,
+      });
+    }, 500); // 防抖 500ms
+
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outfitSelection, selectedDate, selectedHourIndex, mode]);
 
   // 手串佩戴記錄
   const utils = trpc.useUtils();
@@ -109,7 +172,22 @@ export default function OutfitPage() {
     toast.success(isWearing ? `✓ 已記錄佩戴 ${braceletName}` : `已取消 ${braceletName} 佩戴記錄`);
   };
 
+  function handlePartClick(part: BodyPart) {
+    setActivePart(part);
+    setSelectorOpen(true);
+  }
+
+  function handleSelectItem(part: BodyPart, item: { color: string; wuxing: string; name?: string }) {
+    setOutfitSelection(prev => ({ ...prev, [part]: item }));
+  }
+
+  function clearOutfit() {
+    setOutfitSelection({});
+    setAuraBoostResult(null);
+  }
+
   const TABS: { key: ActiveTab; label: string; icon: string }[] = [
+    { key: "simulator", label: "能量模擬器", icon: "⚡" },
     { key: "outfit", label: "穿搭建議", icon: "👗" },
     { key: "bracelet", label: "手串矩陣", icon: "📿" },
   ];
@@ -117,6 +195,12 @@ export default function OutfitPage() {
   const outfit = outfitData?.outfit;
   const targetHour = outfitData?.targetHour;
   const allHours = outfitData?.allHours ?? [];
+
+  // 計算顯示的 Aura 分數
+  const displayInnate = simulatorData?.innateAura ?? 0;
+  const displayBoost = auraBoostResult?.outfitBoost ?? 0;
+  const displayTotal = auraBoostResult?.totalScore ?? displayInnate;
+  const displayAuraLevel = auraBoostResult?.auraLevel ?? simulatorData?.auraLevel ?? DEFAULT_AURA_LEVEL;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -129,7 +213,7 @@ export default function OutfitPage() {
               <h1 className="text-2xl font-bold text-amber-300 flex items-center gap-2">
                 <span>✨</span> 神諭穿搭
               </h1>
-              <p className="text-white/40 text-sm mt-1">時辰動態能量模擬器 · 依命格與情境量身打造</p>
+              <p className="text-white/40 text-sm mt-1">Aura Score 雙層計分 · 時辰動態能量模擬器</p>
             </div>
             {targetHour && (
               <motion.div
@@ -140,12 +224,6 @@ export default function OutfitPage() {
               >
                 <div className="text-amber-400 font-bold text-lg">{targetHour.chineseName}</div>
                 <div className="text-white/40 text-xs">{targetHour.displayTime}</div>
-                <div className="text-white/30 text-xs mt-0.5">
-                  {targetHour.stem}{targetHour.branch} ·
-                  <span className={WUXING_COLORS[targetHour.stemElement]?.text ?? "text-white/50"}>
-                    {" "}{targetHour.stemElement}
-                  </span>
-                </div>
               </motion.div>
             )}
           </div>
@@ -159,7 +237,7 @@ export default function OutfitPage() {
             return (
               <button
                 key={offset}
-                onClick={() => { setSelectedOffset(offset); setSelectedHourIndex(null); }}
+                onClick={() => { setSelectedOffset(offset); setSelectedHourIndex(null); setOutfitSelection({}); setAuraBoostResult(null); }}
                 className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   selectedOffset === offset
                     ? "bg-amber-500 text-black"
@@ -174,7 +252,7 @@ export default function OutfitPage() {
 
         {/* ═══ 情境模式切換器 ═══ */}
         <div className="mb-5 rounded-2xl border border-white/10 bg-white/5 p-4">
-          <OutfitModeSelector value={mode} onChange={setMode} />
+          <OutfitModeSelector value={mode} onChange={(m) => { setMode(m); setAuraBoostResult(null); }} />
         </div>
 
         {/* ═══ 時辰能量時間軸 ═══ */}
@@ -182,7 +260,7 @@ export default function OutfitPage() {
           <OutfitHourlyTimeline
             hours={allHours}
             selectedIndex={selectedHourIndex ?? (targetHour?.branchIndex ?? 0)}
-            onSelect={(idx) => setSelectedHourIndex(idx)}
+            onSelect={(idx) => { setSelectedHourIndex(idx); setAuraBoostResult(null); }}
             isLoading={outfitLoading && allHours.length === 0}
           />
         </div>
@@ -204,8 +282,184 @@ export default function OutfitPage() {
           ))}
         </div>
 
-        {/* ═══ 穿搭建議 Tab ═══ */}
         <AnimatePresence mode="wait">
+
+          {/* ═══ 能量模擬器 Tab ═══ */}
+          {activeTab === "simulator" && (
+            <motion.div
+              key="simulator"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3 }}
+            >
+              {!isAdmin && !hasFeature("warroom_outfit") ? (
+                <FeatureLockedCard feature="warroom_outfit" />
+              ) : simLoading ? (
+                <div className="space-y-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="h-40 bg-white/5 rounded-2xl animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {/* ── Aura Score 儀表盤 ── */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/30 via-yellow-950/20 to-black/40 p-6"
+                  >
+                    <div className="text-center mb-2">
+                      <span className="text-xs text-amber-400/70 uppercase tracking-widest">本日天命 Aura Score</span>
+                    </div>
+                    <div className="flex justify-center">
+                      <AuraScoreGauge
+                        innateAura={displayInnate}
+                        outfitBoost={displayBoost}
+                        totalScore={displayTotal}
+                        auraLevel={displayAuraLevel}
+                        isAnimating={isSimulating}
+                      />
+                    </div>
+                    {simulatorData?.innateAnalysis && (
+                      <p className="text-center text-xs text-white/40 mt-3 leading-relaxed">
+                        {simulatorData.innateAnalysis.description}
+                      </p>
+                    )}
+                    {/* AI 點評 */}
+                    {auraBoostResult?.aiComment && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-4 p-3 rounded-xl bg-amber-900/20 border border-amber-500/30"
+                      >
+                        <p className="text-amber-200 text-xs leading-relaxed">
+                          <span className="text-amber-400 font-bold">✨ 神諭點評：</span>
+                          {auraBoostResult.aiComment}
+                        </p>
+                      </motion.div>
+                    )}
+                  </motion.div>
+
+                  {/* ── 交互式虛擬人台 ── */}
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">👗</span>
+                        <h3 className="text-sm font-semibold text-white/70 uppercase tracking-widest">
+                          互動穿搭模擬
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isSimulating && (
+                          <div className="flex items-center gap-1 text-amber-300 text-xs">
+                            <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                            計算中
+                          </div>
+                        )}
+                        {Object.keys(outfitSelection).length > 0 && (
+                          <button
+                            onClick={clearOutfit}
+                            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                          >
+                            清除全部
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-white/30 mb-4 text-center">
+                      點擊人台各部位選擇衣物，即時計算能量加成
+                    </p>
+
+                    <InteractiveMannequin
+                      selection={outfitSelection}
+                      onPartClick={handlePartClick}
+                      favorableElements={simulatorData?.favorableElements ?? []}
+                    />
+
+                    {/* 加成明細 */}
+                    {auraBoostResult && auraBoostResult.boostBreakdown.some(b => b.points > 0) && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="mt-4 space-y-1"
+                      >
+                        <div className="text-xs text-white/40 mb-2">穿搭加成明細：</div>
+                        {auraBoostResult.boostBreakdown
+                          .filter(b => b.points > 0)
+                          .map((b, i) => (
+                            <div key={i} className="flex items-center gap-2 text-xs">
+                              <span className="text-white/40">{b.category}</span>
+                              <span className="text-white/60">{b.color}</span>
+                              <span className="text-amber-400 font-bold ml-auto">+{b.points}</span>
+                            </div>
+                          ))}
+                        <div className="flex items-center justify-between text-xs border-t border-white/10 pt-2 mt-2">
+                          <span className="text-white/50">穿搭總加成</span>
+                          <span className="text-amber-400 font-bold">+{auraBoostResult.outfitBoost}</span>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+
+                  {/* ── 今日補運目標 ── */}
+                  {simulatorData?.innateAnalysis && (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span>🎯</span>
+                        <span className="text-xs font-semibold text-white/60 uppercase tracking-widest">今日補運目標</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {simulatorData.innateAnalysis.weakestElements.map((el) => (
+                          <div
+                            key={el}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium ${
+                              WUXING_COLORS[el]?.bg ?? "bg-gray-800"
+                            } ${WUXING_COLORS[el]?.border ?? "border-gray-600"}`}
+                          >
+                            <span className={`w-2 h-2 rounded-full ${WUXING_COLORS[el]?.dot ?? "bg-gray-500"}`} />
+                            <span className={WUXING_COLORS[el]?.text ?? "text-gray-300"}>
+                              {el}系能量不足 → 補{el}
+                            </span>
+                          </div>
+                        ))}
+                        {simulatorData.favorableElements.map((el) => (
+                          <div
+                            key={`fav-${el}`}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-500/30 bg-amber-900/20 text-xs"
+                          >
+                            <span className="text-amber-400">★</span>
+                            <span className="text-amber-300">{el}（喜用神）</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── 前往虛擬衣櫥 ── */}
+                  <Link href="/wardrobe">
+                    <a className="flex items-center justify-between p-4 rounded-2xl border border-dashed border-white/20 hover:border-amber-500/40 hover:bg-amber-900/10 transition-all group">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">👗</span>
+                        <div>
+                          <div className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">
+                            管理虛擬衣櫥
+                          </div>
+                          <div className="text-xs text-white/30">
+                            新增衣物，讓模擬器從您的衣櫥中挑選
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-white/30 group-hover:text-amber-400 transition-colors">→</span>
+                    </a>
+                  </Link>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* ═══ 穿搭建議 Tab ═══ */}
           {activeTab === "outfit" && (
             <motion.div
               key={`outfit-${mode}-${selectedHourIndex}`}
@@ -309,10 +563,6 @@ export default function OutfitPage() {
                           <span className={`font-bold ${WUXING_COLORS[outfitData.wuxing.weakestElement]?.text ?? "text-blue-300"}`}>
                             {outfitData.wuxing.weakestElement}
                           </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-white/40">時柱：</span>
-                          <span className="text-white/60">{targetHour.stem}{targetHour.branch}</span>
                         </div>
                       </div>
                     </motion.div>
@@ -474,6 +724,32 @@ export default function OutfitPage() {
           )}
         </AnimatePresence>
       </main>
+
+      {/* 衣物選擇器 Sheet */}
+      <WardrobeSelector
+        open={selectorOpen}
+        onClose={() => { setSelectorOpen(false); setActivePart(null); }}
+        part={activePart}
+        onSelect={handleSelectItem}
+        wardrobeItems={(simulatorData?.wardrobe ?? []) as Array<{
+          id: number; name: string; category: string; color: string; wuxing: string; occasion?: string | null;
+        }>}
+        bracelets={(simulatorData?.bracelets ?? []) as Array<{
+          code: string; name: string; element: string; color: string; function: string;
+        }>}
+        systemRecommendation={
+          activePart && simulatorData?.systemRecommendation
+            ? (() => {
+                const rec = (simulatorData.systemRecommendation as unknown as Record<string, unknown>)[activePart];
+                if (rec && typeof rec === 'object' && 'color' in rec && 'wuxing' in rec && 'reason' in rec) {
+                  return rec as { color: string; wuxing: string; reason: string };
+                }
+                return undefined;
+              })()
+            : undefined
+        }
+        favorableElements={simulatorData?.favorableElements ?? []}
+      />
     </div>
   );
 }

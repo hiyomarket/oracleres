@@ -1315,3 +1315,44 @@
 - [ ] /diet 餐廳分類關鍵字說明與優化
 - [ ] /diet 每次搜尋最多 20 筆
 - [ ] /diet 五行屬性篩選修復
+
+## 功能增強 v4.1 - 虛擬衣櫥 + AI 穿搭點評（2026-02-26）
+
+- [ ] 資料庫：新增 wardrobe_items 表（名稱/顏色/五行/類型/圖片URL）
+- [ ] 後端：wardrobe CRUD API（新增/列表/刪除衣物）
+- [ ] 後端：wardrobe.aiReview API（上傳照片 → AI 分析五行匹配度）
+- [ ] 前端：虛擬衣櫥管理頁面（/wardrobe）
+- [ ] 前端：OutfitPage 加入 AI 穿搭點評（上傳照片 + AI 分析結果）
+- [ ] 前端：OutfitPage 穿搭建議整合衣櫥單品（從用戶衣物中挑選最匹配的）
+
+## 功能增強 v4.2 - 神諭穿搭 V4.0 完整版（2026-02-27）
+
+### 後端：auraEngine.ts 雙層計分模型
+- [x] 建立 server/lib/auraEngine.ts（Innate Aura + Outfit Boost 雙層計分）
+- [x] calculateInnateAura：命格 × 流日 × 天氣 → 30~90 分天命底盤
+- [x] calculateOutfitBoost：穿搭五行 × 喜用神匹配 → 0~20 分穿搭加成
+- [x] calculateAuraScore：整合兩層計分，輸出完整 boostBreakdown
+- [x] getAuraLevel：分數映射等級（天命共振/能量充沛/運勢平穩/能量偏弱/需補強）
+- [x] ELEMENT_COLORS：五行顏色對應表（供前端 WardrobeSelector 使用）
+- [x] 後端：warRoom.getOutfitSimulatorData API（初始化模擬器資料）
+- [x] 後端：warRoom.simulateOutfit API（即時計算穿搭 Aura Score）
+
+### 前端：核心元件
+- [x] 建立 AuraScoreGauge.tsx（SVG 弧形儀表盤 + 動畫計數 + 雙層分數說明）
+- [x] 建立 InteractiveMannequin.tsx（交互式虛擬人台 + 各部位熱區點擊）
+- [x] 建立 WardrobeSelector.tsx（底部 Sheet + 系統推薦/衣櫥/探索顏色三 Tab）
+
+### 前端：OutfitPage V4.0 全面升級
+- [x] 新增「能量模擬器」Tab（AuraScoreGauge + InteractiveMannequin + WardrobeSelector）
+- [x] 保留原有「穿搭建議」Tab（V3.0 功能完整保留）
+- [x] 保留原有「手串矩陣」Tab（V3.0 功能完整保留）
+- [x] 穿搭選擇防抖自動觸發模擬（500ms debounce）
+- [x] AI 點評顯示（規則生成，不調用 LLM）
+- [x] 加成明細展示（boostBreakdown 列表）
+- [x] 今日補運目標展示（weakestElements + favorableElements）
+- [x] 前往虛擬衣櫥快捷連結
+
+### 路由 & 測試
+- [x] App.tsx 加入 /wardrobe 路由（WardrobePage）
+- [x] 撰寫 auraEngine.test.ts（13 項測試全部通過）
+- [x] 全部 125 項測試通過，TypeScript 零錯誤

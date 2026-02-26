@@ -6,6 +6,7 @@ import { dashboardRouter } from "./routers/dashboard";
 import { pointsRouter } from "./routers/points";
 import { businessHubRouter } from "./routers/businessHub";
 import { userGroupsRouter } from "./routers/userGroups";
+import { wardrobeRouter } from "./routers/wardrobe";
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -38,6 +39,7 @@ export const appRouter = router({
   system: systemRouter,
   account: accountRouter,
   permissions: permissionsRouter,
+  wardrobe: wardrobeRouter,
   dashboard: dashboardRouter,
   points: pointsRouter,
   businessHub: businessHubRouter,
@@ -2242,6 +2244,217 @@ ${profileDesc}
             isCurrent: h.isCurrentHour,
           })),
           favorableElements: ep.favorableElements,
+        };
+      }),
+
+    /**
+     * 神諭穿搭 V4.0 - 取得完整模擬器初始化資料
+     * 包含：Innate Aura 分數、系統推薦穿搭、虛擬衣櫥、手串列表
+     */
+    getOutfitSimulatorData: protectedProcedure
+      .input(z.object({
+        date: z.string().optional(),
+        hourBranchIndex: z.number().min(0).max(11).optional(),
+        mode: z.enum(['default', 'love', 'work', 'leisure', 'travel']).default('default'),
+        lat: z.number().optional(),
+        lon: z.number().optional(),
+      }))
+      .query(async ({ input, ctx }) => {
+        const { calculateInnateAura, getAuraLevel } = await import('./lib/auraEngine');
+        const ep = await getUserProfileForEngine(ctx.user.id);
+        const realNow = new Date();
+        const twNow = new Date(realNow.getTime() + 8 * 60 * 60 * 1000);
+        const dateStr = input.date ?? twNow.toISOString().split('T')[0];
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const dateObj = new Date(Date.UTC(year, month - 1, day, 4, 0, 0));
+        const dateInfo = getFullDateInfo(dateObj);
+        const { yearPillar, monthPillar, dayPillar } = dateInfo;
+
+        // 計算環境五行（含時辰）
+        const twHour = twNow.getUTCHours();
+        const currentBranchIndex = HOUR_BRANCHES.findIndex(h => {
+          if (h.startHour > h.endHour) return twHour >= h.startHour || twHour < h.endHour;
+          return twHour >= h.startHour && twHour < h.endHour;
+        });
+        const targetBranchIndex = input.hourBranchIndex ?? (currentBranchIndex >= 0 ? currentBranchIndex : 0);
+        const targetBranch = HOUR_BRANCHES[targetBranchIndex];
+        const hourStem = getHourStem(dayPillar.stem, targetBranchIndex);
+
+        const envBase = calculateEnvironmentElements(
+          yearPillar.stem, yearPillar.branch,
+          monthPillar.stem, monthPillar.branch,
+          dayPillar.stem, dayPillar.branch,
+        );
+        const hourStemEl = STEM_ELEMENT[hourStem] as keyof typeof envBase;
+        const hourBranchEl = targetBranch.branchElement as keyof typeof envBase;
+        const envAdj = { ...envBase };
+        if (hourStemEl && hourStemEl in envAdj) envAdj[hourStemEl] = Math.min(1, envAdj[hourStemEl] + 0.08);
+        if (hourBranchEl && hourBranchEl in envAdj) envAdj[hourBranchEl] = Math.min(1, envAdj[hourBranchEl] + 0.07);
+        const envTotal = Object.values(envAdj).reduce((a, b) => a + b, 0);
+        const normalizedEnv = {
+          木: envAdj.木 / envTotal,
+          火: envAdj.火 / envTotal,
+          土: envAdj.土 / envTotal,
+          金: envAdj.金 / envTotal,
+          水: envAdj.水 / envTotal,
+        };
+
+        // 天氣五行
+        let weatherData: { wuxingRatio?: typeof normalizedEnv } | undefined;
+        if (input.lat && input.lon) {
+          try {
+            const { getCurrentWeatherWuxing } = await import('./lib/weatherEngine');
+            const ww = await getCurrentWeatherWuxing(input.lat, input.lon);
+            if (ww) weatherData = { wuxingRatio: { 木: ww.木, 火: ww.火, 土: ww.土, 金: ww.金, 水: ww.水 } };
+          } catch { /* ignore */ }
+        }
+
+        // 計算 Innate Aura
+        const innateAnalysis = calculateInnateAura(
+          ep.natalElementRatio,
+          ep.favorableElements,
+          ep.unfavorableElements,
+          normalizedEnv,
+          weatherData,
+        );
+        const auraLevel = getAuraLevel(innateAnalysis.score);
+
+        // 取得虛擬衣櫥
+        const db = await getDb();
+        const { wardrobeItems } = await import('../drizzle/schema');
+        const wardrobe = db ? await db.select().from(wardrobeItems).where(eq(wardrobeItems.userId, ctx.user.id)) : [];
+
+        // 取得手串列表（從 wuxingEngine）
+        const { BRACELET_DB } = await import('./lib/wuxingEngine');
+        const bracelets = BRACELET_DB.map(b => ({
+          code: b.code,
+          name: b.name,
+          element: b.element,
+          color: b.color,
+          function: b.function,
+        }));
+
+        // 系統推薦穿搭（基於今日短板五行）
+        const { ELEMENT_COLORS } = await import('./lib/auraEngine');
+        const primaryTarget = innateAnalysis.weakestElements[0] ?? ep.favorableElements[0] ?? '火';
+        const secondaryTarget = innateAnalysis.weakestElements[1] ?? ep.favorableElements[1] ?? '土';
+        const systemRecommendation = {
+          upper: { color: ELEMENT_COLORS[primaryTarget]?.[0] ?? '紅色', wuxing: primaryTarget, reason: `上衣補${primaryTarget}能量` },
+          lower: { color: ELEMENT_COLORS[secondaryTarget]?.[0] ?? '黃色', wuxing: secondaryTarget, reason: `下身補${secondaryTarget}能量` },
+          shoes: { color: ELEMENT_COLORS[primaryTarget]?.[1] ?? '橘色', wuxing: primaryTarget, reason: `鞋子強化${primaryTarget}能量` },
+          bracelet: bracelets.find(b => b.element === primaryTarget) ?? bracelets[0],
+        };
+
+        return {
+          innateAura: innateAnalysis.score,
+          auraLevel,
+          innateAnalysis,
+          systemRecommendation,
+          wardrobe,
+          bracelets,
+          targetHour: {
+            branchIndex: targetBranchIndex,
+            branch: targetBranch.branch,
+            chineseName: targetBranch.chineseName,
+            displayTime: targetBranch.displayTime,
+          },
+          mode: input.mode,
+          favorableElements: ep.favorableElements,
+          unfavorableElements: ep.unfavorableElements,
+        };
+      }),
+
+    /**
+     * 神諭穿搭 V4.0 - 即時模擬穿搭組合，計算 Aura Score
+     */
+    simulateOutfit: protectedProcedure
+      .input(z.object({
+        date: z.string().optional(),
+        hourBranchIndex: z.number().min(0).max(11).optional(),
+        mode: z.enum(['default', 'love', 'work', 'leisure', 'travel']).default('default'),
+        outfit: z.object({
+          upper: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
+          lower: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
+          shoes: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
+          outer: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
+          accessory: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
+          bracelet: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
+        }),
+        lat: z.number().optional(),
+        lon: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { calculateAuraScore, getAuraLevel } = await import('./lib/auraEngine');
+        const ep = await getUserProfileForEngine(ctx.user.id);
+        const realNow = new Date();
+        const twNow = new Date(realNow.getTime() + 8 * 60 * 60 * 1000);
+        const dateStr = input.date ?? twNow.toISOString().split('T')[0];
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const dateObj = new Date(Date.UTC(year, month - 1, day, 4, 0, 0));
+        const dateInfo = getFullDateInfo(dateObj);
+        const { yearPillar, monthPillar, dayPillar } = dateInfo;
+
+        const twHour = twNow.getUTCHours();
+        const currentBranchIndex = HOUR_BRANCHES.findIndex(h => {
+          if (h.startHour > h.endHour) return twHour >= h.startHour || twHour < h.endHour;
+          return twHour >= h.startHour && twHour < h.endHour;
+        });
+        const targetBranchIndex = input.hourBranchIndex ?? (currentBranchIndex >= 0 ? currentBranchIndex : 0);
+        const targetBranch = HOUR_BRANCHES[targetBranchIndex];
+        const hourStem = getHourStem(dayPillar.stem, targetBranchIndex);
+
+        const envBase = calculateEnvironmentElements(
+          yearPillar.stem, yearPillar.branch,
+          monthPillar.stem, monthPillar.branch,
+          dayPillar.stem, dayPillar.branch,
+        );
+        const hourStemEl = STEM_ELEMENT[hourStem] as keyof typeof envBase;
+        const hourBranchEl = targetBranch.branchElement as keyof typeof envBase;
+        const envAdj = { ...envBase };
+        if (hourStemEl && hourStemEl in envAdj) envAdj[hourStemEl] = Math.min(1, envAdj[hourStemEl] + 0.08);
+        if (hourBranchEl && hourBranchEl in envAdj) envAdj[hourBranchEl] = Math.min(1, envAdj[hourBranchEl] + 0.07);
+        const envTotal = Object.values(envAdj).reduce((a, b) => a + b, 0);
+        const normalizedEnv = {
+          木: envAdj.木 / envTotal,
+          火: envAdj.火 / envTotal,
+          土: envAdj.土 / envTotal,
+          金: envAdj.金 / envTotal,
+          水: envAdj.水 / envTotal,
+        };
+
+        let weatherData: { wuxingRatio?: typeof normalizedEnv } | undefined;
+        if (input.lat && input.lon) {
+          try {
+            const { getCurrentWeatherWuxing } = await import('./lib/weatherEngine');
+            const ww = await getCurrentWeatherWuxing(input.lat, input.lon);
+            if (ww) weatherData = { wuxingRatio: { 木: ww.木, 火: ww.火, 土: ww.土, 金: ww.金, 水: ww.水 } };
+          } catch { /* ignore */ }
+        }
+
+        const result = calculateAuraScore(
+          ep.natalElementRatio,
+          ep.favorableElements,
+          ep.unfavorableElements,
+          normalizedEnv,
+          input.outfit as import('./lib/auraEngine').OutfitCombination,
+          weatherData,
+        );
+
+        const auraLevel = getAuraLevel(result.totalScore);
+
+        // 生成 AI 點評（簡短版，不調用 LLM，用規則生成）
+        const topBoost = result.boostBreakdown
+          .filter(b => b.points > 0)
+          .sort((a, b) => b.points - a.points)
+          .slice(0, 2);
+        const aiComment = topBoost.length > 0
+          ? `今日穿搭能量加成 +${result.outfitBoost} 分！${topBoost.map(b => b.reason).join('；')}。${auraLevel.description}`
+          : `今日穿搭能量中性，建議加入${result.innateAnalysis.weakestElements[0] ?? '火'}系顏色提升能量共振。`;
+
+        return {
+          ...result,
+          auraLevel,
+          aiComment,
         };
       }),
   }),
