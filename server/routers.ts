@@ -13,10 +13,10 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { castOracle } from "./lib/oracleAlgorithm";
-import { getFullDateInfo, getTaiwanHour, getTaiwanDate, getYearPillar } from "./lib/lunarCalendar";
+import { getFullDateInfo, getTaiwanHour, getTaiwanDate, getYearPillar, STEM_ELEMENT } from "./lib/lunarCalendar";
 import { solarToLunarByYMD } from "./lib/lunarConverter";
 import { getMoonPhase } from "./lib/moonPhase";
-import { getAllHourEnergies, getCurrentHourEnergy, getBestHours, getWorstHours, getAllHourEnergiesDynamic, getCurrentHourEnergyDynamic } from "./lib/hourlyEnergy";
+import { getAllHourEnergies, getCurrentHourEnergy, getBestHours, getWorstHours, getAllHourEnergiesDynamic, getCurrentHourEnergyDynamic, HOUR_BRANCHES, getHourStem } from "./lib/hourlyEnergy";
 import { getDb, saveOracleSession, getOracleHistory, getOracleStats, saveLotterySession, getLotteryHistory, getLotteryStats, getUserProfileForEngine } from "./db";
 import { userProfiles, userSubscriptions, plans, users, pointsTransactions } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
@@ -2097,9 +2097,155 @@ ${profileDesc}
         const success = await notifyOwner({ title, content });
         return { success };
       }),
-  }),
 
-  // ── 手串佩戴記錄 ──────────────────────────────────────────────────────────
+    /**
+     * 神諭穿搭 V3.0 - 時辰動態穿搭建議
+     * 支援指定時辰（預覽未來時辰）+ 五種情境模式
+     */
+    getOutfitByShichen: protectedProcedure
+      .input(z.object({
+        date: z.string().optional(), // YYYY-MM-DD
+        hourBranchIndex: z.number().min(0).max(11).optional(), // 0=子時...11=亥時，不傳則用當前時辰
+        mode: z.enum(['default', 'love', 'work', 'leisure', 'travel']).default('default'),
+        lat: z.number().optional(),
+        lon: z.number().optional(),
+      }))
+      .query(async ({ input, ctx }) => {
+        const ep = await getUserProfileForEngine(ctx.user.id);
+        const realNow = new Date();
+        const twNow = new Date(realNow.getTime() + 8 * 60 * 60 * 1000);
+        const dateStr = input.date ?? twNow.toISOString().split('T')[0];
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const dateObj = new Date(Date.UTC(year, month - 1, day, 4, 0, 0));
+        const dateInfo = getFullDateInfo(dateObj);
+        const { yearPillar, monthPillar, dayPillar } = dateInfo;
+
+        // 取得目標時辰
+        const twHour = twNow.getUTCHours();
+        const currentBranchIndex = HOUR_BRANCHES.findIndex(h => {
+          if (h.startHour > h.endHour) return twHour >= h.startHour || twHour < h.endHour;
+          return twHour >= h.startHour && twHour < h.endHour;
+        });
+        const targetBranchIndex = input.hourBranchIndex ?? (currentBranchIndex >= 0 ? currentBranchIndex : 0);
+        const targetBranch = HOUR_BRANCHES[targetBranchIndex];
+        const hourStem = getHourStem(dayPillar.stem, targetBranchIndex);
+
+        // 計算包含時辰的環境五行（六柱：年月日時）
+        const envWithHour = calculateEnvironmentElements(
+          yearPillar.stem, yearPillar.branch,
+          monthPillar.stem, monthPillar.branch,
+          dayPillar.stem, dayPillar.branch,
+        );
+        // 加入時柱五行加成（時辰佔環境權重 15%）
+        const hourStemEl = STEM_ELEMENT[hourStem] as keyof typeof envWithHour;
+        const hourBranchEl = targetBranch.branchElement as keyof typeof envWithHour;
+        const envAdjusted = { ...envWithHour };
+        if (hourStemEl && hourStemEl in envAdjusted) {
+          envAdjusted[hourStemEl] = Math.min(1, envAdjusted[hourStemEl] + 0.08);
+        }
+        if (hourBranchEl && hourBranchEl in envAdjusted) {
+          envAdjusted[hourBranchEl] = Math.min(1, envAdjusted[hourBranchEl] + 0.07);
+        }
+        // 正規化
+        const envTotal = Object.values(envAdjusted).reduce((a, b) => a + b, 0);
+        const normalizedEnv: typeof envWithHour = {
+          木: envAdjusted.木 / envTotal,
+          火: envAdjusted.火 / envTotal,
+          土: envAdjusted.土 / envTotal,
+          金: envAdjusted.金 / envTotal,
+          水: envAdjusted.水 / envTotal,
+        };
+
+        // 天氣五行（可選）
+        let weatherRatio: typeof envWithHour | undefined;
+        if (input.lat && input.lon) {
+          try {
+            const { getCurrentWeatherWuxing } = await import('./lib/weatherEngine');
+            const ww = await getCurrentWeatherWuxing(input.lat, input.lon);
+            if (ww) weatherRatio = { 木: ww.木, 火: ww.火, 土: ww.土, 金: ww.金, 水: ww.水 };
+          } catch { /* ignore */ }
+        }
+
+        const wuxingResult = calculateWeightedElements(normalizedEnv, ep.natalElementRatio, weatherRatio);
+
+        // 根據情境模式調整補運優先級
+        const modeSupplementMap: Record<string, string[]> = {
+          default: ep.favorableElements,
+          love:    ['水', '木', '火', '土', '金'], // 水木主感情流動
+          work:    ['金', '火', '土', '木', '水'], // 金主決斷，火主創意
+          leisure: ['木', '土', '水', '火', '金'], // 木主放鬆，土主穩定
+          travel:  ['火', '木', '金', '水', '土'], // 火主活力，木主生長
+        };
+        // 戀愛/工作模式的優先級與用戶喜用神交叉加權
+        const modeBase = modeSupplementMap[input.mode] ?? ep.favorableElements;
+        const blendedPriority = input.mode === 'default'
+          ? ep.favorableElements
+          : [
+              ...ep.favorableElements.filter(el => modeBase.includes(el)),
+              ...modeBase.filter(el => !ep.favorableElements.includes(el)),
+              ...ep.favorableElements.filter(el => !modeBase.includes(el)),
+            ];
+
+        const outfit = generateOutfitAdviceV9(wuxingResult, blendedPriority);
+
+        // 時辰能量分數（用於前端時間軸顯示）
+        const hourDynamicProfile: import('./lib/hourlyEnergy').DynamicHourProfile = {
+          hourElementScores: Object.fromEntries(
+            ['火', '土', '金', '水', '木'].map(el => [
+              el,
+              ep.favorableElements.includes(el) ? 25
+                : ep.unfavorableElements.includes(el) ? -20
+                : 5
+            ])
+          ),
+          specialHourBonus: {},
+        };
+        const allHours = getAllHourEnergiesDynamic(dayPillar.stem, hourDynamicProfile);
+
+        // 情境模式文字說明
+        const modeLabels: Record<string, { label: string; icon: string; desc: string }> = {
+          default: { label: '天命模式', icon: '☯️', desc: '依您的命格喜用神優化，全方位能量補強' },
+          love:    { label: '戀愛模式', icon: '💕', desc: '強化桃花能量，增進人際吸引力與感情運勢' },
+          work:    { label: '工作模式', icon: '⚡', desc: '強化決斷力與創意，提升職場競爭力' },
+          leisure: { label: '休閒模式', icon: '🌿', desc: '放鬆身心，補充木土能量，享受當下' },
+          travel:  { label: '出遊模式', icon: '🌟', desc: '活力滿點，火木能量加持，開拓視野' },
+        };
+
+        return {
+          outfit,
+          targetHour: {
+            branchIndex: targetBranchIndex,
+            branch: targetBranch.branch,
+            chineseName: targetBranch.chineseName,
+            displayTime: targetBranch.displayTime,
+            stem: hourStem,
+            stemElement: STEM_ELEMENT[hourStem] ?? '',
+            branchElement: targetBranch.branchElement,
+            isCurrent: targetBranchIndex === (currentBranchIndex >= 0 ? currentBranchIndex : 0),
+          },
+          mode: input.mode,
+          modeInfo: modeLabels[input.mode] ?? modeLabels.default,
+          wuxing: {
+            weighted: wuxingResult.weighted,
+            dominantElement: wuxingResult.dominantElement,
+            weakestElement: wuxingResult.weakestElement,
+          },
+          allHours: allHours.map(h => ({
+            branchIndex: HOUR_BRANCHES.findIndex(b => b.branch === h.branch),
+            branch: h.branch,
+            chineseName: h.chineseName,
+            displayTime: h.displayTime,
+            stem: h.stem,
+            score: h.energyScore,
+            level: h.energyLevel,
+            label: h.energyLabel,
+            isCurrent: h.isCurrentHour,
+          })),
+          favorableElements: ep.favorableElements,
+        };
+      }),
+  }),
+  // ── 手串佩戴記錄 ───────────────────────────────────────────────────────────
   /**
    * 命格分析 - 流年流月分析
    */

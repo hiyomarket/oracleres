@@ -1,23 +1,24 @@
 /**
- * 補運穿搭頁面（/outfit）
- * 獨立模塊頁面：今日五行加權總覽 + 穿搭建議 + 飲食建議 + 手串矩陣
+ * 神諭穿搭・能量模擬器 V3.0
+ * 時辰動態穿搭評分 + 五情境模式切換 + 12時辰能量時間軸
  */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { SharedNav } from "@/components/SharedNav";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
-import { NearbyRestaurants } from "@/components/NearbyRestaurants";
+import { OutfitModeSelector, type OutfitMode } from "@/components/OutfitModeSelector";
+import { OutfitHourlyTimeline } from "@/components/OutfitHourlyTimeline";
 import { toast } from "sonner";
 
 // 五行顏色映射
-const WUXING_COLORS: Record<string, { bg: string; border: string; text: string }> = {
-  火: { bg: "bg-red-950/40", border: "border-red-500/50", text: "text-red-400" },
-  土: { bg: "bg-amber-950/40", border: "border-amber-500/50", text: "text-amber-400" },
-  金: { bg: "bg-slate-800/40", border: "border-slate-400/50", text: "text-slate-300" },
-  水: { bg: "bg-blue-950/40", border: "border-blue-500/50", text: "text-blue-400" },
-  木: { bg: "bg-emerald-950/40", border: "border-emerald-500/50", text: "text-emerald-400" },
+const WUXING_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
+  火: { bg: "bg-red-950/40", border: "border-red-500/50", text: "text-red-400", dot: "bg-red-500" },
+  土: { bg: "bg-amber-950/40", border: "border-amber-500/50", text: "text-amber-400", dot: "bg-amber-500" },
+  金: { bg: "bg-slate-800/40", border: "border-slate-400/50", text: "text-slate-300", dot: "bg-slate-400" },
+  水: { bg: "bg-blue-950/40", border: "border-blue-500/50", text: "text-blue-400", dot: "bg-blue-500" },
+  木: { bg: "bg-emerald-950/40", border: "border-emerald-500/50", text: "text-emerald-400", dot: "bg-emerald-500" },
 };
 
 function getTaiwanDateStr(offsetDays = 0): string {
@@ -26,7 +27,9 @@ function getTaiwanDateStr(offsetDays = 0): string {
   return new Date(twMs).toISOString().split("T")[0];
 }
 
-function SectionCard({ title, icon, children, className = "" }: { title: string; icon: string; children: React.ReactNode; className?: string }) {
+function SectionCard({ title, icon, children, className = "" }: {
+  title: string; icon: string; children: React.ReactNode; className?: string;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -49,13 +52,41 @@ export default function OutfitPage() {
   const { hasFeature, isAdmin } = usePermissions();
   const [selectedOffset, setSelectedOffset] = useState(0);
   const selectedDate = getTaiwanDateStr(selectedOffset);
-  const todayDate = getTaiwanDateStr(0);
   const [activeTab, setActiveTab] = useState<ActiveTab>("outfit");
+  const [mode, setMode] = useState<OutfitMode>("default");
+  const [selectedHourIndex, setSelectedHourIndex] = useState<number | null>(null);
+  const prevModeRef = useRef<OutfitMode>(mode);
 
-  const { data, isLoading } = trpc.warRoom.dailyReport.useQuery(
+  // 原始 dailyReport（用於手串矩陣）
+  const { data: dailyData, isLoading: dailyLoading } = trpc.warRoom.dailyReport.useQuery(
     { date: selectedDate },
     { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false }
   );
+
+  // V3.0 時辰動態穿搭 API
+  const { data: outfitData, isLoading: outfitLoading, isFetching: outfitFetching } = trpc.warRoom.getOutfitByShichen.useQuery(
+    {
+      date: selectedDate,
+      hourBranchIndex: selectedHourIndex ?? undefined,
+      mode,
+    },
+    {
+      staleTime: 0,
+      refetchOnWindowFocus: false,
+    }
+  );
+
+  // 初始化：從 outfitData 取得當前時辰 index
+  useEffect(() => {
+    if (outfitData && selectedHourIndex === null) {
+      setSelectedHourIndex(outfitData.targetHour.branchIndex);
+    }
+  }, [outfitData, selectedHourIndex]);
+
+  // 模式切換時記錄
+  useEffect(() => {
+    prevModeRef.current = mode;
+  }, [mode]);
 
   // 手串佩戴記錄
   const utils = trpc.useUtils();
@@ -78,10 +109,14 @@ export default function OutfitPage() {
     toast.success(isWearing ? `✓ 已記錄佩戴 ${braceletName}` : `已取消 ${braceletName} 佩戴記錄`);
   };
 
-  const TABS: { key: ActiveTab; label: string; icon: string; feature?: string }[] = [
-    { key: "outfit", label: "穿搭建議", icon: "👗", feature: "warroom_outfit" },
-    { key: "bracelet", label: "手串矩陣", icon: "📿", feature: "warroom_outfit" },
+  const TABS: { key: ActiveTab; label: string; icon: string }[] = [
+    { key: "outfit", label: "穿搭建議", icon: "👗" },
+    { key: "bracelet", label: "手串矩陣", icon: "📿" },
   ];
+
+  const outfit = outfitData?.outfit;
+  const targetHour = outfitData?.targetHour;
+  const allHours = outfitData?.allHours ?? [];
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -89,10 +124,31 @@ export default function OutfitPage() {
       <main className="max-w-2xl mx-auto px-4 py-6">
         {/* 頁面標題 */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <h1 className="text-2xl font-bold text-amber-300 flex items-center gap-2">
-            <span>✨</span> 補運穿搭
-          </h1>
-          <p className="text-white/40 text-sm mt-1">以今日五行能量，為你量身打造穿搭策略</p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-amber-300 flex items-center gap-2">
+                <span>✨</span> 神諭穿搭
+              </h1>
+              <p className="text-white/40 text-sm mt-1">時辰動態能量模擬器 · 依命格與情境量身打造</p>
+            </div>
+            {targetHour && (
+              <motion.div
+                key={targetHour.chineseName}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-right"
+              >
+                <div className="text-amber-400 font-bold text-lg">{targetHour.chineseName}</div>
+                <div className="text-white/40 text-xs">{targetHour.displayTime}</div>
+                <div className="text-white/30 text-xs mt-0.5">
+                  {targetHour.stem}{targetHour.branch} ·
+                  <span className={WUXING_COLORS[targetHour.stemElement]?.text ?? "text-white/50"}>
+                    {" "}{targetHour.stemElement}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+          </div>
         </motion.div>
 
         {/* 日期選擇器 */}
@@ -103,7 +159,7 @@ export default function OutfitPage() {
             return (
               <button
                 key={offset}
-                onClick={() => setSelectedOffset(offset)}
+                onClick={() => { setSelectedOffset(offset); setSelectedHourIndex(null); }}
                 className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   selectedOffset === offset
                     ? "bg-amber-500 text-black"
@@ -114,6 +170,21 @@ export default function OutfitPage() {
               </button>
             );
           })}
+        </div>
+
+        {/* ═══ 情境模式切換器 ═══ */}
+        <div className="mb-5 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <OutfitModeSelector value={mode} onChange={setMode} />
+        </div>
+
+        {/* ═══ 時辰能量時間軸 ═══ */}
+        <div className="mb-5 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <OutfitHourlyTimeline
+            hours={allHours}
+            selectedIndex={selectedHourIndex ?? (targetHour?.branchIndex ?? 0)}
+            onSelect={(idx) => setSelectedHourIndex(idx)}
+            isLoading={outfitLoading && allHours.length === 0}
+          />
         </div>
 
         {/* Tab 選擇 */}
@@ -133,205 +204,275 @@ export default function OutfitPage() {
           ))}
         </div>
 
-        {/* 內容區 */}
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2].map((i) => (
-              <div key={i} className="h-40 bg-white/5 rounded-2xl animate-pulse" />
-            ))}
-          </div>
-        ) : !data ? (
-          <div className="text-center py-12 text-white/30">無法載入今日能量資料</div>
-        ) : (
-          <>
-        {/* ═══ 五行加權總覽（常駐顯示）═══ */}
-        {data && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
-            <SectionCard title="今日五行加權總覽" icon="⚖️">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-white/40 border-b border-white/10">
-                      <th className="text-left py-2 pr-3">五行</th>
-                      <th className="text-right py-2 px-2">本命</th>
-                      <th className="text-right py-2 px-2">環境</th>
-                      <th className="text-right py-2 px-2 font-bold text-amber-300/80">加權</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.wuxing && ["木","火","土","金","水"].map((el) => {
-                      const natal = data.wuxing.natal?.[el as keyof typeof data.wuxing.natal] ?? 0;
-                      const env = data.wuxing.environment?.[el as keyof typeof data.wuxing.environment] ?? 0;
-                      const w = data.wuxing.weighted?.[el as keyof typeof data.wuxing.weighted] ?? 0;
-                      const isStrong = el === data.wuxing.dominantElement;
-                      const isWeak = el === data.wuxing.weakestElement;
-                      return (
-                        <tr key={el} className={`border-b border-white/5 ${isStrong ? "bg-amber-500/5" : isWeak ? "bg-blue-500/5" : ""}`}>
-                          <td className="py-2 pr-3 font-semibold text-white/80">{el}</td>
-                          <td className="text-right py-2 px-2 text-white/50">{(natal * 100).toFixed(0)}%</td>
-                          <td className="text-right py-2 px-2 text-white/50">{(env * 100).toFixed(0)}%</td>
-                          <td className={`text-right py-2 px-2 font-bold ${isStrong ? "text-amber-400" : isWeak ? "text-blue-400" : "text-white/70"}`}>
-                            {(w * 100).toFixed(0)}%
-                            {isStrong && <span className="ml-1 text-amber-500">↑</span>}
-                            {isWeak && <span className="ml-1 text-blue-500">↓</span>}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              {data.wuxing?.coreContradiction && (
-                <div className="mt-3 flex items-start gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                  <span className="text-amber-400 text-sm">⚡</span>
-                  <span className="text-amber-300/80 text-xs ml-2">{data.wuxing.coreContradiction}</span>
+        {/* ═══ 穿搭建議 Tab ═══ */}
+        <AnimatePresence mode="wait">
+          {activeTab === "outfit" && (
+            <motion.div
+              key={`outfit-${mode}-${selectedHourIndex}`}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3 }}
+            >
+              {!isAdmin && !hasFeature("warroom_outfit") ? (
+                <FeatureLockedCard feature="warroom_outfit" />
+              ) : outfitLoading && !outfitData ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-32 bg-white/5 rounded-2xl animate-pulse" />
+                  ))}
+                </div>
+              ) : !outfit ? (
+                <div className="text-center py-12 text-white/30">無法載入穿搭建議</div>
+              ) : (
+                <div className="space-y-4">
+                  {/* 五行加權總覽 */}
+                  {dailyData && (
+                    <SectionCard title="今日五行加權總覽" icon="⚖️">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="text-white/40 border-b border-white/10">
+                              <th className="text-left py-2 pr-3">五行</th>
+                              <th className="text-right py-2 px-2">本命</th>
+                              <th className="text-right py-2 px-2">環境</th>
+                              <th className="text-right py-2 px-2 font-bold text-amber-300/80">加權</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {dailyData.wuxing && ["木","火","土","金","水"].map((el) => {
+                              const natal = dailyData.wuxing.natal?.[el as keyof typeof dailyData.wuxing.natal] ?? 0;
+                              const env = dailyData.wuxing.environment?.[el as keyof typeof dailyData.wuxing.environment] ?? 0;
+                              const w = dailyData.wuxing.weighted?.[el as keyof typeof dailyData.wuxing.weighted] ?? 0;
+                              const isStrong = el === dailyData.wuxing.dominantElement;
+                              const isWeak = el === dailyData.wuxing.weakestElement;
+                              const colors = WUXING_COLORS[el];
+                              return (
+                                <tr key={el} className={`border-b border-white/5 ${isStrong ? "bg-amber-500/5" : isWeak ? "bg-blue-500/5" : ""}`}>
+                                  <td className="py-2 pr-3">
+                                    <span className={`flex items-center gap-1.5 font-semibold ${colors.text}`}>
+                                      <span className={`w-2 h-2 rounded-full ${colors.dot}`} />
+                                      {el}
+                                    </span>
+                                  </td>
+                                  <td className="text-right py-2 px-2 text-white/50">{(natal * 100).toFixed(0)}%</td>
+                                  <td className="text-right py-2 px-2 text-white/50">{(env * 100).toFixed(0)}%</td>
+                                  <td className={`text-right py-2 px-2 font-bold ${isStrong ? "text-amber-400" : isWeak ? "text-blue-400" : "text-white/70"}`}>
+                                    {(w * 100).toFixed(0)}%
+                                    {isStrong && <span className="ml-1 text-amber-500">↑</span>}
+                                    {isWeak && <span className="ml-1 text-blue-500">↓</span>}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </SectionCard>
+                  )}
+
+                  {/* 當前時辰 + 模式能量卡 */}
+                  {targetHour && outfitData && (
+                    <motion.div
+                      key={`hour-card-${targetHour.branchIndex}-${mode}`}
+                      initial={{ opacity: 0, scale: 0.97 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/30 to-yellow-950/20 p-4"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{outfitData.modeInfo.icon}</span>
+                          <div>
+                            <div className="text-amber-300 font-bold text-sm">{outfitData.modeInfo.label}模式</div>
+                            <div className="text-white/40 text-xs">{outfitData.modeInfo.desc}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-amber-400 font-bold">{targetHour.chineseName}</div>
+                          <div className="text-white/40 text-xs">{targetHour.displayTime}</div>
+                          {targetHour.isCurrent && (
+                            <span className="text-[10px] bg-amber-400 text-black px-1.5 py-0.5 rounded-full font-bold">
+                              當前時辰
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-xs">
+                        <div className="flex items-center gap-1">
+                          <span className="text-white/40">主導：</span>
+                          <span className={`font-bold ${WUXING_COLORS[outfitData.wuxing.dominantElement]?.text ?? "text-amber-300"}`}>
+                            {outfitData.wuxing.dominantElement}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-white/40">補強：</span>
+                          <span className={`font-bold ${WUXING_COLORS[outfitData.wuxing.weakestElement]?.text ?? "text-blue-300"}`}>
+                            {outfitData.wuxing.weakestElement}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-white/40">時柱：</span>
+                          <span className="text-white/60">{targetHour.stem}{targetHour.branch}</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* 穿搭建議（含 loading overlay） */}
+                  <div className="relative">
+                    {outfitFetching && (
+                      <div className="absolute inset-0 bg-black/40 rounded-2xl z-10 flex items-center justify-center backdrop-blur-sm">
+                        <div className="flex items-center gap-2 text-amber-300 text-sm">
+                          <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                          重新計算中...
+                        </div>
+                      </div>
+                    )}
+                    <SectionCard title="今日穿搭建議" icon="🎨">
+                      <div className="space-y-3">
+                        {outfit?.energyTag && (
+                          <div className="rounded-xl bg-orange-950/20 border border-orange-500/20 p-3">
+                            <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/30">{outfit.energyTag}</span>
+                            {outfit?.coreStrategy && <p className="text-orange-300/80 text-xs mt-2">{outfit.coreStrategy}</p>}
+                          </div>
+                        )}
+                        {outfit?.upperBody && (
+                          <div className={`rounded-xl border p-3 ${WUXING_COLORS[outfit.upperBody.element]?.bg ?? 'bg-red-950/20'} ${WUXING_COLORS[outfit.upperBody.element]?.border ?? 'border-red-500/20'}`}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={`text-xs font-semibold ${WUXING_COLORS[outfit.upperBody.element]?.text ?? 'text-red-400'}`}>上半身</span>
+                              <span className="text-white font-medium text-sm">{outfit.upperBody.colors.join(' / ')}</span>
+                              <span className="text-white/40 text-xs ml-auto">{outfit.upperBody.element}系</span>
+                            </div>
+                            <p className="text-white/60 text-xs leading-relaxed">{outfit.upperBody.tacticalExplanation}</p>
+                          </div>
+                        )}
+                        {outfit?.lowerBody && (
+                          <div className={`rounded-xl border p-3 ${WUXING_COLORS[outfit.lowerBody.element]?.bg ?? 'bg-amber-950/20'} ${WUXING_COLORS[outfit.lowerBody.element]?.border ?? 'border-amber-500/20'}`}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={`text-xs font-semibold ${WUXING_COLORS[outfit.lowerBody.element]?.text ?? 'text-amber-400'}`}>下半身</span>
+                              <span className="text-white font-medium text-sm">{outfit.lowerBody.colors.join(' / ')}</span>
+                              <span className="text-white/40 text-xs ml-auto">{outfit.lowerBody.element}系</span>
+                            </div>
+                            <p className="text-white/60 text-xs leading-relaxed">{outfit.lowerBody.tacticalExplanation}</p>
+                          </div>
+                        )}
+                      </div>
+                    </SectionCard>
+                  </div>
+
+                  {/* 忌用色彩 */}
+                  {outfit?.avoid && outfit.avoid.length > 0 && (
+                    <SectionCard title="今日忌用色彩" icon="⚠️">
+                      <div className="flex flex-wrap gap-2">
+                        {outfit.avoid.map((c, idx) => {
+                          const colors = WUXING_COLORS[c.element] ?? { text: 'text-white/50', border: 'border-white/10' };
+                          return (
+                            <div key={idx} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-white/5 ${colors.border}`}>
+                              <span className={`text-xs font-medium line-through ${colors.text}`}>{c.colors.join('/')}</span>
+                              <span className="text-white/30 text-xs">({c.element})</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {outfit.avoid[0]?.reason && (
+                        <p className="text-white/40 text-xs mt-3 leading-relaxed">{outfit.avoid[0].reason}</p>
+                      )}
+                    </SectionCard>
+                  )}
                 </div>
               )}
-            </SectionCard>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-          <AnimatePresence mode="wait">
-            {/* 穿搭建議 */}
-            {activeTab === "outfit" && (
-              !isAdmin && !hasFeature("warroom_outfit") ? (
-                <motion.div key="outfit-locked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <FeatureLockedCard feature="warroom_outfit" />
-                </motion.div>
+          {/* ═══ 手串矩陣 Tab ═══ */}
+          {activeTab === "bracelet" && (
+            <motion.div
+              key="bracelet"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.3 }}
+            >
+              {!isAdmin && !hasFeature("warroom_outfit") ? (
+                <FeatureLockedCard feature="warroom_outfit" />
+              ) : dailyLoading ? (
+                <div className="h-40 bg-white/5 rounded-2xl animate-pulse" />
+              ) : !dailyData ? (
+                <div className="text-center py-12 text-white/30">無法載入手串資料</div>
               ) : (
-                <motion.div key="outfit" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                  <SectionCard title="今日穿搭建議" icon="👗">
-                    <div className="space-y-3">
-                      {data.outfit?.energyTag && (
-                        <div className="rounded-xl bg-orange-950/20 border border-orange-500/20 p-3">
-                          <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/30">
-                            {data.outfit.energyTag}
-                          </span>
-                          {data.outfit?.coreStrategy && (
-                            <p className="text-orange-300/80 text-xs mt-2">{data.outfit.coreStrategy}</p>
-                          )}
-                        </div>
-                      )}
-                      <div className="rounded-xl bg-red-950/20 border border-red-500/20 p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-red-400 text-xs font-semibold">上半身</span>
-                          <span className="text-white font-medium text-sm">{data.outfit?.upperBody?.colors?.join(" / ") || ""}</span>
-                          <span className="text-red-500/60 text-xs ml-auto">{data.outfit?.upperBody?.element}</span>
-                        </div>
-                        <p className="text-white/60 text-xs leading-relaxed">{data.outfit?.upperBody?.tacticalExplanation}</p>
-                      </div>
-                      <div className="rounded-xl bg-amber-950/20 border border-amber-500/20 p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-amber-400 text-xs font-semibold">下半身</span>
-                          <span className="text-white font-medium text-sm">{data.outfit?.lowerBody?.colors?.join(" / ") || ""}</span>
-                          <span className="text-amber-500/60 text-xs ml-auto">{data.outfit?.lowerBody?.element}</span>
-                        </div>
-                        <p className="text-white/60 text-xs leading-relaxed">{data.outfit?.lowerBody?.tacticalExplanation}</p>
-                      </div>
-                      {data.outfit?.avoid && data.outfit.avoid.length > 0 && (
-                        <div className="rounded-xl bg-slate-800/40 border border-slate-500/20 p-3">
-                          <div className="text-slate-400 text-xs font-semibold mb-2">⚠️ 今日避開</div>
-                          {data.outfit.avoid.map((item: { element: string; colors: string[]; reason: string }, i: number) => (
-                            <div key={i} className="mb-1">
-                              <span className="text-slate-300 text-xs">{item.element}色系（{item.colors.slice(0, 2).join("/")}）</span>
-                              <span className="text-slate-500 text-xs ml-2">— {item.reason}</span>
+                <SectionCard title="今日手串矩陣" icon="📿">
+                  {dailyData.bracelets?.coreGoal && (
+                    <p className="text-white/50 text-xs mb-4 leading-relaxed">{dailyData.bracelets.coreGoal}</p>
+                  )}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* 左手 */}
+                    <div>
+                      <div className="text-emerald-400/70 text-xs font-semibold mb-2">🤲 左手（能量/吸引）</div>
+                      {dailyData.bracelets?.leftHand && (
+                        <div className={`rounded-lg border p-3 transition-all ${
+                          wornSet.has(`${dailyData.bracelets.leftHand.code}-left`)
+                            ? "bg-emerald-900/40 border-emerald-400/50"
+                            : "bg-emerald-950/20 border-emerald-500/20"
+                        }`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <span className="text-emerald-500/60 text-xs font-mono">{dailyData.bracelets.leftHand.code}</span>
+                              <span className="text-emerald-300 font-medium text-sm ml-2">{dailyData.bracelets.leftHand.name}</span>
                             </div>
-                          ))}
+                            <button
+                              onClick={() => handleToggleWear(dailyData.bracelets.leftHand.code, dailyData.bracelets.leftHand.name, "left")}
+                              disabled={toggleWear.isPending}
+                              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
+                                wornSet.has(`${dailyData.bracelets.leftHand.code}-left`)
+                                  ? "bg-emerald-500/30 border border-emerald-400/60 text-emerald-300"
+                                  : "bg-white/5 border border-white/20 text-white/40 hover:border-emerald-500/40 hover:text-emerald-400"
+                              }`}
+                            >
+                              {wornSet.has(`${dailyData.bracelets.leftHand.code}-left`) ? "✓ 已佩戴" : "佩戴"}
+                            </button>
+                          </div>
+                          <p className="text-emerald-400/70 text-xs font-medium mb-1">⚔️ {dailyData.bracelets.leftHand.tacticalRole}</p>
+                          <p className="text-white/50 text-xs leading-relaxed">{dailyData.bracelets.leftHand.explanation}</p>
                         </div>
                       )}
                     </div>
-                  </SectionCard>
-                </motion.div>
-              )
-            )}
-
-            {/* 飲食建議 */}
-            {activeTab === "bracelet" && (
-              !isAdmin && !hasFeature("warroom_outfit") ? (
-                <motion.div key="bracelet-locked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                  <FeatureLockedCard feature="warroom_outfit" />
-                </motion.div>
-              ) : (
-                <motion.div key="bracelet" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                  <SectionCard title="今日手串矩陣" icon="📿">
-                    <div className="space-y-4">
-                      {data.bracelets?.coreGoal && (
-                        <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-                          <p className="text-white/70 text-sm">{data.bracelets.coreGoal}</p>
+                    {/* 右手 */}
+                    <div>
+                      <div className="text-blue-400/70 text-xs font-semibold mb-2">🤚 右手（策略/防護）</div>
+                      {dailyData.bracelets?.rightHand && (
+                        <div className={`rounded-lg border p-3 transition-all ${
+                          wornSet.has(`${dailyData.bracelets.rightHand.code}-right`)
+                            ? "bg-blue-900/40 border-blue-400/50"
+                            : "bg-blue-950/20 border-blue-500/20"
+                        }`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <span className="text-blue-500/60 text-xs font-mono">{dailyData.bracelets.rightHand.code}</span>
+                              <span className="text-blue-300 font-medium text-sm ml-2">{dailyData.bracelets.rightHand.name}</span>
+                            </div>
+                            <button
+                              onClick={() => handleToggleWear(dailyData.bracelets.rightHand.code, dailyData.bracelets.rightHand.name, "right")}
+                              disabled={toggleWear.isPending}
+                              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
+                                wornSet.has(`${dailyData.bracelets.rightHand.code}-right`)
+                                  ? "bg-blue-500/30 border border-blue-400/60 text-blue-300"
+                                  : "bg-white/5 border border-white/20 text-white/40 hover:border-blue-500/40 hover:text-blue-400"
+                              }`}
+                            >
+                              {wornSet.has(`${dailyData.bracelets.rightHand.code}-right`) ? "✓ 已佩戴" : "佩戴"}
+                            </button>
+                          </div>
+                          <p className="text-blue-400/70 text-xs font-medium mb-1">🛡️ {dailyData.bracelets.rightHand.tacticalRole}</p>
+                          <p className="text-white/50 text-xs leading-relaxed">{dailyData.bracelets.rightHand.explanation}</p>
                         </div>
                       )}
-                      <div className="grid grid-cols-2 gap-3">
-                        {/* 左手 */}
-                        <div>
-                          <div className="text-emerald-400/70 text-xs font-semibold mb-2">🤲 左手（能量/吸引）</div>
-                          {data.bracelets?.leftHand && (
-                            <div className={`rounded-lg border p-3 transition-all ${
-                              wornSet.has(`${data.bracelets.leftHand.code}-left`)
-                                ? "bg-emerald-900/40 border-emerald-400/50"
-                                : "bg-emerald-950/20 border-emerald-500/20"
-                            }`}>
-                              <div className="flex items-center justify-between mb-2">
-                                <div>
-                                  <span className="text-emerald-500/60 text-xs font-mono">{data.bracelets.leftHand.code}</span>
-                                  <span className="text-emerald-300 font-medium text-sm ml-2">{data.bracelets.leftHand.name}</span>
-                                </div>
-                                <button
-                                  onClick={() => handleToggleWear(data.bracelets.leftHand.code, data.bracelets.leftHand.name, "left")}
-                                  disabled={toggleWear.isPending}
-                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
-                                    wornSet.has(`${data.bracelets.leftHand.code}-left`)
-                                      ? "bg-emerald-500/30 border border-emerald-400/60 text-emerald-300"
-                                      : "bg-white/5 border border-white/20 text-white/40 hover:border-emerald-500/40 hover:text-emerald-400"
-                                  }`}
-                                >
-                                  {wornSet.has(`${data.bracelets.leftHand.code}-left`) ? "✓ 已佩戴" : "佩戴"}
-                                </button>
-                              </div>
-                              <p className="text-emerald-400/70 text-xs font-medium mb-1">⚔️ {data.bracelets.leftHand.tacticalRole}</p>
-                              <p className="text-white/50 text-xs leading-relaxed">{data.bracelets.leftHand.explanation}</p>
-                            </div>
-                          )}
-                        </div>
-                        {/* 右手 */}
-                        <div>
-                          <div className="text-blue-400/70 text-xs font-semibold mb-2">🤚 右手（策略/防護）</div>
-                          {data.bracelets?.rightHand && (
-                            <div className={`rounded-lg border p-3 transition-all ${
-                              wornSet.has(`${data.bracelets.rightHand.code}-right`)
-                                ? "bg-blue-900/40 border-blue-400/50"
-                                : "bg-blue-950/20 border-blue-500/20"
-                            }`}>
-                              <div className="flex items-center justify-between mb-2">
-                                <div>
-                                  <span className="text-blue-500/60 text-xs font-mono">{data.bracelets.rightHand.code}</span>
-                                  <span className="text-blue-300 font-medium text-sm ml-2">{data.bracelets.rightHand.name}</span>
-                                </div>
-                                <button
-                                  onClick={() => handleToggleWear(data.bracelets.rightHand.code, data.bracelets.rightHand.name, "right")}
-                                  disabled={toggleWear.isPending}
-                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
-                                    wornSet.has(`${data.bracelets.rightHand.code}-right`)
-                                      ? "bg-blue-500/30 border border-blue-400/60 text-blue-300"
-                                      : "bg-white/5 border border-white/20 text-white/40 hover:border-blue-500/40 hover:text-blue-400"
-                                  }`}
-                                >
-                                  {wornSet.has(`${data.bracelets.rightHand.code}-right`) ? "✓ 已佩戴" : "佩戴"}
-                                </button>
-                              </div>
-                              <p className="text-blue-400/70 text-xs font-medium mb-1">🛡️ {data.bracelets.rightHand.tacticalRole}</p>
-                              <p className="text-white/50 text-xs leading-relaxed">{data.bracelets.rightHand.explanation}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
                     </div>
-                  </SectionCard>
-                </motion.div>
-              )
-            )}
-          </AnimatePresence>
-          </>
-        )}
+                  </div>
+                </SectionCard>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
