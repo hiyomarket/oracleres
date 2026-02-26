@@ -109,7 +109,12 @@ export default function DietPage() {
             </SectionCard>
             {data.dietary?.supplements && data.dietary.supplements.length > 0 && (
               <div className="mt-4">
-                <NearbyRestaurants supplements={data.dietary.supplements} todayDirections={data.todayDirections} />
+                <NearbyRestaurants
+                  supplements={data.dietary.supplements}
+                  todayDirections={data.todayDirections}
+                  favorableElements={data.favorableElements}
+                  unfavorableElements={data.unfavorableElements}
+                />
               </div>
             )}
           </motion.div>

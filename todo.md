@@ -1068,3 +1068,20 @@
 - [x] routers.ts 新增 utils.toLunar 程序（使用 lunar-typescript 精確換算）
 - [x] MyProfile 出生日期輸入框下方新增農曆即時換算顯示
 - [x] OnboardingModal 出生日期輸入框下方新增農曆即時換算顯示
+
+## 鳳凰計畫 Phase 6 - 補運餐食・生活融合
+
+- [ ] 修正 NearbyRestaurants 硬編碼命格：ELEMENT_MATCH_SCORE 改為依用戶 favorableElements 動態計算
+- [ ] 新建 weatherEngine.ts：天氣 API 接入 + 天氣五行映射規則
+- [ ] 升級 wuxingEngine.ts：新公式（本命30%+環境50%+天氣20%）+ calculateResonanceScore 函數
+- [ ] 改造 generateDietaryAdvice：新增 planB 陣列（五行補運指數）
+- [ ] 全面重塑 DietPage 為「補運餐食」：品牌化、補運指數儀表盤、高級篩選面板、價格顯示
+- [ ] 改造 NearbyRestaurants：高級搜尋表單（分類/距離/價格篩選）、補運指數標籤、價格標籤
+
+## 鳳凰計畫 Phase 6 - 飲食羅盤命格個人化修正
+
+- [x] 修正 NearbyRestaurants 硬編碼問題：ELEMENT_MATCH_SCORE 改為依用戶喜用神動態計算
+- [x] 新增 buildElementMatchScore 函數：第1喜神=100, 第2喜神=80, 第3喜神=60, 中性=40, 第1忌神=20, 第2忌神=10
+- [x] dailyReport API 新增 favorableElements 和 unfavorableElements 欄位回傳
+- [x] DietPage 傳入 favorableElements/unfavorableElements 至 NearbyRestaurants
+- [x] calcFengShui 函數改為接受 elementMatchScore 參數，不再依賴全域常數

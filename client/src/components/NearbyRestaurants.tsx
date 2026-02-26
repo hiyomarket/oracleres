@@ -179,9 +179,32 @@ function analyzeBusinessElementLocal(name: string, keyword: string): string {
   return dominant;
 }
 
-// 五行匹配分數（針對蘇先生：火>土>金>木>水）
-const ELEMENT_MATCH_SCORE: Record<string, number> = {
-  火: 100, 土: 85, 金: 70, 木: 30, 水: 20,
+// 五行匹配分數 — 依用戶喜用神動態計算（不再硬編碼）
+// 第1喜神=100, 第2喜神=80, 第3喜神=60, 中性=40, 第1忌神=20, 第2忌神=10
+function buildElementMatchScore(
+  favorableElements: string[],
+  unfavorableElements: string[]
+): Record<string, number> {
+  const ALL_ELEMENTS = ["木", "火", "土", "金", "水"];
+  const FAVORABLE_SCORES = [100, 80, 60];
+  const UNFAVORABLE_SCORES = [20, 10];
+  const scores: Record<string, number> = {};
+  for (const el of ALL_ELEMENTS) {
+    const favIdx = favorableElements.indexOf(el);
+    const unfavIdx = unfavorableElements.indexOf(el);
+    if (favIdx >= 0) {
+      scores[el] = FAVORABLE_SCORES[favIdx] ?? 50;
+    } else if (unfavIdx >= 0) {
+      scores[el] = UNFAVORABLE_SCORES[unfavIdx] ?? 10;
+    } else {
+      scores[el] = 40; // 中性
+    }
+  }
+  return scores;
+}
+// 預設分數（未傳入命格時的備用值，以蘇先生命格為基準）
+const DEFAULT_ELEMENT_MATCH_SCORE: Record<string, number> = {
+  火: 100, 土: 80, 金: 60, 木: 20, 水: 10,
 };
 
 const GRADE_CONFIG: Record<string, { label: string; color: string; emoji: string }> = {
@@ -206,7 +229,8 @@ interface FengShuiResult {
 function calcFengShui(
   userLat: number, userLng: number,
   restLat: number, restLng: number,
-  name: string, address: string, keyword: string
+  name: string, address: string, keyword: string,
+  elementMatchScore: Record<string, number> = DEFAULT_ELEMENT_MATCH_SCORE
 ): FengShuiResult {
   const dLng = (restLng - userLng) * Math.PI / 180;
   const lat1 = userLat * Math.PI / 180;
@@ -214,14 +238,12 @@ function calcFengShui(
   const y = Math.sin(dLng) * Math.cos(lat2);
   const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
   const bearingDeg = ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
-
   const { element: bearingEl, mountain } = getBearingElementLocal(bearingDeg);
   const nameEl = analyzeNameElementLocal(`${name} ${address}`);
   const businessEl = analyzeBusinessElementLocal(name, keyword);
-
-  const bearingScore = ELEMENT_MATCH_SCORE[bearingEl] ?? 50;
-  const nameScore = ELEMENT_MATCH_SCORE[nameEl] ?? 50;
-  const businessScore = ELEMENT_MATCH_SCORE[businessEl] ?? 50;
+  const bearingScore = elementMatchScore[bearingEl] ?? 50;
+  const nameScore = elementMatchScore[nameEl] ?? 50;
+  const businessScore = elementMatchScore[businessEl] ?? 50;
   const totalScore = Math.round(bearingScore * 0.40 + nameScore * 0.20 + businessScore * 0.40);
 
   const contributions = [
@@ -266,9 +288,19 @@ interface Restaurant {
 interface Props {
   supplements: Array<{ element: string; priority: number; foods: string[] }>;
   todayDirections?: { xi: string; fu: string; cai: string }; // 今日吉方
+  /** 用戶喜用神（中文），例如 ["火", "土", "金"] */
+  favorableElements?: string[];
+  /** 用戶忌神（中文），例如 ["水", "木"] */
+  unfavorableElements?: string[];
 }
-
-export function NearbyRestaurants({ supplements, todayDirections }: Props) {
+export function NearbyRestaurants({ supplements, todayDirections, favorableElements, unfavorableElements }: Props) {
+  // 依用戶命格動態計算五行匹配分數
+  const elementMatchScore = useMemo(
+    () => favorableElements && unfavorableElements
+      ? buildElementMatchScore(favorableElements, unfavorableElements)
+      : DEFAULT_ELEMENT_MATCH_SCORE,
+    [favorableElements, unfavorableElements]
+  );
   const [phase, setPhase] = useState<"idle" | "locating" | "searching" | "done" | "error">("idle");
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
@@ -357,13 +389,14 @@ export function NearbyRestaurants({ supplements, todayDirections }: Props) {
                       isInDirection(bearing, todayDirections.cai) ||
                       isInDirection(bearing, todayDirections.xi);
                   }
-                  // 計算風水地塊三維度分析
+                  // 計算風水地塊三維度分析（使用用戶命格動態分數）
                   fengShui = calcFengShui(
                     userLocation.lat, userLocation.lng,
                     lat2, lng2,
                     place.displayName ?? "",
                     place.formattedAddress ?? "",
-                    keyword
+                    keyword,
+                    elementMatchScore
                   );
                 }
                 results.push({
@@ -413,7 +446,7 @@ export function NearbyRestaurants({ supplements, todayDirections }: Props) {
         setErrorMsg("搜尋餐廳時發生錯誤，請稍後再試。");
       }
     },
-    [userLocation, supplements, todayDirections]
+    [userLocation, supplements, todayDirections, elementMatchScore]
   );
 
   const topElements = supplements.slice(0, 2).map((s) => s.element);
