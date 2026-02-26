@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Link } from "wouter";
+import { ArrowLeft } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { SharedNav } from "@/components/SharedNav";
 import { Button } from "@/components/ui/button";
@@ -16,7 +18,17 @@ const CATEGORIES = [
   { value: "outer", label: "外套" },
   { value: "shoes", label: "鞋子" },
   { value: "accessory", label: "配件" },
+  { value: "bracelet", label: "手串" },
 ];
+
+const CATEGORY_ICONS: Record<string, string> = {
+  upper: "👕",
+  lower: "👖",
+  outer: "🧥",
+  shoes: "👟",
+  accessory: "💍",
+  bracelet: "📿",
+};
 
 const WUXING_OPTIONS = [
   { value: "木", label: "🌿 木", color: "text-green-400" },
@@ -56,7 +68,7 @@ type FormData = {
 
 const EMPTY_FORM: FormData = {
   name: "",
-  category: "top",
+  category: "upper",
   color: "",
   wuxing: "",
   occasion: "",
@@ -136,7 +148,8 @@ export default function WardrobePage() {
       toast.error("請填寫名稱與顏色");
       return;
     }
-    const catVal = form.category as "upper" | "lower" | "shoes" | "outer" | "accessory";
+    const validCats = ["upper", "lower", "shoes", "outer", "accessory", "bracelet"];
+    const catVal = (validCats.includes(form.category) ? form.category : "upper") as "upper" | "lower" | "shoes" | "outer" | "accessory" | "bracelet";
     if (editItem) {
       updateMutation.mutate({
         id: editItem.id,
@@ -166,42 +179,51 @@ export default function WardrobePage() {
     <div className="min-h-screen bg-background text-foreground">
       <SharedNav currentPage="outfit" />
       <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* 返回連結 */}
+        <Link href="/outfit">
+          <a className="inline-flex items-center gap-1.5 text-sm text-amber-400/70 hover:text-amber-400 transition-colors mb-4">
+            <ArrowLeft className="w-4 h-4" />
+            返回神諭穿搭
+          </a>
+        </Link>
         {/* 頁面標題 */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Shirt className="w-6 h-6 text-amber-400" />
+        <div className="flex items-start justify-between mb-6 gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <Shirt className="w-5 h-5 sm:w-6 sm:h-6 text-amber-400 flex-shrink-0" />
               虛擬衣櫥
             </h1>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-xs sm:text-sm text-gray-400 mt-1">
               建立你的衣物資料庫，讓神諭穿搭從你的衣櫥中挑選最佳搭配
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setPhotoSheetOpen(true)}
-              className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 gap-2"
+              className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 gap-1.5 px-2 sm:px-3"
             >
               <Camera className="w-4 h-4" />
-              <span className="hidden sm:inline">拍照分析</span>
+              <span className="hidden sm:inline text-sm">拍照分析</span>
               <Sparkles className="w-3 h-3" />
             </Button>
             <Button
+              size="sm"
               onClick={openAdd}
-              className="bg-amber-600 hover:bg-amber-500 text-white gap-2"
+              className="bg-amber-600 hover:bg-amber-500 text-white gap-1.5 px-2 sm:px-3"
             >
               <Plus className="w-4 h-4" />
-              新增衣物
+              <span className="text-sm">新增</span>
             </Button>
           </div>
         </div>
 
         {/* 分類篩選 */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-1">
           <button
             onClick={() => setFilterCategory("all")}
-            className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+            className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs sm:text-sm border transition-colors ${
               filterCategory === "all"
                 ? "bg-amber-600 border-amber-500 text-white"
                 : "border-white/20 text-gray-400 hover:border-amber-500 hover:text-amber-400"
@@ -210,17 +232,21 @@ export default function WardrobePage() {
             全部 ({items.length})
           </button>
           {CATEGORIES.map((cat) => {
-            const count = items.filter((i) => i.category === cat.value).length;
+            const count = items.filter((i) => {
+              if (cat.value === "bracelet") return i.category === "bracelet";
+              return i.category === cat.value;
+            }).length;
             return (
               <button
                 key={cat.value}
                 onClick={() => setFilterCategory(cat.value)}
-                className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs sm:text-sm border transition-colors ${
                   filterCategory === cat.value
                     ? "bg-amber-600 border-amber-500 text-white"
                     : "border-white/20 text-gray-400 hover:border-amber-500 hover:text-amber-400"
                 }`}
               >
+                <span className="text-xs">{CATEGORY_ICONS[cat.value]}</span>
                 {cat.label} ({count})
               </button>
             );
@@ -245,46 +271,51 @@ export default function WardrobePage() {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="relative bg-white/5 border border-white/10 rounded-xl p-4 hover:border-amber-500/40 transition-colors group"
+                className="relative bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 hover:border-amber-500/40 transition-colors group"
               >
-                {/* 五行標籤 */}
-                <span
-                  className={`inline-block text-xs px-2 py-0.5 rounded-full border mb-2 ${
-                    WUXING_COLORS[item.wuxing] ?? "bg-gray-700 text-gray-300 border-gray-600"
-                  }`}
-                >
-                  {item.wuxing} 系
-                </span>
+                {/* 頂部：五行標籤 + 操作按鈕（桌面 hover，手機常顯） */}
+                <div className="flex items-start justify-between mb-2">
+                  <span
+                    className={`inline-block text-xs px-2 py-0.5 rounded-full border ${
+                      WUXING_COLORS[item.wuxing] ?? "bg-gray-700 text-gray-300 border-gray-600"
+                    }`}
+                  >
+                    {item.wuxing} 系
+                  </span>
+                  {/* 操作按鈕：手機版常顯，桌面版 hover 顯示 */}
+                  <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => openEdit(item)}
+                      className="p-1.5 rounded bg-white/10 hover:bg-amber-600/50 transition-colors"
+                      title="編輯"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteConfirmId(item.id)}
+                      className="p-1.5 rounded bg-white/10 hover:bg-red-600/50 transition-colors"
+                      title="刪除"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
 
-                {/* 顏色色塊 */}
-                <div className="flex items-center gap-2 mb-1">
+                {/* 分類圖示 */}
+                <div className="text-lg mb-1">{CATEGORY_ICONS[item.category] ?? "👔"}</div>
+
+                {/* 顏色色塊 + 名稱 */}
+                <div className="flex items-center gap-1.5 mb-1">
                   <div
-                    className="w-4 h-4 rounded-full border border-white/20 flex-shrink-0"
+                    className="w-3 h-3 rounded-full border border-white/20 flex-shrink-0"
                     style={{ backgroundColor: item.color.startsWith("#") ? item.color : undefined }}
                   />
-                  <span className="font-medium text-sm truncate">{item.name}</span>
+                  <span className="font-medium text-xs sm:text-sm truncate">{item.name}</span>
                 </div>
 
                 <div className="text-xs text-gray-400 space-y-0.5">
-                  <div>{categoryLabel(item.category)} · {item.color}</div>
+                  <div className="truncate">{categoryLabel(item.category)} · {item.color}</div>
                   {item.occasion && <div className="truncate">場合：{item.occasion}</div>}
-                  {item.note && <div className="truncate text-gray-500">{item.note}</div>}
-                </div>
-
-                {/* 操作按鈕 */}
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => openEdit(item)}
-                    className="p-1 rounded bg-white/10 hover:bg-amber-600/50 transition-colors"
-                  >
-                    <Edit2 className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={() => setDeleteConfirmId(item.id)}
-                    className="p-1 rounded bg-white/10 hover:bg-red-600/50 transition-colors"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
                 </div>
               </div>
             ))}

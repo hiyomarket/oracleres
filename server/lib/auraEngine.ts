@@ -68,7 +68,7 @@ export interface WeatherData {
 }
 
 export interface OutfitItem {
-  category: "upper" | "lower" | "shoes" | "outer" | "accessory" | "bracelet";
+  category: "upper" | "lower" | "shoes" | "outer" | "accessory" | "bracelet" | "leftBracelet" | "leftAccessory" | "rightBracelet" | "rightAccessory";
   color: string;
   wuxing?: string; // 若已知五行，直接使用；否則從顏色推算
   name?: string;
@@ -79,8 +79,14 @@ export interface OutfitCombination {
   lower?: OutfitItem;
   shoes?: OutfitItem;
   outer?: OutfitItem;
+  // 舊版相容（單一手串/配件）
   accessory?: OutfitItem;
   bracelet?: OutfitItem;
+  // 新版：左右手分開（左進右出策略）
+  leftBracelet?: OutfitItem;   // 左手手串（吸納能量）
+  leftAccessory?: OutfitItem;  // 左手配件（吸納能量）
+  rightBracelet?: OutfitItem;  // 右手手串（釋放能量）
+  rightAccessory?: OutfitItem; // 右手配件（釋放能量）
 }
 
 export interface InnateAuraAnalysis {
@@ -122,7 +128,13 @@ export interface AuraEngineRules {
 
 /** 預設規則（當 DB 未初始化時使用） */
 export const DEFAULT_ENGINE_RULES: AuraEngineRules = {
-  categoryWeights: { upper: 5, outer: 4, lower: 3, shoes: 2, accessory: 2, bracelet: 3 },
+  categoryWeights: {
+    upper: 5, outer: 4, lower: 3, shoes: 2,
+    accessory: 2, bracelet: 3,
+    // 左右手分開計分（左手吸納加分更高，右手釋放防御加分稍低）
+    leftBracelet: 4, leftAccessory: 3,
+    rightBracelet: 2, rightAccessory: 2,
+  },
   directMatchRatio: 1.0,
   generatesMatchRatio: 0.7,
   controlsMatchRatio: 0.5,
@@ -246,6 +258,9 @@ export function calculateOutfitBoost(
   const breakdown: AuraScoreResult["boostBreakdown"] = [];
 
   const { weakestElements, favorableElements } = innateAnalysis;
+  // unfavorableElements 從 innateAnalysis 推算（對喜用神的相居五行為忘神）
+  const CONTROLS_MAP: Record<string, string> = { 木: "土", 火: "金", 土: "水", 金: "木", 水: "火" };
+  const unfavorableElements = favorableElements.map(el => CONTROLS_MAP[el]).filter(Boolean);
   const seen = new Set<string>();
   const targetElements: string[] = [];
   for (const el of [...weakestElements, ...favorableElements]) {
@@ -262,7 +277,37 @@ export function calculateOutfitBoost(
     let points = 0;
     let reason = "";
 
-    if (targetElements.includes(wuxing)) {
+    // 左右手特殊策略：左進右出
+    const isLeftHand = cat === "leftBracelet" || cat === "leftAccessory";
+    const isRightHand = cat === "rightBracelet" || cat === "rightAccessory";
+    const handLabel = isLeftHand ? "左手（吸納）" : isRightHand ? "右手（釋放）" : "";
+
+    if (isLeftHand) {
+      // 左手：吸納能量——補益喜用神效果更好
+      if (targetElements.includes(wuxing)) {
+        points = Math.round(weight * r.directMatchRatio * 1.2); // 左手吸納加成 20%
+        reason = `左手佩戴${wuxing}系${item.color}，吸納補益喜用神能量 +${points}`;
+      } else if (GENERATES[wuxing] && targetElements.includes(GENERATES[wuxing])) {
+        points = Math.round(weight * r.generatesMatchRatio);
+        reason = `左手${wuxing}系${item.color}生扶${GENERATES[wuxing]}，吸納間接補益 +${points}`;
+      } else {
+        points = 0;
+        reason = `左手${wuxing}系${item.color}對今日吸納能量影響中性`;
+      }
+    } else if (isRightHand) {
+      // 右手：釋放能量——居制忘神或清除負能量
+      if (CONTROLS[wuxing] && innateAnalysis.strongestElements.includes(CONTROLS[wuxing])) {
+        points = Math.round(weight * r.controlsMatchRatio * 1.3); // 右手防御加成 30%
+        reason = `右手佩戴${wuxing}系${item.color}，釋放居制過強的${CONTROLS[wuxing]}能量 +${points}`;
+      } else if (unfavorableElements && unfavorableElements.includes(wuxing)) {
+        // 右手佩戴忘神屬性手串，可釋放忘神帶來的負能量
+        points = Math.round(weight * r.controlsMatchRatio);
+        reason = `右手佩戴${wuxing}系${item.color}，釋放忘神負能量、形成防護層 +${points}`;
+      } else {
+        points = 0;
+        reason = `右手${wuxing}系${item.color}對今日釋放能量影響中性`;
+      }
+    } else if (targetElements.includes(wuxing)) {
       // 直接補益喜用神
       points = Math.round(weight * r.directMatchRatio);
       reason = `${wuxing}系${item.color}直接補益今日喜用神，能量加成 +${points}`;
@@ -271,7 +316,7 @@ export function calculateOutfitBoost(
       points = Math.round(weight * r.generatesMatchRatio);
       reason = `${wuxing}系${item.color}生扶${GENERATES[wuxing]}，間接補益 +${points}`;
     } else if (CONTROLS[wuxing] && innateAnalysis.strongestElements.includes(CONTROLS[wuxing])) {
-      // 尅制今日過強的五行
+      // 居制今日過強的五行
       points = Math.round(weight * r.controlsMatchRatio);
       reason = `${wuxing}系${item.color}制衡過強的${CONTROLS[wuxing]}，平衡加成 +${points}`;
     } else {
@@ -335,6 +380,9 @@ export function calculateAuraScore(
     boostBreakdown,
   };
 }
+
+// Re-export from braceletHandExplanations
+export { getBraceletHandExplanation } from "./braceletHandExplanations";
 
 /**
  * 根據 Aura Score 生成等級標籤

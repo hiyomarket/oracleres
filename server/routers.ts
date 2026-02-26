@@ -2282,12 +2282,16 @@ ${profileDesc}
             for (const r of dbRules) { ruleMap[r.configKey] = parseFloat(r.configValue); }
             engineRules = {
               categoryWeights: {
-                upper:     ruleMap['upper']     ?? DEFAULT_ENGINE_RULES.categoryWeights.upper,
-                outer:     ruleMap['outer']     ?? DEFAULT_ENGINE_RULES.categoryWeights.outer,
-                lower:     ruleMap['lower']     ?? DEFAULT_ENGINE_RULES.categoryWeights.lower,
-                shoes:     ruleMap['shoes']     ?? DEFAULT_ENGINE_RULES.categoryWeights.shoes,
-                accessory: ruleMap['accessory'] ?? DEFAULT_ENGINE_RULES.categoryWeights.accessory,
-                bracelet:  ruleMap['bracelet']  ?? DEFAULT_ENGINE_RULES.categoryWeights.bracelet,
+                upper:         ruleMap['upper']          ?? DEFAULT_ENGINE_RULES.categoryWeights.upper,
+                outer:         ruleMap['outer']          ?? DEFAULT_ENGINE_RULES.categoryWeights.outer,
+                lower:         ruleMap['lower']          ?? DEFAULT_ENGINE_RULES.categoryWeights.lower,
+                shoes:         ruleMap['shoes']          ?? DEFAULT_ENGINE_RULES.categoryWeights.shoes,
+                accessory:     ruleMap['accessory']      ?? DEFAULT_ENGINE_RULES.categoryWeights.accessory,
+                bracelet:      ruleMap['bracelet']       ?? DEFAULT_ENGINE_RULES.categoryWeights.bracelet,
+                leftBracelet:  ruleMap['leftBracelet']   ?? DEFAULT_ENGINE_RULES.categoryWeights.leftBracelet,
+                leftAccessory: ruleMap['leftAccessory']  ?? DEFAULT_ENGINE_RULES.categoryWeights.leftAccessory,
+                rightBracelet: ruleMap['rightBracelet']  ?? DEFAULT_ENGINE_RULES.categoryWeights.rightBracelet,
+                rightAccessory:ruleMap['rightAccessory'] ?? DEFAULT_ENGINE_RULES.categoryWeights.rightAccessory,
               },
               directMatchRatio:    ruleMap['direct_match']    ?? DEFAULT_ENGINE_RULES.directMatchRatio,
               generatesMatchRatio: ruleMap['generates_match'] ?? DEFAULT_ENGINE_RULES.generatesMatchRatio,
@@ -2409,8 +2413,14 @@ ${profileDesc}
           lower: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
           shoes: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
           outer: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
+          // 舊版相容
           accessory: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
           bracelet: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
+          // 新版：左右手分開
+          leftBracelet: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
+          leftAccessory: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
+          rightBracelet: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
+          rightAccessory: z.object({ color: z.string(), wuxing: z.string().optional(), name: z.string().optional() }).optional(),
         }),
         lat: z.number().optional(),
         lon: z.number().optional(),
@@ -2436,12 +2446,16 @@ ${profileDesc}
             for (const r of dbRules) { ruleMap[r.configKey] = parseFloat(r.configValue); }
             simEngineRules = {
               categoryWeights: {
-                upper:     ruleMap['upper']     ?? DEFAULT_ENGINE_RULES.categoryWeights.upper,
-                outer:     ruleMap['outer']     ?? DEFAULT_ENGINE_RULES.categoryWeights.outer,
-                lower:     ruleMap['lower']     ?? DEFAULT_ENGINE_RULES.categoryWeights.lower,
-                shoes:     ruleMap['shoes']     ?? DEFAULT_ENGINE_RULES.categoryWeights.shoes,
-                accessory: ruleMap['accessory'] ?? DEFAULT_ENGINE_RULES.categoryWeights.accessory,
-                bracelet:  ruleMap['bracelet']  ?? DEFAULT_ENGINE_RULES.categoryWeights.bracelet,
+                upper:         ruleMap['upper']          ?? DEFAULT_ENGINE_RULES.categoryWeights.upper,
+                outer:         ruleMap['outer']          ?? DEFAULT_ENGINE_RULES.categoryWeights.outer,
+                lower:         ruleMap['lower']          ?? DEFAULT_ENGINE_RULES.categoryWeights.lower,
+                shoes:         ruleMap['shoes']          ?? DEFAULT_ENGINE_RULES.categoryWeights.shoes,
+                accessory:     ruleMap['accessory']      ?? DEFAULT_ENGINE_RULES.categoryWeights.accessory,
+                bracelet:      ruleMap['bracelet']       ?? DEFAULT_ENGINE_RULES.categoryWeights.bracelet,
+                leftBracelet:  ruleMap['leftBracelet']   ?? DEFAULT_ENGINE_RULES.categoryWeights.leftBracelet,
+                leftAccessory: ruleMap['leftAccessory']  ?? DEFAULT_ENGINE_RULES.categoryWeights.leftAccessory,
+                rightBracelet: ruleMap['rightBracelet']  ?? DEFAULT_ENGINE_RULES.categoryWeights.rightBracelet,
+                rightAccessory:ruleMap['rightAccessory'] ?? DEFAULT_ENGINE_RULES.categoryWeights.rightAccessory,
               },
               directMatchRatio:    ruleMap['direct_match']    ?? DEFAULT_ENGINE_RULES.directMatchRatio,
               generatesMatchRatio: ruleMap['generates_match'] ?? DEFAULT_ENGINE_RULES.generatesMatchRatio,
@@ -2519,6 +2533,19 @@ ${profileDesc}
           auraLevel,
           aiComment,
         };
+      }),
+
+    /**
+     * 取得手串左右手佩戴的「左進右出」能量說明
+     */
+    getBraceletHandExplanation: publicProcedure
+      .input(z.object({
+        element: z.string(),
+        hand: z.enum(['left', 'right']),
+      }))
+      .query(async ({ input }) => {
+        const { getBraceletHandExplanation } = await import('./lib/auraEngine');
+        return getBraceletHandExplanation(input.element, input.hand);
       }),
   }),
   // ── 手串佩戴記錄 ───────────────────────────────────────────────────────────

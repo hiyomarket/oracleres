@@ -52,7 +52,7 @@ export const wardrobeRouter = router({
   add: protectedProcedure
     .input(z.object({
       name: z.string().min(1).max(100),
-      category: z.enum(["upper", "lower", "shoes", "outer", "accessory"]),
+      category: z.enum(["upper", "lower", "shoes", "outer", "accessory", "bracelet"]),
       color: z.string().min(1).max(50),
       wuxing: z.enum(["木", "火", "土", "金", "水"]).optional(),
       material: z.string().max(50).optional(),
@@ -83,7 +83,7 @@ export const wardrobeRouter = router({
     .input(z.object({
       id: z.number(),
       name: z.string().min(1).max(100).optional(),
-      category: z.enum(["upper", "lower", "shoes", "outer", "accessory"]).optional(),
+      category: z.enum(["upper", "lower", "shoes", "outer", "accessory", "bracelet"]).optional(),
       color: z.string().min(1).max(50).optional(),
       wuxing: z.enum(["木", "火", "土", "金", "水"]).optional(),
       material: z.string().max(50).optional(),

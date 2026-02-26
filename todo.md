@@ -1476,3 +1476,31 @@
 - [x] 修復 db 變數重複宣告的 TypeScript 錯誤（改用 dbSim 命名）
 - [x] 新增 5 個 DB 規則串接測試（innateMax/innateMin/boostCap/categoryWeights/calculateAuraScore）
 - [x] 168 項測試全部通過，TypeScript 零錯誤
+
+## 功能增強 v4.7 - 能量模擬器同步每日運勢 + 左右手四位置 + 左進右出說明（2026-02-27）
+
+- [ ] 分析每日運勢分數計算邏輯（warRoom 的 dailyScore）與 auraEngine 天命底盤的差異
+- [ ] 確認同步方案：天命底盤 = 每日運勢分數 × 10（0-10 → 0-100）或直接使用相同計算邏輯
+- [ ] 後端：auraEngine 新增 leftHand/rightHand 分開計分欄位
+- [ ] 後端：新增 getBraceletHandExplanation API（左進右出五行說明）
+- [ ] 前端：InteractiveMannequin 改為四個手部位置（左手手串、左手配件、右手手串、右手配件）
+- [ ] 前端：WardrobeSelector 新增左右手分類選擇
+- [ ] 前端：點擊衣物/配件時顯示能量說明 Panel
+- [ ] 前端：左右手手串顯示「左進右出」詳細說明（五行 × 左/右手 = 不同效果）
+- [ ] 前端：OutfitPage 能量模擬器天命底盤改為以每日運勢分數為基礎計算
+- [ ] 後台：AdminLogicConfig 手串管理新增左右手能量說明欄位
+
+## Bug 修復 v4.7 - OutfitPage 左右手 + WardrobePage 六大修復
+
+- [ ] OutfitPage: 點擊衣物/配件時顯示能量說明 Panel
+- [ ] OutfitPage: 左右手手串顯示「左進右出」說明
+- [ ] OutfitPage: 天命底盤分數同步每日運勢分數
+- [x] WardrobePage: 新增「手串」分類篩選 Tab
+- [x] WardrobePage: 新增衣物表單分類下拉加入「手串」選項
+- [x] WardrobePage: 修復「回到手串」連結（改為返回神諭穿搭連結）
+- [x] WardrobePage: 手機版 UI 修復（標題收縮、按鈕小型化、分類篩選可滞動）
+- [x] WardrobePage: 手機版新增編輯/刪除按鈕（手機常顯，桌面 hover 顯示）
+- [x] WardrobePage: 修復拍照分析後歸檔分類（wardrobe router 支援 bracelet 分類）
+- [x] WardrobePage: 改善手串與虛擬衣櫥整體 UI 串接（分類圖示、五行分佈統計）
+- [x] WardrobeSelector: 手串選擇器同時顯示虛擬衣櫥手串 + 神諭手串庫
+- [x] WardrobeSelector: 左右手選擇器顯示「左手吸納/右手釋放」說明標籤和提示

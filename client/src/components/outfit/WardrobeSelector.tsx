@@ -80,6 +80,10 @@ const PART_LABELS: Record<BodyPart, string> = {
   outer: "外套",
   accessory: "配件",
   bracelet: "手串",
+  leftBracelet: "左手串",
+  leftAccessory: "左手配件",
+  rightBracelet: "右手串",
+  rightAccessory: "右手配件",
 };
 
 interface WardrobeItem {
@@ -139,9 +143,13 @@ export function WardrobeSelector({
   if (!part) return null;
 
   const partLabel = PART_LABELS[part];
-  const partItems = part === "bracelet"
-    ? [] // 手串從 bracelets 列表選
-    : wardrobeItems.filter(i => i.category === part);
+  const isBraceletPart = part === "bracelet" || part === "leftBracelet" || part === "rightBracelet";
+  const isAccessoryPart = part === "accessory" || part === "leftAccessory" || part === "rightAccessory";
+  // 虛擬衣櫥中 category=bracelet 的物品
+  const wardrobeBracelets = wardrobeItems.filter(i => i.category === "bracelet");
+  const partItems = isBraceletPart
+    ? wardrobeBracelets
+    : wardrobeItems.filter(i => i.category === (isAccessoryPart ? "accessory" : part));
 
   function handleColorSelect(colorName: string, wuxing: string) {
     if (!part) return;
@@ -167,10 +175,30 @@ export function WardrobeSelector({
         side="bottom"
         className="bg-gray-900 border-t border-gray-700 rounded-t-2xl max-h-[80vh] overflow-y-auto"
       >
-        <SheetHeader className="mb-4">
-          <SheetTitle className="text-white text-lg">
+        <SheetHeader className="mb-2">
+          <SheetTitle className="text-white text-lg flex items-center gap-2">
             選擇{partLabel}
+            {(part === "leftBracelet" || part === "leftAccessory") && (
+              <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-400 border border-emerald-700">
+                左手 · 吸納能量
+              </span>
+            )}
+            {(part === "rightBracelet" || part === "rightAccessory") && (
+              <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-amber-900/50 text-amber-400 border border-amber-700">
+                右手 · 釋放能量
+              </span>
+            )}
           </SheetTitle>
+          {(part === "leftBracelet" || part === "leftAccessory") && (
+            <p className="text-xs text-emerald-400/70 mt-1">
+              📌 左手為「陰」，主吸納天地之氣。配戴左手可強化内在能量場，吸納天地灵氣。
+            </p>
+          )}
+          {(part === "rightBracelet" || part === "rightAccessory") && (
+            <p className="text-xs text-amber-400/70 mt-1">
+              📌 右手為「陽」，主釋放輸出能量。配戴右手可將多餘能量向外擴散，強化對外影響力。
+            </p>
+          )}
         </SheetHeader>
 
         {/* Tab 切換 */}
@@ -193,7 +221,7 @@ export function WardrobeSelector({
         {/* 系統推薦 Tab */}
         {activeTab === "recommend" && (
           <div className="space-y-3">
-            {part === "bracelet" ? (
+            {isBraceletPart ? (
               // 手串推薦
               <div>
                 <p className="text-xs text-gray-400 mb-3">
@@ -299,38 +327,82 @@ export function WardrobeSelector({
           </div>
         )}
 
-        {/* 我的衣櫥 Tab */}
+        {/* 我的衣樻 Tab */}
         {activeTab === "wardrobe" && (
           <div>
-            {part === "bracelet" ? (
-              <div className="space-y-2">
-                {bracelets.map((bracelet) => (
-                  <button
-                    key={bracelet.code}
-                    onClick={() => handleBraceletSelect(bracelet)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-800 border border-gray-700 hover:border-gray-500 transition-all text-left"
-                  >
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-                      style={{ backgroundColor: WUXING_BG[bracelet.element] + "20" }}
-                    >
-                      📿
+            {isBraceletPart ? (
+              <div className="space-y-3">
+                {/* 虛擬衣櫥中的手串 */}
+                {partItems.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">📿 我的手串（虛擬衣櫥）</p>
+                    <div className="space-y-2">
+                      {partItems.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => handleWardrobeItemSelect(item)}
+                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-800 border border-gray-700 hover:border-amber-500/50 transition-all text-left"
+                        >
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-lg border border-gray-600"
+                            style={{ backgroundColor: WUXING_BG[item.wuxing] + "20" }}
+                          >
+                            📿
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-white text-sm font-medium">{item.name}</div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-gray-400">{item.color}</span>
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: WUXING_BG[item.wuxing] }} />
+                              <span className="text-[10px]" style={{ color: WUXING_BG[item.wuxing] }}>{item.wuxing}系</span>
+                              {favorableElements.includes(item.wuxing) && (
+                                <span className="text-[10px] text-amber-400">★ 喜用神</span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
                     </div>
-                    <div className="flex-1">
-                      <div className="text-white text-sm font-medium">{bracelet.name}</div>
-                      <div className="text-xs text-gray-400">{bracelet.function}</div>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: WUXING_BG[bracelet.element] }} />
-                        <span className="text-[10px]" style={{ color: WUXING_BG[bracelet.element] }}>
-                          {bracelet.element}系
-                        </span>
-                        {favorableElements.includes(bracelet.element) && (
-                          <span className="text-[10px] text-amber-400">★ 喜用神</span>
-                        )}
-                      </div>
+                  </div>
+                )}
+                {/* 系統手串庫 */}
+                {bracelets.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">✨ 神諭手串庫</p>
+                    <div className="space-y-2">
+                      {bracelets.map((bracelet) => (
+                        <button
+                          key={bracelet.code}
+                          onClick={() => handleBraceletSelect(bracelet)}
+                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-800 border border-gray-700 hover:border-gray-500 transition-all text-left"
+                        >
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
+                            style={{ backgroundColor: WUXING_BG[bracelet.element] + "20" }}
+                          >
+                            📿
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-white text-sm font-medium">{bracelet.name}</div>
+                            <div className="text-xs text-gray-400">{bracelet.function}</div>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: WUXING_BG[bracelet.element] }} />
+                              <span className="text-[10px]" style={{ color: WUXING_BG[bracelet.element] }}>
+                                {bracelet.element}系
+                              </span>
+                              {favorableElements.includes(bracelet.element) && (
+                                <span className="text-[10px] text-amber-400">★ 喜用神</span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
                     </div>
-                  </button>
-                ))}
+                  </div>
+                )}
+                {partItems.length === 0 && bracelets.length === 0 && (
+                  <p className="text-gray-500 text-sm text-center py-4">暫無手串資料</p>
+                )}
               </div>
             ) : partItems.length > 0 ? (
               <div className="space-y-2">
