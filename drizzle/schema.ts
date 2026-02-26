@@ -570,6 +570,12 @@ export const wardrobeItems = mysqlTable("wardrobe_items", {
   imageUrl: text("imageUrl"),
   // 備注
   note: varchar("note", { length: 200 }),
+  // AI 分析結果（JSON）：包含 detectedColors / energyExplanation / auraBoost 等
+  aiAnalysis: text("aiAnalysis"),
+  // 對 Aura Score 的加成分數（0-10），由 AI 分析後寫入
+  auraBoost: int("auraBoost").default(0),
+  // 標記是否由 AI 拍照分析新增
+  fromPhoto: int("fromPhoto").default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

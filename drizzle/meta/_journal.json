@@ -211,6 +211,13 @@
       "when": 1772125864762,
       "tag": "0029_right_network",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1772127141947,
+      "tag": "0030_yellow_nomad",
+      "breakpoints": true
     }
   ]
 }

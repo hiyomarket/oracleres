@@ -5,7 +5,7 @@ import { getDb } from "../db";
 import { wardrobeItems } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import { invokeLLM, type Message, type ImageContent, type TextContent } from "../_core/llm";
-import { storagePut } from "../storage";
+import { storagePut, storageDelete } from "../storage";
 
 // 五行顏色對應表
 const COLOR_WUXING: Record<string, string> = {
@@ -293,5 +293,204 @@ ${shichen ? `- 當前時辰：${shichen}` : ""}
       });
 
       return { hasWardrobe: true, recommendations };
+    }),
+
+  // ============================================================
+  // 拍照 AI 分析五行 → 加入虛擬衣樻（分析後即删除圖片）
+  // ============================================================
+  analyzeAndAdd: protectedProcedure
+    .input(z.object({
+      // base64 圖片（data:image/jpeg;base64,...）
+      imageBase64: z.string(),
+      // 衣物類型（可選），如果沒有則由 AI 自動判斷
+      category: z.enum(["upper", "lower", "shoes", "outer", "accessory", "bracelet"]).optional(),
+      // 今日用神（幫助 AI 給出更準確的加成分數）
+      favorableWuxing: z.array(z.string()).optional(),
+      unfavorableWuxing: z.array(z.string()).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // 1. 解析 base64 並上傳到 S3 暫存
+      const matches = input.imageBase64.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+      if (!matches) throw new TRPCError({ code: "BAD_REQUEST", message: "圖片格式錯誤" });
+      const mimeType = matches[1];
+      const ext = mimeType.split("/")[1]?.replace("jpeg", "jpg") ?? "jpg";
+      const imageBuffer = Buffer.from(matches[2], "base64");
+
+      // 檢查圖片大小（16MB 限制）
+      if (imageBuffer.byteLength > 16 * 1024 * 1024) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "圖片大小不能超過 16MB" });
+      }
+
+      const tempKey = `wardrobe-temp/${ctx.user.id}/${Date.now()}.${ext}`;
+      const { url: tempUrl } = await storagePut(tempKey, imageBuffer, mimeType);
+
+      try {
+        // 2. 呼叫 LLM 視覺分析
+        const categoryHint = input.category
+          ? `用戶指定此物品類型為「${{
+              upper: "上衣", lower: "下裝", shoes: "鞋子",
+              outer: "外套", accessory: "配件", bracelet: "手串/手錢"
+            }[input.category]}」，請以此為主要分析對象。`
+          : "請自動判斷物品類型。";
+
+        const favorableNote = input.favorableWuxing?.length
+          ? `\n- 今日用神（有利五行）：${input.favorableWuxing.join("、")}`
+          : "";
+        const unfavorableNote = input.unfavorableWuxing?.length
+          ? `\n- 今日忌神（不利五行）：${input.unfavorableWuxing.join("、")}`
+          : "";
+
+        const systemPrompt = `你是一位精通八字命理與色彩能量學的專家。
+你的任務是分析用戶上傳的衣物/配件/手串照片，從五行能量角度給出詳細分析。
+
+五行色彩對應規則：
+- 木：綠色、深綠、草綠、橄欖綠、墨綠、青色、森林系
+- 火：紅色、深紅、酒紅、橘色、橙色、紫色、桃紅、珊瑚色、暖色系
+- 土：黃色、土黃、棕色、咊啡色、米色、卡其、駕色、大地色系
+- 金：白色、米白、象牙白、金色、銀色、淺灰、香滝色、金屬色系
+- 水：黑色、深藍、藍色、海軍藍、靖藍、炭灰、深灰、午夜藍系
+
+請以 JSON 格式回假，不要加任何其他文字。`;
+
+        const userMessage = `請分析此照片中的衣物/配件/手串。
+${categoryHint}${favorableNote}${unfavorableNote}
+
+請輸出以下 JSON：
+{
+  "name": "物品名稱（中文，包含顏色+材質+類型，例：酒紅色羊毛外套）",
+  "category": "upper|lower|shoes|outer|accessory|bracelet",
+  "color": "主要顏色（中文）",
+  "wuxing": "五行屬性（木|火|土|金|水）",
+  "material": "材質（可空）",
+  "occasion": "適合場合（工作|休閒|正式|運動|約會，可多選逗號分隔）",
+  "auraBoost": 0-10（對命格用神的加成分數）,
+  "energyExplanation": "五行能量說明（白話台灣口語）",
+  "detectedColors": [
+    {"part": "部位", "color": "顏色", "wuxing": "五行"}
+  ]
+}`;
+
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              content: [
+                { type: "text", text: userMessage } as TextContent,
+                { type: "image_url", image_url: { url: tempUrl, detail: "high" } } as ImageContent,
+              ] as (TextContent | ImageContent)[],
+            },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "wardrobe_item_analysis",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  category: { type: "string" },
+                  color: { type: "string" },
+                  wuxing: { type: "string" },
+                  material: { type: "string" },
+                  occasion: { type: "string" },
+                  auraBoost: { type: "number" },
+                  energyExplanation: { type: "string" },
+                  detectedColors: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        part: { type: "string" },
+                        color: { type: "string" },
+                        wuxing: { type: "string" },
+                      },
+                      required: ["part", "color", "wuxing"],
+                      additionalProperties: false,
+                    },
+                  },
+                },
+                required: ["name", "category", "color", "wuxing", "material", "occasion", "auraBoost", "energyExplanation", "detectedColors"],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+
+        const rawContent = response.choices?.[0]?.message?.content;
+        const content = typeof rawContent === "string" ? rawContent : null;
+        if (!content) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 分析失敗" });
+
+        let analysis: {
+          name: string; category: string; color: string; wuxing: string;
+          material: string; occasion: string; auraBoost: number;
+          energyExplanation: string; detectedColors: Array<{ part: string; color: string; wuxing: string }>;
+        };
+        try {
+          analysis = JSON.parse(content);
+        } catch {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 回應格式錯誤" });
+        }
+
+        // 3. 儲存至號樻資料庫
+        const finalCategory = (input.category ?? analysis.category) as string;
+        const validCategories = ["upper", "lower", "shoes", "outer", "accessory", "bracelet"];
+        const safeCategory = validCategories.includes(finalCategory) ? finalCategory : "accessory";
+
+        await db.insert(wardrobeItems).values({
+          userId: ctx.user.id,
+          name: analysis.name,
+          category: safeCategory,
+          color: analysis.color,
+          wuxing: analysis.wuxing as "木" | "火" | "土" | "金" | "水",
+          material: analysis.material || undefined,
+          occasion: analysis.occasion || undefined,
+          imageUrl: null, // 不保留圖片
+          note: analysis.energyExplanation,
+          aiAnalysis: JSON.stringify({
+            detectedColors: analysis.detectedColors,
+            energyExplanation: analysis.energyExplanation,
+            auraBoost: analysis.auraBoost,
+            analyzedAt: new Date().toISOString(),
+          }),
+          auraBoost: Math.round(Math.max(0, Math.min(10, analysis.auraBoost))),
+          fromPhoto: 1,
+        });
+
+        // 4. 即刷删除 S3 暫存圖片
+        await storageDelete(tempKey).catch(() => { /* 删除失敗不影響主流程 */ });
+
+        return {
+          success: true,
+          item: {
+            name: analysis.name,
+            category: safeCategory,
+            color: analysis.color,
+            wuxing: analysis.wuxing,
+            auraBoost: Math.round(Math.max(0, Math.min(10, analysis.auraBoost))),
+            energyExplanation: analysis.energyExplanation,
+            detectedColors: analysis.detectedColors,
+          },
+        };
+      } catch (err) {
+        // 發生錯誤時也要確保删除暫存圖片
+        await storageDelete(tempKey).catch(() => {});
+        throw err;
+      }
+    }),
+
+  // 刪除衣樻衣物
+  remove: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      await db.delete(wardrobeItems)
+        .where(and(eq(wardrobeItems.id, input.id), eq(wardrobeItems.userId, ctx.user.id)));
+      return { success: true };
     }),
 });

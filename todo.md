@@ -1430,3 +1430,27 @@
 - [x] RestaurantCategoriesTab 新增時段控制 UI（列表顯示 + 表單設定）
 - [x] NearbyRestaurants 改用 getScheduledActiveCategories（每分鐘自動刷新）
 - [x] 153 項測試全部通過，TypeScript 零錯誤
+
+## 功能增強 v4.5 - 拍照 AI 分析五行 → 虛擬衣櫃
+
+- [ ] 評估技術可行性（LLM 視覺模型 + S3 暫存 + 即時刪除）
+- [ ] DB schema 新增 wardrobe_items 資料表（user_id/category/name/element/colors/wuxingScore/auraBoost/aiAnalysis）
+- [ ] 後端 wardrobe.analyzePhoto API（multipart 上傳 → S3 暫存 → LLM 視覺分析 → 儲存 → 刪除 S3 圖片）
+- [ ] 後端 wardrobe.addItem / listItems / deleteItem API
+- [ ] 前端 PhotoUploadAnalyzer 元件（相機/相簿選擇 → 預覽 → AI 分析動畫 → 結果確認 → 加入衣樻）
+- [ ] 前端 WardrobePage 整合 PhotoUploadAnalyzer（「拍照新增」按鈕）
+- [ ] 後台 AdminLogicConfig 手串/配飾管理 Tab 整合拍照新增流程
+- [ ] 153+ 項測試全部通過，TypeScript 零錯誤
+- [ ] 儲存 V4.5 checkpoint
+
+## 功能增強 v4.5 完成狀態
+
+- [x] DB schema 新增 wardrobe_items.aiAnalysis / auraBoost / fromPhoto 欄位
+- [x] server/storage.ts 新增 storageDelete() 函數
+- [x] wardrobe.analyzeAndAdd API（base64 → S3 暫存 → LLM 視覺分析 → 儲存 → 刪除圖片）
+- [x] wardrobe.remove API（刪除衣物）
+- [x] PhotoUploadAnalyzer 元件（拍照/上傳 → 壓縮 → AI 分析動畫 → 結果確認 → 加入衣樻）
+- [x] WardrobePage 整合「拍照分析」按鈕 + Sheet 面板
+- [x] AdminLogicConfig BraceletsTab 整合「拍照分析」按鈕 + 分析後自動帶入表單
+- [x] 163 項測試全部通過，TypeScript 零錯誤
+- [x] 儲存 V4.5 checkpoint

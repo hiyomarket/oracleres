@@ -32,6 +32,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Camera, Sparkles } from "lucide-react";
+import PhotoUploadAnalyzer from "@/components/wardrobe/PhotoUploadAnalyzer";
 
 // ============================================================
 // 分類標籤中文對應
@@ -335,6 +337,7 @@ function BraceletsTab() {
   });
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
   const [form, setForm] = useState<BraceletFormData>({
     code: "", name: "", element: "火", color: "", functionDesc: "",
     tacticalRoles: {}, pairingItems: [], sortOrder: 99, enabled: true,
@@ -418,6 +421,16 @@ function BraceletsTab() {
               🔄 同步內建手串
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 gap-1.5"
+            onClick={() => setPhotoSheetOpen(true)}
+          >
+            <Camera className="w-3.5 h-3.5" />
+            拍照分析
+            <Sparkles className="w-3 h-3" />
+          </Button>
           <Button
             size="sm"
             className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
@@ -626,6 +639,35 @@ function BraceletsTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 拍照 AI 分析 Sheet */}
+      <Sheet open={photoSheetOpen} onOpenChange={setPhotoSheetOpen}>
+        <SheetContent
+          side="right"
+          className="bg-slate-900 border-l border-slate-700 text-white w-full sm:max-w-md overflow-y-auto"
+        >
+          <div className="p-4">
+            <PhotoUploadAnalyzer
+              mode="admin"
+              defaultCategory="bracelet"
+              onSuccess={(item) => {
+                // 後台分析完成後，自動帶入新增表單
+                setForm(prev => ({
+                  ...prev,
+                  name: item.name,
+                  element: (item.wuxing as "\u6728" | "\u706b" | "\u571f" | "\u91d1" | "\u6c34") ?? "火",
+                  color: item.color,
+                  functionDesc: item.energyExplanation,
+                }));
+                setPhotoSheetOpen(false);
+                setDialogOpen(true);
+                toast.success("分析完成！請確認手串資料後儲存");
+              }}
+              onClose={() => setPhotoSheetOpen(false)}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

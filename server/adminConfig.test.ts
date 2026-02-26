@@ -247,3 +247,97 @@ describe("餐廳分類時段控制邏輯", () => {
     expect(isActiveAtHour(1, 12, 12, 13)).toBe(false);
   });
 });
+
+// ============================================================
+// 拍照 AI 分析五行 - 輔助邏輯測試
+// ============================================================
+
+// 測試 base64 圖片格式驗證邏輯（模擬 analyzeAndAdd 的驗證）
+function parseImageBase64(dataUrl: string): { mimeType: string; ext: string } | null {
+  const matches = dataUrl.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+  if (!matches) return null;
+  const mimeType = matches[1];
+  const ext = mimeType.split("/")[1]?.replace("jpeg", "jpg") ?? "jpg";
+  return { mimeType, ext };
+}
+
+// 測試衣物類型安全轉換邏輯
+function safeCategoryConvert(category: string): string {
+  const valid = ["upper", "lower", "shoes", "outer", "accessory", "bracelet"];
+  return valid.includes(category) ? category : "accessory";
+}
+
+// 測試 auraBoost 邊界值處理
+function clampAuraBoost(raw: number): number {
+  return Math.round(Math.max(0, Math.min(10, raw)));
+}
+
+describe("PhotoUploadAnalyzer - 圖片格式驗證", () => {
+  it("應正確解析 JPEG base64 格式", () => {
+    const result = parseImageBase64("data:image/jpeg;base64,/9j/abc123");
+    expect(result).not.toBeNull();
+    expect(result?.mimeType).toBe("image/jpeg");
+    expect(result?.ext).toBe("jpg");
+  });
+
+  it("應正確解析 PNG base64 格式", () => {
+    const result = parseImageBase64("data:image/png;base64,iVBORw0KGgo=");
+    expect(result).not.toBeNull();
+    expect(result?.mimeType).toBe("image/png");
+    expect(result?.ext).toBe("png");
+  });
+
+  it("應拒絕非 base64 格式", () => {
+    expect(parseImageBase64("https://example.com/image.jpg")).toBeNull();
+    expect(parseImageBase64("not-a-base64-string")).toBeNull();
+    expect(parseImageBase64("")).toBeNull();
+  });
+
+  it("應正確處理 HEIC 格式", () => {
+    const result = parseImageBase64("data:image/heic;base64,abc123");
+    expect(result).not.toBeNull();
+    expect(result?.ext).toBe("heic");
+  });
+});
+
+describe("PhotoUploadAnalyzer - 衣物類型安全轉換", () => {
+  it("有效類型應直接通過", () => {
+    expect(safeCategoryConvert("upper")).toBe("upper");
+    expect(safeCategoryConvert("lower")).toBe("lower");
+    expect(safeCategoryConvert("shoes")).toBe("shoes");
+    expect(safeCategoryConvert("outer")).toBe("outer");
+    expect(safeCategoryConvert("accessory")).toBe("accessory");
+    expect(safeCategoryConvert("bracelet")).toBe("bracelet");
+  });
+
+  it("無效類型應 fallback 到 accessory", () => {
+    expect(safeCategoryConvert("unknown")).toBe("accessory");
+    expect(safeCategoryConvert("")).toBe("accessory");
+    expect(safeCategoryConvert("hat")).toBe("accessory");
+  });
+});
+
+describe("PhotoUploadAnalyzer - Aura 加成分數邊界值", () => {
+  it("正常範圍應保持不變", () => {
+    expect(clampAuraBoost(5)).toBe(5);
+    expect(clampAuraBoost(0)).toBe(0);
+    expect(clampAuraBoost(10)).toBe(10);
+    expect(clampAuraBoost(7.5)).toBe(8);
+  });
+
+  it("超出上限應截斷為 10", () => {
+    expect(clampAuraBoost(15)).toBe(10);
+    expect(clampAuraBoost(100)).toBe(10);
+  });
+
+  it("低於下限應截斷為 0", () => {
+    expect(clampAuraBoost(-5)).toBe(0);
+    expect(clampAuraBoost(-100)).toBe(0);
+  });
+
+  it("應四捨五入到整數", () => {
+    expect(clampAuraBoost(7.4)).toBe(7);
+    expect(clampAuraBoost(7.6)).toBe(8);
+    expect(clampAuraBoost(9.9)).toBe(10);
+  });
+});

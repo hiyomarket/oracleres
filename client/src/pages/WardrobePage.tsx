@@ -4,9 +4,11 @@ import { SharedNav } from "@/components/SharedNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Trash2, Plus, Edit2, Shirt } from "lucide-react";
+import { Trash2, Plus, Edit2, Shirt, Camera, Sparkles } from "lucide-react";
+import PhotoUploadAnalyzer from "@/components/wardrobe/PhotoUploadAnalyzer";
 
 const CATEGORIES = [
   { value: "upper", label: "上衣" },
@@ -68,6 +70,11 @@ export default function WardrobePage() {
   const [editItem, setEditItem] = useState<WardrobeItem | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [photoSheetOpen, setPhotoSheetOpen] = useState(false);
+
+  // 今日用神（從共享小工具取得）
+  const { data: meData } = trpc.auth.me.useQuery();
+  const userId = meData?.id;
 
   const utils = trpc.useUtils();
 
@@ -170,13 +177,24 @@ export default function WardrobePage() {
               建立你的衣物資料庫，讓神諭穿搭從你的衣櫥中挑選最佳搭配
             </p>
           </div>
-          <Button
-            onClick={openAdd}
-            className="bg-amber-600 hover:bg-amber-500 text-white gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            新增衣物
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setPhotoSheetOpen(true)}
+              className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 gap-2"
+            >
+              <Camera className="w-4 h-4" />
+              <span className="hidden sm:inline">拍照分析</span>
+              <Sparkles className="w-3 h-3" />
+            </Button>
+            <Button
+              onClick={openAdd}
+              className="bg-amber-600 hover:bg-amber-500 text-white gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              新增衣物
+            </Button>
+          </div>
         </div>
 
         {/* 分類篩選 */}
@@ -293,6 +311,24 @@ export default function WardrobePage() {
           </div>
         )}
       </div>
+
+      {/* 拍照 AI 分析 Sheet */}
+      <Sheet open={photoSheetOpen} onOpenChange={setPhotoSheetOpen}>
+        <SheetContent
+          side="bottom"
+          className="bg-[#1a1a2e] border-t border-white/20 text-white max-h-[90vh] overflow-y-auto rounded-t-2xl"
+        >
+          <div className="max-w-md mx-auto py-4">
+            <PhotoUploadAnalyzer
+              mode="wardrobe"
+              onSuccess={() => {
+                utils.wardrobe.list.invalidate();
+              }}
+              onClose={() => setPhotoSheetOpen(false)}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* 新增/編輯 Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) setEditItem(null); }}>
