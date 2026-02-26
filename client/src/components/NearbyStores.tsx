@@ -345,6 +345,7 @@ export function NearbyStores() {
   const scoredStores = scoreMutation.data?.stores ?? [];
   const dayPillar = scoreMutation.data?.dayPillar;
   const hourPillar = scoreMutation.data?.hourPillar;
+  const favorableElements = scoreMutation.data?.favorableElements;
 
   return (
     <div className="space-y-4">
@@ -400,7 +401,11 @@ export function NearbyStores() {
                   流時 {hourPillar.chineseName}（{hourPillar.stemElement}）
                 </span>
               )}
-              <span className="text-slate-500">· 命格用神：火土</span>
+              {favorableElements && favorableElements.length > 0 ? (
+                <span className="text-slate-500">· 命格用神：{favorableElements.join('、')}</span>
+              ) : (
+                <span className="text-slate-500/50">· 未設定命格</span>
+              )}
             </div>
           )}
 

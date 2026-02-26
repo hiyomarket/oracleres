@@ -425,6 +425,7 @@ export default function DietPage() {
                   todayDirections={data?.todayDirections ?? []}
                   favorableElements={favorableElements}
                   unfavorableElements={unfavorableElements}
+                  weatherEnabled={!!weather}
                 />
               </motion.div>
 

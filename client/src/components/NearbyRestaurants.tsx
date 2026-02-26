@@ -1,42 +1,51 @@
-import { useState, useRef, useCallback, useMemo } from "react";
+/**
+ * 飲食羅盤 - 附近命理推薦餐廳
+ * 升級版：互動地圖標記（顏色依補運等級）、三維加權顯示、天氣五行加成
+ */
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapView } from "@/components/Map";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Map, List } from "lucide-react";
 
 // 五行 → Google Maps 搜尋關鍵字（台灣在地化）
-const ELEMENT_KEYWORDS: Record<string, { keywords: string[]; label: string; emoji: string; color: string }> = {
+const ELEMENT_KEYWORDS: Record<string, { keywords: string[]; label: string; emoji: string; color: string; mapColor: string }> = {
   土: {
     keywords: ["甜點", "米食", "台灣料理", "蛋糕甜食", "根莖類料理"],
     label: "補土（甜食/米食）",
     emoji: "🌍",
     color: "text-amber-400 border-amber-500/40 bg-amber-950/20",
+    mapColor: "#f59e0b",
   },
   金: {
     keywords: ["豆腐", "日式料理", "清淡料理", "白肉", "豆漿"],
     label: "補金（白色食物）",
     emoji: "⚪",
     color: "text-slate-300 border-slate-400/40 bg-slate-800/30",
+    mapColor: "#94a3b8",
   },
   火: {
     keywords: ["燒烤", "辛辣料理", "麻辣", "烤肉", "韓式料理"],
     label: "補火（辛辣/燒烤）",
     emoji: "🔥",
     color: "text-red-400 border-red-500/40 bg-red-950/20",
+    mapColor: "#ef4444",
   },
   水: {
     keywords: ["海鮮", "湯品", "火鍋", "清湯", "壽司"],
     label: "補水（湯品/海鮮）",
     emoji: "🌊",
     color: "text-blue-400 border-blue-500/40 bg-blue-950/20",
+    mapColor: "#3b82f6",
   },
   木: {
     keywords: ["蔬食", "素食", "沙拉", "健康餐", "輕食"],
     label: "補木（蔬食/健康）",
     emoji: "🌿",
     color: "text-emerald-400 border-emerald-500/40 bg-emerald-950/20",
+    mapColor: "#10b981",
   },
 };
 
@@ -66,7 +75,6 @@ function calcBearing(from: { lat: number; lng: number }, to: { lat: number; lng:
 function isInDirection(bearing: number, directionName: string): boolean {
   const dir = DIRECTION_BEARING[directionName];
   if (!dir) return false;
-  // 正北特殊處理（跨越360/0度）
   if (directionName === "正北") {
     return bearing >= 337.5 || bearing < 22.5;
   }
@@ -185,7 +193,6 @@ function analyzeBusinessElementLocal(name: string, keyword: string): string {
 }
 
 // 五行匹配分數 — 依用戶喜用神動態計算（不再硬編碼）
-// 第1喜神=100, 第2喜神=80, 第3喜神=60, 中性=40, 第1忌神=20, 第2忌神=10
 function buildElementMatchScore(
   favorableElements: string[],
   unfavorableElements: string[]
@@ -207,17 +214,17 @@ function buildElementMatchScore(
   }
   return scores;
 }
-// 預設分數（未傳入命格時的備用值，以蘇先生命格為基準）
+// 預設分數（未傳入命格時的備用值）
 const DEFAULT_ELEMENT_MATCH_SCORE: Record<string, number> = {
   火: 100, 土: 80, 金: 60, 木: 20, 水: 10,
 };
 
-const GRADE_CONFIG: Record<string, { label: string; color: string; emoji: string }> = {
-  大吉: { label: "大吉", color: "text-amber-300 bg-amber-500/15 border-amber-500/40", emoji: "✦" },
-  吉:   { label: "吉",   color: "text-green-400 bg-green-500/10 border-green-500/30",  emoji: "◎" },
-  平:   { label: "平",   color: "text-white/40 bg-white/5 border-white/10",            emoji: "○" },
-  凶:   { label: "凶",   color: "text-orange-400 bg-orange-500/10 border-orange-500/30", emoji: "△" },
-  大凶: { label: "大凶", color: "text-red-400 bg-red-500/10 border-red-500/30",        emoji: "✕" },
+const GRADE_CONFIG: Record<string, { label: string; color: string; emoji: string; markerColor: string }> = {
+  大吉: { label: "大吉", color: "text-amber-300 bg-amber-500/15 border-amber-500/40", emoji: "✦", markerColor: "#f59e0b" },
+  吉:   { label: "吉",   color: "text-green-400 bg-green-500/10 border-green-500/30",  emoji: "◎", markerColor: "#10b981" },
+  平:   { label: "平",   color: "text-white/40 bg-white/5 border-white/10",            emoji: "○", markerColor: "#94a3b8" },
+  凶:   { label: "凶",   color: "text-orange-400 bg-orange-500/10 border-orange-500/30", emoji: "△", markerColor: "#f97316" },
+  大凶: { label: "大凶", color: "text-red-400 bg-red-500/10 border-red-500/30",        emoji: "✕", markerColor: "#ef4444" },
 };
 
 interface FengShuiResult {
@@ -246,6 +253,7 @@ function calcFengShui(
   const { element: bearingEl, mountain } = getBearingElementLocal(bearingDeg);
   const nameEl = analyzeNameElementLocal(`${name} ${address}`);
   const businessEl = analyzeBusinessElementLocal(name, keyword);
+
   const bearingScore = elementMatchScore[bearingEl] ?? 50;
   const nameScore = elementMatchScore[nameEl] ?? 50;
   const businessScore = elementMatchScore[businessEl] ?? 50;
@@ -277,8 +285,8 @@ const CATEGORY_TAGS: Array<{
   id: string;
   label: string;
   emoji: string;
-  types: string[]; // Google Places API includedTypes
-  textSuffix?: string; // 附加到 textQuery 的後綴
+  types: string[];
+  textSuffix?: string;
 }> = [
   { id: "all", label: "全部", emoji: "🍽️", types: ["restaurant"] },
   { id: "local_snack", label: "小吃", emoji: "🥢", types: ["restaurant"], textSuffix: "小吃" },
@@ -315,29 +323,32 @@ interface Restaurant {
   address: string;
   rating: number;
   userRatingsTotal: number;
-  priceLevel?: number; // 1-4 對應 $-$$$$
+  priceLevel?: number;
   distance?: number;
   bearing?: number;
   element: string;
   matchScore: number;
   keyword: string;
   placeId: string;
-  isAuspicious: boolean; // 是否在吉方
+  isAuspicious: boolean;
   lat?: number;
   lng?: number;
   fengShui?: FengShuiResult;
-  categoryId?: string; // 搜尋時使用的分類
+  categoryId?: string;
 }
 
 interface Props {
   supplements: Array<{ element: string; priority: number; foods: string[] }>;
-  todayDirections?: { xi: string; fu: string; cai: string }; // 今日吉方
+  todayDirections?: { xi: string; fu: string; cai: string };
   /** 用戶喜用神（中文），例如 ["火", "土", "金"] */
   favorableElements?: string[];
   /** 用戶忌神（中文），例如 ["水", "木"] */
   unfavorableElements?: string[];
+  /** 天氣五行加成是否已啟用 */
+  weatherEnabled?: boolean;
 }
-export function NearbyRestaurants({ supplements, todayDirections, favorableElements, unfavorableElements }: Props) {
+
+export function NearbyRestaurants({ supplements, todayDirections, favorableElements, unfavorableElements, weatherEnabled }: Props) {
   // 依用戶命格動態計算五行匹配分數
   const elementMatchScore = useMemo(
     () => favorableElements && unfavorableElements
@@ -349,6 +360,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
   const [showMap, setShowMap] = useState(false);
+  const [mapVisible, setMapVisible] = useState(true); // 地圖/列表切換
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [filterAuspicious, setFilterAuspicious] = useState(false);
   const [sortMode, setSortMode] = useState<"distance" | "fengshui">("distance");
@@ -357,40 +369,46 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
   const [maxDistance, setMaxDistance] = useState(2000);
   const [minFengShuiScore, setMinFengShuiScore] = useState(0);
   const [filterElement, setFilterElement] = useState<string | null>(null);
-   // 分類單選（null = 全部）— 點選分類後立即重新搜尋
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
-  // 用 ref 記錄最新分類，供 handleMapReady 讀取（避免 stale closure）
   const filterCategoryRef = useRef<string | null>(null);
-  // 價格多選（空陣列 = 全部）— 前端過濾，不需重新搜尋
   const [filterPriceLevels, setFilterPriceLevels] = useState<number[]>([]);
-  // 分享狀態
   const [sharingId, setSharingId] = useState<string | null>(null);
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+  const [searchTrigger, setSearchTrigger] = useState(0);
 
   // 分類單選切換：點選後更新 ref 並立即重新搜尋
   const handleCategorySelect = useCallback((categoryId: string | null) => {
     const newCat = categoryId === "all" ? null : categoryId;
     setFilterCategory(newCat);
     filterCategoryRef.current = newCat;
-    // 立即觸發重新搜尋
-    setPhase("locating");
-    setRestaurants([]);
-    setErrorMsg("");
     setFilterSheetOpen(false);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setUserLocation(loc);
-        setPhase("searching");
-        setShowMap(true);
-      },
-      (err) => {
-        setPhase("error");
-        setErrorMsg(`無法取得定位：${err.message}。請確認已允許位置存取。`);
-      },
-      { timeout: 10000, maximumAge: 60000 }
-    );
-  }, []);
+    if (mapRef.current && userLocation) {
+      setPhase("searching");
+      setRestaurants([]);
+      setErrorMsg("");
+      setSearchTrigger((n) => n + 1);
+    } else {
+      setPhase("locating");
+      setRestaurants([]);
+      setErrorMsg("");
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLocation(loc);
+          setPhase("searching");
+          setShowMap(true);
+        },
+        (err) => {
+          setPhase("error");
+          setErrorMsg(`無法取得定位：${err.message}。請確認已允許位置存取。`);
+        },
+        { timeout: 10000, maximumAge: 60000 }
+      );
+    }
+  }, [userLocation]);
 
   const handleSearch = useCallback(() => {
     setPhase("locating");
@@ -409,7 +427,107 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
       },
       { timeout: 10000, maximumAge: 60000 }
     );
-  }, []);;
+  }, []);
+
+  // 在地圖上繪製餐廳標記
+  const drawMarkers = useCallback((map: google.maps.Map, list: Restaurant[]) => {
+    // 清除舊標記
+    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current = [];
+    if (infoWindowRef.current) {
+      infoWindowRef.current.close();
+    }
+    infoWindowRef.current = new google.maps.InfoWindow();
+
+    list.forEach((r) => {
+      if (r.lat === undefined || r.lng === undefined) return;
+      const fs = r.fengShui;
+      const gradeConfig = fs ? GRADE_CONFIG[fs.grade] : null;
+      const markerColor = gradeConfig?.markerColor ?? "#94a3b8";
+      const isAuspicious = r.isAuspicious;
+
+      // 建立自訂 SVG 標記
+      const svgContent = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
+          <defs>
+            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.4)"/>
+            </filter>
+          </defs>
+          <!-- 標記底部 -->
+          <path d="M18 42 L4 16 Q4 2 18 2 Q32 2 32 16 Z" fill="${markerColor}" filter="url(#shadow)"/>
+          <!-- 吉方光環 -->
+          ${isAuspicious ? `<circle cx="18" cy="14" r="13" fill="none" stroke="#f59e0b" stroke-width="2" opacity="0.8"/>` : ''}
+          <!-- 中心圓 -->
+          <circle cx="18" cy="14" r="9" fill="rgba(0,0,0,0.3)"/>
+          <!-- 分數文字 -->
+          <text x="18" y="18" text-anchor="middle" font-size="8" font-weight="bold" fill="white" font-family="Arial">${fs?.totalScore ?? "?"}</text>
+        </svg>
+      `;
+      const svgUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgContent)}`;
+
+      const marker = new google.maps.Marker({
+        position: { lat: r.lat!, lng: r.lng! },
+        map,
+        icon: {
+          url: svgUrl,
+          scaledSize: new google.maps.Size(36, 44),
+          anchor: new google.maps.Point(18, 44),
+        },
+        title: r.name,
+        zIndex: fs ? fs.totalScore : 50,
+      });
+
+      marker.addListener("click", () => {
+        setSelectedMarkerId(r.id);
+        setExpandedId(r.id);
+        // 顯示資訊視窗
+        const infoContent = `
+          <div style="background:#1a1a2e;color:white;padding:10px 12px;border-radius:10px;min-width:180px;font-family:sans-serif;">
+            <div style="font-weight:bold;font-size:13px;margin-bottom:4px;">${r.name}</div>
+            ${fs ? `<div style="font-size:11px;color:${markerColor};margin-bottom:2px;">補運指數：${fs.totalScore}/100 ${gradeConfig?.emoji ?? ''} ${gradeConfig?.label ?? ''}</div>` : ''}
+            ${r.distance !== undefined ? `<div style="font-size:11px;color:#94a3b8;">📏 ${r.distance < 1000 ? r.distance + 'm' : (r.distance/1000).toFixed(1) + 'km'}</div>` : ''}
+            ${r.rating > 0 ? `<div style="font-size:11px;color:#94a3b8;">⭐ ${r.rating.toFixed(1)}</div>` : ''}
+            ${isAuspicious ? `<div style="font-size:11px;color:#f59e0b;margin-top:2px;">✨ 今日吉方</div>` : ''}
+          </div>
+        `;
+        infoWindowRef.current?.setContent(infoContent);
+        infoWindowRef.current?.open(map, marker);
+        // 地圖置中到標記
+        map.panTo({ lat: r.lat!, lng: r.lng! });
+        // 滾動到對應卡片
+        const cardEl = document.getElementById(`restaurant-card-${r.id}`);
+        if (cardEl) {
+          cardEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    // 加入用戶位置標記
+    if (userLocation) {
+      const userSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" fill="#6366f1" opacity="0.3"/>
+          <circle cx="12" cy="12" r="6" fill="#6366f1"/>
+          <circle cx="12" cy="12" r="3" fill="white"/>
+        </svg>
+      `;
+      const userMarker = new google.maps.Marker({
+        position: userLocation,
+        map,
+        icon: {
+          url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(userSvg)}`,
+          scaledSize: new google.maps.Size(24, 24),
+          anchor: new google.maps.Point(12, 12),
+        },
+        title: "您的位置",
+        zIndex: 999,
+      });
+      markersRef.current.push(userMarker);
+    }
+  }, [userLocation]);
 
   const handleMapReady = useCallback(
     async (map: google.maps.Map) => {
@@ -419,27 +537,23 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
       try {
         const results: Restaurant[] = [];
         const seen = new Set<string>();
-        // 取得當前選中的分類（單選）— 使用 ref 避免 stale closure
         const activeCatId = filterCategoryRef.current;
         const activeCategoryTag = activeCatId
           ? CATEGORY_TAGS.find((c) => c.id === activeCatId) ?? null
           : null;
 
-        // 依優先級搜尋前兩個需補五行，每個五行搜尋多個關鍵字以確保至少8筆
         const topSupplements = supplements.slice(0, 2);
 
         for (const sup of topSupplements) {
           const info = ELEMENT_KEYWORDS[sup.element];
           if (!info) continue;
 
-          // 搜尋前3個關鍵字，確保結果足夠
           const keywordsToSearch = info.keywords.slice(0, 3);
 
           for (const keyword of keywordsToSearch) {
-            if (results.length >= 12) break; // 最多搜尋12筆
+            if (results.length >= 12) break;
 
             const { Place } = await google.maps.importLibrary("places") as google.maps.PlacesLibrary;
-            // 建立搜尋文字：若有分類後綴則加上
             const searchText = activeCategoryTag?.textSuffix
               ? `${keyword} ${activeCategoryTag.textSuffix}`
               : `${keyword} 餐廳`;
@@ -454,7 +568,6 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
               maxResultCount: 8,
               language: "zh-TW",
             };
-            // 加入分類 types 篩選（若有選擇特定分類）
             if (activeCategoryTag && activeCategoryTag.id !== "all" && activeCategoryTag.types.length > 0) {
               request.includedType = activeCategoryTag.types[0];
             }
@@ -477,13 +590,11 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                   const to = { lat: lat2, lng: lng2 };
                   distance = calcDistance(userLocation, to);
                   bearing = calcBearing(userLocation, to);
-                  // 判斷是否在今日財神方（吉方）
                   if (todayDirections) {
                     isAuspicious =
                       isInDirection(bearing, todayDirections.cai) ||
                       isInDirection(bearing, todayDirections.xi);
                   }
-                  // 計算風水地塊三維度分析（使用用戶命格動態分數）
                   fengShui = calcFengShui(
                     userLocation.lat, userLocation.lng,
                     lat2, lng2,
@@ -493,7 +604,6 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                     elementMatchScore
                   );
                 }
-                // 取得 priceLevel（Google Places API 回傳 1-4）
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const rawPriceLevel = (place as any).priceLevel;
                 const priceLevel = typeof rawPriceLevel === "number" ? rawPriceLevel : undefined;
@@ -525,29 +635,51 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
 
         // 依距離從近到遠排序（主要排序），吉方優先（次要排序）
         results.sort((a, b) => {
-          // 吉方優先（同距離段內）
           if (a.isAuspicious !== b.isAuspicious) {
             const distA = a.distance ?? 9999;
             const distB = b.distance ?? 9999;
-            // 只有在距離差距不超過500m時，才讓吉方優先
             if (Math.abs(distA - distB) < 500) {
               return a.isAuspicious ? -1 : 1;
             }
           }
-          // 主要按距離排序
           return (a.distance ?? 9999) - (b.distance ?? 9999);
         });
 
-        setRestaurants(results.slice(0, 12)); // 最多顯示12筆（至少8筆）
+        const finalResults = results.slice(0, 12);
+        setRestaurants(finalResults);
         setPhase("done");
+
+        // 繪製地圖標記
+        drawMarkers(map, finalResults);
+
+        // 調整地圖視野以包含所有標記
+        if (finalResults.length > 0) {
+          const bounds = new google.maps.LatLngBounds();
+          bounds.extend(userLocation);
+          finalResults.forEach((r) => {
+            if (r.lat !== undefined && r.lng !== undefined) {
+              bounds.extend({ lat: r.lat, lng: r.lng });
+            }
+          });
+          map.fitBounds(bounds, { top: 40, right: 20, bottom: 40, left: 20 });
+        }
       } catch (err) {
         console.error(err);
         setPhase("error");
         setErrorMsg("搜尋餐廳時發生錯誤，請稍後再試。");
       }
     },
-    [userLocation, supplements, todayDirections, elementMatchScore]
+    [userLocation, supplements, todayDirections, elementMatchScore, drawMarkers]
   );
+
+  // 監聽 searchTrigger：當分類改變且地圖已初始化時，直接重新執行搜尋
+  useEffect(() => {
+    if (searchTrigger === 0) return;
+    if (mapRef.current) {
+      handleMapReady(mapRef.current);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTrigger]);
 
   const topElements = supplements.slice(0, 2).map((s) => s.element);
   const displayedRestaurants = useMemo(() => {
@@ -555,16 +687,16 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
     if (filterAuspicious) list = list.filter((r) => r.isAuspicious);
     if (maxDistance < 2000) list = list.filter((r) => (r.distance ?? 9999) <= maxDistance);
     if (minFengShuiScore > 0) list = list.filter((r) => (r.fengShui?.totalScore ?? 0) >= minFengShuiScore);
-    if (filterElement) list = list.filter((r) => r.element === filterElement);
-    // 價格篩選（多選）
+    if (filterElement) list = list.filter((r) => r.fengShui?.dominantElement === filterElement);
     if (filterPriceLevels.length > 0) {
-      list = list.filter((r) => r.priceLevel !== undefined && filterPriceLevels.includes(r.priceLevel));
+      list = list.filter((r) => r.priceLevel === undefined || filterPriceLevels.includes(r.priceLevel));
     }
     if (sortMode === "fengshui") {
       list = list.sort((a, b) => (b.fengShui?.totalScore ?? 0) - (a.fengShui?.totalScore ?? 0));
     }
     return list;
   }, [restaurants, filterAuspicious, sortMode, maxDistance, minFengShuiScore, filterElement, filterPriceLevels]);
+
   const activeFilterCount = [
     filterAuspicious,
     maxDistance < 2000,
@@ -573,13 +705,13 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
     !!filterCategory,
     filterPriceLevels.length > 0,
   ].filter(Boolean).length;
-  // 切換價格選擇（多選）
+
   const togglePrice = (id: number) => {
     setFilterPriceLevels((prev) =>
       prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
     );
   };
-  // 分享餐廳
+
   const handleShare = async (r: Restaurant) => {
     setSharingId(r.id);
     const fs = r.fengShui;
@@ -608,15 +740,23 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
     setSharingId(null);
   };
 
-  // 建立正確的 Google Maps 搜尋 URL
   const buildMapsUrl = (r: Restaurant): string => {
     if (r.lat !== undefined && r.lng !== undefined) {
-      // 使用座標 + 名稱搜尋（最可靠）
       const query = encodeURIComponent(r.name);
       return `https://www.google.com/maps/search/?api=1&query=${query}&query_place_id=${r.placeId}`;
     }
-    // 備用：用名稱搜尋
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name)}`;
+  };
+
+  // 點擊卡片時，地圖標記也要高亮
+  const handleCardClick = (r: Restaurant) => {
+    const isExpanding = expandedId !== r.id;
+    setExpandedId(isExpanding ? r.id : null);
+    if (isExpanding && r.lat !== undefined && r.lng !== undefined && mapRef.current) {
+      mapRef.current.panTo({ lat: r.lat, lng: r.lng });
+      setSelectedMarkerId(r.id);
+      setMapVisible(true);
+    }
   };
 
   return (
@@ -635,6 +775,12 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
               ))}
             </div>
           )}
+          {/* 天氣加成標籤 */}
+          {weatherEnabled && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-emerald-500/40 bg-emerald-950/20 text-emerald-400">
+              ☁ 天氣加成
+            </span>
+          )}
         </div>
         {phase === "idle" && (
           <button
@@ -651,7 +797,17 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         )}
         {phase === "done" && (
           <button
-            onClick={() => { setPhase("idle"); setShowMap(false); setRestaurants([]); setFilterAuspicious(false); setSortMode("distance"); setExpandedId(null); }}
+            onClick={() => {
+              setPhase("idle");
+              setShowMap(false);
+              setRestaurants([]);
+              setFilterAuspicious(false);
+              setSortMode("distance");
+              setExpandedId(null);
+              setSelectedMarkerId(null);
+              markersRef.current.forEach((m) => m.setMap(null));
+              markersRef.current = [];
+            }}
             className="text-xs text-white/30 hover:text-white/50 transition-colors flex-shrink-0"
           >
             重新搜尋
@@ -669,6 +825,18 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
             </>
           )}
           <div className="ml-auto flex items-center gap-1.5">
+            {/* 地圖/列表切換 */}
+            <button
+              onClick={() => setMapVisible(!mapVisible)}
+              className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border transition-all ${
+                mapVisible
+                  ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300"
+                  : "bg-white/5 border-white/10 text-white/40"
+              }`}
+            >
+              {mapVisible ? <List className="w-3 h-3" /> : <Map className="w-3 h-3" />}
+              {mapVisible ? "列表" : "地圖"}
+            </button>
             <button
               onClick={() => setSortMode(sortMode === "distance" ? "fengshui" : "distance")}
               className={`text-[10px] px-2 py-1 rounded-lg border transition-all ${
@@ -698,7 +866,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                   <SheetTitle className="text-white text-base">進階篩選</SheetTitle>
                 </SheetHeader>
                 <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-1">
-                  {/* 分類標籤單選 — 點選後立即重新搜尋 */}
+                  {/* 分類標籤單選 */}
                   <div>
                     <p className="text-sm font-medium text-white/80 mb-2.5">🍽️ 餐廳分類（點選即搜尋）</p>
                     <div className="flex flex-wrap gap-1.5">
@@ -721,7 +889,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                     </div>
                     {filterCategory && (
                       <p className="text-[10px] text-amber-400/60 mt-1.5">
-                        ❖ 已選分類：{CATEGORY_TAGS.find(c => c.id === filterCategory)?.label}，正在重新搜尋中...
+                        ✦ 已選擇分類，點擊「全部」可清除
                       </p>
                     )}
                   </div>
@@ -819,8 +987,30 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         <div className="px-4 py-3 text-xs text-red-400">{errorMsg}</div>
       )}
 
-      {/* 地圖（隱藏但需要初始化 Places API） */}
+      {/* 地圖（搜尋中或完成後顯示） */}
       {showMap && userLocation && (
+        <AnimatePresence>
+          {(phase === "searching" || (phase === "done" && mapVisible)) && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: phase === "done" ? 240 : 0, opacity: phase === "done" ? 1 : 0 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden border-b border-white/10"
+            >
+              <div style={{ height: 240 }}>
+                <MapView
+                  initialCenter={userLocation}
+                  initialZoom={15}
+                  onMapReady={handleMapReady}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+      {/* 搜尋中的隱藏地圖（用於初始化 Places API） */}
+      {showMap && userLocation && phase === "searching" && (
         <div className="h-0 overflow-hidden">
           <MapView
             initialCenter={userLocation}
@@ -830,9 +1020,32 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         </div>
       )}
 
-      {/* 餐廳清單 - 大型視覺卡片 */}
+      {/* 搜尋中狀態 */}
+      {phase === "searching" && (
+        <div className="px-4 py-6 text-center">
+          <div className="text-2xl mb-2 animate-spin inline-block">☯</div>
+          <p className="text-sm text-amber-400/70">正在搜尋附近命理餐廳...</p>
+          <p className="text-xs text-white/30 mt-1">分析方位五行、地名字根、料理類型...</p>
+        </div>
+      )}
+
+      {/* 餐廳清單 */}
       {phase === "done" && displayedRestaurants.length > 0 && (
         <div className="p-3 space-y-3">
+          {/* 三維加權說明橫幅 */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/8 text-[10px] text-white/40">
+            <span>🧭 補運指數 =</span>
+            <span className="text-white/60">方位五行 × 40%</span>
+            <span>+</span>
+            <span className="text-white/60">地名字根 × 20%</span>
+            <span>+</span>
+            <span className="text-white/60">料理類型 × 40%</span>
+            {weatherEnabled && (
+              <>
+                <span className="ml-1 text-emerald-400/60">✦ 天氣加成已啟用</span>
+              </>
+            )}
+          </div>
           <AnimatePresence>
           {displayedRestaurants.map((r, i) => {
             const info = ELEMENT_KEYWORDS[r.element];
@@ -840,21 +1053,28 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
             const fs = r.fengShui;
             const gradeConfig = fs ? GRADE_CONFIG[fs.grade] : null;
             const isExpanded = expandedId === r.id;
+            const isSelected = selectedMarkerId === r.id;
             const scoreColor = fs
               ? fs.totalScore >= 85 ? "#f59e0b" : fs.totalScore >= 70 ? "#10b981" : fs.totalScore >= 50 ? "#94a3b8" : "#f97316"
               : "#94a3b8";
             return (
               <motion.div
                 key={r.id}
+                id={`restaurant-card-${r.id}`}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className={`rounded-2xl border bg-white/[0.03] overflow-hidden ${
-                  r.isAuspicious ? "border-amber-500/30" : "border-white/8"
+                className={`rounded-2xl border bg-white/[0.03] overflow-hidden transition-all duration-200 ${
+                  isSelected
+                    ? "border-indigo-500/50 shadow-lg shadow-indigo-900/20"
+                    : r.isAuspicious ? "border-amber-500/30" : "border-white/8"
                 }`}
               >
                 {/* 卡片頂部：名稱 + 分數 */}
-                <div className="flex items-start gap-3 p-4">
+                <div
+                  className="flex items-start gap-3 p-4 cursor-pointer"
+                  onClick={() => handleCardClick(r)}
+                >
                   {/* 補運指數圓形分數 */}
                   <div className="relative w-12 h-12 flex-shrink-0">
                     <svg viewBox="0 0 48 48" className="w-full h-full -rotate-90">
@@ -916,13 +1136,11 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                       {isExpanded ? "收起分析 ↑" : "🧭 三維分析 ↓"}
                     </button>
                   )}
-                  {/* 價格標籤 */}
                   {r.priceLevel && (
                     <span className="text-[10px] text-emerald-400/70 border border-emerald-500/20 px-2 py-1 rounded-lg bg-emerald-500/5">
                       {"$".repeat(r.priceLevel)}
                     </span>
                   )}
-                  {/* 分享按鈕 */}
                   <button
                     onClick={() => handleShare(r)}
                     disabled={sharingId === r.id}
