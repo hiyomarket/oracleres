@@ -229,6 +229,54 @@ export const pointsRouter = router({
   }),
 
   /**
+   * 查詢本月簽到日曆（哪幾天有簽到）
+   */
+  getMonthlyCalendar: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return { signedDays: [], streak: 0, totalThisMonth: 0, year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
+    // 取本月第一天和下月第一天（台灣時間 UTC+8）
+    const now = new Date();
+    const twNow = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+    const year = twNow.getUTCFullYear();
+    const month = twNow.getUTCMonth(); // 0-indexed
+    const monthStart = new Date(Date.UTC(year, month, 1) - 8 * 60 * 60 * 1000);
+    const monthEnd = new Date(Date.UTC(year, month + 1, 1) - 8 * 60 * 60 * 1000);
+    // 查詢本月所有 daily_signin 記錄
+    const txRows = await db
+      .select({ createdAt: pointsTransactions.createdAt })
+      .from(pointsTransactions)
+      .where(
+        and(
+          eq(pointsTransactions.userId, ctx.user.id),
+          eq(pointsTransactions.type, 'daily_signin'),
+          gte(pointsTransactions.createdAt, monthStart)
+        )
+      )
+      .orderBy(pointsTransactions.createdAt);
+    // 過濾本月內的記錄，轉換為台灣日期字串
+    const signedDays = txRows
+      .filter(row => row.createdAt < monthEnd)
+      .map(row => {
+        const twDate = new Date(row.createdAt.getTime() + 8 * 60 * 60 * 1000);
+        return `${twDate.getUTCFullYear()}-${String(twDate.getUTCMonth() + 1).padStart(2, '0')}-${String(twDate.getUTCDate()).padStart(2, '0')}`;
+      });
+    const uniqueSignedDays = Array.from(new Set(signedDays));
+    // 取用戶當前 streak
+    const [userRow] = await db
+      .select({ signinStreak: users.signinStreak })
+      .from(users)
+      .where(eq(users.id, ctx.user.id))
+      .limit(1);
+    return {
+      signedDays: uniqueSignedDays,
+      streak: Number(userRow?.signinStreak ?? 0),
+      totalThisMonth: uniqueSignedDays.length,
+      year,
+      month: month + 1, // 1-indexed
+    };
+  }),
+
+  /**
    * 查詢積分餘額與最近 10 筆交易記錄
    */
   getBalance: protectedProcedure.query(async ({ ctx }) => {

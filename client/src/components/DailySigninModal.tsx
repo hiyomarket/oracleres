@@ -99,8 +99,10 @@ function MilestoneNode({
 // ── 主組件 ────────────────────────────────────────────────────────────────────
 export function DailySigninModal() {
   const { user } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  const [hasTriggered, setHasTriggered] = useState(false);
+  // 用 dismissed 追蹤用戶是否已主動關閉，避免 HMR 重置狀態
+  const [dismissed, setDismissed] = useState(false);
+  // 延遲顯示用
+  const [showModal, setShowModal] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [claimResult, setClaimResult] = useState<{
     pointsEarned: number;
@@ -134,7 +136,8 @@ export function DailySigninModal() {
       utils.points.getBalance.invalidate();
       const delay = res.isStreakMilestone ? 3500 : 2500;
       setTimeout(() => {
-        setIsOpen(false);
+        setShowModal(false);
+        setDismissed(true);
         setTimeout(() => { setClaimed(false); setClaimResult(null); }, 400);
       }, delay);
     },
@@ -143,34 +146,33 @@ export function DailySigninModal() {
     },
   });
 
-  // 當 user 剛載入（從 null 變成有值），重置 hasTriggered 以重新偵測
+  // 當 user 變化時，重置 dismissed 狀態
   const prevUserIdRef = useRef<number | null>(null);
   useEffect(() => {
     const currentId = user?.id ?? null;
     if (prevUserIdRef.current !== currentId) {
       prevUserIdRef.current = currentId;
       if (currentId !== null) {
-        // 用戶剛登入或頁面剛載入，重置觸發狀態
-        setHasTriggered(false);
+        setDismissed(false);
+        setShowModal(false);
       }
     }
   }, [user?.id]);
 
+  // 當 signinStatus 載入且未簽到，延遲 1.5 秒顯示彈窗
   useEffect(() => {
     if (!user) return;
-    if (hasTriggered) return;
+    if (dismissed) return;
     if (signinStatus === undefined) return;
     if (!signinStatus.hasSigned) {
-      setHasTriggered(true);
-      const timer = setTimeout(() => setIsOpen(true), 1500);
+      const timer = setTimeout(() => setShowModal(true), 1500);
       return () => clearTimeout(timer);
-    } else {
-      setHasTriggered(true);
     }
-  }, [user, signinStatus, hasTriggered]);
+  }, [user, signinStatus, dismissed]);
 
   const handleClose = () => {
-    setIsOpen(false);
+    setShowModal(false);
+    setDismissed(true);
     setTimeout(() => { setClaimed(false); setClaimResult(null); }, 400);
   };
 
@@ -184,7 +186,7 @@ export function DailySigninModal() {
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {showModal && (
         <>
           {/* 背景遮罩 */}
           <motion.div

@@ -262,6 +262,12 @@ export function SharedNav({ currentPage }: SharedNavProps) {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { isAdmin } = usePermissions();
+  const desktopNavRef = useRef<HTMLDivElement>(null);
+  const mobileNavRef = useRef<HTMLDivElement>(null);
+  const [desktopCanScrollLeft, setDesktopCanScrollLeft] = useState(false);
+  const [desktopCanScrollRight, setDesktopCanScrollRight] = useState(false);
+  const [mobileCanScrollLeft, setMobileCanScrollLeft] = useState(false);
+  const [mobileCanScrollRight, setMobileCanScrollRight] = useState(false);
   const notifyMutation = trpc.oracle.notifyDailyEnergy.useMutation({
     onSuccess: () => toast.success("今日能量通知已發送！"),
     onError: () => toast.error("通知發送失敗，請稍後再試。"),
@@ -280,6 +286,33 @@ export function SharedNav({ currentPage }: SharedNavProps) {
   const visibleNavItems = navLoading || !navModules
     ? FALLBACK_NAV
     : navModules.filter(m => m.navPath && m.navPath.length > 0);
+
+  // 檢查捲動狀態（是否可以向左/右捲動）
+  const checkScrollState = (el: HTMLDivElement, setLeft: (v: boolean) => void, setRight: (v: boolean) => void) => {
+    setLeft(el.scrollLeft > 4);
+    setRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+
+  // 自動捲動到當前活躍項目
+  useEffect(() => {
+    const scrollToActive = (ref: React.RefObject<HTMLDivElement | null>) => {
+      if (!ref.current) return;
+      const el = ref.current;
+      const activeBtn = el.querySelector('[data-active="true"]') as HTMLElement;
+      if (activeBtn) {
+        const btnLeft = activeBtn.offsetLeft;
+        const btnWidth = activeBtn.offsetWidth;
+        const containerWidth = el.clientWidth;
+        el.scrollTo({ left: btnLeft - containerWidth / 2 + btnWidth / 2, behavior: 'smooth' });
+      }
+      checkScrollState(el, ref === desktopNavRef ? setDesktopCanScrollLeft : setMobileCanScrollLeft, ref === desktopNavRef ? setDesktopCanScrollRight : setMobileCanScrollRight);
+    };
+    const timer = setTimeout(() => {
+      scrollToActive(desktopNavRef);
+      scrollToActive(mobileNavRef);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [visibleNavItems, currentPage]);
 
   return (
     <>
@@ -352,46 +385,75 @@ export function SharedNav({ currentPage }: SharedNavProps) {
 
         {/* 第二行：功能導覽列（桌機 + 手機，統一在頂部，支援左右滑動） */}
         <div className="border-t border-white/5">
-          {/* 桌機：居中顯示 */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto scrollbar-none gap-1 px-4 py-1.5">
-            {visibleNavItems.map((item) => {
-              const navPath = (item as { navPath: string }).navPath ?? (item as { path?: string }).path ?? "/";
-              const label = (item as { name?: string; label?: string }).name ?? (item as { label?: string }).label ?? "";
-              const locked = !item.hasAccess;
-              const isActive = navPath === "/" ? currentPage === "warRoom" || currentPage === "" : location.pathname === navPath;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    if (locked) { toast.error("此功能需要升級方案才能使用"); return; }
-                    navigate(navPath);
-                  }}
-                  title={locked ? "鎖定—需要升級方案" : label}
-                  className={`
-                    flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all shrink-0
-                    ${locked
-                      ? "text-slate-600 border border-transparent cursor-not-allowed opacity-50"
-                      : isActive
-                        ? "bg-amber-900/40 border border-amber-600/50 text-amber-300"
-                        : "text-slate-400 hover:text-amber-400 hover:bg-white/5 border border-transparent"
-                    }
-                  `}
-                >
-                  <span className="text-[28px] leading-none">{item.icon ?? "🔒"}</span>
-                  <span>{label}</span>
-                  {locked && <span className="text-[10px] ml-0.5">🔒</span>}
-                </button>
-              );
-            })}
+          {/* 桌機：可左右滑動，加漸層提示 */}
+          <div className="hidden md:block relative">
+            {/* 左漸層提示 */}
+            {desktopCanScrollLeft && (
+              <div className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to right, #050d14 0%, transparent 100%)' }} />
+            )}
+            {/* 右漸層提示 */}
+            {desktopCanScrollRight && (
+              <div className="absolute right-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to left, #050d14 0%, transparent 100%)' }} />
+            )}
+            <div
+              ref={desktopNavRef}
+              className="flex items-center overflow-x-auto scrollbar-none gap-1 px-4 py-1.5"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+              onScroll={(e) => checkScrollState(e.currentTarget, setDesktopCanScrollLeft, setDesktopCanScrollRight)}
+            >
+              {visibleNavItems.map((item) => {
+                const navPath = (item as { navPath: string }).navPath ?? (item as { path?: string }).path ?? "/";
+                const label = (item as { name?: string; label?: string }).name ?? (item as { label?: string }).label ?? "";
+                const locked = !item.hasAccess;
+                const isActive = navPath === "/" ? currentPage === "warRoom" || currentPage === "" : location.pathname === navPath;
+                return (
+                  <button
+                    key={item.id}
+                    data-active={isActive ? "true" : undefined}
+                    onClick={() => {
+                      if (locked) { toast.error("此功能需要升級方案才能使用"); return; }
+                      navigate(navPath);
+                    }}
+                    title={locked ? "鎖定—需要升級方案" : label}
+                    className={`
+                      flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all shrink-0
+                      ${locked
+                        ? "text-slate-600 border border-transparent cursor-not-allowed opacity-50"
+                        : isActive
+                          ? "bg-amber-900/40 border border-amber-600/50 text-amber-300"
+                          : "text-slate-400 hover:text-amber-400 hover:bg-white/5 border border-transparent"
+                      }
+                    `}
+                  >
+                    <span className="text-[28px] leading-none">{item.icon ?? "🔒"}</span>
+                    <span>{label}</span>
+                    {locked && <span className="text-[10px] ml-0.5">🔒</span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* 手機：居中顯示，支援左右滑動 */}
-          <div
-            className="md:hidden flex items-center justify-center overflow-x-auto scrollbar-none px-2 py-1"
-            style={{ WebkitOverflowScrolling: "touch" }}
-          >
-            {/* 使用 inline-flex 讓項目可以超出容器觸發滑動，同時 justify-center 讓少量項目居中 */}
-            <div className="flex items-center gap-1 min-w-max mx-auto">
+          {/* 手機：可左右滑動，加漸層提示 */}
+          <div className="md:hidden relative">
+            {/* 左漸層提示 */}
+            {mobileCanScrollLeft && (
+              <div className="absolute left-0 top-0 bottom-0 w-10 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to right, #050d14 0%, transparent 100%)' }} />
+            )}
+            {/* 右漸層提示 */}
+            {mobileCanScrollRight && (
+              <div className="absolute right-0 top-0 bottom-0 w-10 z-10 pointer-events-none"
+                style={{ background: 'linear-gradient(to left, #050d14 0%, transparent 100%)' }} />
+            )}
+            <div
+              ref={mobileNavRef}
+              className="flex items-center overflow-x-auto scrollbar-none px-2 py-1"
+              style={{ WebkitOverflowScrolling: "touch" }}
+              onScroll={(e) => checkScrollState(e.currentTarget, setMobileCanScrollLeft, setMobileCanScrollRight)}
+            >
               {visibleNavItems.map((item) => {
                 const navPath = (item as { navPath: string }).navPath ?? "/";
                 const label = (item as { name?: string; label?: string }).name ?? (item as { label?: string }).label ?? "";
@@ -400,6 +462,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                 return (
                   <button
                     key={item.id}
+                    data-active={isActive ? "true" : undefined}
                     onClick={() => {
                       if (locked) { toast.error("此功能需要升級方案才能使用"); return; }
                       navigate(navPath);

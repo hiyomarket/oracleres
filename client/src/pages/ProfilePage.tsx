@@ -392,6 +392,11 @@ export default function ProfilePage() {
   const isOwner = !!(accountStatus?.isOwner);
   const { data: profile, isLoading: profileLoading } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
 
+  // 簽到日曆資料
+  const { data: calendarData } = trpc.points.getMonthlyCalendar.useQuery(undefined, {
+    staleTime: 0,
+    refetchOnMount: true,
+  });
   // 主帳號使用靜態資料，其他用戶使用 DB 動態資料
   const effectiveProfile = isOwner ? OWNER_STATIC_PROFILE : profile;
   const displayName = isOwner ? OWNER_STATIC_PROFILE.displayName : (profile?.displayName ?? user?.name ?? '您');
@@ -837,6 +842,88 @@ export default function ProfilePage() {
               </h2>
               <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
                 <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{autoNotes}</p>
+              </div>
+            </section>
+          );
+        })()}
+
+        {/* ─── 簽到日曆視圖 ─── */}
+        {calendarData && (() => {
+          const { signedDays, streak, totalThisMonth, year, month } = calendarData;
+          const signedSet = new Set(signedDays);
+          // 本月天數
+          const daysInMonth = new Date(year, month, 0).getDate();
+          // 本月第一天是星期幾（日曆對齊）
+          const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 0=日
+          const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+          const todayTW = new Date(Date.now() + 8 * 60 * 60 * 1000);
+          const todayStr = `${todayTW.getUTCFullYear()}-${String(todayTW.getUTCMonth()+1).padStart(2,'0')}-${String(todayTW.getUTCDate()).padStart(2,'0')}`;
+          const tierLabel = streak >= 20 ? '🥇 黃金' : streak >= 6 ? '🥈 白銀' : '🥉 青銅';
+          const tierColor = streak >= 20 ? 'text-yellow-300' : streak >= 6 ? 'text-gray-300' : 'text-orange-400';
+          return (
+            <section className="bg-gray-900/60 border border-orange-500/20 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📅</span>
+                  <h3 className="text-sm font-bold text-orange-300">簽到日曆</h3>
+                  <span className="text-xs text-gray-500">{year}年 {monthNames[month-1]}</span>
+                </div>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className={`font-bold ${tierColor}`}>{tierLabel}</span>
+                  <span className="text-gray-400">連續 <span className="text-orange-300 font-bold">{streak}</span> 天</span>
+                  <span className="text-gray-400">本月 <span className="text-green-300 font-bold">{totalThisMonth}</span> 天</span>
+                </div>
+              </div>
+              {/* 星期標題 */}
+              <div className="grid grid-cols-7 gap-1 mb-1">
+                {['日','一','二','三','四','五','六'].map(d => (
+                  <div key={d} className="text-center text-[10px] text-gray-500 py-1">{d}</div>
+                ))}
+              </div>
+              {/* 日期格子 */}
+              <div className="grid grid-cols-7 gap-1">
+                {/* 空白占位 */}
+                {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+                  <div key={`empty-${i}`} />
+                ))}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const day = i + 1;
+                  const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                  const isSigned = signedSet.has(dateStr);
+                  const isToday = dateStr === todayStr;
+                  return (
+                    <div
+                      key={day}
+                      className={`relative aspect-square rounded-lg flex items-center justify-center text-xs font-medium transition-all ${
+                        isSigned
+                          ? 'bg-orange-500/30 border border-orange-400/60 text-orange-200'
+                          : isToday
+                            ? 'bg-gray-700/60 border border-cyan-500/50 text-cyan-300'
+                            : 'bg-gray-800/40 border border-gray-700/30 text-gray-500'
+                      }`}
+                    >
+                      {day}
+                      {isSigned && (
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-orange-400 rounded-full" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* 圖例 */}
+              <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-500">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-orange-500/30 border border-orange-400/60" />
+                  <span>已簽到</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-gray-800/40 border border-gray-700/30" />
+                  <span>未簽到</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-gray-700/60 border border-cyan-500/50" />
+                  <span>今日</span>
+                </div>
               </div>
             </section>
           );

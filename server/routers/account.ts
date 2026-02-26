@@ -13,7 +13,7 @@ import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { ENV } from "../_core/env";
 import { getDb } from "../db";
-import { inviteCodes, userProfiles, users, oracleSessions, lotterySessions, scratchLogs } from "../../drizzle/schema";
+import { inviteCodes, userProfiles, users, oracleSessions, lotterySessions, scratchLogs, userSubscriptions } from "../../drizzle/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { notifyOwner } from "../_core/notification";
 
@@ -446,8 +446,29 @@ export const accountRouter = router({
           createdAt: new Date(),
         });
       }
-      // 首次建立檔案時通知主帳號
+      // 首次建立檔案時：自動分配基礎方案 + 通知主帳號
       if (existing.length === 0) {
+        // 自動建立 userSubscriptions 記錄，分配基礎方案
+        try {
+          const [existingSub] = await db.select({ id: userSubscriptions.id })
+            .from(userSubscriptions)
+            .where(eq(userSubscriptions.userId, ctx.user.id))
+            .limit(1);
+          if (!existingSub) {
+            await db.insert(userSubscriptions).values({
+              userId: ctx.user.id,
+              planId: 'basic',
+              planExpiresAt: null,
+              customModules: [],
+            });
+            // 同步 users 表的 planId
+            await db.update(users)
+              .set({ planId: 'basic' })
+              .where(eq(users.id, ctx.user.id));
+          }
+        } catch (e) {
+          console.warn('[Account] Failed to assign basic plan:', e);
+        }
         const userName = input.displayName ?? ctx.user.name ?? `用戶 #${ctx.user.id}`;
         try {
           await notifyOwner({

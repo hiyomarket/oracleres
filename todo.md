@@ -1288,3 +1288,10 @@
 - [x] 修復：getSigninStatus 加入 staleTime: 0 + refetchOnMount: true + retry: 2，確保每次頁面載入都重新查詢
 - [x] 修復：加入 prevUserIdRef 追蹤 user.id 變化，當 user 從 null 變成有值時重置 hasTriggered，確保時序正確
 - [x] 112 項測試全部通過，TypeScript 零錯誤
+
+## Bug 修復 v3.2（2026-02-26）
+
+- [x] 新用戶完成三階段資料後未自動分配基礎方案
+- [x] 每日簽到彈窗仍未正常跳出（需瀏覽器實測確認）
+- [x] 個人頁面加入本月簽到日曆視圖
+- [x] 導覽列功能超出版面（桌機與手機均有，需改為可水平捲動並加漸層提示）
