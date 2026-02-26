@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import {
   calculateInnateAura,
   calculateAuraScore,
+  calculateOutfitBoost,
   getAuraLevel,
+  DEFAULT_ENGINE_RULES,
+  type AuraEngineRules,
 } from "./lib/auraEngine";
 
 // 測試用命格資料
@@ -110,5 +113,67 @@ describe("auraEngine - getAuraLevel", () => {
     // 至少有兩個不同等級
     const uniqueLabels = new Set(labels);
     expect(uniqueLabels.size).toBeGreaterThan(1);
+  });
+});
+
+// ============================================================
+// DB 規則串接測試（v4.6 修復驗證）
+// ============================================================
+describe("AuraEngine DB rules integration", () => {
+  const natal = { 木: 0.1, 火: 0.1, 土: 0.3, 金: 0.3, 水: 0.2 };
+  const fav = ["火", "木"];
+  const unfav = ["金"];
+  const day = { 木: 0.3, 火: 0.3, 土: 0.2, 金: 0.1, 水: 0.1 };
+
+  it("innateMax 調低後，天命底盤分數不超過新上限", () => {
+    const rules: AuraEngineRules = { ...DEFAULT_ENGINE_RULES, innateMax: 70, innateMin: 20 };
+    const result = calculateInnateAura(natal, fav, unfav, day, undefined, rules);
+    expect(result.score).toBeLessThanOrEqual(70);
+    expect(result.score).toBeGreaterThanOrEqual(20);
+  });
+
+  it("innateMin 調高後，即使五行不利也不低於新下限", () => {
+    const rules: AuraEngineRules = { ...DEFAULT_ENGINE_RULES, innateMin: 55, innateMax: 90 };
+    const result = calculateInnateAura(natal, ["金"], ["火"], day, undefined, rules);
+    expect(result.score).toBeGreaterThanOrEqual(55);
+  });
+
+  it("boostCap 調低後，穿搭加成總分不超過新上限", () => {
+    const rules: AuraEngineRules = { ...DEFAULT_ENGINE_RULES, boostCap: 8, directMatchRatio: 2.0 };
+    const innate = calculateInnateAura(natal, fav, unfav, day, undefined, rules);
+    const outfit = {
+      upper: { color: "紅色", wuxing: "火" },
+      lower: { color: "綠色", wuxing: "木" },
+      shoes: { color: "紅色", wuxing: "火" },
+      outer: { color: "綠色", wuxing: "木" },
+      bracelet: { color: "紅色", wuxing: "火" },
+    };
+    const boost = calculateOutfitBoost(innate, outfit, rules);
+    const total = boost.reduce((s, b) => s + b.points, 0);
+    expect(total).toBeLessThanOrEqual(8);
+  });
+
+  it("手串權重調高後，手串加分高於預設", () => {
+    const highBracelet: AuraEngineRules = {
+      ...DEFAULT_ENGINE_RULES,
+      categoryWeights: { ...DEFAULT_ENGINE_RULES.categoryWeights, bracelet: 10 },
+    };
+    const innate = calculateInnateAura(natal, fav, unfav, day);
+    const outfit = { bracelet: { color: "紅色", wuxing: "火" } };
+    const defaultBoost = calculateOutfitBoost(innate, outfit, DEFAULT_ENGINE_RULES);
+    const highBoost = calculateOutfitBoost(innate, outfit, highBracelet);
+    const defaultPts = defaultBoost.find(b => b.category === "bracelet")?.points ?? 0;
+    const highPts = highBoost.find(b => b.category === "bracelet")?.points ?? 0;
+    expect(highPts).toBeGreaterThan(defaultPts);
+  });
+
+  it("calculateAuraScore 使用自訂規則時，totalScore 在正確範圍", () => {
+    const rules: AuraEngineRules = { ...DEFAULT_ENGINE_RULES, innateMin: 40, innateMax: 80, boostCap: 15 };
+    const outfit = { upper: { color: "紅色", wuxing: "火" } };
+    const result = calculateAuraScore(natal, fav, unfav, day, outfit, undefined, rules);
+    expect(result.innateAura).toBeGreaterThanOrEqual(40);
+    expect(result.innateAura).toBeLessThanOrEqual(80);
+    expect(result.outfitBoost).toBeLessThanOrEqual(15);
+    expect(result.totalScore).toBe(result.innateAura + result.outfitBoost);
   });
 });

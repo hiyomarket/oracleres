@@ -1454,3 +1454,25 @@
 - [x] AdminLogicConfig BraceletsTab 整合「拍照分析」按鈕 + 分析後自動帶入表單
 - [x] 163 項測試全部通過，TypeScript 零錯誤
 - [x] 儲存 V4.5 checkpoint
+
+## Bug 修復 v4.6 - admin/logic-config 規則設定未串接前台
+
+- [ ] 診斷 simulateOutfit 是否從 DB 讀取 aura_engine_config 規則
+- [ ] 診斷 getOutfitSimulatorData 天命底盤計算是否套用 DB 規則
+- [ ] 修復串接：確保後台規則變更即時影響前台 Aura Score
+- [ ] 撰寫端對端測試驗證修復
+- [ ] 儲存 v4.6 checkpoint
+
+## Bug 修復 v4.6 - admin/logic-config 能量模擬器規則串接修復（2026-02-27）
+
+- [x] 診斷根本原因：auraEngine.ts 使用硬編碼常數，simulateOutfit 未從 DB 讀取規則
+- [x] auraEngine.ts 新增 AuraEngineRules 介面（categoryWeights/boostCap/innateMin/innateMax 等）
+- [x] auraEngine.ts 新增 DEFAULT_ENGINE_RULES 預設常數物件（向後相容）
+- [x] calculateInnateAura 新增可選 rules 參數
+- [x] calculateOutfitBoost 新增可選 rules 參數
+- [x] calculateAuraScore 新增可選 rules 參數並傳遞給子函數
+- [x] getOutfitSimulatorData 執行前從 aura_engine_config DB 讀取規則並建構 engineRules
+- [x] simulateOutfit 執行前從 aura_engine_config DB 讀取規則並建構 simEngineRules
+- [x] 修復 db 變數重複宣告的 TypeScript 錯誤（改用 dbSim 命名）
+- [x] 新增 5 個 DB 規則串接測試（innateMax/innateMin/boostCap/categoryWeights/calculateAuraScore）
+- [x] 168 項測試全部通過，TypeScript 零錯誤

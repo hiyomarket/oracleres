@@ -106,6 +106,34 @@ export interface AuraScoreResult {
   }>;
 }
 
+/** 從 DB 讀取的可配置計算規則 */
+export interface AuraEngineRules {
+  categoryWeights: Record<string, number>; // 各部位權重
+  directMatchRatio: number;   // 直接補益比例
+  generatesMatchRatio: number; // 相生補益比例
+  controlsMatchRatio: number;  // 制衡加成比例
+  boostCap: number;            // 穿搭加成上限
+  innateMin: number;           // 天命底盤最低分
+  innateMax: number;           // 天命底盤最高分
+  natalWeight: number;         // 本命五行權重(%)
+  timeWeight: number;          // 時間五行權重(%)
+  weatherWeight: number;       // 天氣五行權重(%)
+}
+
+/** 預設規則（當 DB 未初始化時使用） */
+export const DEFAULT_ENGINE_RULES: AuraEngineRules = {
+  categoryWeights: { upper: 5, outer: 4, lower: 3, shoes: 2, accessory: 2, bracelet: 3 },
+  directMatchRatio: 1.0,
+  generatesMatchRatio: 0.7,
+  controlsMatchRatio: 0.5,
+  boostCap: 20,
+  innateMin: 30,
+  innateMax: 90,
+  natalWeight: 30,
+  timeWeight: 50,
+  weatherWeight: 20,
+};
+
 // ============================================================
 // 核心計算函數
 // ============================================================
@@ -124,33 +152,41 @@ export function calculateInnateAura(
   unfavorableElements: string[],
   dayElementRatio: ElementRatio,
   weatherData?: WeatherData,
+  rules?: AuraEngineRules,
 ): InnateAuraAnalysis {
-  const elements = ["木", "火", "土", "金", "水"] as const;
+  const r = rules ?? DEFAULT_ENGINE_RULES;
+  const elements = ["\u6728", "\u706b", "\u571f", "\u91d1", "\u6c34"] as const;
 
-  // 1. 本命分析（30%）：喜用神在今日的強度
+  // 各維度權重（從 DB 讀取，預設 30/50/20）
+  const natalW = r.natalWeight / 100;   // e.g. 0.30
+  const timeW  = r.timeWeight  / 100;   // e.g. 0.50
+  const weatherW = r.weatherWeight / 100; // e.g. 0.20
+
+  // 1. 本命分析：喜用神在今日的強度
   let natalScore = 0;
   for (const el of favorableElements) {
     const natalStrength = natalElementRatio[el] ?? 0;
-    // 喜用神本命越弱，補運需求越大，今日若有補到則得分越高
-    natalScore += (1 - natalStrength) * 20; // 最多 20 分
+    natalScore += (1 - natalStrength) * 20;
   }
-  natalScore = Math.min(30, natalScore); // 本命貢獻上限 30
+  natalScore = Math.min(r.innateMax * natalW, natalScore);
 
-  // 2. 時間分析（50%）：今日干支五行與喜用神的匹配度
+  // 2. 時間分析：今日干支五行與喜用神的匹配度
   let timeScore = 0;
   for (const el of elements) {
     const dayStrength = dayElementRatio[el];
     if (favorableElements.includes(el)) {
-      timeScore += dayStrength * 50; // 喜用神當日越強越好
+      timeScore += dayStrength * 50;
     } else if (unfavorableElements.includes(el)) {
-      timeScore -= dayStrength * 30; // 忌神當日越強越差
+      timeScore -= dayStrength * 30;
     }
   }
-  // 映射到 0-50 分
-  timeScore = Math.max(0, Math.min(50, timeScore * 100 + 25));
+  // 映射到 0 ~ innateMax*timeW
+  const timeMax = r.innateMax * timeW;
+  timeScore = Math.max(0, Math.min(timeMax, timeScore * 100 + timeMax / 2));
 
-  // 3. 環境分析（20%）：天氣五行調候
-  let weatherScore = 10; // 預設中性分
+  // 3. 環境分析：天氣五行調候
+  const weatherBase = r.innateMax * weatherW * 0.5; // 預設中性分
+  let weatherScore = weatherBase;
   if (weatherData?.wuxingRatio) {
     for (const el of favorableElements) {
       weatherScore += (weatherData.wuxingRatio[el as keyof ElementRatio] ?? 0) * 15;
@@ -158,12 +194,12 @@ export function calculateInnateAura(
     for (const el of unfavorableElements) {
       weatherScore -= (weatherData.wuxingRatio[el as keyof ElementRatio] ?? 0) * 10;
     }
-    weatherScore = Math.max(0, Math.min(20, weatherScore));
+    weatherScore = Math.max(0, Math.min(r.innateMax * weatherW, weatherScore));
   }
 
-  // 綜合分數（30-90 區間）
+  // 綜合分數（innateMin ~ innateMax 區間）
   const rawScore = natalScore + timeScore + weatherScore;
-  const score = Math.round(Math.max(30, Math.min(90, rawScore)));
+  const score = Math.round(Math.max(r.innateMin, Math.min(r.innateMax, rawScore)));
 
   // 找出今日最弱和最強五行
   const sorted = [...elements].sort(
@@ -204,8 +240,9 @@ export function calculateInnateAura(
 export function calculateOutfitBoost(
   innateAnalysis: InnateAuraAnalysis,
   outfitCombination: OutfitCombination,
+  rules?: AuraEngineRules,
 ): AuraScoreResult["boostBreakdown"] {
-  const BOOST_CAP = 20;
+  const r = rules ?? DEFAULT_ENGINE_RULES;
   const breakdown: AuraScoreResult["boostBreakdown"] = [];
 
   const { weakestElements, favorableElements } = innateAnalysis;
@@ -215,15 +252,8 @@ export function calculateOutfitBoost(
     if (!seen.has(el)) { seen.add(el); targetElements.push(el); }
   }
 
-  // 各部位的加分權重（上衣最顯眼，加分最多）
-  const CATEGORY_WEIGHTS: Record<string, number> = {
-    upper: 5,
-    outer: 4,
-    lower: 3,
-    shoes: 2,
-    accessory: 2,
-    bracelet: 3,
-  };
+  // 各部位的加分權重（從 DB 讀取）
+  const CATEGORY_WEIGHTS = r.categoryWeights;
 
   for (const [cat, item] of Object.entries(outfitCombination)) {
     if (!item) continue;
@@ -233,19 +263,18 @@ export function calculateOutfitBoost(
     let reason = "";
 
     if (targetElements.includes(wuxing)) {
-      // 直接補益喜用神：滿分
-      points = weight;
+      // 直接補益喜用神
+      points = Math.round(weight * r.directMatchRatio);
       reason = `${wuxing}系${item.color}直接補益今日喜用神，能量加成 +${points}`;
     } else if (GENERATES[wuxing] && targetElements.includes(GENERATES[wuxing])) {
-      // 相生喜用神：70% 加分
-      points = Math.round(weight * 0.7);
+      // 相生喜用神
+      points = Math.round(weight * r.generatesMatchRatio);
       reason = `${wuxing}系${item.color}生扶${GENERATES[wuxing]}，間接補益 +${points}`;
     } else if (CONTROLS[wuxing] && innateAnalysis.strongestElements.includes(CONTROLS[wuxing])) {
-      // 剋制今日過強的五行：50% 加分
-      points = Math.round(weight * 0.5);
+      // 尅制今日過強的五行
+      points = Math.round(weight * r.controlsMatchRatio);
       reason = `${wuxing}系${item.color}制衡過強的${CONTROLS[wuxing]}，平衡加成 +${points}`;
     } else {
-      // 中性或輕微不利
       points = 0;
       reason = `${wuxing}系${item.color}對今日能量影響中性`;
     }
@@ -259,15 +288,14 @@ export function calculateOutfitBoost(
     });
   }
 
-  // 封頂處理
+  // 封頂處理（使用 DB 設定的 boostCap）
   let totalBoost = breakdown.reduce((sum, b) => sum + b.points, 0);
-  if (totalBoost > BOOST_CAP) {
-    // 按比例縮放
-    const scale = BOOST_CAP / totalBoost;
+  if (totalBoost > r.boostCap) {
+    const scale = r.boostCap / totalBoost;
     for (const b of breakdown) {
       b.points = Math.round(b.points * scale);
     }
-    totalBoost = BOOST_CAP;
+    totalBoost = r.boostCap;
   }
 
   return breakdown;
@@ -283,17 +311,20 @@ export function calculateAuraScore(
   dayElementRatio: ElementRatio,
   outfitCombination: OutfitCombination = {},
   weatherData?: WeatherData,
+  rules?: AuraEngineRules,
 ): AuraScoreResult {
+  const r = rules ?? DEFAULT_ENGINE_RULES;
   const innateAnalysis = calculateInnateAura(
     natalElementRatio,
     favorableElements,
     unfavorableElements,
     dayElementRatio,
     weatherData,
+    r,
   );
 
-  const boostBreakdown = calculateOutfitBoost(innateAnalysis, outfitCombination);
-  const outfitBoost = Math.min(20, boostBreakdown.reduce((sum, b) => sum + b.points, 0));
+  const boostBreakdown = calculateOutfitBoost(innateAnalysis, outfitCombination, r);
+  const outfitBoost = Math.min(r.boostCap, boostBreakdown.reduce((sum, b) => sum + b.points, 0));
   const totalScore = Math.min(100, innateAnalysis.score + outfitBoost);
 
   return {

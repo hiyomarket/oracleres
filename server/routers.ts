@@ -20,7 +20,7 @@ import { solarToLunarByYMD } from "./lib/lunarConverter";
 import { getMoonPhase } from "./lib/moonPhase";
 import { getAllHourEnergies, getCurrentHourEnergy, getBestHours, getWorstHours, getAllHourEnergiesDynamic, getCurrentHourEnergyDynamic, HOUR_BRANCHES, getHourStem } from "./lib/hourlyEnergy";
 import { getDb, saveOracleSession, getOracleHistory, getOracleStats, saveLotterySession, getLotteryHistory, getLotteryStats, getUserProfileForEngine } from "./db";
-import { userProfiles, userSubscriptions, plans, users, pointsTransactions } from "../drizzle/schema";
+import { userProfiles, userSubscriptions, plans, users, pointsTransactions, auraEngineConfig } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
 import { generateLotteryNumbers, generateLotterySets, generateScratchStrategies, analyzeAddressWuxing } from "./lib/lotteryAlgorithm";
@@ -2262,7 +2262,7 @@ ${profileDesc}
         lon: z.number().optional(),
       }))
       .query(async ({ input, ctx }) => {
-        const { calculateInnateAura, getAuraLevel } = await import('./lib/auraEngine');
+        const { calculateInnateAura, getAuraLevel, DEFAULT_ENGINE_RULES } = await import('./lib/auraEngine');
         const ep = await getUserProfileForEngine(ctx.user.id);
         const realNow = new Date();
         const twNow = new Date(realNow.getTime() + 8 * 60 * 60 * 1000);
@@ -2271,6 +2271,36 @@ ${profileDesc}
         const dateObj = new Date(Date.UTC(year, month - 1, day, 4, 0, 0));
         const dateInfo = getFullDateInfo(dateObj);
         const { yearPillar, monthPillar, dayPillar } = dateInfo;
+
+        // 從 DB 讀取 aura 計算規則
+        const db = await getDb();
+        let engineRules = { ...DEFAULT_ENGINE_RULES };
+        if (db) {
+          const dbRules = await db.select().from(auraEngineConfig);
+          if (dbRules.length > 0) {
+            const ruleMap: Record<string, number> = {};
+            for (const r of dbRules) { ruleMap[r.configKey] = parseFloat(r.configValue); }
+            engineRules = {
+              categoryWeights: {
+                upper:     ruleMap['upper']     ?? DEFAULT_ENGINE_RULES.categoryWeights.upper,
+                outer:     ruleMap['outer']     ?? DEFAULT_ENGINE_RULES.categoryWeights.outer,
+                lower:     ruleMap['lower']     ?? DEFAULT_ENGINE_RULES.categoryWeights.lower,
+                shoes:     ruleMap['shoes']     ?? DEFAULT_ENGINE_RULES.categoryWeights.shoes,
+                accessory: ruleMap['accessory'] ?? DEFAULT_ENGINE_RULES.categoryWeights.accessory,
+                bracelet:  ruleMap['bracelet']  ?? DEFAULT_ENGINE_RULES.categoryWeights.bracelet,
+              },
+              directMatchRatio:    ruleMap['direct_match']    ?? DEFAULT_ENGINE_RULES.directMatchRatio,
+              generatesMatchRatio: ruleMap['generates_match'] ?? DEFAULT_ENGINE_RULES.generatesMatchRatio,
+              controlsMatchRatio:  ruleMap['controls_match']  ?? DEFAULT_ENGINE_RULES.controlsMatchRatio,
+              boostCap:      ruleMap['boost_cap']      ?? DEFAULT_ENGINE_RULES.boostCap,
+              innateMin:     ruleMap['innate_min']     ?? DEFAULT_ENGINE_RULES.innateMin,
+              innateMax:     ruleMap['innate_max']     ?? DEFAULT_ENGINE_RULES.innateMax,
+              natalWeight:   ruleMap['natal_weight']   ?? DEFAULT_ENGINE_RULES.natalWeight,
+              timeWeight:    ruleMap['time_weight']    ?? DEFAULT_ENGINE_RULES.timeWeight,
+              weatherWeight: ruleMap['weather_weight'] ?? DEFAULT_ENGINE_RULES.weatherWeight,
+            };
+          }
+        }
 
         // 計算環境五行（含時辰）
         const twHour = twNow.getUTCHours();
@@ -2311,18 +2341,18 @@ ${profileDesc}
           } catch { /* ignore */ }
         }
 
-        // 計算 Innate Aura
+        // 計算 Innate Aura（傳入 DB 規則）
         const innateAnalysis = calculateInnateAura(
           ep.natalElementRatio,
           ep.favorableElements,
           ep.unfavorableElements,
           normalizedEnv,
           weatherData,
+          engineRules,
         );
         const auraLevel = getAuraLevel(innateAnalysis.score);
 
-        // 取得虛擬衣櫥
-        const db = await getDb();
+        // 取得虛擬衣樻（重用已存在的 db 變數）
         const { wardrobeItems } = await import('../drizzle/schema');
         const wardrobe = db ? await db.select().from(wardrobeItems).where(eq(wardrobeItems.userId, ctx.user.id)) : [];
 
@@ -2386,7 +2416,7 @@ ${profileDesc}
         lon: z.number().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        const { calculateAuraScore, getAuraLevel } = await import('./lib/auraEngine');
+        const { calculateAuraScore, getAuraLevel, DEFAULT_ENGINE_RULES } = await import('./lib/auraEngine');
         const ep = await getUserProfileForEngine(ctx.user.id);
         const realNow = new Date();
         const twNow = new Date(realNow.getTime() + 8 * 60 * 60 * 1000);
@@ -2395,6 +2425,36 @@ ${profileDesc}
         const dateObj = new Date(Date.UTC(year, month - 1, day, 4, 0, 0));
         const dateInfo = getFullDateInfo(dateObj);
         const { yearPillar, monthPillar, dayPillar } = dateInfo;
+
+        // 從 DB 讀取 aura 計算規則
+        const dbSim = await getDb();
+        let simEngineRules = { ...DEFAULT_ENGINE_RULES };
+        if (dbSim) {
+          const dbRules = await dbSim.select().from(auraEngineConfig);
+          if (dbRules.length > 0) {
+            const ruleMap: Record<string, number> = {};
+            for (const r of dbRules) { ruleMap[r.configKey] = parseFloat(r.configValue); }
+            simEngineRules = {
+              categoryWeights: {
+                upper:     ruleMap['upper']     ?? DEFAULT_ENGINE_RULES.categoryWeights.upper,
+                outer:     ruleMap['outer']     ?? DEFAULT_ENGINE_RULES.categoryWeights.outer,
+                lower:     ruleMap['lower']     ?? DEFAULT_ENGINE_RULES.categoryWeights.lower,
+                shoes:     ruleMap['shoes']     ?? DEFAULT_ENGINE_RULES.categoryWeights.shoes,
+                accessory: ruleMap['accessory'] ?? DEFAULT_ENGINE_RULES.categoryWeights.accessory,
+                bracelet:  ruleMap['bracelet']  ?? DEFAULT_ENGINE_RULES.categoryWeights.bracelet,
+              },
+              directMatchRatio:    ruleMap['direct_match']    ?? DEFAULT_ENGINE_RULES.directMatchRatio,
+              generatesMatchRatio: ruleMap['generates_match'] ?? DEFAULT_ENGINE_RULES.generatesMatchRatio,
+              controlsMatchRatio:  ruleMap['controls_match']  ?? DEFAULT_ENGINE_RULES.controlsMatchRatio,
+              boostCap:      ruleMap['boost_cap']      ?? DEFAULT_ENGINE_RULES.boostCap,
+              innateMin:     ruleMap['innate_min']     ?? DEFAULT_ENGINE_RULES.innateMin,
+              innateMax:     ruleMap['innate_max']     ?? DEFAULT_ENGINE_RULES.innateMax,
+              natalWeight:   ruleMap['natal_weight']   ?? DEFAULT_ENGINE_RULES.natalWeight,
+              timeWeight:    ruleMap['time_weight']    ?? DEFAULT_ENGINE_RULES.timeWeight,
+              weatherWeight: ruleMap['weather_weight'] ?? DEFAULT_ENGINE_RULES.weatherWeight,
+            };
+          }
+        }
 
         const twHour = twNow.getUTCHours();
         const currentBranchIndex = HOUR_BRANCHES.findIndex(h => {
@@ -2440,6 +2500,7 @@ ${profileDesc}
           normalizedEnv,
           input.outfit as import('./lib/auraEngine').OutfitCombination,
           weatherData,
+          simEngineRules,
         );
 
         const auraLevel = getAuraLevel(result.totalScore);
