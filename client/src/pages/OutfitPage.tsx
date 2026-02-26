@@ -13,6 +13,7 @@ import { OutfitHourlyTimeline } from "@/components/OutfitHourlyTimeline";
 import { AuraScoreGauge } from "@/components/outfit/AuraScoreGauge";
 import { InteractiveMannequin, type BodyPart, type OutfitSelection } from "@/components/outfit/InteractiveMannequin";
 import { WardrobeSelector } from "@/components/outfit/WardrobeSelector";
+import { EnergyDetailPanel } from "@/components/outfit/EnergyDetailPanel";
 import { toast } from "sonner";
 import { Link } from "wouter";
 
@@ -73,6 +74,9 @@ export default function OutfitPage() {
   const [activePart, setActivePart] = useState<BodyPart | null>(null);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
+  // 能量說明 Panel 狀態
+  const [energyPanelOpen, setEnergyPanelOpen] = useState(false);
+  const [energyPanelPart, setEnergyPanelPart] = useState<BodyPart | null>(null);
   const [auraBoostResult, setAuraBoostResult] = useState<{
     innateAura: number;
     outfitBoost: number;
@@ -173,12 +177,21 @@ export default function OutfitPage() {
   };
 
   function handlePartClick(part: BodyPart) {
-    setActivePart(part);
-    setSelectorOpen(true);
+    // 如果該部位已有選擇，點擊時顯示能量說明 Panel
+    if (outfitSelection[part]) {
+      setEnergyPanelPart(part);
+      setEnergyPanelOpen(true);
+    } else {
+      setActivePart(part);
+      setSelectorOpen(true);
+    }
   }
 
   function handleSelectItem(part: BodyPart, item: { color: string; wuxing: string; name?: string }) {
     setOutfitSelection(prev => ({ ...prev, [part]: item }));
+    // 選擇後自動顯示能量說明 Panel
+    setEnergyPanelPart(part);
+    setEnergyPanelOpen(true);
   }
 
   function clearOutfit() {
@@ -197,9 +210,15 @@ export default function OutfitPage() {
   const allHours = outfitData?.allHours ?? [];
 
   // 計算顯示的 Aura 分數
-  const displayInnate = simulatorData?.innateAura ?? 0;
+  // 天命底盤同步：優先使用 dailyData.overallScore × 10（與作戰室每日運勢分數一致）
+  const syncedInnate = dailyData?.overallScore != null
+    ? Math.round(dailyData.overallScore * 10)
+    : (simulatorData?.innateAura ?? 0);
+  const displayInnate = syncedInnate;
   const displayBoost = auraBoostResult?.outfitBoost ?? 0;
-  const displayTotal = auraBoostResult?.totalScore ?? displayInnate;
+  const displayTotal = auraBoostResult?.totalScore
+    ? Math.round(syncedInnate + auraBoostResult.outfitBoost)
+    : syncedInnate;
   const displayAuraLevel = auraBoostResult?.auraLevel ?? simulatorData?.auraLevel ?? DEFAULT_AURA_LEVEL;
 
   return (
@@ -438,21 +457,19 @@ export default function OutfitPage() {
                   )}
 
                   {/* ── 前往虛擬衣櫥 ── */}
-                  <Link href="/wardrobe">
-                    <a className="flex items-center justify-between p-4 rounded-2xl border border-dashed border-white/20 hover:border-amber-500/40 hover:bg-amber-900/10 transition-all group">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">👗</span>
-                        <div>
-                          <div className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">
-                            管理虛擬衣櫥
-                          </div>
-                          <div className="text-xs text-white/30">
-                            新增衣物，讓模擬器從您的衣櫥中挑選
-                          </div>
+                  <Link href="/wardrobe" className="flex items-center justify-between p-4 rounded-2xl border border-dashed border-white/20 hover:border-amber-500/40 hover:bg-amber-900/10 transition-all group">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">👗</span>
+                      <div>
+                        <div className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">
+                          管理虛擬衣櫥
+                        </div>
+                        <div className="text-xs text-white/30">
+                          新增衣物，讓模擬器從您的衣櫥中挑選
                         </div>
                       </div>
-                      <span className="text-white/30 group-hover:text-amber-400 transition-colors">→</span>
-                    </a>
+                    </div>
+                    <span className="text-white/30 group-hover:text-amber-400 transition-colors">→</span>
                   </Link>
                 </div>
               )}
@@ -749,6 +766,23 @@ export default function OutfitPage() {
             : undefined
         }
         favorableElements={simulatorData?.favorableElements ?? []}
+      />
+      {/* 能量說明 Panel */}
+      <EnergyDetailPanel
+        open={energyPanelOpen}
+        onClose={() => { setEnergyPanelOpen(false); setEnergyPanelPart(null); }}
+        part={energyPanelPart}
+        item={energyPanelPart ? (outfitSelection[energyPanelPart] ?? null) : null}
+        boostPoints={
+          energyPanelPart && auraBoostResult
+            ? auraBoostResult.boostBreakdown.find(b => b.category === energyPanelPart)?.points
+            : undefined
+        }
+        boostReason={
+          energyPanelPart && auraBoostResult
+            ? auraBoostResult.boostBreakdown.find(b => b.category === energyPanelPart)?.reason
+            : undefined
+        }
       />
     </div>
   );

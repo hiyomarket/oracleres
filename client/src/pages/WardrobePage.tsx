@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -11,6 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Trash2, Plus, Edit2, Shirt, Camera, Sparkles } from "lucide-react";
 import PhotoUploadAnalyzer from "@/components/wardrobe/PhotoUploadAnalyzer";
+
+// 取得台灣今日日期字串
+function getTodayStr(): string {
+  const now = new Date();
+  const twMs = now.getTime() + 8 * 60 * 60 * 1000;
+  return new Date(twMs).toISOString().split("T")[0];
+}
 
 const CATEGORIES = [
   { value: "upper", label: "上衣" },
@@ -87,8 +94,32 @@ export default function WardrobePage() {
   // 今日用神（從共享小工具取得）
   const { data: meData } = trpc.auth.me.useQuery();
   const userId = meData?.id;
+  const todayStr = useMemo(() => getTodayStr(), []);
 
   const utils = trpc.useUtils();
+
+  // 今日手串佩戴記錄
+  const { data: wearLogs } = trpc.braceletWear.getByDate.useQuery({ wearDate: todayStr });
+  const wornSet = useMemo(() => {
+    const s = new Set<string>();
+    if (wearLogs) for (const log of wearLogs) s.add(`${log.braceletId}-${log.hand}`);
+    return s;
+  }, [wearLogs]);
+  const toggleWear = trpc.braceletWear.toggle.useMutation({
+    onSuccess: () => utils.braceletWear.getByDate.invalidate({ wearDate: todayStr }),
+  });
+  function handleToggleBraceletWear(item: WardrobeItem) {
+    const braceletId = `wardrobe-${item.id}`;
+    const isWearing = !wornSet.has(`${braceletId}-left`);
+    toggleWear.mutate({
+      braceletId,
+      braceletName: item.name,
+      hand: "left",
+      wearDate: todayStr,
+      isWearing,
+    });
+    toast.success(isWearing ? `✓ 已記錄佩戴 ${item.name}` : `已取消 ${item.name} 佩戴記錄`);
+  }
 
   const { data: items = [], isLoading } = trpc.wardrobe.list.useQuery(
     filterCategory !== "all" ? { category: filterCategory } : undefined
@@ -180,11 +211,9 @@ export default function WardrobePage() {
       <SharedNav currentPage="outfit" />
       <div className="max-w-4xl mx-auto px-4 py-6">
         {/* 返回連結 */}
-        <Link href="/outfit">
-          <a className="inline-flex items-center gap-1.5 text-sm text-amber-400/70 hover:text-amber-400 transition-colors mb-4">
-            <ArrowLeft className="w-4 h-4" />
-            返回神諭穿搭
-          </a>
+        <Link href="/outfit" className="inline-flex items-center gap-1.5 text-sm text-amber-400/70 hover:text-amber-400 transition-colors mb-4">
+          <ArrowLeft className="w-4 h-4" />
+          返回神諭穿搭
         </Link>
         {/* 頁面標題 */}
         <div className="flex items-start justify-between mb-6 gap-3">
@@ -317,6 +346,20 @@ export default function WardrobePage() {
                   <div className="truncate">{categoryLabel(item.category)} · {item.color}</div>
                   {item.occasion && <div className="truncate">場合：{item.occasion}</div>}
                 </div>
+                {/* 手串佩戴記錄按鈕 */}
+                {item.category === "bracelet" && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleToggleBraceletWear(item); }}
+                    disabled={toggleWear.isPending}
+                    className={`mt-2 w-full flex items-center justify-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
+                      wornSet.has(`wardrobe-${item.id}-left`)
+                        ? "bg-emerald-500/20 border border-emerald-400/50 text-emerald-300"
+                        : "bg-white/5 border border-white/15 text-white/40 hover:border-amber-500/40 hover:text-amber-400"
+                    }`}
+                  >
+                    {wornSet.has(`wardrobe-${item.id}-left`) ? "✓ 今日已佩戴" : "⊕ 記錄佩戴"}
+                  </button>
+                )}
               </div>
             ))}
           </div>

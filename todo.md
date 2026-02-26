@@ -1504,3 +1504,12 @@
 - [x] WardrobePage: 改善手串與虛擬衣櫥整體 UI 串接（分類圖示、五行分佈統計）
 - [x] WardrobeSelector: 手串選擇器同時顯示虛擬衣櫥手串 + 神諭手串庫
 - [x] WardrobeSelector: 左右手選擇器顯示「左手吸納/右手釋放」說明標籤和提示
+
+### 功能增強 v4.8 - 巢狀 <a> 修復 + 三項新功能（2026-02-27）
+- [x] 修復 /outfit 頁面巢狀 <a> 錯誤（Link 內不能再包 <a>）
+- [x] 修復 /wardrobe 頁面巢狀 <a> 錯誤（Link 內不能再包 <a>）
+- [x] 能量說明 Panel：點擊已選衣物/手串時彈出五行詳情卡片
+- [x] 能量說明 Panel：顯示五行屬性、對命格加成原因、左/右手效果差異
+- [x] 天命底盤同步：讀取 warRoom dailyScore × 10 作為天命底盤基礎
+- [x] WardrobePage 手串佩戴記錄：手串卡片加入「今日已佩戴」快速記錄按鈕
+- [x] WardrobePage 手串佩戴記錄：與作戰室佩戴記錄同步（braceletWear API）
