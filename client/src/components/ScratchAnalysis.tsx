@@ -59,12 +59,22 @@ function formatCountdown(seconds: number): string {
   return `${s}秒後`;
 }
 
+const ZH_ELEMENT: Record<string, string> = { wood: '木', fire: '火', earth: '土', metal: '金', water: '水' };
+
 export function ScratchAnalysis() {
   const [address, setAddress] = useState("");
   const [inputAddress, setInputAddress] = useState("");
   const [expandedDenom, setExpandedDenom] = useState<number | null>(100);
   const [showAddressResult, setShowAddressResult] = useState(false);
   const [countdown, setCountdown] = useState(0);
+
+  // 用戶命格（動態）
+  const { data: userProfile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 300000 });
+  const dayMasterLabel = (() => {
+    const stem = userProfile?.dayPillar?.[0] ?? '';
+    const el = userProfile?.dayMasterElement ? (ZH_ELEMENT[userProfile.dayMasterElement] ?? userProfile.dayMasterElement) : '';
+    return stem && el ? `${stem}${el}命格` : '您的命格';
+  })();
 
   // 面額選號策略
   const { data: strategies, isLoading: strategiesLoading } = trpc.lottery.scratchStrategies.useQuery();
@@ -170,7 +180,7 @@ export function ScratchAnalysis() {
           <h3 className="text-base font-semibold text-white">彩券行地址五行分析</h3>
         </div>
         <p className="text-slate-400 text-xs mb-4">
-          輸入您打算前往的彩券行地址，系統將分析其門牌號碼的五行屬性，判斷與您甲木命格的天命共振程度。
+          輸入您打算前往的彩券行地址，系統將分析其門牌號碼的五行屬性，判斷與您{dayMasterLabel}的天命共振程度。
         </p>
 
         {/* 地址輸入 */}

@@ -84,9 +84,10 @@ const PALACE_FORTUNE: Record<string, { level: "大吉" | "吉" | "平" | "凶" |
 // ─── 塔羅流年計算 ──────────────────────────────────────────────
 // 中間個性：10（命運之輪）
 // 流年 = 中間個性(10) + 年份數字相加
-function calcTarotYear(year: number): { number: number; name: string; element: string; theme: string } {
+function calcTarotYear(year: number, middleNumber?: number): { number: number; name: string; element: string; theme: string } {
   const yearSum = String(year).split("").reduce((a, b) => a + parseInt(b), 0);
-  let total = NUMEROLOGY.middle.number + yearSum;
+  const baseNumber = middleNumber ?? NUMEROLOGY.middle.number;
+  let total = baseNumber + yearSum;
   // 歸約到 1-22（22保留）
   while (total > 22) {
     total = String(total).split("").reduce((a, b) => a + parseInt(b), 0);
@@ -150,13 +151,23 @@ const BRANCH_ELEMENT_MAP: Record<string, string> = {
   辰: "土", 巳: "火", 午: "火", 未: "土",
   申: "金", 酉: "金", 戌: "土", 亥: "水",
 };
+// 五行對蘇先生的月份評分
 const ELEMENT_SCORE: Record<string, number> = {
   火: 3, 土: 2, 金: 1, 木: -1, 水: -2,
 };
 
-function calcMonthScore(stem: string, branch: string): number {
+function calcMonthScore(stem: string, branch: string, favorableElements?: string[], unfavorableElements?: string[]): number {
   const stemEl = STEM_ELEMENT_MAP[stem] ?? "木";
   const branchEl = BRANCH_ELEMENT_MAP[branch] ?? "木";
+  // 動態計算：依用戶喜忌神評分
+  if (favorableElements && favorableElements.length > 0) {
+    const dynamicScore: Record<string, number> = {};
+    favorableElements.forEach((el, i) => { dynamicScore[el] = i === 0 ? 3 : i === 1 ? 2 : 1; });
+    if (unfavorableElements) {
+      unfavorableElements.forEach((el, i) => { dynamicScore[el] = i === 0 ? -2 : -1; });
+    }
+    return 5 + (dynamicScore[stemEl] ?? 0) + (dynamicScore[branchEl] ?? 0);
+  }
   return 5 + (ELEMENT_SCORE[stemEl] ?? 0) + (ELEMENT_SCORE[branchEl] ?? 0);
 }
 
@@ -311,9 +322,15 @@ function buildYearTheme(
 /**
  * 計算指定年份的完整流年流月分析
  */
-export function getYearlyAnalysis(year: number): YearAnalysis {
+export interface UserProfileForYearly {
+  middleNumber?: number;
+  favorableElements?: string[];
+  unfavorableElements?: string[];
+}
+
+export function getYearlyAnalysis(year: number, userProfile?: UserProfileForYearly): YearAnalysis {
   const { stem, branch } = getYearStemBranch(year);
-  const tarot = calcTarotYear(year);
+  const tarot = calcTarotYear(year, userProfile?.middleNumber);
   const trans = FOUR_TRANSFORMATIONS[stem];
 
   // 四化落宮
@@ -351,7 +368,7 @@ export function getYearlyAnalysis(year: number): YearAnalysis {
     const mStem = HEAVENLY_STEMS[stemIdx];
     const mBranch = branch;
     const mElement = STEM_ELEMENT_MAP[mStem] ?? "木";
-    const score = calcMonthScore(mStem, mBranch);
+    const score = calcMonthScore(mStem, mBranch, userProfile?.favorableElements, userProfile?.unfavorableElements);
     const level = getMonthLevel(score);
     return {
       lunarMonth: MONTH_NAMES[idx],
@@ -385,10 +402,10 @@ export function getYearlyAnalysis(year: number): YearAnalysis {
 /**
  * 計算多年流年分析（例如 2026-2030）
  */
-export function getMultiYearAnalysis(startYear: number, endYear: number): YearAnalysis[] {
+export function getMultiYearAnalysis(startYear: number, endYear: number, userProfile?: UserProfileForYearly): YearAnalysis[] {
   const results: YearAnalysis[] = [];
   for (let y = startYear; y <= endYear; y++) {
-    results.push(getYearlyAnalysis(y));
+    results.push(getYearlyAnalysis(y, userProfile));
   }
   return results;
 }

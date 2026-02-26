@@ -316,6 +316,73 @@ export interface FullDateInfo {
 }
 
 /**
+ * 動態版本：依用戶喜忌神計算日柱能量等級（多用戶版）
+ * @param date 日期
+ * @param favorableElements 用戶喜用神（中文，如 ['火', '土']）
+ * @param unfavorableElements 用戶忌神（中文，如 ['水', '木']）
+ */
+export function getDayPillarDynamic(
+  date: Date,
+  favorableElements: string[],
+  unfavorableElements: string[],
+): DayPillar {
+  const y = date.getFullYear();
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  const jd = julianDay(y, m, d);
+  const basejd = julianDay(2000, 1, 7);
+  const diff = jd - basejd;
+  const stemIndex = ((diff % 10) + 10) % 10;
+  const branchIndex = ((diff % 12) + 12) % 12;
+  const stem = HEAVENLY_STEMS[stemIndex];
+  const branch = EARTHLY_BRANCHES[branchIndex];
+  const stemElement = STEM_ELEMENT[stem];
+  const branchElement = BRANCH_ELEMENT[branch];
+
+  const elements = [stemElement, branchElement];
+  let auspiciousScore = 0;
+  let challengingScore = 0;
+  for (const el of elements) {
+    if (favorableElements.includes(el)) auspiciousScore += 1.5;
+    else if (unfavorableElements.includes(el)) challengingScore += 1.5;
+  }
+
+  let energyLevel: EnergyLevel;
+  let energyDescription: string;
+  const auspicious: string[] = [];
+  const inauspicious: string[] = [];
+  const topFav = favorableElements[0] ?? '火';
+  const topUnfav = unfavorableElements[0] ?? '水';
+
+  if (auspiciousScore >= 3) {
+    energyLevel = 'excellent';
+    energyDescription = `今日${topFav}能量旺盛，用神得力，天時大利，諸事皆宜進取。`;
+    auspicious.push('行動', '決策', '創業', '表達', '社交');
+  } else if (auspiciousScore >= 1.5) {
+    energyLevel = 'good';
+    energyDescription = '今日能量平和偏吉，用神有力，適合穩步推進重要事項。';
+    auspicious.push('規劃', '溝通', '執行');
+    inauspicious.push('過度保守');
+  } else if (challengingScore >= 3) {
+    energyLevel = 'challenging';
+    energyDescription = `今日${topUnfav}能量過旺，忌神當道，宜靜思內斂，避免輕舉妄動。`;
+    inauspicious.push('重大決策', '冒險投資', '爭訟');
+    auspicious.push('學習', '冥想', '休養');
+  } else if (challengingScore >= 1.5) {
+    energyLevel = 'neutral';
+    energyDescription = '今日能量中性偏弱，宜謹慎行事，量力而為。';
+    auspicious.push('日常事務');
+    inauspicious.push('激進行動');
+  } else {
+    energyLevel = 'neutral';
+    energyDescription = '今日能量平穩，無特殊吉凶，隨心而行即可。';
+    auspicious.push('日常事務', '學習');
+  }
+
+  return { stem, branch, stemElement, branchElement, energyLevel, energyDescription, auspicious, inauspicious };
+}
+
+/**
  * 獲取完整的當日命理信息
  */
 export function getFullDateInfo(date?: Date): FullDateInfo {

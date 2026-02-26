@@ -1133,3 +1133,22 @@
 - [x] 移除 toggleCategory 多選函數，改為 handleCategorySelect 單選函數（點選即搜尋）
 - [x] 價格篩選保持前端過濾（不需重新搜尋 API）
 - [x] TypeScript 零錯誤，91 項測試全部通過
+
+## 全系統硬資料修復 v2.25（2026-02-26）
+
+- [x] 診斷根本原因：wuxingEngine.ts SUPPLEMENT_PRIORITY 常數為蘇先生硬資料
+- [x] wuxingEngine.generateDietaryAdvice 接受動態 supplementPriority 參數
+- [x] wuxingEngine.generateOutfitAdviceV9 接受動態 supplementPriority 參數
+- [x] wuxingEngine.recommendBraceletsV9 接受動態 supplementPriority 參數
+- [x] routers.ts 所有呼叫傳入 engineProfile.favorableElements
+- [x] lunarCalendar.ts 新增 getDayPillarDynamic（接受用戶喜忌神）
+- [x] 命理日曆月曆改用 getDayPillarDynamic（/calendar）
+- [x] 命理日曆購彩指數改用 getTenGodDynamic（/calendar）
+- [x] yearlyAnalysis.calcTarotYear 接受動態 middleNumber（從出生日期計算）
+- [x] yearlyAnalysis.calcMonthScore 接受動態喜忌神評分
+- [x] yearlyAnalysis.getYearlyAnalysis 接受用戶命格參數
+- [x] profile.yearlyAnalysis 改為 protectedProcedure + 動態命格（/luck-cycle）
+- [x] ScratchAnalysis.tsx 地址分析說明文字改為動態日主顯示（/lottery）
+- [x] 確認 oracleAlgorithm.ts / warRoomEngine.ts 的 FAVORABLE_ELEMENTS import 未實際使用（安全）
+- [x] 91 項測試全部通過，TypeScript 零錯誤
+- [x] 儲存 V2.25 checkpoint
