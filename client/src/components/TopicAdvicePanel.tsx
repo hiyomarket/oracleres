@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 const TOPICS = [
   { key: "work" as const, icon: "💼", label: "工作", desc: "事業・合作・決策" },
@@ -24,6 +25,7 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
   } | null>(null);
   const [isAsking, setIsAsking] = useState(false);
 
+  const utils = trpc.useUtils();
   const topicAdviceMutation = trpc.warRoom.topicAdvice.useMutation({
     onSuccess: (result) => {
       setTopicResult({
@@ -32,9 +34,16 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
         context: result.context,
       });
       setIsAsking(false);
+      utils.points.getBalance.invalidate();
     },
-    onError: () => {
+    onError: (err) => {
       setIsAsking(false);
+      setSelectedTopic(null);
+      if (err.message.includes('積分不足')) {
+        toast.error('積分不足！問卜需要 10 點積分，請先完成每日登入領取積分。', { duration: 5000 });
+      } else {
+        toast.error('問卜失敗，請稍後再試');
+      }
     },
   });
 
@@ -233,6 +242,7 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
         {!selectedTopic && !isAsking && (
           <div className="text-center py-4">
             <p className="text-xs text-slate-500/70">選擇上方主題，AI 將結合今日命理給出專屬建議</p>
+            <p className="text-xs text-amber-500/60 mt-1">💰 每次問卜扣除 10 點積分</p>
           </div>
         )}
       </div>

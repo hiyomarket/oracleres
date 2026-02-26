@@ -17,6 +17,7 @@ import {
   subscriptionLogs,
   redemptionCodes,
   users,
+  pointsTransactions,
 } from "../../drizzle/schema";
 import { eq, asc, desc, and, ne } from "drizzle-orm";
 import { hasAccess } from "../PermissionService";
@@ -162,6 +163,7 @@ export const businessHubRouter = router({
         price: z.string().regex(/^\d+(\.\d{1,2})?$/),
         level: z.number().int().min(1),
         description: z.string().optional(),
+        bonusPoints: z.number().int().min(0).default(0),
         moduleIds: z.array(z.string()).default([]),
       })
     )
@@ -186,6 +188,7 @@ export const businessHubRouter = router({
         level: z.number().int().min(1).optional(),
         description: z.string().optional(),
         isActive: z.number().int().min(0).max(1).optional(),
+        bonusPoints: z.number().int().min(0).optional(),
         moduleIds: z.array(z.string()).optional(),
       })
     )
@@ -337,6 +340,22 @@ export const businessHubRouter = router({
           note: input.note,
         },
       });
+      // 如果方案有設定 bonusPoints，自動贈送積分
+      if (input.planId) {
+        const [planData] = await db.select().from(plans).where(eq(plans.id, input.planId)).limit(1);
+        if (planData && planData.bonusPoints > 0) {
+          // 讀取當前積分後更新
+          const [currentUser] = await db.select({ pointsBalance: users.pointsBalance }).from(users).where(eq(users.id, input.userId));
+          const newBalance = (currentUser?.pointsBalance ?? 0) + planData.bonusPoints;
+          await db.update(users).set({ pointsBalance: newBalance }).where(eq(users.id, input.userId));
+          await db.insert(pointsTransactions).values({
+            userId: input.userId,
+            type: "admin_grant",
+            amount: planData.bonusPoints,
+            description: `訂閱方案「${planData.name}」贈送積分`,
+          });
+        }
+      }
       return { success: true };
     }),
 

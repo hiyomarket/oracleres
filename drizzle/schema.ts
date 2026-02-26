@@ -14,6 +14,8 @@ export const plans = mysqlTable("plans", {
   description: text("description"),
   // 是否啟用此方案
   isActive: tinyint("isActive").notNull().default(1),
+  // 訂閱此方案時贈送的積分
+  bonusPoints: int("bonusPoints").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -155,6 +157,8 @@ export const users = mysqlTable("users", {
   planExpiresAt: timestamp("planExpiresAt"),
   // 積分餘額
   pointsBalance: int("pointsBalance").notNull().default(0),
+  // 最後每日登入領取積分的日期（YYYY-MM-DD）
+  lastDailyCheckIn: varchar("lastDailyCheckIn", { length: 10 }),
   // 折扣券暫存（JSON 陣列，待支付系統接入時使用）
   // 例如 [{ "campaign_id": 1, "discount_percentage": 0.8, "expires_at": "2027-01-01" }]
   availableDiscounts: json("availableDiscounts").$type<Array<{ campaign_id: number; discount_percentage?: number; expires_at: string | null }>>(),
@@ -514,7 +518,7 @@ export const userGroups = mysqlTable("user_groups", {
   // 分組顏色標籤（用於 UI 顯示）
   color: varchar("color", { length: 30 }).default("amber"),
   // 分組圖示 emoji
-  icon: varchar("icon", { length: 10 }).default("👥"),
+  icon: varchar("icon", { length: 50 }).default("👥"),
   // 建立者（管理員 userId）
   createdBy: int("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

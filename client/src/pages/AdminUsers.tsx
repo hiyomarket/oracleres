@@ -338,8 +338,126 @@ function SubscriptionModal({ user, onClose, onSuccess }: SubscriptionModalProps)
   );
 }
 
-// ─── 主頁面 ─────────────────────────────────────────────────────────────────
+// ─── 積分調整 Modal ─────────────────────────────────────────────────────────
+function PointsAdjustModal({
+  user,
+  onClose,
+  onSuccess,
+}: {
+  user: { id: number; name: string | null; balance: number };
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [mode, setMode] = useState<'add' | 'subtract' | 'set'>('add');
+  const [amount, setAmount] = useState('');
+  const [reason, setReason] = useState('');
 
+  const adjustMutation = trpc.dashboard.adminAdjustPoints.useMutation({
+    onSuccess: (data) => {
+      toast.success(`積分已更新，新餘額：${data.newBalance} 點`);
+      onSuccess();
+    },
+    onError: (err) => toast.error(`調整失敗：${err.message}`),
+  });
+
+  const modeLabels = { add: '贈送積分', subtract: '扣除積分', set: '直接設定' };
+  const modeColors = { add: 'bg-green-600 hover:bg-green-700', subtract: 'bg-red-600 hover:bg-red-700', set: 'bg-blue-600 hover:bg-blue-700' };
+
+  const handleSubmit = () => {
+    const amt = parseInt(amount);
+    if (isNaN(amt) || amt < 0) { toast.error('請輸入有效數字'); return; }
+    adjustMutation.mutate({ userId: user.id, mode, amount: amt, reason: reason || undefined });
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-amber-400">💰 調整積分 — {user.name ?? '用戶 #' + user.id}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="bg-slate-800/60 rounded-xl px-4 py-3 text-center">
+            <div className="text-xs text-slate-400 mb-1">目前積分餘額</div>
+            <div className="text-2xl font-bold text-amber-400">{user.balance.toLocaleString()} 點</div>
+          </div>
+          <div>
+            <label className="text-xs text-slate-400 mb-1 block">操作類型</label>
+            <div className="flex gap-2">
+              {(['add', 'subtract', 'set'] as const).map(m => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${
+                    mode === m ? (m === 'add' ? 'bg-green-600 text-white' : m === 'subtract' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white') : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                  }`}
+                >
+                  {modeLabels[m]}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-slate-400 mb-1 block">
+              {mode === 'add' ? '贈送點數' : mode === 'subtract' ? '扣除點數' : '設定為'}
+            </label>
+            <Input
+              type="number"
+              min="0"
+              placeholder="輸入數量..."
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              className="bg-slate-800 border-slate-700 text-slate-200"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate-400 mb-1 block">原因備注（選填）</label>
+            <Input
+              placeholder="例：活動獎勵、補償..."
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              className="bg-slate-800 border-slate-700 text-slate-200"
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose} className="border-slate-700 text-slate-300 bg-transparent hover:bg-slate-800">取消</Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={adjustMutation.isPending || !amount}
+            className={`${modeColors[mode]} text-white font-semibold`}
+          >
+            {adjustMutation.isPending ? '處理中...' : '確認'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/// ─── 批量重算生命靈數按鈕 ────────────────────────────────────────────────────
+function RecalcLifePathButton() {
+  const utils = trpc.useUtils();
+  const recalcMutation = trpc.dashboard.batchRecalcLifePathNumbers.useMutation({
+    onSuccess: (data) => {
+      toast.success(`靈數補全完成：更新 ${data.updated} 人，跳過 ${data.skipped} 人`);
+      utils.dashboard.listUsersFiltered.invalidate();
+    },
+    onError: (err) => toast.error(`補全失敗：${err.message}`),
+  });
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className="border-amber-500/50 text-amber-400 hover:bg-amber-900/30 shrink-0"
+      onClick={() => recalcMutation.mutate({ onlyMissing: true })}
+      disabled={recalcMutation.isPending}
+    >
+      {recalcMutation.isPending ? '計算中…' : '🔢 補全生命靈數'}
+    </Button>
+  );
+}
+
+// ─── 主頁面 ─────────────────────────────────────────────────────────────────
 export default function AdminUsers() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -356,6 +474,11 @@ export default function AdminUsers() {
     name: string | null;
     planId: string | null;
     planExpiresAt: Date | null;
+  } | null>(null);
+  const [pointsModalUser, setPointsModalUser] = useState<{
+    id: number;
+    name: string | null;
+    balance: number;
   } | null>(null);
   // 批量選取
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set());
@@ -417,9 +540,12 @@ export default function AdminUsers() {
     <AdminLayout>
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* 標題 */}
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-amber-400 mb-1">用戶管理</h1>
-          <p className="text-slate-400 text-sm">查看所有用戶、篩選方案與活躍狀態、管理訂閱權益</p>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-amber-400 mb-1">用戶管理</h1>
+            <p className="text-slate-400 text-sm">查看所有用戶、篩選方案與活躍狀態、管理訂閱權益</p>
+          </div>
+          <RecalcLifePathButton />
         </div>
 
         {/* 批量操作工具列 */}
@@ -589,11 +715,11 @@ export default function AdminUsers() {
                     </div>
 
                     {/* 最後上線 */}
-                    <div className="text-right shrink-0 w-20">
-                      <div className="text-xs text-slate-400">
+                    <div className="text-right shrink-0 w-24">
+                      <div className="text-xs font-medium text-slate-200">
                         {formatRelative(u.lastSignedIn)}
                       </div>
-                      <div className="text-[10px] text-slate-600">最後上線</div>
+                      <div className="text-[10px] text-slate-400">最後上線</div>
                     </div>
 
                     {/* 展開箭頭 */}
@@ -653,23 +779,36 @@ export default function AdminUsers() {
                         </div>
                       </div>
                       {/* 操作列 */}
-                      <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
                         <SubscriptionLogsPanel userId={u.id} />
-                        <Button
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSubscriptionModalUser({
-                              id: u.id,
-                              name: u.name ?? null,
-                              planId: u.planId ?? null,
-                              planExpiresAt: u.planExpiresAt ? new Date(u.planExpiresAt) : null,
-                            });
-                          }}
-                          className="bg-amber-600/80 hover:bg-amber-600 text-black text-xs font-semibold shrink-0"
-                        >
-                          🎫 管理訂閱
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPointsModalUser({ id: u.id, name: u.name ?? null, balance: Number(u.pointsBalance ?? 0) });
+                            }}
+                            className="border-amber-600/50 text-amber-400 hover:bg-amber-600/20 bg-transparent text-xs font-semibold shrink-0"
+                          >
+                            💰 調整積分
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSubscriptionModalUser({
+                                id: u.id,
+                                name: u.name ?? null,
+                                planId: u.planId ?? null,
+                                planExpiresAt: u.planExpiresAt ? new Date(u.planExpiresAt) : null,
+                              });
+                            }}
+                            className="bg-amber-600/80 hover:bg-amber-600 text-black text-xs font-semibold shrink-0"
+                          >
+                            🎫 管理訂閱
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -713,6 +852,14 @@ export default function AdminUsers() {
           user={subscriptionModalUser}
           onClose={() => setSubscriptionModalUser(null)}
           onSuccess={() => refetch()}
+        />
+      )}
+      {/* 積分調整 Modal */}
+      {pointsModalUser && (
+        <PointsAdjustModal
+          user={pointsModalUser}
+          onClose={() => setPointsModalUser(null)}
+          onSuccess={() => { refetch(); setPointsModalUser(null); }}
         />
       )}
       {/* 批量訂閱 Modal */}

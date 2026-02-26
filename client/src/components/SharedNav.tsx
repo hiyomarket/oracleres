@@ -92,6 +92,21 @@ function RedeemCodeEntry({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** 頂部積分顯示徽章 */
+function PointsBadge() {
+  const { data: pointsData } = trpc.points.getBalance.useQuery(undefined, { staleTime: 30000 });
+  const points = pointsData?.balance ?? 0;
+  return (
+    <div
+      className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 shrink-0 cursor-default"
+      title={`積分餘額：${points} 點`}
+    >
+      <Coins className="w-3.5 h-3.5 text-amber-400" />
+      <span className="text-xs font-bold text-amber-300">{points.toLocaleString()}</span>
+    </div>
+  );
+}
+
 /** 使用者頭像下拉選單 */
 function UserMenu({ user }: { user: { name?: string | null; openId?: string; planName?: string | null } }) {
   const [open, setOpen] = useState(false);
@@ -327,7 +342,10 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                 登入
               </a>
             ) : (
-              <UserMenu user={{ ...user, planName: (meData as { planName?: string | null } | null)?.planName ?? null }} />
+              <>
+                <PointsBadge />
+                <UserMenu user={{ ...user, planName: (meData as { planName?: string | null } | null)?.planName ?? null }} />
+              </>
             )}
           </div>
         </div>

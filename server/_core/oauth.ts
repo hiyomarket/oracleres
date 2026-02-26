@@ -45,9 +45,14 @@ export function registerOAuthRoutes(app: Express) {
         // 取得剛建立的用戶 ID
         const newUser = await db.getUserByOpenId(userInfo.openId);
         if (newUser) {
+          // 首先嘗試套用活動方案
           const result = await db.applyDefaultOnboardingCampaign(newUser.id);
           if (result.applied) {
             console.log(`[OAuth] New user #${newUser.id} received onboarding campaign: ${result.campaignName}`);
+          } else {
+            // 沒有活動時，預設分配基礎方案
+            await db.setUserPlan(newUser.id, 'basic', null);
+            console.log(`[OAuth] New user #${newUser.id} assigned default basic plan`);
           }
         }
       }

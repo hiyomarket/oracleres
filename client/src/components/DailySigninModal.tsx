@@ -28,6 +28,7 @@ export function DailySigninModal() {
     onSuccess: (res) => {
       setClaimed(true);
       utils.points.getSigninStatus.invalidate();
+      utils.points.getBalance.invalidate();
       // 2 秒後自動關閉
       setTimeout(() => {
         setIsOpen(false);

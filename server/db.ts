@@ -154,6 +154,17 @@ export async function applyDefaultOnboardingCampaign(userId: number): Promise<{ 
 }
 
 /**
+ * 設定用戶方案
+ */
+export async function setUserPlan(userId: number, planId: string, planExpiresAt: Date | null): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  const updateData: Record<string, unknown> = { planId };
+  if (planExpiresAt !== undefined) updateData.planExpiresAt = planExpiresAt;
+  await db.update(users).set(updateData).where(eq(users.id, userId));
+}
+
+/**
  * 儲存擲筊記錄
  */
 export async function saveOracleSession(session: InsertOracleSession): Promise<number | null> {

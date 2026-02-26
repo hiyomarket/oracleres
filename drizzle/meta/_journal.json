@@ -148,6 +148,27 @@
       "when": 1772104592837,
       "tag": "0020_bouncy_annihilus",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "5",
+      "when": 1772106219008,
+      "tag": "0021_bizarre_hellfire_club",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "5",
+      "when": 1772107238076,
+      "tag": "0022_tan_the_liberteens",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1772108497669,
+      "tag": "0023_zippy_landau",
+      "breakpoints": true
     }
   ]
 }

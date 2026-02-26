@@ -1,0 +1,1 @@
+ALTER TABLE `plans` ADD `bonusPoints` int DEFAULT 0 NOT NULL;

@@ -500,6 +500,7 @@ function PlansTab() {
     price: "0",
     level: 1,
     description: "",
+    bonusPoints: 0,
     moduleIds: [] as string[],
   });
 
@@ -660,6 +661,20 @@ function PlansTab() {
                 />
               </div>
               <div>
+                <label className="text-sm text-slate-400">💰 訂閱贈送積分（點）</label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={(editingPlan as Plan & { bonusPoints?: number }).bonusPoints ?? 0}
+                  onChange={(e) =>
+                    setEditingPlan({ ...editingPlan, bonusPoints: parseInt(e.target.value) || 0 } as Plan & { bonusPoints?: number })
+                  }
+                  placeholder="0"
+                  className="bg-slate-800 border-slate-600 text-white"
+                />
+                <p className="text-xs text-slate-500 mt-1">用戶被指派此方案時，自動贈送的積分點數</p>
+              </div>
+              <div>
                 <label className="text-sm text-slate-400 block mb-2">包含模塊</label>
                 <div className="space-y-2">
                   {(allModules as Module[]).map((m) => {
@@ -717,6 +732,7 @@ function PlansTab() {
                   name: editingPlan.name,
                   price: editingPlan.price,
                   description: editingPlan.description || undefined,
+                  bonusPoints: (editingPlan as Plan & { bonusPoints?: number }).bonusPoints ?? 0,
                   moduleIds: editingPlan.modules.map((m) => m.id),
                 });
                 setEditingPlan(null);
@@ -786,6 +802,18 @@ function PlansTab() {
               />
             </div>
             <div>
+              <label className="text-sm text-slate-400">💰 訂閱贈送積分（點）</label>
+              <Input
+                type="number"
+                min={0}
+                value={newPlan.bonusPoints}
+                onChange={(e) => setNewPlan({ ...newPlan, bonusPoints: parseInt(e.target.value) || 0 })}
+                placeholder="0"
+                className="bg-slate-800 border-slate-600 text-white"
+              />
+              <p className="text-xs text-slate-500 mt-1">用戶被指派此方案時，自動贈送的積分點數</p>
+            </div>
+            <div>
               <label className="text-sm text-slate-400 block mb-2">包含模塊</label>
               <div className="space-y-2">
                 {(allModules as Module[]).map((m) => (
@@ -824,6 +852,7 @@ function PlansTab() {
                   price: newPlan.price,
                   level: newPlan.level,
                   description: newPlan.description || undefined,
+                  bonusPoints: newPlan.bonusPoints,
                   moduleIds: newPlan.moduleIds,
                 });
               }}

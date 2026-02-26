@@ -1244,3 +1244,19 @@
 ### /profile 修復
 - [x] 移除大限流年「提示」區塊（圖9，已模塊化）
 - [x] 命格備注區塊邏輯確認正確（根據 favorableElements/unfavorableElements 自動生成）
+
+## 積分系統擴充（2026-02-26 第二輪）
+- [x] 頂部導覽列顯示積分徽章
+- [x] 每日登入簽到彈窗（修復 invalidate 邏輯）
+- [x] AdminUsers 積分調整功能（PointsAdjustModal）
+- [x] UserGroups 一鍵贈送積分（batchAdjustPoints API）
+- [x] /divination 問卜扣除 10 積分
+- [x] BusinessHub 方案新增/編輯加入「訂閱贈送積分」欄位
+- [x] 指派方案時自動贈送 bonusPoints
+
+## Bug 修復（2026-02-26 第二輪）
+- [x] 建立分群 icon 欄位超長錯誤（varchar 10 → 50）
+- [x] 生命靈數批量重算功能（AdminUsers 右上角按鈕）
+- [x] 折疊卡片最後上線時間顏色修正（text-slate-200）
+- [x] 新用戶首登自動分配基礎方案（OAuth callback 設定 planId=basic）
+- [x] 後台 plan_assign 活動類型支援（BusinessHub campaigns）

@@ -11,13 +11,14 @@ import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, gene
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { castOracle } from "./lib/oracleAlgorithm";
 import { getFullDateInfo, getTaiwanHour, getTaiwanDate, getYearPillar } from "./lib/lunarCalendar";
 import { solarToLunarByYMD } from "./lib/lunarConverter";
 import { getMoonPhase } from "./lib/moonPhase";
 import { getAllHourEnergies, getCurrentHourEnergy, getBestHours, getWorstHours, getAllHourEnergiesDynamic, getCurrentHourEnergyDynamic } from "./lib/hourlyEnergy";
 import { getDb, saveOracleSession, getOracleHistory, getOracleStats, saveLotterySession, getLotteryHistory, getLotteryStats, getUserProfileForEngine } from "./db";
-import { userProfiles, userSubscriptions, plans } from "../drizzle/schema";
+import { userProfiles, userSubscriptions, plans, users, pointsTransactions } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { notifyOwner } from "./_core/notification";
 import { generateLotteryNumbers, generateLotterySets, generateScratchStrategies, analyzeAddressWuxing } from "./lib/lotteryAlgorithm";
@@ -1944,6 +1945,23 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
         date: z.string().optional(), // YYYY-MM-DD
       }))
       .mutation(async ({ input, ctx }) => {
+        // 扣除積分：每次問卜扣 10 點
+        const db = await getDb();
+        if (db) {
+          const [currentUser] = await db.select({ pointsBalance: users.pointsBalance }).from(users).where(eq(users.id, ctx.user.id)).limit(1);
+          const balance = Number(currentUser?.pointsBalance ?? 0);
+          if (balance < 10) {
+            throw new TRPCError({ code: 'PRECONDITION_FAILED', message: '積分不足，問卜需要 10 點積分' });
+          }
+          const topicLabels: Record<string, string> = { work: '工作', love: '愛情', health: '健康', wealth: '財運', decision: '決策' };
+          await db.update(users).set({ pointsBalance: balance - 10 }).where(eq(users.id, ctx.user.id));
+          await db.insert(pointsTransactions).values({
+            userId: ctx.user.id,
+            amount: -10,
+            type: 'spend',
+            description: `天命問卜：${topicLabels[input.topic] ?? input.topic}`,
+          });
+        }
         // 動態讀取登入者命格
         const ep = await getUserProfileForEngine(ctx.user.id);
         const realNow = new Date();

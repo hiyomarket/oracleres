@@ -110,7 +110,7 @@ export const userGroupsRouter = router({
       name: z.string().min(1).max(100),
       description: z.string().max(500).optional(),
       color: z.string().max(30).optional(),
-      icon: z.string().max(10).optional(),
+      icon: z.string().max(50).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       requireAdmin(ctx.user.openId, ctx.user.role);
@@ -135,7 +135,7 @@ export const userGroupsRouter = router({
       name: z.string().min(1).max(100).optional(),
       description: z.string().max(500).optional(),
       color: z.string().max(30).optional(),
-      icon: z.string().max(10).optional(),
+      icon: z.string().max(50).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       requireAdmin(ctx.user.openId, ctx.user.role);

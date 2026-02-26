@@ -6,7 +6,7 @@
  * - listUsersFiltered：進階用戶篩選（生命靈數/方案/最後上線）+ 分頁
  */
 import { z } from "zod";
-import { router, protectedProcedure } from "../_core/trpc";
+import { router, protectedProcedure, adminProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { ENV } from "../_core/env";
 import { getDb } from "../db";
@@ -336,5 +336,108 @@ export const dashboardRouter = router({
         pageSize: input.pageSize,
         totalPages: Math.ceil(totalCount / input.pageSize),
       };
+    }),
+
+  /**
+   * 批量重算生命靈數（针對尚未計算靈數的用戶）
+   */
+  batchRecalcLifePathNumbers: protectedProcedure
+    .input(z.object({
+      onlyMissing: z.boolean().default(true),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      if (!isOwner(ctx.user.openId, ctx.user.role)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: '僅管理員可執行此操作' });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      const profiles = await db
+        .select({
+          id: userProfiles.id,
+          birthDate: userProfiles.birthDate,
+          lifePathNumber: userProfiles.lifePathNumber,
+        })
+        .from(userProfiles)
+        .where(isNotNull(userProfiles.birthDate));
+      function reduceToMaster(n: number): number {
+        while (n > 22) {
+          n = n.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0);
+        }
+        return n;
+      }
+      let updated = 0;
+      let skipped = 0;
+      for (const p of profiles) {
+        if (!p.birthDate) { skipped++; continue; }
+        if (input.onlyMissing && p.lifePathNumber !== null && p.lifePathNumber !== undefined) {
+          skipped++;
+          continue;
+        }
+        try {
+          const [yStr, mStr, dStr] = p.birthDate.split('-');
+          const _y = parseInt(yStr), _m = parseInt(mStr), _d = parseInt(dStr);
+          if (isNaN(_y) || isNaN(_m) || isNaN(_d)) { skipped++; continue; }
+          const _middleRaw = _m.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0)
+            + _d.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0);
+          const _middle = reduceToMaster(_middleRaw);
+          const _yearRaw = _y.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0);
+          const _yearNum = reduceToMaster(_yearRaw);
+          const _primaryRaw = _middle + _yearNum;
+          const lifePathNumber = reduceToMaster(_primaryRaw);
+          await db.update(userProfiles)
+            .set({ lifePathNumber })
+            .where(eq(userProfiles.id, p.id));
+          updated++;
+        } catch {
+          skipped++;
+        }
+      }
+      return { updated, skipped, total: profiles.length };
+    }),
+
+  /**
+   * 管理員調整用戶積分（贈送、扣除、直接設定）
+   */
+  adminAdjustPoints: adminProcedure
+    .input(
+      z.object({
+        userId: z.number(),
+        mode: z.enum(['add', 'subtract', 'set']),
+        amount: z.number().int().min(0).max(999999),
+        reason: z.string().max(200).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      const [u] = await db.select({ pointsBalance: users.pointsBalance }).from(users).where(eq(users.id, input.userId)).limit(1);
+      if (!u) throw new TRPCError({ code: 'NOT_FOUND', message: '用戶不存在' });
+      const current = Number(u.pointsBalance ?? 0);
+      let newBalance: number;
+      let txAmount: number;
+      let txType: string;
+      if (input.mode === 'add') {
+        newBalance = current + input.amount;
+        txAmount = input.amount;
+        txType = 'admin_grant';
+      } else if (input.mode === 'subtract') {
+        newBalance = Math.max(0, current - input.amount);
+        txAmount = -(current - newBalance);
+        txType = 'admin_deduct';
+      } else {
+        txAmount = input.amount - current;
+        newBalance = input.amount;
+        txType = 'admin_set';
+      }
+      await db.update(users).set({ pointsBalance: newBalance }).where(eq(users.id, input.userId));
+      if (txAmount !== 0) {
+        await db.insert(pointsTransactions).values({
+          userId: input.userId,
+          amount: txAmount,
+          type: txType,
+          description: input.reason ?? `管理員調整（${input.mode}）`,
+        });
+      }
+      return { success: true, newBalance };
     }),
 });
