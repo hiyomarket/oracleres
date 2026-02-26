@@ -361,6 +361,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
   const [errorMsg, setErrorMsg] = useState("");
   const [showMap, setShowMap] = useState(false);
   const [mapVisible, setMapVisible] = useState(true); // 地圖/列表切換
+  const mapReadyRef = useRef(false); // 防止 handleMapReady 被呼叫多次
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [filterAuspicious, setFilterAuspicious] = useState(false);
   const [sortMode, setSortMode] = useState<"distance" | "fengshui">("distance");
@@ -430,7 +431,8 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
   }, []);
 
   // 在地圖上繪製餐廳標記
-  const drawMarkers = useCallback((map: google.maps.Map, list: Restaurant[]) => {
+  const drawMarkers = useCallback((mapInstance: google.maps.Map, list: Restaurant[], userLoc?: { lat: number; lng: number }) => {
+    const map = mapInstance;
     // 清除舊標記
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
@@ -506,7 +508,8 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
     });
 
     // 加入用戶位置標記
-    if (userLocation) {
+    const locToUse = userLoc ?? userLocation;
+    if (locToUse) {
       const userSvg = `
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="10" fill="#6366f1" opacity="0.3"/>
@@ -515,7 +518,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         </svg>
       `;
       const userMarker = new google.maps.Marker({
-        position: userLocation,
+        position: locToUse,
         map,
         icon: {
           url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(userSvg)}`,
@@ -527,13 +530,11 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
       });
       markersRef.current.push(userMarker);
     }
-  }, [userLocation]);
+  }, [userLocation]); // userLocation 作為 fallback
 
-  const handleMapReady = useCallback(
-    async (map: google.maps.Map) => {
-      mapRef.current = map;
-      if (!userLocation) return;
-
+  // 搜尋餐廳的核心邏輯（可被 handleMapReady 和 searchTrigger 共用）
+  const doSearch = useCallback(
+    async (map: google.maps.Map, loc: { lat: number; lng: number }) => {
       try {
         const results: Restaurant[] = [];
         const seen = new Set<string>();
@@ -562,7 +563,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
               textQuery: searchText,
               fields: ["id", "displayName", "formattedAddress", "rating", "userRatingCount", "location", "priceLevel"],
               locationBias: {
-                center: userLocation,
+                center: loc,
                 radius: 2000,
               },
               maxResultCount: 8,
@@ -588,15 +589,15 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                 let fengShui: FengShuiResult | undefined;
                 if (lat2 !== undefined && lng2 !== undefined) {
                   const to = { lat: lat2, lng: lng2 };
-                  distance = calcDistance(userLocation, to);
-                  bearing = calcBearing(userLocation, to);
+                  distance = calcDistance(loc, to);
+                  bearing = calcBearing(loc, to);
                   if (todayDirections) {
                     isAuspicious =
                       isInDirection(bearing, todayDirections.cai) ||
                       isInDirection(bearing, todayDirections.xi);
                   }
                   fengShui = calcFengShui(
-                    userLocation.lat, userLocation.lng,
+                    loc.lat, loc.lng,
                     lat2, lng2,
                     place.displayName ?? "",
                     place.formattedAddress ?? "",
@@ -650,18 +651,24 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         setPhase("done");
 
         // 繪製地圖標記
-        drawMarkers(map, finalResults);
+        drawMarkers(map, finalResults, loc);
 
         // 調整地圖視野以包含所有標記
         if (finalResults.length > 0) {
-          const bounds = new google.maps.LatLngBounds();
-          bounds.extend(userLocation);
-          finalResults.forEach((r) => {
-            if (r.lat !== undefined && r.lng !== undefined) {
-              bounds.extend({ lat: r.lat, lng: r.lng });
-            }
-          });
-          map.fitBounds(bounds, { top: 40, right: 20, bottom: 40, left: 20 });
+          try {
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(new google.maps.LatLng(loc.lat, loc.lng));
+            finalResults.forEach((r) => {
+              if (r.lat !== undefined && r.lng !== undefined) {
+                bounds.extend(new google.maps.LatLng(r.lat, r.lng));
+              }
+            });
+            map.fitBounds(bounds, 40);
+          } catch (boundsErr) {
+            // fitBounds 失敗不影響搜尋結果顯示
+            console.warn("fitBounds error:", boundsErr);
+            map.setCenter(new google.maps.LatLng(loc.lat, loc.lng));
+          }
         }
       } catch (err) {
         console.error(err);
@@ -669,14 +676,28 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         setErrorMsg("搜尋餐廳時發生錯誤，請稍後再試。");
       }
     },
-    [userLocation, supplements, todayDirections, elementMatchScore, drawMarkers]
+    [supplements, todayDirections, elementMatchScore, drawMarkers]
+  );
+
+  const handleMapReady = useCallback(
+    async (map: google.maps.Map) => {
+      // 防止重複初始化
+      if (mapReadyRef.current) return;
+      mapReadyRef.current = true;
+      mapRef.current = map;
+      if (!userLocation) return;
+      await doSearch(map, userLocation);
+    },
+    [userLocation, doSearch]
   );
 
   // 監聽 searchTrigger：當分類改變且地圖已初始化時，直接重新執行搜尋
   useEffect(() => {
     if (searchTrigger === 0) return;
-    if (mapRef.current) {
-      handleMapReady(mapRef.current);
+    if (mapRef.current && userLocation) {
+      setPhase("searching");
+      setRestaurants([]);
+      doSearch(mapRef.current, userLocation);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTrigger]);
@@ -987,13 +1008,13 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         <div className="px-4 py-3 text-xs text-red-400">{errorMsg}</div>
       )}
 
-      {/* 地圖（搜尋中或完成後顯示） */}
+      {/* 地圖（搜尋中或完成後顯示） - 單一 MapView 防止重複載入 */}
       {showMap && userLocation && (
         <AnimatePresence>
           {(phase === "searching" || (phase === "done" && mapVisible)) && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: phase === "done" ? 240 : 0, opacity: phase === "done" ? 1 : 0 }}
+              animate={{ height: 240, opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
               className="overflow-hidden border-b border-white/10"
@@ -1008,16 +1029,6 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
             </motion.div>
           )}
         </AnimatePresence>
-      )}
-      {/* 搜尋中的隱藏地圖（用於初始化 Places API） */}
-      {showMap && userLocation && phase === "searching" && (
-        <div className="h-0 overflow-hidden">
-          <MapView
-            initialCenter={userLocation}
-            initialZoom={15}
-            onMapReady={handleMapReady}
-          />
-        </div>
       )}
 
       {/* 搜尋中狀態 */}

@@ -1169,3 +1169,10 @@
 - [x] 飲食羅盤地圖/列表切換按鈕（地圖可顯示/隱藏）
 - [x] 飲食羅盤補運指數三維加權說明橫幅（方位40%+地名20%+料理40%）
 - [x] 飲食羅盤依命格動態計算五行匹配分數（不再硬編碼）
+
+## 飲食羅盤地圖 Bug 修復（2026-02-26）
+
+- [x] 修復雙重 MapView 導致 Google Maps API 重複載入（移除隱藏的第二個 MapView）
+- [x] 修復 setMap: not an instance of Map 錯誤（提取 doSearch 共用邏輯，防止 handleMapReady 被呼叫多次）
+- [x] 修復 LatLngBounds 格式錯誤（改用 new google.maps.LatLng() 封裝）
+- [x] 修復 drawMarkers 用戶位置標記（改為接收 userLoc 參數，不再依賴 state closure）
