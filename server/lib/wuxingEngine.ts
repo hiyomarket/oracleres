@@ -257,10 +257,38 @@ export interface WeightedElementResult {
   weighted: ElementRatio;
   natal: ElementRatio;
   environment: ElementRatio;
+  /** 天氣五行（若有） */
+  weather?: ElementRatio;
   levels: Record<string, EnergyLevel>;
   dominantElement: string;
   weakestElement: string;
   coreContradiction: string;
+}
+
+// ============================================================
+// 補運指數計算（五行相生相剋）
+// ============================================================
+
+function isGenerating(from: string, to: string): boolean {
+  const gen: Record<string, string> = { 木: '火', 火: '土', 土: '金', 金: '水', 水: '木' };
+  return gen[from] === to;
+}
+function isControlling(from: string, to: string): boolean {
+  const ctrl: Record<string, string> = { 木: '土', 土: '水', 水: '火', 火: '金', 金: '木' };
+  return ctrl[from] === to;
+}
+
+/**
+ * 計算「選擇的五行食物」對「目標補充五行」的補運指數
+ * 返回 -100 到 +100 的分數
+ */
+export function calculateResonanceScore(targetElement: string, chosenElement: string): number {
+  if (chosenElement === targetElement) return 100;          // 完美補運
+  if (isGenerating(chosenElement, targetElement)) return 60; // 相生助力（如木生火）
+  if (isControlling(chosenElement, targetElement)) return -70; // 相剋（如金剋木）
+  if (isGenerating(targetElement, chosenElement)) return -40;  // 洩氣（如火生土，選土時火被洩）
+  if (isControlling(targetElement, chosenElement)) return 30;  // 目標剋制選擇（如火剋金，選火補土時金受制）
+  return 0; // 中性
 }
 
 export interface EnergyLevel {
@@ -277,7 +305,8 @@ export interface EnergyLevel {
  */
 export function calculateWeightedElements(
   env: ElementRatio,
-  dynamicNatalRatio?: Record<string, number>
+  dynamicNatalRatio?: Record<string, number>,
+  weatherRatio?: ElementRatio
 ): WeightedElementResult {
   const natalSource = dynamicNatalRatio || NATAL_ELEMENT_RATIO;
   const natal: ElementRatio = {
@@ -288,7 +317,15 @@ export function calculateWeightedElements(
     水: natalSource['水'] ?? NATAL_ELEMENT_RATIO.水,
   };
 
-  const weighted: ElementRatio = {
+  // 三維加權公式：本命30% + 環境50% + 天氣20%（若無天氣則回退：本命30% + 環境70%）
+  const weather = weatherRatio;
+  const weighted: ElementRatio = weather ? {
+    木: natal.木 * 0.3 + env.木 * 0.5 + weather.木 * 0.2,
+    火: natal.火 * 0.3 + env.火 * 0.5 + weather.火 * 0.2,
+    土: natal.土 * 0.3 + env.土 * 0.5 + weather.土 * 0.2,
+    金: natal.金 * 0.3 + env.金 * 0.5 + weather.金 * 0.2,
+    水: natal.水 * 0.3 + env.水 * 0.5 + weather.水 * 0.2,
+  } : {
     木: natal.木 * 0.3 + env.木 * 0.7,
     火: natal.火 * 0.3 + env.火 * 0.7,
     土: natal.土 * 0.3 + env.土 * 0.7,
@@ -301,17 +338,12 @@ export function calculateWeightedElements(
     levels[el] = assessEnergyLevel(weighted[el]);
   }
 
-  // 找出最強和最弱的五行
   const sorted = Object.entries(weighted).sort(([, a], [, b]) => b - a);
   const dominantElement = sorted[0][0];
   const weakestElement = sorted[sorted.length - 1][0];
-
-  // 生成核心矛盾描述
-  const dominantPct = Math.round(weighted[dominantElement as keyof ElementRatio] * 100);
-  const weakestPct = Math.round(weighted[weakestElement as keyof ElementRatio] * 100);
   const coreContradiction = generateCoreContradiction(weighted, dominantElement, weakestElement);
 
-  return { weighted, natal, environment: env, levels, dominantElement, weakestElement, coreContradiction };
+  return { weighted, natal, environment: env, weather, levels, dominantElement, weakestElement, coreContradiction };
 }
 
 /**
@@ -559,6 +591,14 @@ function generateOutfitExplanation(
 // 飲食建議生成
 // ============================================================
 
+export interface PlanBItem {
+  element: string;
+  resonanceScore: number;  // -100 到 +100
+  label: string;           // 首選方案 / 次選方案 / 中性 / 應避免 / 強烈避免
+  foods: string[];
+  advice: string;
+}
+
 export interface DietaryAdvice {
   supplements: Array<{
     element: string;
@@ -571,6 +611,10 @@ export interface DietaryAdvice {
     foods: string[];
     reason: string;
   }>;
+  /** 全五行補運指數排行（-100 到 +100），供儀表盤顯示 */
+  planB: PlanBItem[];
+  /** 今日首選補充五行 */
+  targetElement: string;
 }
 
 export function generateDietaryAdvice(result: WeightedElementResult): DietaryAdvice {
@@ -609,7 +653,25 @@ export function generateDietaryAdvice(result: WeightedElementResult): DietaryAdv
       reason: `${el}能量已過旺（${Math.round(weighted[el as keyof ElementRatio] * 100)}%），避免再攝取同類食物，以免能量失衡。`,
     }));
 
-  return { supplements, avoid };
+  // 計算 planB：對所有五行計算補運指數
+  const targetElement = supplements[0]?.element ?? "火";
+  const planB: PlanBItem[] = ["木", "火", "土", "金", "水"].map((el) => {
+    const score = calculateResonanceScore(targetElement, el);
+    let label: string;
+    if (score >= 100) label = "首選方案";
+    else if (score >= 50) label = "次選方案";
+    else if (score >= 0) label = "中性";
+    else if (score >= -50) label = "應避免";
+    else label = "強烈避免";
+    const advice = score >= 60
+      ? `${el}系食材可強化今日補運，推薦積極攝取。`
+      : score < 0
+      ? `${el}系食材今日不利補運，建議減少攝取。`
+      : `${el}系食材今日中性，可適量攝取。`;
+    return { element: el, resonanceScore: score, label, foods: ELEMENT_FOODS[el] || [], advice };
+  }).sort((a, b) => b.resonanceScore - a.resonanceScore);
+
+  return { supplements, avoid, planB, targetElement };
 }
 
 function generateFoodAdvice(element: string, pct: number): string {

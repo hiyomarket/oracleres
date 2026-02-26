@@ -1,5 +1,10 @@
 import { useState, useRef, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { MapView } from "@/components/Map";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import { SlidersHorizontal } from "lucide-react";
 
 // 五行 → Google Maps 搜尋關鍵字（台灣在地化）
 const ELEMENT_KEYWORDS: Record<string, { keywords: string[]; label: string; emoji: string; color: string }> = {
@@ -309,6 +314,10 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
   const [filterAuspicious, setFilterAuspicious] = useState(false);
   const [sortMode, setSortMode] = useState<"distance" | "fengshui">("distance");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [maxDistance, setMaxDistance] = useState(2000);
+  const [minFengShuiScore, setMinFengShuiScore] = useState(0);
+  const [filterElement, setFilterElement] = useState<string | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
 
   const handleSearch = useCallback(() => {
@@ -451,13 +460,17 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
 
   const topElements = supplements.slice(0, 2).map((s) => s.element);
   const displayedRestaurants = useMemo(() => {
-    let list = filterAuspicious ? restaurants.filter((r) => r.isAuspicious) : [...restaurants];
+    let list = [...restaurants];
+    if (filterAuspicious) list = list.filter((r) => r.isAuspicious);
+    if (maxDistance < 2000) list = list.filter((r) => (r.distance ?? 9999) <= maxDistance);
+    if (minFengShuiScore > 0) list = list.filter((r) => (r.fengShui?.totalScore ?? 0) >= minFengShuiScore);
+    if (filterElement) list = list.filter((r) => r.element === filterElement);
     if (sortMode === "fengshui") {
       list = list.sort((a, b) => (b.fengShui?.totalScore ?? 0) - (a.fengShui?.totalScore ?? 0));
     }
-    // distance mode: already sorted by distance from handleSearch
     return list;
-  }, [restaurants, filterAuspicious, sortMode]);
+  }, [restaurants, filterAuspicious, sortMode, maxDistance, minFengShuiScore, filterElement]);
+  const activeFilterCount = [filterAuspicious, maxDistance < 2000, minFengShuiScore > 0, !!filterElement].filter(Boolean).length;
 
   // 建立正確的 Google Maps 搜尋 URL
   const buildMapsUrl = (r: Restaurant): string => {
@@ -510,19 +523,16 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         )}
       </div>
 
-      {/* 吉方篩選列（有結果時顯示） */}
-      {phase === "done" && todayDirections && (
-        <div className="flex items-center gap-3 px-4 py-2 border-b border-white/5 bg-white/2">
-          <span className="text-[10px] text-white/40">今日財神方：</span>
-          <span className="text-[10px] text-amber-300 font-medium">
-            💰 {todayDirections.cai}
-          </span>
-          <span className="text-[10px] text-white/40">喜神方：</span>
-          <span className="text-[10px] text-rose-300 font-medium">
-            🌸 {todayDirections.xi}
-          </span>
+      {/* 進階篩選列（有結果時顯示） */}
+      {phase === "done" && (
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-white/5 bg-white/[0.02] flex-wrap">
+          {todayDirections && (
+            <>
+              <span className="text-[10px] text-amber-300">💰 財神：{todayDirections.cai}</span>
+              <span className="text-[10px] text-rose-300">🌸 喜神：{todayDirections.xi}</span>
+            </>
+          )}
           <div className="ml-auto flex items-center gap-1.5">
-            {/* 排序模式切換 */}
             <button
               onClick={() => setSortMode(sortMode === "distance" ? "fengshui" : "distance")}
               className={`text-[10px] px-2 py-1 rounded-lg border transition-all ${
@@ -530,20 +540,73 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                   ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
                   : "bg-white/5 border-white/10 text-white/40"
               }`}
-              title={sortMode === "fengshui" ? "目前：風水優先排序，點擊切換為距離優先" : "目前：距離優先排序，點擊切換為風水優先"}
             >
               {sortMode === "fengshui" ? "🧭 風水優先" : "📏 距離優先"}
             </button>
-            <button
-              onClick={() => setFilterAuspicious(!filterAuspicious)}
-              className={`text-[10px] px-2 py-1 rounded-lg border transition-all ${
-                filterAuspicious
-                  ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-                  : "bg-white/5 border-white/10 text-white/40"
-              }`}
-            >
-              {filterAuspicious ? "✦ 吉方優先" : "○ 吉方優先"}
-            </button>
+            <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+              <SheetTrigger asChild>
+                <button className={`relative flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border transition-all ${
+                  activeFilterCount > 0
+                    ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-300"
+                    : "bg-white/5 border-white/10 text-white/40"
+                }`}>
+                  <SlidersHorizontal className="w-3 h-3" />
+                  篩選
+                  {activeFilterCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-indigo-500 text-[8px] flex items-center justify-center text-white">{activeFilterCount}</span>
+                  )}
+                </button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="bg-[#0f0f1a] border-t border-white/10 text-white rounded-t-2xl pb-8">
+                <SheetHeader className="mb-4">
+                  <SheetTitle className="text-white text-base">進階篩選</SheetTitle>
+                </SheetHeader>
+                <div className="space-y-5">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-white/70">最大距離</span>
+                      <span className="text-sm font-bold text-white">{maxDistance < 2000 ? `${maxDistance}m` : "不限"}</span>
+                    </div>
+                    <Slider min={200} max={2000} step={100} value={[maxDistance]} onValueChange={([v]) => setMaxDistance(v)} className="w-full" />
+                    <div className="flex justify-between text-[10px] text-white/30 mt-1"><span>200m</span><span>2km</span></div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-white/70">最低補運分數</span>
+                      <span className="text-sm font-bold text-white">{minFengShuiScore > 0 ? `≥${minFengShuiScore}分` : "不限"}</span>
+                    </div>
+                    <Slider min={0} max={90} step={10} value={[minFengShuiScore]} onValueChange={([v]) => setMinFengShuiScore(v)} className="w-full" />
+                    <div className="flex justify-between text-[10px] text-white/30 mt-1"><span>不限</span><span>大吉(≥85)</span></div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-white/70 mb-2">五行分類</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[null, "火", "土", "金", "木", "水"].map((el) => (
+                        <button key={el ?? "all"} onClick={() => setFilterElement(el)}
+                          className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                            filterElement === el ? "bg-white/20 border-white/40 text-white" : "bg-white/5 border-white/10 text-white/50"
+                          }`}>
+                          {el ? `${ELEMENT_KEYWORDS[el]?.emoji} ${el}系` : "全部"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-white/70">僅顯示吉方餐廳</span>
+                    <button onClick={() => setFilterAuspicious(!filterAuspicious)}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${filterAuspicious ? "bg-amber-500" : "bg-white/20"}`}>
+                      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${filterAuspicious ? "left-5" : "left-0.5"}`} />
+                    </button>
+                  </div>
+                  {activeFilterCount > 0 && (
+                    <button onClick={() => { setFilterAuspicious(false); setMaxDistance(2000); setMinFengShuiScore(0); setFilterElement(null); }}
+                      className="w-full py-2 text-sm text-red-400 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-colors">
+                      重設所有篩選
+                    </button>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       )}
@@ -564,117 +627,154 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
         </div>
       )}
 
-      {/* 餐廳清單 */}
+      {/* 餐廳清單 - 大型視覺卡片 */}
       {phase === "done" && displayedRestaurants.length > 0 && (
-        <div className="divide-y divide-white/5">
+        <div className="p-3 space-y-3">
+          <AnimatePresence>
           {displayedRestaurants.map((r, i) => {
             const info = ELEMENT_KEYWORDS[r.element];
             const mapsUrl = buildMapsUrl(r);
             const fs = r.fengShui;
             const gradeConfig = fs ? GRADE_CONFIG[fs.grade] : null;
             const isExpanded = expandedId === r.id;
+            const scoreColor = fs
+              ? fs.totalScore >= 85 ? "#f59e0b" : fs.totalScore >= 70 ? "#10b981" : fs.totalScore >= 50 ? "#94a3b8" : "#f97316"
+              : "#94a3b8";
             return (
-              <div key={r.id} className={`px-4 py-3 hover:bg-white/3 transition-colors ${r.isAuspicious ? "border-l-2 border-amber-500/40" : ""}`}>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    {/* 第一行：序號 + 名稱 + 吉方標籤 */}
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs text-white/30 font-mono w-4 flex-shrink-0">{i + 1}</span>
-                      <span className="text-sm font-medium text-white/85 truncate">{r.name}</span>
-                      {r.isAuspicious && (
-                        <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 flex-shrink-0">吉方</span>
-                      )}
+              <motion.div
+                key={r.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className={`rounded-2xl border bg-white/[0.03] overflow-hidden ${
+                  r.isAuspicious ? "border-amber-500/30" : "border-white/8"
+                }`}
+              >
+                {/* 卡片頂部：名稱 + 分數 */}
+                <div className="flex items-start gap-3 p-4">
+                  {/* 補運指數圓形分數 */}
+                  <div className="relative w-12 h-12 flex-shrink-0">
+                    <svg viewBox="0 0 48 48" className="w-full h-full -rotate-90">
+                      <circle cx="24" cy="24" r="19" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="4" />
+                      <circle cx="24" cy="24" r="19" fill="none" stroke={scoreColor} strokeWidth="4"
+                        strokeDasharray={`${(fs?.totalScore ?? 0) * 1.194} 119.4`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-[10px] font-bold" style={{ color: scoreColor }}>{fs?.totalScore ?? "-"}</span>
                     </div>
-                    {/* 第二行：五行標籤 + 風水等級 + 評分 + 距離 */}
-                    <div className="flex items-center gap-2 ml-6 flex-wrap">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${info?.color ?? ''}`}>
-                        {info?.emoji} {info?.label}
-                      </span>
-                      {/* 風水匹配等級（可點擊展開詳情） */}
-                      {fs && gradeConfig && (
-                        <button
-                          onClick={() => setExpandedId(isExpanded ? null : r.id)}
-                          className={`text-[10px] px-1.5 py-0.5 rounded border transition-all hover:opacity-80 ${gradeConfig.color}`}
-                          title="點擊查看風水三維度分析"
-                        >
-                          {gradeConfig.emoji} 風水{gradeConfig.label} {fs.totalScore}分
-                        </button>
-                      )}
-                      {r.rating > 0 && (
-                        <span className="text-[10px] text-white/40">
-                          ⭐ {r.rating.toFixed(1)} ({r.userRatingsTotal > 999 ? '999+' : r.userRatingsTotal})
-                        </span>
-                      )}
-                      {r.distance !== undefined && (
-                        <span className="text-[10px] text-white/30">
-                          📏 {r.distance < 1000 ? `${r.distance}m` : `${(r.distance / 1000).toFixed(1)}km`}
-                        </span>
-                      )}
-                    </div>
-                    {r.address && (
-                      <p className="text-[10px] text-white/25 ml-6 mt-0.5 truncate">{r.address}</p>
-                    )}
-                    {/* 風水三維度詳情展開面板 */}
-                    {isExpanded && fs && (
-                      <div className="ml-6 mt-2 p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1.5">
-                        <p className="text-[10px] font-semibold text-white/60 mb-1">🧭 風水地塊三維度分析</p>
-                        <div className="grid grid-cols-3 gap-1.5">
-                          <div className="text-center p-1.5 rounded bg-white/5 border border-white/8">
-                            <div className="text-[9px] text-white/40 mb-0.5">方位（40%）</div>
-                            <div className="text-[11px] font-bold text-white/70">{fs.bearingMountain}山</div>
-                            <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.bearingElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
-                              {fs.bearingElement}氣 {fs.bearingDeg}°
-                            </div>
-                          </div>
-                          <div className="text-center p-1.5 rounded bg-white/5 border border-white/8">
-                            <div className="text-[9px] text-white/40 mb-0.5">地名（20%）</div>
-                            <div className="text-[11px] font-bold text-white/70">字根</div>
-                            <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.nameElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
-                              {fs.nameElement}屬
-                            </div>
-                          </div>
-                          <div className="text-center p-1.5 rounded bg-white/5 border border-white/8">
-                            <div className="text-[9px] text-white/40 mb-0.5">類型（40%）</div>
-                            <div className="text-[11px] font-bold text-white/70">料理</div>
-                            <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.businessElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
-                              {fs.businessElement}屬
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between pt-1 border-t border-white/8">
-                          <span className="text-[10px] text-white/40">
-                            主導五行：
-                            <span className={`font-semibold ml-1 ${ELEMENT_KEYWORDS[fs.dominantElement]?.color?.split(' ')[0] ?? 'text-white/60'}`}>
-                              {fs.dominantElement}
-                            </span>
-                          </span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${gradeConfig?.color ?? ''}`}>
-                            {gradeConfig?.emoji} {fs.grade} {fs.totalScore}/100
-                          </span>
-                        </div>
-                      </div>
-                    )}
                   </div>
-                  {/* Google Maps 連結 */}
-                  <a
-                    href={mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-shrink-0 text-[10px] text-blue-400/70 hover:text-blue-300 transition-colors mt-1 border border-blue-500/20 hover:border-blue-400/40 px-2 py-1 rounded-lg bg-blue-500/5 hover:bg-blue-500/10"
-                  >
-                    地圖 →
+                  {/* 名稱與標籤 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                      <span className="text-sm font-semibold text-white/90 truncate max-w-[160px]">{r.name}</span>
+                      {r.isAuspicious && (
+                        <Badge className="text-[9px] px-1.5 py-0 bg-amber-500/15 text-amber-400 border-amber-500/30">吉方</Badge>
+                      )}
+                      {gradeConfig && (
+                        <Badge className={`text-[9px] px-1.5 py-0 border ${gradeConfig.color}`}>
+                          {gradeConfig.emoji} {gradeConfig.label}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {info && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${info.color}`}>
+                          {info.emoji} {info.label}
+                        </span>
+                      )}
+                      {r.rating > 0 && <span className="text-[10px] text-white/40">⭐ {r.rating.toFixed(1)}</span>}
+                      {r.distance !== undefined && (
+                        <span className="text-[10px] text-white/30">📏 {r.distance < 1000 ? `${r.distance}m` : `${(r.distance / 1000).toFixed(1)}km`}</span>
+                      )}
+                    </div>
+                    {r.address && <p className="text-[10px] text-white/25 mt-0.5 truncate">{r.address}</p>}
+                  </div>
+                </div>
+                {/* 補運指數進度條 */}
+                {fs && (
+                  <div className="px-4 pb-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] text-white/40">補運指數</span>
+                      <span className="text-[10px] font-bold" style={{ color: scoreColor }}>{fs.totalScore}/100</span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${fs.totalScore}%`, background: scoreColor }} />
+                    </div>
+                  </div>
+                )}
+                {/* 操作列 */}
+                <div className="flex items-center gap-2 px-4 pb-3">
+                  {fs && (
+                    <button
+                      onClick={() => setExpandedId(isExpanded ? null : r.id)}
+                      className="text-[10px] text-white/40 hover:text-white/60 transition-colors border border-white/10 hover:border-white/20 px-2.5 py-1 rounded-lg"
+                    >
+                      {isExpanded ? "收起分析 ↑" : "🧭 三維分析 ↓"}
+                    </button>
+                  )}
+                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
+                    className="ml-auto text-[10px] text-blue-400/70 hover:text-blue-300 transition-colors border border-blue-500/20 hover:border-blue-400/40 px-3 py-1 rounded-lg bg-blue-500/5 hover:bg-blue-500/10">
+                    在地圖開啟 →
                   </a>
                 </div>
-              </div>
+                {/* 風水三維度詳情展開 */}
+                <AnimatePresence>
+                {isExpanded && fs && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="mx-4 mb-3 p-3 rounded-xl bg-white/5 border border-white/10 space-y-2">
+                      <p className="text-[10px] font-semibold text-white/50">🧭 風水地塊三維度分析</p>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="text-center p-2 rounded-lg bg-white/5 border border-white/8">
+                          <div className="text-[9px] text-white/40 mb-0.5">方位（40%）</div>
+                          <div className="text-xs font-bold text-white/70">{fs.bearingMountain}山</div>
+                          <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.bearingElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
+                            {fs.bearingElement}氣 {fs.bearingDeg}°
+                          </div>
+                        </div>
+                        <div className="text-center p-2 rounded-lg bg-white/5 border border-white/8">
+                          <div className="text-[9px] text-white/40 mb-0.5">地名（20%）</div>
+                          <div className="text-xs font-bold text-white/70">字根</div>
+                          <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.nameElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
+                            {fs.nameElement}屬
+                          </div>
+                        </div>
+                        <div className="text-center p-2 rounded-lg bg-white/5 border border-white/8">
+                          <div className="text-[9px] text-white/40 mb-0.5">類型（40%）</div>
+                          <div className="text-xs font-bold text-white/70">料理</div>
+                          <div className={`text-[9px] mt-0.5 ${ELEMENT_KEYWORDS[fs.businessElement]?.color?.split(' ')[0] ?? 'text-white/40'}`}>
+                            {fs.businessElement}屬
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-1.5 border-t border-white/8">
+                        <span className="text-[10px] text-white/40">
+                          主導五行：<span className={`font-semibold ml-1 ${ELEMENT_KEYWORDS[fs.dominantElement]?.color?.split(' ')[0] ?? 'text-white/60'}`}>{fs.dominantElement}</span>
+                        </span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${gradeConfig?.color ?? ''}`}>
+                          {gradeConfig?.emoji} {fs.grade} {fs.totalScore}/100
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+                </AnimatePresence>
+              </motion.div>
             );
           })}
+          </AnimatePresence>
         </div>
       )}
 
       {phase === "done" && displayedRestaurants.length === 0 && (
         <div className="px-4 py-4 text-xs text-white/40 text-center">
-          {filterAuspicious
-            ? "吉方範圍內未找到符合命理的餐廳，請關閉吉方篩選查看全部結果。"
+          {activeFilterCount > 0
+            ? "目前篩選條件下無結果，請調整篩選設定。"
             : "附近 2km 內未找到符合命理的餐廳，請嘗試重新搜尋。"}
         </div>
       )}

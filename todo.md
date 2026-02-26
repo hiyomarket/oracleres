@@ -1085,3 +1085,19 @@
 - [x] dailyReport API 新增 favorableElements 和 unfavorableElements 欄位回傳
 - [x] DietPage 傳入 favorableElements/unfavorableElements 至 NearbyRestaurants
 - [x] calcFengShui 函數改為接受 elementMatchScore 參數，不再依賴全域常數
+
+## 鳳凰計畫 Phase 6 - 補運餐食・生活融合（2026-02-26）
+- [x] 建立 weatherEngine.ts（Open-Meteo 免費 API，天氣→五行映射）
+- [x] 升級 wuxingEngine.ts（三維加權公式：本命30%+環境50%+天氣20%，calculateResonanceScore，planB 陣列）
+- [x] 更新 dailyReport 整合 weatherEngine，回傳 planB + favorableElements + weatherInfo
+- [x] 全面重塑 DietPage（補運指數儀表盤、planB 切換、天氣資訊列、呼吸感版面）
+- [x] 升級 NearbyRestaurants（進階篩選 Sheet、距離/分數/五行/吉方篩選、補運指數圓形進度條、大型視覺卡片、framer-motion 動畫）
+- [x] 修正 NearbyRestaurants ELEMENT_MATCH_SCORE 硬編碼→依用戶喜用神動態計算
+
+## 鳳凰計畫 Phase 6 - 補運餐食・生活融合（2026-02-26）
+- [x] 建立 weatherEngine.ts（Open-Meteo 免費 API，天氣→五行映射）
+- [x] 升級 wuxingEngine.ts（三維加權公式：本命30%+環境50%+天氣20%，calculateResonanceScore，planB 陣列）
+- [x] 更新 dailyReport 整合 weatherEngine，回傳 planB + favorableElements + weatherInfo
+- [x] 全面重塑 DietPage（補運指數儀表盤、planB 切換、天氣資訊列、呼吸感版面）
+- [x] 升級 NearbyRestaurants（進階篩選 Sheet、距離/分數/五行/吉方篩選、補運指數圓形進度條、大型視覺卡片、framer-motion 動畫）
+- [x] 修正 NearbyRestaurants ELEMENT_MATCH_SCORE 硬編碼→依用戶喜用神動態計算
