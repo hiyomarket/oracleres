@@ -7,7 +7,7 @@
  * - 分級積分獎勵：1-5天10點、6-19天15點、20天以上20點
  * - 里程碑達成時顯示特殊慶祝動畫
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -115,6 +115,9 @@ export function DailySigninModal() {
   const { data: signinStatus } = trpc.points.getSigninStatus.useQuery(undefined, {
     enabled: !!user,
     refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    staleTime: 0,
+    retry: 2,
   });
 
   const claimPoints = trpc.points.claimDailyPoints.useMutation({
@@ -139,6 +142,19 @@ export function DailySigninModal() {
       toast.error(err.message);
     },
   });
+
+  // 當 user 剛載入（從 null 變成有值），重置 hasTriggered 以重新偵測
+  const prevUserIdRef = useRef<number | null>(null);
+  useEffect(() => {
+    const currentId = user?.id ?? null;
+    if (prevUserIdRef.current !== currentId) {
+      prevUserIdRef.current = currentId;
+      if (currentId !== null) {
+        // 用戶剛登入或頁面剛載入，重置觸發狀態
+        setHasTriggered(false);
+      }
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user) return;

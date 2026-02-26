@@ -1281,3 +1281,10 @@
 - [x] 前端升級：里程碑達成特殊慶祝動畫
 - [x] 前端升級：簽到成功後顯示下一里程碑鼓勵提示
 - [x] 測試更新：34 個 points 測試涵蓋分級積分、streak、里程碑計算（112 項全部通過）
+
+## Bug 修復 v3.1 - 每日簽到彈窗不自動跳出
+
+- [x] 診斷根本原因：hasTriggered 是 useState，重整後確實歸零，但 getSigninStatus 的 staleTime 預設讓 React Query 使用快取，不重新 fetch
+- [x] 修復：getSigninStatus 加入 staleTime: 0 + refetchOnMount: true + retry: 2，確保每次頁面載入都重新查詢
+- [x] 修復：加入 prevUserIdRef 追蹤 user.id 變化，當 user 從 null 變成有值時重置 hasTriggered，確保時序正確
+- [x] 112 項測試全部通過，TypeScript 零錯誤
