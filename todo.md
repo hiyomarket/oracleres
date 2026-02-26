@@ -1513,3 +1513,10 @@
 - [x] 天命底盤同步：讀取 warRoom dailyScore × 10 作為天命底盤基礎
 - [x] WardrobePage 手串佩戴記錄：手串卡片加入「今日已佩戴」快速記錄按鈕
 - [x] WardrobePage 手串佩戴記錄：與作戰室佩戴記錄同步（braceletWear API）
+
+## Bug 修復 v4.9 - 天命底盤折扣評語 + 我的衣櫥手串來源（2026-02-27）
+- [x] OutfitPage: 天命底盤 = overallScore×10 × (maxInnate/100)，評語依實際分數動態計算
+- [x] OutfitPage: 評語等級分段（90+極佳/70+良好/50+平穩/30+偏弱/30以下低迷）
+- [x] OutfitPage: 說明文字（底部小字）也要反映實際折扣後分數，不再寫死「極佳（80分）」
+- [x] WardrobeSelector: 「我的衣櫥」 Tab 手串部位只顯示用戶自己 wardrobe bracelet 分類（不包含系統手串庫）
+- [x] WardrobeSelector: 移除「我的衣櫥」 Tab 中的系統手串庫資料（系統手串庫只在「系統推薦」 Tab 顯示）

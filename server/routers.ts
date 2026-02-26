@@ -2381,8 +2381,9 @@ ${profileDesc}
           bracelet: bracelets.find(b => b.element === primaryTarget) ?? bracelets[0],
         };
 
-        return {
+         return {
           innateAura: innateAnalysis.score,
+          innateMax: engineRules.innateMax,  // 天命底盤最高分（從 DB 讀取）
           auraLevel,
           innateAnalysis,
           systemRecommendation,
@@ -2399,7 +2400,6 @@ ${profileDesc}
           unfavorableElements: ep.unfavorableElements,
         };
       }),
-
     /**
      * 神諭穿搭 V4.0 - 即時模擬穿搭組合，計算 Aura Score
      */

@@ -365,43 +365,18 @@ export function WardrobeSelector({
                     </div>
                   </div>
                 )}
-                {/* 系統手串庫 */}
-                {bracelets.length > 0 && (
-                  <div>
-                    <p className="text-xs text-gray-500 mb-2">✨ 神諭手串庫</p>
-                    <div className="space-y-2">
-                      {bracelets.map((bracelet) => (
-                        <button
-                          key={bracelet.code}
-                          onClick={() => handleBraceletSelect(bracelet)}
-                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-gray-800 border border-gray-700 hover:border-gray-500 transition-all text-left"
-                        >
-                          <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-                            style={{ backgroundColor: WUXING_BG[bracelet.element] + "20" }}
-                          >
-                            📿
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-white text-sm font-medium">{bracelet.name}</div>
-                            <div className="text-xs text-gray-400">{bracelet.function}</div>
-                            <div className="flex items-center gap-1 mt-0.5">
-                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: WUXING_BG[bracelet.element] }} />
-                              <span className="text-[10px]" style={{ color: WUXING_BG[bracelet.element] }}>
-                                {bracelet.element}系
-                              </span>
-                              {favorableElements.includes(bracelet.element) && (
-                                <span className="text-[10px] text-amber-400">★ 喜用神</span>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+                {partItems.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-4xl mb-3">📿</p>
+                    <p className="text-gray-400 text-sm font-medium">衣櫥中暫無手串</p>
+                    <p className="text-gray-600 text-xs mt-2 leading-relaxed">
+                      前往「虛擬衣櫥」頁面，<br />
+                      新增手串分類的配件
+                    </p>
+                    <p className="text-gray-600 text-xs mt-3">
+                      💡 系統推薦 Tab 可選擇神諭手串庫
+                    </p>
                   </div>
-                )}
-                {partItems.length === 0 && bracelets.length === 0 && (
-                  <p className="text-gray-500 text-sm text-center py-4">暫無手串資料</p>
                 )}
               </div>
             ) : partItems.length > 0 ? (

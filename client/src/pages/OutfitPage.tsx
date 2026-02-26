@@ -211,15 +211,27 @@ export default function OutfitPage() {
 
   // 計算顯示的 Aura 分數
   // 天命底盤同步：優先使用 dailyData.overallScore × 10（與作戰室每日運勢分數一致）
-  const syncedInnate = dailyData?.overallScore != null
+  // 再乘以 innateMax / 100 打折（來自 admin logic-config 的天命底盤最高分設定）
+  const innateMaxDiscount = simulatorData?.innateMax != null ? (simulatorData.innateMax as number) / 100 : 1;
+  const rawInnate = dailyData?.overallScore != null
     ? Math.round(dailyData.overallScore * 10)
     : (simulatorData?.innateAura ?? 0);
+  const syncedInnate = Math.round(rawInnate * innateMaxDiscount);
   const displayInnate = syncedInnate;
   const displayBoost = auraBoostResult?.outfitBoost ?? 0;
   const displayTotal = auraBoostResult?.totalScore
     ? Math.round(syncedInnate + auraBoostResult.outfitBoost)
     : syncedInnate;
-  const displayAuraLevel = auraBoostResult?.auraLevel ?? simulatorData?.auraLevel ?? DEFAULT_AURA_LEVEL;
+  // 評語等級依實際分數動態計算（不再使用後端回傳的固定等級）
+  function getAuraLevelFromScore(score: number): { label: string; color: string; description: string; emoji: string } {
+    if (score >= 90) return { label: "運勢極佳", color: "#F59E0B", description: "天命豐沿，諸事順遂，把握機會大步前進。", emoji: "✨" };
+    if (score >= 70) return { label: "運勢良好", color: "#10B981", description: "能量穩健，適合行動與決策，積極推進重要事項。", emoji: "🌟" };
+    if (score >= 50) return { label: "運勢平穩", color: "#6B7280", description: "能量平穩，適合維持現狀，不宜跌進冲動。", emoji: "🌐" };
+    if (score >= 30) return { label: "運勢偏弱", color: "#F97316", description: "能量稍弱，建議透過穿搭补運，避免重大決策。", emoji: "🍂" };
+    return { label: "運勢低迷", color: "#EF4444", description: "能量較低，建議休養為主，透過穿搭與手串積極補運。", emoji: "🌙" };
+  }
+  const computedAuraLevel = getAuraLevelFromScore(displayTotal);
+  const displayAuraLevel = simulatorData ? computedAuraLevel : DEFAULT_AURA_LEVEL;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -342,7 +354,11 @@ export default function OutfitPage() {
                     </div>
                     {simulatorData?.innateAnalysis && (
                       <p className="text-center text-xs text-white/40 mt-3 leading-relaxed">
-                        {simulatorData.innateAnalysis.description}
+                        今日天命底盤 {displayAuraLevel.label}（{displayInnate}分）。
+                        {simulatorData.innateAnalysis.favorableElements?.length > 0
+                          ? `您的喜用神 ${(simulatorData.innateAnalysis.favorableElements as string[]).slice(0, 2).join('、')} 今日${displayInnate >= 50 ? '能量充沛' : '略顯不足'}，`
+                          : ''}
+                        透過穿搭補運可提升至多 20 分。
                       </p>
                     )}
                     {/* AI 點評 */}
