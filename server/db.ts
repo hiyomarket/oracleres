@@ -840,3 +840,99 @@ function buildNatalRatioFromDayMaster(
 
   return base;
 }
+
+/**
+ * 取得用戶完整命格資料（含四柱、出生時間、職業等），供天命問卜 LLM 使用
+ */
+export async function getUserFullProfile(userId: number): Promise<{
+  yearPillar: string | null;
+  monthPillar: string | null;
+  dayPillar: string | null;
+  hourPillar: string | null;
+  birthDate: string | null;
+  birthTime: string | null;
+  birthLunar: string | null;
+  occupation: string | null;
+  displayName: string | null;
+  birthPlace: string | null;
+  lifePathNumber: number | null;
+}> {
+  const db = await getDb();
+  const empty = {
+    yearPillar: null, monthPillar: null, dayPillar: null, hourPillar: null,
+    birthDate: null, birthTime: null, birthLunar: null, occupation: null,
+    displayName: null, birthPlace: null, lifePathNumber: null,
+  };
+  if (!db) return empty;
+  try {
+    const { userProfiles } = await import("../drizzle/schema");
+    const rows = await db.select({
+      yearPillar: userProfiles.yearPillar,
+      monthPillar: userProfiles.monthPillar,
+      dayPillar: userProfiles.dayPillar,
+      hourPillar: userProfiles.hourPillar,
+      birthDate: userProfiles.birthDate,
+      birthTime: userProfiles.birthTime,
+      birthLunar: userProfiles.birthLunar,
+      occupation: userProfiles.occupation,
+      displayName: userProfiles.displayName,
+      birthPlace: userProfiles.birthPlace,
+      lifePathNumber: userProfiles.lifePathNumber,
+    }).from(userProfiles).where(eq(userProfiles.userId, userId)).limit(1);
+    if (rows.length === 0) return empty;
+    return rows[0];
+  } catch {
+    return empty;
+  }
+}
+
+/**
+ * 儲存問卜歷史記錄
+ */
+export async function saveDivinationSession(data: {
+  userId: number;
+  topic: string;
+  topicName: string;
+  question: string | null;
+  adviceJson: string;
+  contextJson: string;
+  dateString: string;
+  energyScore: number;
+}): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  try {
+    const { divinationSessions } = await import("../drizzle/schema");
+    await db.insert(divinationSessions).values(data);
+  } catch {
+    // silently fail - history is non-critical
+  }
+}
+
+/**
+ * 取得用戶問卜歷史記錄（最近 20 筆）
+ */
+export async function getDivinationHistory(userId: number): Promise<Array<{
+  id: number;
+  topic: string;
+  topicName: string;
+  question: string | null;
+  adviceJson: string;
+  contextJson: string;
+  dateString: string;
+  energyScore: number;
+  createdAt: Date;
+}>> {
+  const db = await getDb();
+  if (!db) return [];
+  try {
+    const { divinationSessions } = await import("../drizzle/schema");
+    const rows = await db.select().from(divinationSessions)
+      .where(eq(divinationSessions.userId, userId))
+      .orderBy(desc(divinationSessions.createdAt))
+      .limit(20);
+    return rows;
+  } catch {
+    return [];
+  }
+}

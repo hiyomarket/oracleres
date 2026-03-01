@@ -689,3 +689,28 @@ export const customBracelets = mysqlTable("custom_bracelets", {
 });
 export type CustomBracelet = typeof customBracelets.$inferSelect;
 export type InsertCustomBracelet = typeof customBracelets.$inferInsert;
+
+// ============================================================
+// 天命問卜：問卜歷史記錄
+// ============================================================
+export const divinationSessions = mysqlTable("divination_sessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // 問卜主題（work/love/health/wealth/decision）
+  topic: varchar("topic", { length: 20 }).notNull(),
+  // 主題中文名稱
+  topicName: varchar("topicName", { length: 20 }).notNull(),
+  // 用戶輸入的具體問題（可為空）
+  question: text("question"),
+  // AI 回答（JSON 格式，含分段結構）
+  adviceJson: text("adviceJson").notNull(),
+  // 命理上下文（JSON）
+  contextJson: text("contextJson").notNull(),
+  // 問卜日期（YYYY-MM-DD，台灣時區）
+  dateString: varchar("dateString", { length: 12 }).notNull(),
+  // 十神能量分數（1-10）
+  energyScore: int("energyScore").notNull().default(5),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type DivinationSession = typeof divinationSessions.$inferSelect;
+export type InsertDivinationSession = typeof divinationSessions.$inferInsert;
