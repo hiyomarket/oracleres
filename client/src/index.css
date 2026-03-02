@@ -208,6 +208,16 @@
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
+  /* 導覽列水平滚動容器：允許 pan-x 手勢 */
+  .nav-scroll-container {
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* 導覽列滚動容器內的按鈕不覆蓋 pan-x */
+  .nav-scroll-container button,
+  .nav-scroll-container [role="button"] {
+    touch-action: pan-x;
+  }
 
   /* 手機版卡片間距縮小 */
   .glass-card {

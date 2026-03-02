@@ -1555,3 +1555,6 @@
 - [x] 前端：DivinationPage 升級（積分餘額顯示、日期選擇器優化、說明文字更新）
 - [x] 前端：加入問卜歷史記錄區塊（可查看過去問題與回答）
 - [x] 測試：168 項測試全部通過，TypeScript 零錯誤，儲存 v4.12 checkpoint
+
+## Bug 修復 v4.13 - SharedNav 功能列水平滑動修復（2026-03-02）
+- [x] 修復 SharedNav 功能列無法左右滑動（touch-action: manipulation 覆蓋了 pan-x 手勢，加入 nav-scroll-container 類別修復）

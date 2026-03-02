@@ -399,7 +399,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
             )}
             <div
               ref={desktopNavRef}
-              className="flex items-center overflow-x-auto scrollbar-none gap-1 px-4 py-1.5"
+              className="nav-scroll-container flex items-center overflow-x-auto scrollbar-none gap-1 px-4 py-1.5"
               style={{ WebkitOverflowScrolling: 'touch' }}
               onScroll={(e) => checkScrollState(e.currentTarget, setDesktopCanScrollLeft, setDesktopCanScrollRight)}
             >
@@ -450,7 +450,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
             )}
             <div
               ref={mobileNavRef}
-              className="flex items-center overflow-x-auto scrollbar-none px-2 py-1"
+              className="nav-scroll-container flex items-center overflow-x-auto scrollbar-none px-2 py-1"
               style={{ WebkitOverflowScrolling: "touch" }}
               onScroll={(e) => checkScrollState(e.currentTarget, setMobileCanScrollLeft, setMobileCanScrollRight)}
             >
