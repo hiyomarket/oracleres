@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { MapView } from "@/components/Map";
 import { FavoriteStores } from "@/components/FavoriteStores";
-import { Star, Map as MapIcon, List } from "lucide-react";
+import { Star, Map as MapIcon, List, ChevronDown, ChevronUp, Navigation } from "lucide-react";
 import { toast } from "sonner";
 
 type WuXing = "wood" | "fire" | "earth" | "metal" | "water";
@@ -294,6 +294,7 @@ export function NearbyStores({ onSelectStore }: NearbyStoresProps = {}) {
     onError: () => toast.error('收藏失敗，請稍後再試'),
   });
   const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
+  const [expandedStoreId, setExpandedStoreId] = useState<string | null>(null);
 
   // 清除地圖標記
   const clearMarkers = useCallback(() => {
@@ -737,12 +738,12 @@ export function NearbyStores({ onSelectStore }: NearbyStoresProps = {}) {
             </div>
           )}
 
-          {/* 彩券行列表 */}
+          {/* 彩券行列表（緊湊可摺疊） */}
           {scoredStores.length > 0 && !isSearching && !scoreMutation.isPending && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-2">
                 <p className="text-xs text-slate-400">
-                  找到 {scoredStores.length} 家彩券行（{RADIUS_OPTIONS.find(o => o.value === searchRadius)?.label} 內），依天命共振指數排序
+                  找到 {scoredStores.length} 家（{RADIUS_OPTIONS.find(o => o.value === searchRadius)?.label} 內）
                 </p>
                 <button
                   onClick={() => {
@@ -757,38 +758,137 @@ export function NearbyStores({ onSelectStore }: NearbyStoresProps = {}) {
                   🔄 重新搜尋
                 </button>
               </div>
-              {scoredStores.map((store: ScoredStore) => (
-                <StoreCard
-                  key={store.placeId}
-                  store={store}
-                  isSelected={selectedStore === store.placeId}
-                  onClick={() => {
-                    const newSelected = selectedStore === store.placeId ? null : store.placeId;
-                    setSelectedStore(newSelected);
-                    if (newSelected) {
-                      onSelectStore?.(store);
-                      if (mapRef.current) {
-                        mapRef.current.panTo(new google.maps.LatLng(store.lat, store.lng));
-                        mapRef.current.setZoom(17);
-                        setMapVisible(true);
-                      }
-                    } else {
-                      onSelectStore?.(null);
-                    }
-                  }}
-                  isFavorited={favoritedIds.has(store.placeId)}
-                  onFavorite={() => {
-                    setFavoritedIds(prev => { const s = new Set(prev); s.add(store.placeId); return s; });
-                    addFavoriteMutation.mutate({
-                      placeId: store.placeId,
-                      name: store.name,
-                      address: store.address,
-                      lat: store.lat,
-                      lng: store.lng,
-                    });
-                  }}
-                />
-              ))}
+              <div className="glass-card rounded-xl border border-white/10 overflow-hidden divide-y divide-white/5">
+                {scoredStores.map((store: ScoredStore) => {
+                  const isExpanded = expandedStoreId === store.placeId;
+                  const isChosen = selectedStore === store.placeId;
+                  const scoreColor =
+                    store.resonanceScore >= 80 ? "text-amber-400" :
+                    store.resonanceScore >= 60 ? "text-emerald-400" :
+                    store.resonanceScore >= 40 ? "text-blue-400" : "text-slate-400";
+                  const bearingColors = ELEMENT_COLORS[store.bearingElement];
+                  return (
+                    <div key={store.placeId}>
+                      {/* 緊湊行 */}
+                      <button
+                        type="button"
+                        onClick={() => setExpandedStoreId(isExpanded ? null : store.placeId)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-white/5 ${
+                          isChosen ? "bg-amber-900/20" : ""
+                        }`}
+                      >
+                        {/* 排名 */}
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                          store.rank === 1 ? "bg-amber-500 text-black" :
+                          store.rank === 2 ? "bg-slate-300 text-black" :
+                          store.rank === 3 ? "bg-amber-700 text-white" :
+                          "bg-white/10 text-slate-400"
+                        }`}>{store.rank}</div>
+                        {/* 店名 + 地址 */}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-bold text-white truncate">{store.name}</div>
+                          <div className="text-[10px] text-slate-500 truncate">{store.address}</div>
+                        </div>
+                        {/* 分數 + 五行 */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className={`text-xs px-1.5 py-0.5 rounded-md ${bearingColors.bg} ${bearingColors.text} border ${bearingColors.border}`}>
+                            {bearingColors.label}
+                          </span>
+                          <span className={`text-sm font-black ${scoreColor}`}>{store.resonanceScore}</span>
+                          {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-slate-500" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-500" />}
+                        </div>
+                      </button>
+                      {/* 展開詳情 */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-3 pb-3 pt-1 space-y-3 bg-white/3">
+                              {/* 推薦語 + 距離 */}
+                              <p className="text-xs text-amber-300/80 leading-relaxed">{store.recommendation}</p>
+                              <div className="flex items-center gap-3 text-xs text-slate-500">
+                                <span>📍 {store.distance < 1000 ? `${store.distance}m` : `${(store.distance / 1000).toFixed(1)}km`}</span>
+                                {store.rating && <span>⭐ {store.rating.toFixed(1)}</span>}
+                                {store.isOpen === true && <span className="text-emerald-400">● 營業中</span>}
+                                {store.isOpen === false && <span className="text-slate-500">● 已打烊</span>}
+                              </div>
+                              {/* 三維分析 */}
+                              <div className="grid grid-cols-3 gap-2">
+                                {[{
+                                  label: "方位", val: `${store.bearingLabel}山`, sub: `${ELEMENT_COLORS[store.bearingElement].label}氣 ${store.bearingDegree}°`, color: ELEMENT_COLORS[store.bearingElement].text
+                                },{
+                                  label: "門牌", val: store.addressAnalysis.digits || "—", sub: `${ELEMENT_COLORS[store.addressAnalysis.element].label}屬`, color: ELEMENT_COLORS[store.addressAnalysis.element].text
+                                },{
+                                  label: "店名", val: store.nameAnalysis.matchedKeyword || "字根", sub: `${ELEMENT_COLORS[store.nameAnalysis.element].label}屬`, color: ELEMENT_COLORS[store.nameAnalysis.element].text
+                                }].map(d => (
+                                  <div key={d.label} className="text-center p-2 rounded-lg bg-white/5 border border-white/8">
+                                    <div className="text-[9px] text-white/40 mb-0.5">{d.label}</div>
+                                    <div className="text-xs font-bold text-white/70 truncate">{d.val}</div>
+                                    <div className={`text-[9px] mt-0.5 ${d.color}`}>{d.sub}</div>
+                                  </div>
+                                ))}
+                              </div>
+                              {/* 操作按鈕 */}
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    const newSelected = isChosen ? null : store.placeId;
+                                    setSelectedStore(newSelected);
+                                    if (newSelected) {
+                                      onSelectStore?.(store);
+                                      if (mapRef.current) {
+                                        mapRef.current.panTo(new google.maps.LatLng(store.lat, store.lng));
+                                        mapRef.current.setZoom(17);
+                                        setMapVisible(true);
+                                      }
+                                    } else {
+                                      onSelectStore?.(null);
+                                    }
+                                  }}
+                                  className={`flex-1 text-xs py-2 rounded-xl font-semibold transition-all ${
+                                    isChosen
+                                      ? "bg-amber-500/30 text-amber-300 border border-amber-500/50"
+                                      : "bg-amber-500/15 text-amber-400 border border-amber-500/30 hover:bg-amber-500/25"
+                                  }`}
+                                >
+                                  {isChosen ? "✦ 已選定此店" : "✦ 選定此彩券行"}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const url = `https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}&destination_place_id=${store.placeId}`;
+                                    window.open(url, "_blank");
+                                  }}
+                                  className="w-9 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-blue-400 hover:border-blue-500/30 flex items-center justify-center transition-colors"
+                                >
+                                  <Navigation className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setFavoritedIds(prev => { const s = new Set(prev); s.add(store.placeId); return s; });
+                                    addFavoriteMutation.mutate({ placeId: store.placeId, name: store.name, address: store.address, lat: store.lat, lng: store.lng });
+                                  }}
+                                  className={`w-9 rounded-xl text-sm flex items-center justify-center transition-all border ${
+                                    favoritedIds.has(store.placeId)
+                                      ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                                      : 'bg-white/5 border-white/10 text-slate-500 hover:text-amber-400 hover:border-amber-500/30'
+                                  }`}
+                                >
+                                  <Star className="w-3.5 h-3.5" fill={favoritedIds.has(store.placeId) ? '#f59e0b' : 'none'} />
+                                </button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

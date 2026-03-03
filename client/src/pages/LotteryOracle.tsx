@@ -19,7 +19,7 @@ import {
   Sparkles, RefreshCw, Clock, ChevronDown, ChevronUp,
   TrendingUp, Flame, Calendar, MapPin, Thermometer,
   CloudRain, Sun, Cloud, Zap, Target, CheckCircle, AlertCircle, MinusCircle,
-  Store, Trophy, Coins, Star,
+  Store, Trophy, Coins, Star, Users, Search, X,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
@@ -224,7 +224,6 @@ function PurchaseAdviceCard({ data, isLoading }: {
             <div key={i} className="flex items-center gap-2">
               <div className="w-24 shrink-0">
                 <div className="text-xs text-slate-400 truncate">{item.label}</div>
-                <div className="text-xs text-slate-600">{item.weight}</div>
               </div>
               <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                 <motion.div
@@ -525,6 +524,117 @@ function EnergyIndexCard({ data }: {
   );
 }
 
+// ── 為誰選號可搜尋下拉選單 ─────────────────────────────────────────────────────
+function ForWhomCombobox({
+  usersWithProfile,
+  selectedProfileUserId,
+  onSelect,
+}: {
+  usersWithProfile: any[];
+  selectedProfileUserId: number | undefined;
+  onSelect: (id: number | undefined) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const allOptions = [
+    { id: undefined as number | undefined, label: "✦ 我自己", sub: "使用主帳號命格" },
+    ...usersWithProfile.map((u: any) => ({
+      id: u.id as number,
+      label: u.profile?.displayName ?? u.name?.split(' ')[0] ?? `用戶${u.id}`,
+      sub: u.profile?.dayMasterElement ? `${u.profile.dayMasterElement}命` : "",
+    })),
+  ];
+
+  const filtered = allOptions.filter(o =>
+    o.label.toLowerCase().includes(search.toLowerCase()) ||
+    o.sub.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const selected = allOptions.find(o => o.id === selectedProfileUserId) ?? allOptions[0];
+
+  return (
+    <div className="mt-4 relative">
+      <div className="text-xs text-slate-400 mb-1.5 flex items-center gap-1">
+        <Users className="w-3 h-3" />
+        為誰選號
+      </div>
+      <button
+        type="button"
+        onClick={() => { setOpen(!open); setSearch(""); }}
+        className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-800/80 border border-slate-700/50 text-sm hover:border-amber-500/40 transition-colors"
+      >
+        <span className={selectedProfileUserId === undefined ? "text-amber-300" : "text-purple-300"}>
+          {selected.label}
+        </span>
+        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-50 top-full mt-1 w-full bg-slate-900 border border-slate-700/80 rounded-xl shadow-2xl overflow-hidden"
+          >
+            {/* 搜尋框 */}
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-700/50">
+              <Search className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              <input
+                autoFocus
+                type="text"
+                placeholder="搜尋成員..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="flex-1 bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="text-slate-500 hover:text-slate-300">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {/* 選項列表 */}
+            <div className="max-h-48 overflow-y-auto">
+              {filtered.length === 0 ? (
+                <div className="px-3 py-3 text-xs text-slate-500 text-center">找不到符合的成員</div>
+              ) : (
+                filtered.map(opt => (
+                  <button
+                    key={String(opt.id)}
+                    type="button"
+                    onClick={() => { onSelect(opt.id); setOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm transition-colors hover:bg-white/5 ${
+                      opt.id === selectedProfileUserId ? "bg-amber-500/10" : ""
+                    }`}
+                  >
+                    <div>
+                      <div className={opt.id === undefined ? "text-amber-300" : "text-purple-300"}>{opt.label}</div>
+                      {opt.sub && <div className="text-[10px] text-slate-500 mt-0.5">{opt.sub}</div>}
+                    </div>
+                    {opt.id === selectedProfileUserId && (
+                      <CheckCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {selectedProfileUserId !== undefined && (
+        <div className="mt-1.5 text-xs text-purple-400 flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3" />
+          已切換至 {selected.label} 的命格選號
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── 主組件 ────────────────────────────────────────────────────────────────────
 type LotteryData = {
   numbers: number[];
@@ -747,6 +857,7 @@ export default function LotteryOracle() {
         weather: weatherInput,
         profileUserId: selectedProfileUserId,
         storeResonanceScore: selectedStore?.resonanceScore,
+        randomSeed: Date.now() % 100000,
       });
     }, 600);
   }, [bigLottoMutation, selectedDate, weatherIncluded, weatherQuery.data, selectedProfileUserId, selectedStore]);
@@ -766,6 +877,7 @@ export default function LotteryOracle() {
         weather: weatherInput,
         profileUserId: selectedProfileUserId,
         storeResonanceScore: selectedStore?.resonanceScore,
+        randomSeed: Date.now() % 100000,
       });
     }, 600);
   }, [powerballMutation, selectedDate, weatherIncluded, weatherQuery.data, selectedProfileUserId, selectedStore]);
@@ -785,6 +897,7 @@ export default function LotteryOracle() {
         weather: weatherInput,
         profileUserId: selectedProfileUserId,
         storeResonanceScore: selectedStore?.resonanceScore,
+        randomSeed: Date.now() % 100000,
       });
     }, 600);
   }, [threeStarMutation, selectedDate, weatherIncluded, weatherQuery.data, selectedProfileUserId, selectedStore]);
@@ -804,6 +917,7 @@ export default function LotteryOracle() {
         weather: weatherInput,
         profileUserId: selectedProfileUserId,
         storeResonanceScore: selectedStore?.resonanceScore,
+        randomSeed: Date.now() % 100000,
       });
     }, 600);
   }, [fourStarMutation, selectedDate, weatherIncluded, weatherQuery.data, selectedProfileUserId, selectedStore]);
@@ -927,42 +1041,13 @@ export default function LotteryOracle() {
             </button>
           </div>
 
-          {/* 命格切換（主帳號專屬） */}
+          {/* 命格切換（主帳號專屬）- 可搜尋下拉選單 */}
           {user?.role === 'admin' && usersWithProfile.length > 0 && (
-            <div className="mt-4">
-              <div className="text-xs text-slate-400 mb-2">為誰選號</div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setSelectedProfileUserId(undefined)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    selectedProfileUserId === undefined
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                      : 'bg-slate-800/60 text-slate-400 border border-slate-700/40 hover:border-amber-500/30'
-                  }`}
-                >
-                  ✦ 我自己
-                </button>
-                {usersWithProfile.map((u: any) => (
-                  <button
-                    key={u.id}
-                    onClick={() => setSelectedProfileUserId(u.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                      selectedProfileUserId === u.id
-                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-                        : 'bg-slate-800/60 text-slate-400 border border-slate-700/40 hover:border-purple-500/30'
-                    }`}
-                  >
-                    {u.profile?.displayName ?? u.name?.split(' ')[0] ?? `用戶${u.id}`}
-                  </button>
-                ))}
-              </div>
-              {selectedProfileUserId && (
-                <div className="mt-2 text-xs text-purple-400 flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3" />
-                  已切換至 {usersWithProfile.find((u: any) => u.id === selectedProfileUserId)?.profile?.displayName ?? '成員'} 的命格選號
-                </div>
-              )}
-            </div>
+            <ForWhomCombobox
+              usersWithProfile={usersWithProfile}
+              selectedProfileUserId={selectedProfileUserId}
+              onSelect={setSelectedProfileUserId}
+            />
           )}
           {/* 天氣資訊 */}
           <div className="mt-4">
@@ -1246,29 +1331,32 @@ export default function LotteryOracle() {
                         </div>
                       )}
                       {bigLottoResult && !bigLottoRevealing && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                          <div className="bg-slate-900/60 border border-red-500/20 rounded-2xl p-4">
-                            <div className="text-xs text-slate-500 mb-3 text-center">{bigLottoResult.description}</div>
-                            <div className="flex justify-center gap-2 flex-wrap mb-3">
-                              {bigLottoResult.mainNumbers?.map((n: number, i: number) => (
-                                <div key={i} className="w-10 h-10 rounded-full bg-red-900/40 border-2 border-red-500/50 flex items-center justify-center text-sm font-bold text-red-300">{n}</div>
-                              ))}
-                              {bigLottoResult.specialNumber !== undefined && (
-                                <div className="w-10 h-10 rounded-full bg-amber-900/40 border-2 border-amber-500/50 flex items-center justify-center text-sm font-bold text-amber-300">{bigLottoResult.specialNumber}</div>
-                              )}
-                            </div>
-                            {bigLottoResult.specialNumber !== undefined && (
-                              <div className="text-center text-[10px] text-slate-500">紅色=主號碼（6個）· 金色=特別號</div>
-                            )}
-                            {bigLottoResult.storeLabel && (
-                              <div className="mt-2 text-center text-xs text-amber-400">{bigLottoResult.storeLabel}</div>
-                            )}
-                            {bigLottoResult.recommendation && (
-                              <div className="mt-3 p-3 rounded-xl bg-red-900/20 border border-red-500/15">
-                                <p className="text-xs text-slate-300 leading-relaxed">{bigLottoResult.recommendation}</p>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+                          {bigLottoResult.storeLabel && (
+                            <div className="text-center text-xs text-amber-400 mb-1">{bigLottoResult.storeLabel}</div>
+                          )}
+                          <div className="text-[10px] text-slate-500 text-center mb-2">紅色=主號碼（6個）· 金色=特別號</div>
+                          {(bigLottoResult.sets ?? []).map((set: any, si: number) => (
+                            <div key={si} className="bg-slate-900/60 border border-red-500/20 rounded-xl p-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${ set.confidence === 'high' ? 'bg-amber-500/20 text-amber-300' : set.confidence === 'medium' ? 'bg-red-500/15 text-red-300' : 'bg-slate-700/60 text-slate-400' }`}>{set.type}</span>
+                                <span className="text-[10px] text-slate-500 truncate">{set.description}</span>
                               </div>
-                            )}
-                          </div>
+                              <div className="flex gap-1.5 flex-wrap">
+                                {(set.numbers ?? []).map((n: number, i: number) => (
+                                  <div key={i} className="w-9 h-9 rounded-full bg-red-900/40 border-2 border-red-500/50 flex items-center justify-center text-xs font-bold text-red-300">{n}</div>
+                                ))}
+                                {set.specialNumber !== undefined && (
+                                  <div className="w-9 h-9 rounded-full bg-amber-900/40 border-2 border-amber-500/50 flex items-center justify-center text-xs font-bold text-amber-300">{set.specialNumber}</div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          {bigLottoResult.energyAnalysis?.recommendation && (
+                            <div className="mt-2 p-3 rounded-xl bg-red-900/20 border border-red-500/15">
+                              <p className="text-xs text-slate-300 leading-relaxed">{bigLottoResult.energyAnalysis.recommendation}</p>
+                            </div>
+                          )}
                         </motion.div>
                       )}
                       {!bigLottoResult && !bigLottoRevealing && (
@@ -1306,29 +1394,32 @@ export default function LotteryOracle() {
                         </div>
                       )}
                       {powerballResult && !powerballRevealing && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                          <div className="bg-slate-900/60 border border-purple-500/20 rounded-2xl p-4">
-                            <div className="text-xs text-slate-500 mb-3 text-center">{powerballResult.description}</div>
-                            <div className="flex justify-center gap-2 flex-wrap mb-3">
-                              {powerballResult.mainNumbers?.map((n: number, i: number) => (
-                                <div key={i} className="w-10 h-10 rounded-full bg-purple-900/40 border-2 border-purple-500/50 flex items-center justify-center text-sm font-bold text-purple-300">{n}</div>
-                              ))}
-                              {powerballResult.secondBall !== undefined && (
-                                <div className="w-10 h-10 rounded-full bg-pink-900/40 border-2 border-pink-500/50 flex items-center justify-center text-sm font-bold text-pink-300">{powerballResult.secondBall}</div>
-                              )}
-                            </div>
-                            {powerballResult.secondBall !== undefined && (
-                              <div className="text-center text-[10px] text-slate-500">紫色=第一區（6個）· 粉色=第二區</div>
-                            )}
-                            {powerballResult.storeLabel && (
-                              <div className="mt-2 text-center text-xs text-amber-400">{powerballResult.storeLabel}</div>
-                            )}
-                            {powerballResult.recommendation && (
-                              <div className="mt-3 p-3 rounded-xl bg-purple-900/20 border border-purple-500/15">
-                                <p className="text-xs text-slate-300 leading-relaxed">{powerballResult.recommendation}</p>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+                          {powerballResult.storeLabel && (
+                            <div className="text-center text-xs text-amber-400 mb-1">{powerballResult.storeLabel}</div>
+                          )}
+                          <div className="text-[10px] text-slate-500 text-center mb-2">紫色=第一區（6個）· 粉色=第二區</div>
+                          {(powerballResult.sets ?? []).map((set: any, si: number) => (
+                            <div key={si} className="bg-slate-900/60 border border-purple-500/20 rounded-xl p-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${ set.confidence === 'high' ? 'bg-amber-500/20 text-amber-300' : set.confidence === 'medium' ? 'bg-purple-500/15 text-purple-300' : 'bg-slate-700/60 text-slate-400' }`}>{set.type}</span>
+                                <span className="text-[10px] text-slate-500 truncate">{set.description}</span>
                               </div>
-                            )}
-                          </div>
+                              <div className="flex gap-1.5 flex-wrap">
+                                {(set.mainNumbers ?? set.numbers ?? []).map((n: number, i: number) => (
+                                  <div key={i} className="w-9 h-9 rounded-full bg-purple-900/40 border-2 border-purple-500/50 flex items-center justify-center text-xs font-bold text-purple-300">{n}</div>
+                                ))}
+                                {set.powerNumber !== undefined && (
+                                  <div className="w-9 h-9 rounded-full bg-pink-900/40 border-2 border-pink-500/50 flex items-center justify-center text-xs font-bold text-pink-300">{set.powerNumber}</div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          {powerballResult.energyAnalysis?.recommendation && (
+                            <div className="mt-2 p-3 rounded-xl bg-purple-900/20 border border-purple-500/15">
+                              <p className="text-xs text-slate-300 leading-relaxed">{powerballResult.energyAnalysis.recommendation}</p>
+                            </div>
+                          )}
                         </motion.div>
                       )}
                       {!powerballResult && !powerballRevealing && (
@@ -1413,24 +1504,29 @@ export default function LotteryOracle() {
                         </div>
                       )}
                       {threeStarResult && !threeStarRevealing && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                          <div className="bg-slate-900/60 border border-emerald-500/20 rounded-2xl p-4">
-                            <div className="text-xs text-slate-500 mb-3 text-center">{threeStarResult.description}</div>
-                            <div className="flex justify-center gap-3 mb-3">
-                              {threeStarResult.digits?.map((d: string, i: number) => (
-                                <div key={i} className="w-14 h-14 rounded-2xl bg-emerald-900/40 border-2 border-emerald-500/50 flex items-center justify-center text-2xl font-black text-emerald-300">{d}</div>
-                              ))}
-                            </div>
-                            <div className="text-center text-sm font-bold text-emerald-400 mb-2">{threeStarResult.number}</div>
-                            {threeStarResult.storeLabel && (
-                              <div className="text-center text-xs text-amber-400">{threeStarResult.storeLabel}</div>
-                            )}
-                            {threeStarResult.recommendation && (
-                              <div className="mt-3 p-3 rounded-xl bg-emerald-900/20 border border-emerald-500/15">
-                                <p className="text-xs text-slate-300 leading-relaxed">{threeStarResult.recommendation}</p>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+                          {threeStarResult.storeLabel && (
+                            <div className="text-center text-xs text-amber-400 mb-1">{threeStarResult.storeLabel}</div>
+                          )}
+                          {(threeStarResult.sets ?? []).map((set: any, si: number) => (
+                            <div key={si} className="bg-slate-900/60 border border-emerald-500/20 rounded-xl p-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${ set.confidence === 'high' ? 'bg-amber-500/20 text-amber-300' : set.confidence === 'medium' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-700/60 text-slate-400' }`}>{set.type}</span>
+                                <span className="text-[10px] text-slate-500 truncate">{set.description}</span>
                               </div>
-                            )}
-                          </div>
+                              <div className="flex gap-2 justify-center">
+                                {(set.digits ?? []).map((d: number, i: number) => (
+                                  <div key={i} className="w-11 h-11 rounded-xl bg-emerald-900/40 border-2 border-emerald-500/50 flex items-center justify-center text-lg font-black text-emerald-300">{d}</div>
+                                ))}
+                              </div>
+                              <div className="text-center text-xs font-bold text-emerald-400 mt-1">{(set.digits ?? []).join('')}</div>
+                            </div>
+                          ))}
+                          {threeStarResult.energyAnalysis?.recommendation && (
+                            <div className="mt-2 p-3 rounded-xl bg-emerald-900/20 border border-emerald-500/15">
+                              <p className="text-xs text-slate-300 leading-relaxed">{threeStarResult.energyAnalysis.recommendation}</p>
+                            </div>
+                          )}
                         </motion.div>
                       )}
                       {!threeStarResult && !threeStarRevealing && (
@@ -1467,24 +1563,29 @@ export default function LotteryOracle() {
                         </div>
                       )}
                       {fourStarResult && !fourStarRevealing && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                          <div className="bg-slate-900/60 border border-blue-500/20 rounded-2xl p-4">
-                            <div className="text-xs text-slate-500 mb-3 text-center">{fourStarResult.description}</div>
-                            <div className="flex justify-center gap-3 mb-3">
-                              {fourStarResult.digits?.map((d: string, i: number) => (
-                                <div key={i} className="w-12 h-12 rounded-2xl bg-blue-900/40 border-2 border-blue-500/50 flex items-center justify-center text-xl font-black text-blue-300">{d}</div>
-                              ))}
-                            </div>
-                            <div className="text-center text-sm font-bold text-blue-400 mb-2">{fourStarResult.number}</div>
-                            {fourStarResult.storeLabel && (
-                              <div className="text-center text-xs text-amber-400">{fourStarResult.storeLabel}</div>
-                            )}
-                            {fourStarResult.recommendation && (
-                              <div className="mt-3 p-3 rounded-xl bg-blue-900/20 border border-blue-500/15">
-                                <p className="text-xs text-slate-300 leading-relaxed">{fourStarResult.recommendation}</p>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
+                          {fourStarResult.storeLabel && (
+                            <div className="text-center text-xs text-amber-400 mb-1">{fourStarResult.storeLabel}</div>
+                          )}
+                          {(fourStarResult.sets ?? []).map((set: any, si: number) => (
+                            <div key={si} className="bg-slate-900/60 border border-blue-500/20 rounded-xl p-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${ set.confidence === 'high' ? 'bg-amber-500/20 text-amber-300' : set.confidence === 'medium' ? 'bg-blue-500/15 text-blue-300' : 'bg-slate-700/60 text-slate-400' }`}>{set.type}</span>
+                                <span className="text-[10px] text-slate-500 truncate">{set.description}</span>
                               </div>
-                            )}
-                          </div>
+                              <div className="flex gap-2 justify-center">
+                                {(set.digits ?? []).map((d: number, i: number) => (
+                                  <div key={i} className="w-11 h-11 rounded-xl bg-blue-900/40 border-2 border-blue-500/50 flex items-center justify-center text-lg font-black text-blue-300">{d}</div>
+                                ))}
+                              </div>
+                              <div className="text-center text-xs font-bold text-blue-400 mt-1">{(set.digits ?? []).join('')}</div>
+                            </div>
+                          ))}
+                          {fourStarResult.energyAnalysis?.recommendation && (
+                            <div className="mt-2 p-3 rounded-xl bg-blue-900/20 border border-blue-500/15">
+                              <p className="text-xs text-slate-300 leading-relaxed">{fourStarResult.energyAnalysis.recommendation}</p>
+                            </div>
+                          )}
                         </motion.div>
                       )}
                       {!fourStarResult && !fourStarRevealing && (
@@ -1570,9 +1671,24 @@ function ScratchAnalysisWithMap({ selectedDate, weatherElement, addressElement }
   const [selectedStore, setSelectedStore] = useState<{ name: string; address: string; fengShuiGrade?: string; fengShuiScore?: number } | null>(null);
   const [mapUserLoc, setMapUserLoc] = useState<{lat:number;lng:number}|null>(null);
   const [expandedDenom, setExpandedDenom] = useState<number | null>(100);
+  const [selectedStoreFengShui, setSelectedStoreFengShui] = useState<{
+    resonanceScore?: number;
+    fengShuiGrade?: string;
+    bearingElement?: string;
+  } | null>(null);
   const { data: strategies } = trpc.lottery.scratchStrategies.useQuery(
-    { targetDate: selectedDate, weatherElement, addressElement, useWeather: !!weatherElement, useAddress: !!addressElement },
-    { staleTime: 30000 }
+    {
+      targetDate: selectedDate,
+      weatherElement,
+      addressElement,
+      useWeather: !!weatherElement,
+      useAddress: !!addressElement,
+      storeResonanceScore: selectedStoreFengShui?.resonanceScore,
+      storeFengShuiGrade: selectedStoreFengShui?.fengShuiGrade,
+      storeBearingElement: selectedStoreFengShui?.bearingElement,
+      denomination: expandedDenom ?? 100,
+    },
+    { staleTime: 5000 }
   );
 
   const { data: addressData, isLoading: addressLoading } = trpc.lottery.addressAnalysis.useQuery(
@@ -1614,6 +1730,13 @@ function ScratchAnalysisWithMap({ selectedDate, weatherElement, addressElement }
           marker.addListener("click", () => {
             const addr = place.formatted_address ?? place.name ?? "";
             setSelectedStore({ name: place.name ?? "", address: addr, fengShuiGrade: fsData?.grade, fengShuiScore: fsData?.total });
+            if (fsData) {
+              setSelectedStoreFengShui({
+                resonanceScore: fsData.total,
+                fengShuiGrade: fsData.grade,
+                bearingElement: fsData.bearingEl,
+              });
+            }
             setAddress(addr);
             setInputAddress(addr);
             setShowMap(false);
@@ -1652,25 +1775,35 @@ function ScratchAnalysisWithMap({ selectedDate, weatherElement, addressElement }
   };
 
   return (
-    <div className="space-y-5">
-      {/* GPS 地圖搜尋彩券行 */}
+    <div className="space-y-4">
+      {/* 彩券行地址輸入（可從上方地圖點選帶入） */}
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <MapPin className="w-4 h-4 text-amber-400" />
-          <span className="text-sm font-medium text-amber-300">搜尋附近彩券行</span>
+        <div className="flex items-center gap-2 mb-2">
+          <MapPin className="w-3.5 h-3.5 text-amber-400" />
+          <span className="text-xs font-medium text-amber-300">彩券行地址五行分析</span>
+          <span className="text-[10px] text-slate-500">（可從上方地圖點選帶入）</span>
         </div>
-        <button
-          onClick={() => setShowMap(!showMap)}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-amber-500/40 text-amber-400 text-sm hover:bg-amber-500/10 transition-colors"
-        >
-          <MapPin className="w-4 h-4" />
-          {showMap ? "收起地圖" : "開啟 GPS 地圖搜尋台灣彩券行"}
-        </button>
-
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="輸入彩券行地址進行五行分析..."
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAnalyzeAddress()}
+            className="flex-1 bg-slate-800/80 border border-slate-700/50 rounded-xl px-3 py-2 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-500/50"
+          />
+          <button
+            onClick={handleAnalyzeAddress}
+            disabled={addressLoading}
+            className="px-3 py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 text-sm hover:bg-amber-500/30 transition-colors disabled:opacity-50"
+          >
+            {addressLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
+          </button>
+        </div>
         {selectedStore && (
           <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">
             <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate flex-1">已選擇：{selectedStore.name}（{selectedStore.address}）</span>
+            <span className="truncate flex-1">已帶入：{selectedStore.name}</span>
             {selectedStore.fengShuiGrade && (
               <span
                 className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold border"
@@ -1685,45 +1818,6 @@ function ScratchAnalysisWithMap({ selectedDate, weatherElement, addressElement }
             )}
           </div>
         )}
-
-        <AnimatePresence>
-          {showMap && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden mt-3"
-            >
-              <div className="rounded-xl overflow-hidden border border-slate-700/50" style={{ height: 320 }}>
-                <MapView
-                  onMapReady={handleMapReady}
-                  initialCenter={{ lat: 25.04, lng: 121.53 }}
-                  initialZoom={13}
-                />
-              </div>
-              <p className="text-xs text-slate-500 mt-2 text-center">點擊地圖上的彩券行標記，即可帶入地址進行五行分析</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* 手動輸入地址 */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          placeholder="輸入彩券行地址（或從地圖點選）"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleAnalyzeAddress()}
-          className="flex-1 bg-slate-800/80 border border-slate-700/50 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-amber-500/50"
-        />
-        <button
-          onClick={handleAnalyzeAddress}
-          disabled={addressLoading}
-          className="px-4 py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 text-sm hover:bg-amber-500/30 transition-colors disabled:opacity-50"
-        >
-          {addressLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
-        </button>
       </div>
 
       {/* 地址五行分析結果 */}
