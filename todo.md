@@ -1904,3 +1904,41 @@
 
 ## 全系統設計原則（永久生效）
 - [x] 所有面向用戶的說明/解讀/回饋文字，一律使用高情緒價值、正向鼓勵語言，讓用戶感受宇宙眷顧與特殊感
+
+## 功能修復 & 增強 v6.0 - 後台管理全面升級
+
+### 修復 /feature-store 前台無法顯示方案
+- [ ] 診斷 featureStore.list API 為何前台無法顯示已新增方案
+- [ ] 修復前台 FeatureStore.tsx 的資料載入邏輯
+
+### 遊戲幣顯示
+- [ ] 首頁/個人下拉選單新增遊戲幣餘額顯示（SharedNav 或 Header）
+- [ ] 遊戲幣顯示即時更新（登入後自動刷新）
+
+### 後台管理增強
+- [ ] /admin/users 新增「增加遊戲幣」按鈕（可輸入數量+備注）
+- [ ] /admin/user-groups 新增「批量增加遊戲幣」功能（對群組內所有用戶）
+- [ ] 後端：admin.addCoins API（單一用戶增加遊戲幣）
+- [ ] 後端：admin.addCoinsToGroup API（群組批量增加遊戲幣）
+
+### /admin/dashboard 重新設計
+- [ ] 後端：admin.dashboardStats API（各功能使用頻率統計）
+- [ ] 統計項目：擲筊次數/刮刮樂選號次數/作戰室查看次數/各彩種選號次數/天命問卜次數
+- [ ] 重新設計 dashboard UI（使用頻率排行榜 + 趨勢圖 + 用戶活躍度）
+- [ ] 加入用戶增長曲線（每日新增用戶）
+- [ ] 加入遊戲幣流通統計（總發放/總消耗/流通中）
+
+## 功能修復 & 增強 v6.0 - 後台管理全面升級（已完成）
+
+- [x] 確認 /feature-store 前台正常顯示方案（isActive=1 的方案正確顯示）
+- [x] SharedNav 頂部導航新增遊戲幣顯示（積分旁顯示遊戲幣數量）
+- [x] UserMenu 下拉選單新增遊戲幣顯示（積分區塊旁並列）
+- [x] /admin/users 新增「增加遊戲幣」按鈕和 Modal（支援增加/扣除模式）
+- [x] /admin/user-groups 新增「批量增加遊戲幣」按鈕和 Modal
+- [x] 後端 adminAdjustCoins API（dashboard router）
+- [x] 後端 batchAdjustCoins API（userGroups router）
+- [x] 後端 getFeatureUsage API（dashboard router，各功能使用頻率統計）
+- [x] getKpis API 新增 totalCoinsGranted 和 avgCoinsPerUser 欄位
+- [x] /admin/dashboard 全面重新設計：KPI 卡片、功能使用頻率橫條圖、24h 活躍時段、方案分佈
+- [x] 10 項新測試全部通過（admin.coins.test.ts）
+- [x] 全部 233 項測試通過

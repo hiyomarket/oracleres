@@ -1,0 +1,43 @@
+{
+  "query": "SELECT id, name, moduleId, isActive FROM feature_plans; SELECT id, name FROM modules LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, moduleId, isActive FROM feature_plans; SELECT id, name FROM modules LIMIT 20;",
+  "rows": [
+    {
+      "id": "divination_poe",
+      "name": "擲筊問卦",
+      "moduleId": "module_oracle",
+      "isActive": "1"
+    },
+    {
+      "id": "Metaphysics Calendar",
+      "name": "命理日曆",
+      "moduleId": "module_calendar",
+      "isActive": "1"
+    },
+    {
+      "id": "Oracle Outfit",
+      "name": "神諭穿搭",
+      "moduleId": "module_outfit",
+      "isActive": "1"
+    }
+  ],
+  "messages": [
+    "id\tname",
+    "module_calendar\t命理日曆",
+    "module_casino\t天命娛樂城",
+    "module_diet\t飲食羅盤",
+    "module_divination\t天命問卜",
+    "module_lottery\t補運樂透",
+    "module_luck_cycle\t大限流年",
+    "module_oracle\t擲筊問卦",
+    "module_outfit\t神諭穿搭",
+    "module_profile\t命格方舟",
+    "module_stats\t【統計】命理統計",
+    "module_warroom\t每日運勢",
+    "module_wealth\t財運羅盤",
+    "module_weekly\t【週報】天命週報"
+  ],
+  "stdout": "id\tname\tmoduleId\tisActive\ndivination_poe\t擲筊問卦\tmodule_oracle\t1\nMetaphysics Calendar\t命理日曆\tmodule_calendar\t1\nOracle Outfit\t神諭穿搭\tmodule_outfit\t1\nid\tname\nmodule_calendar\t命理日曆\nmodule_casino\t天命娛樂城\nmodule_diet\t飲食羅盤\nmodule_divination\t天命問卜\nmodule_lottery\t補運樂透\nmodule_luck_cycle\t大限流年\nmodule_oracle\t擲筊問卦\nmodule_outfit\t神諭穿搭\nmodule_profile\t命格方舟\nmodule_stats\t【統計】命理統計\nmodule_warroom\t每日運勢\nmodule_wealth\t財運羅盤\nmodule_weekly\t【週報】天命週報\n",
+  "stderr": "",
+  "execution_time_ms": 1805
+}

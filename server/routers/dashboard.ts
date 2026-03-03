@@ -18,6 +18,11 @@ import {
   scratchLogs,
   inviteCodes,
   pointsTransactions,
+  divinationSessions,
+  wbcBets,
+  wealthJournal,
+  featureRedemptions,
+  currencyExchangeLogs,
 } from "../../drizzle/schema";
 import { eq, desc, and, sql, gte, lte, isNotNull, or, like, count } from "drizzle-orm";
 
@@ -53,6 +58,8 @@ export const dashboardRouter = router({
       totalPointsGrantedRows,
       totalPointsSpentRows,
       todayActiveRows,
+      totalCoinsGrantedRows,
+      avgCoinsRows,
     ] = await Promise.all([
       // 總用戶數
       db.select({ count: sql<number>`COUNT(*)` }).from(users),
@@ -81,6 +88,12 @@ export const dashboardRouter = router({
       db.select({ count: sql<number>`COUNT(DISTINCT userId)` })
         .from(oracleSessions)
         .where(gte(oracleSessions.createdAt, todayStart)),
+      // 累積發放遊戲幣（透過兑換獲得的）
+      db.select({ total: sql<number>`COALESCE(SUM(gameCoinsAmount), 0)` })
+        .from(currencyExchangeLogs)
+        .where(gte(currencyExchangeLogs.gameCoinsAmount, 1)),
+      // 用戶平均遊戲幣
+      db.select({ avg: sql<number>`COALESCE(AVG(gameCoins), 0)` }).from(users),
     ]);
 
     const totalUsers = Number(totalUsersRows[0]?.count ?? 0);
@@ -92,6 +105,8 @@ export const dashboardRouter = router({
     const todayActive = Number(todayActiveRows[0]?.count ?? 0);
     const totalPointsGranted = Number(totalPointsGrantedRows[0]?.total ?? 0);
     const totalPointsSpent = Number(totalPointsSpentRows[0]?.total ?? 0);
+    const totalCoinsGranted = Number(totalCoinsGrantedRows[0]?.total ?? 0);
+    const avgCoinsPerUser = Math.round(Number(avgCoinsRows[0]?.avg ?? 0));
 
     // 方案分佈轉為物件
     const planDist: Record<string, number> = { basic: 0, advanced: 0, professional: 0 };
@@ -107,6 +122,8 @@ export const dashboardRouter = router({
       planDist,
       totalPointsGranted,
       totalPointsSpent,
+      totalCoinsGranted,
+      avgCoinsPerUser,
     };
   }),
 
@@ -393,6 +410,58 @@ export const dashboardRouter = router({
         }
       }
       return { updated, skipped, total: profiles.length };
+    }),
+
+  /** 取得各功能使用頻率統計（近 30 天 / 近 7 天） */
+  getFeatureUsage: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const [oT, o7, lT, l7, sT, s7, dT, d7, wbcT, wbc7, wjT, wj7, frT] = await Promise.all([
+      db.select({ c: sql<number>`COUNT(*)` }).from(oracleSessions).where(gte(oracleSessions.createdAt, thirtyDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(oracleSessions).where(gte(oracleSessions.createdAt, sevenDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(lotterySessions).where(gte(lotterySessions.createdAt, thirtyDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(lotterySessions).where(gte(lotterySessions.createdAt, sevenDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(scratchLogs).where(gte(scratchLogs.createdAt, thirtyDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(scratchLogs).where(gte(scratchLogs.createdAt, sevenDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(divinationSessions).where(gte(divinationSessions.createdAt, thirtyDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(divinationSessions).where(gte(divinationSessions.createdAt, sevenDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(wbcBets).where(gte(wbcBets.createdAt, thirtyDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(wbcBets).where(gte(wbcBets.createdAt, sevenDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(wealthJournal).where(gte(wealthJournal.createdAt, thirtyDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(wealthJournal).where(gte(wealthJournal.createdAt, sevenDaysAgo)),
+      db.select({ c: sql<number>`COUNT(*)` }).from(featureRedemptions).where(gte(featureRedemptions.createdAt, thirtyDaysAgo)),
+    ]);
+    const rows = [
+      { feature: '擲筊問卦', icon: '🎋', total30d: Number(oT[0]?.c ?? 0), total7d: Number(o7[0]?.c ?? 0) },
+      { feature: '補運樂透', icon: '🎰', total30d: Number(lT[0]?.c ?? 0), total7d: Number(l7[0]?.c ?? 0) },
+      { feature: '刮刮樂日誌', icon: '🎫', total30d: Number(sT[0]?.c ?? 0), total7d: Number(s7[0]?.c ?? 0) },
+      { feature: '擲筊問卦（進階）', icon: '🔮', total30d: Number(dT[0]?.c ?? 0), total7d: Number(d7[0]?.c ?? 0) },
+      { feature: '世界盃競猜', icon: '⚽', total30d: Number(wbcT[0]?.c ?? 0), total7d: Number(wbc7[0]?.c ?? 0) },
+      { feature: '財富日記', icon: '💰', total30d: Number(wjT[0]?.c ?? 0), total7d: Number(wj7[0]?.c ?? 0) },
+      { feature: '功能兌換', icon: '🛒', total30d: Number(frT[0]?.c ?? 0), total7d: 0 },
+    ].sort((a, b) => b.total30d - a.total30d);
+    return rows;
+  }),
+
+  /** 管理員調整用戶遊戲幣（贈送、扣除） */
+  adminAdjustCoins: adminProcedure
+    .input(z.object({
+      userId: z.number(),
+      mode: z.enum(['add', 'subtract']),
+      amount: z.number().int().min(1).max(999999),
+      reason: z.string().max(200).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+      const [u] = await db.select({ gameCoins: users.gameCoins }).from(users).where(eq(users.id, input.userId)).limit(1);
+      if (!u) throw new TRPCError({ code: 'NOT_FOUND', message: '用戶不存在' });
+      const current = Number(u.gameCoins ?? 0);
+      const newCoins = input.mode === 'add' ? current + input.amount : Math.max(0, current - input.amount);
+      await db.update(users).set({ gameCoins: newCoins }).where(eq(users.id, input.userId));
+      return { success: true, newCoins };
     }),
 
   /**

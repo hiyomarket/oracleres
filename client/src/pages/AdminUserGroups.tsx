@@ -250,6 +250,57 @@ function BatchPointsModal({ groupId, groupName, memberCount, onClose, onSuccess 
   );
 }
 
+// ─── 批量贈送遊戲幣 Modal ────────────────────────────────────────────────────
+function BatchCoinsModal({ groupId, groupName, memberCount, onClose, onSuccess }: {
+  groupId: number;
+  groupName: string;
+  memberCount: number;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const mutation = trpc.userGroups.batchAdjustCoins.useMutation({
+    onSuccess: (res) => { toast.success(`🎮 已成功贈送 ${res.count} 位成員遊戲幣！`); onSuccess(); onClose(); },
+    onError: (e) => toast.error(`贈送失敗：${e.message}`),
+  });
+  const parsedAmount = parseInt(amount);
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-purple-400">🎮 批量贈送遊戲幣 — {groupName}（{memberCount} 位成員）</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div>
+            <label className="text-xs text-slate-400 mb-1 block">贈送數量（每人）</label>
+            <Input type="number" min="1" value={amount} onChange={e => setAmount(e.target.value)} placeholder="例：100" className="bg-slate-800 border-slate-700 text-slate-200" />
+          </div>
+          <div>
+            <label className="text-xs text-slate-400 mb-1 block">原因（選填）</label>
+            <Input placeholder="例：節日活動獎勵..." value={reason} onChange={e => setReason(e.target.value)} className="bg-slate-800 border-slate-700 text-slate-200" />
+          </div>
+          {!isNaN(parsedAmount) && parsedAmount > 0 && (
+            <div className="text-xs px-3 py-2 rounded-lg bg-purple-900/30 text-purple-400">
+              將為每位成員贈送 {parsedAmount} 枚遊戲幣，共 {parsedAmount * memberCount} 枚
+            </div>
+          )}
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose} className="border-slate-700 text-slate-300 bg-transparent hover:bg-slate-800">取消</Button>
+          <Button
+            onClick={() => mutation.mutate({ groupId, amount: parsedAmount, reason: reason || undefined })}
+            disabled={mutation.isPending || isNaN(parsedAmount) || parsedAmount <= 0}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+          >
+            {mutation.isPending ? '處理中...' : `確認贈送 ${memberCount} 位`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ─── 新增成員 Modal ───────────────────────────────────────────────────────────
 interface AddMemberModalProps {
   groupId: number;
@@ -361,6 +412,7 @@ function GroupDetailPanel({ groupId, onRefreshGroups }: GroupDetailPanelProps) {
   const { data: group, refetch } = trpc.userGroups.getGroup.useQuery({ groupId });
   const [batchPlanOpen, setBatchPlanOpen] = useState(false);
   const [batchPointsOpen, setBatchPointsOpen] = useState(false);
+  const [batchCoinsOpen, setBatchCoinsOpen] = useState(false);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
 
   const removeMutation = trpc.userGroups.removeMember.useMutation({
@@ -394,6 +446,9 @@ function GroupDetailPanel({ groupId, onRefreshGroups }: GroupDetailPanelProps) {
         </Button>
         <Button size="sm" onClick={() => setBatchPointsOpen(true)} disabled={group.members.length === 0} className="bg-indigo-600/80 hover:bg-indigo-600 text-white text-xs gap-1.5">
           💎 批量調整積分
+        </Button>
+        <Button size="sm" onClick={() => setBatchCoinsOpen(true)} disabled={group.members.length === 0} className="bg-purple-600/80 hover:bg-purple-600 text-white text-xs gap-1.5">
+          🎮 批量贈送遊戲幣
         </Button>
       </div>
 
@@ -453,6 +508,15 @@ function GroupDetailPanel({ groupId, onRefreshGroups }: GroupDetailPanelProps) {
           groupName={group.name}
           memberCount={group.members.length}
           onClose={() => setBatchPointsOpen(false)}
+          onSuccess={() => { refetch(); onRefreshGroups(); }}
+        />
+      )}
+      {batchCoinsOpen && (
+        <BatchCoinsModal
+          groupId={groupId}
+          groupName={group.name}
+          memberCount={group.members.length}
+          onClose={() => setBatchCoinsOpen(false)}
           onSuccess={() => { refetch(); onRefreshGroups(); }}
         />
       )}

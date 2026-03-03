@@ -92,17 +92,30 @@ function RedeemCodeEntry({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** 頂部積分顯示徽章 */
+/** 頂部積分 + 遊戲幣顯示徽章 */
 function PointsBadge() {
   const { data: pointsData } = trpc.points.getBalance.useQuery(undefined, { staleTime: 30000 });
+  const { data: balanceData } = trpc.exchange.getBalance.useQuery(undefined, { staleTime: 30000 });
   const points = pointsData?.balance ?? 0;
+  const gameCoins = balanceData?.gameCoins ?? 0;
   return (
-    <div
-      className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 shrink-0 cursor-default"
-      title={`積分餘額：${points} 點`}
-    >
-      <Coins className="w-3.5 h-3.5 text-amber-400" />
-      <span className="text-xs font-bold text-amber-300">{points.toLocaleString()}</span>
+    <div className="flex items-center gap-1.5 shrink-0">
+      <div
+        className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 cursor-default"
+        title={`積分餘額：${points} 點`}
+      >
+        <Coins className="w-3.5 h-3.5 text-amber-400" />
+        <span className="text-xs font-bold text-amber-300">{points.toLocaleString()}</span>
+      </div>
+      {gameCoins > 0 && (
+        <div
+          className="flex items-center gap-1 bg-purple-500/10 border border-purple-500/30 rounded-lg px-2.5 py-1.5 cursor-default"
+          title={`遊戲幣：${gameCoins} 枚`}
+        >
+          <span className="text-xs">🎮</span>
+          <span className="text-xs font-bold text-purple-300">{gameCoins.toLocaleString()}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -218,6 +231,7 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
   const { data: status } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
   const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
   const { data: pointsData } = trpc.points.getBalance.useQuery(undefined, { staleTime: 30000 });
+  const { data: exchangeData } = trpc.exchange.getBalance.useQuery(undefined, { staleTime: 30000 });
   const { data: navModulesForProfile } = trpc.businessHub.getVisibleNav.useQuery(undefined, { staleTime: 30000 });
   const { hasFeature } = usePermissions();
   const displayName = profile?.displayName || user.name;
@@ -242,6 +256,7 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
 
 
   const points = pointsData?.balance ?? 0;
+  const gameCoins = exchangeData?.gameCoins ?? 0;
 
   return (
     <div ref={ref} className="relative">
@@ -286,13 +301,21 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
                   </p>
                 )}
               </div>
-              {/* 積分顯示 */}
-              {points > 0 && (
-                <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2 py-1 shrink-0">
-                  <Coins className="w-3 h-3 text-amber-400" />
-                  <span className="text-xs font-bold text-amber-400">{points}</span>
-                </div>
-              )}
+              {/* 積分 + 遊戲幣顯示 */}
+              <div className="flex flex-col gap-1 shrink-0">
+                {points > 0 && (
+                  <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 rounded-lg px-2 py-1">
+                    <Coins className="w-3 h-3 text-amber-400" />
+                    <span className="text-xs font-bold text-amber-400">{points}</span>
+                  </div>
+                )}
+                {gameCoins > 0 && (
+                  <div className="flex items-center gap-1 bg-purple-500/10 border border-purple-500/20 rounded-lg px-2 py-1">
+                    <span className="text-[10px]">🎮</span>
+                    <span className="text-xs font-bold text-purple-400">{gameCoins}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

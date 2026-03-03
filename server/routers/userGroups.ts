@@ -315,4 +315,29 @@ export const userGroupsRouter = router({
       }
       return { count: userIds.length };
     }),
+
+  /** 批量贈送分組成員遊戲幣 */
+  batchAdjustCoins: protectedProcedure
+    .input(z.object({
+      groupId: z.number().int(),
+      amount: z.number().int().min(1).max(100000),
+      reason: z.string().max(200).optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      requireAdmin(ctx.user.openId, ctx.user.role);
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const members = await db
+        .select({ userId: userGroupMembers.userId })
+        .from(userGroupMembers)
+        .where(eq(userGroupMembers.groupId, input.groupId));
+      if (members.length === 0) return { count: 0 };
+      const userIds = members.map(m => m.userId);
+      for (const userId of userIds) {
+        await db.update(users)
+          .set({ gameCoins: sql`GREATEST(0, gameCoins + ${input.amount})` })
+          .where(eq(users.id, userId));
+      }
+      return { count: userIds.length };
+    }),
 });

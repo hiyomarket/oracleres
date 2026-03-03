@@ -439,6 +439,76 @@ function PointsAdjustModal({
   );
 }
 
+/// ─── 遊戲幣贈送 Modal ──────────────────────────────────────────────────────────
+function CoinsGrantModal({
+  user,
+  onClose,
+  onSuccess,
+}: {
+  user: { id: number; name: string | null; gameCoins: number };
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [amount, setAmount] = useState('');
+  const [reason, setReason] = useState('');
+  const grantMutation = trpc.dashboard.adminAdjustCoins.useMutation({
+    onSuccess: (data) => {
+      toast.success(`🎮 遊戲幣已贈送！新餘額：${data.newCoins} 枚`);
+      onSuccess();
+    },
+    onError: (err) => toast.error(`贈送失敗：${err.message}`),
+  });
+  const handleSubmit = () => {
+    const amt = parseInt(amount);
+    if (isNaN(amt) || amt <= 0) { toast.error('請輸入有效正整數'); return; }
+    grantMutation.mutate({ userId: user.id, mode: 'add', amount: amt, reason: reason || undefined });
+  };
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-purple-400">🎮 贈送遊戲幣 — {user.name ?? '用戶 #' + user.id}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="bg-slate-800/60 rounded-xl px-4 py-3 text-center">
+            <div className="text-xs text-slate-400 mb-1">目前遊戲幣餘額</div>
+            <div className="text-2xl font-bold text-purple-400">{user.gameCoins.toLocaleString()} 枚</div>
+          </div>
+          <div>
+            <label className="text-xs text-slate-400 mb-1 block">贈送數量</label>
+            <Input
+              type="number"
+              min="1"
+              placeholder="輸入贈送數量..."
+              value={amount}
+              onChange={e => setAmount(e.target.value)}
+              className="bg-slate-800 border-slate-700 text-slate-200"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate-400 mb-1 block">原因備注（選填）</label>
+            <Input
+              placeholder="例：活動獎勵、補償..."
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              className="bg-slate-800 border-slate-700 text-slate-200"
+            />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose} className="border-slate-700 text-slate-300 bg-transparent hover:bg-slate-800">取消</Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={grantMutation.isPending || !amount}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+          >
+            {grantMutation.isPending ? '處理中...' : '確認贈送'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 /// ─── 批量重算生命靈數按鈕 ────────────────────────────────────────────────────
 function RecalcLifePathButton() {
   const utils = trpc.useUtils();
@@ -484,6 +554,11 @@ export default function AdminUsers() {
     id: number;
     name: string | null;
     balance: number;
+  } | null>(null);
+  const [coinsModalUser, setCoinsModalUser] = useState<{
+    id: number;
+    name: string | null;
+    gameCoins: number;
   } | null>(null);
   // 批量選取
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set());
@@ -837,6 +912,17 @@ export default function AdminUsers() {
                           </Button>
                           <Button
                             size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCoinsModalUser({ id: u.id, name: u.name ?? null, gameCoins: Number((u as any).gameCoins ?? 0) });
+                            }}
+                            className="border-purple-600/50 text-purple-400 hover:bg-purple-600/20 bg-transparent text-xs font-semibold shrink-0"
+                          >
+                            🎮 贈送遊戲幣
+                          </Button>
+                          <Button
+                            size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSubscriptionModalUser({
@@ -902,6 +988,13 @@ export default function AdminUsers() {
           user={pointsModalUser}
           onClose={() => setPointsModalUser(null)}
           onSuccess={() => { refetch(); setPointsModalUser(null); }}
+        />
+      )}
+      {coinsModalUser && (
+        <CoinsGrantModal
+          user={coinsModalUser}
+          onClose={() => setCoinsModalUser(null)}
+          onSuccess={() => { refetch(); setCoinsModalUser(null); }}
         />
       )}
       {/* 批量訂閱 Modal */}

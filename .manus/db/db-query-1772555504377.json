@@ -1,0 +1,37 @@
+{
+  "query": "SELECT fp.id, fp.name, fp.moduleId, fp.isActive, fp.allowPointsRedemption, fp.allowPurchase, m.name as moduleName FROM feature_plans fp LEFT JOIN modules m ON fp.moduleId = m.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT fp.id, fp.name, fp.moduleId, fp.isActive, fp.allowPointsRedemption, fp.allowPurchase, m.name as moduleName FROM feature_plans fp LEFT JOIN modules m ON fp.moduleId = m.id;",
+  "rows": [
+    {
+      "id": "Metaphysics Calendar",
+      "name": "命理日曆",
+      "moduleId": "module_calendar",
+      "isActive": "1",
+      "allowPointsRedemption": "1",
+      "allowPurchase": "1",
+      "moduleName": "命理日曆"
+    },
+    {
+      "id": "divination_poe",
+      "name": "擲筊問卦",
+      "moduleId": "module_oracle",
+      "isActive": "1",
+      "allowPointsRedemption": "1",
+      "allowPurchase": "1",
+      "moduleName": "擲筊問卦"
+    },
+    {
+      "id": "Oracle Outfit",
+      "name": "神諭穿搭",
+      "moduleId": "module_outfit",
+      "isActive": "1",
+      "allowPointsRedemption": "1",
+      "allowPurchase": "1",
+      "moduleName": "神諭穿搭"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tmoduleId\tisActive\tallowPointsRedemption\tallowPurchase\tmoduleName\nMetaphysics Calendar\t命理日曆\tmodule_calendar\t1\t1\t1\t命理日曆\ndivination_poe\t擲筊問卦\tmodule_oracle\t1\t1\t1\t擲筊問卦\nOracle Outfit\t神諭穿搭\tmodule_outfit\t1\t1\t1\t神諭穿搭\n",
+  "stderr": "",
+  "execution_time_ms": 1516
+}
