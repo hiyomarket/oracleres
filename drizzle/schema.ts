@@ -1032,3 +1032,35 @@ export const purchaseOrders = mysqlTable("purchase_orders", {
 });
 export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
 export type InsertPurchaseOrder = typeof purchaseOrders.$inferInsert;
+
+/**
+ * 全站懸浮廣告/公告表
+ * 管理員可新增、編輯、啟用/停用全站懸浮橫幅
+ */
+export const siteBanners = mysqlTable("site_banners", {
+  id: int("id").autoincrement().primaryKey(),
+  // 標題（顯示在橫幅左側）
+  title: varchar("title", { length: 100 }).notNull(),
+  // 內容文字
+  content: varchar("content", { length: 300 }).notNull(),
+  // 點擊連結（可選）
+  linkUrl: varchar("linkUrl", { length: 500 }),
+  // 連結文字（如「查看詳情」）
+  linkText: varchar("linkText", { length: 50 }),
+  // 圖示（emoji 或 lucide icon name）
+  icon: varchar("icon", { length: 50 }).default("🔔"),
+  // 類型：info=一般資訊, warning=警告, success=成功, promo=促銷
+  type: mysqlEnum("type", ["info", "warning", "success", "promo"]).notNull().default("info"),
+  // 是否啟用
+  isActive: tinyint("isActive").notNull().default(1),
+  // 排序（數字越小越優先）
+  sortOrder: int("sortOrder").notNull().default(0),
+  // 顯示開始時間（null=立即）
+  startsAt: timestamp("startsAt"),
+  // 顯示結束時間（null=永久）
+  endsAt: timestamp("endsAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SiteBanner = typeof siteBanners.$inferSelect;
+export type InsertSiteBanner = typeof siteBanners.$inferInsert;

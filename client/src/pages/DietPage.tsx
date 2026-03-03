@@ -155,14 +155,14 @@ function HourlyTimeline({ hours }: { hours: HourInfo[] }) {
       <div className="overflow-x-auto pb-1">
         <div className="flex gap-1.5 min-w-max">
           {hours.map((h, i) => {
-            const isHigh = h.score >= 7;
-            const isMid = h.score >= 4;
+            const isHigh = h.score >= 70;
+            const isMid = h.score >= 40;
             const barColor = isHigh ? "#10b981" : isMid ? "#f59e0b" : "#6b7280";
             return (
               <div key={i} className={`flex flex-col items-center gap-1 px-1.5 py-2 rounded-lg transition-all ${h.isCurrent ? "bg-amber-500/15 border border-amber-500/30" : "bg-white/[0.02]"}`}>
                 <span className="text-[9px] text-white/40">{h.displayTime.split("–")[0]}</span>
                 <div className="w-4 h-8 rounded-full bg-white/10 overflow-hidden flex flex-col-reverse">
-                  <div className="rounded-full transition-all duration-700" style={{ height: `${h.score * 10}%`, background: barColor }} />
+                  <div className="rounded-full transition-all duration-700" style={{ height: `${h.score}%`, background: barColor }} />
                 </div>
                 <span className="text-[10px] font-medium" style={{ color: h.isCurrent ? "#f59e0b" : "rgba(255,255,255,0.6)" }}>{h.chineseName}</span>
                 {h.isCurrent && <span className="text-[8px] text-amber-400">▲ 現在</span>}

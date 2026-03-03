@@ -55,6 +55,12 @@ const NAV_ITEMS = [
     label: "功能兌換中心",
     desc: "方案設定、訂單審核",
   },
+  {
+    href: "/admin/banners",
+    icon: "📢",
+    label: "廣告/公告管理",
+    desc: "全站懸浮橫幅廣告",
+  },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {

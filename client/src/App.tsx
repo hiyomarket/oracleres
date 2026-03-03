@@ -25,13 +25,15 @@ import WbcPage from "./pages/WbcPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import FeatureStore from "./pages/FeatureStore";
 import AdminFeatureStore from "./pages/AdminFeatureStore";
+import AdminBanners from "./pages/AdminBanners";
 import OutfitPage from "@/pages/OutfitPage";
 import WardrobePage from "@/pages/WardrobePage";
 import DietPage from "@/pages/DietPage";
 import DivinationPage from "@/pages/DivinationPage";
 import LuckCyclePage from "@/pages/LuckCyclePage";
 import WealthPage from "@/pages/WealthPage";
-import { DailySigninModal } from "@/components/DailySigninModal";
+import { DailySigninModal } from "./components/DailySigninModal";
+import { FloatingBanner } from "./components/FloatingBanner";
 
 function Router() {
   return (
@@ -57,6 +59,7 @@ function Router() {
         <Route path={"/notifications"} component={NotificationsPage} />
         <Route path={"/feature-store"} component={FeatureStore} />
         <Route path={"/admin/feature-store"} component={AdminFeatureStore} />
+        <Route path={"/admin/banners"} component={AdminBanners} />
         <Route path={"/outfit"} component={OutfitPage} />
         <Route path={"/wardrobe"} component={WardrobePage} />
         <Route path={"/diet"} component={DietPage} />
@@ -82,6 +85,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <DailySigninModal />
+          <FloatingBanner />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

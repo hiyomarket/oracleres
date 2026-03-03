@@ -608,10 +608,10 @@ export default function WarRoom() {
 
           {/* ═══ 十神能量 + 月相 並排 ═══ */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SectionCard title="十神能量分析" icon="☯️">
+            <SectionCard title="今日能量指引" icon="☯️">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-white/60 text-sm">主十神</span>
+                  <span className="text-white/60 text-sm">今日主要能量</span>
                   <span className={`font-bold text-lg ${wuxingTheme.text}`}>{data.tenGod.main}</span>
                 </div>
                 <div className="text-white/80 text-sm">{data.tenGod.energy}</div>
@@ -619,7 +619,7 @@ export default function WarRoom() {
                 <p className="text-white/60 text-xs">{data.tenGod.advice}</p>
                 {data.tenGod.branchGods.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-white/10">
-                    <div className="text-white/40 text-xs mb-2">地支藏干</div>
+                    <div className="text-white/40 text-xs mb-2">隐藏的能量</div>
                     <div className="flex gap-2 flex-wrap">
                       {data.tenGod.branchGods.map((bg, i) => (
                         <span key={i} className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/70">
@@ -652,7 +652,7 @@ export default function WarRoom() {
 
           {/* ═══ 塔羅流日 ═══ */}
           {(!isAdmin && !hasFeature("warroom_divination")) ? <FeatureLockedCard feature="warroom_divination" /> : (
-            <SectionCard title="今日塔羅流日" icon="🃏">
+            <SectionCard title="今日塔羅牌指引" icon="🃏">
               <div className="flex flex-col md:flex-row gap-6 items-start">
                 <div className="shrink-0 mx-auto md:mx-0">
                   <motion.div
@@ -677,11 +677,11 @@ export default function WarRoom() {
                     ))}
                   </div>
                   <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-                    <div className="text-white/40 text-xs mb-2">今日能量</div>
+                    <div className="text-white/40 text-xs mb-2">今日的氣場</div>
                     <p className="text-white/80 text-sm">{data.tarot.energy}</p>
                   </div>
                   <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-4">
-                    <div className="text-amber-400/70 text-xs mb-2">行動建議</div>
+                    <div className="text-amber-400/70 text-xs mb-2">今日建議你</div>
                     <p className="text-white/80 text-sm">{data.tarot.advice}</p>
                   </div>
                 </div>
@@ -690,7 +690,7 @@ export default function WarRoom() {
           )}
 
           {/* ═══ 時辰能量 ═══ */}
-          <SectionCard title="全天時辰能量時間軸" icon="⏰">
+          <SectionCard title="今日各時段運勢" icon="⏰">
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {data.hourEnergy.allHours.map((h: { name: string; branch: string; stem: string; score: number; level: string; label: string; isCurrent: boolean; displayTime: string }, i: number) => (
                 <motion.div

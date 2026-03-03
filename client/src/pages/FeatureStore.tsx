@@ -29,7 +29,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Coins, ShoppingCart, Clock, CheckCircle, AlertTriangle, ExternalLink, History, Package } from "lucide-react";
+import { Coins, ShoppingCart, Clock, CheckCircle, AlertTriangle, ExternalLink, History, Package, ArrowLeft } from "lucide-react";
+import { SharedNav } from "@/components/SharedNav";
 
 type DurationDays = 3 | 7 | 15 | 30;
 type PurchaseDays = 15 | 30;
@@ -190,8 +191,19 @@ export default function FeatureStore() {
   const currentPoints = (plans[0] as FeaturePlan | undefined)?.userStatus.currentPoints ?? 0;
 
   return (
+    <div className="min-h-screen bg-background">
+      <SharedNav />
     <div className="container py-6 max-w-4xl">
       {/* 頁首 */}
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          返回首頁
+        </button>
+      </div>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -448,6 +460,7 @@ export default function FeatureStore() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }
