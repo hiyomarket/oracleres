@@ -5,7 +5,7 @@ import { SharedNav } from "@/components/SharedNav";
 import { ProfileIncompleteBanner } from "@/components/ProfileIncompleteBanner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
-import { Zap, Bell, CheckCircle, Trophy, ChevronRight } from "lucide-react";
+import { Zap, Bell, CheckCircle, Trophy, ChevronRight, X, Swords } from "lucide-react";
 import { toast } from "sonner";
 import { NearbyRestaurants } from "@/components/NearbyRestaurants";
 import { useLocation } from "wouter";
@@ -124,10 +124,130 @@ function getTaiwanWeekday(offsetDays = 0): number {
 
 const WEEKDAY_NAMES = ["日", "一", "二", "三", "四", "五", "六"];
 
+/** WBC 活動彈窗：每天首次進入首頁顯示一次 */
+function WbcPromoModal({ onClose }: { onClose: () => void }) {
+  const [, navigate] = useLocation();
+  const { data: matches } = trpc.wbc.getMatches.useQuery({ status: "pending" }, { staleTime: 60000 });
+  const pendingMatches = (matches ?? []).filter(m => m.status === "pending");
+  const next = pendingMatches[0];
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.85, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.85, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="relative w-full max-w-sm bg-gradient-to-b from-[#1a1000] to-[#0a0f1a] border border-amber-600/40 rounded-2xl overflow-hidden shadow-2xl shadow-amber-900/30"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* 頂部裝飾光效 */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 bg-amber-500/10 blur-2xl rounded-full" />
+
+          {/* 進入按鈕 */}
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+          >
+            <X className="w-3.5 h-3.5 text-white/50" />
+          </button>
+
+          {/* 內容 */}
+          <div className="px-6 pt-8 pb-6">
+            {/* 圖標區 */}
+            <div className="flex justify-center mb-4">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/30 to-orange-600/20 border border-amber-500/30 flex items-center justify-center">
+                  <Swords className="w-8 h-8 text-amber-400" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 border border-red-400 flex items-center justify-center">
+                  <span className="text-[9px] font-bold text-white">NEW</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 標題 */}
+            <div className="text-center mb-4">
+              <h2 className="text-xl font-black text-white mb-1">WBC 2026 天命競猜</h2>
+              <p className="text-amber-400/80 text-sm">世界棒球經典賽小預測，用天命磁場贏得天命幣！</p>
+            </div>
+
+            {/* 活動資訊 */}
+            <div className="space-y-2 mb-5">
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <span className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-xs">✓</span>
+                <span>A/B/C/D 四組 40 場賽事全開放競猜</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <span className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-xs">✓</span>
+                <span>中華台北對戰日本、韓國等熱門賽事</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <span className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-xs">✓</span>
+                <span>正確預測可累積天命幣獎勵</span>
+              </div>
+            </div>
+
+            {/* 下一場賽事預覽 */}
+            {next && (
+              <div className="mb-5 p-3 rounded-xl bg-white/5 border border-white/10">
+                <p className="text-xs text-white/40 mb-1">下一場賽事</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-white">{next.teamAFlag}{next.teamA} vs {next.teamBFlag}{next.teamB}</span>
+                  <span className="text-xs text-amber-400">
+                    {new Date(next.matchTime).toLocaleDateString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* 行動按鈕 */}
+            <button
+              onClick={() => { onClose(); navigate("/casino/wbc"); }}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-black font-bold text-sm transition-all shadow-lg shadow-amber-900/30"
+            >
+              前往競猜頁面 →
+            </button>
+            <button
+              onClick={onClose}
+              className="w-full mt-2 py-2 text-xs text-white/30 hover:text-white/50 transition-colors"
+            >
+              今日不再提醒
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 export default function WarRoom() {
   const { hasFeature, isAdmin } = usePermissions();
   const { data: accountStatus } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
   const isOwner = accountStatus?.isOwner ?? false;
+
+  // WBC 彈窗：每天首次進入顯示
+  const [showWbcModal, setShowWbcModal] = useState(false);
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const key = `wbc_modal_shown_${today}`;
+    if (!localStorage.getItem(key)) {
+      // 延遲 1.5 秒再顯示，避免頁面剛載入就彈出
+      const t = setTimeout(() => {
+        setShowWbcModal(true);
+        localStorage.setItem(key, '1');
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, []);
   // 七日選擇器：0=今天，1=明天，...，-1=昨天
   const [selectedOffset, setSelectedOffset] = useState(0);
   const selectedDate = getTaiwanDateStr(selectedOffset);
@@ -243,6 +363,8 @@ export default function WarRoom() {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] flex flex-col">
+      {/* WBC 活動彈窗 */}
+      {showWbcModal && <WbcPromoModal onClose={() => setShowWbcModal(false)} />}
       {/* 背景動態光效 */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className={`absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-10 ${data.tenGod.wuxing === "火" ? "bg-red-500" : data.tenGod.wuxing === "土" ? "bg-amber-500" : data.tenGod.wuxing === "金" ? "bg-slate-400" : data.tenGod.wuxing === "水" ? "bg-blue-500" : "bg-emerald-500"}`} />

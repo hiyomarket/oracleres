@@ -11,6 +11,7 @@ import { sendMorningBriefing } from "../lib/morningBriefing";
 import { checkAndNotifyFestival } from "../lib/festivalNotification";
 import { checkExpiringSubscriptions } from "../lib/expiryReminder";
 import { checkAndLockWbcMatches } from "../lib/wbcMatchLock";
+import { checkAndFetchWbcScores } from "../lib/wbcScoreFetcher";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -169,3 +170,20 @@ function startWbcMatchLockScheduler() {
 }
 
 startWbcMatchLockScheduler();
+
+/**
+ * WBC 賽後 AI 自動抓取比分排程：每 5 分鐘掃描 live 賽事
+ * 比賽時間超過 3 小時後，呼叫 AI 查詢最新比分
+ */
+function startWbcScoreFetcherScheduler() {
+  console.log("[WbcScoreFetcher] Scheduler started. Will fetch scores every 5 min for finished matches.");
+  setInterval(async () => {
+    try {
+      await checkAndFetchWbcScores();
+    } catch (err) {
+      console.error("[WbcScoreFetcher] Scheduler error:", err);
+    }
+  }, 5 * 60 * 1000); // 每 5 分鐘檢查
+}
+
+startWbcScoreFetcherScheduler();
