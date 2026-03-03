@@ -29,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Camera, Sparkles } from "lucide-react";
@@ -1015,54 +1014,227 @@ function RestaurantCategoriesTab() {
 }
 
 // ============================================================
-// 主頁面
+// 策略引擎說明面板（靜態展示，未來可接 DB 動態調整）
+// ============================================================
+function StrategyEnginePanel() {
+  const strategies = [
+    {
+      id: "強勢補弱",
+      icon: "⚔️",
+      color: "text-red-400",
+      border: "border-red-500/30",
+      bg: "bg-red-950/20",
+      trigger: "日主五行最強 ≥ 35% 且最弱 ≤ 8%",
+      primaryTarget: "最弱五行",
+      secondaryTarget: "日主喜用神",
+      desc: "今日能量極度失衡，主動補充最弱元素以恢復平衡，同時鞏固喜用神。適合需要突破瓶頸的日子。",
+      outfitHint: "主色選最弱五行對應色，輔色選喜用神色",
+    },
+    {
+      id: "順勢生旺",
+      icon: "🌊",
+      color: "text-blue-400",
+      border: "border-blue-500/30",
+      bg: "bg-blue-950/20",
+      trigger: "日主喜用神比例 ≥ 30% 且最弱 > 8%",
+      primaryTarget: "喜用神",
+      secondaryTarget: "生喜用神的五行",
+      desc: "今日喜用神能量充沛，順勢強化，讓好能量持續發酵。適合重要決策、談判、創作的日子。",
+      outfitHint: "主色選喜用神色，輔色選生喜用神的五行色",
+    },
+    {
+      id: "借力打力",
+      icon: "🔄",
+      color: "text-purple-400",
+      border: "border-purple-500/30",
+      bg: "bg-purple-950/20",
+      trigger: "日主忌神比例 ≥ 30%（環境能量對日主不利）",
+      primaryTarget: "剋制忌神的五行",
+      secondaryTarget: "喜用神",
+      desc: "今日環境能量對你不利，以剋制忌神的五行來化解阻力。適合需要化解衝突的日子。",
+      outfitHint: "主色選剋忌神的五行色，輔色選喜用神色",
+    },
+    {
+      id: "食神生財",
+      icon: "💰",
+      color: "text-amber-400",
+      border: "border-amber-500/30",
+      bg: "bg-amber-950/20",
+      trigger: "食神/傷官比例 ≥ 25% 且財星 ≤ 15%",
+      primaryTarget: "財星（土/金）",
+      secondaryTarget: "食神/傷官對應五行",
+      desc: "今日才華能量旺盛但財星偏弱，補充財星讓才華轉化為實際收益。適合創作、展示、銷售的日子。",
+      outfitHint: "主色選財星對應色（土=黃棕、金=白灰），輔色選食神色",
+    },
+    {
+      id: "均衡守成",
+      icon: "⚖️",
+      color: "text-green-400",
+      border: "border-green-500/30",
+      bg: "bg-green-950/20",
+      trigger: "五行分布相對均衡（無元素 ≥ 35% 或 ≤ 5%）",
+      primaryTarget: "喜用神",
+      secondaryTarget: "次弱五行",
+      desc: "今日能量相對平衡，維持穩定狀態，小幅補強喜用神即可。適合日常工作、維持關係的日子。",
+      outfitHint: "主色選喜用神色，整體穿搭以和諧為主",
+    },
+  ];
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-amber-500/20 bg-amber-950/10 p-4 mb-2">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-amber-400 text-lg">⚙️</span>
+          <span className="text-amber-300 font-semibold text-sm">策略引擎 V10.0 說明</span>
+        </div>
+        <p className="text-slate-400 text-xs leading-relaxed">
+          每日系統依據「本命四柱 × 流日天干地支 × 流時時柱」計算加權五行比例，再依下列五大策略的觸發條件，
+          自動判定當日最佳策略，並驅動穿搭主色、手串選擇、行動建議的生成。
+          未來版本將支援在此頁面直接調整各策略的觸發閾值。
+        </p>
+      </div>
+      {strategies.map((s) => (
+        <div key={s.id} className={`rounded-xl border ${s.border} ${s.bg} p-4`}>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">{s.icon}</span>
+            <span className={`font-bold text-sm ${s.color}`}>{s.id}</span>
+            <span className="ml-auto text-xs text-slate-500 bg-slate-800/60 px-2 py-0.5 rounded-full">策略 ID: {s.id}</span>
+          </div>
+          <div className="space-y-2 text-xs">
+            <div className="flex gap-2">
+              <span className="text-slate-500 w-16 flex-shrink-0">觸發條件</span>
+              <span className="text-slate-300">{s.trigger}</span>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-slate-500 w-16 flex-shrink-0">主攻目標</span>
+              <span className={`font-medium ${s.color}`}>{s.primaryTarget}</span>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-slate-500 w-16 flex-shrink-0">輔助目標</span>
+              <span className="text-slate-300">{s.secondaryTarget}</span>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-slate-500 w-16 flex-shrink-0">策略說明</span>
+              <span className="text-slate-400 leading-relaxed">{s.desc}</span>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-slate-500 w-16 flex-shrink-0">穿搭提示</span>
+              <span className="text-slate-400 italic">{s.outfitHint}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+// 五行顏色對應表（靜態展示）
+// ============================================================
+function ElementColorMapPanel() {
+  const colorMap = [
+    { element: "木", colors: ["翠綠", "青色", "翠碧", "橄欖綠"], hex: ["#22c55e", "#06b6d4", "#16a34a", "#84cc16"], avoid: "白色、銀色（金剋木）", season: "春", direction: "東" },
+    { element: "火", colors: ["紅色", "橙色", "粉紅", "紫色"], hex: ["#ef4444", "#f97316", "#ec4899", "#a855f7"], avoid: "黑色、深藍（水剋火）", season: "夏", direction: "南" },
+    { element: "土", colors: ["黃色", "棕色", "米色", "咖啡"], hex: ["#eab308", "#92400e", "#d4a574", "#78350f"], avoid: "青色、綠色（木剋土）", season: "四季末", direction: "中" },
+    { element: "金", colors: ["白色", "銀色", "金色", "灰色"], hex: ["#f8fafc", "#94a3b8", "#f59e0b", "#6b7280"], avoid: "紅色、橙色（火剋金）", season: "秋", direction: "西" },
+    { element: "水", colors: ["黑色", "深藍", "靛藍", "深紫"], hex: ["#0f172a", "#1e3a5f", "#312e81", "#1e1b4b"], avoid: "黃色、棕色（土剋水）", season: "冬", direction: "北" },
+  ];
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-slate-700 bg-slate-800/30 p-4 mb-2">
+        <p className="text-slate-400 text-xs leading-relaxed">
+          此對應表定義了系統生成穿搭建議時的顏色選擇邏輯。每個五行元素對應一組推薦色系，
+          系統會依當日策略的主攻/輔助目標元素，從對應色系中選取穿搭主色與輔色。
+        </p>
+      </div>
+      {colorMap.map((item) => (
+        <div key={item.element} className="rounded-xl border border-slate-700 bg-slate-800/20 p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm"
+              style={{ backgroundColor: item.hex[0] + "33", color: item.hex[0] }}
+            >
+              {item.element}
+            </div>
+            <div>
+              <span className="text-white font-semibold text-sm">{item.element}元素</span>
+              <span className="text-slate-500 text-xs ml-2">{item.season}・{item.direction}方</span>
+            </div>
+          </div>
+          <div className="flex gap-2 mb-3 flex-wrap">
+            {item.hex.map((h, i) => (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <div className="w-8 h-8 rounded-lg border border-white/10" style={{ backgroundColor: h }} />
+                <span className="text-[10px] text-slate-500">{item.colors[i]}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-500">避免：</span>
+            <span className="text-red-400/70">{item.avoid}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+// 主頁面（主從佈局）
 // ============================================================
 export default function AdminLogicConfig() {
+  const [activeSection, setActiveSection] = useState<string>("strategy");
+
+  const navItems = [
+    { id: "strategy", icon: "🧠", label: "策略引擎", desc: "五大策略觸發邏輯" },
+    { id: "colormap", icon: "🎨", label: "五行顏色對應", desc: "穿搭顏色選擇規則" },
+    { id: "aura", icon: "⚡", label: "能量模擬器規則", desc: "部位權重與加成比例" },
+    { id: "bracelets", icon: "📿", label: "手串/配飾資料庫", desc: "新增/編輯/停用手串" },
+    { id: "restaurants", icon: "🍽️", label: "餐廳分類管理", desc: "飲食羅盤分類設定" },
+  ];
+
   return (
     <AdminLayout>
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* 標題 */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-amber-400 mb-1">管理邏輯計算權限</h1>
-          <p className="text-slate-400 text-sm">
-            調整能量模擬器計算規則、手串/配飾資料庫、飲食羅盤餐廳分類——所有變更即時生效。
-          </p>
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* 頁面標題 */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-amber-400 mb-1">算法核心控制中心</h1>
+          <p className="text-slate-400 text-sm">管理策略引擎、能量計算規則、手串資料庫與飲食分類——所有變更即時生效。</p>
         </div>
 
-        <Tabs defaultValue="aura" className="space-y-6">
-          <TabsList className="bg-slate-800/60 border border-slate-700 h-auto p-1 flex flex-wrap gap-1">
-            <TabsTrigger
-              value="aura"
-              className="text-slate-300 data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-sm px-4 py-2"
-            >
-              ⚡ 能量模擬器規則
-            </TabsTrigger>
-            <TabsTrigger
-              value="bracelets"
-              className="text-slate-300 data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-sm px-4 py-2"
-            >
-              📿 手串/配飾管理
-            </TabsTrigger>
-            <TabsTrigger
-              value="restaurants"
-              className="text-slate-300 data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400 text-sm px-4 py-2"
-            >
-              🍽️ 餐廳分類管理
-            </TabsTrigger>
-          </TabsList>
+        {/* 主從佈局 */}
+        <div className="flex gap-6">
+          {/* 左側導覽選單 */}
+          <div className="w-52 flex-shrink-0">
+            <nav className="space-y-1 sticky top-6">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={`w-full text-left px-3 py-3 rounded-xl transition-all ${
+                    activeSection === item.id
+                      ? "bg-amber-500/15 border border-amber-500/30 text-amber-300"
+                      : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 border border-transparent"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-base">{item.icon}</span>
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </div>
+                  <div className="text-[11px] text-slate-500 pl-6">{item.desc}</div>
+                </button>
+              ))}
+            </nav>
+          </div>
 
-          <TabsContent value="aura">
-            <AuraRulesTab />
-          </TabsContent>
-
-          <TabsContent value="bracelets">
-            <BraceletsTab />
-          </TabsContent>
-
-          <TabsContent value="restaurants">
-            <RestaurantCategoriesTab />
-          </TabsContent>
-        </Tabs>
+          {/* 右側內容區 */}
+          <div className="flex-1 min-w-0">
+            {activeSection === "strategy" && <StrategyEnginePanel />}
+            {activeSection === "colormap" && <ElementColorMapPanel />}
+            {activeSection === "aura" && <AuraRulesTab />}
+            {activeSection === "bracelets" && <BraceletsTab />}
+            {activeSection === "restaurants" && <RestaurantCategoriesTab />}
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );

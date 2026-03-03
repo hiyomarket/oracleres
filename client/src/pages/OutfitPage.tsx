@@ -354,18 +354,32 @@ export default function OutfitPage() {
           )}
         </AnimatePresence>
 
-        {/* ═══ 今日五行加權總覽（常駐顯示，方便對比）═══ */}
+        {/* ═══ 管理虛擬衣櫥快捷入口（置於五行圖上方）═══ */}
+        {(!isAdmin && !hasFeature("warroom_outfit")) ? null : (
+          <Link href="/wardrobe" className="flex items-center justify-between p-3 mb-4 rounded-xl border border-dashed border-white/20 hover:border-amber-500/40 hover:bg-amber-900/10 transition-all group">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">👗</span>
+              <div>
+                <div className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">管理虛擬衣櫥</div>
+                <div className="text-xs text-white/30">新增衣物，讓模擬器從您的衣櫥中挑選</div>
+              </div>
+            </div>
+            <span className="text-white/30 group-hover:text-amber-400 transition-colors">→</span>
+          </Link>
+        )}
+
+        {/* ═══ 今日五行加權總覽（水平進度條設計）═══ */}
         {dailyData?.wuxing && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-5 rounded-2xl border border-white/10 bg-white/5 p-4"
           >
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-4">
               <span>⚖️</span>
               <span className="text-xs font-semibold text-white/60 uppercase tracking-widest">今日五行加權總覽</span>
             </div>
-            <div className="flex items-end gap-2">
+            <div className="space-y-2.5">
               {["木","火","土","金","水"].map((el) => {
                 const w = dailyData.wuxing.weighted?.[el as keyof typeof dailyData.wuxing.weighted] ?? 0;
                 const pct = Math.round((w as number) * 100);
@@ -373,22 +387,25 @@ export default function OutfitPage() {
                 const isWeak = el === dailyData.wuxing.weakestElement;
                 const colors = WUXING_COLORS[el];
                 return (
-                  <div key={el} className="flex-1 flex flex-col items-center gap-1">
-                    <span className={`text-[10px] font-bold ${isStrong ? "text-amber-400" : isWeak ? "text-blue-400" : "text-white/40"}`}>
+                  <div key={el} className="flex items-center gap-3">
+                    <span className={`text-xs font-bold w-4 flex-shrink-0 ${colors.text}`}>{el}</span>
+                    <div className="flex-1 relative h-5 bg-white/5 rounded-full overflow-hidden">
+                      <motion.div
+                        className={`absolute left-0 top-0 h-full rounded-full ${colors.dot} ${isStrong ? "opacity-90" : isWeak ? "opacity-50" : "opacity-65"}`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.max(pct, 2)}%` }}
+                        transition={{ duration: 0.8, delay: 0.05 }}
+                      />
+                      {isStrong && (
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-amber-400">↑旺</span>
+                      )}
+                      {isWeak && (
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-blue-400">↓弱</span>
+                      )}
+                    </div>
+                    <span className={`text-xs font-bold w-8 text-right flex-shrink-0 tabular-nums ${isStrong ? "text-amber-400" : isWeak ? "text-blue-400" : "text-white/40"}`}>
                       {pct}%
                     </span>
-                    <div className="w-full bg-white/5 rounded-full overflow-hidden" style={{ height: 40 }}>
-                      <motion.div
-                        className={`w-full rounded-full ${colors.dot} ${isStrong ? "opacity-100" : isWeak ? "opacity-60" : "opacity-70"}`}
-                        initial={{ height: 0 }}
-                        animate={{ height: `${Math.max(pct, 4)}%` }}
-                        transition={{ duration: 0.8, delay: 0.1 }}
-                        style={{ height: `${Math.max(pct, 4)}%` }}
-                      />
-                    </div>
-                    <span className={`text-xs font-semibold ${colors.text}`}>{el}</span>
-                    {isStrong && <span className="text-[9px] text-amber-500">↑旺</span>}
-                    {isWeak && <span className="text-[9px] text-blue-500">↓弱</span>}
                   </div>
                 );
               })}
@@ -479,7 +496,7 @@ export default function OutfitPage() {
           </div>
         ) : null}
 
-        {/* ═══ 今日手串矩陣（展開顯示）═══ */}
+        {/* ═══ 今日手串矩陣（展開顯示，顏色依五行元素動態決定）═══ */}
         {(!isAdmin && !hasFeature("warroom_outfit")) ? null : dailyLoading ? (
           <div className="h-40 bg-white/5 rounded-2xl animate-pulse mb-5" />
         ) : dailyData?.bracelets ? (
@@ -492,68 +509,91 @@ export default function OutfitPage() {
               <p className="text-white/50 text-xs mb-3 leading-relaxed">{dailyData.bracelets.coreGoal}</p>
             )}
             <div className="grid grid-cols-2 gap-3">
-              {/* 左手 */}
-              <div>
-                <div className="text-emerald-400/70 text-xs font-semibold mb-2">🤲 左手（能量/吸引）</div>
-                {dailyData.bracelets?.leftHand && (
-                  <div className={`rounded-lg border p-3 transition-all ${
-                    wornSet.has(`${dailyData.bracelets.leftHand.code}-left`)
-                      ? "bg-emerald-900/40 border-emerald-400/50"
-                      : "bg-emerald-950/20 border-emerald-500/20"
-                  }`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <span className="text-emerald-500/60 text-xs font-mono">{dailyData.bracelets.leftHand.code}</span>
-                        <span className="text-emerald-300 font-medium text-sm ml-2">{dailyData.bracelets.leftHand.name}</span>
+              {/* 左手 - 顏色依左手手串的五行元素決定 */}
+              {(() => {
+                const lh = dailyData.bracelets?.leftHand;
+                // 取得左手手串的主要五行元素（從 explanation 或 element 欄位），fallback 到 '土'
+                const lhElement = (lh as unknown as { element?: string })?.element ?? "土";
+                const lhColors = WUXING_COLORS[lhElement] ?? WUXING_COLORS["土"];
+                const lhWorn = lh ? wornSet.has(`${lh.code}-left`) : false;
+                return (
+                  <div>
+                    <div className={`text-xs font-semibold mb-2 ${lhColors.text}`}>🤲 左手（能量/吸引）</div>
+                    {lh && (
+                      <div className={`rounded-lg border p-3 transition-all ${
+                        lhWorn
+                          ? `${lhColors.bg} ${lhColors.border}`
+                          : `bg-white/3 ${lhColors.border} opacity-80`
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <span className={`text-xs font-mono opacity-60 ${lhColors.text}`}>{lh.code}</span>
+                            <span className={`font-medium text-sm ml-2 ${lhColors.text}`}>{lh.name}</span>
+                          </div>
+                          <button
+                            onClick={() => handleToggleWear(lh.code, lh.name, "left")}
+                            disabled={toggleWear.isPending}
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
+                              lhWorn
+                                ? `${lhColors.bg} ${lhColors.border} ${lhColors.text}`
+                                : `bg-white/5 border border-white/20 text-white/40 hover:${lhColors.border} hover:${lhColors.text}`
+                            }`}
+                          >
+                            {lhWorn ? "✓ 已佩戴" : "佩戴"}
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${lhColors.dot}`} />
+                          <p className={`text-xs font-medium ${lhColors.text} opacity-80`}>⚔️ {lh.tacticalRole}</p>
+                        </div>
+                        <p className="text-white/50 text-xs leading-relaxed">{lh.explanation}</p>
                       </div>
-                      <button
-                        onClick={() => handleToggleWear(dailyData.bracelets.leftHand.code, dailyData.bracelets.leftHand.name, "left")}
-                        disabled={toggleWear.isPending}
-                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
-                          wornSet.has(`${dailyData.bracelets.leftHand.code}-left`)
-                            ? "bg-emerald-500/30 border border-emerald-400/60 text-emerald-300"
-                            : "bg-white/5 border border-white/20 text-white/40 hover:border-emerald-500/40 hover:text-emerald-400"
-                        }`}
-                      >
-                        {wornSet.has(`${dailyData.bracelets.leftHand.code}-left`) ? "✓ 已佩戴" : "佩戴"}
-                      </button>
-                    </div>
-                    <p className="text-emerald-400/70 text-xs font-medium mb-1">⚔️ {dailyData.bracelets.leftHand.tacticalRole}</p>
-                    <p className="text-white/50 text-xs leading-relaxed">{dailyData.bracelets.leftHand.explanation}</p>
+                    )}
                   </div>
-                )}
-              </div>
-              {/* 右手 */}
-              <div>
-                <div className="text-blue-400/70 text-xs font-semibold mb-2">🤚 右手（策略/防護）</div>
-                {dailyData.bracelets?.rightHand && (
-                  <div className={`rounded-lg border p-3 transition-all ${
-                    wornSet.has(`${dailyData.bracelets.rightHand.code}-right`)
-                      ? "bg-blue-900/40 border-blue-400/50"
-                      : "bg-blue-950/20 border-blue-500/20"
-                  }`}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <span className="text-blue-500/60 text-xs font-mono">{dailyData.bracelets.rightHand.code}</span>
-                        <span className="text-blue-300 font-medium text-sm ml-2">{dailyData.bracelets.rightHand.name}</span>
+                );
+              })()}
+              {/* 右手 - 顏色依右手手串的五行元素決定 */}
+              {(() => {
+                const rh = dailyData.bracelets?.rightHand;
+                const rhElement = (rh as unknown as { element?: string })?.element ?? "金";
+                const rhColors = WUXING_COLORS[rhElement] ?? WUXING_COLORS["金"];
+                const rhWorn = rh ? wornSet.has(`${rh.code}-right`) : false;
+                return (
+                  <div>
+                    <div className={`text-xs font-semibold mb-2 ${rhColors.text}`}>🤚 右手（策略/防護）</div>
+                    {rh && (
+                      <div className={`rounded-lg border p-3 transition-all ${
+                        rhWorn
+                          ? `${rhColors.bg} ${rhColors.border}`
+                          : `bg-white/3 ${rhColors.border} opacity-80`
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <span className={`text-xs font-mono opacity-60 ${rhColors.text}`}>{rh.code}</span>
+                            <span className={`font-medium text-sm ml-2 ${rhColors.text}`}>{rh.name}</span>
+                          </div>
+                          <button
+                            onClick={() => handleToggleWear(rh.code, rh.name, "right")}
+                            disabled={toggleWear.isPending}
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
+                              rhWorn
+                                ? `${rhColors.bg} ${rhColors.border} ${rhColors.text}`
+                                : `bg-white/5 border border-white/20 text-white/40 hover:${rhColors.border} hover:${rhColors.text}`
+                            }`}
+                          >
+                            {rhWorn ? "✓ 已佩戴" : "佩戴"}
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${rhColors.dot}`} />
+                          <p className={`text-xs font-medium ${rhColors.text} opacity-80`}>🛡️ {rh.tacticalRole}</p>
+                        </div>
+                        <p className="text-white/50 text-xs leading-relaxed">{rh.explanation}</p>
                       </div>
-                      <button
-                        onClick={() => handleToggleWear(dailyData.bracelets.rightHand.code, dailyData.bracelets.rightHand.name, "right")}
-                        disabled={toggleWear.isPending}
-                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
-                          wornSet.has(`${dailyData.bracelets.rightHand.code}-right`)
-                            ? "bg-blue-500/30 border border-blue-400/60 text-blue-300"
-                            : "bg-white/5 border border-white/20 text-white/40 hover:border-blue-500/40 hover:text-blue-400"
-                        }`}
-                      >
-                        {wornSet.has(`${dailyData.bracelets.rightHand.code}-right`) ? "✓ 已佩戴" : "佩戴"}
-                      </button>
-                    </div>
-                    <p className="text-blue-400/70 text-xs font-medium mb-1">🛡️ {dailyData.bracelets.rightHand.tacticalRole}</p>
-                    <p className="text-white/50 text-xs leading-relaxed">{dailyData.bracelets.rightHand.explanation}</p>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
             </div>
           </div>
         ) : null}
@@ -690,17 +730,12 @@ export default function OutfitPage() {
                       </div>
                     )}
 
-                    {/* 前往虛擬衣櫥 */}
-                    <Link href="/wardrobe" className="flex items-center justify-between p-3 rounded-xl border border-dashed border-white/20 hover:border-amber-500/40 hover:bg-amber-900/10 transition-all group">
-                      <div className="flex items-center gap-3">
-                        <span className="text-xl">👗</span>
-                        <div>
-                          <div className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">管理虛擬衣櫥</div>
-                          <div className="text-xs text-white/30">新增衣物，讓模擬器從您的衣櫥中挑選</div>
-                        </div>
-                      </div>
-                      <span className="text-white/30 group-hover:text-amber-400 transition-colors">→</span>
-                    </Link>
+                    {/* 前往虛擬衣櫥（模擬器內部也保留一個入口）*/}
+                    <div className="text-center">
+                      <Link href="/wardrobe" className="inline-flex items-center gap-2 text-xs text-white/30 hover:text-amber-400 transition-colors">
+                        <span>👗</span> 管理虛擬衣櫥 →
+                      </Link>
+                    </div>
                   </div>
                 </motion.div>
               )}
