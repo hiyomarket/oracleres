@@ -13,9 +13,25 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
 import {
   User, Save, ArrowLeft, Loader2, Sparkles,
-  RefreshCw, MapPin, Calendar, ChevronDown, ChevronUp, AlertTriangle, Trash2
+  RefreshCw, MapPin, Calendar, ChevronDown, ChevronUp, AlertTriangle, Trash2,
+  Utensils, Check
 } from "lucide-react";
+
 import { Link, useLocation } from "wouter";
+
+const HEALTH_TAG_OPTIONS = [
+  { id: "low_sugar",    label: "🍯 低糖",   desc: "減少精製糖" },
+  { id: "low_sodium",   label: "🧂 低鹽",   desc: "減少鹽分" },
+  { id: "vegetarian",  label: "🥦 素食",   desc: "不含肉類" },
+  { id: "high_protein",label: "🥩 高蛋白", desc: "增加蛋白質" },
+  { id: "gluten_free", label: "🌾 無麵質", desc: "不含麵質" },
+  { id: "low_calorie", label: "🥗 低卡",   desc: "控制熱量" },
+];
+const BUDGET_OPTIONS = [
+  { id: "budget",  label: "💲 小資預", desc: "100元以內" },
+  { id: "mid",     label: "💳 中資預", desc: "100–300元" },
+  { id: "premium", label: "💴 高檔",   desc: "300元以上" },
+];
 
 const BIRTH_HOUR_OPTIONS = [
   { value: 0,  label: "子時", desc: "23:00–01:00" },
@@ -107,6 +123,30 @@ export default function MyProfile() {
   const [recalculating, setRecalculating] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [, navigate] = useLocation();
+
+  // 飲食偏好設定
+  const { data: dietPrefs } = trpc.diet.getUserPreferences.useQuery(undefined, { staleTime: 60 * 1000 });
+  const [selectedHealthTags, setSelectedHealthTags] = useState<string[]>([]);
+  const [selectedBudget, setSelectedBudget] = useState<"budget" | "mid" | "premium">("mid");
+  const [dietPrefsSaved, setDietPrefsSaved] = useState(false);
+
+  // 載入飲食偏好
+  useEffect(() => {
+    if (dietPrefs) {
+      setSelectedHealthTags(dietPrefs.healthTags ?? []);
+      setSelectedBudget((dietPrefs.budgetPreference as "budget" | "mid" | "premium") ?? "mid");
+    }
+  }, [dietPrefs]);
+
+  const updateDietPrefs = trpc.diet.updateUserPreferences.useMutation({
+    onSuccess: () => {
+      toast.success("飲食偏好已儲存！");
+      setDietPrefsSaved(true);
+      setTimeout(() => setDietPrefsSaved(false), 2000);
+      utils.diet.getUserPreferences.invalidate();
+    },
+    onError: (err) => toast.error(`儲存失敗：${err.message}`),
+  });
 
   // 載入現有資料
   useEffect(() => {
@@ -427,6 +467,76 @@ export default function MyProfile() {
               修改出生日期或時辰後，點擊「重新推算」更新命格
             </p>
           )}
+        </section>
+
+        {/* ── 飲食偏好設定 ── */}
+        <section className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5 space-y-4">
+          <div className="flex items-center gap-2">
+            <Utensils className="w-4 h-4 text-emerald-400" />
+            <h2 className="text-sm font-semibold text-white">飲食羅盤偏好</h2>
+            <span className="text-xs text-slate-500">影響 AI 飲食建議與附近餐廳篩選</span>
+          </div>
+
+          {/* 健康標籤 */}
+          <div>
+            <p className="text-xs text-slate-400 mb-2">健康標籤（可多選）</p>
+            <div className="grid grid-cols-3 gap-2">
+              {HEALTH_TAG_OPTIONS.map(tag => {
+                const isSelected = selectedHealthTags.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    onClick={() => setSelectedHealthTags(prev =>
+                      isSelected ? prev.filter(t => t !== tag.id) : [...prev, tag.id]
+                    )}
+                    className={`flex flex-col items-center gap-0.5 p-2.5 rounded-xl border text-xs transition-all ${
+                      isSelected
+                        ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300"
+                        : "border-slate-700/50 bg-slate-800/40 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <span className="font-medium">{tag.label}</span>
+                    <span className="text-[10px] opacity-60">{tag.desc}</span>
+                    {isSelected && <Check className="w-3 h-3 text-emerald-400 mt-0.5" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 預算偏好 */}
+          <div>
+            <p className="text-xs text-slate-400 mb-2">預算偏好</p>
+            <div className="grid grid-cols-3 gap-2">
+              {BUDGET_OPTIONS.map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => setSelectedBudget(opt.id as "budget" | "mid" | "premium")}
+                  className={`flex flex-col items-center gap-0.5 p-2.5 rounded-xl border text-xs transition-all ${
+                    selectedBudget === opt.id
+                      ? "border-amber-500/60 bg-amber-500/10 text-amber-300"
+                      : "border-slate-700/50 bg-slate-800/40 text-slate-400 hover:border-slate-600"
+                  }`}
+                >
+                  <span className="font-medium">{opt.label}</span>
+                  <span className="text-[10px] opacity-60">{opt.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={() => updateDietPrefs.mutate({ healthTags: selectedHealthTags, budgetPreference: selectedBudget })}
+            disabled={updateDietPrefs.isPending}
+            className="w-full py-2.5 rounded-xl bg-emerald-600/80 hover:bg-emerald-600 text-white text-sm font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {updateDietPrefs.isPending
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : dietPrefsSaved
+              ? <Check className="w-4 h-4" />
+              : <Save className="w-4 h-4" />}
+            {updateDietPrefs.isPending ? "儲存中..." : dietPrefsSaved ? "已儲存！" : "儲存飲食偏好"}
+          </button>
         </section>
 
         {/* ── 危險區域：刪除帳號 ── */}

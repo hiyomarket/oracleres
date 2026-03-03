@@ -3,9 +3,9 @@ import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  ReferenceLine, BarChart, Bar, Cell,
+  ReferenceLine, BarChart, Bar, Cell, PieChart, Pie, Legend,
 } from "recharts";
-import { TrendingUp, TrendingDown, DollarSign, Target, Clock, Award } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Target, Clock, Award, Utensils } from "lucide-react";
 import { SharedNav } from "@/components/SharedNav";
 import { ProfileIncompleteBanner } from "@/components/ProfileIncompleteBanner";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -119,6 +119,9 @@ export default function WeeklyReport() {
     const bestHour = hourHeatData.reduce((best, h) => h.total > 0 && h.winRate > best.winRate ? h : best, { hour: "-", winRate: 0, total: 0, won: 0, hourLabel: "-" });
     return { totalInvested, totalWon, roi, winRate, totalCount, wonCount, bestHour };
   }, [scratchStats, hourHeatData]);
+
+  // 本週五行飲食分布
+  const { data: weeklyDietStats } = trpc.diet.getWeeklyDietStats.useQuery(undefined, { staleTime: 5 * 60 * 1000 });
 
   const isLoading = statsLoading || logsLoading;
 
@@ -427,6 +430,114 @@ export default function WeeklyReport() {
               </motion.div>
             )}
           </>
+        )}
+
+        {/* ── 本週五行飲食分布 ── */}
+        {weeklyDietStats && weeklyDietStats.totalLogs > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-gray-900/60 border border-gray-700/40 rounded-2xl p-5 mt-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Utensils className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-sm font-bold text-emerald-300 tracking-wider">本週五行飲食分布</h3>
+              </div>
+              <span className="text-xs text-slate-500">共 {weeklyDietStats.totalLogs} 筆記錄</span>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              {/* 圓餅圖 */}
+              <div className="w-full md:w-1/2">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={weeklyDietStats.distribution.filter(d => d.count > 0)}
+                      dataKey="count"
+                      nameKey="element"
+                      cx="50%" cy="50%"
+                      outerRadius={80}
+                      label={({ element, pct }) => `${element} ${pct}%`}
+                      labelLine={false}
+                    >
+                      {weeklyDietStats.distribution.filter(d => d.count > 0).map((entry) => (
+                        <Cell key={entry.element} fill={{
+                          "火": "#ef4444", "木": "#22c55e", "水": "#3b82f6",
+                          "土": "#eab308", "金": "#94a3b8",
+                        }[entry.element] ?? "#6b7280"} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(value: number, name: string) => [`${value} 筆`, `${name}行`]}
+                      contentStyle={{ background: "#0a1628", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "12px", fontSize: "12px" }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* 排行清單 */}
+              <div className="w-full md:w-1/2 space-y-2">
+                {weeklyDietStats.distribution.map((d) => (
+                  <div key={d.element} className="flex items-center gap-3">
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ background: { "火": "#ef4444", "木": "#22c55e", "水": "#3b82f6", "土": "#eab308", "金": "#94a3b8" }[d.element] ?? "#6b7280" }}
+                    />
+                    <span className="text-sm text-white/70 w-6">{d.element}</span>
+                    <div className="flex-1 h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          width: `${d.pct}%`,
+                          background: { "火": "#ef4444", "木": "#22c55e", "水": "#3b82f6", "土": "#eab308", "金": "#94a3b8" }[d.element] ?? "#6b7280",
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs text-slate-400 w-16 text-right">{d.count} 筆 ({d.pct}%)</span>
+                  </div>
+                ))}
+                {weeklyDietStats.totalLogs === 0 && (
+                  <p className="text-xs text-slate-500 text-center py-4">本週尚無飲食記錄</p>
+                )}
+              </div>
+            </div>
+
+            {/* 每日堆疊長條圖 */}
+            {weeklyDietStats.dailyDistribution.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs text-slate-500 mb-2">每日五行飲食分布</p>
+                <ResponsiveContainer width="100%" height={120}>
+                  <BarChart data={weeklyDietStats.dailyDistribution} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
+                    <XAxis dataKey="date" tick={{ fontSize: 9, fill: "rgba(255,255,255,0.3)" }} tickFormatter={(v: string) => v.slice(5)} />
+                    <YAxis tick={{ fontSize: 9, fill: "rgba(255,255,255,0.3)" }} />
+                    <Tooltip
+                      contentStyle={{ background: "#0a1628", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "12px", fontSize: "11px" }}
+                      formatter={(value: number, name: string) => [`${value} 筆`, `${name}行`]}
+                    />
+                    {["火", "木", "水", "土", "金"].map(el => (
+                      <Bar key={el} dataKey={el} stackId="a" fill={{ "火": "#ef4444", "木": "#22c55e", "水": "#3b82f6", "土": "#eab308", "金": "#94a3b8" }[el] ?? "#6b7280"} radius={el === "金" ? [3, 3, 0, 0] : [0, 0, 0, 0]} />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* 無飲食記錄提示 */}
+        {weeklyDietStats && weeklyDietStats.totalLogs === 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-gray-900/40 border border-emerald-500/15 rounded-2xl p-5 mt-6 text-center"
+          >
+            <Utensils className="w-8 h-8 text-emerald-500/40 mx-auto mb-2" />
+            <p className="text-sm text-slate-400">本週尚無飲食日誌記錄</p>
+            <p className="text-xs text-slate-600 mt-1">前往「飲食羅盤」頁面記錄今日飲食，即可在這裡看到本週五行補運分布。</p>
+          </motion.div>
         )}
       </div>
       }

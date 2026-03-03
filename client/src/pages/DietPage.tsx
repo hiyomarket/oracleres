@@ -214,16 +214,41 @@ function ElementKnowledgeModal({ open, onClose, knowledge }: { open: boolean; on
   );
 }
 
-// ─── AI 主廚菜單彈窗 ──────────────────────────────────────────
+// ─── AI 主廚菜單彈窗（含 localStorage 快取） ───────────────────────────────────────
 type AiDish = { name: string; ingredients: string; wuxingEffect: string };
 type AiMenu = { menuName: string; mainDishes: AiDish[]; sideDish: AiDish; drink: { name: string; description: string; wuxingEffect: string }; motto: string };
+
+function buildChefCacheKey(targetElement: string, mealScene: string, mode: string) {
+  const today = new Date().toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei" });
+  return `ai_chef_menu:${today}:${targetElement}:${mealScene}:${mode}`;
+}
+
 function AiChefMenuModal({ open, onClose, targetElement, secondaryElement, mealScene, mode, healthTags, budgetPreference }: {
   open: boolean; onClose: () => void; targetElement: string; secondaryElement?: string;
   mealScene: string; mode: ModeId; healthTags: string[]; budgetPreference: string;
 }) {
   const aiChefMenu = trpc.diet.aiChefMenu.useMutation();
+  const [cachedMenu, setCachedMenu] = useState<AiMenu | null>(null);
+  const [fromCache, setFromCache] = useState(false);
+
   useEffect(() => {
-    if (open && !aiChefMenu.data && !aiChefMenu.isPending) {
+    if (!open) return;
+    const cacheKey = buildChefCacheKey(targetElement, mealScene, mode);
+    try {
+      const raw = localStorage.getItem(cacheKey);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { menu: AiMenu; ts: number };
+        if (Date.now() - parsed.ts < 24 * 60 * 60 * 1000) {
+          setCachedMenu(parsed.menu);
+          setFromCache(true);
+          return;
+        }
+        localStorage.removeItem(cacheKey);
+      }
+    } catch { /* ignore */ }
+    setFromCache(false);
+    setCachedMenu(null);
+    if (!aiChefMenu.data && !aiChefMenu.isPending) {
       aiChefMenu.mutate({
         targetElement, secondaryElement,
         mealType: mealScene as "breakfast" | "lunch" | "dinner" | "snack",
@@ -233,8 +258,23 @@ function AiChefMenuModal({ open, onClose, targetElement, secondaryElement, mealS
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
-  const menu = aiChefMenu.data?.menu as AiMenu | undefined;
-  const retry = () => aiChefMenu.mutate({ targetElement, secondaryElement, mealType: mealScene as "breakfast" | "lunch" | "dinner" | "snack", mode, healthTags, budgetPreference: budgetPreference as "budget" | "mid" | "premium" });
+
+  // API 回覆後儲存到 localStorage
+  useEffect(() => {
+    if (aiChefMenu.data?.menu) {
+      const cacheKey = buildChefCacheKey(targetElement, mealScene, mode);
+      try { localStorage.setItem(cacheKey, JSON.stringify({ menu: aiChefMenu.data.menu, ts: Date.now() })); } catch { /* ignore */ }
+    }
+  }, [aiChefMenu.data, targetElement, mealScene, mode]);
+
+  const menu = cachedMenu ?? (aiChefMenu.data?.menu as AiMenu | undefined);
+  const handleRetry = () => {
+    const cacheKey = buildChefCacheKey(targetElement, mealScene, mode);
+    try { localStorage.removeItem(cacheKey); } catch { /* ignore */ }
+    setCachedMenu(null); setFromCache(false);
+    aiChefMenu.mutate({ targetElement, secondaryElement, mealType: mealScene as "breakfast" | "lunch" | "dinner" | "snack", mode, healthTags, budgetPreference: budgetPreference as "budget" | "mid" | "premium" });
+  };
+  const retry = handleRetry;
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="bg-[#0f0f1a] border border-white/15 text-white max-w-sm mx-auto max-h-[80vh] overflow-y-auto">
@@ -259,6 +299,12 @@ function AiChefMenuModal({ open, onClose, targetElement, secondaryElement, mealS
         )}
         {menu && (
           <div className="space-y-3">
+            {fromCache && (
+              <div className="flex items-center justify-between rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
+                <span className="text-xs text-emerald-400">⚡ 今日快取菜單</span>
+                <button onClick={retry} disabled={aiChefMenu.isPending} className="text-xs text-white/40 hover:text-white/70 transition-colors">重新生成</button>
+              </div>
+            )}
             <div className={`rounded-xl bg-gradient-to-br ${ELEMENT_GRADIENT[targetElement] ?? "from-white/5 to-white/[0.02]"} p-3 text-center`}>
               <p className="text-xs text-white/40 mb-1">今日天命菜單</p>
               <p className="text-base font-bold text-white">{menu.menuName}</p>

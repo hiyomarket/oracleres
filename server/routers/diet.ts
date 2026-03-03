@@ -485,4 +485,51 @@ export const dietRouter = router({
       }
       return { success: true };
     }),
+
+  /**
+   * 取得本週五行飲食分布統計（圓餅圖資料）
+   */
+  getWeeklyDietStats: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      // 取得7天內的飲食日誌
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+      const startDate = sevenDaysAgo.toISOString().split("T")[0];
+      const logs = await db.select()
+        .from(dietaryLogs)
+        .where(eq(dietaryLogs.userId, ctx.user.id))
+        .orderBy(desc(dietaryLogs.logDate))
+        .limit(300);
+      // 字串比較過濾最近7天
+      const recentLogs = logs.filter(l => l.logDate >= startDate);
+      // 五行計數
+      const elementCount: Record<string, number> = { "火": 0, "木": 0, "水": 0, "土": 0, "金": 0 };
+      for (const log of recentLogs) {
+        const el = log.consumedElement;
+        if (el in elementCount) elementCount[el] = (elementCount[el] ?? 0) + 1;
+      }
+      const total = recentLogs.length;
+      const distribution = Object.entries(elementCount)
+        .map(([element, count]) => ({
+          element,
+          count,
+          pct: total > 0 ? Math.round((count / total) * 100) : 0,
+        }))
+        .sort((a, b) => b.count - a.count);
+      // 每日分布
+      const dailyMap: Record<string, Record<string, number>> = {};
+      for (const log of recentLogs) {
+        if (!dailyMap[log.logDate]) dailyMap[log.logDate] = { "火": 0, "木": 0, "水": 0, "土": 0, "金": 0 };
+        const el = log.consumedElement;
+        if (el in dailyMap[log.logDate]!) {
+          dailyMap[log.logDate]![el] = (dailyMap[log.logDate]![el] ?? 0) + 1;
+        }
+      }
+      const dailyDistribution = Object.entries(dailyMap)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, counts]) => ({ date, ...(counts as Record<string, number>) }));
+      return { distribution, dailyDistribution, totalLogs: total, startDate };
+    }),
 });
