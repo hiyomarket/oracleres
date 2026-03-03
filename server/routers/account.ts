@@ -374,7 +374,11 @@ export const accountRouter = router({
       if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: '資料庫連線失敗' });
       const existing = await db.select({ id: userProfiles.id })
         .from(userProfiles).where(eq(userProfiles.userId, ctx.user.id)).limit(1);
-      // 計算主要靈數（靈魂渴望）
+      // 計算主要靈數（靈魂渴望）——蘇祐震塔羅系統正確邏輯
+      // 外層靈數：日期本身 ≤22 直接用，>22 才拆位數相加
+      // 中層靈數：外層靈數 + 月份處理結果（月份≥10才拆位數）
+      // 靈魂數：年份各位數相加，22保留
+      // 主要靈數：中層靈數 + 靈魂數
       function reduceToMaster(n: number): number {
         while (n > 22) {
           n = n.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0);
@@ -383,11 +387,17 @@ export const accountRouter = router({
       }
       const [yStr, mStr, dStr] = input.birthDate.split('-');
       const _y = parseInt(yStr), _m = parseInt(mStr), _d = parseInt(dStr);
-      const _middleRaw = _m.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0)
-        + _d.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0);
+      // 外層靈數：日期本身 ≤22 直接用，>22 才拆位數相加
+      const _outer = reduceToMaster(_d);
+      // 月份處理：月份 ≥10 才各位數相加
+      const _monthProcessed = _m >= 10 ? Math.floor(_m / 10) + (_m % 10) : _m;
+      // 中層靈數：外層靈數 + 月份處理結果
+      const _middleRaw = _outer + _monthProcessed;
       const _middle = reduceToMaster(_middleRaw);
+      // 靈魂數：年份各位數相加，22保留
       const _yearRaw = _y.toString().split('').reduce((a: number, c: string) => a + parseInt(c), 0);
       const _yearNum = reduceToMaster(_yearRaw);
+      // 主要靈數：中層靈數 + 靈魂數
       const _primaryRaw = _middle + _yearNum;
       const primaryLifeNumber = reduceToMaster(_primaryRaw);
       const baziData = {

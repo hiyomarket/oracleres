@@ -2353,13 +2353,16 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
               ...ep.favorableElements.filter(el => !modeBase.includes(el)),
             ];
 
-        // V10.0：動態策略判定層
+        // V10.0：動態策略判定層（從 DB 快取讀取閾值）
         const { determineDailyStrategy } = await import('./lib/strategyEngine');
+        const { getStrategyThresholdConfigs } = await import('./lib/strategyThresholdCache');
+        const dbThresholds = await getStrategyThresholdConfigs();
         const dailyStrategy = determineDailyStrategy(
           wuxingResult,
           blendedPriority,
           ep.unfavorableElements,
           input.mode,
+          dbThresholds,
         );
         const outfit = generateOutfitAdviceV9(wuxingResult, blendedPriority, dailyStrategy);
         // 時辰能量分數（用於前端時間軸顯示））
@@ -2729,6 +2732,8 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
         const { getFullDateInfo } = await import('./lib/lunarCalendar');
         const { calculateWeightedElements, calculateEnvironmentElements } = await import('./lib/wuxingEngine');
         const { determineDailyStrategy, getStrategyDescription } = await import('./lib/strategyEngine');
+        const { getStrategyThresholdConfigs: getThresholdConfigs } = await import('./lib/strategyThresholdCache');
+        const dbThresholdsForWeekly = await getThresholdConfigs();
         const twNow = new Date(new Date().getTime() + 8 * 60 * 60 * 1000);
         const baseDate = input?.endDate
           ? new Date(input.endDate + 'T04:00:00Z')
@@ -2760,6 +2765,7 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
             ep.favorableElements,
             ep.unfavorableElements,
             'default',
+            dbThresholdsForWeekly,
           );
           const desc = getStrategyDescription(strategy.strategyName);
           const [y, m, dd] = dateStr.split('-').map(Number);

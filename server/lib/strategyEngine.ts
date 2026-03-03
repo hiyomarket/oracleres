@@ -15,6 +15,7 @@
  */
 
 import type { WeightedElementResult, ElementRatio } from "./wuxingEngine";
+import type { StrategyThresholdConfig } from "./strategyThresholdCache";
 
 // ── 五行相生關係 ─────────────────────────────────────────────────
 // 木生火、火生土、土生金、金生水、水生木
@@ -83,12 +84,14 @@ export interface DailyStrategyObject {
  * @param favorableElements - 用戶喜用神（中文，按優先級排序，如 ["火","土","金"]）
  * @param unfavorableElements - 用戶忌神（中文，如 ["水","木"]）
  * @param mode - 情境模式（影響策略判定的優先級）
+ * @param dbThresholds - 從 DB 快取讀取的閾值設定（可選，沒有則用硬編碼常數）
  */
 export function determineDailyStrategy(
   result: WeightedElementResult,
   favorableElements: string[],
   unfavorableElements: string[],
   mode: "default" | "love" | "work" | "leisure" | "travel" = "default",
+  dbThresholds?: StrategyThresholdConfig[],
 ): DailyStrategyObject {
   const { weighted } = result;
 
@@ -99,14 +102,30 @@ export function determineDailyStrategy(
   const secondary = modeAdjustedFavorable[1] ?? "土";
   const tertiary = modeAdjustedFavorable[2] ?? "金";
 
-  // ── 策略 1：強勢補弱 ─────────────────────────────────────────
+  // 從 DB 閾值覆蓋硬編碼常數（如果有提供）
+  const getThreshold = (name: string, key: "weakThreshold" | "strongThreshold"): number => {
+    if (!dbThresholds) return -1;
+    const t = dbThresholds.find(t => t.strategyName === name);
+    return t ? t[key] / 100 : -1; // DB 存整數百分比，轉為小數
+  };
+  const isEnabled = (name: string): boolean => {
+    if (!dbThresholds) return true;
+    const t = dbThresholds.find(t => t.strategyName === name);
+    return t ? t.enabled : true;
+  };
+
+  // ── 策略 1：強勢補弱 ─────────────────────────────────────────────
   // 觸發條件：第一優先喜用神 < 8% 或 任何喜用神 < 3%
   const primaryPct = weighted[primary as keyof ElementRatio] ?? 0;
-  const isDangerouslyWeak = primaryPct < DANGER_THRESHOLD;
+  const dangerThr = getThreshold("強勢補弱", "weakThreshold");
+  const collapseThr = getThreshold("強勢補弱", "strongThreshold");
+  const effectiveDangerThreshold = dangerThr >= 0 ? dangerThr : DANGER_THRESHOLD;
+  const effectiveCollapseThreshold = collapseThr >= 0 ? collapseThr : COLLAPSE_THRESHOLD;
+  const isDangerouslyWeak = isEnabled("強勢補弱") && primaryPct < effectiveDangerThreshold;
 
   let collapsingElement: string | null = null;
-  for (const el of modeAdjustedFavorable) {
-    if ((weighted[el as keyof ElementRatio] ?? 0) < COLLAPSE_THRESHOLD) {
+  if (isEnabled("強勢補弱")) for (const el of modeAdjustedFavorable) {
+    if ((weighted[el as keyof ElementRatio] ?? 0) < effectiveCollapseThreshold) {
       collapsingElement = el;
       break;
     }
@@ -127,18 +146,23 @@ export function determineDailyStrategy(
     };
   }
 
-  // ── 策略 2：借力打力 ─────────────────────────────────────────
-  // 觸發條件：某忌神 ≥ 40% 且直接剋制核心喜用神，或兩個忌神合計 > 55%
-  const dominantEnemy = unfavorableElements.find(
-    el => (weighted[el as keyof ElementRatio] ?? 0) >= ENEMY_DOMINANT
-  );
+  // ── 策略 2：借力打力 ─────────────────────────────────────────────
+  // 觸發條件：某忌神 ≥ 40% 且直接尅制核心喜用神，或兩個忌神合計 > 55%
+  const enemyDominantThr = getThreshold("借力打力", "strongThreshold");
+  const enemyCombinedThr = getThreshold("借力打力", "weakThreshold");
+  const effectiveEnemyDominant = enemyDominantThr >= 0 ? enemyDominantThr : ENEMY_DOMINANT;
+  const effectiveEnemyCombined = enemyCombinedThr >= 0 ? enemyCombinedThr : ENEMY_COMBINED;
+
+  const dominantEnemy = isEnabled("借力打力") ? unfavorableElements.find(
+    el => (weighted[el as keyof ElementRatio] ?? 0) >= effectiveEnemyDominant
+  ) : undefined;
 
   const enemyCombined = unfavorableElements.reduce(
     (sum, el) => sum + (weighted[el as keyof ElementRatio] ?? 0),
     0
   );
 
-  if (dominantEnemy || enemyCombined > ENEMY_COMBINED) {
+  if (dominantEnemy || (isEnabled("借力打力") && enemyCombined > effectiveEnemyCombined)) {
     const mainEnemy = dominantEnemy ?? unfavorableElements[0] ?? "水";
     const mainEnemyPct = Math.round((weighted[mainEnemy as keyof ElementRatio] ?? 0) * 100);
     // 找能剋制這個忌神的五行
@@ -157,15 +181,20 @@ export function determineDailyStrategy(
     };
   }
 
-  // ── 策略 3：順勢生旺 ─────────────────────────────────────────
+  // ── 策略 3：順勢生旺 ─────────────────────────────────────────────
   // 觸發條件：核心喜用神處於中等水平(15%-25%) 且 能生旺它的五行也不弱(≥15%)
-  for (const el of modeAdjustedFavorable) {
+  const medMinThr = getThreshold("順勢生旺", "weakThreshold");
+  const medMaxThr = getThreshold("順勢生旺", "strongThreshold");
+  const effectiveMedMin = medMinThr >= 0 ? medMinThr : MEDIUM_LEVEL_MIN;
+  const effectiveMedMax = medMaxThr >= 0 ? medMaxThr : MEDIUM_LEVEL_MAX;
+  const effectiveSupportThr = medMinThr >= 0 ? medMinThr : SUPPORT_THRESHOLD;
+
+  if (isEnabled("順勢生旺")) for (const el of modeAdjustedFavorable) {
     const elPct = weighted[el as keyof ElementRatio] ?? 0;
-    if (elPct >= MEDIUM_LEVEL_MIN && elPct <= MEDIUM_LEVEL_MAX) {
-      // 找能生旺這個喜用神的五行
+    if (elPct >= effectiveMedMin && elPct <= effectiveMedMax) {   // 找能生旺這個喜用神的五行
       const generatorEl = GENERATED_BY[el];
       const generatorPct = weighted[generatorEl as keyof ElementRatio] ?? 0;
-      if (generatorPct >= SUPPORT_THRESHOLD) {
+      if (generatorPct >= effectiveSupportThr) {
         const elPctRound = Math.round(elPct * 100);
         const genPctRound = Math.round(generatorPct * 100);
         const supportEl = modeAdjustedFavorable.find(e => e !== generatorEl) ?? secondary;
@@ -181,21 +210,24 @@ export function determineDailyStrategy(
       }
     }
   }
-
-  // ── 策略 4：食神生財 ─────────────────────────────────────────
-  // 觸發條件：才華五行（食神/傷官，即日主所生的五行）旺盛(≥25%) 且 財星五行偏弱(≤15%)
-  // 才華五行 = 日主能生出的五行（GENERATES[dayMasterElement]）
-  // 財星五行 = 日主所剋的五行（CONTROLS[dayMasterElement]）
+  // ── 策略 4：食神生財 ─────────────────────────────────────────────
+  // 觸發條件：才術五行（食神/傷官，即日主所生的五行）旺盛(≥25%) 且 財星五行偏弱(≤15%)
+  // 才術五行 = 日主能生出的五行（GENERATES[dayMasterElement]）
+  // 財星五行 = 日主所尅的五行（CONTROLS[dayMasterElement]）
   // 由於我們只有 favorableElements 而非日主，用喜用神中的「食傷」代理
   // 策略：若喜用神中有一個五行能量旺盛(≥25%)，且另一個喜用神能量偏弱(≤15%)
   // 且前者能生出後者（或後者能被前者生出）
-  for (const talentEl of modeAdjustedFavorable) {
+  const talentStrongThr = getThreshold("食神生財", "strongThreshold");
+  const wealthWeakThr = getThreshold("食神生財", "weakThreshold");
+  const effectiveTalentStrong = talentStrongThr >= 0 ? talentStrongThr : TALENT_STRONG;
+  const effectiveWealthWeak = wealthWeakThr >= 0 ? wealthWeakThr : WEALTH_WEAK;
+
+  if (isEnabled("食神生財")) for (const talentEl of modeAdjustedFavorable) {
     const talentPct = weighted[talentEl as keyof ElementRatio] ?? 0;
-    if (talentPct >= TALENT_STRONG) {
-      const wealthEl = GENERATES[talentEl]; // 才華生出的五行
+    if (talentPct >= effectiveTalentStrong) {    const wealthEl = GENERATES[talentEl]; // 才華生出的五行
       const wealthPct = weighted[wealthEl as keyof ElementRatio] ?? 0;
       // 如果生出的五行也是喜用神且偏弱
-      if (modeAdjustedFavorable.includes(wealthEl) && wealthPct <= WEALTH_WEAK) {
+      if (modeAdjustedFavorable.includes(wealthEl) && wealthPct <= effectiveWealthWeak) {
         const talentPctRound = Math.round(talentPct * 100);
         const wealthPctRound = Math.round(wealthPct * 100);
         const decisionEl = modeAdjustedFavorable.find(e => e !== wealthEl && e !== talentEl) ?? tertiary;

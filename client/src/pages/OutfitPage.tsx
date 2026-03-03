@@ -26,6 +26,35 @@ const WUXING_COLORS: Record<string, { bg: string; border: string; text: string; 
   木: { bg: "bg-emerald-950/40", border: "border-emerald-500/50", text: "text-emerald-400", dot: "bg-emerald-500" },
 };
 
+// 策略白話說明（讓用戶理解每個策略的實際意義與建議行動）
+const STRATEGY_PLAIN_DESC: Record<string, { summary: string; action: string; avoid: string }> = {
+  "強勢補弱": {
+    summary: "今天你的弱項五行缺口很大，能量容易流失。",
+    action: "穿上對應的補運色系，讓外在能量填補內在不足，適合主動出擊、爭取機會。",
+    avoid: "避免穿著剋制喜用神的顏色，否則補了也白補。",
+  },
+  "順勢生旺": {
+    summary: "今天的流日能量與你的本命高度契合，如魚得水。",
+    action: "順著今日能量方向行動，適合談判、簽約、重要決策，事半功倍。",
+    avoid: "不要逆勢而為，此時保持節奏比努力衝刺更重要。",
+  },
+  "借力打力": {
+    summary: "今天的流日能量可以轉化為你的助力，關鍵在借勢。",
+    action: "透過穿搭引導能量流向，借助外部資源或人脈，適合合作與借力。",
+    avoid: "獨自硬撐效果有限，找對人合作才是今日關鍵。",
+  },
+  "食神生財": {
+    summary: "今天的能量配置有利於創造與輸出，財運偏旺。",
+    action: "展現才華、創作、銷售、服務他人，你的付出今天特別容易換來回報。",
+    avoid: "不要只守不攻，今天適合主動創造，而非被動等待。",
+  },
+  "均衡守成": {
+    summary: "今天的能量較為平穩，沒有特別強的優勢或弱點。",
+    action: "維持日常節奏，做好本分，適合整理、規劃、沉澱。",
+    avoid: "不宜冒進或做重大改變，穩中求進才是今日策略。",
+  },
+};
+
 // 策略顏色映射
 const STRATEGY_COLORS: Record<string, { bg: string; border: string; text: string; badge: string }> = {
   "強勢補弱": { bg: "bg-blue-950/40", border: "border-blue-500/40", text: "text-blue-300", badge: "bg-blue-500/20 text-blue-300 border-blue-500/40" },
@@ -97,6 +126,13 @@ export default function OutfitPage() {
   const { data: weeklyDist } = trpc.warRoom.weeklyStrategyDistribution.useQuery(
     undefined,
     { staleTime: 30 * 60 * 1000, refetchOnWindowFocus: false }
+  );
+
+  // 昨日策略（用於今日 vs 昨日策略對比）
+  const yesterdayDate = getTaiwanDateStr(-1);
+  const { data: yesterdayOutfit } = trpc.warRoom.getOutfitByShichen.useQuery(
+    { date: yesterdayDate },
+    { staleTime: 60 * 60 * 1000, refetchOnWindowFocus: false }
   );
   // simulateOutfit mutation
   const simulateMutation = trpc.warRoom.simulateOutfit.useMutation({
@@ -200,6 +236,9 @@ export default function OutfitPage() {
   const computedAuraLevel = getAuraLevelFromScore(displayTotal);
   const displayAuraLevel = simulatorData ? computedAuraLevel : DEFAULT_AURA_LEVEL;
   const strategyColors = strategy ? (STRATEGY_COLORS[strategy.strategyName] ?? STRATEGY_COLORS["均衡守成"]) : null;
+  const yesterdayStrategy = (yesterdayOutfit as unknown as { strategy?: { strategyName: string } })?.strategy;
+  const strategyPlain = strategy ? (STRATEGY_PLAIN_DESC[strategy.strategyName] ?? null) : null;
+  const strategyChanged = yesterdayStrategy && strategy && yesterdayStrategy.strategyName !== strategy.strategyName;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -334,7 +373,7 @@ export default function OutfitPage() {
           />
         </div>
 
-        {/* ═══ V10.0 策略橫幅 ═══ */}
+        {/* ═══ V10.0 策略橫幅（含白話說明 + 昨日對比）═══ */}
         <AnimatePresence>
           {strategy && strategyColors && (
             <motion.div
@@ -343,18 +382,55 @@ export default function OutfitPage() {
               exit={{ opacity: 0, y: -8 }}
               className={`mb-5 rounded-2xl border p-4 ${strategyColors.bg} ${strategyColors.border}`}
             >
-              <div className="flex items-center gap-3">
-                <div className={`px-2.5 py-1 rounded-full border text-xs font-bold flex-shrink-0 ${strategyColors.badge}`}>
-                  {strategy.strategyName}
+              {/* 策略標題行 */}
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3">
+                  <div className={`px-2.5 py-1 rounded-full border text-xs font-bold flex-shrink-0 ${strategyColors.badge}`}>
+                    {strategy.strategyName}
+                  </div>
+                  <div className="min-w-0">
+                    <p className={`text-sm font-semibold ${strategyColors.text}`}>{strategy.coreStrategyText}</p>
+                    <p className="text-white/40 text-xs mt-0.5">
+                      主攻：<span className={`font-bold ${WUXING_COLORS[strategy.primaryTargetElement]?.text ?? "text-white"}`}>{strategy.primaryTargetElement}</span>
+                      　輔助：<span className={`font-bold ${WUXING_COLORS[strategy.secondaryTargetElement]?.text ?? "text-white"}`}>{strategy.secondaryTargetElement}</span>
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className={`text-sm font-semibold ${strategyColors.text}`}>{strategy.coreStrategyText}</p>
-                  <p className="text-white/40 text-xs mt-0.5">
-                    主攻：<span className={`font-bold ${WUXING_COLORS[strategy.primaryTargetElement]?.text ?? "text-white"}`}>{strategy.primaryTargetElement}</span>
-                    　輔助：<span className={`font-bold ${WUXING_COLORS[strategy.secondaryTargetElement]?.text ?? "text-white"}`}>{strategy.secondaryTargetElement}</span>
-                  </p>
-                </div>
+                {/* 昨日 vs 今日策略對比 */}
+                {yesterdayStrategy && (
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-[9px] text-white/30 mb-0.5">昨日</div>
+                    <div className={`text-[10px] font-bold ${
+                      strategyChanged ? "text-amber-400" : "text-white/40"
+                    }`}>
+                      {strategyChanged ? (
+                        <span>➡️ {yesterdayStrategy.strategyName}</span>
+                      ) : (
+                        <span>✔️ 同策略</span>
+                      )}
+                    </div>
+                    {strategyChanged && (
+                      <div className="text-[9px] text-amber-300/60">能量已轉換</div>
+                    )}
+                  </div>
+                )}
               </div>
+              {/* 白話說明區塊 */}
+              {strategyPlain && (
+                <div className="border-t border-white/10 pt-3 space-y-2">
+                  <p className="text-xs text-white/70">{strategyPlain.summary}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white/5 rounded-lg p-2">
+                      <div className="text-[9px] text-emerald-400 font-bold mb-1">✅ 建議行動</div>
+                      <p className="text-[10px] text-white/60 leading-relaxed">{strategyPlain.action}</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-2">
+                      <div className="text-[9px] text-red-400 font-bold mb-1">⚠️ 避免事項</div>
+                      <p className="text-[10px] text-white/60 leading-relaxed">{strategyPlain.avoid}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -803,21 +879,32 @@ export default function OutfitPage() {
                 );
               })}
             </div>
-            {/* 策略解讀提示 */}
-            {weeklyDist.distribution[0] && (
-              <div className={`mt-3 p-2.5 rounded-xl border text-xs ${
-                (STRATEGY_COLORS[weeklyDist.distribution[0].name] ?? STRATEGY_COLORS["均衡守成"]).bg
-              } ${
-                (STRATEGY_COLORS[weeklyDist.distribution[0].name] ?? STRATEGY_COLORS["均衡守成"]).border
-              }`}>
-                <span className={`font-semibold ${
-                  (STRATEGY_COLORS[weeklyDist.distribution[0].name] ?? STRATEGY_COLORS["均衡守成"]).text
-                }`}>
-                  {weeklyDist.distribution[0].icon} 本週主導策略：{weeklyDist.distribution[0].name}
-                </span>
-                <span className="text-white/40 ml-2">（{weeklyDist.distribution[0].count}/7 天）</span>
-              </div>
-            )}
+            {/* 策略白話解讀提示 */}
+            {weeklyDist.distribution[0] && (() => {
+              const top = weeklyDist.distribution[0];
+              const sc = STRATEGY_COLORS[top.name] ?? STRATEGY_COLORS["均衡守成"];
+              const plain = STRATEGY_PLAIN_DESC[top.name];
+              return (
+                <div className={`mt-3 p-3 rounded-xl border ${sc.bg} ${sc.border}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`font-bold text-sm ${sc.text}`}>{top.icon} 本週主導策略：{top.name}</span>
+                    <span className="text-white/40 text-xs">（{top.count}/7 天）</span>
+                  </div>
+                  {plain && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-white/70">{plain.summary}</p>
+                      <p className="text-[10px] text-white/50">本週建議：{plain.action}</p>
+                    </div>
+                  )}
+                  {weeklyDist.distribution.length === 1 && (
+                    <p className="text-[10px] text-white/40 mt-1.5">本週能量很一致，這種規律性通常代表你的天命能量正處於穩定期。</p>
+                  )}
+                  {weeklyDist.distribution.length >= 3 && (
+                    <p className="text-[10px] text-white/40 mt-1.5">本週策略較多元，能量轉換頻繁，建議每日早晨查看穿搭建議以適時調整。</p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
       </main>

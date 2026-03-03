@@ -582,10 +582,13 @@ export const adminConfigRouter = router({
       if (input.enabled !== undefined) updateData.enabled = input.enabled ? 1 : 0;
       if (input.notes !== undefined) updateData.notes = input.notes;
       await db.update(strategyThresholds).set(updateData).where(eq(strategyThresholds.id, input.id));
+      // 更新後清除快取，讓新閾值立即生效
+      const { invalidateStrategyThresholdCache } = await import('../lib/strategyThresholdCache');
+      invalidateStrategyThresholdCache();
       return { success: true };
     }),
 
-  /** 重置所有策略閾值為預設值 */
+  /** 重置所有策略閾值為預設値 */
   resetStrategyThresholds: protectedProcedure.mutation(async ({ ctx }) => {
     requireAdmin(ctx);
     const db = await getDb();
@@ -602,6 +605,9 @@ export const adminConfigRouter = router({
         .set({ weakThreshold: d.weak, strongThreshold: d.strong, priority: d.priority, enabled: 1 })
         .where(eq(strategyThresholds.strategyName, d.name));
     }
+    // 重置後清除快取
+    const { invalidateStrategyThresholdCache: invalidateCache } = await import('../lib/strategyThresholdCache');
+    invalidateCache();
     return { success: true, message: '已重置為預設閾值' };
   }),
 });

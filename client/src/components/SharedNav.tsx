@@ -107,9 +107,89 @@ function PointsBadge() {
   );
 }
 
+/** 簽到日曆小面板（嵌入下拉選單） */
+function CheckInCalendarPanel({ onClose }: { onClose: () => void }) {
+  const { data: calendarData } = trpc.points.getMonthlyCalendar.useQuery(undefined, {
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+  if (!calendarData) return <div className="px-4 py-3 text-xs text-slate-500">載入中...</div>;
+  const { signedDays, streak, totalThisMonth, year, month } = calendarData;
+  const signedSet = new Set(signedDays);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
+  const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const todayTW = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const todayStr = `${todayTW.getUTCFullYear()}-${String(todayTW.getUTCMonth()+1).padStart(2,'0')}-${String(todayTW.getUTCDate()).padStart(2,'0')}`;
+  const tierLabel = streak >= 20 ? '🥇 黃金' : streak >= 6 ? '🥈 白銀' : '🥉 青銅';
+  const tierColor = streak >= 20 ? 'text-yellow-300' : streak >= 6 ? 'text-gray-300' : 'text-orange-400';
+  return (
+    <div className="px-3 pb-3">
+      {/* 標題 */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-orange-300">{year}年 {monthNames[month-1]}</span>
+        </div>
+        <div className="flex items-center gap-2 text-[10px]">
+          <span className={`font-bold ${tierColor}`}>{tierLabel}</span>
+          <span className="text-slate-400">連續 <span className="text-orange-300 font-bold">{streak}</span> 天</span>
+          <span className="text-slate-400">本月 <span className="text-green-300 font-bold">{totalThisMonth}</span> 天</span>
+        </div>
+      </div>
+      {/* 星期標題 */}
+      <div className="grid grid-cols-7 gap-0.5 mb-0.5">
+        {['日','一','二','三','四','五','六'].map(d => (
+          <div key={d} className="text-center text-[9px] text-slate-600 py-0.5">{d}</div>
+        ))}
+      </div>
+      {/* 日期格子 */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+          <div key={`empty-${i}`} />
+        ))}
+        {Array.from({ length: daysInMonth }).map((_, i) => {
+          const day = i + 1;
+          const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          const isSigned = signedSet.has(dateStr);
+          const isToday = dateStr === todayStr;
+          return (
+            <div
+              key={day}
+              className={`relative aspect-square rounded flex items-center justify-center text-[9px] font-medium ${
+                isSigned
+                  ? 'bg-orange-500/30 border border-orange-400/60 text-orange-200'
+                  : isToday
+                    ? 'bg-slate-700/60 border border-cyan-500/50 text-cyan-300'
+                    : 'bg-slate-800/40 border border-slate-700/30 text-slate-600'
+              }`}
+            >
+              {day}
+              {isSigned && (
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-orange-400 rounded-full" />
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {/* 圖例 */}
+      <div className="flex items-center gap-3 mt-2 text-[9px] text-slate-600">
+        <div className="flex items-center gap-1">
+          <div className="w-2.5 h-2.5 rounded bg-orange-500/30 border border-orange-400/60" />
+          <span>已簽到</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2.5 h-2.5 rounded bg-slate-700/60 border border-cyan-500/50" />
+          <span>今日</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** 使用者頭像下拉選單 */
 function UserMenu({ user }: { user: { name?: string | null; openId?: string; planName?: string | null } }) {
   const [open, setOpen] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { data: status } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
   const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
@@ -237,7 +317,24 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
               </>
             )}
 
-            {/* 兌換碼入口 */}
+            {/* 簽到日曆入口 */}
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-orange-500/10 hover:text-orange-300 transition-colors"
+            >
+              <div className="w-7 h-7 rounded-lg bg-orange-500/15 flex items-center justify-center shrink-0">
+                <span className="text-xs">📅</span>
+              </div>
+              <span className="flex-1 text-left">簽到日曆</span>
+              <ChevronDown className={`w-3 h-3 text-slate-500 transition-transform duration-200 ${showCalendar ? "rotate-180" : ""}`} />
+            </button>
+            {showCalendar && (
+              <div className="mx-2 mb-1 bg-slate-800/60 rounded-xl border border-orange-500/20 overflow-hidden">
+                <CheckInCalendarPanel onClose={() => setShowCalendar(false)} />
+              </div>
+            )}
+
+            {/* 兑換碼入口 */}
             <RedeemCodeEntry onClose={() => setOpen(false)} />
 
             {/* 登出 */}

@@ -116,6 +116,33 @@ function buildLuckyStrategy(favorableElements: string, unfavorableElements: stri
 }
 
 // ─── 生命靈數計算函數 ─────────────────────────────────────────────────────────
+// 每張塔羅牌的個性特質（用於靈數說明）
+const TAROT_PERSONALITY: Record<number, string> = {
+  0:  "自由靈魂，不受框架束縛，充滿冒險精神與直覺力",
+  1:  "意志力強，善於創造與溝通，行動力十足",
+  2:  "直覺敏銳，神秘內斂，善於感知隱藏的真相",
+  3:  "豐盛創造力，溫暖滋養，重視美感與生活品質",
+  4:  "穩重踏實，重視秩序與規則，具有強大的執行力",
+  5:  "智慧傳承，善於引導他人，重視傳統與精神成長",
+  6:  "重視關係與和諧，感情豐富，善於在選擇中尋找平衡",
+  7:  "意志堅定，自律自強，善於克服挑戰向前推進",
+  8:  "內在力量強大，溫柔而堅韌，善於駕馭情緒與本能",
+  9:  "深思熟慮，獨立內省，追求智慧與靈性的深度",
+  10: "適應力強，善於把握機遇，理解萬物循環的智慧",
+  11: "公正理性，重視平衡與真理，善於做出客觀判斷",
+  12: "願意犧牲與等待，從不同角度看待事物，具有靈性洞察",
+  13: "善於轉化與蛻變，放下舊有執念，迎接全新的開始",
+  14: "耐心調和，善於整合對立，追求身心靈的平衡",
+  15: "務實直接，了解人性慾望，善於在物質世界中運作",
+  16: "勇於打破舊有框架，接受突破性的改變與啟示",
+  17: "樂觀開朗，充滿希望與靈感，相信未來的美好",
+  18: "直覺豐富，情感深邃，善於探索潛意識與夢境",
+  19: "充滿活力與自信，樂觀積極，帶給周圍溫暖與光明",
+  20: "善於反思與覺醒，重視使命感，勇於回應內心的呼喚",
+  21: "整合圓滿，善於在各領域達到成就，具有全方位的視野",
+  22: "大智若愚，超越常規思維，以純粹的信念踏上未知旅程",
+};
+
 const TAROT_CARDS: Record<number, { name: string; element: string }> = {
   1: { name: "魔術師", element: "🔥" },
   2: { name: "女祭司", element: "💧" },
@@ -140,45 +167,82 @@ const TAROT_CARDS: Record<number, { name: string; element: string }> = {
   21: { name: "世界", element: "🌍" },
   22: { name: "愚者", element: "💨" },
 };
-function reduceToSingleDigitOrMaster(n: number): number {
-  while (n > 22) {
-    const s = n.toString().split('').reduce((a, d) => a + parseInt(d), 0);
-    n = s;
+/**
+ * 歸約函數：超過22才繼續相加，並記錄拆分前的兩位數作為高階靈數
+ * 高階靈數：當兩位數相加得到結果時，十位數和個位數各自對應的塔羅牌個性會更加鮮明
+ */
+function reduce22WithHigher(n: number): { result: number; higherNums?: number[] } {
+  if (n <= 22) return { result: n };
+  const higherNums: number[] = [];
+  let cur = n;
+  while (cur > 22) {
+    const s = cur.toString();
+    if (s.length === 2) {
+      const d1 = parseInt(s[0]), d2 = parseInt(s[1]);
+      if (d1 >= 1) higherNums.push(d1);
+      if (d2 >= 1) higherNums.push(d2);
+    }
+    cur = s.split('').reduce((a, d) => a + parseInt(d), 0);
   }
-  return n;
+  // deduplicate without Set spread for TS compatibility
+  const seen: number[] = [];
+  for (const n of higherNums) { if (!seen.includes(n)) seen.push(n); }
+  return { result: cur, higherNums: seen.length > 0 ? seen : undefined };
 }
-function calcLifeNumbers(birthDate: string): { outer: { num: number; name: string; element: string }; middle: { num: number; name: string; element: string }; primary: { num: number; name: string; element: string }; soul: { num: number; name: string; element: string } } | null {
+
+/**
+ * 正確的生命靈數計算邏輯（蘇祐震塔羅系統）
+ *
+ * 外層靈數（生日展現）：日期本身 ≤22 直接用，>22 才拆位數相加
+ *   - ex: 16日 → 外層=16（塔），不是1+6=7
+ *   - ex: 26日 → 26>22，2+6=8（力量），高階靈數為2號女祭司和6號戀人
+ *
+ * 中層靈數（天賦使命）：外層靈數 + 月份處理結果
+ *   - 月份 ≥10 才各位數相加；月份 <10 直接用原數
+ *
+ * 靈魂數（年度輔助牌）：年份各位數相加，22保留
+ *
+ * 主要靈數（靈魂渴望）：中層靈數 + 靈魂數
+ */
+function calcLifeNumbers(birthDate: string): {
+  outer: { num: number; name: string; element: string; higherNums?: number[] };
+  middle: { num: number; name: string; element: string; higherNums?: number[] };
+  primary: { num: number; name: string; element: string; higherNums?: number[] };
+  soul: { num: number; name: string; element: string };
+} | null {
   const parts = birthDate.split('-');
   if (parts.length !== 3) return null;
   const [yStr, mStr, dStr] = parts;
   const y = parseInt(yStr), m = parseInt(mStr), d = parseInt(dStr);
   if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
 
-  // 外層靈數（生日展現）= 出生日期各位數相加，超過22才繼續相加
-  const outerRaw = d.toString().split('').reduce((a, c) => a + parseInt(c), 0);
-  const outer = reduceToSingleDigitOrMaster(outerRaw);
+  // 外層靈數：日期本身 ≤22 直接用，>22 才拆位數相加
+  const outerReduced = reduce22WithHigher(d);
+  const outer = outerReduced.result;
 
-  // 中層靈數（天賦使命）= 月份各位數 + 日期各位數相加，超過22才繼續相加
-  const middleRaw = m.toString().split('').reduce((a, c) => a + parseInt(c), 0)
-    + d.toString().split('').reduce((a, c) => a + parseInt(c), 0);
-  const middle = reduceToSingleDigitOrMaster(middleRaw);
+  // 月份處理：月份 ≥10 才各位數相加
+  const monthProcessed = m >= 10 ? Math.floor(m / 10) + (m % 10) : m;
 
-  // 年度靈數 = 年份各位數相加，超過22才繼續相加
+  // 中層靈數：外層靈數 + 月份處理結果
+  const middleRaw = outer + monthProcessed;
+  const middleReduced = reduce22WithHigher(middleRaw);
+  const middle = middleReduced.result;
+
+  // 靈魂數：年份各位數相加，22保留
   const yearRaw = y.toString().split('').reduce((a, c) => a + parseInt(c), 0);
-  const yearNum = reduceToSingleDigitOrMaster(yearRaw);
+  const soulReduced = reduce22WithHigher(yearRaw);
+  const soul = soulReduced.result;
 
-  // 主要靈數（靈魂渴望）= 中層靈數 + 年度靈數，超過22才繼續相加
-  const primaryRaw = middle + yearNum;
-  const primary = reduceToSingleDigitOrMaster(primaryRaw);
-
-  // 靈魂數（生命主題）= 年度靈數（與主要靈數共用年份計算）
-  const soul = yearNum;
+  // 主要靈數：中層靈數 + 靈魂數
+  const primaryRaw = middle + soul;
+  const primaryReduced = reduce22WithHigher(primaryRaw);
+  const primary = primaryReduced.result;
 
   const getCard = (n: number) => TAROT_CARDS[n] ?? { name: `第${n}號`, element: "✨" };
   return {
-    outer: { num: outer, ...getCard(outer) },
-    middle: { num: middle, ...getCard(middle) },
-    primary: { num: primary, ...getCard(primary) },
+    outer: { num: outer, ...getCard(outer), higherNums: outerReduced.higherNums },
+    middle: { num: middle, ...getCard(middle), higherNums: middleReduced.higherNums },
+    primary: { num: primary, ...getCard(primary), higherNums: primaryReduced.higherNums },
     soul: { num: soul, ...getCard(soul) },
   };
 }
@@ -497,8 +561,8 @@ export default function ProfilePage() {
               <div className="flex items-center justify-center md:justify-start gap-3 mb-1">
                 <h1 className="text-3xl font-bold text-orange-400">{displayName}</h1>
                 {dayMasterLabel && (
-                  <span className="text-sm bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/30">
-                    {dayMasterLabel}日主
+                  <span className="text-sm bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/30" title="日主是你天生的五行屬性，也是你所有行動的核心能量">
+                    {dayMasterLabel}（你的天生屬性）
                   </span>
                 )}
               </div>
@@ -526,7 +590,7 @@ export default function ProfilePage() {
             <div className="flex-shrink-0 flex flex-col gap-2 text-center">
               {effectiveProfile?.favorableElements ? (
                 <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl px-4 py-3">
-                  <div className="text-xs text-gray-400 mb-1">喜用神</div>
+                  <div className="text-xs text-gray-400 mb-1" title="喜用神是對你最有幫助的五行能量，穿搭、飲食、行動都應優先選擇">對你有益的五行</div>
                   <div className="text-orange-300 font-bold">
                     {effectiveProfile.favorableElements.split(",").map(e => ELEMENT_ZH[e.trim()] ?? e.trim()).join("・")}
                   </div>
@@ -539,7 +603,7 @@ export default function ProfilePage() {
               )}
               {effectiveProfile?.unfavorableElements && (
                 <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2">
-                  <div className="text-xs text-gray-400 mb-0.5">忌神</div>
+                  <div className="text-xs text-gray-400 mb-0.5" title="忌神是對你不利的五行能量，穿搭、飲食、行動將盡量避免">對你不利的五行</div>
                   <div className="text-red-300 font-bold text-sm">
                     {effectiveProfile.unfavorableElements.split(",").map(e => ELEMENT_ZH[e.trim()] ?? e.trim()).join("・")}
                   </div>
@@ -577,9 +641,10 @@ export default function ProfilePage() {
 
         {/* ─── 八字四柱 ─── */}
         <section>
-          <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-bold text-orange-400 mb-2 flex items-center gap-2">
             <span>🏮</span> 八字四柱
           </h2>
+          <p className="text-xs text-gray-500 mb-4">八字就是你出生的「年、月、日、時」四個天干地支組合，每一柱都代表一個能量層次。日柱的天干就是你的「日主」，也是你最核心的天生屬性。</p>
           {fourPillarsData ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {fourPillarsData.map((p) => (
@@ -620,12 +685,13 @@ export default function ProfilePage() {
         <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 五行圓餅圖 */}
           <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
-            <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
-              <span>⚖️</span> 本命五行比例
+            <h2 className="text-lg font-bold text-orange-400 mb-1 flex items-center gap-2">
+              <span>⚖️</span> 你的五行能量比例
               {!fourPillarsData && fiveElementsData && (
                 <span className="text-xs text-gray-500 font-normal">（依喜忌神估算）</span>
               )}
             </h2>
+            <p className="text-xs text-gray-500 mb-3">展示你天生命格中木火土金水各占多少。比例越高代表天生越強，比例越低則需要透過穿搭、飲食來補充。</p>
             {fiveElementsData ? (
               <>
                 <div className="h-52">
@@ -666,9 +732,10 @@ export default function ProfilePage() {
 
           {/* 補運策略 */}
           <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
-            <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
-              <span>🎯</span> 終身補運策略
+            <h2 className="text-lg font-bold text-orange-400 mb-1 flex items-center gap-2">
+              <span>🎯</span> 你的補運方向
             </h2>
+            <p className="text-xs text-gray-500 mb-3">根據你的喜用神（對你有益的五行）所計算的終身補運優先順序。這個順序終身不變，是所有穿搭、飲食、行動建議的根源。</p>
             {luckyStrategyData ? (
               <>
                 <p className="text-xs text-gray-400 mb-4">
@@ -719,9 +786,10 @@ export default function ProfilePage() {
 
         {/* ─── 大限流年 ─── */}
         <section>
-          <h2 className="text-lg font-bold text-orange-400 mb-4 flex items-center gap-2">
-            <span>📊</span> 當前大限與流年
+          <h2 className="text-lg font-bold text-orange-400 mb-1 flex items-center gap-2">
+            <span>📊</span> 你的人生週期分析
           </h2>
+          <p className="text-xs text-gray-500 mb-4">大限是每 10 年一個大周期，流年是每年的小周期。就像天氣預報一樣，可以幫你知道現在處於什麼能量階段。</p>
           <div className="bg-gray-900 border border-orange-500/30 rounded-xl p-5">
             {ageInfo ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -778,10 +846,30 @@ export default function ProfilePage() {
           const lifeNums = birthDateStr ? calcLifeNumbers(birthDateStr) : null;
           if (!lifeNums) return null;
           const cards = [
-            { label: "外層靈數（生日展現）", ...lifeNums.outer },
-            { label: "中層靈數（天賦使命）", ...lifeNums.middle },
-            { label: "主要靈數（靈魂渴望）", ...lifeNums.primary },
-            { label: "靈魂數（生命主題）", ...lifeNums.soul },
+            {
+              label: "外層靈數",
+              sublabel: "別人眼中的你",
+              desc: TAROT_PERSONALITY[lifeNums.outer.num] ?? '',
+              ...lifeNums.outer
+            },
+            {
+              label: "中層靈數",
+              sublabel: "你的天賦使命",
+              desc: TAROT_PERSONALITY[lifeNums.middle.num] ?? '',
+              ...lifeNums.middle
+            },
+            {
+              label: "主要靈數",
+              sublabel: "靈魂最深層的渴望",
+              desc: TAROT_PERSONALITY[lifeNums.primary.num] ?? '',
+              ...lifeNums.primary
+            },
+            {
+              label: "靈魂數",
+              sublabel: "常駐身側的導師",
+              desc: TAROT_PERSONALITY[lifeNums.soul.num] ?? '',
+              ...lifeNums.soul
+            },
           ];
           return (
             <section>
@@ -789,14 +877,38 @@ export default function ProfilePage() {
                 <span>🎴</span> 生命靈數與塔羅原型
               </h2>
               <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   {cards.map((t) => (
-                    <div key={t.label} className="bg-gray-800/50 border border-gray-700/30 rounded-xl p-4 text-center">
-                      <div className="text-xs text-gray-400 mb-2">{t.label}</div>
-                      <div className="text-3xl font-bold text-orange-400 mb-1">{t.num}</div>
-                      <div className="text-sm font-bold text-gray-200">{t.element} {t.name}</div>
+                    <div key={t.label} className="bg-gray-800/50 border border-gray-700/30 rounded-xl p-4">
+                      <div className="text-xs text-orange-400 font-bold mb-0.5">{t.label}</div>
+                      <div className="text-[10px] text-gray-500 mb-3">{t.sublabel}</div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="text-4xl font-bold text-orange-400">{t.num}</div>
+                        <div>
+                          <div className="text-sm font-bold text-gray-200">{t.element} {t.name}</div>
+                          {t.higherNums && t.higherNums.length > 0 && (
+                            <div className="text-[10px] text-purple-400 mt-0.5">
+                              融入{t.higherNums.map(n => TAROT_CARDS[n]?.name ?? '').filter(Boolean).join('與')}的特質
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-gray-500 leading-relaxed">{t.desc}</p>
+                      {t.higherNums && t.higherNums.length > 0 && (
+                        <p className="text-[10px] text-purple-300/70 leading-relaxed mt-1">
+                          {t.higherNums.map(n => TAROT_CARDS[n]?.name ?? '').filter(Boolean).join('、')}的特質融入其中，讓這個面向更加鮮明立體。
+                        </p>
+                      )}
                     </div>
                   ))}
+                </div>
+                <div className="mt-4 bg-purple-900/10 border border-purple-500/20 rounded-lg p-3">
+                  <div className="text-xs text-purple-400 font-bold mb-1">💡 靈數融合特質</div>
+                  <p className="text-[11px] text-gray-400 leading-relaxed">
+                    有些靈數不只是單一塔羅牌的個性，而是將多張牌的特質融入其中。
+                    這讓你的個性更具層次感——主要靈數的特質為主導，其他融入的牌則在底層补足與豐富主要個性，
+                    形成一種独特的組合能量。
+                  </p>
                 </div>
               </div>
             </section>
