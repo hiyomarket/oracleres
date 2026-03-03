@@ -29,7 +29,8 @@ export default function CasinoPage() {
   const { data: rates } = trpc.exchange.getRates.useQuery();
   const { data: history } = trpc.exchange.getHistory.useQuery({ limit: 10 }, { enabled: !!user });
   const { data: upcomingMatches } = trpc.wbc.getMatches.useQuery({ status: "pending" });
-  const { data: leaderboard } = trpc.wbc.getLeaderboard.useQuery({ limit: 10 });
+  const [leaderboardPeriod, setLeaderboardPeriod] = useState<"week" | "month">("week");
+  const { data: leaderboard } = trpc.wbc.getLeaderboard.useQuery({ limit: 10, period: leaderboardPeriod });
 
   const [p2cAmount, setP2cAmount] = useState("");
   const [c2pAmount, setC2pAmount] = useState("");
@@ -254,11 +255,31 @@ export default function CasinoPage() {
       <div className="max-w-4xl mx-auto px-4 pb-8">
         <Card className="bg-slate-900/60 border-slate-700">
           <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🏆</span>
-              <div>
-                <CardTitle className="text-amber-300 text-lg">本週 WBC 競猜王</CardTitle>
-                <p className="text-slate-500 text-xs mt-0.5">本週（週一至今）贏得遊戲點最多的玩家</p>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🏆</span>
+                <div>
+                  <CardTitle className="text-amber-300 text-lg">
+                    {leaderboardPeriod === "week" ? "本週" : "本月"} WBC 競猜王
+                  </CardTitle>
+                  <p className="text-slate-500 text-xs mt-0.5">
+                    {leaderboardPeriod === "week" ? "本週（週一至今）" : "本月（1日至今）"}贏得遊戲點最多的玩家
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setLeaderboardPeriod("week")}
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                    leaderboardPeriod === "week" ? "bg-amber-600 text-black" : "bg-slate-800 text-slate-400 hover:text-white"
+                  }`}
+                >本週</button>
+                <button
+                  onClick={() => setLeaderboardPeriod("month")}
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                    leaderboardPeriod === "month" ? "bg-amber-600 text-black" : "bg-slate-800 text-slate-400 hover:text-white"
+                  }`}
+                >本月</button>
               </div>
             </div>
           </CardHeader>
@@ -266,7 +287,7 @@ export default function CasinoPage() {
             {!leaderboard || leaderboard.length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-4xl mb-3">⚾</div>
-                <p className="text-slate-500 text-sm">本週還沒有競猜記錄</p>
+                <p className="text-slate-500 text-sm">{leaderboardPeriod === "week" ? "本週" : "本月"}還沒有競猜記錄</p>
                 <p className="text-slate-600 text-xs mt-1">成為第一位 WBC 競猜王！</p>
                 <Link href="/casino/wbc">
                   <Button className="mt-4 bg-amber-600 hover:bg-amber-500 text-black font-semibold text-sm">

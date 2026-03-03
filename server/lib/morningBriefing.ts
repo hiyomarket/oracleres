@@ -9,6 +9,10 @@ import { calculateTarotDailyCard, generateWealthCompass } from "./warRoomEngine"
 import { getMoonPhase } from "./moonPhase";
 import { getBestHours } from "./hourlyEnergy";
 import { notifyOwner } from "../_core/notification";
+import { notifyUser } from "./notifyUser";
+import { getDb } from "../db";
+import { users } from "../../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * 取得台灣當日日期物件（UTC+8）
@@ -135,17 +139,46 @@ ${tenGod.heroScript}
 /**
  * 執行晨報推播
  * 由排程任務呼叫
+ * 1. 透過 notifyOwner 發送 Mail 通知給管理員
+ * 2. 寫入 user_notifications 給所有已登入用戶（通知中心顯示）
  */
 export async function sendMorningBriefing(): Promise<boolean> {
   try {
     const { title, content } = generateMorningBriefingContent();
     console.log(`[MorningBriefing] Sending: ${title}`);
+
+    // 1. Mail 通知管理員
     const success = await notifyOwner({ title, content });
     if (success) {
       console.log("[MorningBriefing] ✅ Morning briefing sent successfully");
     } else {
       console.warn("[MorningBriefing] ⚠️ Failed to send morning briefing");
     }
+
+    // 2. 寫入通知中心給所有用戶（靜默，不影響主流程）
+    try {
+      const db = await getDb();
+      if (db) {
+        const allUsers = await db.select({ id: users.id }).from(users);
+        const briefingDate = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().split('T')[0];
+        // 簡短摘要（取 content 前 120 字）
+        const shortContent = content.replace(/#+\s*/g, '').replace(/\*\*/g, '').replace(/---/g, '').trim().slice(0, 120) + '...';
+        for (const u of allUsers) {
+          await notifyUser({
+            userId: String(u.id),
+            type: 'daily_briefing',
+            title,
+            content: shortContent,
+            linkUrl: '/war-room',
+            relatedId: briefingDate,
+          }).catch(() => {});
+        }
+        console.log(`[MorningBriefing] ✅ Wrote daily_briefing notifications for ${allUsers.length} users`);
+      }
+    } catch (notifyErr) {
+      console.warn("[MorningBriefing] ⚠️ Failed to write user notifications:", notifyErr);
+    }
+
     return success;
   } catch (err) {
     console.error("[MorningBriefing] ❌ Error sending morning briefing:", err);

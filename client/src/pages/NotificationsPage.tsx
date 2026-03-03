@@ -20,6 +20,9 @@ const TYPE_CONFIG: Record<string, { icon: string; color: string; label: string }
   system: { icon: "🔔", color: "text-blue-400", label: "系統通知" },
   reward: { icon: "🎁", color: "text-green-400", label: "獎勵" },
   announcement: { icon: "📢", color: "text-purple-400", label: "公告" },
+  daily_briefing: { icon: "🌅", color: "text-sky-400", label: "每日晨報" },
+  fortune_reminder: { icon: "🔮", color: "text-violet-400", label: "命格提醒" },
+  scratch_milestone: { icon: "🎰", color: "text-yellow-400", label: "刮刮樂里程碑" },
 };
 
 export default function NotificationsPage() {
@@ -137,7 +140,7 @@ export default function NotificationsPage() {
             <p className="text-slate-500 text-sm">
               {showUnreadOnly ? "沒有未讀通知" : "目前沒有通知"}
             </p>
-            <p className="text-slate-600 text-xs">參與 WBC 競猜後，結算結果會在此顯示</p>
+            <p className="text-slate-600 text-xs mt-1">每日晨報、WBC 競猜結算、刮刮樂里程碑等通知會在此顯示</p>
           </div>
         ) : (
           notifications.map((notif) => {

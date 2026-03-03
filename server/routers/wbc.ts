@@ -276,24 +276,38 @@ export const wbcRouter = router({
       };
     }),
 
-  // 本週競猜王排行榜（公開）
+  // 競猜王排行榜（公開）- 支援本週/本月切換
   getLeaderboard: publicProcedure
     .input(z.object({
       limit: z.number().int().min(1).max(20).default(10),
+      period: z.enum(["week", "month"]).default("week"),
     }))
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return [];
       
-      // 本週開始時間（UTC 週一 00:00）
+      // 計算期間開始時間（台灣時間 UTC+8）
       const now = new Date();
-      const dayOfWeek = now.getUTCDay(); // 0=Sun, 1=Mon...
-      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-      const weekStart = new Date(now);
-      weekStart.setUTCDate(now.getUTCDate() - daysFromMonday);
-      weekStart.setUTCHours(0, 0, 0, 0);
+      const twNow = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+      let periodStart: Date;
+
+      if (input.period === "month") {
+        // 本月1日 00:00 台灣時間（轉回 UTC）
+        const monthStart = new Date(Date.UTC(twNow.getUTCFullYear(), twNow.getUTCMonth(), 1, 0, 0, 0));
+        // 台灣時間1日0時 = UTC 前一日 16:00
+        periodStart = new Date(monthStart.getTime() - 8 * 60 * 60 * 1000);
+      } else {
+        // 本週週一 00:00 台灣時間
+        const dayOfWeek = twNow.getUTCDay(); // 0=Sun, 1=Mon...
+        const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        const weekMonday = new Date(twNow);
+        weekMonday.setUTCDate(twNow.getUTCDate() - daysFromMonday);
+        weekMonday.setUTCHours(0, 0, 0, 0);
+        // 台灣時間週一0時 = UTC 前一日 16:00
+        periodStart = new Date(weekMonday.getTime() - 8 * 60 * 60 * 1000);
+      }
       
-      // 查詢本週所有獲勝下注
+      // 查詢期間所有獲勝下注
       const wonBets = await db.select({
         userId: wbcBets.userId,
         actualWin: wbcBets.actualWin,
@@ -302,7 +316,7 @@ export const wbcRouter = router({
       }).from(wbcBets)
         .where(and(
           eq(wbcBets.status, "won"),
-          gte(wbcBets.createdAt, weekStart)
+          gte(wbcBets.createdAt, periodStart)
         ));
       
       // 計算每位用戶的統計
@@ -314,12 +328,12 @@ export const wbcRouter = router({
         statsMap[bet.userId].winCount++;
       }
       
-      // 查詢本週所有下注（含輸）以計算勝率
-      const allWeekBets = await db.select({ userId: wbcBets.userId })
+      // 查詢期間所有下注（含輸）以計算勝率
+      const allPeriodBets = await db.select({ userId: wbcBets.userId })
         .from(wbcBets)
-        .where(gte(wbcBets.createdAt, weekStart));
+        .where(gte(wbcBets.createdAt, periodStart));
       const totalBetCountMap: Record<string, number> = {};
-      for (const bet of allWeekBets) {
+      for (const bet of allPeriodBets) {
         totalBetCountMap[bet.userId] = (totalBetCountMap[bet.userId] ?? 0) + 1;
       }
       

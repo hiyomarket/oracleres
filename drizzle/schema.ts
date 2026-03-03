@@ -923,7 +923,7 @@ export const userNotifications = mysqlTable("user_notifications", {
   // 接收通知的用戶 ID
   userId: varchar("userId", { length: 100 }).notNull(),
   // 通知類型
-  type: mysqlEnum("type", ["wbc_result", "system", "reward", "announcement"]).notNull().default("system"),
+  type: mysqlEnum("type", ["wbc_result", "system", "reward", "announcement", "daily_briefing", "fortune_reminder", "scratch_milestone"]).notNull().default("system"),
   // 通知標題
   title: varchar("title", { length: 200 }).notNull(),
   // 通知內容
