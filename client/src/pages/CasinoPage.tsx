@@ -28,6 +28,7 @@ export default function CasinoPage() {
   const { data: rates } = trpc.exchange.getRates.useQuery();
   const { data: history } = trpc.exchange.getHistory.useQuery({ limit: 10 }, { enabled: !!user });
   const { data: upcomingMatches } = trpc.wbc.getMatches.useQuery({ status: "pending" });
+  const { data: leaderboard } = trpc.wbc.getLeaderboard.useQuery({ limit: 10 });
 
   const [p2cAmount, setP2cAmount] = useState("");
   const [c2pAmount, setC2pAmount] = useState("");
@@ -245,6 +246,70 @@ export default function CasinoPage() {
             </CardContent>
           </Card>
         )}
+      </div>
+
+      {/* 本週競猜王排行榜 */}
+      <div className="max-w-4xl mx-auto px-4 pb-8">
+        <Card className="bg-slate-900/60 border-slate-700">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🏆</span>
+              <div>
+                <CardTitle className="text-amber-300 text-lg">本週 WBC 競猜王</CardTitle>
+                <p className="text-slate-500 text-xs mt-0.5">本週（週一至今）贏得遊戲點最多的玩家</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {!leaderboard || leaderboard.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-3">⚾</div>
+                <p className="text-slate-500 text-sm">本週還沒有競猜記錄</p>
+                <p className="text-slate-600 text-xs mt-1">成為第一位 WBC 競猜王！</p>
+                <Link href="/casino/wbc">
+                  <Button className="mt-4 bg-amber-600 hover:bg-amber-500 text-black font-semibold text-sm">
+                    前往競猜
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {leaderboard.map((entry) => (
+                  <div key={entry.userId}
+                    className={`flex items-center gap-3 p-3 rounded-lg border ${
+                      entry.rank === 1 ? "bg-amber-500/10 border-amber-500/30" :
+                      entry.rank === 2 ? "bg-slate-400/10 border-slate-400/20" :
+                      entry.rank === 3 ? "bg-orange-700/10 border-orange-700/20" :
+                      "bg-slate-800/40 border-slate-700/30"
+                    }`}
+                  >
+                    {/* 名次 */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                      entry.rank === 1 ? "bg-amber-500 text-black" :
+                      entry.rank === 2 ? "bg-slate-400 text-black" :
+                      entry.rank === 3 ? "bg-orange-700 text-white" :
+                      "bg-slate-700 text-slate-400"
+                    }`}>
+                      {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : entry.rank}
+                    </div>
+                    {/* 用戶名 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white font-medium text-sm truncate">{entry.name}</div>
+                      <div className="text-slate-500 text-xs">
+                        {entry.winCount} 場得獎／{entry.totalBetCount} 場下注（勝率 {entry.winRate}%）
+                      </div>
+                    </div>
+                    {/* 獲得遠戲點 */}
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-amber-400 font-bold text-sm">+{entry.totalWin.toLocaleString()}</div>
+                      <div className="text-slate-600 text-xs">遊戲點</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

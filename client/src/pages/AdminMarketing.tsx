@@ -103,6 +103,7 @@ export default function AdminMarketing() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showSettleDialog, setShowSettleDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [editingMatch, setEditingMatch] = useState<any>(null);
   const [settlingMatch, setSettlingMatch] = useState<any>(null);
   const [form, setForm] = useState<MatchForm>(EMPTY_FORM);
@@ -307,11 +308,11 @@ export default function AdminMarketing() {
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => importSchedule.mutate()}
+                  onClick={() => setShowImportDialog(true)}
                   disabled={importSchedule.isPending}
                   className="border-amber-600 text-amber-400 hover:bg-amber-600/10 text-sm"
                 >
-                  {importSchedule.isPending ? "匯入中..." : "📥 匯入預設賽程"}
+                  {importSchedule.isPending ? "匯入中..." : "📥 匯入完整賽程（40場）"}
                 </Button>
                 <Button
                   onClick={() => { setForm(EMPTY_FORM); setShowCreateDialog(true); }}
@@ -454,6 +455,38 @@ export default function AdminMarketing() {
             <Button onClick={handleSettle} disabled={settleMatch.isPending}
               className="bg-green-600 hover:bg-green-500 text-white font-semibold">
               {settleMatch.isPending ? "結算中..." : "確認結算"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 匯入確認對話框 */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-amber-300">📥 匯入 WBC 2026 完整賽程</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-slate-300">
+            <p>即將匯入 <span className="text-amber-400 font-bold">40 場</span> WBC 2026 小組賽賽事，涵蓋：</p>
+            <ul className="list-disc list-inside space-y-1 text-slate-400">
+              <li>A 組（聖胡安）：波多黎各、哥倫比亞、尼加拉瓜、巴拿馬</li>
+              <li>B 組（休士頓）：美國、墨西哥、巴西、古巴</li>
+              <li>C 組（東京）：日本、中華臺北、南韓、澳大利亞、捷克</li>
+              <li>D 組（邁阿密）：多明尼加、委內瑞拉、荷蘭、以色列</li>
+            </ul>
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded p-2 text-amber-300 text-xs">
+              ⚠️ 此操作將清除所有現有「待開賽」狀態的賽事，已結算的歷史記錄不受影響。
+            </div>
+            <p className="text-slate-400">所有賽事均已預設賠率，匯入後可在管理介面逐一調整。</p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowImportDialog(false)} className="text-slate-400">取消</Button>
+            <Button
+              onClick={() => { importSchedule.mutate(); setShowImportDialog(false); }}
+              disabled={importSchedule.isPending}
+              className="bg-amber-600 hover:bg-amber-500 text-black font-semibold"
+            >
+              {importSchedule.isPending ? "匯入中..." : "確認匯入"}
             </Button>
           </DialogFooter>
         </DialogContent>

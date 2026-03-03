@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import { users, wbcMatches, wbcBets } from "../../drizzle/schema";
-import { eq, and, desc, inArray, sql } from "drizzle-orm";
+import { eq, and, desc, gte, inArray, sql } from "drizzle-orm";
 import { notifyOwner } from "../_core/notification";
 
 // 分差競猜賠率
@@ -224,18 +224,125 @@ export const wbcRouter = router({
       }
 
       // 通知管理員
+      const winnerTeamName = input.winningTeam === "A" ? match.teamA : input.winningTeam === "B" ? match.teamB : "平局";
       await notifyOwner({
         title: `WBC 結算完成：${match.teamA} vs ${match.teamB}`,
-        content: `獲勝方：${input.winningTeam === "A" ? match.teamA : input.winningTeam === "B" ? match.teamB : "平局"}，共 ${bets.length} 筆下注，${winnersCount} 筆獲勝，總派彩 ${totalPayout} 遊戲點`,
+        content: `獲勝方：${winnerTeamName}，共 ${bets.length} 筆下注，${winnersCount} 筆獲勝，總派彩 ${totalPayout} 遊戲點`,
       });
+
+      // 推播贏家通知（查詢每位贏家的用戶資訊）
+      const winningBets = await db.select({ userId: wbcBets.userId, actualWin: wbcBets.actualWin })
+        .from(wbcBets)
+        .where(and(eq(wbcBets.matchId, input.matchId), eq(wbcBets.status, "won")));
+      
+      // 批量取得贏家用戶名
+      const winnerUserIds = Array.from(new Set(winningBets.map(b => b.userId)));
+      if (winnerUserIds.length > 0) {
+        const winnerUsers = await db.select({ id: users.id, name: users.name })
+          .from(users)
+          .where(inArray(users.id, winnerUserIds));
+        const userNameMap = Object.fromEntries(winnerUsers.map(u => [u.id, u.name ?? "天命玩家"]));
+        
+        // 對每位贏家發送通知（合併同一用戶的多筆下注）
+        const winnerPayoutMap: Record<string, number> = {};
+        for (const bet of winningBets) {
+          winnerPayoutMap[bet.userId] = (winnerPayoutMap[bet.userId] ?? 0) + (bet.actualWin ?? 0);
+        }
+        for (const [userId, payout] of Object.entries(winnerPayoutMap)) {
+          const userName = userNameMap[userId] ?? "天命玩家";
+          await notifyOwner({
+            title: `🏆 ${userName} WBC 競猜獲勝！`,
+            content: `恭喜 ${userName} 在「${match.teamA} vs ${match.teamB}」競猜中獲勝，贏得 ${payout} 遊戲點！`,
+          }).catch(() => {}); // 忽略通知失敗
+        }
+      }
 
       return {
         success: true,
         totalBets: bets.length,
         winnersCount,
         totalPayout,
-        message: `結算完成！共 ${bets.length} 筆下注，${winnersCount} 筆獲勝`,
+        message: `結算完成！共 ${bets.length} 筆下注，${winnersCount} 筆獲勝，總派彩 ${totalPayout} 遊戲點`,
       };
+    }),
+
+  // 本週競猜王排行榜（公開）
+  getLeaderboard: publicProcedure
+    .input(z.object({
+      limit: z.number().int().min(1).max(20).default(10),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      
+      // 本週開始時間（UTC 週一 00:00）
+      const now = new Date();
+      const dayOfWeek = now.getUTCDay(); // 0=Sun, 1=Mon...
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const weekStart = new Date(now);
+      weekStart.setUTCDate(now.getUTCDate() - daysFromMonday);
+      weekStart.setUTCHours(0, 0, 0, 0);
+      
+      // 查詢本週所有獲勝下注
+      const wonBets = await db.select({
+        userId: wbcBets.userId,
+        actualWin: wbcBets.actualWin,
+        amount: wbcBets.amount,
+        createdAt: wbcBets.createdAt,
+      }).from(wbcBets)
+        .where(and(
+          eq(wbcBets.status, "won"),
+          gte(wbcBets.createdAt, weekStart)
+        ));
+      
+      // 計算每位用戶的統計
+      const statsMap: Record<string, { totalWin: number; totalBet: number; winCount: number }> = {};
+      for (const bet of wonBets) {
+        if (!statsMap[bet.userId]) statsMap[bet.userId] = { totalWin: 0, totalBet: 0, winCount: 0 };
+        statsMap[bet.userId].totalWin += bet.actualWin ?? 0;
+        statsMap[bet.userId].totalBet += bet.amount;
+        statsMap[bet.userId].winCount++;
+      }
+      
+      // 查詢本週所有下注（含輸）以計算勝率
+      const allWeekBets = await db.select({ userId: wbcBets.userId })
+        .from(wbcBets)
+        .where(gte(wbcBets.createdAt, weekStart));
+      const totalBetCountMap: Record<string, number> = {};
+      for (const bet of allWeekBets) {
+        totalBetCountMap[bet.userId] = (totalBetCountMap[bet.userId] ?? 0) + 1;
+      }
+      
+      // 排序取前 N 名
+      const sorted = Object.entries(statsMap)
+        .map(([userId, stats]) => ({
+          userId,
+          totalWin: stats.totalWin,
+          winCount: stats.winCount,
+          totalBetCount: totalBetCountMap[userId] ?? stats.winCount,
+          winRate: Math.round((stats.winCount / (totalBetCountMap[userId] ?? stats.winCount)) * 100),
+        }))
+        .sort((a, b) => b.totalWin - a.totalWin)
+        .slice(0, input.limit);
+      
+      if (sorted.length === 0) return [];
+      
+      // 查詢用戶名（userId 是 string 類型）
+      const userIds = sorted.map(s => s.userId);
+      const userRows = await db.select({ id: users.id, name: users.name })
+        .from(users)
+        .where(sql`${users.id} IN (${sql.join(userIds.map(id => sql`${id}`), sql`, `)})`);
+      const nameMap = Object.fromEntries(userRows.map(u => [String(u.id), u.name ?? "天命玩家"]));
+      
+      return sorted.map((s, idx) => ({
+        rank: idx + 1,
+        userId: s.userId,
+        name: nameMap[s.userId] ?? "天命玩家",
+        totalWin: s.totalWin,
+        winCount: s.winCount,
+        totalBetCount: s.totalBetCount,
+        winRate: s.winRate,
+      }));
     }),
 
   // 取得下注統計（管理員）

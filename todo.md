@@ -1738,3 +1738,21 @@
 - [x] 前端: modules 資料庫新增天命娛樂城項目（sortOrder 13）
 - [x] 前端: App.tsx 新增 /casino 與 /casino/wbc 路由
 - [x] 測試: casino.test.ts（21 項，總計 193 項全部通過）
+
+## 功能升級 v5.1 - 娛樂城後續三項建議（2026-03-03）
+
+### WBC 賽事一鍵匯入與賞率設定
+- [x] 後端: importWbcSchedule 加入預設賞率欄位（winlose/spread/combo 各別設定）
+- [x] 後端: 匯入時包含 WBC 2026 完整 40 場小組賽資料（含日期/隊伍/場地）
+- [x] 前端: AdminMarketing 賽事新增/編輯表單加入賞率輸入欄位
+- [x] 前端: AdminMarketing 一鍵匯入按鈕（含確認對話框）
+
+### 結算後推播贏家通知
+- [x] 後端: settleMatch 結算時查詢所有該場次贏家下注記錄
+- [x] 後端: 對每位贏家呼叫 notifyOwner 推播（標題：WBC 競猜結果、內容：贏得遠戲點）
+- [x] 後端: 結算回傳 winnersCount 與 totalPayout 統計
+
+### 娛樂城首頁本週競猜王排行榜
+- [x] 後端: wbc.getLeaderboard API（本週贏得遠戲點最多的前 10 名）
+- [x] 前端: /casino 首頁底部加入「本週競猜王」排行榜卡片
+- [x] 前端: 排行榜顯示名次/用戶名/本週獲利遠戲點/勝率
