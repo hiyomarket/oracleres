@@ -43,6 +43,12 @@ const NAV_ITEMS = [
     label: "管理邏輯計算",
     desc: "能量規則、手串、餐廳分類",
   },
+  {
+    href: "/admin/marketing",
+    icon: "🎰",
+    label: "行銷中心",
+    desc: "娛樂城、WBC 賽事管理",
+  },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {

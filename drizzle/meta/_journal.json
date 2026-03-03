@@ -246,6 +246,13 @@
       "when": 1772536256043,
       "tag": "0034_luxuriant_khan",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "5",
+      "when": 1772537780792,
+      "tag": "0035_open_squirrel_girl",
+      "breakpoints": true
     }
   ]
 }

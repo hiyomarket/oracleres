@@ -1698,3 +1698,43 @@
 - [x] 後端: 新增 wealth.logEntry API（財運日記記錄）
 - [x] 前端: WealthPage 加入財運日記（記錄今日心得 + 歷史查閱）
 - [x] 前端: WealthPage 加入吉時倒數計時器
+
+## 功能升級 v5.0 - 天命娛樂城 V1.0（2026-03-03）
+
+### 第一部分：後端架構 - 雙軌貨幣基石
+- [x] DB: users 表新增 gameCoins 欄位（integer, default 0）
+- [x] DB: 新增 currency_exchange_logs 表（對換日誌）
+- [x] DB: 新增 wbc_matches 表（WBC 賽事）
+- [x] DB: 新增 wbc_bets 表（用戶下注記錄）
+- [x] DB: 遷移腳本 - 為現有用戶設初始 gameCoins 1000
+- [x] 後端: exchange.getRates（公開，返回對換比例）
+- [x] 後端: exchange.pointsToCoins（積分→遠戲點，含事務）
+- [x] 後端: exchange.coinsToPoints（遠戲點→積分，含每日限額）
+- [x] 後端: wbc.getMatches（獲取賽事列表）
+- [x] 後端: wbc.placeBet（下注，三種玩法）
+- [x] 後端: wbc.getMyBets（查詢我的下注記錄）
+- [x] 後端: wbc.settleMatch（管理員結算，含通知）
+- [x] 後端: marketing.getEconomyConfig（讀取對換配置）
+- [x] 後端: marketing.updateEconomyConfig（管理員更新配置）
+- [x] 後端: marketing.getNewGames（是否有新遠戲，用於 NEW 標籤）
+- [x] 後端: marketing.createMatch（管理員新增賽事）
+- [x] 後端: marketing.updateMatch（管理員更新賽事）
+- [x] 後端: marketing.deleteMatch（管理員刪除賽事）
+
+### 第二部分：後台頁面
+- [x] 前端: /admin/marketing 行銷中心（側邊欄新增大類）
+- [x] 前端: /admin/marketing 經濟系統配置（對換比例 + 每日限額）
+- [x] 前端: /admin/marketing WBC 競猜管理（CRUD + 一鍵結算）
+
+### 第三部分：用戶端頁面
+- [x] 前端: /casino 天命娛樂城門戶頁（積分/遠戲點顯示 + 對換 + 遠戲列表）
+- [x] 前端: /casino/wbc WBC 競猜頁面（賽程列表 + 天命羅盤 + 下注）
+- [x] 前端: WBC 三種玩法（單場勝負 / 積分差競猜 / 天命組合投注）
+- [x] 前端: 天命羅盤按鈕（調用 dailyReport 生成命理風向建議）
+- [x] 前端: 下注模態框（輸入遠戲點 + 餘額校驗 + 確認）
+- [x] 前端: 我的下注記錄（狀態 placed/won/lost）
+
+### 第四部分：導航改造
+- [x] 前端: modules 資料庫新增天命娛樂城項目（sortOrder 13）
+- [x] 前端: App.tsx 新增 /casino 與 /casino/wbc 路由
+- [x] 測試: casino.test.ts（21 項，總計 193 項全部通過）

@@ -161,6 +161,8 @@ export const users = mysqlTable("users", {
   lastDailyCheckIn: varchar("lastDailyCheckIn", { length: 10 }),
   // 連續簽到天數（累積）
   signinStreak: int("signinStreak").notNull().default(0),
+  // 遊戲點餘額（天命娛樂城專用貨幣）
+  gameCoins: int("gameCoins").notNull().default(0),
   // 折扣券暫存（JSON 陣列，待支付系統接入時使用）
   // 例如 [{ "campaign_id": 1, "discount_percentage": 0.8, "expires_at": "2027-01-01" }]
   availableDiscounts: json("availableDiscounts").$type<Array<{ campaign_id: number; discount_percentage?: number; expires_at: string | null }>>(),
@@ -808,3 +810,106 @@ export const wealthJournal = mysqlTable("wealth_journal", {
 });
 export type WealthJournal = typeof wealthJournal.$inferSelect;
 export type InsertWealthJournal = typeof wealthJournal.$inferInsert;
+
+/**
+ * 貨幣兌換日誌
+ * 記錄積分 ↔ 遊戲點的所有兌換操作
+ */
+export const currencyExchangeLogs = mysqlTable("currency_exchange_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // 兌換方向
+  direction: mysqlEnum("direction", ["points_to_coins", "coins_to_points"]).notNull(),
+  // 積分變動量（正數=獲得，負數=扣除）
+  pointsAmount: int("pointsAmount").notNull(),
+  // 遊戲點變動量（正數=獲得，負數=扣除）
+  gameCoinsAmount: int("gameCoinsAmount").notNull(),
+  // 兌換比率（快照）
+  exchangeRate: decimal("exchangeRate", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type CurrencyExchangeLog = typeof currencyExchangeLogs.$inferSelect;
+export type InsertCurrencyExchangeLog = typeof currencyExchangeLogs.$inferInsert;
+
+/**
+ * WBC 賽事資料表
+ * 管理員建立並管理每一場 WBC 比賽
+ */
+export const wbcMatches = mysqlTable("wbc_matches", {
+  id: int("id").autoincrement().primaryKey(),
+  // 客場隊伍名稱
+  teamA: varchar("teamA", { length: 50 }).notNull(),
+  // 主場隊伍名稱
+  teamB: varchar("teamB", { length: 50 }).notNull(),
+  // 客場隊伍旗幟 emoji
+  teamAFlag: varchar("teamAFlag", { length: 10 }).notNull().default("🏳️"),
+  // 主場隊伍旗幟 emoji
+  teamBFlag: varchar("teamBFlag", { length: 10 }).notNull().default("🏳️"),
+  // 比賽時間（UTC 時間戳）
+  matchTime: bigint("matchTime", { mode: "number" }).notNull(),
+  // 比賽場地
+  venue: varchar("venue", { length: 100 }).notNull().default(""),
+  // 分組（A/B/C/D/複賽/決賽）
+  poolGroup: varchar("poolGroup", { length: 20 }).notNull().default(""),
+  // 客場隊伍勝利賠率（固定賠率）
+  rateA: decimal("rateA", { precision: 5, scale: 2 }).notNull().default("1.90"),
+  // 主場隊伍勝利賠率（固定賠率）
+  rateB: decimal("rateB", { precision: 5, scale: 2 }).notNull().default("1.90"),
+  // 比賽狀態
+  status: mysqlEnum("status", ["pending", "live", "finished", "cancelled"]).notNull().default("pending"),
+  // 獲勝隊伍（A/B/draw，結算後填入）
+  winningTeam: varchar("winningTeam", { length: 5 }),
+  // 最終比分（快照，例如 "3-2"）
+  finalScore: varchar("finalScore", { length: 20 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type WbcMatch = typeof wbcMatches.$inferSelect;
+export type InsertWbcMatch = typeof wbcMatches.$inferInsert;
+
+/**
+ * WBC 下注記錄
+ * 記錄每位用戶的每一筆下注
+ */
+export const wbcBets = mysqlTable("wbc_bets", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  matchId: int("matchId").notNull(),
+  // 玩法類型：winlose=單場勝負, spread=分差競猜, combo=天命組合
+  betType: mysqlEnum("betType", ["winlose", "spread", "combo"]).notNull().default("winlose"),
+  // 押注選項（A=客場隊, B=主場隊, spread_1_3=1-3分差, spread_4_6=4-6分差, spread_7plus=7+分差, draw=平局）
+  betOn: varchar("betOn", { length: 30 }).notNull(),
+  // 下注遊戲點數量
+  amount: int("amount").notNull(),
+  // 適用賠率（快照）
+  appliedRate: decimal("appliedRate", { precision: 5, scale: 2 }).notNull(),
+  // 潛在獲利（amount * appliedRate，快照）
+  potentialWin: int("potentialWin").notNull(),
+  // 下注狀態
+  status: mysqlEnum("status", ["placed", "won", "lost", "cancelled"]).notNull().default("placed"),
+  // 實際獲得遊戲點（結算後填入）
+  actualWin: int("actualWin").notNull().default(0),
+  // 組合投注的關聯 matchId 列表（JSON，僅 combo 類型使用）
+  comboMatchIds: json("comboMatchIds").$type<number[]>(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type WbcBet = typeof wbcBets.$inferSelect;
+export type InsertWbcBet = typeof wbcBets.$inferInsert;
+
+/**
+ * 行銷系統配置
+ * 儲存娛樂城的全域配置（兌換比率、每日限額等）
+ */
+export const marketingConfig = mysqlTable("marketing_config", {
+  id: int("id").autoincrement().primaryKey(),
+  // 配置鍵
+  configKey: varchar("configKey", { length: 50 }).notNull().unique(),
+  // 配置值（JSON 格式）
+  configValue: json("configValue").notNull(),
+  // 描述
+  description: varchar("description", { length: 200 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type MarketingConfig = typeof marketingConfig.$inferSelect;
+export type InsertMarketingConfig = typeof marketingConfig.$inferInsert;
