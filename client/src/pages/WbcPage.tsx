@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { SharedNav } from "@/components/SharedNav";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   pending: { label: "待開賽", color: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
@@ -72,6 +73,9 @@ export default function WbcPage() {
   const [betState, setBetState] = useState<BetState>(EMPTY_BET);
   const [showBetDialog, setShowBetDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("matches");
+  // 篩選器狀態
+  const [filterGroup, setFilterGroup] = useState<string>("all");
+  const [filterDate, setFilterDate] = useState<string>("all");
 
   const placeBet = trpc.wbc.placeBet.useMutation({
     onSuccess: (data) => {
@@ -84,8 +88,37 @@ export default function WbcPage() {
     onError: (e) => toast.error(e.message),
   });
 
-  const pendingMatches = useMemo(() => allMatches?.filter(m => m.status === "pending") ?? [], [allMatches]);
-  const finishedMatches = useMemo(() => allMatches?.filter(m => m.status === "finished") ?? [], [allMatches]);
+  // 取得所有日期選項
+  const availableDates = useMemo(() => {
+    if (!allMatches) return [];
+    const dates = new Set(allMatches.map(m => {
+      const d = new Date(m.matchTime);
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    }));
+    return Array.from(dates).sort();
+  }, [allMatches]);
+
+  // 取得所有分組選項
+  const availableGroups = useMemo(() => {
+    if (!allMatches) return [];
+    const groups = new Set(allMatches.map(m => m.poolGroup ?? "").filter(Boolean));
+    return Array.from(groups).sort();
+  }, [allMatches]);
+
+  // 篩選後的賽事
+  const filteredMatches = useMemo(() => {
+    if (!allMatches) return [];
+    return allMatches.filter(m => {
+      const matchDate = new Date(m.matchTime);
+      const dateStr = `${matchDate.getMonth() + 1}/${matchDate.getDate()}`;
+      const groupOk = filterGroup === "all" || m.poolGroup === filterGroup;
+      const dateOk = filterDate === "all" || dateStr === filterDate;
+      return groupOk && dateOk;
+    });
+  }, [allMatches, filterGroup, filterDate]);
+
+  const pendingMatches = useMemo(() => filteredMatches.filter(m => m.status === "pending"), [filteredMatches]);
+  const finishedMatches = useMemo(() => filteredMatches.filter(m => m.status === "finished"), [filteredMatches]);
 
   // 天命羅盤建議
   const lotteryScore = (warRoomData?.wealthCompass as any)?.lotteryIndex ?? 5;
@@ -173,7 +206,8 @@ export default function WbcPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-white">
+    <div className="min-h-screen bg-[#0a0e1a] text-white pb-24">
+      <SharedNav currentPage="casino" />
       {/* 頂部 */}
       <div className="bg-gradient-to-b from-green-900/20 to-[#0a0e1a] border-b border-green-800/30">
         <div className="max-w-4xl mx-auto px-4 py-5">
@@ -218,6 +252,56 @@ export default function WbcPage() {
               <div className="text-xs text-slate-500 mt-0.5">{item.desc}</div>
             </div>
           ))}
+        </div>
+
+        {/* 篩選列 */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-500">分組：</span>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setFilterGroup("all")}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  filterGroup === "all" ? "bg-amber-600 text-black" : "bg-slate-800 text-slate-400 hover:text-white"
+                }`}
+              >全部</button>
+              {availableGroups.map(g => (
+                <button
+                  key={g}
+                  onClick={() => setFilterGroup(g)}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    filterGroup === g ? "bg-amber-600 text-black" : "bg-slate-800 text-slate-400 hover:text-white"
+                  }`}
+                >{g}組</button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-500">日期：</span>
+            <div className="flex gap-1 flex-wrap">
+              <button
+                onClick={() => setFilterDate("all")}
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                  filterDate === "all" ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-400 hover:text-white"
+                }`}
+              >全部</button>
+              {availableDates.map(d => (
+                <button
+                  key={d}
+                  onClick={() => setFilterDate(d)}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    filterDate === d ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-400 hover:text-white"
+                  }`}
+                >{d}</button>
+              ))}
+            </div>
+          </div>
+          {(filterGroup !== "all" || filterDate !== "all") && (
+            <button
+              onClick={() => { setFilterGroup("all"); setFilterDate("all"); }}
+              className="px-2 py-1 rounded text-xs text-slate-500 hover:text-red-400 transition-colors"
+            >清除篩選 ×</button>
+          )}
         </div>
 
         {/* 主要內容 Tabs */}

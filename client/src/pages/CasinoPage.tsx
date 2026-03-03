@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { SharedNav } from "@/components/SharedNav";
 
 export default function CasinoPage() {
   const { user, loading: authLoading } = useAuth();
@@ -78,7 +79,8 @@ export default function CasinoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-white">
+    <div className="min-h-screen bg-[#0a0e1a] text-white pb-24">
+      <SharedNav currentPage="casino" />
       {/* 頂部 Hero */}
       <div className="relative overflow-hidden bg-gradient-to-b from-amber-900/30 to-[#0a0e1a] border-b border-amber-800/30">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-600/10 via-transparent to-transparent" />

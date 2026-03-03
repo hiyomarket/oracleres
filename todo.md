@@ -1756,3 +1756,25 @@
 - [x] 後端: wbc.getLeaderboard API（本週贏得遠戲點最多的前 10 名）
 - [x] 前端: /casino 首頁底部加入「本週競猜王」排行榜卡片
 - [x] 前端: 排行榜顯示名次/用戶名/本週獲利遠戲點/勝率
+
+## 功能升級 v5.2 - 娛樂城導航修復 + WBC 篩選器 + 通知中心（2026-03-03）
+
+### 導航修復
+- [x] 檢查 CasinoPage 返回按鈕、麵包屑、SharedNav 高亮
+- [x] 檢查 WbcPage 返回按鈕、麵包屑、SharedNav 高亮
+- [x] 確保所有娛樂城頁面有明確逃生路線
+
+### WBC 賽事篩選器
+- [x] 前端: WbcPage 加入分組篩選（A/B/C/D 組 + 複賽）
+- [x] 前端: WbcPage 加入日期篩選（依比賽日期）
+- [x] 前端: 篩選器 UI（標籤按鈕組）
+
+### 用戶個人通知中心
+- [x] DB: 新增 user_notifications 表
+- [x] 後端: notifications.getMyNotifications API
+- [x] 後端: notifications.markAsRead API
+- [x] 後端: notifications.markAllRead API
+- [x] 後端: wbc.settleMatch 改為寫入 user_notifications
+- [x] 前端: /notifications 通知列表頁
+- [x] 前端: SharedNav 加入通知鈴鐺圖示 + 未讀紅點
+- [x] 前端: 通知列表顯示已讀/未讀狀態

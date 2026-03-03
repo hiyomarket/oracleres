@@ -2,7 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
 import { getDb } from "../db";
-import { users, wbcMatches, wbcBets } from "../../drizzle/schema";
+import { users, wbcMatches, wbcBets, userNotifications } from "../../drizzle/schema";
 import { eq, and, desc, gte, inArray, sql } from "drizzle-orm";
 import { notifyOwner } from "../_core/notification";
 
@@ -250,10 +250,20 @@ export const wbcRouter = router({
         }
         for (const [userId, payout] of Object.entries(winnerPayoutMap)) {
           const userName = userNameMap[userId] ?? "天命玩家";
+          // 寫入用戶個人通知
+          await db.insert(userNotifications).values({
+            userId,
+            type: "wbc_result",
+            title: `🏆 WBC 競猜獲勝！`,
+            content: `恭喜您在「${match.teamA} vs ${match.teamB}」競猜中獲勝，贏得 ${payout} 遠戲點！`,
+            linkUrl: "/casino/wbc",
+            relatedId: String(input.matchId),
+          }).catch(() => {});
+          // 同時通知管理員
           await notifyOwner({
             title: `🏆 ${userName} WBC 競猜獲勝！`,
-            content: `恭喜 ${userName} 在「${match.teamA} vs ${match.teamB}」競猜中獲勝，贏得 ${payout} 遊戲點！`,
-          }).catch(() => {}); // 忽略通知失敗
+            content: `恭喜 ${userName} 在「${match.teamA} vs ${match.teamB}」競猜中獲勝，贏得 ${payout} 遠戲點！`,
+          }).catch(() => {});
         }
       }
 

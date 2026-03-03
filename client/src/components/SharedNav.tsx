@@ -186,6 +186,30 @@ function CheckInCalendarPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
+/** 通知鈴鐺元件 */
+function NotificationBell() {
+  const [, navigate] = useLocation();
+  const { data: unreadData } = trpc.notifications.getUnreadCount.useQuery(undefined, {
+    staleTime: 30000,
+    refetchInterval: 60000, // 每分鐘自動更新
+  });
+  const count = unreadData?.count ?? 0;
+  return (
+    <button
+      onClick={() => navigate("/notifications")}
+      className="relative p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800/60 transition-colors"
+      title="通知中心"
+    >
+      <span className="text-base">🔔</span>
+      {count > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] rounded-full bg-red-500 border border-[#050d14] flex items-center justify-center text-[9px] font-bold text-white px-0.5">
+          {count > 99 ? "99+" : count}
+        </span>
+      )}
+    </button>
+  );
+}
+
 /** 使用者頭像下拉選單 */
 function UserMenu({ user }: { user: { name?: string | null; openId?: string; planName?: string | null } }) {
   const [open, setOpen] = useState(false);
@@ -465,6 +489,8 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                 📬
               </button>
             )}
+            {/* 通知鈴鐺 */}
+            {user && <NotificationBell />}
             {!user ? (
               <a
                 href={getLoginUrl()}
@@ -508,7 +534,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                 const navPath = (item as { navPath: string }).navPath ?? (item as { path?: string }).path ?? "/";
                 const label = (item as { name?: string; label?: string }).name ?? (item as { label?: string }).label ?? "";
                 const locked = !item.hasAccess;
-                const isActive = navPath === "/" ? currentPage === "warRoom" || currentPage === "" : location.pathname === navPath;
+                const isActive = navPath === "/" ? currentPage === "warRoom" || currentPage === "" : location.pathname === navPath || (navPath !== "/" && location.pathname.startsWith(navPath + "/"));
                 return (
                   <button
                     key={item.id}
@@ -558,7 +584,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                 const navPath = (item as { navPath: string }).navPath ?? "/";
                 const label = (item as { name?: string; label?: string }).name ?? (item as { label?: string }).label ?? "";
                 const locked = !item.hasAccess;
-                const isActive = navPath === "/" ? currentPage === "warRoom" || currentPage === "" : location.pathname === navPath;
+                const isActive = navPath === "/" ? currentPage === "warRoom" || currentPage === "" : location.pathname === navPath || (navPath !== "/" && location.pathname.startsWith(navPath + "/"));
                 return (
                   <button
                     key={item.id}

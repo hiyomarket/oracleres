@@ -20,8 +20,9 @@ import AdminUserGroups from "@/pages/AdminUserGroups";
 import AdminBusinessHub from "@/pages/AdminBusinessHub";
 import AdminLogicConfig from "@/pages/AdminLogicConfig";
 import AdminMarketing from "@/pages/AdminMarketing";
-import CasinoPage from "@/pages/CasinoPage";
-import WbcPage from "@/pages/WbcPage";
+import CasinoPage from "./pages/CasinoPage";
+import WbcPage from "./pages/WbcPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import OutfitPage from "@/pages/OutfitPage";
 import WardrobePage from "@/pages/WardrobePage";
 import DietPage from "@/pages/DietPage";
@@ -51,6 +52,7 @@ function Router() {
         <Route path={"/admin/marketing"} component={AdminMarketing} />
         <Route path={"/casino/wbc"} component={WbcPage} />
         <Route path={"/casino"} component={CasinoPage} />
+        <Route path={"/notifications"} component={NotificationsPage} />
         <Route path={"/outfit"} component={OutfitPage} />
         <Route path={"/wardrobe"} component={WardrobePage} />
         <Route path={"/diet"} component={DietPage} />

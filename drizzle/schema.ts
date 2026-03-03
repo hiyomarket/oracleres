@@ -913,3 +913,28 @@ export const marketingConfig = mysqlTable("marketing_config", {
 });
 export type MarketingConfig = typeof marketingConfig.$inferSelect;
 export type InsertMarketingConfig = typeof marketingConfig.$inferInsert;
+
+/**
+ * 用戶個人通知
+ * 儲存發給每個用戶的個人通知（WBC 競猜結算、系統公告等）
+ */
+export const userNotifications = mysqlTable("user_notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  // 接收通知的用戶 ID
+  userId: varchar("userId", { length: 100 }).notNull(),
+  // 通知類型
+  type: mysqlEnum("type", ["wbc_result", "system", "reward", "announcement"]).notNull().default("system"),
+  // 通知標題
+  title: varchar("title", { length: 200 }).notNull(),
+  // 通知內容
+  content: text("content").notNull(),
+  // 相關連結（可選，如 /casino/wbc）
+  linkUrl: varchar("linkUrl", { length: 500 }),
+  // 是否已讀
+  isRead: tinyint("isRead").notNull().default(0),
+  // 相關資源 ID（如 matchId）
+  relatedId: varchar("relatedId", { length: 100 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type UserNotification = typeof userNotifications.$inferSelect;
+export type InsertUserNotification = typeof userNotifications.$inferInsert;
