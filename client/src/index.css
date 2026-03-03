@@ -208,15 +208,22 @@
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
-  /* 導覽列水平滚動容器：允許 pan-x 手勢 */
+  /* 導覽列水平滾動容器：允許 pan-x 手勢，防止回彈 */
   .nav-scroll-container {
-    touch-action: pan-x;
+    touch-action: pan-x pan-y;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    will-change: scroll-position;
+    /* 防止 iOS 慣性回彈 */
+    -webkit-scroll-snap-type: none;
+    scroll-snap-type: none;
   }
-  /* 導覽列滚動容器內的按鈕不覆蓋 pan-x */
+  /* 導覽列容器內的按鈕：允許 pan-x，禁止 transform 動畫干擾滾動 */
   .nav-scroll-container button,
   .nav-scroll-container [role="button"] {
-    touch-action: pan-x;
+    touch-action: manipulation;
+    /* 禁用 active transform，防止 iOS 把滑動誤判為點擊 */
+    transform: none !important;
   }
 
   /* 手機版卡片間距縮小 */

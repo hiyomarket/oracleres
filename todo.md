@@ -1558,3 +1558,6 @@
 
 ## Bug 修復 v4.13 - SharedNav 功能列水平滑動修復（2026-03-02）
 - [x] 修復 SharedNav 功能列無法左右滑動（touch-action: manipulation 覆蓋了 pan-x 手勢，加入 nav-scroll-container 類別修復）
+
+## Bug 修復 v4.14 - SharedNav 功能列滑動回彈根本修復（2026-03-03）
+- [x] 徹底修復 SharedNav 功能列水平滑動回彈問題（移除 active:scale-95/transition-transform/scale-105、CSS 加入 overscroll-behavior-x:contain、useEffect 改為只執行一次且使用 instant）

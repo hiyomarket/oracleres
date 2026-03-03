@@ -293,8 +293,11 @@ export function SharedNav({ currentPage }: SharedNavProps) {
     setRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
   };
 
-  // 自動捲動到當前活躍項目
+  // 初始化時自動捧動到當前活躍項目（只在導航項目載入完成後執行一次，不跟用戶手動滞動競爭）
+  const hasScrolledRef = useRef(false);
   useEffect(() => {
+    if (navLoading) return; // 等導航資料載入完成
+    if (hasScrolledRef.current) return; // 只執行一次
     const scrollToActive = (ref: React.RefObject<HTMLDivElement | null>) => {
       if (!ref.current) return;
       const el = ref.current;
@@ -303,16 +306,18 @@ export function SharedNav({ currentPage }: SharedNavProps) {
         const btnLeft = activeBtn.offsetLeft;
         const btnWidth = activeBtn.offsetWidth;
         const containerWidth = el.clientWidth;
-        el.scrollTo({ left: btnLeft - containerWidth / 2 + btnWidth / 2, behavior: 'smooth' });
+        // 使用 instant 避免 smooth 動畫與用戶手動滞動衝突
+        el.scrollTo({ left: btnLeft - containerWidth / 2 + btnWidth / 2, behavior: 'instant' as ScrollBehavior });
       }
       checkScrollState(el, ref === desktopNavRef ? setDesktopCanScrollLeft : setMobileCanScrollLeft, ref === desktopNavRef ? setDesktopCanScrollRight : setMobileCanScrollRight);
     };
     const timer = setTimeout(() => {
       scrollToActive(desktopNavRef);
       scrollToActive(mobileNavRef);
-    }, 100);
+      hasScrolledRef.current = true;
+    }, 150);
     return () => clearTimeout(timer);
-  }, [visibleNavItems, currentPage]);
+  }, [visibleNavItems, navLoading]);
 
   return (
     <>
@@ -400,7 +405,6 @@ export function SharedNav({ currentPage }: SharedNavProps) {
             <div
               ref={desktopNavRef}
               className="nav-scroll-container flex items-center overflow-x-auto scrollbar-none gap-1 px-4 py-1.5"
-              style={{ WebkitOverflowScrolling: 'touch' }}
               onScroll={(e) => checkScrollState(e.currentTarget, setDesktopCanScrollLeft, setDesktopCanScrollRight)}
             >
               {visibleNavItems.map((item) => {
@@ -451,7 +455,6 @@ export function SharedNav({ currentPage }: SharedNavProps) {
             <div
               ref={mobileNavRef}
               className="nav-scroll-container flex items-center overflow-x-auto scrollbar-none px-2 py-1"
-              style={{ WebkitOverflowScrolling: "touch" }}
               onScroll={(e) => checkScrollState(e.currentTarget, setMobileCanScrollLeft, setMobileCanScrollRight)}
             >
               {visibleNavItems.map((item) => {
@@ -469,7 +472,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                     }}
                     className={`
                       relative flex flex-col items-center justify-center gap-1
-                      shrink-0 px-3 py-2 min-w-[64px] rounded-xl transition-all active:scale-95
+                      shrink-0 px-3 py-2 min-w-[64px] rounded-xl transition-colors
                       ${locked
                         ? "opacity-40 cursor-not-allowed border border-transparent"
                         : isActive
@@ -478,7 +481,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                       }
                     `}
                   >
-                    <span className={`text-[44px] leading-none transition-transform ${isActive ? 'scale-105' : ''}`}>
+                    <span className="text-[44px] leading-none">
                       {item.icon ?? "🔒"}
                     </span>
                     <span className={`text-[10px] font-medium leading-none tracking-wide ${isActive ? 'text-amber-400' : 'text-slate-500'}`}>
