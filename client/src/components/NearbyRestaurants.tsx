@@ -353,9 +353,26 @@ interface Props {
   weatherEnabled?: boolean;
   /** 天氣主導五行（中文），例如 "火" */
   weatherElement?: string;
+  /** 場景感知：餐別 */
+  mealScene?: "breakfast" | "lunch" | "dinner" | "snack";
+  /** 預算偏好 */
+  budgetPreference?: "budget" | "mid" | "premium";
 }
 
-export function NearbyRestaurants({ supplements, todayDirections, favorableElements, unfavorableElements, weatherEnabled, weatherElement }: Props) {
+const MEAL_SCENE_TITLE: Record<string, string> = {
+  breakfast: "早餐補運餐廳",
+  lunch: "午餐補運餐廳",
+  dinner: "晚餐補運餐廳",
+  snack: "點心補運預先選",
+};
+// 預算 → priceLevel 白名單（Google Places priceLevel 1-4）
+const BUDGET_PRICE_FILTER: Record<string, number[]> = {
+  budget: [0, 1, 2],   // 小資預：$/$$ 層級
+  mid: [0, 2, 3],      // 中資預：$$/$$$
+  premium: [0, 3, 4],  // 高檔：$$$/$$$$ 層級
+};
+
+export function NearbyRestaurants({ supplements, todayDirections, favorableElements, unfavorableElements, weatherEnabled, weatherElement, mealScene, budgetPreference }: Props) {
   // 從後台動態讀取餐廳分類（包含時段控制，fallback 到硬編碼預設値）
   const { data: dbCategories } = trpc.adminConfig.getScheduledActiveCategories.useQuery(undefined, {
     staleTime: 5 * 60 * 1000, // 5 分鐘快取
@@ -382,6 +399,8 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
   const mapReadyRef = useRef(false); // 防止 handleMapReady 被呼叫多次
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [filterAuspicious, setFilterAuspicious] = useState(false);
+  // 預算篩選：從 props 初始化
+  const [filterPriceLevel, setFilterPriceLevel] = useState<number | null>(null);
   const [sortMode, setSortMode] = useState<"distance" | "fengshui">("distance");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
@@ -738,11 +757,17 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                r.fengShui.businessElement === filterElement;
       });
     }
+    // 預算篩選：依 priceLevel 白名單過濾
+    if (filterPriceLevel !== null) {
+      const bp = filterPriceLevel === 2 ? "budget" : filterPriceLevel === 3 ? "mid" : "premium";
+      const allowed = BUDGET_PRICE_FILTER[bp];
+      list = list.filter((r) => !r.priceLevel || allowed.includes(r.priceLevel));
+    }
     if (sortMode === "fengshui") {
       list = list.sort((a, b) => (b.fengShui?.totalScore ?? 0) - (a.fengShui?.totalScore ?? 0));
     }
     return list;
-  }, [restaurants, filterAuspicious, sortMode, maxDistance, minFengShuiScore, filterElement]);
+  }, [restaurants, filterAuspicious, sortMode, maxDistance, minFengShuiScore, filterElement, filterPriceLevel]);
 
   const activeFilterCount = [
     filterAuspicious,
@@ -750,6 +775,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
     minFengShuiScore > 0,
     !!filterElement,
     !!filterCategory,
+    filterPriceLevel !== null,
   ].filter(Boolean).length;
 
   const handleShare = async (r: Restaurant) => {
@@ -805,7 +831,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-base">📍</span>
-          <span className="text-sm font-semibold text-white/80">附近命理推薦餐廳</span>
+          <span className="text-sm font-semibold text-white/80">{mealScene ? MEAL_SCENE_TITLE[mealScene] : "附近命理推薦餐廳"}</span>
           {topElements.length > 0 && (
             <div className="flex gap-1">
               {topElements.map((el) => (
@@ -972,6 +998,25 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                             filterElement === el ? "bg-white/20 border-white/40 text-white" : "bg-white/5 border-white/10 text-white/50"
                           }`}>
                           {el ? `${ELEMENT_KEYWORDS[el]?.emoji} ${el}系` : "全部"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* 預算篩選 */}
+                  <div>
+                    <p className="text-sm font-medium text-white/80 mb-2">💰 預算範圍</p>
+                    <div className="flex gap-2">
+                      {([null, "budget", "mid", "premium"] as const).map((bp) => (
+                        <button key={bp ?? "all"} onClick={() => setFilterPriceLevel(bp === null ? null : bp === "budget" ? 2 : bp === "mid" ? 3 : 4)}
+                          className={`text-xs px-3 py-1.5 rounded-full border transition-all flex-1 ${
+                            (bp === null && filterPriceLevel === null) ||
+                            (bp === "budget" && filterPriceLevel === 2) ||
+                            (bp === "mid" && filterPriceLevel === 3) ||
+                            (bp === "premium" && filterPriceLevel === 4)
+                              ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                              : "bg-white/5 border-white/10 text-white/50"
+                          }`}>
+                          {bp === null ? "不限" : bp === "budget" ? "💲 小資預" : bp === "mid" ? "💳 中資預" : "💴 高檔"}
                         </button>
                       ))}
                     </div>

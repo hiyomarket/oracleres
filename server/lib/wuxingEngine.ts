@@ -788,3 +788,227 @@ function generateBraceletExplanation(
 
   return explanations[element]?.[hand] || `${handDesc}佩戴${bracelet.name}，補充${element}元素能量，${bracelet.function}。`;
 }
+
+// ============================================================
+// 飲食羅盤 V10.0 升級：食物分類（重型/輕型）
+// ============================================================
+/** 重型食物（能量強烈，不宜過量） */
+export const ELEMENT_FOODS_HEAVY: Record<string, string[]> = {
+  火: ["麻辣火鍋", "燒烤", "炸雞", "烈酒", "辣椒炒肉"],
+  木: ["生菜沙拉（大量）", "草藥茶", "酸梅湯"],
+  水: ["生魚片", "冷飲", "冰品", "海鮮鍋"],
+  土: ["蛋糕甜點", "麵包", "炸薯條", "糯米食品"],
+  金: ["白斬雞", "豬腳", "白肉大餐"],
+};
+
+/** 輕型食物（溫和補充，適合連續多日） */
+export const ELEMENT_FOODS_LIGHT: Record<string, string[]> = {
+  火: ["番茄", "紅棗", "咖啡（少量）", "薑湯", "辣味小菜"],
+  木: ["青菜", "黃瓜", "綠茶", "菠菜湯"],
+  水: ["海帶湯", "豆腐", "黑芝麻糊", "蛤蜊湯"],
+  土: ["地瓜", "南瓜湯", "蜂蜜水", "山藥粥"],
+  金: ["白蘿蔔湯", "銀耳蓮子湯", "梨子", "杏仁豆腐"],
+};
+
+// ============================================================
+// 飲食羅盤 V10.0 升級：五行知識延伸資料庫
+// ============================================================
+export interface ElementKnowledge {
+  element: string;
+  organ: string;
+  tcmBenefit: string;
+  cookingStyle: string;
+  season: string;
+  color: string;
+  taste: string;
+}
+
+export const ELEMENT_KNOWLEDGE: Record<string, ElementKnowledge> = {
+  火: {
+    element: "火",
+    organ: "心臟、小腸",
+    tcmBenefit: "火系食物性溫熱，能促進血液循環、提振心陽、增強消化功能。中醫認為「心主神明」，適量補火有助於提升精神專注力與創造力。",
+    cookingStyle: "燒烤、快炒、煎炸。高溫烹飪能激活食材中的火性能量，讓食物的溫熱之氣更充分釋放。",
+    season: "夏季",
+    color: "紅色、橙色",
+    taste: "苦味",
+  },
+  木: {
+    element: "木",
+    organ: "肝臟、膽囊",
+    tcmBenefit: "木系食物多含葉綠素與纖維，能疏肝理氣、促進膽汁分泌、幫助排毒。中醫認為「肝主疏泄」，補木有助於情緒舒暢、決策清晰。",
+    cookingStyle: "清蒸、涼拌、快炒。盡量保持食材的清脆口感，避免過度烹飪破壞木性的生機之氣。",
+    season: "春季",
+    color: "綠色、青色",
+    taste: "酸味",
+  },
+  水: {
+    element: "水",
+    organ: "腎臟、膀胱",
+    tcmBenefit: "水系食物多含礦物質與蛋白質，能滋補腎陰、強化骨骼、增強記憶力。中醫認為「腎主藏精」，補水有助於深層滋養、增強意志力。",
+    cookingStyle: "燉湯、清蒸、水煮。溫和的烹飪方式能保留食材的滋潤之性，讓水性能量緩慢而深入地補充。",
+    season: "冬季",
+    color: "黑色、深藍色",
+    taste: "鹹味",
+  },
+  土: {
+    element: "土",
+    organ: "脾臟、胃",
+    tcmBenefit: "土系食物多含澱粉與甜味，能健脾益胃、補充氣血、增強消化吸收。中醫認為「脾主運化」，補土有助於將才華轉化為實際成果（財富）。",
+    cookingStyle: "蒸煮、燉煮、烘焙。溫和的加熱方式能讓土性食物的甘甜之氣充分釋放，滋養脾胃。",
+    season: "長夏（四季末各18天）",
+    color: "黃色、棕色",
+    taste: "甘甜味",
+  },
+  金: {
+    element: "金",
+    organ: "肺臟、大腸",
+    tcmBenefit: "金系食物多為白色，能潤肺止咳、清腸排毒、增強免疫力。中醫認為「肺主氣」，補金有助於提升決斷力、增強執行力與邊界感。",
+    cookingStyle: "清蒸、白灼、涼拌。清淡的烹飪方式能保留金性食物的清肅之氣，讓肺氣更加清明。",
+    season: "秋季",
+    color: "白色、金色",
+    taste: "辛辣味（辛）",
+  },
+};
+
+// ============================================================
+// 飲食羅盤 V10.0 升級：generateDietaryAdviceV10
+// 整合動態策略判定層 + 情境模式 + 短期記憶過濾 + 健康標籤
+// ============================================================
+export interface DietaryAdviceV10 extends DietaryAdvice {
+  /** 今日策略名稱 */
+  strategyName?: string;
+  /** 今日策略核心文案 */
+  strategyCoreText?: string;
+  /** 短期記憶提示（若昨日已大量攝取某五行） */
+  memoryHint?: string;
+  /** 今日輕型推薦食物（短期記憶模式下優先顯示） */
+  lightFoods?: string[];
+  /** 健康標籤過濾後的餐廳搜索關鍵字修正 */
+  restaurantKeywordOverrides?: Partial<Record<string, string[]>>;
+}
+
+export function generateDietaryAdviceV10(
+  result: WeightedElementResult,
+  strategy?: import('./strategyEngine').DailyStrategyObject,
+  supplementPriority?: string[],
+  options?: {
+    recentConsumedElements?: string[];
+    healthTags?: string[];
+  },
+): DietaryAdviceV10 {
+  const { weighted } = result;
+
+  // 1. 決定補運優先級（策略層優先）
+  const primaryElement = strategy?.primaryTargetElement ?? supplementPriority?.[0] ?? "火";
+  const secondaryElement = strategy?.secondaryTargetElement ?? supplementPriority?.[1] ?? "土";
+  const priority = strategy
+    ? [primaryElement, secondaryElement, ...(supplementPriority ?? []).filter(e => e !== primaryElement && e !== secondaryElement)]
+    : (supplementPriority && supplementPriority.length > 0 ? supplementPriority : [...SUPPLEMENT_PRIORITY]);
+
+  // 2. 短期記憶過濾
+  const recentConsumed = options?.recentConsumedElements ?? [];
+  const isRecentlyConsumed = recentConsumed.includes(primaryElement);
+  let memoryHint: string | undefined;
+  let lightFoods: string[] | undefined;
+
+  if (isRecentlyConsumed) {
+    memoryHint = `系統注意到您近期已補充大量${primaryElement}能量，今日建議以溫和的方式繼續鞏固，避免過於燥熱。`;
+    lightFoods = ELEMENT_FOODS_LIGHT[primaryElement] ?? [];
+  }
+
+  // 3. 健康標籤過濾
+  const healthTags = options?.healthTags ?? [];
+  const restaurantKeywordOverrides: Partial<Record<string, string[]>> = {};
+
+  const filterFoods = (foods: string[]): string[] => {
+    let filtered = [...foods];
+    if (healthTags.includes("vegetarian")) {
+      filtered = filtered.filter(f => !["紅肉", "燒烤", "烤肉", "炸雞", "白斬雞", "豬腳", "白肉大餐", "辣椒炒肉"].includes(f));
+    }
+    if (healthTags.includes("no_seafood")) {
+      filtered = filtered.filter(f => !["魚", "蝦", "海帶", "海鮮鍋", "生魚片", "蛤蜊湯"].includes(f));
+    }
+    if (healthTags.includes("no_spicy")) {
+      filtered = filtered.filter(f => !["辣椒", "麻辣火鍋", "辣味小菜", "辣椒炒肉"].includes(f));
+    }
+    if (healthTags.includes("low_carb")) {
+      filtered = filtered.filter(f => !["麵包", "米飯", "碳水化合物", "蛋糕甜點", "炸薯條", "糯米食品", "地瓜", "南瓜湯"].includes(f));
+    }
+    return filtered.length > 0 ? filtered : foods.slice(0, 2);
+  };
+
+  if (healthTags.includes("vegetarian")) {
+    restaurantKeywordOverrides["火"] = ["素食燒烤", "蔬食料理", "素食餐廳"];
+    restaurantKeywordOverrides["水"] = ["素食湯品", "蔬食料理"];
+  }
+  if (healthTags.includes("no_seafood")) {
+    restaurantKeywordOverrides["水"] = ["豆腐料理", "蔬食湯品", "黑芝麻甜品"];
+  }
+
+  // 4. 生成補充建議
+  const supplements = [];
+  for (const el of priority.slice(0, 2)) {
+    const rawFoods = isRecentlyConsumed && el === primaryElement
+      ? (ELEMENT_FOODS_LIGHT[el] ?? ELEMENT_FOODS[el] ?? [])
+      : (ELEMENT_FOODS[el] ?? []);
+    const foods = filterFoods(rawFoods);
+    const pct = Math.round(weighted[el as keyof ElementRatio] * 100);
+    supplements.push({
+      element: el,
+      priority: priority.indexOf(el) + 1,
+      foods,
+      advice: strategy
+        ? `今日策略「${strategy.strategyName}」：${strategy.coreStrategyText}。建議多攝取${el}系食物。`
+        : generateFoodAdviceV10(el, pct),
+    });
+  }
+
+  // 5. 避開過旺五行
+  const avoid = Object.entries(weighted)
+    .filter(([el, v]) => v >= 0.35 && !priority.slice(0, 2).includes(el))
+    .map(([el]) => ({
+      element: el,
+      foods: ELEMENT_FOODS[el] || [],
+      reason: `${el}能量已過旺（${Math.round(weighted[el as keyof ElementRatio] * 100)}%），避免再攝取同類食物。`,
+    }));
+
+  // 6. planB 計算
+  const targetElement = supplements[0]?.element ?? "火";
+  const planB: PlanBItem[] = ["木", "火", "土", "金", "水"].map((el) => {
+    const score = calculateResonanceScore(targetElement, el);
+    let label: string;
+    if (score >= 100) label = "首選方案";
+    else if (score >= 50) label = "次選方案";
+    else if (score >= 0) label = "中性";
+    else if (score >= -50) label = "應避免";
+    else label = "強烈避免";
+    const advice = score >= 60
+      ? `${el}系食材可強化今日補運，推薦積極攝取。`
+      : score < 0
+      ? `${el}系食材今日不利補運，建議減少攝取。`
+      : `${el}系食材今日中性，可適量攝取。`;
+    return { element: el, resonanceScore: score, label, foods: filterFoods(ELEMENT_FOODS[el] || []), advice };
+  }).sort((a, b) => b.resonanceScore - a.resonanceScore);
+
+  return {
+    supplements,
+    avoid,
+    planB,
+    targetElement,
+    strategyName: strategy?.strategyName,
+    strategyCoreText: strategy?.coreStrategyText,
+    memoryHint,
+    lightFoods,
+    restaurantKeywordOverrides: Object.keys(restaurantKeywordOverrides).length > 0 ? restaurantKeywordOverrides : undefined,
+  };
+}
+
+function generateFoodAdviceV10(element: string, pct: number): string {
+  const advices: Record<string, string> = {
+    火: `火能量不足（${pct}%），積極補充！盡情享用辛辣、燒烤、油炸食物，喝咖啡、烈酒、濃茶，點燃你的創意才華。`,
+    土: `土能量極弱（${pct}%），財星補充！多吃甜食、碳水化合物、紅薯、山藥、蜂蜜，把才華轉化為實際財富。`,
+    金: `金能量不足（${pct}%），決斷力補充！多吃白色食物、白蘿蔔、百合、杏仁、銀耳，強化你的判斷力。`,
+  };
+  return advices[element] || `補充${element}元素食物（${pct}%），平衡今日能量。`;
+}

@@ -8,6 +8,7 @@ import { pointsRouter } from "./routers/points";
 import { businessHubRouter } from "./routers/businessHub";
 import { userGroupsRouter } from "./routers/userGroups";
 import { wardrobeRouter } from "./routers/wardrobe";
+import { dietRouter } from "./routers/diet";
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -2833,6 +2834,7 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
         return getMultiYearAnalysis(startYear, endYear, userProfileForYearly);
       }),
   }),
+  diet: dietRouter,
   braceletWear: router({
     /**
      * 勾選佩戴（新增記錄）

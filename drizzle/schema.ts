@@ -741,3 +741,42 @@ export const strategyThresholds = mysqlTable("strategy_thresholds", {
 });
 export type StrategyThreshold = typeof strategyThresholds.$inferSelect;
 export type InsertStrategyThreshold = typeof strategyThresholds.$inferInsert;
+
+// ============================================================
+// 飲食羅盤 V11.0：飲食日誌
+// ============================================================
+export const dietaryLogs = mysqlTable("dietary_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // 日期字串（YYYY-MM-DD，台灣時區）
+  logDate: varchar("logDate", { length: 12 }).notNull(),
+  // 餐別（breakfast/lunch/dinner/snack）
+  mealType: varchar("mealType", { length: 20 }).notNull(),
+  // 攝取的五行元素（木/火/土/金/水）
+  consumedElement: varchar("consumedElement", { length: 10 }).notNull(),
+  // 攝取的食物名稱（例：炒青菜、紅燒肉）
+  consumedFood: varchar("consumedFood", { length: 100 }).notNull(),
+  // 用戶回饋（like/neutral/dislike）
+  preference: varchar("preference", { length: 10 }).default("neutral"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type DietaryLog = typeof dietaryLogs.$inferSelect;
+export type InsertDietaryLog = typeof dietaryLogs.$inferInsert;
+
+// ============================================================
+// 飲食羅盤 V11.0：用戶飲食偏好設定
+// ============================================================
+export const userDietPreferences = mysqlTable("user_diet_preferences", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  // 健康標籤（JSON 陣列，例：["vegetarian","no_seafood","no_spicy"]）
+  healthTags: varchar("healthTags", { length: 500 }).default("[]"),
+  // 預算偏好（budget/mid/premium，對應 Google price_level 1/2/3）
+  budgetPreference: varchar("budgetPreference", { length: 20 }).default("mid"),
+  // 不喜歡的五行元素（JSON 陣列，例：["金","水"]）
+  dislikedElements: varchar("dislikedElements", { length: 200 }).default("[]"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UserDietPreference = typeof userDietPreferences.$inferSelect;
+export type InsertUserDietPreference = typeof userDietPreferences.$inferInsert;

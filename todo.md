@@ -1629,3 +1629,36 @@
 ### 簽到日曆移至個人下拉選單 + Profile 白話化
 - [x] 簽到日曆從 /profile 移至 Header 個人下拉選單
 - [x] Profile 頁文字白話化：專業術語改為一般用戶看得懂的說法
+
+## 功能升級 v4.20 - 飲食羅盤 V10.0+V11.0 升級（2026-03-03）
+
+### DB Schema 升級
+- [x] DB: 新增 dietary_logs 表
+- [x] DB: 新增 user_preferences 表
+
+### 後端 V10.0 - 動態美食軍師
+- [x] 後端: generateDietaryAdvice 移植策略層
+- [x] 後端: getDietaryAdvice 支援情境模式
+- [x] 後端: getDietaryAdvice 支援時辰動態調整
+- [x] 後端: 短期記憶過濾
+- [x] 後端: AI 主廚菜單（invokeLLM）
+- [x] 後端: 五行知識延伸資料
+
+### 後端 V11.0 - 記憶與感知引擎
+- [x] 後端: scoreNearbyStores 場景感知（早/午/晚）
+- [x] 後端: scoreNearbyStores 預算篩選
+- [x] 後端: 健康標籤過濾
+- [x] 後端: diet.logConsumption tRPC 程序
+- [x] 後端: account.updateUserPreferences / getUserPreferences tRPC 程序
+
+### 前端 V10.0
+- [x] 前端: DietPage 情境模式選擇器
+- [x] 前端: DietPage 時辰能量時間軸
+- [x] 前端: DietPage AI 主廚菜單卡片
+- [x] 前端: DietPage 五行知識延伸彈窗
+- [x] 前端: DietPage 場景感知標題
+
+### 前端 V11.0
+- [x] 前端: DietPage 飲食日誌互動功能
+- [x] 前端: DietPage 附近餐廳預算篩選
+- [x] 前端: 飲食偏好設定（健康標籤 + 預算篩選）
