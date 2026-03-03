@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE experts \n  ADD COLUMN IF NOT EXISTS specialties JSON,\n  ADD COLUMN IF NOT EXISTS languages VARCHAR(200) DEFAULT '中文',\n  ADD COLUMN IF NOT EXISTS consultationModes JSON,\n  ADD COLUMN IF NOT EXISTS socialLinks JSON,\n  ADD COLUMN IF NOT EXISTS priceMin INT DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS priceMax INT DEFAULT 0;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nALTER TABLE experts \n  ADD COLUMN IF NOT EXISTS specialties JSON,\n  ADD COLUMN IF NOT EXISTS languages VARCHAR(200) DEFAULT '中文',\n  ADD COLUMN IF NOT EXISTS consultationModes JSON,\n  ADD COLUMN IF NOT EXISTS socialLinks JSON,\n  ADD COLUMN IF NOT EXISTS priceMin INT DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS priceMax INT DEFAULT 0;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2572
+}

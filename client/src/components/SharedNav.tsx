@@ -4,7 +4,7 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
-import { User, LogOut, ChevronDown, Smartphone, LayoutDashboard, Star, Coins, Gift, ShoppingBag } from "lucide-react";
+import { User, LogOut, ChevronDown, Smartphone, LayoutDashboard, Star, Coins, Gift, ShoppingBag, Calendar } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
 
 type NavPage = string;
@@ -354,6 +354,27 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
               </div>
             </Link>
 
+            {/* 天命聯盟（專家市集）與我的預約 */}
+            <Link
+              href="/experts"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-purple-500/10 hover:text-purple-300 transition-colors group/item"
+            >
+              <div className="w-7 h-7 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0 group-hover/item:bg-purple-500/25 transition-colors">
+                <span className="text-sm">🔮</span>
+              </div>
+              <span>天命聯盟</span>
+            </Link>
+            <Link
+              href="/my-bookings"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-purple-500/10 hover:text-purple-300 transition-colors group/item"
+            >
+              <div className="w-7 h-7 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0 group-hover/item:bg-purple-500/25 transition-colors">
+                <Calendar className="w-3.5 h-3.5 text-purple-400" />
+              </div>
+              <span>我的預約</span>
+            </Link>
             {/* 加入手機主畫面 */}
             <Link
               href="/add-to-home"

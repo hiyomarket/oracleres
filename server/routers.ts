@@ -16,6 +16,7 @@ import { marketingRouter } from './routers/marketing';
 import { notificationsRouter } from './routers/notifications';
 import { featureStoreRouter } from './routers/featureStore';
 import { siteBannerRouter } from './routers/siteBanner';
+import { expertRouter } from './routers/expert';
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -2928,6 +2929,7 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
   marketing: marketingRouter,
   notifications: notificationsRouter,
   siteBanner: siteBannerRouter,
+  expert: expertRouter,
   braceletWear: router({
     /**
      * 勾選佩戴（新增記錄）

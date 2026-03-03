@@ -1,0 +1,932 @@
+/**
+ * Project Nexus - 天命聯盟・專家平台 Router
+ * 包含 Phase 1-4 的所有 API
+ */
+import { z } from "zod";
+import { router, protectedProcedure, publicProcedure, adminProcedure } from "../_core/trpc";
+import { getDb } from "../db";
+import {
+  experts,
+  expertServices,
+  expertAvailability,
+  bookings,
+  privateMessages,
+  reviews,
+  users,
+} from "../../drizzle/schema";
+import { eq, and, desc, asc, gte, lte, sql, ne } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+import { storagePut } from "../storage";
+
+// ─── 輔助函數 ─────────────────────────────────────────────────────────────────
+
+/** 確保當前用戶是專家，回傳 expert 記錄 */
+async function requireExpert(userId: number) {
+  const db = (await getDb())!;
+  const [expert] = await db.select().from(experts).where(eq(experts.userId, userId)).limit(1);
+  if (!expert) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "您尚未成為認證專家" });
+  }
+  return expert;
+}
+
+/** 確保當前用戶是專家或管理員 */
+function requireExpertOrAdmin(role: string) {
+  if (role !== "expert" && role !== "admin") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "此功能僅限認證專家使用" });
+  }
+}
+
+// ─── Router ───────────────────────────────────────────────────────────────────
+
+export const expertRouter = router({
+
+  // ── Phase 1: 專家後台 ────────────────────────────────────────────────────────
+
+  /** 取得當前登入專家的個人資料 */
+  getMyProfile: protectedProcedure.query(async ({ ctx }) => {
+    requireExpertOrAdmin(ctx.user.role);
+    const db = (await getDb())!;
+    const [expert] = await db
+      .select()
+      .from(experts)
+      .where(eq(experts.userId, ctx.user.id))
+      .limit(1);
+    return expert ?? null;
+  }),
+
+  /** 更新當前專家的個人資料 */
+  updateMyProfile: protectedProcedure
+    .input(
+      z.object({
+        publicName: z.string().min(1).max(100),
+        title: z.string().max(200).optional(),
+        bio: z.string().optional(),
+        profileImageUrl: z.string().max(500).optional(),
+        coverImageUrl: z.string().max(500).optional(),
+        tags: z.array(z.string()).optional(),
+        specialties: z.array(z.string()).optional(),
+        languages: z.string().optional(),
+        consultationModes: z.array(z.string()).optional(),
+        priceMin: z.number().optional(),
+        priceMax: z.number().optional(),
+        paymentQrUrl: z.string().max(500).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const db = (await getDb())!;
+      const existing = await db
+        .select({ id: experts.id })
+        .from(experts)
+        .where(eq(experts.userId, ctx.user.id))
+        .limit(1);
+      const profileData = {
+        publicName: input.publicName,
+        title: input.title,
+        bio: input.bio,
+        profileImageUrl: input.profileImageUrl,
+        coverImageUrl: input.coverImageUrl,
+        tags: input.tags ?? [],
+        specialties: input.specialties ?? [],
+        languages: input.languages,
+        consultationModes: input.consultationModes ?? [],
+        priceMin: input.priceMin,
+        priceMax: input.priceMax,
+        paymentQrUrl: input.paymentQrUrl,
+      };
+      if (existing.length === 0) {
+        // 首次建立
+        await db.insert(experts).values({
+          userId: ctx.user.id,
+          ...profileData,
+          status: "pending_review",
+        });
+      } else {
+        await db
+          .update(experts)
+          .set(profileData)
+          .where(eq(experts.userId, ctx.user.id));
+      }
+      return { success: true };
+    }),
+
+  /** 取得當前專家的所有服務項目 */
+  listMyServices: protectedProcedure.query(async ({ ctx }) => {
+    requireExpertOrAdmin(ctx.user.role);
+    const expert = await requireExpert(ctx.user.id);
+    const db = (await getDb())!;
+    return db
+      .select()
+      .from(expertServices)
+      .where(eq(expertServices.expertId, expert.id))
+      .orderBy(asc(expertServices.sortOrder), asc(expertServices.createdAt));
+  }),
+
+  /** 新增服務項目 */
+  createService: protectedProcedure
+    .input(
+      z.object({
+        title: z.string().min(1).max(200),
+        description: z.string().optional(),
+        durationMinutes: z.number().int().min(15).max(480).default(60),
+        price: z.number().int().min(0),
+        type: z.enum(["online", "offline"]).default("online"),
+        isActive: z.boolean().default(true),
+        sortOrder: z.number().int().default(0),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      const [result] = await db.insert(expertServices).values({
+        expertId: expert.id,
+        title: input.title,
+        description: input.description,
+        durationMinutes: input.durationMinutes,
+        price: input.price,
+        type: input.type,
+        isActive: input.isActive ? 1 : 0,
+        sortOrder: input.sortOrder,
+      });
+      return { id: (result as any).insertId, success: true };
+    }),
+
+  /** 更新服務項目 */
+  updateService: protectedProcedure
+    .input(
+      z.object({
+        id: z.number().int(),
+        title: z.string().min(1).max(200).optional(),
+        description: z.string().optional(),
+        durationMinutes: z.number().int().min(15).max(480).optional(),
+        price: z.number().int().min(0).optional(),
+        type: z.enum(["online", "offline"]).optional(),
+        isActive: z.boolean().optional(),
+        sortOrder: z.number().int().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      const { id, ...fields } = input;
+      const updateData: Record<string, unknown> = { ...fields };
+      if (typeof fields.isActive === "boolean") {
+        updateData.isActive = fields.isActive ? 1 : 0;
+      }
+      await db
+        .update(expertServices)
+        .set(updateData)
+        .where(and(eq(expertServices.id, id), eq(expertServices.expertId, expert.id)));
+      return { success: true };
+    }),
+
+  /** 刪除服務項目 */
+  toggleServiceActive: protectedProcedure
+    .input(z.object({ id: z.number(), isActive: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      const expert = await db.select().from(experts).where(eq(experts.userId, ctx.user.id)).limit(1);
+      if (!expert[0]) throw new TRPCError({ code: "NOT_FOUND", message: "尚未建立專家資料" });
+      await db.update(expertServices)
+        .set({ isActive: input.isActive ? 1 : 0 })
+        .where(and(eq(expertServices.id, input.id), eq(expertServices.expertId, expert[0].id)));
+      return { success: true };
+    }),
+
+  deleteService: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      await db
+        .delete(expertServices)
+        .where(and(eq(expertServices.id, input.id), eq(expertServices.expertId, expert.id)));
+      return { success: true };
+    }),
+
+  // ── Phase 2: 智能行事曆 ──────────────────────────────────────────────────────
+
+  /** 設定可預約時段（批量新增） */
+  setAvailability: protectedProcedure
+    .input(
+      z.object({
+        slots: z.array(
+          z.object({
+            startTime: z.date(),
+            endTime: z.date(),
+          })
+        ),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      if (input.slots.length === 0) return { success: true, count: 0 };
+      await db.insert(expertAvailability).values(
+        input.slots.map((s) => ({
+          expertId: expert.id,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          isBooked: 0,
+        }))
+      );
+      return { success: true, count: input.slots.length };
+    }),
+
+  /** 刪除可預約時段 */
+  deleteAvailability: protectedProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      await db
+        .delete(expertAvailability)
+        .where(
+          and(
+            eq(expertAvailability.id, input.id),
+            eq(expertAvailability.expertId, expert.id),
+            eq(expertAvailability.isBooked, 0)
+          )
+        );
+      return { success: true };
+    }),
+
+  /** 取得指定月份的行事曆資料（可預約時段 + 訂單） */
+  getCalendarData: protectedProcedure
+    .input(
+      z.object({
+        year: z.number().int(),
+        month: z.number().int().min(1).max(12),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+
+      const startOfMonth = new Date(input.year, input.month - 1, 1);
+      const endOfMonth = new Date(input.year, input.month, 0, 23, 59, 59);
+
+      const [availSlots, myBookings] = await Promise.all([
+        db
+          .select()
+          .from(expertAvailability)
+          .where(
+            and(
+              eq(expertAvailability.expertId, expert.id),
+              gte(expertAvailability.startTime, startOfMonth),
+              lte(expertAvailability.startTime, endOfMonth)
+            )
+          )
+          .orderBy(asc(expertAvailability.startTime)),
+        db
+          .select({
+            id: bookings.id,
+            userId: bookings.userId,
+            serviceId: bookings.serviceId,
+            bookingTime: bookings.bookingTime,
+            status: bookings.status,
+            notes: bookings.notes,
+            userName: users.name,
+            serviceTitle: expertServices.title,
+          })
+          .from(bookings)
+          .leftJoin(users, eq(bookings.userId, users.id))
+          .leftJoin(expertServices, eq(bookings.serviceId, expertServices.id))
+          .where(
+            and(
+              eq(bookings.expertId, expert.id),
+              gte(bookings.bookingTime, startOfMonth),
+              lte(bookings.bookingTime, endOfMonth),
+              ne(bookings.status, "cancelled")
+            )
+          )
+          .orderBy(asc(bookings.bookingTime)),
+      ]);
+
+      return { availSlots, bookings: myBookings };
+    }),
+
+  /** 取得當前專家的所有訂單（含用戶資訊） */
+  listMyBookings: protectedProcedure
+    .input(
+      z.object({
+        status: z.enum(["pending_payment", "confirmed", "completed", "cancelled", "all"]).default("all"),
+        limit: z.number().int().min(1).max(100).default(20),
+        offset: z.number().int().min(0).default(0),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+
+      const conditions = [eq(bookings.expertId, expert.id)];
+      if (input.status !== "all") {
+        conditions.push(eq(bookings.status, input.status));
+      }
+
+      return db
+        .select({
+          id: bookings.id,
+          userId: bookings.userId,
+          serviceId: bookings.serviceId,
+          bookingTime: bookings.bookingTime,
+          status: bookings.status,
+          paymentProofUrl: bookings.paymentProofUrl,
+          notes: bookings.notes,
+          createdAt: bookings.createdAt,
+          userName: users.name,
+          serviceTitle: expertServices.title,
+          servicePrice: expertServices.price,
+          serviceDuration: expertServices.durationMinutes,
+        })
+        .from(bookings)
+        .leftJoin(users, eq(bookings.userId, users.id))
+        .leftJoin(expertServices, eq(bookings.serviceId, expertServices.id))
+        .where(and(...conditions))
+        .orderBy(desc(bookings.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+    }),
+
+  /** 專家確認付款（pending_payment → confirmed） */
+  confirmPayment: protectedProcedure
+    .input(z.object({ bookingId: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      await db
+        .update(bookings)
+        .set({ status: "confirmed" })
+        .where(
+          and(
+            eq(bookings.id, input.bookingId),
+            eq(bookings.expertId, expert.id),
+            eq(bookings.status, "pending_payment")
+          )
+        );
+      return { success: true };
+    }),
+
+  /** 專家標記訂單為已完成 */
+  completeBooking: protectedProcedure
+    .input(z.object({ bookingId: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      await db
+        .update(bookings)
+        .set({ status: "completed" })
+        .where(
+          and(
+            eq(bookings.id, input.bookingId),
+            eq(bookings.expertId, expert.id),
+            eq(bookings.status, "confirmed")
+          )
+        );
+      return { success: true };
+    }),
+
+  // ── Phase 3: 用戶前台 API ────────────────────────────────────────────────────
+
+  /** 公開：取得所有 active 專家列表 */
+  listExperts: publicProcedure
+    .input(
+      z.object({
+        tag: z.string().optional(),
+        limit: z.number().int().min(1).max(50).default(20),
+        offset: z.number().int().min(0).default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = (await getDb())!;
+      const allExperts = await db
+        .select({
+          id: experts.id,
+          userId: experts.userId,
+          publicName: experts.publicName,
+          title: experts.title,
+          profileImageUrl: experts.profileImageUrl,
+          tags: experts.tags,
+          ratingAvg: experts.ratingAvg,
+          ratingCount: experts.ratingCount,
+        })
+        .from(experts)
+        .where(eq(experts.status, "active"))
+        .orderBy(desc(experts.ratingAvg))
+        .limit(input.limit)
+        .offset(input.offset);
+
+      // 若有 tag 篩選，在應用層過濾（JSON 欄位）
+      if (input.tag) {
+        return allExperts.filter((e) => {
+          const tags = e.tags as string[] | null;
+          return tags && tags.includes(input.tag!);
+        });
+      }
+      return allExperts;
+    }),
+
+  /** 公開：取得單一專家詳細資料 + 服務 + 未來可預約時段 */
+  getExpertDetails: publicProcedure
+    .input(z.object({ expertId: z.number().int() }))
+    .query(async ({ input }) => {
+      const db = (await getDb())!;
+      const [expert] = await db
+        .select()
+        .from(experts)
+        .where(and(eq(experts.id, input.expertId), eq(experts.status, "active")))
+        .limit(1);
+
+      if (!expert) throw new TRPCError({ code: "NOT_FOUND", message: "找不到此專家" });
+
+      const now = new Date();
+      const oneMonthLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      const [services, availSlots] = await Promise.all([
+        db
+          .select()
+          .from(expertServices)
+          .where(and(eq(expertServices.expertId, input.expertId), eq(expertServices.isActive, 1)))
+          .orderBy(asc(expertServices.sortOrder)),
+        db
+          .select()
+          .from(expertAvailability)
+          .where(
+            and(
+              eq(expertAvailability.expertId, input.expertId),
+              eq(expertAvailability.isBooked, 0),
+              gte(expertAvailability.startTime, now),
+              lte(expertAvailability.startTime, oneMonthLater)
+            )
+          )
+          .orderBy(asc(expertAvailability.startTime)),
+      ]);
+
+      return { expert, services, availSlots };
+    }),
+
+  /** 用戶建立預約訂單 */
+  createBooking: protectedProcedure
+    .input(
+      z.object({
+        expertId: z.number().int(),
+        serviceId: z.number().int(),
+        availabilityId: z.number().int(),
+        notes: z.string().max(500).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+
+      // 確認時段存在且未被預約
+      const [slot] = await db
+        .select()
+        .from(expertAvailability)
+        .where(
+          and(
+            eq(expertAvailability.id, input.availabilityId),
+            eq(expertAvailability.expertId, input.expertId),
+            eq(expertAvailability.isBooked, 0)
+          )
+        )
+        .limit(1);
+
+      if (!slot) {
+        throw new TRPCError({ code: "CONFLICT", message: "此時段已被預約或不存在" });
+      }
+
+      // 建立訂單
+      const [result] = await db.insert(bookings).values({
+        userId: ctx.user.id,
+        expertId: input.expertId,
+        serviceId: input.serviceId,
+        bookingTime: slot.startTime,
+        status: "pending_payment",
+        notes: input.notes,
+      });
+
+      const bookingId = (result as any).insertId;
+
+      // 標記時段為已預約
+      await db
+        .update(expertAvailability)
+        .set({ isBooked: 1, bookingId })
+        .where(eq(expertAvailability.id, input.availabilityId));
+
+      return { bookingId, success: true };
+    }),
+
+  /** 用戶上傳付款憑證 */
+  uploadPaymentProof: protectedProcedure
+    .input(
+      z.object({
+        bookingId: z.number().int(),
+        imageBase64: z.string(),
+        mimeType: z.string().default("image/jpeg"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+
+      // 確認訂單屬於當前用戶
+      const [booking] = await db
+        .select()
+        .from(bookings)
+        .where(and(eq(bookings.id, input.bookingId), eq(bookings.userId, ctx.user.id)))
+        .limit(1);
+
+      if (!booking) throw new TRPCError({ code: "NOT_FOUND", message: "找不到此訂單" });
+
+      // 上傳圖片到 S3
+      const buffer = Buffer.from(input.imageBase64, "base64");
+      const ext = input.mimeType.split("/")[1] || "jpg";
+      const key = `payment-proofs/${input.bookingId}-${Date.now()}.${ext}`;
+      const { url } = await storagePut(key, buffer, input.mimeType);
+
+      await db
+        .update(bookings)
+        .set({ paymentProofUrl: url })
+        .where(eq(bookings.id, input.bookingId));
+
+      return { url, success: true };
+    }),
+
+  /** 用戶取得自己的所有訂單 */
+  myBookings: protectedProcedure
+    .input(
+      z.object({
+        status: z.enum(["pending_payment", "confirmed", "completed", "cancelled", "all"]).default("all"),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      const conditions = [eq(bookings.userId, ctx.user.id)];
+      if (input.status !== "all") {
+        conditions.push(eq(bookings.status, input.status));
+      }
+
+      return db
+        .select({
+          id: bookings.id,
+          expertId: bookings.expertId,
+          serviceId: bookings.serviceId,
+          bookingTime: bookings.bookingTime,
+          status: bookings.status,
+          paymentProofUrl: bookings.paymentProofUrl,
+          notes: bookings.notes,
+          createdAt: bookings.createdAt,
+          expertName: experts.publicName,
+          expertProfileImage: experts.profileImageUrl,
+          serviceTitle: expertServices.title,
+          servicePrice: expertServices.price,
+          serviceDuration: expertServices.durationMinutes,
+        })
+        .from(bookings)
+        .leftJoin(experts, eq(bookings.expertId, experts.id))
+        .leftJoin(expertServices, eq(bookings.serviceId, expertServices.id))
+        .where(and(...conditions))
+        .orderBy(desc(bookings.createdAt));
+    }),
+
+  // ── Phase 4: 私訊與評論 ──────────────────────────────────────────────────────
+
+  /** 取得某訂單的聊天訊息 */
+  getMessages: protectedProcedure
+    .input(z.object({ bookingId: z.number().int() }))
+    .query(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+
+      // 確認用戶有權限（是訂單的用戶或專家）
+      const [booking] = await db
+        .select({ userId: bookings.userId, expertId: bookings.expertId })
+        .from(bookings)
+        .where(eq(bookings.id, input.bookingId))
+        .limit(1);
+
+      if (!booking) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // 取得當前用戶的 expert 記錄（如果有）
+      const [expertRecord] = await db
+        .select({ id: experts.id })
+        .from(experts)
+        .where(eq(experts.userId, ctx.user.id))
+        .limit(1);
+
+      const isParticipant =
+        booking.userId === ctx.user.id ||
+        (expertRecord && booking.expertId === expertRecord.id);
+
+      if (!isParticipant) throw new TRPCError({ code: "FORBIDDEN" });
+
+      return db
+        .select({
+          id: privateMessages.id,
+          senderId: privateMessages.senderId,
+          content: privateMessages.content,
+          imageUrl: privateMessages.imageUrl,
+          createdAt: privateMessages.createdAt,
+          senderName: users.name,
+        })
+        .from(privateMessages)
+        .leftJoin(users, eq(privateMessages.senderId, users.id))
+        .where(eq(privateMessages.bookingId, input.bookingId))
+        .orderBy(asc(privateMessages.createdAt));
+    }),
+
+  /** 發送訊息 */
+  sendMessage: protectedProcedure
+    .input(
+      z.object({
+        bookingId: z.number().int(),
+        content: z.string().min(1).max(2000),
+        imageUrl: z.string().max(500).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+
+      const [booking] = await db
+        .select({ userId: bookings.userId, expertId: bookings.expertId, status: bookings.status })
+        .from(bookings)
+        .where(eq(bookings.id, input.bookingId))
+        .limit(1);
+
+      if (!booking) throw new TRPCError({ code: "NOT_FOUND" });
+      if (booking.status === "cancelled") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "已取消的訂單無法發送訊息" });
+      }
+
+      const [expertRecord] = await db
+        .select({ id: experts.id })
+        .from(experts)
+        .where(eq(experts.userId, ctx.user.id))
+        .limit(1);
+
+      const isParticipant =
+        booking.userId === ctx.user.id ||
+        (expertRecord && booking.expertId === expertRecord.id);
+
+      if (!isParticipant) throw new TRPCError({ code: "FORBIDDEN" });
+
+      await db.insert(privateMessages).values({
+        bookingId: input.bookingId,
+        senderId: ctx.user.id,
+        content: input.content,
+        imageUrl: input.imageUrl,
+      });
+
+      return { success: true };
+    }),
+
+  /** 用戶提交評論（訂單完成後） */
+  submitReview: protectedProcedure
+    .input(
+      z.object({
+        bookingId: z.number().int(),
+        rating: z.number().int().min(1).max(5),
+        comment: z.string().max(1000).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+
+      const [booking] = await db
+        .select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.id, input.bookingId),
+            eq(bookings.userId, ctx.user.id),
+            eq(bookings.status, "completed")
+          )
+        )
+        .limit(1);
+
+      if (!booking) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "只有已完成的訂單才能評論" });
+      }
+
+      // 插入評論（若已存在則更新）
+      await db.insert(reviews).values({
+        bookingId: input.bookingId,
+        userId: ctx.user.id,
+        expertId: booking.expertId,
+        rating: input.rating,
+        comment: input.comment,
+      }).onDuplicateKeyUpdate({
+        set: { rating: input.rating, comment: input.comment },
+      });
+
+      // 更新專家平均評分
+      const allReviews = await db
+        .select({ rating: reviews.rating })
+        .from(reviews)
+        .where(eq(reviews.expertId, booking.expertId));
+
+      const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+      await db
+        .update(experts)
+        .set({
+          ratingAvg: avg.toFixed(2),
+          ratingCount: allReviews.length,
+        })
+        .where(eq(experts.id, booking.expertId));
+
+      return { success: true };
+    }),
+
+  /** 公開：取得某專家的所有評論 */
+  getExpertReviews: publicProcedure
+    .input(
+      z.object({
+        expertId: z.number().int(),
+        limit: z.number().int().min(1).max(50).default(20),
+        offset: z.number().int().min(0).default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = (await getDb())!;
+      return db
+        .select({
+          id: reviews.id,
+          rating: reviews.rating,
+          comment: reviews.comment,
+          createdAt: reviews.createdAt,
+          userName: users.name,
+        })
+        .from(reviews)
+        .leftJoin(users, eq(reviews.userId, users.id))
+        .where(eq(reviews.expertId, input.expertId))
+        .orderBy(desc(reviews.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+    }),
+
+  // ── 管理員控管 ───────────────────────────────────────────────────────────────
+
+  /** 管理員：取得所有專家列表（含待審核） */
+  adminListExperts: adminProcedure
+    .input(
+      z.object({
+        status: z.enum(["active", "inactive", "pending_review", "all"]).default("all"),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = (await getDb())!;
+      const conditions = [];
+      if (input.status !== "all") {
+        conditions.push(eq(experts.status, input.status));
+      }
+
+      return db
+        .select({
+          id: experts.id,
+          userId: experts.userId,
+          publicName: experts.publicName,
+          title: experts.title,
+          status: experts.status,
+          ratingAvg: experts.ratingAvg,
+          ratingCount: experts.ratingCount,
+          createdAt: experts.createdAt,
+          userName: users.name,
+          userEmail: users.email,
+          userRole: users.role,
+        })
+        .from(experts)
+        .leftJoin(users, eq(experts.userId, users.id))
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(experts.createdAt));
+    }),
+
+  /** 管理員：審核專家（更改狀態） */
+  adminUpdateExpertStatus: adminProcedure
+    .input(
+      z.object({
+        expertId: z.number().int(),
+        status: z.enum(["active", "inactive", "pending_review"]),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = (await getDb())!;
+      await db
+        .update(experts)
+        .set({ status: input.status })
+        .where(eq(experts.id, input.expertId));
+      return { success: true };
+    }),
+
+  /** 管理員：將用戶設為專家角色（同時建立 expert 記錄） */
+  adminGrantExpertRole: adminProcedure
+    .input(
+      z.object({
+        userId: z.number().int(),
+        publicName: z.string().min(1).max(100),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = (await getDb())!;
+
+      // 更新 users.role
+      await db
+        .update(users)
+        .set({ role: "expert" })
+        .where(eq(users.id, input.userId));
+
+      // 建立 expert 記錄（若不存在）
+      const existing = await db
+        .select({ id: experts.id })
+        .from(experts)
+        .where(eq(experts.userId, input.userId))
+        .limit(1);
+
+      if (existing.length === 0) {
+        await db.insert(experts).values({
+          userId: input.userId,
+          publicName: input.publicName,
+          status: "active",
+        });
+      }
+
+      return { success: true };
+    }),
+
+  /** 管理員：撤銷專家角色 */
+  adminRevokeExpertRole: adminProcedure
+    .input(z.object({ userId: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = (await getDb())!;
+      await db
+        .update(users)
+        .set({ role: "user" })
+        .where(eq(users.id, input.userId));
+      await db
+        .update(experts)
+        .set({ status: "inactive" })
+        .where(eq(experts.userId, input.userId));
+      return { success: true };
+    }),
+
+  /** 管理員：取得所有訂單（全平台） */
+  adminListAllBookings: adminProcedure
+    .input(
+      z.object({
+        status: z.enum(["pending_payment", "confirmed", "completed", "cancelled", "all"]).default("all"),
+        limit: z.number().int().min(1).max(100).default(30),
+        offset: z.number().int().min(0).default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = (await getDb())!;
+      const conditions = [];
+      if (input.status !== "all") {
+        conditions.push(eq(bookings.status, input.status));
+      }
+
+      return db
+        .select({
+          id: bookings.id,
+          status: bookings.status,
+          bookingTime: bookings.bookingTime,
+          paymentProofUrl: bookings.paymentProofUrl,
+          createdAt: bookings.createdAt,
+          userName: users.name,
+          expertName: experts.publicName,
+          serviceTitle: expertServices.title,
+          servicePrice: expertServices.price,
+        })
+        .from(bookings)
+        .leftJoin(users, eq(bookings.userId, users.id))
+        .leftJoin(experts, eq(bookings.expertId, experts.id))
+        .leftJoin(expertServices, eq(bookings.serviceId, expertServices.id))
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(bookings.createdAt))
+        .limit(input.limit)
+        .offset(input.offset);
+    }),
+  /** 管理員：更新訂單狀態 */
+  adminUpdateBookingStatus: adminProcedure
+    .input(
+      z.object({
+        bookingId: z.number().int(),
+        status: z.enum(["confirmed", "completed", "cancelled"]),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = (await getDb())!;
+      await db
+        .update(bookings)
+        .set({ status: input.status })
+        .where(eq(bookings.id, input.bookingId));
+      return { success: true };
+    }),
+});

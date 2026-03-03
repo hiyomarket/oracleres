@@ -61,6 +61,12 @@ const NAV_ITEMS = [
     label: "廣告/公告管理",
     desc: "全站懸浮橫幅廣告",
   },
+  {
+    href: "/admin/experts",
+    icon: "🔮",
+    label: "專家管理",
+    desc: "審核申請、管理訂單",
+  },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {

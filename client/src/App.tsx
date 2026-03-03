@@ -26,6 +26,15 @@ import NotificationsPage from "./pages/NotificationsPage";
 import FeatureStore from "./pages/FeatureStore";
 import AdminFeatureStore from "./pages/AdminFeatureStore";
 import AdminBanners from "./pages/AdminBanners";
+import AdminExperts from "./pages/AdminExperts";
+import ExpertMarket from "./pages/ExpertMarket";
+import ExpertDetail from "./pages/ExpertDetail";
+import ExpertDashboard from "./pages/expert/ExpertDashboard";
+import ExpertProfile from "./pages/expert/ExpertProfile";
+import ExpertServices from "./pages/expert/ExpertServices";
+import ExpertCalendar from "./pages/expert/ExpertCalendar";
+import ExpertBookings from "./pages/expert/ExpertOrders";
+import MyBookings from "./pages/MyBookings";
 import OutfitPage from "@/pages/OutfitPage";
 import WardrobePage from "@/pages/WardrobePage";
 import DietPage from "@/pages/DietPage";
@@ -67,6 +76,16 @@ function Router() {
         <Route path={"/luck-cycle"} component={LuckCyclePage} />
         <Route path={"/wealth"} component={WealthPage} />
         <Route path={"/add-to-home"} component={AddToHome} />
+        {/* Expert System Routes */}
+        <Route path={"/experts"} component={ExpertMarket} />
+        <Route path={"/experts/:id"} component={ExpertDetail} />
+        <Route path={"/expert/dashboard"} component={ExpertDashboard} />
+        <Route path={"/expert/profile"} component={ExpertProfile} />
+        <Route path={"/expert/services"} component={ExpertServices} />
+        <Route path={"/expert/calendar"} component={ExpertCalendar} />
+        <Route path={"/expert/bookings"} component={ExpertBookings} />
+        <Route path={"/my-bookings"} component={MyBookings} />
+        <Route path={"/admin/experts"} component={AdminExperts} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />

@@ -14,6 +14,7 @@ import {
   modules,
   users,
   pointsTransactions,
+  plans,
 } from "../../drizzle/schema";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -609,4 +610,69 @@ export const featureStoreRouter = router({
 
       return { success: true, newExpiresAt: newExpiresAt.toISOString() };
     }),
+
+  /** 取得用戶目前方案資訊與已訂閱功能清單 */
+  myPlanInfo: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return null;
+
+    const [user] = await db.select().from(users).where(eq(users.id, ctx.user.id));
+    if (!user) return null;
+
+    // 取得方案名稱
+    let planName = "基礎方案";
+    let planExpiresAt: string | null = null;
+    if (user.planId && user.planId !== "basic") {
+      const [plan] = await db.select().from(plans).where(eq(plans.id, user.planId));
+      if (plan) planName = plan.name;
+    }
+    if (user.planExpiresAt) {
+      planExpiresAt = user.planExpiresAt.toISOString();
+    }
+
+    // 取得方案包含的模塊
+    const planModuleIds = await getPlanModuleIds(user.planId);
+    const planModuleRows = planModuleIds.length
+      ? await db.select().from(modules).where(inArray(modules.id, planModuleIds))
+      : [];
+
+    // 取得自訂購買的模塊（customModules）
+    const customModules = await getUserCustomModules(ctx.user.id);
+    const now = new Date();
+    const activeCustomModuleIds = customModules
+      .filter((m) => !m.expires_at || new Date(m.expires_at) > now)
+      .map((m) => m.module_id);
+    const customModuleRows = activeCustomModuleIds.length
+      ? await db.select().from(modules).where(inArray(modules.id, activeCustomModuleIds))
+      : [];
+
+    // 合併已訂閱功能清單（含到期時間）
+    const subscribedFeatures = [
+      ...planModuleRows.map((m) => ({
+        moduleId: m.id,
+        name: m.name,
+        icon: m.icon,
+        source: "plan" as const,
+        expiresAt: planExpiresAt,
+      })),
+      ...customModuleRows.map((m) => {
+        const entry = customModules.find((c) => c.module_id === m.id);
+        return {
+          moduleId: m.id,
+          name: m.name,
+          icon: m.icon,
+          source: "custom" as const,
+          expiresAt: entry?.expires_at ?? null,
+        };
+      }),
+    ];
+
+    return {
+      planId: user.planId,
+      planName,
+      planExpiresAt,
+      pointsBalance: user.pointsBalance,
+      subscribedFeatures,
+    };
+  }),
 });

@@ -288,6 +288,13 @@
       "when": 1772563134456,
       "tag": "0040_broad_mariko_yashida",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "5",
+      "when": 1772568031255,
+      "tag": "0041_left_vermin",
+      "breakpoints": true
     }
   ]
 }

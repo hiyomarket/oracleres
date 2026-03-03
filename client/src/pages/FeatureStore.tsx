@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Coins, ShoppingCart, Clock, CheckCircle, AlertTriangle, ExternalLink, History, Package, ArrowLeft } from "lucide-react";
+import { Coins, ShoppingCart, Clock, CheckCircle, AlertTriangle, ExternalLink, History, Package, ArrowLeft, Crown, Star, CalendarDays, Zap } from "lucide-react";
 import { SharedNav } from "@/components/SharedNav";
 
 type DurationDays = 3 | 7 | 15 | 30;
@@ -90,6 +90,7 @@ export default function FeatureStore() {
   // 查詢
   const { data: plans = [], isLoading, refetch } = trpc.featureStore.list.useQuery();
   const { data: history } = trpc.featureStore.myHistory.useQuery();
+  const { data: planInfo } = trpc.featureStore.myPlanInfo.useQuery();
 
   // Mutations
   const redeemMutation = trpc.featureStore.redeem.useMutation({
@@ -192,7 +193,7 @@ export default function FeatureStore() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SharedNav />
+      <SharedNav currentPage="feature-store" />
     <div className="container py-6 max-w-4xl">
       {/* 頁首 */}
       <div className="flex items-center gap-3 mb-6">
@@ -204,7 +205,7 @@ export default function FeatureStore() {
           返回首頁
         </button>
       </div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Package className="w-6 h-6 text-amber-400" />
@@ -218,6 +219,93 @@ export default function FeatureStore() {
           <Coins className="w-4 h-4 text-amber-400" />
           <span className="text-sm font-medium text-amber-400">{currentPoints.toLocaleString()} 積分</span>
         </div>
+      </div>
+
+      {/* 我的方案資訊卡 - 始終顯示 */}
+      <div className="mb-6 rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent p-4">
+        {planInfo ? (
+          <>
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <Crown className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-sm">{planInfo.planName}</span>
+                    <Badge className="text-xs bg-amber-500/20 text-amber-300 border-amber-500/30 border">
+                      目前方案
+                    </Badge>
+                    {planInfo.planId === 'basic' && (
+                      <Badge variant="outline" className="text-xs border-muted-foreground/30 text-muted-foreground">
+                        免費方案
+                      </Badge>
+                    )}
+                  </div>
+                  {planInfo.planExpiresAt ? (
+                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                      <CalendarDays className="w-3 h-3" />
+                      方案到期：{new Date(planInfo.planExpiresAt).toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" })}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-0.5">方案效期：永久有效</p>
+                  )}
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-xs text-muted-foreground">我的積分</p>
+                <p className="text-base font-bold text-amber-400">{(planInfo.pointsBalance ?? currentPoints).toLocaleString()} <span className="text-xs font-normal">點</span></p>
+              </div>
+            </div>
+
+            {planInfo.subscribedFeatures.length > 0 ? (
+              <div className="mt-3 pt-3 border-t border-amber-500/20">
+                <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                  <Zap className="w-3 h-3" />
+                  已啟用功能（{planInfo.subscribedFeatures.length} 項）
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {planInfo.subscribedFeatures.map((f) => (
+                    <div
+                      key={f.moduleId}
+                      className="flex items-center gap-1.5 text-xs bg-background/60 border border-border rounded-lg px-2.5 py-1.5"
+                    >
+                      {f.icon && <span>{f.icon}</span>}
+                      <span className="font-medium">{f.name}</span>
+                      {f.source === "custom" && f.expiresAt && (
+                        <span className="text-amber-300/80 ml-1 flex items-center gap-0.5">
+                          <CalendarDays className="w-2.5 h-2.5" />
+                          {new Date(f.expiresAt).toLocaleDateString("zh-TW", { year: "numeric", month: "numeric", day: "numeric" })} 到期
+                        </span>
+                      )}
+                      {f.source === "custom" && !f.expiresAt && (
+                        <span className="text-emerald-400/80 ml-1">永久</span>
+                      )}
+                      {f.source === "plan" && (
+                        <span className="flex items-center gap-0.5 text-amber-400/80 ml-1">
+                          <Star className="w-2.5 h-2.5" />
+                          方案含
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-2">
+                目前尚未啟用任何進階功能，可在下方選擇方案兌換或購買
+              </p>
+            )}
+          </>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-muted/50 animate-pulse" />
+            <div className="space-y-1.5">
+              <div className="h-3 w-24 bg-muted/50 animate-pulse rounded" />
+              <div className="h-2.5 w-36 bg-muted/50 animate-pulse rounded" />
+            </div>
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="store">

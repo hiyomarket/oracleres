@@ -1973,3 +1973,52 @@
 - [x] /luck-cycle 白話文改寫：大限流年→未來五年運勢、四化→財運加持/掌控力提升/貴人相助/需要留意
 - [x] /divination AI 回覆邏輯改寫：白話文、情緒價值、鼓勵文字、直接回答具體問題
 - [x] 修正每日運勢「今日時辰能量」顏色固定問題（DietPage 0-10 改為 0-100 閱值）
+
+## Project Nexus v8.0 - 天命聯盟・專家平台
+
+### feature-store 修復
+- [x] feature-store 顯示用戶目前方案名稱、到期時間、已訂閱功能清單
+
+### Phase 0：地基與權限
+- [x] users 表確認 role 欄位（'user'/'expert'/'admin'）
+- [x] 建立 experts 表（userId, publicName, title, bio, profileImageUrl, coverImageUrl, tags, status）
+- [x] 建立 /expert/* 路由守衛（role=expert 或 admin 才能進入）
+- [x] 後台管理員可管理專家帳號（審核/啟用/停用/指派 role）
+
+### Phase 1：專家後台
+- [x] 建立 expert_services 表
+- [x] 建立 expert tRPC router（getMyProfile/updateMyProfile/listMyServices/createService/updateService/deleteService）
+- [x] /expert/dashboard 儀表盤頁面
+- [x] /expert/profile-editor 個人品牌編輯器（含 Markdown bio 編輯）
+- [x] /expert/services 服務項目管理頁面
+
+### Phase 2：智能行事曆
+- [x] 建立 expert_availability 表
+- [x] 建立 bookings 表
+- [x] expert.setAvailability / getCalendarData API
+- [x] user.createBooking API
+- [x] /expert/calendar 日曆頁面（FullCalendar/React Big Calendar）
+
+### Phase 3：用戶前台
+- [x] public.listExperts / getExpertDetails API
+- [x] user.uploadPaymentProof / expert.confirmPayment API
+- [x] /experts 專家市集頁面（卡片佈局+標籤篩選）
+- [x] /experts/[expertId] 專家個人主頁（介紹+服務+預約日曆）
+- [x] /booking/[bookingId]/pay 支付頁面（QR Code + 上傳付款截圖）
+
+### Phase 4：溝通與完善
+- [x] 建立 private_messages 表
+- [x] 建立 reviews 表
+- [x] chat.getMessages / sendMessage API
+- [x] review.submitReview / public.getExpertReviews API
+- [x] /my-bookings/[bookingId]/chat 私訊室頁面
+- [x] 專家個人主頁新增「用戶評價」標籤頁
+- [x] 後台管理員完整控管專家（審核/停用/查看訂單/查看評論）
+
+## 功能修復 v8.1 - feature-store 方案顯示 + 專家系統後台控管（2026-03-04）
+- [x] /feature-store 修正：始終顯示用戶目前方案名稱、方案效期、已訂閱功能清單（含各功能到期時間）
+- [x] AdminExperts 頁面：後台管理員完整控管專家（審核/啟用/停用/查看預約）
+- [x] AdminLayout 側邊欄加入「專家管理」入口
+- [x] SharedNav 加入「天命聯盟」（/experts）和「我的預約」（/my-bookings）導航入口
+- [x] MyBookings 頁面：用戶查看自己的預約記錄（含狀態/時間/專家資訊）
+- [x] App.tsx 加入所有專家系統相關路由

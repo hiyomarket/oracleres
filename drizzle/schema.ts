@@ -152,7 +152,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "expert", "admin"]).default("user").notNull(),
   // 當前方案 ID（對應 plans.id）
   planId: varchar("planId", { length: 50 }).notNull().default("basic"),
   // 方案到期日（null = 永久有效，適用基礎免費方案）
@@ -1064,3 +1064,122 @@ export const siteBanners = mysqlTable("site_banners", {
 });
 export type SiteBanner = typeof siteBanners.$inferSelect;
 export type InsertSiteBanner = typeof siteBanners.$inferInsert;
+
+/**
+ * 專家資料表 (Project Nexus)
+ * 存儲專家的公開資訊和狀態
+ */
+export const experts = mysqlTable("experts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  publicName: varchar("publicName", { length: 100 }).notNull(),
+  title: varchar("title", { length: 200 }),
+  bio: text("bio"),
+  profileImageUrl: varchar("profileImageUrl", { length: 500 }),
+  coverImageUrl: varchar("coverImageUrl", { length: 500 }),
+  tags: json("tags").$type<string[]>().default([]),
+  // 狀態： active=公開發佈, inactive=暫停接客, pending_review=待審核
+  status: mysqlEnum("status", ["active", "inactive", "pending_review"]).notNull().default("pending_review"),
+  // 專業領域標籤
+  specialties: json("specialties").$type<string[]>().default([]),
+  // 服務語言
+  languages: varchar("languages", { length: 200 }).default("中文"),
+  // 諮詢方式 (video/voice/text/in_person)
+  consultationModes: json("consultationModes").$type<string[]>().default(["video"]),
+  // 社群連結
+  socialLinks: json("socialLinks").$type<Record<string, string>>().default({}),
+  // 收費範圍
+  priceMin: int("priceMin").default(0),
+  priceMax: int("priceMax").default(0),
+  // 收款 QR Code 圖片
+  paymentQrUrl: varchar("paymentQrUrl", { length: 500 }),
+  // 累計評分平均分
+  ratingAvg: decimal("ratingAvg", { precision: 3, scale: 2 }).default("0.00"),
+  ratingCount: int("ratingCount").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Expert = typeof experts.$inferSelect;
+export type InsertExpert = typeof experts.$inferInsert;
+
+/**
+ * 專家服務項目表
+ */
+export const expertServices = mysqlTable("expert_services", {
+  id: int("id").autoincrement().primaryKey(),
+  expertId: int("expertId").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  durationMinutes: int("durationMinutes").notNull().default(60),
+  price: int("price").notNull().default(0),
+  type: mysqlEnum("type", ["online", "offline"]).notNull().default("online"),
+  isActive: tinyint("isActive").notNull().default(1),
+  sortOrder: int("sortOrder").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ExpertService = typeof expertServices.$inferSelect;
+export type InsertExpertService = typeof expertServices.$inferInsert;
+
+/**
+ * 專家可預約時間表
+ */
+export const expertAvailability = mysqlTable("expert_availability", {
+  id: int("id").autoincrement().primaryKey(),
+  expertId: int("expertId").notNull(),
+  startTime: timestamp("startTime").notNull(),
+  endTime: timestamp("endTime").notNull(),
+  isBooked: tinyint("isBooked").notNull().default(0),
+  bookingId: int("bookingId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ExpertAvailability = typeof expertAvailability.$inferSelect;
+export type InsertExpertAvailability = typeof expertAvailability.$inferInsert;
+
+/**
+ * 預約訂單表
+ */
+export const bookings = mysqlTable("bookings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  expertId: int("expertId").notNull(),
+  serviceId: int("serviceId").notNull(),
+  bookingTime: timestamp("bookingTime").notNull(),
+  // 狀態： pending_payment=待付款, confirmed=已確認, completed=已完成, cancelled=已取消
+  status: mysqlEnum("status", ["pending_payment", "confirmed", "completed", "cancelled"]).notNull().default("pending_payment"),
+  paymentProofUrl: varchar("paymentProofUrl", { length: 500 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Booking = typeof bookings.$inferSelect;
+export type InsertBooking = typeof bookings.$inferInsert;
+
+/**
+ * 私訊表
+ */
+export const privateMessages = mysqlTable("private_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  bookingId: int("bookingId").notNull(),
+  senderId: int("senderId").notNull(),
+  content: text("content").notNull(),
+  imageUrl: varchar("imageUrl", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type PrivateMessage = typeof privateMessages.$inferSelect;
+export type InsertPrivateMessage = typeof privateMessages.$inferInsert;
+
+/**
+ * 評論表
+ */
+export const reviews = mysqlTable("reviews", {
+  id: int("id").autoincrement().primaryKey(),
+  bookingId: int("bookingId").notNull().unique(),
+  userId: int("userId").notNull(),
+  expertId: int("expertId").notNull(),
+  rating: int("rating").notNull(),
+  comment: text("comment"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type Review = typeof reviews.$inferSelect;
+export type InsertReview = typeof reviews.$inferInsert;
