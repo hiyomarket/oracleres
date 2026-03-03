@@ -1014,115 +1014,167 @@ function RestaurantCategoriesTab() {
 }
 
 // ============================================================
-// 策略引擎說明面板（靜態展示，未來可接 DB 動態調整）
+// 策略引擎面板（可編輯閾值，連接 DB）
 // ============================================================
 function StrategyEnginePanel() {
-  const strategies = [
-    {
-      id: "強勢補弱",
-      icon: "⚔️",
-      color: "text-red-400",
-      border: "border-red-500/30",
-      bg: "bg-red-950/20",
-      trigger: "日主五行最強 ≥ 35% 且最弱 ≤ 8%",
-      primaryTarget: "最弱五行",
-      secondaryTarget: "日主喜用神",
-      desc: "今日能量極度失衡，主動補充最弱元素以恢復平衡，同時鞏固喜用神。適合需要突破瓶頸的日子。",
-      outfitHint: "主色選最弱五行對應色，輔色選喜用神色",
-    },
-    {
-      id: "順勢生旺",
-      icon: "🌊",
-      color: "text-blue-400",
-      border: "border-blue-500/30",
-      bg: "bg-blue-950/20",
-      trigger: "日主喜用神比例 ≥ 30% 且最弱 > 8%",
-      primaryTarget: "喜用神",
-      secondaryTarget: "生喜用神的五行",
-      desc: "今日喜用神能量充沛，順勢強化，讓好能量持續發酵。適合重要決策、談判、創作的日子。",
-      outfitHint: "主色選喜用神色，輔色選生喜用神的五行色",
-    },
-    {
-      id: "借力打力",
-      icon: "🔄",
-      color: "text-purple-400",
-      border: "border-purple-500/30",
-      bg: "bg-purple-950/20",
-      trigger: "日主忌神比例 ≥ 30%（環境能量對日主不利）",
-      primaryTarget: "剋制忌神的五行",
-      secondaryTarget: "喜用神",
-      desc: "今日環境能量對你不利，以剋制忌神的五行來化解阻力。適合需要化解衝突的日子。",
-      outfitHint: "主色選剋忌神的五行色，輔色選喜用神色",
-    },
-    {
-      id: "食神生財",
-      icon: "💰",
-      color: "text-amber-400",
-      border: "border-amber-500/30",
-      bg: "bg-amber-950/20",
-      trigger: "食神/傷官比例 ≥ 25% 且財星 ≤ 15%",
-      primaryTarget: "財星（土/金）",
-      secondaryTarget: "食神/傷官對應五行",
-      desc: "今日才華能量旺盛但財星偏弱，補充財星讓才華轉化為實際收益。適合創作、展示、銷售的日子。",
-      outfitHint: "主色選財星對應色（土=黃棕、金=白灰），輔色選食神色",
-    },
-    {
-      id: "均衡守成",
-      icon: "⚖️",
-      color: "text-green-400",
-      border: "border-green-500/30",
-      bg: "bg-green-950/20",
-      trigger: "五行分布相對均衡（無元素 ≥ 35% 或 ≤ 5%）",
-      primaryTarget: "喜用神",
-      secondaryTarget: "次弱五行",
-      desc: "今日能量相對平衡，維持穩定狀態，小幅補強喜用神即可。適合日常工作、維持關係的日子。",
-      outfitHint: "主色選喜用神色，整體穿搭以和諧為主",
-    },
-  ];
+  const utils = trpc.useUtils();
+  const { data: thresholds, isLoading } = trpc.adminConfig.getStrategyThresholds.useQuery();
+  const updateMutation = trpc.adminConfig.updateStrategyThreshold.useMutation({
+    onSuccess: () => { toast.success('閾值已更新'); utils.adminConfig.getStrategyThresholds.invalidate(); },
+    onError: (e) => toast.error('更新失敗：' + e.message),
+  });
+  const resetMutation = trpc.adminConfig.resetStrategyThresholds.useMutation({
+    onSuccess: (d) => { toast.success(d.message); utils.adminConfig.getStrategyThresholds.invalidate(); },
+    onError: (e) => toast.error('重置失敗：' + e.message),
+  });
+
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editValues, setEditValues] = useState<{ weakThreshold: number; strongThreshold: number; priority: number; notes: string }>({
+    weakThreshold: 15, strongThreshold: 30, priority: 1, notes: ''
+  });
+
+  const STRATEGY_META: Record<string, { icon: string; color: string; border: string; bg: string; outfitHint: string; trigger: string; primaryTarget: string }> = {
+    '強勢補弱': { icon: '⚔️', color: 'text-red-400', border: 'border-red-500/30', bg: 'bg-red-950/20', outfitHint: '主色選最弱五行對應色，輔色選喜用神色', trigger: '最弱五行低於 weakThreshold%', primaryTarget: '最弱五行' },
+    '順勢生旺': { icon: '🌊', color: 'text-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-950/20', outfitHint: '主色選喜用神色', trigger: '喜用神佔比超過 strongThreshold%', primaryTarget: '喜用神' },
+    '借力打力': { icon: '🔄', color: 'text-purple-400', border: 'border-purple-500/30', bg: 'bg-purple-950/20', outfitHint: '主色選剋忌神的五行色', trigger: '忌神佔比超過 strongThreshold%', primaryTarget: '剋忌神的五行' },
+    '食神生財': { icon: '💰', color: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-950/20', outfitHint: '主色選財星對應色（土=黃棕、金=白灰）', trigger: '食傷佔比超過 strongThreshold% 且財星低於 weakThreshold%', primaryTarget: '財星' },
+    '均衡守成': { icon: '⚖️', color: 'text-green-400', border: 'border-green-500/30', bg: 'bg-green-950/20', outfitHint: '主色選喜用神色，整體以和諧為主', trigger: '其他策略均不觸發時預設使用', primaryTarget: '喜用神' },
+  };
+
+  function startEdit(t: { id: number; weakThreshold: number; strongThreshold: number; priority: number; notes: string | null }) {
+    setEditingId(t.id);
+    setEditValues({ weakThreshold: t.weakThreshold, strongThreshold: t.strongThreshold, priority: t.priority, notes: t.notes ?? '' });
+  }
+  function saveEdit(id: number) {
+    updateMutation.mutate({ id, ...editValues });
+    setEditingId(null);
+  }
+
+  if (isLoading) return <div className="h-40 bg-white/5 rounded-2xl animate-pulse" />;
+
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-amber-500/20 bg-amber-950/10 p-4 mb-2">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-amber-400 text-lg">⚙️</span>
-          <span className="text-amber-300 font-semibold text-sm">策略引擎 V10.0 說明</span>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-amber-400 text-lg">⚙️</span>
+            <span className="text-amber-300 font-semibold text-sm">策略引擎 V10.0 閾值設定</span>
+          </div>
+          <Button size="sm" variant="outline" className="text-xs h-7 border-slate-600" onClick={() => resetMutation.mutate()} disabled={resetMutation.isPending}>
+            {resetMutation.isPending ? '重置中...' : '🔄 重置預設'}
+          </Button>
         </div>
         <p className="text-slate-400 text-xs leading-relaxed">
-          每日系統依據「本命四柱 × 流日天干地支 × 流時時柱」計算加權五行比例，再依下列五大策略的觸發條件，
-          自動判定當日最佳策略，並驅動穿搭主色、手串選擇、行動建議的生成。
-          未來版本將支援在此頁面直接調整各策略的觸發閾值。
+          每日系統依據「本命四柱 × 流日天干地支 × 流時時柱」計算加權五行比例，再依下列五大策略的觸發閾值自動判定當日最佳策略。
+          可直接在此調整各策略的觸發百分比，變更即時生效。
         </p>
       </div>
-      {strategies.map((s) => (
-        <div key={s.id} className={`rounded-xl border ${s.border} ${s.bg} p-4`}>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">{s.icon}</span>
-            <span className={`font-bold text-sm ${s.color}`}>{s.id}</span>
-            <span className="ml-auto text-xs text-slate-500 bg-slate-800/60 px-2 py-0.5 rounded-full">策略 ID: {s.id}</span>
+      {(thresholds ?? []).map((t) => {
+        const meta = STRATEGY_META[t.strategyName] ?? STRATEGY_META['均衡守成'];
+        const isEditing = editingId === t.id;
+        return (
+          <div key={t.id} className={`rounded-xl border ${meta.border} ${meta.bg} p-4`}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">{meta.icon}</span>
+              <span className={`font-bold text-sm ${meta.color}`}>{t.strategyName}</span>
+              <span className="ml-auto flex items-center gap-2">
+                <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                  t.enabled ? 'bg-emerald-900/30 border-emerald-500/40 text-emerald-400' : 'bg-slate-800/60 border-slate-600/40 text-slate-500'
+                }`}>{t.enabled ? '啟用' : '停用'}</span>
+                <span className="text-xs text-slate-500 bg-slate-800/60 px-2 py-0.5 rounded-full">優先級 #{t.priority}</span>
+              </span>
+            </div>
+            {isEditing ? (
+              <div className="space-y-3 mt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-slate-400 mb-1 block">弱勢閾值（%）</Label>
+                    <Input type="number" min={0} max={100} value={editValues.weakThreshold}
+                      onChange={e => setEditValues(v => ({ ...v, weakThreshold: parseInt(e.target.value) || 0 }))}
+                      className="h-8 text-xs bg-slate-800 border-slate-600" />
+                    <p className="text-[10px] text-slate-500 mt-1">元素佔比低於此值時判定為「弱勢」</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-400 mb-1 block">強勢閾值（%）</Label>
+                    <Input type="number" min={0} max={100} value={editValues.strongThreshold}
+                      onChange={e => setEditValues(v => ({ ...v, strongThreshold: parseInt(e.target.value) || 0 }))}
+                      className="h-8 text-xs bg-slate-800 border-slate-600" />
+                    <p className="text-[10px] text-slate-500 mt-1">元素佔比超過此值時判定為「強勢」</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-400 mb-1 block">優先級（1-99）</Label>
+                    <Input type="number" min={1} max={99} value={editValues.priority}
+                      onChange={e => setEditValues(v => ({ ...v, priority: parseInt(e.target.value) || 1 }))}
+                      className="h-8 text-xs bg-slate-800 border-slate-600" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-xs text-slate-400">啟用此策略</Label>
+                    <Switch checked={t.enabled === 1}
+                      onCheckedChange={checked => updateMutation.mutate({ id: t.id, enabled: checked })}
+                      className="mt-1" />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400 mb-1 block">備註</Label>
+                  <Input value={editValues.notes}
+                    onChange={e => setEditValues(v => ({ ...v, notes: e.target.value }))}
+                    placeholder="管理員筆記..."
+                    className="h-8 text-xs bg-slate-800 border-slate-600" />
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" className="h-7 text-xs" onClick={() => saveEdit(t.id)} disabled={updateMutation.isPending}>儲存</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setEditingId(null)}>取消</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 text-xs">
+                <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="rounded-lg bg-slate-800/60 p-2 text-center">
+                    <div className="text-slate-500 text-[10px] mb-0.5">弱勢閾值</div>
+                    <div className={`font-bold text-base ${meta.color}`}>{t.weakThreshold}%</div>
+                  </div>
+                  <div className="rounded-lg bg-slate-800/60 p-2 text-center">
+                    <div className="text-slate-500 text-[10px] mb-0.5">強勢閾值</div>
+                    <div className={`font-bold text-base ${meta.color}`}>{t.strongThreshold}%</div>
+                  </div>
+                  <div className="rounded-lg bg-slate-800/60 p-2 text-center">
+                    <div className="text-slate-500 text-[10px] mb-0.5">優先級</div>
+                    <div className="font-bold text-base text-slate-300">#{t.priority}</div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-slate-500 w-16 flex-shrink-0">觸發條件</span>
+                  <span className="text-slate-300">{meta.trigger}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-slate-500 w-16 flex-shrink-0">主攻目標</span>
+                  <span className={`font-medium ${meta.color}`}>{meta.primaryTarget}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-slate-500 w-16 flex-shrink-0">策略說明</span>
+                  <span className="text-slate-400 leading-relaxed">{t.description}</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-slate-500 w-16 flex-shrink-0">穿搭提示</span>
+                  <span className="text-slate-400 italic">{meta.outfitHint}</span>
+                </div>
+                {t.notes && (
+                  <div className="flex gap-2">
+                    <span className="text-slate-500 w-16 flex-shrink-0">備註</span>
+                    <span className="text-slate-400">{t.notes}</span>
+                  </div>
+                )}
+                <div className="mt-3 flex items-center gap-3">
+                  <Button size="sm" variant="outline" className="h-7 text-xs border-slate-600" onClick={() => startEdit(t)}>✏️ 編輯閾值</Button>
+                  <Switch checked={t.enabled === 1}
+                    onCheckedChange={checked => updateMutation.mutate({ id: t.id, enabled: checked })} />
+                  <span className="text-slate-500 text-xs">{t.enabled ? '啟用中' : '已停用'}</span>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="space-y-2 text-xs">
-            <div className="flex gap-2">
-              <span className="text-slate-500 w-16 flex-shrink-0">觸發條件</span>
-              <span className="text-slate-300">{s.trigger}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="text-slate-500 w-16 flex-shrink-0">主攻目標</span>
-              <span className={`font-medium ${s.color}`}>{s.primaryTarget}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="text-slate-500 w-16 flex-shrink-0">輔助目標</span>
-              <span className="text-slate-300">{s.secondaryTarget}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="text-slate-500 w-16 flex-shrink-0">策略說明</span>
-              <span className="text-slate-400 leading-relaxed">{s.desc}</span>
-            </div>
-            <div className="flex gap-2">
-              <span className="text-slate-500 w-16 flex-shrink-0">穿搭提示</span>
-              <span className="text-slate-400 italic">{s.outfitHint}</span>
-            </div>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

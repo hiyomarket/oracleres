@@ -17,6 +17,7 @@ import {
   restaurantCategories,
   customBracelets,
   auraRuleHistory,
+  strategyThresholds,
 } from "../../drizzle/schema";
 import { eq, asc, desc } from "drizzle-orm";
 
@@ -546,5 +547,61 @@ export const adminConfigRouter = router({
         types: JSON.parse(c.types) as string[],
         textSuffix: c.textSuffix ?? undefined,
       }));
+  }),
+
+  // ============================================================
+  // 策略引擎閾值設定
+  // ============================================================
+
+  /** 取得所有策略閾值 */
+  getStrategyThresholds: protectedProcedure.query(async ({ ctx }) => {
+    requireAdmin(ctx);
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(strategyThresholds).orderBy(asc(strategyThresholds.priority));
+  }),
+
+  /** 更新單一策略閾值 */
+  updateStrategyThreshold: protectedProcedure
+    .input(z.object({
+      id: z.number().int().positive(),
+      weakThreshold: z.number().int().min(0).max(100).optional(),
+      strongThreshold: z.number().int().min(0).max(100).optional(),
+      priority: z.number().int().min(1).max(99).optional(),
+      enabled: z.boolean().optional(),
+      notes: z.string().max(500).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      requireAdmin(ctx);
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const updateData: Record<string, unknown> = {};
+      if (input.weakThreshold !== undefined) updateData.weakThreshold = input.weakThreshold;
+      if (input.strongThreshold !== undefined) updateData.strongThreshold = input.strongThreshold;
+      if (input.priority !== undefined) updateData.priority = input.priority;
+      if (input.enabled !== undefined) updateData.enabled = input.enabled ? 1 : 0;
+      if (input.notes !== undefined) updateData.notes = input.notes;
+      await db.update(strategyThresholds).set(updateData).where(eq(strategyThresholds.id, input.id));
+      return { success: true };
+    }),
+
+  /** 重置所有策略閾值為預設值 */
+  resetStrategyThresholds: protectedProcedure.mutation(async ({ ctx }) => {
+    requireAdmin(ctx);
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    const defaults = [
+      { name: '強勢補弱', weak: 15, strong: 25, priority: 1 },
+      { name: '順勢生旺', weak: 20, strong: 40, priority: 2 },
+      { name: '借力打力', weak: 18, strong: 35, priority: 3 },
+      { name: '食神生財', weak: 25, strong: 45, priority: 4 },
+      { name: '均衡守成', weak: 10, strong: 30, priority: 5 },
+    ];
+    for (const d of defaults) {
+      await db.update(strategyThresholds)
+        .set({ weakThreshold: d.weak, strongThreshold: d.strong, priority: d.priority, enabled: 1 })
+        .where(eq(strategyThresholds.strategyName, d.name));
+    }
+    return { success: true, message: '已重置為預設閾值' };
   }),
 });

@@ -714,3 +714,30 @@ export const divinationSessions = mysqlTable("divination_sessions", {
 });
 export type DivinationSession = typeof divinationSessions.$inferSelect;
 export type InsertDivinationSession = typeof divinationSessions.$inferInsert;
+
+// ============================================================
+// 後台管理：策略引擎閾值設定
+// ============================================================
+export const strategyThresholds = mysqlTable("strategy_thresholds", {
+  id: int("id").autoincrement().primaryKey(),
+  // 策略名稱（強勢補弱/順勢生旺/借力打力/食神生財/均衡守成）
+  strategyName: varchar("strategyName", { length: 20 }).notNull().unique(),
+  // 策略說明
+  description: varchar("description", { length: 200 }).notNull(),
+  // 主攻目標（補弱/生旺/借力/生財/守成）
+  primaryTarget: varchar("primaryTarget", { length: 20 }).notNull(),
+  // 觸發閾值：弱勢元素佔比下限（0-100 整數，代表百分比）
+  weakThreshold: int("weakThreshold").notNull().default(15),
+  // 觸發閾值：強勢元素佔比上限（0-100 整數，代表百分比）
+  strongThreshold: int("strongThreshold").notNull().default(30),
+  // 優先級（數字越小越優先）
+  priority: int("priority").notNull().default(99),
+  // 是否啟用
+  enabled: tinyint("enabled").notNull().default(1),
+  // 備註（管理員筆記）
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type StrategyThreshold = typeof strategyThresholds.$inferSelect;
+export type InsertStrategyThreshold = typeof strategyThresholds.$inferInsert;

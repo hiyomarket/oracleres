@@ -1589,3 +1589,21 @@
 - [x] 後台：新增「五行顏色對應」面板（穿搭顏色選擇規則）
 - [x] 後台：保留並整合原有三個 Tab（能量模擬器規則/手串資料庫/餐廳分類）
 - [x] 測試：168 項測試全部通過，TypeScript 零錯誤
+## 功能升級 v4.17 - 三項功能升級（2026-03-03）
+
+### 本週策略分布圖表
+- [x] 後端：新增 outfit.weeklyStrategyDistribution API（回傳過去 7 日每日策略名稱）
+- [x] 前端：OutfitPage 加入本週策略分布橫條圖（策略名稱 × 觸發天數）
+- [x] 前端：每個策略顯示對應顏色與天數標籤
+
+### storeResonance 動態加權整合
+- [x] 後端：storeResonance.ts 升級 buildDestinyWeightsFromProfile 為 calculateWeightedElements 動態加權
+- [x] 後端：scoreStores API 傳入當日日期，讓評分反映流日能量變化
+- [x] 後端：lottery.scoreStores 與 diet.nearbyRestaurants 同步更新
+
+### 策略觸發閾值可調整
+- [x] DB：新增 strategy_thresholds 資料表（strategy_id, threshold_key, threshold_value, label, description）
+- [x] 後端：adminConfig.getStrategyThresholds / upsertStrategyThreshold API
+- [x] 後端：strategyEngine.ts 從 DB 讀取閾值（有快取機制）
+- [x] 前端：AdminLogicConfig 策略引擎面板改為可編輯閾值介面
+- [x] 測試：更新/新增相關測試，168 項全部通過

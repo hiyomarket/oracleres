@@ -93,6 +93,11 @@ export default function OutfitPage() {
     { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false }
   );
 
+  // 本週策略分布
+  const { data: weeklyDist } = trpc.warRoom.weeklyStrategyDistribution.useQuery(
+    undefined,
+    { staleTime: 30 * 60 * 1000, refetchOnWindowFocus: false }
+  );
   // simulateOutfit mutation
   const simulateMutation = trpc.warRoom.simulateOutfit.useMutation({
     onSuccess: (data) => { setAuraBoostResult(data); setIsSimulating(false); },
@@ -741,10 +746,81 @@ export default function OutfitPage() {
               )}
             </AnimatePresence>
           </div>
-        ) : null}
+         ) : null}
 
+        {/* ═══ 本週策略分布圖表 ═══ */}
+        {weeklyDist && weeklyDist.days.length > 0 && (
+          <div className="mb-5 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">📊</span>
+              <div>
+                <div className="text-sm font-semibold text-white/70 uppercase tracking-widest">本週策略分布</div>
+                <div className="text-xs text-white/30 mt-0.5">過去 7 日各日觸發策略分析</div>
+              </div>
+            </div>
+            {/* 7日日期橫向列 */}
+            <div className="grid grid-cols-7 gap-1 mb-4">
+              {weeklyDist.days.map((d) => {
+                const sc = STRATEGY_COLORS[d.strategyName] ?? STRATEGY_COLORS["均衡守成"];
+                return (
+                  <div key={d.date} className={`flex flex-col items-center gap-1 p-1.5 rounded-xl border transition-all ${
+                    d.isToday ? `${sc.bg} ${sc.border} ring-1 ring-amber-400/50` : `bg-white/3 border-white/10`
+                  }`}>
+                    <span className={`text-[10px] font-medium ${ d.isToday ? "text-amber-400" : "text-white/40" }`}>{d.dayOfWeek.replace("週", "")}</span>
+                    <span className="text-base">{d.strategyIcon}</span>
+                    <span className={`text-[9px] leading-tight text-center ${ d.isToday ? sc.text : "text-white/30" }`}>
+                      {d.strategyName.length > 4 ? d.strategyName.slice(0, 4) : d.strategyName}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            {/* 策略次數橫條圖 */}
+            <div className="space-y-2">
+              {weeklyDist.distribution.map((item) => {
+                const sc = STRATEGY_COLORS[item.name] ?? STRATEGY_COLORS["均衡守成"];
+                const pct = Math.round((item.count / 7) * 100);
+                return (
+                  <div key={item.name} className="flex items-center gap-2">
+                    <span className="text-sm w-5 text-center">{item.icon}</span>
+                    <span className={`text-xs w-16 flex-shrink-0 ${sc.text}`}>{item.name}</span>
+                    <div className="flex-1 bg-white/10 rounded-full h-2 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className={`h-full rounded-full ${
+                          item.name === "強勢補弱" ? "bg-blue-400" :
+                          item.name === "順勢生旺" ? "bg-emerald-400" :
+                          item.name === "借力打力" ? "bg-purple-400" :
+                          item.name === "食神生財" ? "bg-amber-400" :
+                          "bg-gray-400"
+                        }`}
+                      />
+                    </div>
+                    <span className="text-xs text-white/40 w-8 text-right">{item.count}天</span>
+                  </div>
+                );
+              })}
+            </div>
+            {/* 策略解讀提示 */}
+            {weeklyDist.distribution[0] && (
+              <div className={`mt-3 p-2.5 rounded-xl border text-xs ${
+                (STRATEGY_COLORS[weeklyDist.distribution[0].name] ?? STRATEGY_COLORS["均衡守成"]).bg
+              } ${
+                (STRATEGY_COLORS[weeklyDist.distribution[0].name] ?? STRATEGY_COLORS["均衡守成"]).border
+              }`}>
+                <span className={`font-semibold ${
+                  (STRATEGY_COLORS[weeklyDist.distribution[0].name] ?? STRATEGY_COLORS["均衡守成"]).text
+                }`}>
+                  {weeklyDist.distribution[0].icon} 本週主導策略：{weeklyDist.distribution[0].name}
+                </span>
+                <span className="text-white/40 ml-2">（{weeklyDist.distribution[0].count}/7 天）</span>
+              </div>
+            )}
+          </div>
+        )}
       </main>
-
       {/* 衣物選擇器 Sheet */}
       <WardrobeSelector
         open={selectorOpen}

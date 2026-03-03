@@ -225,6 +225,13 @@
       "when": 1772144053708,
       "tag": "0031_pretty_ezekiel",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "5",
+      "when": 1772527728492,
+      "tag": "0032_serious_vindicator",
+      "breakpoints": true
     }
   ]
 }
