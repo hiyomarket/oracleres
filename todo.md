@@ -1680,3 +1680,21 @@
 - [x] 後端: diet.getWeeklyDietStats API（過去7天五行飲食分布）
 - [x] 前端: WeeklyReport 頁加入五行飲食分布圓餅圖（Recharts PieChart）
 - [x] 前端: 顯示各五行攝取次數與每日堆疊長條圖
+
+## 功能升級 v4.22 - 財運羅盤修復與延伸（2026-03-03）
+
+### Bug 修復
+- [x] 後端: 修正 dailyReport 中硬編碼五行分數（ELEMENT_ZH_SCORE 改為動態計算）
+- [x] 後端: 修正 WEATHER_SCORE 硬編碼（改為依用戶喜忌神動態計算）
+- [x] 後端: 修正 oneLinerMap 食神條目中的「甲木化火」硬編碼
+- [x] 後端: dailyReport 回傳 profileIsDefault 標記
+- [x] 前端: WealthPage 加入 ProfileIncompleteBanner
+
+### 功能延伸
+- [x] 前端: WealthPage 加入個人命格摘要卡（日主五行 + 喜用神）
+- [x] 前端: WealthPage 加入今日最佳出手時辰提示
+- [x] 後端: 新增 wealth.getMonthlyTrend API（本月每日財運走勢）
+- [x] 前端: WealthPage 加入本月財運走勢横向長條圖
+- [x] 後端: 新增 wealth.logEntry API（財運日記記錄）
+- [x] 前端: WealthPage 加入財運日記（記錄今日心得 + 歷史查閱）
+- [x] 前端: WealthPage 加入吉時倒數計時器

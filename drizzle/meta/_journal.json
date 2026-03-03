@@ -239,6 +239,13 @@
       "when": 1772532760087,
       "tag": "0033_harsh_thunderball",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "5",
+      "when": 1772536256043,
+      "tag": "0034_luxuriant_khan",
+      "breakpoints": true
     }
   ]
 }

@@ -780,3 +780,31 @@ export const userDietPreferences = mysqlTable("user_diet_preferences", {
 });
 export type UserDietPreference = typeof userDietPreferences.$inferSelect;
 export type InsertUserDietPreference = typeof userDietPreferences.$inferInsert;
+
+// ============================================================
+// 財運羅盤 V4.22：財運日記
+// ============================================================
+export const wealthJournal = mysqlTable("wealth_journal", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // 日期（台灣時間 YYYY-MM-DD）
+  date: varchar("date", { length: 10 }).notNull(),
+  // 今日偏財指數（1-10）
+  lotteryScore: int("lotteryScore").notNull().default(5),
+  // 今日十神（偏財/正財/食神等）
+  tenGod: varchar("tenGod", { length: 20 }).default(""),
+  // 用戶心得（最多 500 字）
+  note: varchar("note", { length: 500 }).default(""),
+  // 今日是否有購彩（true/false）
+  didBuyLottery: tinyint("didBuyLottery").default(0),
+  // 購彩金額（元）
+  lotteryAmount: int("lotteryAmount").default(0),
+  // 購彩結果（win/lose/pending）
+  lotteryResult: varchar("lotteryResult", { length: 20 }).default("pending"),
+  // 中獎金額（元）
+  winAmount: int("winAmount").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type WealthJournal = typeof wealthJournal.$inferSelect;
+export type InsertWealthJournal = typeof wealthJournal.$inferInsert;
