@@ -257,7 +257,7 @@ export const lotteryResults = mysqlTable("lottery_results", {
   dayPillar: varchar("dayPillar", { length: 4 }).notNull(),
   // 日期字串
   dateString: varchar("dateString", { length: 50 }).notNull(),
-  // 彩券類型: 'lottery'(大樂透) | 'scratch'(刮刮樂)
+  // 彩券類型: 'lottery'(大樂透) | 'scratch'(刮刮樂) | 'bigLotto'(大樂透新) | 'powerball'(威力彩) | 'threeStar'(三星彩) | 'fourStar'(四星彩)
   ticketType: varchar("ticketType", { length: 20 }).notNull().default('lottery'),
   // 刮刮樂專用：券面面額（元）
   scratchPrice: int("scratchPrice"),

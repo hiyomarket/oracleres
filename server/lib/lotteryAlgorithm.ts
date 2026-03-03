@@ -805,3 +805,241 @@ export function analyzeAddressWuxing(address: string): AddressAnalysis {
     elementCounts, resonanceScore, resonanceLabel, advice, luckyNumbers,
   };
 }
+
+// ============================================================
+// 大樂透 / 威力彩 / 三星彩 / 四星彩 選號引擎 V1.0
+// ============================================================
+
+export interface BigLottoResult {
+  type: 'bigLotto';
+  numbers: number[];
+  specialNumber: number;
+  sets: Array<{ type: string; description: string; numbers: number[]; specialNumber: number; confidence: 'high' | 'medium' | 'low' }>;
+  energyAnalysis: { overallLuck: number; recommendation: string; todayElement: string };
+  dayPillar: string;
+  hourPillar: string;
+  moonPhase: string;
+}
+
+export interface PowerballResult {
+  type: 'powerball';
+  numbers: number[];
+  powerNumber: number;
+  sets: Array<{ type: string; description: string; numbers: number[]; powerNumber: number; confidence: 'high' | 'medium' | 'low' }>;
+  energyAnalysis: { overallLuck: number; recommendation: string; todayElement: string };
+  dayPillar: string;
+  hourPillar: string;
+  moonPhase: string;
+}
+
+export interface ThreeStarResult {
+  type: 'threeStar';
+  digits: [number, number, number];
+  straight: string;
+  boxNumbers: string[];
+  sets: Array<{ type: string; description: string; digits: [number, number, number]; confidence: 'high' | 'medium' | 'low' }>;
+  energyAnalysis: { overallLuck: number; recommendation: string; todayElement: string };
+  dayPillar: string;
+  hourPillar: string;
+  moonPhase: string;
+}
+
+export interface FourStarResult {
+  type: 'fourStar';
+  digits: [number, number, number, number];
+  straight: string;
+  sets: Array<{ type: string; description: string; digits: [number, number, number, number]; confidence: 'high' | 'medium' | 'low' }>;
+  energyAnalysis: { overallLuck: number; recommendation: string; todayElement: string };
+  dayPillar: string;
+  hourPillar: string;
+  moonPhase: string;
+}
+
+function buildRangeScores(finalScores: Record<number, number>, min: number, max: number): Array<{ num: number; score: number }> {
+  const result: Array<{ num: number; score: number }> = [];
+  for (let n = min; n <= max; n++) {
+    const ones = n % 10;
+    const tens = Math.floor(n / 10);
+    const score = (finalScores[ones] ?? 5) + (finalScores[tens] ?? 5) * 0.6;
+    result.push({ num: n, score });
+  }
+  return result.sort((a, b) => b.score - a.score);
+}
+
+export function generateBigLottoNumbers(
+  date: Date = new Date(),
+  options: DynamicLotteryInput = {}
+): BigLottoResult {
+  const base = generateLotteryNumbers(date, options);
+  const scores = base.scoreBreakdown?.finalScores ?? {};
+  const tenGodName = base.scoreBreakdown?.tenGodName ?? '比肩';
+  const hourBranch = base.scoreBreakdown?.hourBranch ?? '午';
+
+  const rangeScores = buildRangeScores(scores, 1, 49);
+  const coreNums = rangeScores.slice(0, 6).map(r => r.num).sort((a, b) => a - b);
+  const coreSpecial = rangeScores.find(r => !coreNums.includes(r.num))?.num ?? 49;
+
+  const tenGodLucky = TEN_GOD_STRATEGY[tenGodName]?.luckyNumbers ?? [2, 7, 0, 5];
+  const strategyPool = rangeScores
+    .map(r => ({ ...r, bonus: tenGodLucky.includes(r.num % 10) ? 3 : 0 }))
+    .sort((a, b) => (b.score + b.bonus) - (a.score + a.bonus));
+  const strategyNums = strategyPool.slice(0, 6).map(r => r.num).sort((a, b) => a - b);
+  const strategySpecial = strategyPool.find(r => !strategyNums.includes(r.num))?.num ?? 49;
+
+  const hourPriorityEl = WUXING_NUMBERS.fire.concat(WUXING_NUMBERS.earth);
+  const hourPool = rangeScores
+    .map(r => ({ ...r, bonus: hourPriorityEl.includes(r.num % 10) ? 2 : 0 }))
+    .sort((a, b) => (b.score + b.bonus) - (a.score + a.bonus));
+  const hourNums = hourPool.slice(0, 6).map(r => r.num).sort((a, b) => a - b);
+  const hourSpecial = hourPool.find(r => !hourNums.includes(r.num))?.num ?? 49;
+
+  const overallLuck = base.energyAnalysis.overallLuck;
+  const hourNames: Record<string, string> = { 子:'子時',丑:'丑時',寅:'寅時',卯:'卯時',辰:'辰時',巳:'巳時',午:'午時',未:'未時',申:'申時',酉:'酉時',戌:'戌時',亥:'亥時' };
+  const level = overallLuck >= 8 ? '天命大吉！宇宙正在為您開路' : overallLuck >= 6.5 ? '吉氣匯聚，財星入局' : overallLuck >= 5 ? '能量平穩，以平常心出手' : '今日宜靜待，積蓄能量';
+  const rec = `✦ ${level}。${tenGodName}日×${hourNames[hourBranch] ?? hourBranch}，天命共振選出 ${coreNums.slice(0, 3).join('、')} 等號碼，特別號 ${coreSpecial} 為今日最強備選。整體天命指數 ${overallLuck.toFixed(1)}/10，願宇宙的豐盛能量透過這組號碼流向您。`;
+
+  return {
+    type: 'bigLotto',
+    numbers: coreNums,
+    specialNumber: coreSpecial,
+    sets: [
+      { type: '天命核心組', description: `五維加權最高分6碼（${tenGodName}日策略）`, numbers: coreNums, specialNumber: coreSpecial, confidence: overallLuck >= 7 ? 'high' : 'medium' },
+      { type: `${tenGodName}策略組`, description: `融合十神幸運數字加成`, numbers: strategyNums, specialNumber: strategySpecial, confidence: 'medium' },
+      { type: '時辰能量組', description: `${hourBranch}時辰五行優先序加持`, numbers: hourNums, specialNumber: hourSpecial, confidence: 'medium' },
+    ],
+    energyAnalysis: { overallLuck, recommendation: rec, todayElement: base.energyAnalysis.todayElement },
+    dayPillar: base.dayPillar,
+    hourPillar: base.hourPillar,
+    moonPhase: base.moonPhase,
+  };
+}
+
+export function generatePowerballNumbers(
+  date: Date = new Date(),
+  options: DynamicLotteryInput = {}
+): PowerballResult {
+  const base = generateLotteryNumbers(date, options);
+  const scores = base.scoreBreakdown?.finalScores ?? {};
+  const tenGodName = base.scoreBreakdown?.tenGodName ?? '比肩';
+  const hourBranch = base.scoreBreakdown?.hourBranch ?? '午';
+
+  const rangeScores = buildRangeScores(scores, 1, 38);
+  const coreNums = rangeScores.slice(0, 6).map(r => r.num).sort((a, b) => a - b);
+
+  const powerCandidates = [1,2,3,4,5,6,7,8].map(n => ({ num: n, score: scores[n] ?? 5 })).sort((a,b) => b.score - a.score);
+  const powerNumber = powerCandidates[0]?.num ?? 1;
+
+  const tenGodLucky = TEN_GOD_STRATEGY[tenGodName]?.luckyNumbers ?? [2, 7, 0, 5];
+  const strategyPool = rangeScores.map(r => ({ ...r, bonus: tenGodLucky.includes(r.num % 10) ? 3 : 0 })).sort((a,b) => (b.score+b.bonus)-(a.score+a.bonus));
+  const strategyNums = strategyPool.slice(0, 6).map(r => r.num).sort((a,b) => a-b);
+  const strategyPower = powerCandidates[1]?.num ?? powerNumber;
+
+  const hourPriorityEl = WUXING_NUMBERS.fire.concat(WUXING_NUMBERS.earth);
+  const hourPool = rangeScores.map(r => ({ ...r, bonus: hourPriorityEl.includes(r.num % 10) ? 2 : 0 })).sort((a,b) => (b.score+b.bonus)-(a.score+a.bonus));
+  const hourNums = hourPool.slice(0, 6).map(r => r.num).sort((a,b) => a-b);
+  const hourPower = powerCandidates[2]?.num ?? powerNumber;
+
+  const overallLuck = base.energyAnalysis.overallLuck;
+  const rec = `✦ ${tenGodName}日天命加持，威力彩第一區推薦 ${coreNums.slice(0,3).join('、')} 等，第二區強力推薦 ${powerNumber}（今日最高能量數字）。天命指數 ${overallLuck.toFixed(1)}/10，願這組號碼成為您財富轉機的起點。`;
+
+  return {
+    type: 'powerball',
+    numbers: coreNums,
+    powerNumber,
+    sets: [
+      { type: '天命核心組', description: `第一區五維加權最高分6碼`, numbers: coreNums, powerNumber, confidence: overallLuck >= 7 ? 'high' : 'medium' },
+      { type: `${tenGodName}策略組`, description: `融合十神幸運數字`, numbers: strategyNums, powerNumber: strategyPower, confidence: 'medium' },
+      { type: '時辰能量組', description: `${hourBranch}時辰五行加持`, numbers: hourNums, powerNumber: hourPower, confidence: 'medium' },
+    ],
+    energyAnalysis: { overallLuck, recommendation: rec, todayElement: base.energyAnalysis.todayElement },
+    dayPillar: base.dayPillar,
+    hourPillar: base.hourPillar,
+    moonPhase: base.moonPhase,
+  };
+}
+
+export function generateThreeStarNumbers(
+  date: Date = new Date(),
+  options: DynamicLotteryInput = {}
+): ThreeStarResult {
+  const base = generateLotteryNumbers(date, options);
+  const scores = base.scoreBreakdown?.finalScores ?? {};
+  const tenGodName = base.scoreBreakdown?.tenGodName ?? '比肩';
+  const hourBranch = base.scoreBreakdown?.hourBranch ?? '午';
+
+  const sortedDigits = Object.entries(scores).map(([n,s]) => ({ num: parseInt(n), score: s })).sort((a,b) => b.score-a.score);
+  const top3 = sortedDigits.slice(0, 3).map(d => d.num) as [number, number, number];
+  const straight = top3.join('');
+
+  const perms = new Set<string>();
+  const arr = [...top3];
+  for (let i=0;i<3;i++) for (let j=0;j<3;j++) for (let k=0;k<3;k++) {
+    if (i!==j && j!==k && i!==k) perms.add(`${arr[i]}${arr[j]}${arr[k]}`);
+  }
+  const boxNumbers = Array.from(perms).slice(0, 6);
+
+  const tenGodLucky = TEN_GOD_STRATEGY[tenGodName]?.luckyNumbers ?? [2,7,0,5];
+  const strategyPool = sortedDigits.map(d => ({ ...d, bonus: tenGodLucky.includes(d.num) ? 3 : 0 })).sort((a,b) => (b.score+b.bonus)-(a.score+a.bonus));
+  const strategy3 = strategyPool.slice(0, 3).map(d => d.num) as [number, number, number];
+
+  const hourPriority = [2,7,0,5,4,9,1,3,8,6];
+  const hourDigits = hourPriority.slice(0, 3) as [number, number, number];
+
+  const overallLuck = base.energyAnalysis.overallLuck;
+  const rec = `✦ ${tenGodName}日×${hourBranch}時，三星彩天命直選推薦 ${straight}，組選包含 ${boxNumbers.slice(0,3).join('、')} 等排列。天命指數 ${overallLuck.toFixed(1)}/10，每一個數字都承載著宇宙為您精算的能量，請以信念出手。`;
+
+  return {
+    type: 'threeStar',
+    digits: top3,
+    straight,
+    boxNumbers,
+    sets: [
+      { type: '天命直選組', description: `最高分三個數字直選`, digits: top3, confidence: overallLuck >= 7 ? 'high' : 'medium' },
+      { type: `${tenGodName}策略組`, description: `融合十神幸運數字`, digits: strategy3, confidence: 'medium' },
+      { type: '時辰能量組', description: `${hourBranch}時辰五行優先序`, digits: hourDigits, confidence: 'medium' },
+    ],
+    energyAnalysis: { overallLuck, recommendation: rec, todayElement: base.energyAnalysis.todayElement },
+    dayPillar: base.dayPillar,
+    hourPillar: base.hourPillar,
+    moonPhase: base.moonPhase,
+  };
+}
+
+export function generateFourStarNumbers(
+  date: Date = new Date(),
+  options: DynamicLotteryInput = {}
+): FourStarResult {
+  const base = generateLotteryNumbers(date, options);
+  const scores = base.scoreBreakdown?.finalScores ?? {};
+  const tenGodName = base.scoreBreakdown?.tenGodName ?? '比肩';
+  const hourBranch = base.scoreBreakdown?.hourBranch ?? '午';
+
+  const sortedDigits = Object.entries(scores).map(([n,s]) => ({ num: parseInt(n), score: s })).sort((a,b) => b.score-a.score);
+  const top4 = sortedDigits.slice(0, 4).map(d => d.num) as [number, number, number, number];
+  const straight = top4.join('');
+
+  const tenGodLucky = TEN_GOD_STRATEGY[tenGodName]?.luckyNumbers ?? [2,7,0,5];
+  const strategyPool = sortedDigits.map(d => ({ ...d, bonus: tenGodLucky.includes(d.num) ? 3 : 0 })).sort((a,b) => (b.score+b.bonus)-(a.score+a.bonus));
+  const strategy4 = strategyPool.slice(0, 4).map(d => d.num) as [number, number, number, number];
+
+  const hourPriority = [2,7,0,5,4,9,1,3,8,6];
+  const hourDigits = hourPriority.slice(0, 4) as [number, number, number, number];
+
+  const overallLuck = base.energyAnalysis.overallLuck;
+  const rec = `✦ ${tenGodName}日×${hourBranch}時，四星彩天命直選推薦 ${straight}，每一位數字均為今日最高天命共振值。天命指數 ${overallLuck.toFixed(1)}/10，宇宙正在透過這組數字向您傳遞財富密碼，請以平靜而堅定的心出手。`;
+
+  return {
+    type: 'fourStar',
+    digits: top4,
+    straight,
+    sets: [
+      { type: '天命直選組', description: `最高分四個數字直選`, digits: top4, confidence: overallLuck >= 7 ? 'high' : 'medium' },
+      { type: `${tenGodName}策略組`, description: `融合十神幸運數字`, digits: strategy4, confidence: 'medium' },
+      { type: '時辰能量組', description: `${hourBranch}時辰五行優先序`, digits: hourDigits, confidence: 'medium' },
+    ],
+    energyAnalysis: { overallLuck, recommendation: rec, todayElement: base.energyAnalysis.todayElement },
+    dayPillar: base.dayPillar,
+    hourPillar: base.hourPillar,
+    moonPhase: base.moonPhase,
+  };
+}

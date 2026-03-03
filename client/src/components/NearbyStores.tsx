@@ -263,7 +263,10 @@ const RADIUS_OPTIONS = [
   { label: '5km',  value: 5000 },
 ];
 
-export function NearbyStores() {
+interface NearbyStoresProps {
+  onSelectStore?: (store: { name: string; address: string; resonanceScore: number; resonanceStars: number; recommendation: string } | null) => void;
+}
+export function NearbyStores({ onSelectStore }: NearbyStoresProps = {}) {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -699,14 +702,15 @@ export function NearbyStores() {
                 {top3.map((store: ScoredStore, i) => (
                   <div
                     key={store.placeId}
-                    onClick={() => {
-                      setSelectedStore(store.placeId);
-                      if (mapRef.current) {
-                        mapRef.current.panTo(new google.maps.LatLng(store.lat, store.lng));
-                        mapRef.current.setZoom(17);
-                        setMapVisible(true);
-                      }
-                    }}
+                  onClick={() => {
+                    setSelectedStore(store.placeId);
+                    onSelectStore?.(store);
+                    if (mapRef.current) {
+                      mapRef.current.panTo(new google.maps.LatLng(store.lat, store.lng));
+                      mapRef.current.setZoom(17);
+                      setMapVisible(true);
+                    }
+                  }}
                     className="flex items-center gap-3 p-2 rounded-lg bg-white/5 border border-white/8 cursor-pointer hover:border-amber-500/30 transition-colors"
                   >
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
@@ -761,10 +765,15 @@ export function NearbyStores() {
                   onClick={() => {
                     const newSelected = selectedStore === store.placeId ? null : store.placeId;
                     setSelectedStore(newSelected);
-                    if (newSelected && mapRef.current) {
-                      mapRef.current.panTo(new google.maps.LatLng(store.lat, store.lng));
-                      mapRef.current.setZoom(17);
-                      setMapVisible(true);
+                    if (newSelected) {
+                      onSelectStore?.(store);
+                      if (mapRef.current) {
+                        mapRef.current.panTo(new google.maps.LatLng(store.lat, store.lng));
+                        mapRef.current.setZoom(17);
+                        setMapVisible(true);
+                      }
+                    } else {
+                      onSelectStore?.(null);
                     }
                   }}
                   isFavorited={favoritedIds.has(store.placeId)}

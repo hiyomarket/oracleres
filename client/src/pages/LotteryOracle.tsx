@@ -13,10 +13,13 @@ import { ScratchJournal } from "@/components/ScratchJournal";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 import { LotteryResultChecker } from "@/components/LotteryResultChecker";
+import { NearbyStores } from "@/components/NearbyStores";
+import { BigLottoChecker, PowerballChecker, ThreeStarChecker, FourStarChecker } from "@/components/LotteryCheckers";
 import {
   Sparkles, RefreshCw, Clock, ChevronDown, ChevronUp,
   TrendingUp, Flame, Calendar, MapPin, Thermometer,
   CloudRain, Sun, Cloud, Zap, Target, CheckCircle, AlertCircle, MinusCircle,
+  Store, Trophy, Coins, Star,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
@@ -552,6 +555,9 @@ type LotteryData = {
   }>;
 };
 
+// ── 折疊標籤類型 ──────────────────────────────────────────────────────────────
+type LotteryTab = "scratch" | "biglotto" | "star";
+
 export default function LotteryOracle() {
   const { hasFeature, isAdmin } = usePermissions();
   const [result, setResult] = useState<LotteryData | null>(null);
@@ -560,6 +566,21 @@ export default function LotteryOracle() {
   const [savedSessionId, setSavedSessionId] = useState<number | undefined>();
   const [activeSet, setActiveSet] = useState(0);
   const [showScratchAnalysis, setShowScratchAnalysis] = useState(false);
+  // 折疊標籤狀態
+  const [openTab, setOpenTab] = useState<LotteryTab | null>(null);
+  // 選定彩券行
+  const [selectedStore, setSelectedStore] = useState<{
+    name: string; address: string; resonanceScore: number; resonanceStars: number; recommendation: string;
+  } | null>(null);
+  // 各玩法選號結果
+  const [bigLottoResult, setBigLottoResult] = useState<any>(null);
+  const [bigLottoRevealing, setBigLottoRevealing] = useState(false);
+  const [powerballResult, setPowerballResult] = useState<any>(null);
+  const [powerballRevealing, setPowerballRevealing] = useState(false);
+  const [threeStarResult, setThreeStarResult] = useState<any>(null);
+  const [threeStarRevealing, setThreeStarRevealing] = useState(false);
+  const [fourStarResult, setFourStarResult] = useState<any>(null);
+  const [fourStarRevealing, setFourStarRevealing] = useState(false);
 
   // 日期選擇
   const [selectedDate, setSelectedDate] = useState(getTodayString());
@@ -667,6 +688,27 @@ export default function LotteryOracle() {
     },
   });
 
+  // 大樂透選號
+  const bigLottoMutation = trpc.lottery.bigLotto.useMutation({
+    onSuccess: (data: any) => { setBigLottoResult(data); setBigLottoRevealing(false); },
+    onError: () => { toast.error("天命能量暫時紊亂，請稍後再試"); setBigLottoRevealing(false); },
+  });
+  // 威力彩選號
+  const powerballMutation = trpc.lottery.powerball.useMutation({
+    onSuccess: (data: any) => { setPowerballResult(data); setPowerballRevealing(false); },
+    onError: () => { toast.error("天命能量暫時紊亂，請稍後再試"); setPowerballRevealing(false); },
+  });
+  // 三星彩選號
+  const threeStarMutation = trpc.lottery.threeStar.useMutation({
+    onSuccess: (data: any) => { setThreeStarResult(data); setThreeStarRevealing(false); },
+    onError: () => { toast.error("天命能量暫時紊亂，請稍後再試"); setThreeStarRevealing(false); },
+  });
+  // 四星彩選號
+  const fourStarMutation = trpc.lottery.fourStar.useMutation({
+    onSuccess: (data: any) => { setFourStarResult(data); setFourStarRevealing(false); },
+    onError: () => { toast.error("天命能量暫時紊亂，請稍後再試"); setFourStarRevealing(false); },
+  });
+
   const { data: history } = trpc.lottery.history.useQuery({ limit: 10 });
 
   const handleGenerate = useCallback(() => {
@@ -688,6 +730,83 @@ export default function LotteryOracle() {
       });
     }, 800);
   }, [generateMutation, selectedDate, weatherIncluded, weatherQuery.data, isToday]);
+
+  // 各玩法選號函數
+  const handleBigLotto = useCallback(() => {
+    setBigLottoRevealing(true);
+    setBigLottoResult(null);
+    setTimeout(() => {
+      const weatherInput = weatherIncluded && weatherQuery.data ? {
+        weatherElement: weatherQuery.data.weatherElement,
+        condition: weatherQuery.data.condition,
+        temperature: weatherQuery.data.temperature,
+        humidity: weatherQuery.data.humidity ?? 65,
+      } : undefined;
+      bigLottoMutation.mutate({
+        targetDate: selectedDate,
+        weather: weatherInput,
+        profileUserId: selectedProfileUserId,
+        storeResonanceScore: selectedStore?.resonanceScore,
+      });
+    }, 600);
+  }, [bigLottoMutation, selectedDate, weatherIncluded, weatherQuery.data, selectedProfileUserId, selectedStore]);
+
+  const handlePowerball = useCallback(() => {
+    setPowerballRevealing(true);
+    setPowerballResult(null);
+    setTimeout(() => {
+      const weatherInput = weatherIncluded && weatherQuery.data ? {
+        weatherElement: weatherQuery.data.weatherElement,
+        condition: weatherQuery.data.condition,
+        temperature: weatherQuery.data.temperature,
+        humidity: weatherQuery.data.humidity ?? 65,
+      } : undefined;
+      powerballMutation.mutate({
+        targetDate: selectedDate,
+        weather: weatherInput,
+        profileUserId: selectedProfileUserId,
+        storeResonanceScore: selectedStore?.resonanceScore,
+      });
+    }, 600);
+  }, [powerballMutation, selectedDate, weatherIncluded, weatherQuery.data, selectedProfileUserId, selectedStore]);
+
+  const handleThreeStar = useCallback(() => {
+    setThreeStarRevealing(true);
+    setThreeStarResult(null);
+    setTimeout(() => {
+      const weatherInput = weatherIncluded && weatherQuery.data ? {
+        weatherElement: weatherQuery.data.weatherElement,
+        condition: weatherQuery.data.condition,
+        temperature: weatherQuery.data.temperature,
+        humidity: weatherQuery.data.humidity ?? 65,
+      } : undefined;
+      threeStarMutation.mutate({
+        targetDate: selectedDate,
+        weather: weatherInput,
+        profileUserId: selectedProfileUserId,
+        storeResonanceScore: selectedStore?.resonanceScore,
+      });
+    }, 600);
+  }, [threeStarMutation, selectedDate, weatherIncluded, weatherQuery.data, selectedProfileUserId, selectedStore]);
+
+  const handleFourStar = useCallback(() => {
+    setFourStarRevealing(true);
+    setFourStarResult(null);
+    setTimeout(() => {
+      const weatherInput = weatherIncluded && weatherQuery.data ? {
+        weatherElement: weatherQuery.data.weatherElement,
+        condition: weatherQuery.data.condition,
+        temperature: weatherQuery.data.temperature,
+        humidity: weatherQuery.data.humidity ?? 65,
+      } : undefined;
+      fourStarMutation.mutate({
+        targetDate: selectedDate,
+        weather: weatherInput,
+        profileUserId: selectedProfileUserId,
+        storeResonanceScore: selectedStore?.resonanceScore,
+      });
+    }, 600);
+  }, [fourStarMutation, selectedDate, weatherIncluded, weatherQuery.data, selectedProfileUserId, selectedStore]);
 
   const todayElement = result?.energyAnalysis.todayElement ?? "fire";
   const elementColors = ELEMENT_COLORS[todayElement] ?? ELEMENT_COLORS.fire;
@@ -921,403 +1040,486 @@ export default function LotteryOracle() {
           />
         </motion.div>
 
-        {/* 命理信息條（選號後顯示） */}
-        {result && (
-          <motion.div
-            className="flex flex-wrap gap-2 justify-center mb-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            {[
-              { label: "日柱", value: result.dayPillar },
-              { label: "時柱", value: result.hourPillar },
-              { label: "月相", value: result.moonPhase },
-              { label: "主導五行", value: elementColors.label, color: elementColors.text },
-            ].map(item => (
-              <div key={item.label} className="flex items-center gap-1.5 bg-slate-800/60 border border-slate-700/50 rounded-full px-3 py-1 text-xs">
-                <span className="text-slate-500">{item.label}</span>
-                <span className={item.color ?? "text-slate-200"}>{item.value}</span>
-              </div>
-            ))}
-            {result.energyAnalysis.moonBoost && (
-              <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/30 rounded-full px-3 py-1 text-xs text-amber-400">
-                🌕 滿月加成
-              </div>
-            )}
-            {weatherIncluded && weatherQuery.data && (
-              <div className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/30 rounded-full px-3 py-1 text-xs text-blue-400">
-                {weatherQuery.data.conditionIcon} 天氣加成
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* ── 主要選號區 ────────────────────────────────────────────────── */}
-        <AnimatePresence mode="wait">
-          {!result && !isRevealing && (
-            <motion.div
-              key="idle"
-              className="text-center py-12"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.div
-                className="w-28 h-28 mx-auto mb-6 rounded-full border-2 border-amber-500/30 flex items-center justify-center"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              >
-                <div className="text-5xl">🎰</div>
-              </motion.div>
-              <p className="text-slate-400 text-sm mb-2">靜心，感受此刻的天命能量</p>
-              <p className="text-slate-500 text-xs">
-                {isToday ? "系統將根據您的命格與當下時辰，推算最共振的數字" : `系統將根據 ${selectedDate} 的命格能量，推算最共振的數字`}
-              </p>
-            </motion.div>
-          )}
-
-          {isRevealing && (
-            <motion.div
-              key="revealing"
-              className="text-center py-12"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.div
-                className="text-6xl mb-6"
-                animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
-              >
-                ✨
-              </motion.div>
-              <p className="text-amber-400 text-lg">天命能量匯聚中...</p>
-              <p className="text-slate-500 text-sm mt-2">
-                {weatherIncluded ? "正在整合五行共振 + 天氣因素..." : "正在計算您的五行共振數字"}
-              </p>
-            </motion.div>
-          )}
-
-          {result && (
-            <motion.div
-              key="result"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="space-y-6"
-            >
-              {/* 號碼組合切換 */}
-              <div className="flex gap-2 justify-center flex-wrap">
-                {result.sets.map((set, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveSet(i)}
-                    className={`px-3 py-1.5 rounded-full text-xs transition-all ${
-                      activeSet === i
-                        ? "bg-amber-500/20 border border-amber-500/50 text-amber-400"
-                        : "bg-slate-800/60 border border-slate-700/50 text-slate-400 hover:border-slate-600"
-                    }`}
-                  >
-                    {set.type}
-                  </button>
-                ))}
-              </div>
-
-              {/* 主要號碼展示 */}
-              <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-6 backdrop-blur-sm">
-                <div className="text-center mb-2">
-                  <span className="text-xs text-slate-500">{result.sets[activeSet]?.description}</span>
-                </div>
-                <div className="flex justify-center gap-3 mt-6 mb-8 flex-wrap">
-                  {(result.sets[activeSet]?.numbers ?? result.numbers).map((num, i) => (
-                    <NumberBall
-                      key={`${activeSet}-${i}-${num}`}
-                      num={num}
-                      delay={i * 0.12}
-                      size="lg"
-                      isLucky={result.luckyDigits.includes(num)}
-                    />
-                  ))}
-                </div>
-
-                {/* 最幸運數字 */}
-                <div className="border-t border-slate-700/50 pt-4 mt-4">
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">今日最幸運數字</p>
-                      <div className="flex gap-2">
-                        {result.luckyDigits.map((num, i) => (
-                          <NumberBall key={i} num={num} delay={0.8 + i * 0.1} size="md" isLucky />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-slate-500 mb-1">備選號碼</p>
-                      <div className="flex gap-2">
-                        {result.bonusNumbers.map((num, i) => (
-                          <NumberBall key={i} num={num} delay={1 + i * 0.1} size="sm" />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 運勢儀表 */}
-              <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm">
-                <LuckMeter score={result.energyAnalysis.overallLuck} />
-              </div>
-
-              {/* 五行分布 */}
-              <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm">
-                <p className="text-xs text-slate-500 mb-4">號碼五行分布</p>
-                <div className="grid grid-cols-5 gap-2">
-                  {(["fire", "earth", "metal", "wood", "water"] as const).map(el => {
-                    const nums = result.wuxingBreakdown[el] ?? [];
-                    const colors = ELEMENT_COLORS[el];
-                    return (
-                      <div key={el} className={`rounded-xl p-3 text-center ${colors.bg} border ${colors.border}`}>
-                        <div className={`text-xs font-medium ${colors.text} mb-2`}>{colors.label}</div>
-                        <div className="flex flex-wrap gap-1 justify-center">
-                          {nums.length > 0 ? nums.map(n => (
-                            <span key={n} className={`text-sm font-bold ${colors.text}`}>{n}</span>
-                          )) : <span className="text-slate-600 text-xs">—</span>}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 天命建議 */}
-              <div className={`rounded-2xl p-5 border ${elementColors.border} ${elementColors.bg} backdrop-blur-sm`}>
-                <div className="flex items-start gap-3">
-                  <Flame className={`w-5 h-5 mt-0.5 flex-shrink-0 ${elementColors.text}`} />
-                  <div>
-                    <p className={`text-xs font-medium mb-2 ${elementColors.text}`}>天命選號建議</p>
-                    <p className="text-slate-300 text-sm leading-relaxed">{result.energyAnalysis.recommendation}</p>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── 生成按鈕 ──────────────────────────────────────────────────── */}
-        <div className="mt-8 flex justify-center">
-          <motion.button
-            onClick={handleGenerate}
-            disabled={isRevealing || generateMutation.isPending}
-            className="relative px-10 py-4 rounded-full font-semibold text-white overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: "linear-gradient(135deg, #f59e0b, #ef4444)" }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <motion.div
-              className="absolute inset-0 bg-white/20"
-              animate={{ x: [-200, 200] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              style={{ skewX: -20, width: "60%" }}
-            />
-            <span className="relative flex items-center gap-2">
-              {isRevealing ? (
-                <><RefreshCw className="w-4 h-4 animate-spin" /> 天命匯聚中...</>
-              ) : result ? (
-                <><RefreshCw className="w-4 h-4" /> 重新選號{!isToday ? `（${selectedDate}）` : ''}</>
-              ) : (
-                <><Sparkles className="w-4 h-4" /> 啟動天命選號{!isToday ? `（${selectedDate}）` : ''}</>
-              )}
-            </span>
-          </motion.button>
-        </div>
-
-        {/* ── 今日最佳購買時機 ──────────────────────────────────────────── */}
-        {bestTimeData && isToday && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="glass-card rounded-2xl p-5 border border-amber-600/20 mt-8 mb-6"
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="w-4 h-4 text-amber-400" />
-              <h3 className="text-sm font-bold text-amber-300 tracking-wider">今日最佳購買時機</h3>
-            </div>
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {bestTimeData.bestSlots.map((slot: any, i: number) => {
-                const isPast = slot.isPast;
-                const isCurrent = slot.isCurrent;
-                const energyColor =
-                  slot.energyLabel === '大吉' ? '#f59e0b' :
-                  slot.energyLabel === '吉' ? '#34d399' :
-                  slot.energyLabel === '平' ? '#94a3b8' : '#64748b';
-                return (
-                  <div
-                    key={i}
-                    className={`relative rounded-xl p-2.5 text-center border transition-all ${
-                      isCurrent ? 'border-amber-500/70 bg-amber-900/30' :
-                      isPast ? 'border-white/5 bg-white/2 opacity-40' : 'border-white/10 bg-white/3'
-                    }`}
-                  >
-                    {isCurrent && (
-                      <motion.div
-                        className="absolute inset-0 rounded-xl"
-                        style={{ border: '1.5px solid #f59e0b' }}
-                        animate={{ opacity: [0.4, 1, 0.4] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                    )}
-                    <div className="text-base font-bold" style={{ color: isPast ? '#475569' : energyColor }}>
-                      {slot.chineseName}
-                    </div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">{slot.startHour}:00–{slot.endHour}:00</div>
-                    <div className="text-[9px] mt-1 font-bold" style={{ color: isPast ? '#334155' : energyColor }}>
-                      {isPast ? '已過' : isCurrent ? '● 當前' : slot.energyLabel}
-                    </div>
-                    {!isPast && (
-                      <div className="mt-1 h-1 rounded-full bg-white/5 overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${slot.score * 10}%`, backgroundColor: energyColor, opacity: 0.7 }} />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {bestTimeData.nextBest && countdown && (
-              <div className="text-center py-3 rounded-xl border border-amber-600/20 bg-amber-900/10">
-                <div className="text-xs text-slate-400 mb-1">距下一個吉時（{bestTimeData.nextBest.chineseName}時）</div>
-                <div className="text-2xl font-black text-amber-400 font-mono tracking-widest">{countdown}</div>
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* ── 地址分析 + 面額選號（GPS 地圖版） ───────────────────────── */}
+        {/* ── 推薦彩券行（決策鏈第三層）─────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="glass-card rounded-2xl border border-white/10 mb-6 overflow-hidden"
+          transition={{ delay: 0.25 }}
+          className="mb-6"
         >
-          <button
-            onClick={() => setShowScratchAnalysis(!showScratchAnalysis)}
-            className="w-full flex items-center justify-between p-5 hover:bg-white/3 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span className="text-sm font-bold text-amber-300 tracking-wider">地址分析 · 面額選號</span>
-              <span className="text-[10px] text-slate-500 ml-1">地址五行 · 100/200/300/500/1000/2000元策略</span>
-            </div>
-            {showScratchAnalysis ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-          </button>
-          <AnimatePresence>
-            {showScratchAnalysis && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="overflow-hidden"
-              >
-                <div className="px-5 pb-5">
-                  <ScratchAnalysisWithMap
-                    selectedDate={selectedDate}
-                    weatherElement={weatherIncluded && weatherQuery.data ? weatherQuery.data.weatherElement : undefined}
-                    addressElement={undefined}
-                  />
+          <div className="flex items-center gap-2 mb-3">
+            <Store className="w-4 h-4 text-amber-400" />
+            <h3 className="text-sm font-bold text-amber-300 tracking-wider">✦ 吉地加持 · 推薦彩券行</h3>
+            <span className="text-[10px] text-slate-500">選定店家後，天命能量將融入選號</span>
+          </div>
+          {selectedStore && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-3 p-3 rounded-xl border border-amber-500/40 bg-amber-900/20 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-amber-400 text-lg">✦</span>
+                <div>
+                  <div className="text-sm font-bold text-amber-300">{selectedStore.name}</div>
+                  <div className="text-xs text-slate-400">{selectedStore.address}</div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="text-center">
+                  <div className="text-lg font-black text-amber-400">{selectedStore.resonanceScore}</div>
+                  <div className="text-[9px] text-slate-500">共振分</div>
+                </div>
+                <button
+                  onClick={() => setSelectedStore(null)}
+                  className="text-slate-500 hover:text-slate-300 text-xs ml-2"
+                >取消</button>
+              </div>
+            </motion.div>
+          )}
+          <NearbyStores
+            onSelectStore={(store) => {
+              setSelectedStore(store);
+              toast.success(`✦ 已選定「${store?.name}」，天命能量已融合店家風水加持！`);
+            }}
+          />
         </motion.div>
 
-        {/* ── 歷史記錄 ──────────────────────────────────────────────────── */}
-        {history && history.length > 0 && (
-          <div className="mt-6">
+        {/* ── 今日綜合購彩指數（三合一橫幅）──────────────────────────── */}
+        {purchaseAdviceQuery.data && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-6 rounded-2xl overflow-hidden border border-amber-500/30"
+            style={{ background: "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(239,68,68,0.05), rgba(245,158,11,0.08))" }}
+          >
+            <div className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Star className="w-4 h-4 text-amber-400" />
+                <span className="text-sm font-bold text-amber-300 tracking-wider">今日綜合購彩指數</span>
+                <span className="text-[10px] text-slate-500">天氣五行 × 財運時辰 × 店家風水 三合一</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                {/* 天氣能量 */}
+                <div className="text-center p-2 rounded-xl bg-blue-900/20 border border-blue-500/20">
+                  <div className="text-lg mb-1">{weatherQuery.data?.conditionIcon ?? '🌤'}</div>
+                  <div className="text-xs text-slate-400 mb-1">天氣五行</div>
+                  <div className="text-sm font-bold text-blue-300">{weatherQuery.data?.weatherElement ?? '待取得'}</div>
+                </div>
+                {/* 財運時辰 */}
+                <div className="text-center p-2 rounded-xl bg-amber-900/20 border border-amber-500/20">
+                  <div className="text-lg mb-1">⏰</div>
+                  <div className="text-xs text-slate-400 mb-1">財運能量</div>
+                  <div className="text-sm font-bold text-amber-300">
+                    {purchaseAdviceQuery.data?.compositeScore ? `${purchaseAdviceQuery.data.compositeScore.toFixed(1)}/10` : '—'}
+                  </div>
+                </div>
+                {/* 店家風水 */}
+                <div className="text-center p-2 rounded-xl bg-emerald-900/20 border border-emerald-500/20">
+                  <div className="text-lg mb-1">🏪</div>
+                  <div className="text-xs text-slate-400 mb-1">店家加持</div>
+                  <div className="text-sm font-bold text-emerald-300">
+                    {selectedStore ? `${selectedStore.resonanceScore}分` : '未選定'}
+                  </div>
+                </div>
+              </div>
+              {/* 綜合建議 */}
+              <div className="text-center py-2 px-3 rounded-xl bg-amber-900/20 border border-amber-500/20">
+                <div className="text-xs text-amber-200 leading-relaxed">
+                  {purchaseAdviceQuery.data?.lotteryTypeAdvice ?? '正在為您解讀今日天命能量...'}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── 各玩法折疊標籤（決策鏈第四層）──────────────────────────── */}
+        <div className="space-y-3 mb-6">
+
+          {/* ── 折疊標籤一：刮刮樂 ─────────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="glass-card rounded-2xl border border-white/10 overflow-hidden"
+          >
             <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="w-full flex items-center justify-between px-4 py-3 bg-slate-900/60 border border-slate-700/50 rounded-xl text-sm text-slate-400 hover:border-slate-600 transition-colors"
+              onClick={() => setOpenTab(openTab === 'scratch' ? null : 'scratch')}
+              className="w-full flex items-center justify-between p-5 hover:bg-white/3 transition-colors"
             >
-              <span className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                歷史選號記錄（{history.length} 筆）
-              </span>
-              {showHistory ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-base">🎟</div>
+                <div className="text-left">
+                  <div className="text-sm font-bold text-amber-300 tracking-wider">刮刮樂</div>
+                  <div className="text-[10px] text-slate-500">面額選號 · 五行分析 · 購買日誌</div>
+                </div>
+                {selectedStore && <span className="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-400">✦ 店家加持</span>}
+              </div>
+              {openTab === 'scratch' ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
             </button>
             <AnimatePresence>
-              {showHistory && (
+              {openTab === 'scratch' && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
+                  animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
                   className="overflow-hidden"
                 >
-                  <div className="mt-2 space-y-2">
-                    {history.map((session) => {
-                      const nums = session.numbers as number[];
-                      return (
-                        <div key={session.id} className="bg-slate-900/40 border border-slate-800/50 rounded-xl p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs text-slate-500">{session.dateString}</span>
-                            <div className="flex items-center gap-1">
-                              <TrendingUp className="w-3 h-3 text-amber-500" />
-                              <span className="text-xs text-amber-500">{session.overallLuck}/10</span>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 flex-wrap">
-                            {nums.map((num, i) => {
-                              const el = NUMBER_ELEMENT[num] ?? "earth";
-                              const c = ELEMENT_COLORS[el];
-                              return (
-                                <span key={i} className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${c.bg} ${c.text} border ${c.border}`}>
-                                  {num}
-                                </span>
-                              );
-                            })}
-                            <span className="text-xs text-slate-600 self-center ml-1">
-                              {session.dayPillar} · {session.moonPhase}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="px-5 pb-5 space-y-4">
+                    {/* 面額選號（原地址分析） */}
+                    <ScratchAnalysisWithMap
+                      selectedDate={selectedDate}
+                      weatherElement={weatherIncluded && weatherQuery.data ? weatherQuery.data.weatherElement : undefined}
+                      addressElement={undefined}
+                    />
+                    {/* 刮刮樂購買日誌 */}
+                    <div className="border-t border-white/5 pt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Trophy className="w-4 h-4 text-amber-400" />
+                        <span className="text-sm font-bold text-amber-300">開獎對照 · 刮刮樂日誌</span>
+                      </div>
+                      <ScratchJournal />
+                    </div>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
-        )}
+          </motion.div>
 
-        {/* ── 開獎對照 ──────────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-6"
-        >
-          <LotteryResultChecker
-            latestSessionId={savedSessionId}
-            latestNumbers={result?.sets[activeSet]?.numbers ?? result?.numbers}
-            latestDayPillar={result?.dayPillar}
-            latestDateString={result ? `${result.dayPillar}日` : undefined}
-          />
-        </motion.div>
+          {/* ── 折疊標籤二：大樂透 + 威力彩 ───────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="glass-card rounded-2xl border border-white/10 overflow-hidden"
+          >
+            <button
+              onClick={() => setOpenTab(openTab === 'biglotto' ? null : 'biglotto')}
+              className="w-full flex items-center justify-between p-5 hover:bg-white/3 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center text-base">🎱</div>
+                <div className="text-left">
+                  <div className="text-sm font-bold text-red-300 tracking-wider">大樂透 · 威力彩</div>
+                  <div className="text-[10px] text-slate-500">天命選號 · 開獎對照 · 中獎記錄</div>
+                </div>
+                {selectedStore && <span className="text-[9px] px-2 py-0.5 rounded-full bg-red-500/15 border border-red-500/25 text-red-400">✦ 店家加持</span>}
+              </div>
+              {openTab === 'biglotto' ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </button>
+            <AnimatePresence>
+              {openTab === 'biglotto' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-5 pb-5 space-y-6">
+                    {/* 大樂透選號 */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Coins className="w-4 h-4 text-red-400" />
+                          <span className="text-sm font-bold text-red-300">大樂透選號</span>
+                          <span className="text-[10px] text-slate-500">1-49 選 6 + 特別號</span>
+                        </div>
+                        <motion.button
+                          onClick={handleBigLotto}
+                          disabled={bigLottoRevealing || bigLottoMutation.isPending}
+                          className="px-4 py-1.5 rounded-full text-xs font-semibold text-white disabled:opacity-50"
+                          style={{ background: "linear-gradient(135deg, #ef4444, #f59e0b)" }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {bigLottoRevealing ? '✨ 天命匯聚...' : bigLottoResult ? '🔄 重新選號' : '✦ 啟動選號'}
+                        </motion.button>
+                      </div>
+                      {bigLottoRevealing && (
+                        <div className="text-center py-6">
+                          <motion.div className="text-3xl mb-2" animate={{ rotate: [0,10,-10,0] }} transition={{ repeat: Infinity, duration: 0.5 }}>✨</motion.div>
+                          <p className="text-amber-400 text-sm">宇宙能量正在為您精準校準大樂透號碼...</p>
+                          {selectedStore && <p className="text-xs text-amber-300/60 mt-1">✦ 融合「{selectedStore.name}」的吉地風水加持</p>}
+                        </div>
+                      )}
+                      {bigLottoResult && !bigLottoRevealing && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+                          <div className="bg-slate-900/60 border border-red-500/20 rounded-2xl p-4">
+                            <div className="text-xs text-slate-500 mb-3 text-center">{bigLottoResult.description}</div>
+                            <div className="flex justify-center gap-2 flex-wrap mb-3">
+                              {bigLottoResult.mainNumbers?.map((n: number, i: number) => (
+                                <div key={i} className="w-10 h-10 rounded-full bg-red-900/40 border-2 border-red-500/50 flex items-center justify-center text-sm font-bold text-red-300">{n}</div>
+                              ))}
+                              {bigLottoResult.specialNumber !== undefined && (
+                                <div className="w-10 h-10 rounded-full bg-amber-900/40 border-2 border-amber-500/50 flex items-center justify-center text-sm font-bold text-amber-300">{bigLottoResult.specialNumber}</div>
+                              )}
+                            </div>
+                            {bigLottoResult.specialNumber !== undefined && (
+                              <div className="text-center text-[10px] text-slate-500">紅色=主號碼（6個）· 金色=特別號</div>
+                            )}
+                            {bigLottoResult.storeLabel && (
+                              <div className="mt-2 text-center text-xs text-amber-400">{bigLottoResult.storeLabel}</div>
+                            )}
+                            {bigLottoResult.recommendation && (
+                              <div className="mt-3 p-3 rounded-xl bg-red-900/20 border border-red-500/15">
+                                <p className="text-xs text-slate-300 leading-relaxed">{bigLottoResult.recommendation}</p>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                      {!bigLottoResult && !bigLottoRevealing && (
+                        <div className="text-center py-6 text-slate-500 text-sm">
+                          <div className="text-3xl mb-2">🎱</div>
+                          <p>您的財運能量正蓄勢待發，點擊啟動，讓天命為您指引最強共振號碼</p>
+                        </div>
+                      )}
+                    </div>
 
-        {/* ── 刮刮樂購買日誌 ────────────────────────────────────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="mt-6 bg-slate-900/60 border border-slate-700/50 rounded-2xl p-5 backdrop-blur-sm"
-        >
-          <ScratchJournal />
-         </motion.div>
+                    {/* 威力彩選號 */}
+                    <div className="border-t border-white/5 pt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Coins className="w-4 h-4 text-purple-400" />
+                          <span className="text-sm font-bold text-purple-300">威力彩選號</span>
+                          <span className="text-[10px] text-slate-500">1-38 選 6 + 第二區 1-8</span>
+                        </div>
+                        <motion.button
+                          onClick={handlePowerball}
+                          disabled={powerballRevealing || powerballMutation.isPending}
+                          className="px-4 py-1.5 rounded-full text-xs font-semibold text-white disabled:opacity-50"
+                          style={{ background: "linear-gradient(135deg, #7c3aed, #ec4899)" }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {powerballRevealing ? '✨ 天命匯聚...' : powerballResult ? '🔄 重新選號' : '✦ 啟動選號'}
+                        </motion.button>
+                      </div>
+                      {powerballRevealing && (
+                        <div className="text-center py-6">
+                          <motion.div className="text-3xl mb-2" animate={{ rotate: [0,10,-10,0] }} transition={{ repeat: Infinity, duration: 0.5 }}>✨</motion.div>
+                          <p className="text-purple-400 text-sm">天命能量正在為您精準校準威力彩號碼...</p>
+                          {selectedStore && <p className="text-xs text-purple-300/60 mt-1">✦ 融合「{selectedStore.name}」的吉地風水加持</p>}
+                        </div>
+                      )}
+                      {powerballResult && !powerballRevealing && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+                          <div className="bg-slate-900/60 border border-purple-500/20 rounded-2xl p-4">
+                            <div className="text-xs text-slate-500 mb-3 text-center">{powerballResult.description}</div>
+                            <div className="flex justify-center gap-2 flex-wrap mb-3">
+                              {powerballResult.mainNumbers?.map((n: number, i: number) => (
+                                <div key={i} className="w-10 h-10 rounded-full bg-purple-900/40 border-2 border-purple-500/50 flex items-center justify-center text-sm font-bold text-purple-300">{n}</div>
+                              ))}
+                              {powerballResult.secondBall !== undefined && (
+                                <div className="w-10 h-10 rounded-full bg-pink-900/40 border-2 border-pink-500/50 flex items-center justify-center text-sm font-bold text-pink-300">{powerballResult.secondBall}</div>
+                              )}
+                            </div>
+                            {powerballResult.secondBall !== undefined && (
+                              <div className="text-center text-[10px] text-slate-500">紫色=第一區（6個）· 粉色=第二區</div>
+                            )}
+                            {powerballResult.storeLabel && (
+                              <div className="mt-2 text-center text-xs text-amber-400">{powerballResult.storeLabel}</div>
+                            )}
+                            {powerballResult.recommendation && (
+                              <div className="mt-3 p-3 rounded-xl bg-purple-900/20 border border-purple-500/15">
+                                <p className="text-xs text-slate-300 leading-relaxed">{powerballResult.recommendation}</p>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                      {!powerballResult && !powerballRevealing && (
+                        <div className="text-center py-6 text-slate-500 text-sm">
+                          <div className="text-3xl mb-2">💜</div>
+                          <p>威力彩的宇宙頻率已就緒，等待您的一聲令下，天命號碼即將顯現</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 大樂透+威力彩開獎對照 */}
+                    <div className="border-t border-white/5 pt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Trophy className="w-4 h-4 text-amber-400" />
+                        <span className="text-sm font-bold text-amber-300">開獎對照記錄</span>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <BigLottoChecker />
+                        <PowerballChecker />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* ── 折疊標籤三：三星彩 + 四星彩 ───────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.45 }}
+            className="glass-card rounded-2xl border border-white/10 overflow-hidden"
+          >
+            <button
+              onClick={() => setOpenTab(openTab === 'star' ? null : 'star')}
+              className="w-full flex items-center justify-between p-5 hover:bg-white/3 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-base">⭐</div>
+                <div className="text-left">
+                  <div className="text-sm font-bold text-emerald-300 tracking-wider">三星彩 · 四星彩</div>
+                  <div className="text-[10px] text-slate-500">天命選號 · 開獎對照 · 中獎記錄</div>
+                </div>
+                {selectedStore && <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-400">✦ 店家加持</span>}
+              </div>
+              {openTab === 'star' ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </button>
+            <AnimatePresence>
+              {openTab === 'star' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-5 pb-5 space-y-6">
+                    {/* 三星彩選號 */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Star className="w-4 h-4 text-emerald-400" />
+                          <span className="text-sm font-bold text-emerald-300">三星彩選號</span>
+                          <span className="text-[10px] text-slate-500">000-999 三位數</span>
+                        </div>
+                        <motion.button
+                          onClick={handleThreeStar}
+                          disabled={threeStarRevealing || threeStarMutation.isPending}
+                          className="px-4 py-1.5 rounded-full text-xs font-semibold text-white disabled:opacity-50"
+                          style={{ background: "linear-gradient(135deg, #10b981, #3b82f6)" }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {threeStarRevealing ? '✨ 天命匯聚...' : threeStarResult ? '🔄 重新選號' : '✦ 啟動選號'}
+                        </motion.button>
+                      </div>
+                      {threeStarRevealing && (
+                        <div className="text-center py-6">
+                          <motion.div className="text-3xl mb-2" animate={{ rotate: [0,10,-10,0] }} transition={{ repeat: Infinity, duration: 0.5 }}>✨</motion.div>
+                          <p className="text-emerald-400 text-sm">三星能量正在為您精準對齊最強共振數字...</p>
+                        </div>
+                      )}
+                      {threeStarResult && !threeStarRevealing && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                          <div className="bg-slate-900/60 border border-emerald-500/20 rounded-2xl p-4">
+                            <div className="text-xs text-slate-500 mb-3 text-center">{threeStarResult.description}</div>
+                            <div className="flex justify-center gap-3 mb-3">
+                              {threeStarResult.digits?.map((d: string, i: number) => (
+                                <div key={i} className="w-14 h-14 rounded-2xl bg-emerald-900/40 border-2 border-emerald-500/50 flex items-center justify-center text-2xl font-black text-emerald-300">{d}</div>
+                              ))}
+                            </div>
+                            <div className="text-center text-sm font-bold text-emerald-400 mb-2">{threeStarResult.number}</div>
+                            {threeStarResult.storeLabel && (
+                              <div className="text-center text-xs text-amber-400">{threeStarResult.storeLabel}</div>
+                            )}
+                            {threeStarResult.recommendation && (
+                              <div className="mt-3 p-3 rounded-xl bg-emerald-900/20 border border-emerald-500/15">
+                                <p className="text-xs text-slate-300 leading-relaxed">{threeStarResult.recommendation}</p>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                      {!threeStarResult && !threeStarRevealing && (
+                        <div className="text-center py-6 text-slate-500 text-sm">
+                          <div className="text-3xl mb-2">⭐</div>
+                          <p>三星彩的天命頻率已校準完畢，您的幸運三位數正在等待被召喚</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 四星彩選號 */}
+                    <div className="border-t border-white/5 pt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Star className="w-4 h-4 text-blue-400" />
+                          <span className="text-sm font-bold text-blue-300">四星彩選號</span>
+                          <span className="text-[10px] text-slate-500">0000-9999 四位數</span>
+                        </div>
+                        <motion.button
+                          onClick={handleFourStar}
+                          disabled={fourStarRevealing || fourStarMutation.isPending}
+                          className="px-4 py-1.5 rounded-full text-xs font-semibold text-white disabled:opacity-50"
+                          style={{ background: "linear-gradient(135deg, #3b82f6, #8b5cf6)" }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {fourStarRevealing ? '✨ 天命匯聚...' : fourStarResult ? '🔄 重新選號' : '✦ 啟動選號'}
+                        </motion.button>
+                      </div>
+                      {fourStarRevealing && (
+                        <div className="text-center py-6">
+                          <motion.div className="text-3xl mb-2" animate={{ rotate: [0,10,-10,0] }} transition={{ repeat: Infinity, duration: 0.5 }}>✨</motion.div>
+                          <p className="text-blue-400 text-sm">四星能量正在為您精準鎖定最強共振號碼...</p>
+                        </div>
+                      )}
+                      {fourStarResult && !fourStarRevealing && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                          <div className="bg-slate-900/60 border border-blue-500/20 rounded-2xl p-4">
+                            <div className="text-xs text-slate-500 mb-3 text-center">{fourStarResult.description}</div>
+                            <div className="flex justify-center gap-3 mb-3">
+                              {fourStarResult.digits?.map((d: string, i: number) => (
+                                <div key={i} className="w-12 h-12 rounded-2xl bg-blue-900/40 border-2 border-blue-500/50 flex items-center justify-center text-xl font-black text-blue-300">{d}</div>
+                              ))}
+                            </div>
+                            <div className="text-center text-sm font-bold text-blue-400 mb-2">{fourStarResult.number}</div>
+                            {fourStarResult.storeLabel && (
+                              <div className="text-center text-xs text-amber-400">{fourStarResult.storeLabel}</div>
+                            )}
+                            {fourStarResult.recommendation && (
+                              <div className="mt-3 p-3 rounded-xl bg-blue-900/20 border border-blue-500/15">
+                                <p className="text-xs text-slate-300 leading-relaxed">{fourStarResult.recommendation}</p>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                      {!fourStarResult && !fourStarRevealing && (
+                        <div className="text-center py-6 text-slate-500 text-sm">
+                          <div className="text-3xl mb-2">🌟</div>
+                          <p>四星彩的宇宙密碼已就位，一個四位數字將為您開啟財富之門</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 三星+四星彩開獎對照 */}
+                    <div className="border-t border-white/5 pt-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Trophy className="w-4 h-4 text-amber-400" />
+                        <span className="text-sm font-bold text-amber-300">開獎對照記錄</span>
+                      </div>
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <ThreeStarChecker />
+                        <FourStarChecker />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+        </div>{/* end tabs */}
+
       </div>
       )}
     </div>
   );
 }
-// ── 彩券行風水分析析（三維度：方位40% + 地名20% + 類型40%）────────────────────
+// ── 彩券行風水分析析析（三維度：方位40% + 地名20% + 類型40%）────────────────────
 import { MapView } from "@/components/Map";
 const FS_MOUNTAINS = [
   { min:352.5,max:360,m:"壬",e:"水"},{min:0,max:7.5,m:"壬",e:"水"},{min:7.5,max:22.5,m:"子",e:"水"},{min:22.5,max:37.5,m:"癸",e:"水"},

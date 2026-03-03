@@ -1119,282 +1119,249 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
           },
         };
       }),
-  }),
-
-  calendar: router({
-    /**
-     * 獲取指定月份的每日天命能量日曆（包含農曆日期、宜忌、時辰吉凶）
-     */
-    monthly: protectedProcedure
+    // ── 大樂透選號 ──────────────────────────────────────────────────────────────
+    bigLotto: publicProcedure
       .input(z.object({
-        year: z.number().min(2020).max(2030),
-        month: z.number().min(1).max(12),
-      }))
-      .query(async ({ input, ctx }) => {
-        const { year, month } = input;
-        const engineProfile = await getUserProfileForEngine(ctx.user.id);
-        const daysInMonth = new Date(year, month, 0).getDate();
-        const days = [];
-
-        const { getDayPillarDynamic, getMonthPillar } = await import('./lib/lunarCalendar');
-        const { getMoonPhase } = await import('./lib/moonPhase');
-        const {
-          solarToLunarByYMD, getDayHourFortunes, getDayAuspicious,
-          getDayDirections, getPengzuBaiji, getDayGodsAndShas,
-        } = await import('./lib/lunarConverter');
-        // 使用用戶動態喜忌神計算日柱能量
-        const calFav = engineProfile.favorableElements;
-        const calUnfav = engineProfile.unfavorableElements;
-        for (let day = 1; day <= daysInMonth; day++) {
-          const date = new Date(year, month - 1, day);
-          const dayPillar = getDayPillarDynamic(date, calFav, calUnfav);
-          const monthPillar = getMonthPillar(date);
-          // 月相計算：傳入純日期（不依賴時區）
-          const moonInfo = getMoonPhase(new Date(Date.UTC(year, month - 1, day)));
-          // 農曆日期（直接傳入年月日數字，不依賴時區）
-          const lunarDate = solarToLunarByYMD(year, month, day);
-
-          // 日柱宜忌（基於日支）
-          const dayAuspicious = getDayAuspicious(dayPillar.branch);
-
-          // 方位吉凶
-          const directions = getDayDirections(dayPillar.stem);
-
-          // 彭祖百忌
-          const pengzu = getPengzuBaiji(dayPillar.stem, dayPillar.branch);
-
-          // 吉神凶煞
-          const godsAndShas = getDayGodsAndShas(monthPillar.branch, dayPillar.branch);
-
-          // 時辰吉凶
-          const hourFortunes = getDayHourFortunes(dayPillar.stem);
-
-          // 沖屬相（日支對沖）
-          const chongBranchMap: Record<string, string> = {
-            '子': '午', '丑': '未', '寅': '申', '卯': '酉',
-            '辰': '戌', '巳': '亥', '午': '子', '未': '丑',
-            '申': '寅', '酉': '卯', '戌': '辰', '亥': '巳',
-          };
-          const zodiacMap: Record<string, string> = {
-            '子': '鼠', '丑': '牛', '寅': '虎', '卯': '兔',
-            '辰': '龍', '巳': '蛇', '午': '馬', '未': '羊',
-            '申': '猴', '酉': '雞', '戌': '狗', '亥': '豬',
-          };
-          const chongBranch = chongBranchMap[dayPillar.branch] ?? '';
-          const chongZodiac = zodiacMap[chongBranch] ?? '';
-          const shaMap: Record<string, string> = {
-            '子': '南方', '丑': '東方', '寅': '北方', '卯': '西方',
-            '辰': '南方', '巳': '東方', '午': '北方', '未': '西方',
-            '申': '南方', '酉': '東方', '戌': '北方', '亥': '西方',
-          };
-
-          days.push({
-            date: day,
-            year,
-            month,
-            dayPillar,
-            monthPillar,
-            moonPhase: moonInfo.phaseName,
-            moonEmoji: moonInfo.phaseEmoji,
-            isFullMoon: moonInfo.isFullMoon,
-            isNewMoon: moonInfo.isNewMoon,
-            energyLevel: dayPillar.energyLevel,
-            // 農曆資訊
-            lunarDate,
-            lunarDayName: lunarDate.lunarDayName,
-            lunarMonthName: lunarDate.lunarMonthName,
-            festival: lunarDate.festival,
-            deityBirthday: lunarDate.deityBirthday,
-            // 宜忌
-            auspicious: dayAuspicious.yi,
-            inauspicious: dayAuspicious.ji,
-            // 方位
-            directions,
-            // 彭祖百忌
-            pengzu,
-            // 吉神凶煞
-            luckyGods: godsAndShas.luckyGods,
-            unluckyGods: godsAndShas.unluckyGods,
-            // 沖屬相
-            chong: `(${chongBranch})屬${chongZodiac}`,
-            sha: shaMap[dayPillar.branch] ?? '',
-            // 時辰吉凶
-            hourFortunes,
-          });
+        targetDate: z.string().optional(),
+        weather: z.object({
+          weatherElement: z.string().optional(),
+          condition: z.string().optional(),
+          temperature: z.number().optional(),
+          humidity: z.number().optional(),
+        }).optional(),
+        profileUserId: z.number().int().optional(),
+        storeResonanceScore: z.number().min(0).max(100).optional(), // 店家共振分數
+      }).optional())
+      .mutation(async ({ ctx, input }) => {
+        const { generateBigLottoNumbers } = await import('./lib/lotteryAlgorithm');
+        const { getTaiwanDate } = await import('./lib/lunarCalendar');
+        let now: Date;
+        if (input?.targetDate) {
+          const [y, m, d] = input.targetDate.split('-').map(Number);
+          now = new Date(y, m - 1, d, 8, 0, 0);
+        } else {
+          now = getTaiwanDate();
         }
-
-        // 計算每日購彩指數，標記本月最高分 3 天
-        const tenGodLotteryMap: Record<string, number> = {
-          偏財: 9, 正財: 7, 食神: 8, 傷官: 6,
-          七殺: 4, 正官: 5, 比肩: 3, 劫財: 2,
-          偏印: 4, 正印: 5,
-        };
-        // 根據登入者喜忌神動態計算五行分數
-        const { favorableElements, unfavorableElements } = engineProfile;
-        const ELEMENT_ZH_SCORE: Record<string, number> = {};
-        const allElements = ['木', '火', '土', '金', '水'];
-        allElements.forEach(el => {
-          if (favorableElements[0] === el) ELEMENT_ZH_SCORE[el] = 2.0;       // 用神
-          else if (favorableElements[1] === el) ELEMENT_ZH_SCORE[el] = 1.5;  // 喜神
-          else if (favorableElements[2] === el) ELEMENT_ZH_SCORE[el] = 0.5;  // 次喜
-          else if (unfavorableElements[0] === el) ELEMENT_ZH_SCORE[el] = -2.0; // 忌神
-          else if (unfavorableElements[1] === el) ELEMENT_ZH_SCORE[el] = -1.5; // 次忌
-          else ELEMENT_ZH_SCORE[el] = 0;
-        });
-        const { getTenGodDynamic } = await import('./lib/tenGods');
-        // 計算每日購彩指數（使用用戶動態命格）
-        const daysWithScore = days.map((d: any) => {
-          const tenGod = getTenGodDynamic(d.dayPillar.stem, engineProfile.dayMasterElement, engineProfile.dayMasterYinYang);
-          const fortuneScore = tenGodLotteryMap[tenGod] ?? 5;
-          const dayElementScore = ELEMENT_ZH_SCORE[d.dayPillar.stemElement] ?? 0;
-          const dayScore = Math.min(10, Math.max(1, 5 + dayElementScore * 2));
-          const moonBonus = d.isFullMoon ? 1.5 : d.isNewMoon ? -0.5 : 0;
-          const rawTotal = fortuneScore * 0.40 + dayScore * 0.30 + (5 + moonBonus) * 0.10 + 5 * 0.20;
-          const lotteryScore = Math.round(Math.min(10, Math.max(1, rawTotal)) * 10) / 10;
-          return { ...d, lotteryScore };
-        });
-        // 找出最高分的前 3 天
-        const sorted = [...daysWithScore].sort((a: any, b: any) => b.lotteryScore - a.lotteryScore);
-        const top3Scores = new Set(sorted.slice(0, 3).map((d: any) => d.date));
-        const finalDays = daysWithScore.map((d: any) => ({
-          ...d,
-          lotteryScore: d.lotteryScore,
-          isBestLotteryDay: top3Scores.has(d.date),
-        }));
-        return { year, month, days: finalDays };
-      }),
-  }),
-  insight: router({
-    /**
-     * LLM 神諭深度解讀
-     * 根據擲筊結果、命格、天干地支生成個人化詮釋
-     */
-    deepRead: protectedProcedure
-      .input(z.object({
-        query: z.string().max(500),
-        result: z.enum(['sheng', 'xiao', 'yin', 'li']),
-        dayPillar: z.string(),
-        hourPillar: z.string(),
-        energyLevel: z.string(),
-        moonPhase: z.string(),
-        interpretation: z.string(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const engineProfile = await getUserProfileForEngine(ctx.user.id);
-        const { dayMasterStem, dayMasterElement, favorableElements, unfavorableElements, isDefault } = engineProfile;
-        const ELEMENT_ZH: Record<string, string> = { 木: '木', 火: '火', 土: '土', 金: '金', 水: '水' };
-        const favorableStr = favorableElements.join('、');
-        const unfavorableStr = unfavorableElements.join('、');
-        const profileNote = isDefault
-          ? '（命格未設定，使用預設分析）'
-          : '';
-
-        const resultNames: Record<string, string> = {
-          sheng: '聖杯（一陰一陽）',
-          xiao: '笑杯（兩陽）',
-          yin: '陰杯（兩陰）',
-          li: '立筊（立立）',
-        };
-
-        const systemPrompt = `你是「天命共振」神諦系統的神諦解讀師。你深游中國命理學，尤其精通八字、紫微斗數、五行生宅。${profileNote}
-
-你正在為該用戶解讀擲筊結果。他的命格資料：
-- 日主：${dayMasterStem}${dayMasterElement}
-- 用神（喜用神）：${favorableStr}
-- 忌神：${unfavorableStr}
-
-請用優雅、深入、充滿智慧的漢字語言展開解讀。不要較板，要將命理與具體問題連結。字數建議 200-350 字。`;
-
-        const userMessage = `
-當前日柱：${input.dayPillar}
-當前時柱：${input.hourPillar}
-月相：${input.moonPhase}
-能量狀態：${input.energyLevel}
-
-用戶的問題：「${input.query || '（未言明問題）'}」
-
-擲筊結果：${resultNames[input.result] || input.result}
-
-系統初步解讀：${input.interpretation}
-
-請提供更深層、更個人化的神諦解讀。`;
-
-        try {
-          const response = await invokeLLM({
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userMessage },
-            ],
-          });
-          const content = response.choices?.[0]?.message?.content || '神明正在沉思，請稍候再問。';
-          return { content, success: true };
-        } catch (err) {
-          console.warn('[Insight] LLM call failed:', err);
-          return {
-            content: '神明正在沉思，暗自有定數。此刻静心感受筊杯傳遞的訊息，不需外求解讀。',
-            success: false,
-          };
+        let customBaseWeights: Record<number, number> | undefined;
+        let customElementBoost: Record<string, number> | undefined;
+        const targetUserId = input?.profileUserId ?? ctx.user?.id;
+        if (targetUserId) {
+          try {
+            const { getUserProfileForEngine } = await import('./db');
+            const ep = await getUserProfileForEngine(targetUserId);
+            if (!ep.isDefault) {
+              const favElements = ep.favorableElementsEn;
+              const unfavElements = ep.unfavorableElements.map((e: string) => {
+                const m: Record<string, string> = { '木': 'wood', '火': 'fire', '土': 'earth', '金': 'metal', '水': 'water' };
+                return m[e] ?? e;
+              });
+              const allElements = ['fire', 'earth', 'metal', 'wood', 'water'];
+              customElementBoost = Object.fromEntries(allElements.map(el => {
+                if (favElements.includes(el)) return [el, 3];
+                if (unfavElements.includes(el)) return [el, -2];
+                return [el, 0];
+              }));
+              const WUXING_MAP: Record<string, number[]> = { wood: [1,3,8], fire: [2,7], earth: [0,5], metal: [4,9], water: [6] };
+              customBaseWeights = {};
+              for (let i = 0; i <= 9; i++) {
+                const el = allElements.find(e => WUXING_MAP[e]?.includes(i)) ?? 'earth';
+                if (favElements.includes(el)) customBaseWeights[i] = 10;
+                else if (unfavElements.includes(el)) customBaseWeights[i] = 3;
+                else customBaseWeights[i] = 6;
+              }
+            }
+          } catch (e) { console.warn('[BigLotto] Failed to load profile', e); }
         }
+        const opts = {
+          weatherElement: input?.weather?.weatherElement,
+          useWeather: !!(input?.weather?.weatherElement),
+          customBaseWeights,
+          customElementBoost,
+        };
+        const result = generateBigLottoNumbers(now, opts);
+        // 店家共振分數影響整體運氣描述
+        const storeBonus = input?.storeResonanceScore ?? 0;
+        const storeLabel = storeBonus >= 80 ? '（大吉彩券行加持✦）' : storeBonus >= 60 ? '（吉地加持）' : '';
+        return { ...result, storeLabel };
       }),
 
-    /**
-     * 問卜指引：根據當前時辰與月相建議最適合詢問的問題類型
-     */
-    queryGuide: publicProcedure.query(async () => {
-      const { getFullDateInfo } = await import('./lib/lunarCalendar');
-      const { getCurrentHourEnergy } = await import('./lib/hourlyEnergy');
-      const { getMoonPhase } = await import('./lib/moonPhase');
+    // ── 威力彩選號 ──────────────────────────────────────────────────────────────
+    powerball: publicProcedure
+      .input(z.object({
+        targetDate: z.string().optional(),
+        weather: z.object({ weatherElement: z.string().optional() }).optional(),
+        profileUserId: z.number().int().optional(),
+        storeResonanceScore: z.number().min(0).max(100).optional(),
+      }).optional())
+      .mutation(async ({ ctx, input }) => {
+        const { generatePowerballNumbers } = await import('./lib/lotteryAlgorithm');
+        const { getTaiwanDate } = await import('./lib/lunarCalendar');
+        let now: Date;
+        if (input?.targetDate) {
+          const [y, m, d] = input.targetDate.split('-').map(Number);
+          now = new Date(y, m - 1, d, 8, 0, 0);
+        } else {
+          now = getTaiwanDate();
+        }
+        let customBaseWeights: Record<number, number> | undefined;
+        let customElementBoost: Record<string, number> | undefined;
+        const targetUserId = input?.profileUserId ?? ctx.user?.id;
+        if (targetUserId) {
+          try {
+            const { getUserProfileForEngine } = await import('./db');
+            const ep = await getUserProfileForEngine(targetUserId);
+            if (!ep.isDefault) {
+              const favElements = ep.favorableElementsEn;
+              const unfavElements = ep.unfavorableElements.map((e: string) => {
+                const m: Record<string, string> = { '木': 'wood', '火': 'fire', '土': 'earth', '金': 'metal', '水': 'water' };
+                return m[e] ?? e;
+              });
+              const allElements = ['fire', 'earth', 'metal', 'wood', 'water'];
+              customElementBoost = Object.fromEntries(allElements.map(el => {
+                if (favElements.includes(el)) return [el, 3];
+                if (unfavElements.includes(el)) return [el, -2];
+                return [el, 0];
+              }));
+              const WUXING_MAP: Record<string, number[]> = { wood: [1,3,8], fire: [2,7], earth: [0,5], metal: [4,9], water: [6] };
+              customBaseWeights = {};
+              for (let i = 0; i <= 9; i++) {
+                const el = allElements.find(e => WUXING_MAP[e]?.includes(i)) ?? 'earth';
+                if (favElements.includes(el)) customBaseWeights[i] = 10;
+                else if (unfavElements.includes(el)) customBaseWeights[i] = 3;
+                else customBaseWeights[i] = 6;
+              }
+            }
+          } catch (e) { console.warn('[Powerball] Failed to load profile', e); }
+        }
+        const result = generatePowerballNumbers(now, {
+          weatherElement: input?.weather?.weatherElement,
+          useWeather: !!(input?.weather?.weatherElement),
+          customBaseWeights,
+          customElementBoost,
+        });
+        const storeBonus = input?.storeResonanceScore ?? 0;
+        const storeLabel = storeBonus >= 80 ? '（大吉彩券行加持✦）' : storeBonus >= 60 ? '（吉地加持）' : '';
+        return { ...result, storeLabel };
+      }),
 
-      const dateInfo = getFullDateInfo();
-      const hourEnergy = getCurrentHourEnergy(dateInfo.dayPillar.stem);
-      const moonInfo = getMoonPhase();
+    // ── 三星彩選號 ──────────────────────────────────────────────────────────────
+    threeStar: publicProcedure
+      .input(z.object({
+        targetDate: z.string().optional(),
+        weather: z.object({ weatherElement: z.string().optional() }).optional(),
+        profileUserId: z.number().int().optional(),
+        storeResonanceScore: z.number().min(0).max(100).optional(),
+      }).optional())
+      .mutation(async ({ ctx, input }) => {
+        const { generateThreeStarNumbers } = await import('./lib/lotteryAlgorithm');
+        const { getTaiwanDate } = await import('./lib/lunarCalendar');
+        let now: Date;
+        if (input?.targetDate) {
+          const [y, m, d] = input.targetDate.split('-').map(Number);
+          now = new Date(y, m - 1, d, 8, 0, 0);
+        } else {
+          now = getTaiwanDate();
+        }
+        let customBaseWeights: Record<number, number> | undefined;
+        let customElementBoost: Record<string, number> | undefined;
+        const targetUserId = input?.profileUserId ?? ctx.user?.id;
+        if (targetUserId) {
+          try {
+            const { getUserProfileForEngine } = await import('./db');
+            const ep = await getUserProfileForEngine(targetUserId);
+            if (!ep.isDefault) {
+              const favElements = ep.favorableElementsEn;
+              const unfavElements = ep.unfavorableElements.map((e: string) => {
+                const m: Record<string, string> = { '木': 'wood', '火': 'fire', '土': 'earth', '金': 'metal', '水': 'water' };
+                return m[e] ?? e;
+              });
+              const allElements = ['fire', 'earth', 'metal', 'wood', 'water'];
+              customElementBoost = Object.fromEntries(allElements.map(el => {
+                if (favElements.includes(el)) return [el, 3];
+                if (unfavElements.includes(el)) return [el, -2];
+                return [el, 0];
+              }));
+              const WUXING_MAP: Record<string, number[]> = { wood: [1,3,8], fire: [2,7], earth: [0,5], metal: [4,9], water: [6] };
+              customBaseWeights = {};
+              for (let i = 0; i <= 9; i++) {
+                const el = allElements.find(e => WUXING_MAP[e]?.includes(i)) ?? 'earth';
+                if (favElements.includes(el)) customBaseWeights[i] = 10;
+                else if (unfavElements.includes(el)) customBaseWeights[i] = 3;
+                else customBaseWeights[i] = 6;
+              }
+            }
+          } catch (e) { console.warn('[ThreeStar] Failed to load profile', e); }
+        }
+        const result = generateThreeStarNumbers(now, {
+          weatherElement: input?.weather?.weatherElement,
+          useWeather: !!(input?.weather?.weatherElement),
+          customBaseWeights,
+          customElementBoost,
+        });
+        const storeBonus = input?.storeResonanceScore ?? 0;
+        const storeLabel = storeBonus >= 80 ? '（大吉彩券行加持✦）' : storeBonus >= 60 ? '（吉地加持）' : '';
+        return { ...result, storeLabel };
+      }),
 
-      // 根據時辰五行與月相建議問題類型
-      const hourElement = hourEnergy.stemElement;
-      const suggestions: string[] = [];
-      const bestTopics: string[] = [];
-      let guidanceText = '';
-
-      if (hourElement === 'fire') {
-        bestTopics.push('事業發展', '項目執行', '創意表達');
-        guidanceText = `現在是${hourEnergy.chineseName}，火能旺盛，用神得力。此刻擲筊詢問事業、項目、行動決策，天命共振最為強烈。`;
-        suggestions.push('此時辰最適合詢問事業、財務決策、項目展開等問題');
-      } else if (hourElement === 'earth') {
-        bestTopics.push('財務規劃', '實際行動', '穩定基礎');
-        guidanceText = `現在是${hourEnergy.chineseName}，土氣穩固，財星得力。此刻適合詢問財務規劃、實際行動、居家安定等問題。`;
-        suggestions.push('此時辰最適合詢問財務、居家、實際投資等問題');
-      } else if (hourElement === 'metal') {
-        bestTopics.push('合作洽謈', '人際關係', '簽約决策');
-        guidanceText = `現在是${hourEnergy.chineseName}，金氣清澄，决斷力強。此刻適合詢問合作、人際、簽約等需要判斷力的問題。`;
-        suggestions.push('此時辰最適合詢問合作、人際關係、簽約等問題');
-      } else if (hourElement === 'wood') {
-        bestTopics.push('學習成長', '健康養生', '創意規劃');
-        guidanceText = `現在是${hourEnergy.chineseName}，木氣旺盛，身強印旺。此刻適合詢問學習、健康、個人成長等問題。`;
-        suggestions.push('此時辰最適合詢問學習、健康、個人成長等問題');
-      } else {
-        bestTopics.push('靈性修行', '內心審視', '静心決策');
-        guidanceText = `現在是${hourEnergy.chineseName}，水氣流動，宜静不宜動。此刻適合詢問靈性、內心、長遠規劃等問題。`;
-        suggestions.push('此時辰最適合詢問靈性、內心成長、長期規劃等問題');
-      }
-
-      if (moonInfo.isFullMoon) {
-        guidanceText += '今逢滿月，宇宙能量達到高峰，任何問題都能得到最清晰的神諭回應。';
-        bestTopics.push('重大人生決策');
-      }
-
-      return {
-        currentHour: hourEnergy.chineseName,
-        hourElement,
-        energyLabel: hourEnergy.energyLabel,
-        guidanceText,
-        bestTopics,
-        suggestions,
-        moonPhase: moonInfo.phaseName,
-        isFullMoon: moonInfo.isFullMoon,
-        dateString: dateInfo.dateString,
-      };
-    }),
-   }),
+    // ── 四星彩選號 ──────────────────────────────────────────────────────────────
+    fourStar: publicProcedure
+      .input(z.object({
+        targetDate: z.string().optional(),
+        weather: z.object({ weatherElement: z.string().optional() }).optional(),
+        profileUserId: z.number().int().optional(),
+        storeResonanceScore: z.number().min(0).max(100).optional(),
+      }).optional())
+      .mutation(async ({ ctx, input }) => {
+        const { generateFourStarNumbers } = await import('./lib/lotteryAlgorithm');
+        const { getTaiwanDate } = await import('./lib/lunarCalendar');
+        let now: Date;
+        if (input?.targetDate) {
+          const [y, m, d] = input.targetDate.split('-').map(Number);
+          now = new Date(y, m - 1, d, 8, 0, 0);
+        } else {
+          now = getTaiwanDate();
+        }
+        let customBaseWeights: Record<number, number> | undefined;
+        let customElementBoost: Record<string, number> | undefined;
+        const targetUserId = input?.profileUserId ?? ctx.user?.id;
+        if (targetUserId) {
+          try {
+            const { getUserProfileForEngine } = await import('./db');
+            const ep = await getUserProfileForEngine(targetUserId);
+            if (!ep.isDefault) {
+              const favElements = ep.favorableElementsEn;
+              const unfavElements = ep.unfavorableElements.map((e: string) => {
+                const m: Record<string, string> = { '木': 'wood', '火': 'fire', '土': 'earth', '金': 'metal', '水': 'water' };
+                return m[e] ?? e;
+              });
+              const allElements = ['fire', 'earth', 'metal', 'wood', 'water'];
+              customElementBoost = Object.fromEntries(allElements.map(el => {
+                if (favElements.includes(el)) return [el, 3];
+                if (unfavElements.includes(el)) return [el, -2];
+                return [el, 0];
+              }));
+              const WUXING_MAP: Record<string, number[]> = { wood: [1,3,8], fire: [2,7], earth: [0,5], metal: [4,9], water: [6] };
+              customBaseWeights = {};
+              for (let i = 0; i <= 9; i++) {
+                const el = allElements.find(e => WUXING_MAP[e]?.includes(i)) ?? 'earth';
+                if (favElements.includes(el)) customBaseWeights[i] = 10;
+                else if (unfavElements.includes(el)) customBaseWeights[i] = 3;
+                else customBaseWeights[i] = 6;
+              }
+            }
+          } catch (e) { console.warn('[FourStar] Failed to load profile', e); }
+        }
+        const result = generateFourStarNumbers(now, {
+          weatherElement: input?.weather?.weatherElement,
+          useWeather: !!(input?.weather?.weatherElement),
+          customBaseWeights,
+          customElementBoost,
+        });
+        const storeBonus = input?.storeResonanceScore ?? 0;
+        const storeLabel = storeBonus >= 80 ? '（大吉彩券行加持✦）' : storeBonus >= 60 ? '（吉地加持）' : '';
+        return { ...result, storeLabel };
+      }),
+  }),
 
   lotteryResult: router({
     /**
@@ -1408,11 +1375,16 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
         actualBonus: z.number().optional(),
         dayPillar: z.string(),
         dateString: z.string(),
+        // 彩券類型
+        ticketType: z.enum(['lottery', 'scratch', 'bigLotto', 'powerball', 'threeStar', 'fourStar']).optional().default('lottery'),
         // 刮刮樂專用欄位
-        ticketType: z.enum(['lottery', 'scratch']).optional().default('lottery'),
         scratchPrice: z.number().optional(),
         scratchPrize: z.number().optional(),
         scratchWon: z.boolean().optional(),
+        // 大樂透/威力彩：允許非6個號碼
+        actualNumbersFlex: z.array(z.number()).optional(),
+        // 三星/四星彩：用戶輸入的開獎號碼字串
+        actualDigitString: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const { getDayPillar } = await import('./lib/lunarCalendar');
@@ -1420,6 +1392,61 @@ ${dateInfo.isSpecialChouTime ? '⭐ 今日逢丑，天命寶庫開啟，擲筊�
         const dp = getDayPillar(today);
         const { saveLotteryResult } = await import('./db');
 
+        // ===== 三星/四星彩共振計算 =====
+        if (input.ticketType === 'threeStar' || input.ticketType === 'fourStar') {
+          const predicted = input.predictedNumbers.join('');
+          const actual = input.actualDigitString ?? '';
+          const digitLen = input.ticketType === 'threeStar' ? 3 : 4;
+          let matchCount = 0;
+          for (let i = 0; i < digitLen; i++) {
+            if (predicted[i] && actual[i] && predicted[i] === actual[i]) matchCount++;
+          }
+          const isExact = predicted === actual;
+          let resonanceScore = 30 + matchCount * 15;
+          if (isExact) resonanceScore = 95;
+          resonanceScore = Math.min(100, resonanceScore);
+          const id = await saveLotteryResult({
+            userId: ctx.user?.id,
+            predictedNumbers: input.predictedNumbers,
+            actualNumbers: [],
+            matchCount,
+            bonusMatch: isExact ? 1 : 0,
+            resonanceScore,
+            dayPillar: input.dayPillar || `${dp.stem}${dp.branch}`,
+            dateString: input.dateString || `${dp.stem}${dp.branch}日`,
+            ticketType: input.ticketType,
+          });
+          return { id, matchCount, bonusMatch: isExact ? 1 : 0, resonanceScore, ticketType: input.ticketType, isExact };
+        }
+        // ===== 大樂透/威力彩共振計算 =====
+        if (input.ticketType === 'bigLotto' || input.ticketType === 'powerball') {
+          const actualNums = input.actualNumbersFlex ?? input.actualNumbers;
+          const predicted = new Set(input.predictedNumbers);
+          const matchCount = actualNums.filter(n => predicted.has(n)).length;
+          const bonusMatch = input.actualBonus !== undefined && predicted.has(input.actualBonus) ? 1 : 0;
+          const ELEMENT_MAP: Record<number, string> = { 1:'wood',3:'wood',8:'wood',2:'fire',7:'fire',5:'earth',0:'earth',4:'metal',9:'metal',6:'water' };
+          const FAVORABLE = ['fire', 'earth'];
+          let resonanceScore = 40;
+          actualNums.filter(n => predicted.has(n)).forEach(n => {
+            const el = ELEMENT_MAP[n % 10];
+            resonanceScore += FAVORABLE.includes(el ?? '') ? 12 : 5;
+          });
+          if (bonusMatch) resonanceScore += 8;
+          resonanceScore = Math.min(100, resonanceScore);
+          const id = await saveLotteryResult({
+            userId: ctx.user?.id,
+            predictedNumbers: input.predictedNumbers,
+            actualNumbers: actualNums.slice(0, 6),
+            actualBonus: input.actualBonus,
+            matchCount,
+            bonusMatch,
+            resonanceScore,
+            dayPillar: input.dayPillar || `${dp.stem}${dp.branch}`,
+            dateString: input.dateString || `${dp.stem}${dp.branch}日`,
+            ticketType: input.ticketType,
+          });
+          return { id, matchCount, bonusMatch, resonanceScore, ticketType: input.ticketType };
+        }
         if (input.ticketType === 'scratch') {
           // ===== 刮刮樂共振計算 =====
           const prize = input.scratchPrize ?? 0;
