@@ -6,7 +6,7 @@
  * - 下注流程：選賽事 → 選玩法 → 輸入金額 → 確認
  * - 我的下注記錄
  */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -172,6 +172,26 @@ export default function WbcPage() {
     });
   }
 
+  // 倒數計時器（每秒更新）
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // 計算距離截止（比賽前30分鐘）的倒數
+  function getBetDeadlineCountdown(matchTime: number): { canBet: boolean; label: string } {
+    const deadline = matchTime - 30 * 60 * 1000;
+    const diff = deadline - now;
+    if (diff <= 0) return { canBet: false, label: "下注已截止" };
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    if (h > 0) return { canBet: true, label: `截止倒數 ${h}h ${m}m` };
+    if (m > 0) return { canBet: true, label: `截止倒數 ${m}m ${s}s` };
+    return { canBet: true, label: `截止倒數 ${s}s` };
+  }
+
   const selectedMatch = allMatches?.find(m => m.id === betState.matchId);
   const potentialWin = useMemo(() => {
     if (!betState.amount || !betState.betOn) return null;
@@ -331,9 +351,10 @@ export default function WbcPage() {
             ) : (
               pendingMatches.map(match => {
                 const matchDate = new Date(match.matchTime);
-                const isUpcoming = matchDate > new Date();
+                const deadline = getBetDeadlineCountdown(match.matchTime);
+                const isUrgent = deadline.canBet && (match.matchTime - 30 * 60 * 1000 - now) < 60 * 60 * 1000; // 截止前1小時內
                 return (
-                  <Card key={match.id} className="bg-slate-900/60 border-slate-700 hover:border-slate-600 transition-colors">
+                  <Card key={match.id} className={`bg-slate-900/60 border-slate-700 hover:border-slate-600 transition-colors ${isUrgent ? 'border-amber-700/50' : ''}`}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -343,9 +364,21 @@ export default function WbcPage() {
                           <span>·</span>
                           <span>{matchDate.toLocaleDateString("zh-TW", { month: "numeric", day: "numeric" })} {matchDate.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
-                        <Badge className={`text-xs border ${STATUS_LABELS[match.status]?.color}`}>
-                          {STATUS_LABELS[match.status]?.label}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {/* 下注截止倒數 */}
+                          {deadline.canBet ? (
+                            <span className={`text-xs font-mono px-2 py-0.5 rounded border ${
+                              isUrgent
+                                ? 'text-red-400 border-red-500/40 bg-red-500/10 animate-pulse'
+                                : 'text-slate-400 border-slate-600/40 bg-slate-800/40'
+                            }`}>⏱ {deadline.label}</span>
+                          ) : (
+                            <span className="text-xs text-red-400 border border-red-500/30 bg-red-500/10 px-2 py-0.5 rounded">下注已截止</span>
+                          )}
+                          <Badge className={`text-xs border ${STATUS_LABELS[match.status]?.color}`}>
+                            {STATUS_LABELS[match.status]?.label}
+                          </Badge>
+                        </div>
                       </div>
 
                       {/* 隊伍對陣 */}
@@ -357,7 +390,6 @@ export default function WbcPage() {
                         </div>
                         <div className="text-center">
                           <div className="text-slate-500 font-bold text-lg">VS</div>
-                          {!isUpcoming && <div className="text-xs text-red-400 mt-1">已截止</div>}
                         </div>
                         <div className="text-center flex-1">
                           <div className="text-2xl mb-1">{match.teamBFlag}</div>
@@ -378,7 +410,7 @@ export default function WbcPage() {
                       </div>
 
                       {/* 下注按鈕 */}
-                      {isUpcoming && (
+                      {deadline.canBet ? (
                         <div className="flex gap-2">
                           <Button size="sm" onClick={() => openBetDialog(match, "winlose")}
                             className="flex-1 bg-amber-600/20 hover:bg-amber-600/40 text-amber-400 border border-amber-600/30 text-xs h-8">
@@ -393,6 +425,8 @@ export default function WbcPage() {
                             🔗 組合
                           </Button>
                         </div>
+                      ) : (
+                        <div className="text-center py-2 text-xs text-slate-500">比賽即將開始，下注已鎖定</div>
                       )}
                     </CardContent>
                   </Card>

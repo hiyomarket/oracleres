@@ -358,6 +358,21 @@ function ModuleManagerTab() {
                     ))}
                 </select>
               </div>
+              <div>
+                <label className="text-sm text-slate-400">顯示位置</label>
+                <select
+                  value={(editingModule as any).displayLocation || "main"}
+                  onChange={(e) =>
+                    setEditingModule({ ...editingModule, displayLocation: e.target.value as "main" | "profile" | "both" } as any)
+                  }
+                  className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-white text-sm"
+                >
+                  <option value="main">📱 主功能列表（中間滞動區）</option>
+                  <option value="profile">👤 個人下拉選單</option>
+                  <option value="both">✨ 兩處都顯示</option>
+                </select>
+                <p className="text-xs text-slate-500 mt-1">核心/加値功能建議放主功能列表；附加功能（如娛樂城）建議放個人選單</p>
+              </div>
             </div>
           )}
           <DialogFooter>
@@ -378,6 +393,7 @@ function ModuleManagerTab() {
                   navPath: editingModule.navPath || undefined,
                   isCentral: editingModule.isCentral,
                   parentId: editingModule.parentId ?? null,
+                  displayLocation: ((editingModule as any).displayLocation || "main") as "main" | "profile" | "both",
                 });
                 setEditingModule(null);
               }}

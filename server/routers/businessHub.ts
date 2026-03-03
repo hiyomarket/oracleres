@@ -106,6 +106,7 @@ export const businessHubRouter = router({
         navPath: z.string().max(100).optional(),
         isCentral: z.number().int().min(0).max(1).optional(),
         parentId: z.string().max(50).nullable().optional(),
+        displayLocation: z.enum(["main", "profile", "both"]).optional(),
       })
     )
     .mutation(async ({ input }) => {

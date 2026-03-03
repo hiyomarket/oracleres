@@ -10,6 +10,7 @@ import { serveStatic, setupVite } from "./vite";
 import { sendMorningBriefing } from "../lib/morningBriefing";
 import { checkAndNotifyFestival } from "../lib/festivalNotification";
 import { checkExpiringSubscriptions } from "../lib/expiryReminder";
+import { checkAndLockWbcMatches } from "../lib/wbcMatchLock";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -151,3 +152,20 @@ function startExpiryReminderScheduler() {
 }
 
 startExpiryReminderScheduler();
+
+/**
+ * WBC 賽事下注截止排程：每分鐘掃描 pending 賽事
+ * 比賽開始前 30 分鐘自動將狀態改為 live（鎖定下注）
+ */
+function startWbcMatchLockScheduler() {
+  console.log("[WbcMatchLock] Scheduler started. Will lock matches 30 min before start.");
+  setInterval(async () => {
+    try {
+      await checkAndLockWbcMatches();
+    } catch (err) {
+      console.error("[WbcMatchLock] Scheduler error:", err);
+    }
+  }, 60 * 1000); // 每分鐘檢查
+}
+
+startWbcMatchLockScheduler();

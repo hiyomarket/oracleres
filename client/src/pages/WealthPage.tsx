@@ -395,6 +395,8 @@ function WealthJournalSection({ lotteryScore, tenGod }: { lotteryScore: number; 
 export default function WealthPage() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const { data: accountStatus } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
+  const isOwner = accountStatus?.isOwner ?? false;
 
   const { data, isLoading } = trpc.warRoom.dailyReport.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
@@ -675,8 +677,8 @@ export default function WealthPage() {
           </div>
         )}
 
-        {/* ── 商業羅盤 ── */}
-        {wealthCompass?.businessCompass && (
+        {/* ── 商業羅盤（僅 Owner 可見） ── */}
+        {isOwner && wealthCompass?.businessCompass && (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-4 h-4 text-purple-400" />

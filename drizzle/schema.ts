@@ -62,6 +62,8 @@ export const modules = mysqlTable("modules", {
   isCentral: tinyint("isCentral").notNull().default(0),
   // 父模塊 ID（建立父子層級關係，null = 頂層模塊）
   parentId: varchar("parentId", { length: 50 }),
+  // 顯示位置：main=主功能列表（預設）, profile=個人下拉選單, both=兩處都顯示
+  displayLocation: mysqlEnum("displayLocation", ["main", "profile", "both"]).notNull().default("main"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

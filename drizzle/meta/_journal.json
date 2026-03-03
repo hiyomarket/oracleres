@@ -267,6 +267,13 @@
       "when": 1772541026228,
       "tag": "0037_puzzling_captain_marvel",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "5",
+      "when": 1772542900673,
+      "tag": "0038_dapper_scalphunter",
+      "breakpoints": true
     }
   ]
 }

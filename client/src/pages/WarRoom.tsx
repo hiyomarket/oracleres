@@ -5,9 +5,43 @@ import { SharedNav } from "@/components/SharedNav";
 import { ProfileIncompleteBanner } from "@/components/ProfileIncompleteBanner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
-import { Zap, Bell, CheckCircle } from "lucide-react";
+import { Zap, Bell, CheckCircle, Trophy, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { NearbyRestaurants } from "@/components/NearbyRestaurants";
+import { useLocation } from "wouter";
+
+/** WBC 活動推廣橫幅：有待開賽賽事時顯示 */
+function WbcPromoBanner() {
+  const [, navigate] = useLocation();
+  const { data: matches } = trpc.wbc.getMatches.useQuery({ status: "pending" }, { staleTime: 60000 });
+  const pendingMatches = (matches ?? []).filter(m => m.status === "pending");
+  if (pendingMatches.length === 0) return null;
+  const next = pendingMatches[0];
+  const matchDate = new Date(next.matchTime);
+  const dateStr = matchDate.toLocaleDateString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  return (
+    <div
+      className="mx-4 mt-2 mb-0 cursor-pointer"
+      onClick={() => navigate("/casino/wbc")}
+    >
+      <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-amber-900/30 via-orange-900/20 to-amber-900/30 border border-amber-600/30 rounded-xl hover:border-amber-500/50 transition-colors">
+        <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
+          <Trophy className="w-4 h-4 text-amber-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-amber-400">WBC 2026 天命競猜</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">進行中</span>
+          </div>
+          <p className="text-xs text-white/50 truncate">
+            下場 {next.teamAFlag}{next.teamA} vs {next.teamBFlag}{next.teamB} · {dateStr}
+          </p>
+        </div>
+        <ChevronRight className="w-4 h-4 text-amber-500/60 shrink-0" />
+      </div>
+    </div>
+  );
+}
 
 // 五行顏色映射
 const WUXING_COLORS: Record<string, { bg: string; border: string; text: string; glow: string }> = {
@@ -217,6 +251,8 @@ export default function WarRoom() {
 
       <SharedNav currentPage="warRoom" />
       <ProfileIncompleteBanner featureName="每日運勢" />
+      {/* WBC 活動推廣橫幅 */}
+      <WbcPromoBanner />
       {!isAdmin && !hasFeature("warroom") && <FeatureLockedCard feature="warroom" />}
       {(isAdmin || hasFeature("warroom")) && (
         <main className="flex-1 container max-w-6xl mx-auto px-4 py-6 pb-24 relative z-10 oracle-page-content">

@@ -218,8 +218,16 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
   const { data: status } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
   const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
   const { data: pointsData } = trpc.points.getBalance.useQuery(undefined, { staleTime: 30000 });
+  const { data: navModulesForProfile } = trpc.businessHub.getVisibleNav.useQuery(undefined, { staleTime: 30000 });
   const { hasFeature } = usePermissions();
   const displayName = profile?.displayName || user.name;
+
+  // 個人選單模塊（displayLocation = 'profile' 或 'both'）
+  const profileNavItems = (navModulesForProfile ?? []).filter(m => {
+    if (!m.navPath || m.navPath.length === 0) return false;
+    const loc = (m as any).displayLocation || "main";
+    return loc === "profile" || loc === "both";
+  });
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: () => { window.location.href = "/"; },
   });
@@ -341,6 +349,30 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
               </>
             )}
 
+            {/* 個人選單模塊（displayLocation = profile 或 both） */}
+            {profileNavItems.length > 0 && (
+              <>
+                <div className="mx-4 my-1.5 border-t border-slate-700/50" />
+                <p className="px-4 py-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">功能</p>
+                {profileNavItems.map(m => (
+                  <Link
+                    key={m.id}
+                    href={m.navPath!}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-slate-700/60 flex items-center justify-center shrink-0 text-sm">
+                      {m.icon || '🔧'}
+                    </div>
+                    <span>{m.name}</span>
+                    {!m.hasAccess && (
+                      <span className="ml-auto text-[10px] text-slate-500 border border-slate-600/40 rounded px-1">需升級</span>
+                    )}
+                  </Link>
+                ))}
+              </>
+            )}
+
             {/* 簽到日曆入口 */}
             <button
               onClick={() => setShowCalendar(!showCalendar)}
@@ -404,9 +436,23 @@ export function SharedNav({ currentPage }: SharedNavProps) {
   );
 
   // 只顯示有 navPath 的模塊（空白 navPath = 不在主導航顯示）
+  // displayLocation = 'main' 或 'both' 才顯示在主功能列
   const visibleNavItems = navLoading || !navModules
     ? FALLBACK_NAV
-    : navModules.filter(m => m.navPath && m.navPath.length > 0);
+    : navModules.filter(m => {
+        if (!m.navPath || m.navPath.length === 0) return false;
+        const loc = (m as any).displayLocation || "main";
+        return loc === "main" || loc === "both";
+      });
+
+  // 個人下拉選單模塊（displayLocation = 'profile' 或 'both'）
+  const profileNavItems = navLoading || !navModules
+    ? []
+    : navModules.filter(m => {
+        if (!m.navPath || m.navPath.length === 0) return false;
+        const loc = (m as any).displayLocation || "main";
+        return loc === "profile" || loc === "both";
+      });
 
   // 檢查捲動狀態（是否可以向左/右捲動）
   const checkScrollState = (el: HTMLDivElement, setLeft: (v: boolean) => void, setRight: (v: boolean) => void) => {
