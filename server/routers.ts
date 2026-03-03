@@ -2365,6 +2365,9 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
           dbThresholds,
         );
         const outfit = generateOutfitAdviceV9(wuxingResult, blendedPriority, dailyStrategy);
+        // 塔羅流日卡號
+        const { calculateTarotDailyCard } = await import('./lib/warRoomEngine');
+        const dailyTarotCard = calculateTarotDailyCard(month, day, ep.birthMonth ?? undefined, ep.birthDay ?? undefined);
         // 時辰能量分數（用於前端時間軸顯示））
         const hourDynamicProfile: import('./lib/hourlyEnergy').DynamicHourProfile = {
           hourElementScores: Object.fromEntries(
@@ -2420,6 +2423,8 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
           })),
           favorableElements: ep.favorableElements,
           strategy: dailyStrategy,
+          tarotCardNumber: dailyTarotCard?.cardNumber ?? null,
+          tarotCardName: dailyTarotCard?.card.name ?? null,
         };
       }),
     /**

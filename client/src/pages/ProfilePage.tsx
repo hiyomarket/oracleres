@@ -784,40 +784,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* ─── 大限流年 ─── */}
-        <section>
-          <h2 className="text-lg font-bold text-orange-400 mb-1 flex items-center gap-2">
-            <span>📊</span> 你的人生週期分析
-          </h2>
-          <p className="text-xs text-gray-500 mb-4">大限是每 10 年一個大周期，流年是每年的小周期。就像天氣預報一樣，可以幫你知道現在處於什麼能量階段。</p>
-          <div className="bg-gray-900 border border-orange-500/30 rounded-xl p-5">
-            {ageInfo ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="text-center">
-                  <div className="text-xs text-gray-400 mb-1">實歲 / 虛歲</div>
-                  <div className="text-2xl font-bold text-amber-400">{ageInfo.realAge}歲</div>
-                  <div className="text-sm text-gray-300 mt-1">虛歲 {ageInfo.nominalAge}歲</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs text-gray-400 mb-1">出生年份</div>
-                  <div className="text-2xl font-bold text-orange-400">{ageInfo.birthYear}</div>
-                  <div className="text-sm text-gray-300 mt-1">
-                    {effectiveProfile?.yearPillar ? `${effectiveProfile.yearPillar}年` : "年柱未填寫"}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xs text-gray-400 mb-1">農曆生日</div>
-                  <div className="text-lg font-bold text-purple-400">{effectiveProfile?.birthLunar ?? "未設定"}</div>
-                  <div className="text-sm text-gray-300 mt-1">{effectiveProfile?.birthDate ?? ""}</div>
-                </div>
-              </div>
-            ) : (
-              <div className="mb-4 text-center text-gray-500 text-sm py-2">填寫出生日期以顯示年齡資訊</div>
-            )}
-            {/* ─── 五年流年流月分析 ─── */}
-            <YearlyForecastSection />
-          </div>
-        </section>
+
 
         {/* ─── 紫微斗數十二宮（主帳號專屬）─── */}
         {isOwner && (
@@ -879,11 +846,19 @@ export default function ProfilePage() {
               <div className="bg-gray-900 border border-gray-700/50 rounded-xl p-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                   {cards.map((t) => (
-                    <div key={t.label} className="bg-gray-800/50 border border-gray-700/30 rounded-xl p-4">
-                      <div className="text-xs text-orange-400 font-bold mb-0.5">{t.label}</div>
+                    <div key={t.label} className={`rounded-xl p-4 ${
+                      t.label === '主要靈數'
+                        ? 'bg-purple-900/30 border-2 border-purple-400/60 shadow-lg shadow-purple-900/30'
+                        : 'bg-gray-800/50 border border-gray-700/30'
+                    }`}>
+                      <div className={`text-xs font-bold mb-0.5 ${
+                        t.label === '主要靈數' ? 'text-purple-300' : 'text-orange-400'
+                      }`}>{t.label}{t.label === '主要靈數' && <span className="ml-1 text-[9px] bg-purple-500/30 text-purple-200 px-1.5 py-0.5 rounded-full">代表靈數</span>}</div>
                       <div className="text-[10px] text-gray-500 mb-3">{t.sublabel}</div>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="text-4xl font-bold text-orange-400">{t.num}</div>
+                        <div className={`text-4xl font-bold ${
+                          t.label === '主要靈數' ? 'text-purple-300' : 'text-orange-400'
+                        }`}>{t.num}</div>
                         <div>
                           <div className="text-sm font-bold text-gray-200">{t.element} {t.name}</div>
                           {t.higherNums && t.higherNums.length > 0 && (
@@ -959,87 +934,7 @@ export default function ProfilePage() {
           );
         })()}
 
-        {/* ─── 簽到日曆視圖 ─── */}
-        {calendarData && (() => {
-          const { signedDays, streak, totalThisMonth, year, month } = calendarData;
-          const signedSet = new Set(signedDays);
-          // 本月天數
-          const daysInMonth = new Date(year, month, 0).getDate();
-          // 本月第一天是星期幾（日曆對齊）
-          const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 0=日
-          const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-          const todayTW = new Date(Date.now() + 8 * 60 * 60 * 1000);
-          const todayStr = `${todayTW.getUTCFullYear()}-${String(todayTW.getUTCMonth()+1).padStart(2,'0')}-${String(todayTW.getUTCDate()).padStart(2,'0')}`;
-          const tierLabel = streak >= 20 ? '🥇 黃金' : streak >= 6 ? '🥈 白銀' : '🥉 青銅';
-          const tierColor = streak >= 20 ? 'text-yellow-300' : streak >= 6 ? 'text-gray-300' : 'text-orange-400';
-          return (
-            <section className="bg-gray-900/60 border border-orange-500/20 rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📅</span>
-                  <h3 className="text-sm font-bold text-orange-300">簽到日曆</h3>
-                  <span className="text-xs text-gray-500">{year}年 {monthNames[month-1]}</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs">
-                  <span className={`font-bold ${tierColor}`}>{tierLabel}</span>
-                  <span className="text-gray-400">連續 <span className="text-orange-300 font-bold">{streak}</span> 天</span>
-                  <span className="text-gray-400">本月 <span className="text-green-300 font-bold">{totalThisMonth}</span> 天</span>
-                </div>
-              </div>
-              {/* 星期標題 */}
-              <div className="grid grid-cols-7 gap-1 mb-1">
-                {['日','一','二','三','四','五','六'].map(d => (
-                  <div key={d} className="text-center text-[10px] text-gray-500 py-1">{d}</div>
-                ))}
-              </div>
-              {/* 日期格子 */}
-              <div className="grid grid-cols-7 gap-1">
-                {/* 空白占位 */}
-                {Array.from({ length: firstDayOfWeek }).map((_, i) => (
-                  <div key={`empty-${i}`} />
-                ))}
-                {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const day = i + 1;
-                  const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-                  const isSigned = signedSet.has(dateStr);
-                  const isToday = dateStr === todayStr;
-                  return (
-                    <div
-                      key={day}
-                      className={`relative aspect-square rounded-lg flex items-center justify-center text-xs font-medium transition-all ${
-                        isSigned
-                          ? 'bg-orange-500/30 border border-orange-400/60 text-orange-200'
-                          : isToday
-                            ? 'bg-gray-700/60 border border-cyan-500/50 text-cyan-300'
-                            : 'bg-gray-800/40 border border-gray-700/30 text-gray-500'
-                      }`}
-                    >
-                      {day}
-                      {isSigned && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-orange-400 rounded-full" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              {/* 圖例 */}
-              <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-500">
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-orange-500/30 border border-orange-400/60" />
-                  <span>已簽到</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-gray-800/40 border border-gray-700/30" />
-                  <span>未簽到</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-gray-700/60 border border-cyan-500/50" />
-                  <span>今日</span>
-                </div>
-              </div>
-            </section>
-          );
-        })()}
+
 
         {/* ─── 前往設定按鈕（主帳號不顯示，其他用戶顯示）─── */}
         {!isOwner && (

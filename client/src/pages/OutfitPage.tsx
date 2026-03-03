@@ -122,6 +122,11 @@ export default function OutfitPage() {
     { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false }
   );
 
+  // 用戶命格資料（取得主要靈數）
+  const { data: profileData } = trpc.account.getProfile.useQuery(undefined, {
+    staleTime: 10 * 60 * 1000, refetchOnWindowFocus: false
+  });
+
   // 本週策略分布
   const { data: weeklyDist } = trpc.warRoom.weeklyStrategyDistribution.useQuery(
     undefined,
@@ -239,6 +244,19 @@ export default function OutfitPage() {
   const yesterdayStrategy = (yesterdayOutfit as unknown as { strategy?: { strategyName: string } })?.strategy;
   const strategyPlain = strategy ? (STRATEGY_PLAIN_DESC[strategy.strategyName] ?? null) : null;
   const strategyChanged = yesterdayStrategy && strategy && yesterdayStrategy.strategyName !== strategy.strategyName;
+
+  // 靈數與流日共振計算
+  const primaryLifeNum = profileData?.lifePathNumber ?? null;
+  const tarotCardNum = (outfitData as unknown as { tarotCardNumber?: number | null })?.tarotCardNumber ?? null;
+  const tarotCardName = (outfitData as unknown as { tarotCardName?: string | null })?.tarotCardName ?? null;
+  const resonanceType: 'exact' | 'near' | null = (() => {
+    if (!primaryLifeNum || !tarotCardNum) return null;
+    if (primaryLifeNum === tarotCardNum) return 'exact';
+    // 相鄰共振（差值1，考慮22循環）
+    const diff = Math.abs(primaryLifeNum - tarotCardNum);
+    if (diff === 1 || diff === 21) return 'near';
+    return null;
+  })();
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -435,7 +453,38 @@ export default function OutfitPage() {
           )}
         </AnimatePresence>
 
-        {/* ═══ 管理虛擬衣櫥快捷入口（置於五行圖上方）═══ */}
+        {/* ═══ 靈數與流日共振提示 ═══ */}
+        {resonanceType && tarotCardName && primaryLifeNum && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`mb-4 rounded-2xl border p-3.5 flex items-start gap-3 ${
+              resonanceType === 'exact'
+                ? 'bg-amber-950/50 border-amber-400/50'
+                : 'bg-purple-950/40 border-purple-400/40'
+            }`}
+          >
+            <span className="text-2xl flex-shrink-0">{resonanceType === 'exact' ? '✨' : '🌙'}</span>
+            <div className="min-w-0">
+              <div className={`text-sm font-bold mb-0.5 ${
+                resonanceType === 'exact' ? 'text-amber-300' : 'text-purple-300'
+              }`}>
+                {resonanceType === 'exact'
+                  ? `今日與你的主要靈數共振，能量倍增！`
+                  : `今日流日與你的主要靈數相鄰，能量共鳴`
+                }
+              </div>
+              <p className="text-xs text-white/60 leading-relaxed">
+                {resonanceType === 'exact'
+                  ? `今日流日塔羅「${tarotCardName}」正是你的主要靈數 ${primaryLifeNum} 號。今日的行動與你的天命能量高度對齊，適合重要决策、展現自我。`
+                  : `今日流日塔羅「${tarotCardName}」與你的主要靈數 ${primaryLifeNum} 號相鄰。能量共鳴中，今日適合與人合作、展開對話。`
+                }
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ═══ 管理虛擬衣樥快捷入口（置於五行圖上方）═══ */}
         {(!isAdmin && !hasFeature("warroom_outfit")) ? null : (
           <Link href="/wardrobe" className="flex items-center justify-between p-3 mb-4 rounded-xl border border-dashed border-white/20 hover:border-amber-500/40 hover:bg-amber-900/10 transition-all group">
             <div className="flex items-center gap-3">
