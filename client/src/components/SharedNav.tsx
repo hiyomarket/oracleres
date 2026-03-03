@@ -345,6 +345,18 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
                   </div>
                 </Link>
 
+                {/* 功能兌換中心管理 */}
+                <Link
+                  href="/admin/feature-store"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-amber-500/10 hover:text-amber-300 transition-colors group/item"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0 group-hover/item:bg-amber-500/25 transition-colors">
+                    <span className="text-sm">🎪</span>
+                  </div>
+                  <span>功能兌換中心管理</span>
+                </Link>
+
 
               </>
             )}

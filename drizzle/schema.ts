@@ -940,3 +940,95 @@ export const userNotifications = mysqlTable("user_notifications", {
 });
 export type UserNotification = typeof userNotifications.$inferSelect;
 export type InsertUserNotification = typeof userNotifications.$inferInsert;
+
+/**
+ * 功能兌換方案設定表
+ * 後台管理員設定可供用戶兌換/購買的功能模塊方案
+ */
+export const featurePlans = mysqlTable("feature_plans", {
+  id: varchar("id", { length: 50 }).primaryKey(), // 'plan_warroom', 'plan_lottery_pro'
+  // 對應的模塊 ID（對應 modules.id）
+  moduleId: varchar("moduleId", { length: 50 }).notNull(),
+  // 顯示名稱
+  name: varchar("name", { length: 100 }).notNull(),
+  // 功能說明
+  description: text("description"),
+  // 積分兌換價格（null = 不開放積分兌換）
+  points3Days: int("points3Days"),   // 3天所需積分
+  points7Days: int("points7Days"),   // 7天所需積分
+  points15Days: int("points15Days"), // 15天所需積分
+  points30Days: int("points30Days"), // 30天所需積分
+  // 付費購買外部商城連結（null = 不開放付費購買）
+  shopUrl: varchar("shopUrl", { length: 500 }),
+  // 是否開放積分兌換
+  allowPointsRedemption: tinyint("allowPointsRedemption").notNull().default(1),
+  // 是否開放付費購買
+  allowPurchase: tinyint("allowPurchase").notNull().default(1),
+  // 是否啟用（false = 不在兌換中心顯示）
+  isActive: tinyint("isActive").notNull().default(1),
+  // 排序
+  sortOrder: int("sortOrder").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type FeaturePlan = typeof featurePlans.$inferSelect;
+export type InsertFeaturePlan = typeof featurePlans.$inferInsert;
+
+/**
+ * 用戶功能兌換紀錄表
+ * 記錄每次積分兌換或管理員核發的功能天數
+ */
+export const featureRedemptions = mysqlTable("feature_redemptions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // 對應的功能兌換方案 ID
+  featurePlanId: varchar("featurePlanId", { length: 50 }).notNull(),
+  // 對應的模塊 ID
+  moduleId: varchar("moduleId", { length: 50 }).notNull(),
+  // 兌換天數
+  durationDays: int("durationDays").notNull(),
+  // 消耗積分（0 = 管理員免費核發）
+  pointsSpent: int("pointsSpent").notNull().default(0),
+  // 來源：points=積分兌換, purchase=付費購買核發, admin=管理員手動核發
+  source: mysqlEnum("source", ["points", "purchase", "admin"]).notNull().default("points"),
+  // 兌換前的到期時間（用於顯示「延長前」資訊）
+  previousExpiresAt: timestamp("previousExpiresAt"),
+  // 兌換後的新到期時間
+  newExpiresAt: timestamp("newExpiresAt").notNull(),
+  // 備註（管理員核發時可填寫）
+  note: varchar("note", { length: 300 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type FeatureRedemption = typeof featureRedemptions.$inferSelect;
+export type InsertFeatureRedemption = typeof featureRedemptions.$inferInsert;
+
+/**
+ * 付費訂單表
+ * 用戶在外部商城購買後，回到系統填入訂單號等待管理員審核
+ */
+export const purchaseOrders = mysqlTable("purchase_orders", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // 對應的功能兌換方案 ID
+  featurePlanId: varchar("featurePlanId", { length: 50 }).notNull(),
+  // 對應的模塊 ID
+  moduleId: varchar("moduleId", { length: 50 }).notNull(),
+  // 用戶選擇的天數（15 或 30）
+  durationDays: int("durationDays").notNull(),
+  // 用戶在外部商城的訂單號
+  externalOrderId: varchar("externalOrderId", { length: 200 }).notNull(),
+  // 用戶備註
+  userNote: varchar("userNote", { length: 500 }),
+  // 審核狀態：pending=待審核, approved=已核發, rejected=已拒絕
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).notNull().default("pending"),
+  // 管理員拒絕原因
+  rejectReason: varchar("rejectReason", { length: 300 }),
+  // 審核時間
+  reviewedAt: timestamp("reviewedAt"),
+  // 審核管理員 ID
+  reviewedBy: int("reviewedBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
+export type InsertPurchaseOrder = typeof purchaseOrders.$inferInsert;

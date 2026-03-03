@@ -1849,3 +1849,34 @@
 ### WBC 活動曝光強化
 - [x] 前端: 今日運勢頁面加入 WBC 活動彈窗（每天首次進入顯示一次）
 - [x] 前端: 彈窗顯示下一場賽事資訊，點擊可直接跳轉競猜頁面
+
+## 功能升級 v5.6 - 功能模塊兌換中心（2026-03-03）
+
+### Schema 設計
+- [x] 新增 feature_plans 表（功能方案設定：名稱/說明/積分價格×4/商城連結/啟用狀態）
+- [x] 新增 feature_redemptions 表（用戶兌換紀錄：功能ID/用戶ID/天數/到期時間/來源）
+- [x] 新增 purchase_orders 表（付費訂單：用戶ID/功能ID/天數/商城訂單號/審核狀態）
+- [x] SQL 直接建表（db:push 無法處理 enum 變更）
+
+### 後端 API
+- [x] featureStore.list - 取得所有啟用的功能方案
+- [x] featureStore.redeem - 積分兌換（扣積分+延長到期）
+- [x] featureStore.createOrder - 建立付費訂單（填入商城訂單號）
+- [x] featureStore.myHistory - 用戶兌換/訂單紀錄
+- [x] featureStore.adminUpsertPlan / adminDeletePlan / adminListPlans
+- [x] featureStore.adminListOrders / adminReviewOrder / adminGrantDays
+
+### 前端頁面（/feature-store）
+- [x] 功能卡片列表（名稱/說明/積分價格/商城連結）
+- [x] 積分兌換流程（選時長→衝突檢查→確認扣點→成功提示）
+- [x] 付費購買流程（選時長→衝突提示→跳轉商城→回來填訂單號）
+- [x] 衝突提醒彈窗（三種情況：已包含/更高方案/已購買中）
+- [x] 兌換紀錄 Tab（功能名稱/時長/到期日/來源/狀態）
+- [x] 訂單填寫 Dialog（輸入商城訂單號+說明）
+- [x] SharedNav 後台管理區加入「功能兌換中心管理」入口
+
+### 後台管理
+- [x] 功能方案設定頁（新增/編輯：名稱/說明/各時長積分/商城連結/啟用）
+- [x] 訂單審核列表（待審核/已核發/已拒絕）
+- [x] 手動核發天數（審核通過後自動延長用戶功能到期時間）
+- [x] 拒絕訂單功能（附拒絕原因，通知用戶）
