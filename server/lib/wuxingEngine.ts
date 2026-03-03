@@ -470,35 +470,34 @@ export interface OutfitAdviceV9 {
   energyTag: string;
 }
 
-export function generateOutfitAdviceV9(result: WeightedElementResult, supplementPriority?: string[]): OutfitAdviceV9 {
-  const { weighted, levels, coreContradiction } = result;
+export function generateOutfitAdviceV9(
+  result: WeightedElementResult,
+  supplementPriority?: string[],
+  strategy?: import('./strategyEngine').DailyStrategyObject,
+): OutfitAdviceV9 {
+  const { weighted, coreContradiction } = result;
 
-  // 使用動態傳入的補運優先級，沒有則 fallback 到常數
-  const priority = supplementPriority && supplementPriority.length > 0 ? supplementPriority : [...SUPPLEMENT_PRIORITY];
+  // V10.0：若有策略物件，直接使用策略判定的主攻/輔助五行
+  // V9.1 fallback：若無策略物件，使用舊的補弱邏輯（向後相容）
+  let primarySupplement: string;
+  let secondarySupplement: string;
 
-  // 找出最需要補充的五行（優先級中最弱的）
-  let primarySupplement = priority[0] ?? "火";
-  let secondarySupplement = priority[1] ?? "土";
-
-  // 按補運優先級，找出最弱的
-  for (const el of priority) {
-    if (weighted[el as keyof ElementRatio] < 0.15) {
-      primarySupplement = el;
-      break;
+  if (strategy) {
+    primarySupplement = strategy.primaryTargetElement;
+    secondarySupplement = strategy.secondaryTargetElement;
+  } else {
+    const priority = supplementPriority && supplementPriority.length > 0 ? supplementPriority : [...SUPPLEMENT_PRIORITY];
+    primarySupplement = priority[0] ?? "火";
+    secondarySupplement = priority[1] ?? "土";
+    for (const el of priority) {
+      if (weighted[el as keyof ElementRatio] < 0.15) { primarySupplement = el; break; }
     }
-  }
-
-  // 次要補充：在優先級中找第二弱的
-  for (const el of priority) {
-    if (el !== primarySupplement && weighted[el as keyof ElementRatio] < 0.25) {
-      secondarySupplement = el;
-      break;
+    for (const el of priority) {
+      if (el !== primarySupplement && weighted[el as keyof ElementRatio] < 0.25) { secondarySupplement = el; break; }
     }
-  }
-
-  // 如果主次相同，取下一個優先級
-  if (primarySupplement === secondarySupplement) {
-    secondarySupplement = priority.find(el => el !== primarySupplement) ?? "土";
+    if (primarySupplement === secondarySupplement) {
+      secondarySupplement = priority.find(el => el !== primarySupplement) ?? "土";
+    }
   }
 
   // 找出過旺的五行（需要避開）
@@ -510,9 +509,9 @@ export function generateOutfitAdviceV9(result: WeightedElementResult, supplement
   const upperColors = ELEMENT_COLORS[primarySupplement] || ["白色"];
   const lowerColors = ELEMENT_COLORS[secondarySupplement] || ["黃色"];
 
-  // 生成戰術解讀
-  const upperExplanation = generateOutfitExplanation(primarySupplement, "upper", weighted, coreContradiction);
-  const lowerExplanation = generateOutfitExplanation(secondarySupplement, "lower", weighted, coreContradiction);
+  // 生成戰術解讀（V10.0：加入策略名稱前綴）
+  const upperExplanation = generateOutfitExplanation(primarySupplement, "upper", weighted, coreContradiction, strategy);
+  const lowerExplanation = generateOutfitExplanation(secondarySupplement, "lower", weighted, coreContradiction, strategy);
 
   // 避開顏色（過旺五行，但排除補運色）
   const avoidList = overflowing
@@ -523,8 +522,8 @@ export function generateOutfitAdviceV9(result: WeightedElementResult, supplement
       reason: `${el}能量已過旺（${Math.round(weighted[el as keyof ElementRatio] * 100)}%），避免再添加同類能量`,
     }));
 
-  const energyTag = `${primarySupplement}補運日｜${coreContradiction}`;
-  const coreStrategy = `今日核心策略：用「${primarySupplement}」${getElementGoal(primarySupplement)}，用「${secondarySupplement}」${getElementGoal(secondarySupplement)}`;
+  const energyTag = strategy ? strategy.energyTag : `${primarySupplement}補運日｜${coreContradiction}`;
+  const coreStrategy = strategy ? strategy.coreStrategyText : `今日核心策略：用「${primarySupplement}」${getElementGoal(primarySupplement)}，用「${secondarySupplement}」${getElementGoal(secondarySupplement)}`;
 
   return {
     upperBody: {
@@ -558,7 +557,8 @@ function generateOutfitExplanation(
   element: string,
   position: "upper" | "lower",
   weighted: ElementRatio,
-  coreContradiction: string
+  coreContradiction: string,
+  strategy?: import('./strategyEngine').DailyStrategyObject,
 ): string {
   const pct = Math.round(weighted[element as keyof ElementRatio] * 100);
   const positionDesc = position === "upper" ? "上半身（主生發/滋養/內心）" : "下半身（主支撐/行動/根基）";
@@ -586,7 +586,11 @@ function generateOutfitExplanation(
     },
   };
 
-  return explanations[element]?.[position] || `${positionDesc}穿著${element}色系，補充${element}元素能量。`;
+  const base = explanations[element]?.[position] || `${positionDesc}穿著${element}色系，補充${element}元素能量。`;
+  if (strategy && strategy.strategyName !== "均衡守成") {
+    return `【${strategy.strategyName}・${strategy.aiPromptHint}】 ${base}`;
+  }
+  return base;
 }
 
 // ============================================================
@@ -695,30 +699,35 @@ export interface BraceletRecommendationV9 {
   coreGoal: string;
 }
 
-export function recommendBraceletsV9(result: WeightedElementResult, supplementPriority?: string[]): BraceletRecommendationV9 {
+export function recommendBraceletsV9(
+  result: WeightedElementResult,
+  supplementPriority?: string[],
+  strategy?: import('./strategyEngine').DailyStrategyObject,
+): BraceletRecommendationV9 {
   const { weighted, coreContradiction } = result;
-  // 使用動態傳入的補運優先級，沒有則 fallback 到常數
-  const priority = supplementPriority && supplementPriority.length > 0 ? supplementPriority : [...SUPPLEMENT_PRIORITY];
-  // 左手：補充最需要的五行（按補運優先級找最弱的）
-  let leftElement = priority[0] ?? "火";
-  for (const el of priority) {
-    if (weighted[el as keyof ElementRatio] < 0.15) {
-      leftElement = el;
-      break;
+
+  // V10.0：若有策略物件，直接使用策略判定的主攻/輔助五行
+  let leftElement: string;
+  let rightElement: string;
+
+  if (strategy) {
+    leftElement = strategy.primaryTargetElement;
+    rightElement = strategy.secondaryTargetElement;
+  } else {
+    // V9.1 向後相容
+    const priority = supplementPriority && supplementPriority.length > 0 ? supplementPriority : [...SUPPLEMENT_PRIORITY];
+    leftElement = priority[0] ?? "火";
+    rightElement = priority[1] ?? "土";
+    for (const el of priority) {
+      if (weighted[el as keyof ElementRatio] < 0.15) { leftElement = el; break; }
     }
-  }
-  // 右手：補充次要需要的五行
-  let rightElement = priority[1] ?? "土";
-  for (const el of priority) {
-    if (el !== leftElement && weighted[el as keyof ElementRatio] < 0.25) {
-      rightElement = el;
-      break;
+    for (const el of priority) {
+      if (el !== leftElement && weighted[el as keyof ElementRatio] < 0.25) { rightElement = el; break; }
     }
-  }
-  // 如果左右相同，取下一個優先級
-  if (leftElement === rightElement) {
-    const idx = priority.indexOf(rightElement);
-    rightElement = priority[(idx + 1) % priority.length] ?? priority[0] ?? "土";
+    if (leftElement === rightElement) {
+      const idx = priority.indexOf(rightElement);
+      rightElement = priority[(idx + 1) % priority.length] ?? priority[0] ?? "土";
+    }
   }
 
   // 從手串資料庫選擇對應五行的手串
@@ -731,7 +740,9 @@ export function recommendBraceletsV9(result: WeightedElementResult, supplementPr
   const leftExplanation = generateBraceletExplanation(leftBracelet, leftElement, "left", weighted, coreContradiction);
   const rightExplanation = generateBraceletExplanation(rightBracelet, rightElement, "right", weighted, coreContradiction);
 
-  const coreGoal = `今日核心目標：用「${leftElement}」${getElementGoal(leftElement)}，用「${rightElement}」${getElementGoal(rightElement)}`;
+  const coreGoal = strategy
+    ? strategy.coreStrategyText
+    : `今日核心目標：用「${leftElement}」${getElementGoal(leftElement)}，用「${rightElement}」${getElementGoal(rightElement)}`;
 
   return {
     leftHand: { ...leftBracelet, tacticalRole: leftRole, explanation: leftExplanation },

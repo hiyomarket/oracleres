@@ -1,6 +1,6 @@
 /**
- * 神諭穿搭・能量模擬器 V4.0
- * 雙層計分模型 (Innate Aura + Outfit Boost) + 交互式虛擬人台 + 時辰動態 + 情境模式
+ * 神諭穿搭・能量模擬器 V10.0
+ * 動態策略判定層 + 七日時間軸 + 懸浮儀表盤 + 展開建議 + 可折疊模擬器
  */
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,32 +26,20 @@ const WUXING_COLORS: Record<string, { bg: string; border: string; text: string; 
   木: { bg: "bg-emerald-950/40", border: "border-emerald-500/50", text: "text-emerald-400", dot: "bg-emerald-500" },
 };
 
+// 策略顏色映射
+const STRATEGY_COLORS: Record<string, { bg: string; border: string; text: string; badge: string }> = {
+  "強勢補弱": { bg: "bg-blue-950/40", border: "border-blue-500/40", text: "text-blue-300", badge: "bg-blue-500/20 text-blue-300 border-blue-500/40" },
+  "順勢生旺": { bg: "bg-emerald-950/40", border: "border-emerald-500/40", text: "text-emerald-300", badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" },
+  "借力打力": { bg: "bg-purple-950/40", border: "border-purple-500/40", text: "text-purple-300", badge: "bg-purple-500/20 text-purple-300 border-purple-500/40" },
+  "食神生財": { bg: "bg-amber-950/40", border: "border-amber-500/40", text: "text-amber-300", badge: "bg-amber-500/20 text-amber-300 border-amber-500/40" },
+  "均衡守成": { bg: "bg-gray-900/40", border: "border-gray-500/40", text: "text-gray-300", badge: "bg-gray-500/20 text-gray-300 border-gray-500/40" },
+};
+
 function getTaiwanDateStr(offsetDays = 0): string {
   const now = new Date();
   const twMs = now.getTime() + 8 * 60 * 60 * 1000 + offsetDays * 24 * 60 * 60 * 1000;
   return new Date(twMs).toISOString().split("T")[0];
 }
-
-function SectionCard({ title, icon, children, className = "" }: {
-  title: string; icon: string; children: React.ReactNode; className?: string;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={`rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-5 ${className}`}
-    >
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-xl">{icon}</span>
-        <h3 className="text-sm font-semibold text-white/70 uppercase tracking-widest">{title}</h3>
-      </div>
-      {children}
-    </motion.div>
-  );
-}
-
-type ActiveTab = "simulator" | "outfit" | "bracelet";
 
 const DEFAULT_AURA_LEVEL = {
   label: "計算中",
@@ -64,7 +52,6 @@ export default function OutfitPage() {
   const { hasFeature, isAdmin } = usePermissions();
   const [selectedOffset, setSelectedOffset] = useState(0);
   const selectedDate = getTaiwanDateStr(selectedOffset);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("simulator");
   const [mode, setMode] = useState<OutfitMode>("default");
   const [selectedHourIndex, setSelectedHourIndex] = useState<number | null>(null);
   const prevModeRef = useRef<OutfitMode>(mode);
@@ -74,6 +61,8 @@ export default function OutfitPage() {
   const [activePart, setActivePart] = useState<BodyPart | null>(null);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [simulatorCollapsed, setSimulatorCollapsed] = useState(false);
+
   // 能量說明 Panel 狀態
   const [energyPanelOpen, setEnergyPanelOpen] = useState(false);
   const [energyPanelPart, setEnergyPanelPart] = useState<BodyPart | null>(null);
@@ -88,25 +77,17 @@ export default function OutfitPage() {
 
   // V4.0 模擬器初始化資料
   const { data: simulatorData, isLoading: simLoading } = trpc.warRoom.getOutfitSimulatorData.useQuery(
-    {
-      date: selectedDate,
-      hourBranchIndex: selectedHourIndex ?? undefined,
-      mode,
-    },
+    { date: selectedDate, hourBranchIndex: selectedHourIndex ?? undefined, mode },
     { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false }
   );
 
-  // V3.0 時辰動態穿搭 API（用於穿搭建議 Tab）
+  // V10.0 時辰動態穿搭 API（含策略資訊）
   const { data: outfitData, isLoading: outfitLoading, isFetching: outfitFetching } = trpc.warRoom.getOutfitByShichen.useQuery(
-    {
-      date: selectedDate,
-      hourBranchIndex: selectedHourIndex ?? undefined,
-      mode,
-    },
+    { date: selectedDate, hourBranchIndex: selectedHourIndex ?? undefined, mode },
     { staleTime: 0, refetchOnWindowFocus: false }
   );
 
-  // 原始 dailyReport（用於手串矩陣）
+  // 原始 dailyReport（用於手串矩陣和五行總覽）
   const { data: dailyData, isLoading: dailyLoading } = trpc.warRoom.dailyReport.useQuery(
     { date: selectedDate },
     { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false }
@@ -114,14 +95,8 @@ export default function OutfitPage() {
 
   // simulateOutfit mutation
   const simulateMutation = trpc.warRoom.simulateOutfit.useMutation({
-    onSuccess: (data) => {
-      setAuraBoostResult(data);
-      setIsSimulating(false);
-    },
-    onError: (e) => {
-      toast.error("模擬失敗：" + e.message);
-      setIsSimulating(false);
-    },
+    onSuccess: (data) => { setAuraBoostResult(data); setIsSimulating(false); },
+    onError: (e) => { toast.error("模擬失敗：" + e.message); setIsSimulating(false); },
   });
 
   // 初始化：從 outfitData 取得當前時辰 index
@@ -131,16 +106,12 @@ export default function OutfitPage() {
     }
   }, [outfitData, selectedHourIndex]);
 
-  // 模式切換時記錄
-  useEffect(() => {
-    prevModeRef.current = mode;
-  }, [mode]);
+  useEffect(() => { prevModeRef.current = mode; }, [mode]);
 
-  // 穿搭選擇改變時自動觸發模擬
+  // 穿搭選擇改變時自動觸發模擬（防抖 500ms）
   useEffect(() => {
     const hasAnySelection = Object.keys(outfitSelection).length > 0;
     if (!hasAnySelection || !simulatorData) return;
-
     const timer = setTimeout(() => {
       setIsSimulating(true);
       simulateMutation.mutate({
@@ -149,8 +120,7 @@ export default function OutfitPage() {
         mode,
         outfit: outfitSelection as Record<string, { color: string; wuxing?: string; name?: string }>,
       });
-    }, 500); // 防抖 500ms
-
+    }, 500);
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [outfitSelection, selectedDate, selectedHourIndex, mode]);
@@ -177,7 +147,6 @@ export default function OutfitPage() {
   };
 
   function handlePartClick(part: BodyPart) {
-    // 如果該部位已有選擇，點擊時顯示能量說明 Panel
     if (outfitSelection[part]) {
       setEnergyPanelPart(part);
       setEnergyPanelOpen(true);
@@ -189,7 +158,6 @@ export default function OutfitPage() {
 
   function handleSelectItem(part: BodyPart, item: { color: string; wuxing: string; name?: string }) {
     setOutfitSelection(prev => ({ ...prev, [part]: item }));
-    // 選擇後自動顯示能量說明 Panel
     setEnergyPanelPart(part);
     setEnergyPanelOpen(true);
   }
@@ -199,19 +167,13 @@ export default function OutfitPage() {
     setAuraBoostResult(null);
   }
 
-  const TABS: { key: ActiveTab; label: string; icon: string }[] = [
-    { key: "simulator", label: "能量模擬器", icon: "⚡" },
-    { key: "outfit", label: "穿搭建議", icon: "👗" },
-    { key: "bracelet", label: "手串矩陣", icon: "📿" },
-  ];
-
   const outfit = outfitData?.outfit;
   const targetHour = outfitData?.targetHour;
   const allHours = outfitData?.allHours ?? [];
+  // 策略資訊（V10.0 新增）
+  const strategy = (outfitData as unknown as { strategy?: { strategyName: string; coreStrategyText: string; primaryTargetElement: string; secondaryTargetElement: string } })?.strategy;
 
   // 計算顯示的 Aura 分數
-  // 天命底盤同步：優先使用 dailyData.overallScore × 10（與作戰室每日運勢分數一致）
-  // 再乘以 innateMax / 100 打折（來自 admin logic-config 的天命底盤最高分設定）
   const innateMaxDiscount = simulatorData?.innateMax != null ? (simulatorData.innateMax as number) / 100 : 1;
   const rawInnate = dailyData?.overallScore != null
     ? Math.round(dailyData.overallScore * 10)
@@ -222,37 +184,108 @@ export default function OutfitPage() {
   const displayTotal = auraBoostResult?.totalScore
     ? Math.round(syncedInnate + auraBoostResult.outfitBoost)
     : syncedInnate;
-  // 評語等級依實際分數動態計算（不再使用後端回傳的固定等級）
+
   function getAuraLevelFromScore(score: number): { label: string; color: string; description: string; emoji: string } {
     if (score >= 90) return { label: "運勢極佳", color: "#F59E0B", description: "天命豐沿，諸事順遂，把握機會大步前進。", emoji: "✨" };
     if (score >= 70) return { label: "運勢良好", color: "#10B981", description: "能量穩健，適合行動與決策，積極推進重要事項。", emoji: "🌟" };
-    if (score >= 50) return { label: "運勢平穩", color: "#6B7280", description: "能量平穩，適合維持現狀，不宜跌進冲動。", emoji: "🌐" };
-    if (score >= 30) return { label: "運勢偏弱", color: "#F97316", description: "能量稍弱，建議透過穿搭补運，避免重大決策。", emoji: "🍂" };
+    if (score >= 50) return { label: "運勢平穩", color: "#6B7280", description: "能量平穩，適合維持現狀，不宜輕進冲動。", emoji: "🌐" };
+    if (score >= 30) return { label: "運勢偏弱", color: "#F97316", description: "能量稍弱，建議透過穿搭補運，避免重大決策。", emoji: "🍂" };
     return { label: "運勢低迷", color: "#EF4444", description: "能量較低，建議休養為主，透過穿搭與手串積極補運。", emoji: "🌙" };
   }
   const computedAuraLevel = getAuraLevelFromScore(displayTotal);
   const displayAuraLevel = simulatorData ? computedAuraLevel : DEFAULT_AURA_LEVEL;
+  const strategyColors = strategy ? (STRATEGY_COLORS[strategy.strategyName] ?? STRATEGY_COLORS["均衡守成"]) : null;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       <SharedNav currentPage="outfit" />
-      <main className="max-w-2xl mx-auto px-4 py-6">
+
+      {/* ═══ 懸浮能量儀表盤（sticky top bar）═══ */}
+      {simulatorData && (
+        <div className="sticky top-0 z-30 bg-[#0a0a0f]/95 backdrop-blur-md border-b border-amber-500/20 px-4 py-2">
+          <div className="max-w-2xl mx-auto flex items-center gap-3">
+            {/* 分數區 */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-amber-400/70 text-[10px] uppercase tracking-wider hidden sm:block">Aura</span>
+                <motion.span
+                  key={displayTotal}
+                  initial={{ scale: 1.2, color: "#F59E0B" }}
+                  animate={{ scale: 1, color: displayAuraLevel.color }}
+                  transition={{ duration: 0.4 }}
+                  className="text-2xl font-bold tabular-nums"
+                  style={{ color: displayAuraLevel.color }}
+                >
+                  {displayTotal}
+                </motion.span>
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-white/60 text-[11px] font-medium">{displayAuraLevel.emoji} {displayAuraLevel.label}</span>
+                <div className="flex items-center gap-1.5 text-[10px]">
+                  <span className="text-white/30">底盤 {displayInnate}</span>
+                  {displayBoost > 0 && (
+                    <motion.span
+                      key={displayBoost}
+                      initial={{ opacity: 0, x: -4 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="text-amber-400 font-bold"
+                    >
+                      +{displayBoost} 穿搭加成
+                    </motion.span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 五行快覽 */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {["木","火","土","金","水"].map((el) => {
+                const w = dailyData?.wuxing?.weighted?.[el as keyof typeof dailyData.wuxing.weighted] ?? 0;
+                const pct = Math.round((w as number) * 100);
+                const colors = WUXING_COLORS[el];
+                return (
+                  <div key={el} className="flex flex-col items-center gap-0.5">
+                    <div className="w-1 bg-white/10 rounded-full overflow-hidden" style={{ height: 20 }}>
+                      <motion.div
+                        className={`w-full rounded-full ${colors.dot}`}
+                        style={{ height: `${pct}%` }}
+                        initial={{ height: 0 }}
+                        animate={{ height: `${pct}%` }}
+                        transition={{ duration: 0.6 }}
+                      />
+                    </div>
+                    <span className={`text-[9px] font-bold ${colors.text}`}>{el}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 策略徽章 */}
+            {strategy && strategyColors && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className={`flex-shrink-0 px-2 py-0.5 rounded-full border text-[10px] font-bold ${strategyColors.badge}`}
+              >
+                {strategy.strategyName}
+              </motion.div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <main className="max-w-2xl mx-auto px-4 py-5">
         {/* 頁面標題 */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-2xl font-bold text-amber-300 flex items-center gap-2">
                 <span>✨</span> 神諭穿搭
               </h1>
-              <p className="text-white/40 text-sm mt-1">Aura Score 雙層計分 · 時辰動態能量模擬器</p>
+              <p className="text-white/40 text-sm mt-1">V10.0 動態策略 · 七日時間軸 · 即時能量儀表</p>
             </div>
             {targetHour && (
-              <motion.div
-                key={targetHour.chineseName}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-right"
-              >
+              <motion.div key={targetHour.chineseName} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-right">
                 <div className="text-amber-400 font-bold text-lg">{targetHour.chineseName}</div>
                 <div className="text-white/40 text-xs">{targetHour.displayTime}</div>
               </motion.div>
@@ -260,16 +293,16 @@ export default function OutfitPage() {
           </div>
         </motion.div>
 
-        {/* 日期選擇器 */}
-        <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-1">
-          {[-1, 0, 1, 2].map((offset) => {
+        {/* ═══ 七日時間軸日期選擇器 ═══ */}
+        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 nav-scroll-container">
+          {[-1, 0, 1, 2, 3, 4, 5].map((offset) => {
             const d = getTaiwanDateStr(offset);
-            const label = offset === -1 ? "昨日" : offset === 0 ? "今日" : offset === 1 ? "明日" : `+${offset}日`;
+            const label = offset === -1 ? "昨日" : offset === 0 ? "今日" : offset === 1 ? "明日" : offset === 2 ? "後天" : `+${offset}日`;
             return (
               <button
                 key={offset}
                 onClick={() => { setSelectedOffset(offset); setSelectedHourIndex(null); setOutfitSelection({}); setAuraBoostResult(null); }}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                   selectedOffset === offset
                     ? "bg-amber-500 text-black"
                     : "bg-white/5 text-white/50 hover:bg-white/10"
@@ -282,7 +315,7 @@ export default function OutfitPage() {
         </div>
 
         {/* ═══ 情境模式切換器 ═══ */}
-        <div className="mb-5 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 p-4">
           <OutfitModeSelector value={mode} onChange={(m) => { setMode(m); setAuraBoostResult(null); }} />
         </div>
 
@@ -296,466 +329,385 @@ export default function OutfitPage() {
           />
         </div>
 
-        {/* Tab 選擇 */}
-        <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
-          {TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                activeTab === tab.key
-                  ? "bg-amber-500/20 border border-amber-500/60 text-amber-300"
-                  : "bg-white/5 border border-white/10 text-white/50 hover:bg-white/10"
-              }`}
-            >
-              {tab.icon} {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <AnimatePresence mode="wait">
-
-          {/* ═══ 能量模擬器 Tab ═══ */}
-          {activeTab === "simulator" && (
+        {/* ═══ V10.0 策略橫幅 ═══ */}
+        <AnimatePresence>
+          {strategy && strategyColors && (
             <motion.div
-              key="simulator"
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3 }}
+              className={`mb-5 rounded-2xl border p-4 ${strategyColors.bg} ${strategyColors.border}`}
             >
-              {!isAdmin && !hasFeature("warroom_outfit") ? (
-                <FeatureLockedCard feature="warroom_outfit" />
-              ) : simLoading ? (
-                <div className="space-y-4">
-                  {[1, 2].map((i) => (
-                    <div key={i} className="h-40 bg-white/5 rounded-2xl animate-pulse" />
-                  ))}
+              <div className="flex items-center gap-3">
+                <div className={`px-2.5 py-1 rounded-full border text-xs font-bold flex-shrink-0 ${strategyColors.badge}`}>
+                  {strategy.strategyName}
                 </div>
-              ) : (
-                <div className="space-y-5">
-                  {/* ── Aura Score 儀表盤 ── */}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/30 via-yellow-950/20 to-black/40 p-6"
-                  >
-                    <div className="text-center mb-2">
-                      <span className="text-xs text-amber-400/70 uppercase tracking-widest">本日天命 Aura Score</span>
-                    </div>
-                    <div className="flex justify-center">
-                      <AuraScoreGauge
-                        innateAura={displayInnate}
-                        outfitBoost={displayBoost}
-                        totalScore={displayTotal}
-                        auraLevel={displayAuraLevel}
-                        isAnimating={isSimulating}
+                <div className="min-w-0">
+                  <p className={`text-sm font-semibold ${strategyColors.text}`}>{strategy.coreStrategyText}</p>
+                  <p className="text-white/40 text-xs mt-0.5">
+                    主攻：<span className={`font-bold ${WUXING_COLORS[strategy.primaryTargetElement]?.text ?? "text-white"}`}>{strategy.primaryTargetElement}</span>
+                    　輔助：<span className={`font-bold ${WUXING_COLORS[strategy.secondaryTargetElement]?.text ?? "text-white"}`}>{strategy.secondaryTargetElement}</span>
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ═══ 今日五行加權總覽（常駐顯示，方便對比）═══ */}
+        {dailyData?.wuxing && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-5 rounded-2xl border border-white/10 bg-white/5 p-4"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <span>⚖️</span>
+              <span className="text-xs font-semibold text-white/60 uppercase tracking-widest">今日五行加權總覽</span>
+            </div>
+            <div className="flex items-end gap-2">
+              {["木","火","土","金","水"].map((el) => {
+                const w = dailyData.wuxing.weighted?.[el as keyof typeof dailyData.wuxing.weighted] ?? 0;
+                const pct = Math.round((w as number) * 100);
+                const isStrong = el === dailyData.wuxing.dominantElement;
+                const isWeak = el === dailyData.wuxing.weakestElement;
+                const colors = WUXING_COLORS[el];
+                return (
+                  <div key={el} className="flex-1 flex flex-col items-center gap-1">
+                    <span className={`text-[10px] font-bold ${isStrong ? "text-amber-400" : isWeak ? "text-blue-400" : "text-white/40"}`}>
+                      {pct}%
+                    </span>
+                    <div className="w-full bg-white/5 rounded-full overflow-hidden" style={{ height: 40 }}>
+                      <motion.div
+                        className={`w-full rounded-full ${colors.dot} ${isStrong ? "opacity-100" : isWeak ? "opacity-60" : "opacity-70"}`}
+                        initial={{ height: 0 }}
+                        animate={{ height: `${Math.max(pct, 4)}%` }}
+                        transition={{ duration: 0.8, delay: 0.1 }}
+                        style={{ height: `${Math.max(pct, 4)}%` }}
                       />
                     </div>
-                    {simulatorData?.innateAnalysis && (
-                      <p className="text-center text-xs text-white/40 mt-3 leading-relaxed">
-                        今日天命底盤 {displayAuraLevel.label}（{displayInnate}分）。
-                        {simulatorData.innateAnalysis.favorableElements?.length > 0
-                          ? `您的喜用神 ${(simulatorData.innateAnalysis.favorableElements as string[]).slice(0, 2).join('、')} 今日${displayInnate >= 50 ? '能量充沛' : '略顯不足'}，`
-                          : ''}
-                        透過穿搭補運可提升至多 20 分。
-                      </p>
-                    )}
-                    {/* AI 點評 */}
-                    {auraBoostResult?.aiComment && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-4 p-3 rounded-xl bg-amber-900/20 border border-amber-500/30"
-                      >
-                        <p className="text-amber-200 text-xs leading-relaxed">
-                          <span className="text-amber-400 font-bold">✨ 神諭點評：</span>
-                          {auraBoostResult.aiComment}
-                        </p>
-                      </motion.div>
-                    )}
-                  </motion.div>
+                    <span className={`text-xs font-semibold ${colors.text}`}>{el}</span>
+                    {isStrong && <span className="text-[9px] text-amber-500">↑旺</span>}
+                    {isWeak && <span className="text-[9px] text-blue-500">↓弱</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
 
-                  {/* ── 交互式虛擬人台 ── */}
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">👗</span>
-                        <h3 className="text-sm font-semibold text-white/70 uppercase tracking-widest">
-                          互動穿搭模擬
-                        </h3>
+        {/* ═══ 穿搭建議（展開顯示，無折疊）═══ */}
+        {(!isAdmin && !hasFeature("warroom_outfit")) ? (
+          <FeatureLockedCard feature="warroom_outfit" />
+        ) : outfitLoading && !outfitData ? (
+          <div className="space-y-4 mb-5">
+            {[1, 2].map((i) => <div key={i} className="h-28 bg-white/5 rounded-2xl animate-pulse" />)}
+          </div>
+        ) : outfit ? (
+          <div className="space-y-4 mb-5">
+            {/* 穿搭建議標題 */}
+            <div className="flex items-center gap-2">
+              <span>🎨</span>
+              <span className="text-sm font-semibold text-white/70 uppercase tracking-widest">今日穿搭建議</span>
+              {outfitFetching && (
+                <div className="ml-auto flex items-center gap-1 text-amber-300 text-xs">
+                  <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                  重新計算中
+                </div>
+              )}
+            </div>
+
+            {/* 能量標籤 + 核心策略 */}
+            {outfit?.energyTag && (
+              <div className="rounded-xl bg-orange-950/20 border border-orange-500/20 p-3">
+                <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/30">{outfit.energyTag}</span>
+                {outfit?.coreStrategy && <p className="text-orange-300/80 text-xs mt-2 leading-relaxed">{outfit.coreStrategy}</p>}
+              </div>
+            )}
+
+            {/* 上半身 */}
+            {outfit?.upperBody && (
+              <div className={`rounded-xl border p-4 ${WUXING_COLORS[outfit.upperBody.element]?.bg ?? 'bg-red-950/20'} ${WUXING_COLORS[outfit.upperBody.element]?.border ?? 'border-red-500/20'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${WUXING_COLORS[outfit.upperBody.element]?.text ?? 'text-red-400'} ${WUXING_COLORS[outfit.upperBody.element]?.border ?? 'border-red-500/30'}`}>
+                    上半身
+                  </span>
+                  <span className="text-white font-medium text-sm">{outfit.upperBody.colors.join(' / ')}</span>
+                  <span className="text-white/40 text-xs ml-auto">{outfit.upperBody.element}系</span>
+                </div>
+                <p className="text-white/60 text-xs leading-relaxed">{outfit.upperBody.tacticalExplanation}</p>
+              </div>
+            )}
+
+            {/* 下半身 */}
+            {outfit?.lowerBody && (
+              <div className={`rounded-xl border p-4 ${WUXING_COLORS[outfit.lowerBody.element]?.bg ?? 'bg-amber-950/20'} ${WUXING_COLORS[outfit.lowerBody.element]?.border ?? 'border-amber-500/20'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${WUXING_COLORS[outfit.lowerBody.element]?.text ?? 'text-amber-400'} ${WUXING_COLORS[outfit.lowerBody.element]?.border ?? 'border-amber-500/30'}`}>
+                    下半身
+                  </span>
+                  <span className="text-white font-medium text-sm">{outfit.lowerBody.colors.join(' / ')}</span>
+                  <span className="text-white/40 text-xs ml-auto">{outfit.lowerBody.element}系</span>
+                </div>
+                <p className="text-white/60 text-xs leading-relaxed">{outfit.lowerBody.tacticalExplanation}</p>
+              </div>
+            )}
+
+            {/* 忌用色彩 */}
+            {outfit?.avoid && outfit.avoid.length > 0 && (
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span>⚠️</span>
+                  <span className="text-xs font-semibold text-white/60 uppercase tracking-widest">今日忌用色彩</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {outfit.avoid.map((c, idx) => {
+                    const colors = WUXING_COLORS[c.element] ?? { text: 'text-white/50', border: 'border-white/10' };
+                    return (
+                      <div key={idx} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-white/5 ${colors.border}`}>
+                        <span className={`text-xs font-medium line-through ${colors.text}`}>{c.colors.join('/')}</span>
+                        <span className="text-white/30 text-xs">({c.element})</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {isSimulating && (
-                          <div className="flex items-center gap-1 text-amber-300 text-xs">
-                            <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                            計算中
-                          </div>
-                        )}
+                    );
+                  })}
+                </div>
+                {outfit.avoid[0]?.reason && (
+                  <p className="text-white/40 text-xs mt-3 leading-relaxed">{outfit.avoid[0].reason}</p>
+                )}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {/* ═══ 今日手串矩陣（展開顯示）═══ */}
+        {(!isAdmin && !hasFeature("warroom_outfit")) ? null : dailyLoading ? (
+          <div className="h-40 bg-white/5 rounded-2xl animate-pulse mb-5" />
+        ) : dailyData?.bracelets ? (
+          <div className="mb-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span>📿</span>
+              <span className="text-sm font-semibold text-white/70 uppercase tracking-widest">今日手串矩陣</span>
+            </div>
+            {dailyData.bracelets?.coreGoal && (
+              <p className="text-white/50 text-xs mb-3 leading-relaxed">{dailyData.bracelets.coreGoal}</p>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              {/* 左手 */}
+              <div>
+                <div className="text-emerald-400/70 text-xs font-semibold mb-2">🤲 左手（能量/吸引）</div>
+                {dailyData.bracelets?.leftHand && (
+                  <div className={`rounded-lg border p-3 transition-all ${
+                    wornSet.has(`${dailyData.bracelets.leftHand.code}-left`)
+                      ? "bg-emerald-900/40 border-emerald-400/50"
+                      : "bg-emerald-950/20 border-emerald-500/20"
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <span className="text-emerald-500/60 text-xs font-mono">{dailyData.bracelets.leftHand.code}</span>
+                        <span className="text-emerald-300 font-medium text-sm ml-2">{dailyData.bracelets.leftHand.name}</span>
+                      </div>
+                      <button
+                        onClick={() => handleToggleWear(dailyData.bracelets.leftHand.code, dailyData.bracelets.leftHand.name, "left")}
+                        disabled={toggleWear.isPending}
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
+                          wornSet.has(`${dailyData.bracelets.leftHand.code}-left`)
+                            ? "bg-emerald-500/30 border border-emerald-400/60 text-emerald-300"
+                            : "bg-white/5 border border-white/20 text-white/40 hover:border-emerald-500/40 hover:text-emerald-400"
+                        }`}
+                      >
+                        {wornSet.has(`${dailyData.bracelets.leftHand.code}-left`) ? "✓ 已佩戴" : "佩戴"}
+                      </button>
+                    </div>
+                    <p className="text-emerald-400/70 text-xs font-medium mb-1">⚔️ {dailyData.bracelets.leftHand.tacticalRole}</p>
+                    <p className="text-white/50 text-xs leading-relaxed">{dailyData.bracelets.leftHand.explanation}</p>
+                  </div>
+                )}
+              </div>
+              {/* 右手 */}
+              <div>
+                <div className="text-blue-400/70 text-xs font-semibold mb-2">🤚 右手（策略/防護）</div>
+                {dailyData.bracelets?.rightHand && (
+                  <div className={`rounded-lg border p-3 transition-all ${
+                    wornSet.has(`${dailyData.bracelets.rightHand.code}-right`)
+                      ? "bg-blue-900/40 border-blue-400/50"
+                      : "bg-blue-950/20 border-blue-500/20"
+                  }`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <span className="text-blue-500/60 text-xs font-mono">{dailyData.bracelets.rightHand.code}</span>
+                        <span className="text-blue-300 font-medium text-sm ml-2">{dailyData.bracelets.rightHand.name}</span>
+                      </div>
+                      <button
+                        onClick={() => handleToggleWear(dailyData.bracelets.rightHand.code, dailyData.bracelets.rightHand.name, "right")}
+                        disabled={toggleWear.isPending}
+                        className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
+                          wornSet.has(`${dailyData.bracelets.rightHand.code}-right`)
+                            ? "bg-blue-500/30 border border-blue-400/60 text-blue-300"
+                            : "bg-white/5 border border-white/20 text-white/40 hover:border-blue-500/40 hover:text-blue-400"
+                        }`}
+                      >
+                        {wornSet.has(`${dailyData.bracelets.rightHand.code}-right`) ? "✓ 已佩戴" : "佩戴"}
+                      </button>
+                    </div>
+                    <p className="text-blue-400/70 text-xs font-medium mb-1">🛡️ {dailyData.bracelets.rightHand.tacticalRole}</p>
+                    <p className="text-white/50 text-xs leading-relaxed">{dailyData.bracelets.rightHand.explanation}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* ═══ 互動穿搭模擬器（可折疊）═══ */}
+        {(!isAdmin && !hasFeature("warroom_outfit")) ? null : simLoading ? (
+          <div className="h-40 bg-white/5 rounded-2xl animate-pulse mb-5" />
+        ) : simulatorData ? (
+          <div className="mb-5 rounded-2xl border border-white/10 bg-white/5 overflow-hidden">
+            {/* 模擬器標題欄（可折疊） */}
+            <button
+              onClick={() => setSimulatorCollapsed(c => !c)}
+              className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⚡</span>
+                <div className="text-left">
+                  <div className="text-sm font-semibold text-white/70 uppercase tracking-widest">互動穿搭模擬器</div>
+                  <div className="text-xs text-white/30 mt-0.5">點擊人台各部位選擇衣物，即時計算能量加成</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {isSimulating && (
+                  <div className="flex items-center gap-1 text-amber-300 text-xs">
+                    <div className="w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+                    計算中
+                  </div>
+                )}
+                <span className={`text-white/40 transition-transform duration-200 ${simulatorCollapsed ? "rotate-180" : ""}`}>▼</span>
+              </div>
+            </button>
+
+            <AnimatePresence initial={false}>
+              {!simulatorCollapsed && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-4 pb-4 space-y-4">
+                    {/* Aura Score 儀表盤 */}
+                    <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/30 via-yellow-950/20 to-black/40 p-5">
+                      <div className="text-center mb-2">
+                        <span className="text-xs text-amber-400/70 uppercase tracking-widest">本日天命 Aura Score</span>
+                      </div>
+                      <div className="flex justify-center">
+                        <AuraScoreGauge
+                          innateAura={displayInnate}
+                          outfitBoost={displayBoost}
+                          totalScore={displayTotal}
+                          auraLevel={displayAuraLevel}
+                          isAnimating={isSimulating}
+                        />
+                      </div>
+                      {simulatorData?.innateAnalysis && (
+                        <p className="text-center text-xs text-white/40 mt-3 leading-relaxed">
+                          今日天命底盤 {displayAuraLevel.label}（{displayInnate}分）。
+                          {simulatorData.innateAnalysis.favorableElements?.length > 0
+                            ? `您的喜用神 ${(simulatorData.innateAnalysis.favorableElements as string[]).slice(0, 2).join('、')} 今日${displayInnate >= 50 ? '能量充沛' : '略顯不足'}，`
+                            : ''}
+                          透過穿搭補運可提升至多 20 分。
+                        </p>
+                      )}
+                      {auraBoostResult?.aiComment && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-4 p-3 rounded-xl bg-amber-900/20 border border-amber-500/30"
+                        >
+                          <p className="text-amber-200 text-xs leading-relaxed">
+                            <span className="text-amber-400 font-bold">✨ 神諭點評：</span>
+                            {auraBoostResult.aiComment}
+                          </p>
+                        </motion.div>
+                      )}
+                    </div>
+
+                    {/* 交互式虛擬人台 */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs text-white/40">點擊人台部位選擇衣物</span>
                         {Object.keys(outfitSelection).length > 0 && (
-                          <button
-                            onClick={clearOutfit}
-                            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-                          >
+                          <button onClick={clearOutfit} className="text-xs text-gray-500 hover:text-gray-300 transition-colors">
                             清除全部
                           </button>
                         )}
                       </div>
-                    </div>
-
-                    <p className="text-xs text-white/30 mb-4 text-center">
-                      點擊人台各部位選擇衣物，即時計算能量加成
-                    </p>
-
-                    <InteractiveMannequin
-                      selection={outfitSelection}
-                      onPartClick={handlePartClick}
-                      favorableElements={simulatorData?.favorableElements ?? []}
-                    />
-
-                    {/* 加成明細 */}
-                    {auraBoostResult && auraBoostResult.boostBreakdown.some(b => b.points > 0) && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="mt-4 space-y-1"
-                      >
-                        <div className="text-xs text-white/40 mb-2">穿搭加成明細：</div>
-                        {auraBoostResult.boostBreakdown
-                          .filter(b => b.points > 0)
-                          .map((b, i) => (
+                      <InteractiveMannequin
+                        selection={outfitSelection}
+                        onPartClick={handlePartClick}
+                        favorableElements={simulatorData?.favorableElements ?? []}
+                      />
+                      {auraBoostResult && auraBoostResult.boostBreakdown.some(b => b.points > 0) && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 space-y-1">
+                          <div className="text-xs text-white/40 mb-2">穿搭加成明細：</div>
+                          {auraBoostResult.boostBreakdown.filter(b => b.points > 0).map((b, i) => (
                             <div key={i} className="flex items-center gap-2 text-xs">
                               <span className="text-white/40">{b.category}</span>
                               <span className="text-white/60">{b.color}</span>
                               <span className="text-amber-400 font-bold ml-auto">+{b.points}</span>
                             </div>
                           ))}
-                        <div className="flex items-center justify-between text-xs border-t border-white/10 pt-2 mt-2">
-                          <span className="text-white/50">穿搭總加成</span>
-                          <span className="text-amber-400 font-bold">+{auraBoostResult.outfitBoost}</span>
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-
-                  {/* ── 今日補運目標 ── */}
-                  {simulatorData?.innateAnalysis && (
-                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span>🎯</span>
-                        <span className="text-xs font-semibold text-white/60 uppercase tracking-widest">今日補運目標</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {simulatorData.innateAnalysis.weakestElements.map((el) => (
-                          <div
-                            key={el}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium ${
-                              WUXING_COLORS[el]?.bg ?? "bg-gray-800"
-                            } ${WUXING_COLORS[el]?.border ?? "border-gray-600"}`}
-                          >
-                            <span className={`w-2 h-2 rounded-full ${WUXING_COLORS[el]?.dot ?? "bg-gray-500"}`} />
-                            <span className={WUXING_COLORS[el]?.text ?? "text-gray-300"}>
-                              {el}系能量不足 → 補{el}
-                            </span>
+                          <div className="flex items-center justify-between text-xs border-t border-white/10 pt-2 mt-2">
+                            <span className="text-white/50">穿搭總加成</span>
+                            <span className="text-amber-400 font-bold">+{auraBoostResult.outfitBoost}</span>
                           </div>
-                        ))}
-                        {simulatorData.favorableElements.map((el) => (
-                          <div
-                            key={`fav-${el}`}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-500/30 bg-amber-900/20 text-xs"
-                          >
-                            <span className="text-amber-400">★</span>
-                            <span className="text-amber-300">{el}（喜用神）</span>
-                          </div>
-                        ))}
-                      </div>
+                        </motion.div>
+                      )}
                     </div>
-                  )}
 
-                  {/* ── 前往虛擬衣櫥 ── */}
-                  <Link href="/wardrobe" className="flex items-center justify-between p-4 rounded-2xl border border-dashed border-white/20 hover:border-amber-500/40 hover:bg-amber-900/10 transition-all group">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">👗</span>
+                    {/* 今日補運目標 */}
+                    {simulatorData?.innateAnalysis && (
                       <div>
-                        <div className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">
-                          管理虛擬衣櫥
+                        <div className="flex items-center gap-2 mb-2">
+                          <span>🎯</span>
+                          <span className="text-xs font-semibold text-white/60 uppercase tracking-widest">今日補運目標</span>
                         </div>
-                        <div className="text-xs text-white/30">
-                          新增衣物，讓模擬器從您的衣櫥中挑選
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-white/30 group-hover:text-amber-400 transition-colors">→</span>
-                  </Link>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* ═══ 穿搭建議 Tab ═══ */}
-          {activeTab === "outfit" && (
-            <motion.div
-              key={`outfit-${mode}-${selectedHourIndex}`}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3 }}
-            >
-              {!isAdmin && !hasFeature("warroom_outfit") ? (
-                <FeatureLockedCard feature="warroom_outfit" />
-              ) : outfitLoading && !outfitData ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-32 bg-white/5 rounded-2xl animate-pulse" />
-                  ))}
-                </div>
-              ) : !outfit ? (
-                <div className="text-center py-12 text-white/30">無法載入穿搭建議</div>
-              ) : (
-                <div className="space-y-4">
-                  {/* 五行加權總覽 */}
-                  {dailyData && (
-                    <SectionCard title="今日五行加權總覽" icon="⚖️">
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="text-white/40 border-b border-white/10">
-                              <th className="text-left py-2 pr-3">五行</th>
-                              <th className="text-right py-2 px-2">本命</th>
-                              <th className="text-right py-2 px-2">環境</th>
-                              <th className="text-right py-2 px-2 font-bold text-amber-300/80">加權</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {dailyData.wuxing && ["木","火","土","金","水"].map((el) => {
-                              const natal = dailyData.wuxing.natal?.[el as keyof typeof dailyData.wuxing.natal] ?? 0;
-                              const env = dailyData.wuxing.environment?.[el as keyof typeof dailyData.wuxing.environment] ?? 0;
-                              const w = dailyData.wuxing.weighted?.[el as keyof typeof dailyData.wuxing.weighted] ?? 0;
-                              const isStrong = el === dailyData.wuxing.dominantElement;
-                              const isWeak = el === dailyData.wuxing.weakestElement;
-                              const colors = WUXING_COLORS[el];
-                              return (
-                                <tr key={el} className={`border-b border-white/5 ${isStrong ? "bg-amber-500/5" : isWeak ? "bg-blue-500/5" : ""}`}>
-                                  <td className="py-2 pr-3">
-                                    <span className={`flex items-center gap-1.5 font-semibold ${colors.text}`}>
-                                      <span className={`w-2 h-2 rounded-full ${colors.dot}`} />
-                                      {el}
-                                    </span>
-                                  </td>
-                                  <td className="text-right py-2 px-2 text-white/50">{(natal * 100).toFixed(0)}%</td>
-                                  <td className="text-right py-2 px-2 text-white/50">{(env * 100).toFixed(0)}%</td>
-                                  <td className={`text-right py-2 px-2 font-bold ${isStrong ? "text-amber-400" : isWeak ? "text-blue-400" : "text-white/70"}`}>
-                                    {(w * 100).toFixed(0)}%
-                                    {isStrong && <span className="ml-1 text-amber-500">↑</span>}
-                                    {isWeak && <span className="ml-1 text-blue-500">↓</span>}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </SectionCard>
-                  )}
-
-                  {/* 當前時辰 + 模式能量卡 */}
-                  {targetHour && outfitData && (
-                    <motion.div
-                      key={`hour-card-${targetHour.branchIndex}-${mode}`}
-                      initial={{ opacity: 0, scale: 0.97 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/30 to-yellow-950/20 p-4"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{outfitData.modeInfo.icon}</span>
-                          <div>
-                            <div className="text-amber-300 font-bold text-sm">{outfitData.modeInfo.label}模式</div>
-                            <div className="text-white/40 text-xs">{outfitData.modeInfo.desc}</div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-amber-400 font-bold">{targetHour.chineseName}</div>
-                          <div className="text-white/40 text-xs">{targetHour.displayTime}</div>
-                          {targetHour.isCurrent && (
-                            <span className="text-[10px] bg-amber-400 text-black px-1.5 py-0.5 rounded-full font-bold">
-                              當前時辰
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs">
-                        <div className="flex items-center gap-1">
-                          <span className="text-white/40">主導：</span>
-                          <span className={`font-bold ${WUXING_COLORS[outfitData.wuxing.dominantElement]?.text ?? "text-amber-300"}`}>
-                            {outfitData.wuxing.dominantElement}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-white/40">補強：</span>
-                          <span className={`font-bold ${WUXING_COLORS[outfitData.wuxing.weakestElement]?.text ?? "text-blue-300"}`}>
-                            {outfitData.wuxing.weakestElement}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* 穿搭建議（含 loading overlay） */}
-                  <div className="relative">
-                    {outfitFetching && (
-                      <div className="absolute inset-0 bg-black/40 rounded-2xl z-10 flex items-center justify-center backdrop-blur-sm">
-                        <div className="flex items-center gap-2 text-amber-300 text-sm">
-                          <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
-                          重新計算中...
+                        <div className="flex flex-wrap gap-2">
+                          {simulatorData.innateAnalysis.weakestElements.map((el) => (
+                            <div key={el} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium ${WUXING_COLORS[el]?.bg ?? "bg-gray-800"} ${WUXING_COLORS[el]?.border ?? "border-gray-600"}`}>
+                              <span className={`w-2 h-2 rounded-full ${WUXING_COLORS[el]?.dot ?? "bg-gray-500"}`} />
+                              <span className={WUXING_COLORS[el]?.text ?? "text-gray-300"}>{el}系能量不足 → 補{el}</span>
+                            </div>
+                          ))}
+                          {simulatorData.favorableElements.map((el) => (
+                            <div key={`fav-${el}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-500/30 bg-amber-900/20 text-xs">
+                              <span className="text-amber-400">★</span>
+                              <span className="text-amber-300">{el}（喜用神）</span>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
-                    <SectionCard title="今日穿搭建議" icon="🎨">
-                      <div className="space-y-3">
-                        {outfit?.energyTag && (
-                          <div className="rounded-xl bg-orange-950/20 border border-orange-500/20 p-3">
-                            <span className="text-xs bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/30">{outfit.energyTag}</span>
-                            {outfit?.coreStrategy && <p className="text-orange-300/80 text-xs mt-2">{outfit.coreStrategy}</p>}
-                          </div>
-                        )}
-                        {outfit?.upperBody && (
-                          <div className={`rounded-xl border p-3 ${WUXING_COLORS[outfit.upperBody.element]?.bg ?? 'bg-red-950/20'} ${WUXING_COLORS[outfit.upperBody.element]?.border ?? 'border-red-500/20'}`}>
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className={`text-xs font-semibold ${WUXING_COLORS[outfit.upperBody.element]?.text ?? 'text-red-400'}`}>上半身</span>
-                              <span className="text-white font-medium text-sm">{outfit.upperBody.colors.join(' / ')}</span>
-                              <span className="text-white/40 text-xs ml-auto">{outfit.upperBody.element}系</span>
-                            </div>
-                            <p className="text-white/60 text-xs leading-relaxed">{outfit.upperBody.tacticalExplanation}</p>
-                          </div>
-                        )}
-                        {outfit?.lowerBody && (
-                          <div className={`rounded-xl border p-3 ${WUXING_COLORS[outfit.lowerBody.element]?.bg ?? 'bg-amber-950/20'} ${WUXING_COLORS[outfit.lowerBody.element]?.border ?? 'border-amber-500/20'}`}>
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className={`text-xs font-semibold ${WUXING_COLORS[outfit.lowerBody.element]?.text ?? 'text-amber-400'}`}>下半身</span>
-                              <span className="text-white font-medium text-sm">{outfit.lowerBody.colors.join(' / ')}</span>
-                              <span className="text-white/40 text-xs ml-auto">{outfit.lowerBody.element}系</span>
-                            </div>
-                            <p className="text-white/60 text-xs leading-relaxed">{outfit.lowerBody.tacticalExplanation}</p>
-                          </div>
-                        )}
-                      </div>
-                    </SectionCard>
-                  </div>
 
-                  {/* 忌用色彩 */}
-                  {outfit?.avoid && outfit.avoid.length > 0 && (
-                    <SectionCard title="今日忌用色彩" icon="⚠️">
-                      <div className="flex flex-wrap gap-2">
-                        {outfit.avoid.map((c, idx) => {
-                          const colors = WUXING_COLORS[c.element] ?? { text: 'text-white/50', border: 'border-white/10' };
-                          return (
-                            <div key={idx} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border bg-white/5 ${colors.border}`}>
-                              <span className={`text-xs font-medium line-through ${colors.text}`}>{c.colors.join('/')}</span>
-                              <span className="text-white/30 text-xs">({c.element})</span>
-                            </div>
-                          );
-                        })}
+                    {/* 前往虛擬衣櫥 */}
+                    <Link href="/wardrobe" className="flex items-center justify-between p-3 rounded-xl border border-dashed border-white/20 hover:border-amber-500/40 hover:bg-amber-900/10 transition-all group">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">👗</span>
+                        <div>
+                          <div className="text-sm font-medium text-white/70 group-hover:text-white transition-colors">管理虛擬衣櫥</div>
+                          <div className="text-xs text-white/30">新增衣物，讓模擬器從您的衣櫥中挑選</div>
+                        </div>
                       </div>
-                      {outfit.avoid[0]?.reason && (
-                        <p className="text-white/40 text-xs mt-3 leading-relaxed">{outfit.avoid[0].reason}</p>
-                      )}
-                    </SectionCard>
-                  )}
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {/* ═══ 手串矩陣 Tab ═══ */}
-          {activeTab === "bracelet" && (
-            <motion.div
-              key="bracelet"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3 }}
-            >
-              {!isAdmin && !hasFeature("warroom_outfit") ? (
-                <FeatureLockedCard feature="warroom_outfit" />
-              ) : dailyLoading ? (
-                <div className="h-40 bg-white/5 rounded-2xl animate-pulse" />
-              ) : !dailyData ? (
-                <div className="text-center py-12 text-white/30">無法載入手串資料</div>
-              ) : (
-                <SectionCard title="今日手串矩陣" icon="📿">
-                  {dailyData.bracelets?.coreGoal && (
-                    <p className="text-white/50 text-xs mb-4 leading-relaxed">{dailyData.bracelets.coreGoal}</p>
-                  )}
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* 左手 */}
-                    <div>
-                      <div className="text-emerald-400/70 text-xs font-semibold mb-2">🤲 左手（能量/吸引）</div>
-                      {dailyData.bracelets?.leftHand && (
-                        <div className={`rounded-lg border p-3 transition-all ${
-                          wornSet.has(`${dailyData.bracelets.leftHand.code}-left`)
-                            ? "bg-emerald-900/40 border-emerald-400/50"
-                            : "bg-emerald-950/20 border-emerald-500/20"
-                        }`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <span className="text-emerald-500/60 text-xs font-mono">{dailyData.bracelets.leftHand.code}</span>
-                              <span className="text-emerald-300 font-medium text-sm ml-2">{dailyData.bracelets.leftHand.name}</span>
-                            </div>
-                            <button
-                              onClick={() => handleToggleWear(dailyData.bracelets.leftHand.code, dailyData.bracelets.leftHand.name, "left")}
-                              disabled={toggleWear.isPending}
-                              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
-                                wornSet.has(`${dailyData.bracelets.leftHand.code}-left`)
-                                  ? "bg-emerald-500/30 border border-emerald-400/60 text-emerald-300"
-                                  : "bg-white/5 border border-white/20 text-white/40 hover:border-emerald-500/40 hover:text-emerald-400"
-                              }`}
-                            >
-                              {wornSet.has(`${dailyData.bracelets.leftHand.code}-left`) ? "✓ 已佩戴" : "佩戴"}
-                            </button>
-                          </div>
-                          <p className="text-emerald-400/70 text-xs font-medium mb-1">⚔️ {dailyData.bracelets.leftHand.tacticalRole}</p>
-                          <p className="text-white/50 text-xs leading-relaxed">{dailyData.bracelets.leftHand.explanation}</p>
-                        </div>
-                      )}
-                    </div>
-                    {/* 右手 */}
-                    <div>
-                      <div className="text-blue-400/70 text-xs font-semibold mb-2">🤚 右手（策略/防護）</div>
-                      {dailyData.bracelets?.rightHand && (
-                        <div className={`rounded-lg border p-3 transition-all ${
-                          wornSet.has(`${dailyData.bracelets.rightHand.code}-right`)
-                            ? "bg-blue-900/40 border-blue-400/50"
-                            : "bg-blue-950/20 border-blue-500/20"
-                        }`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <span className="text-blue-500/60 text-xs font-mono">{dailyData.bracelets.rightHand.code}</span>
-                              <span className="text-blue-300 font-medium text-sm ml-2">{dailyData.bracelets.rightHand.name}</span>
-                            </div>
-                            <button
-                              onClick={() => handleToggleWear(dailyData.bracelets.rightHand.code, dailyData.bracelets.rightHand.name, "right")}
-                              disabled={toggleWear.isPending}
-                              className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${
-                                wornSet.has(`${dailyData.bracelets.rightHand.code}-right`)
-                                  ? "bg-blue-500/30 border border-blue-400/60 text-blue-300"
-                                  : "bg-white/5 border border-white/20 text-white/40 hover:border-blue-500/40 hover:text-blue-400"
-                              }`}
-                            >
-                              {wornSet.has(`${dailyData.bracelets.rightHand.code}-right`) ? "✓ 已佩戴" : "佩戴"}
-                            </button>
-                          </div>
-                          <p className="text-blue-400/70 text-xs font-medium mb-1">🛡️ {dailyData.bracelets.rightHand.tacticalRole}</p>
-                          <p className="text-white/50 text-xs leading-relaxed">{dailyData.bracelets.rightHand.explanation}</p>
-                        </div>
-                      )}
-                    </div>
+                      <span className="text-white/30 group-hover:text-amber-400 transition-colors">→</span>
+                    </Link>
                   </div>
-                </SectionCard>
+                </motion.div>
               )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </AnimatePresence>
+          </div>
+        ) : null}
+
       </main>
 
       {/* 衣物選擇器 Sheet */}
@@ -764,12 +716,8 @@ export default function OutfitPage() {
         onClose={() => { setSelectorOpen(false); setActivePart(null); }}
         part={activePart}
         onSelect={handleSelectItem}
-        wardrobeItems={(simulatorData?.wardrobe ?? []) as Array<{
-          id: number; name: string; category: string; color: string; wuxing: string; occasion?: string | null;
-        }>}
-        bracelets={(simulatorData?.bracelets ?? []) as Array<{
-          code: string; name: string; element: string; color: string; function: string;
-        }>}
+        wardrobeItems={(simulatorData?.wardrobe ?? []) as Array<{ id: number; name: string; category: string; color: string; wuxing: string; occasion?: string | null; }>}
+        bracelets={(simulatorData?.bracelets ?? []) as Array<{ code: string; name: string; element: string; color: string; function: string; }>}
         systemRecommendation={
           activePart && simulatorData?.systemRecommendation
             ? (() => {
@@ -783,22 +731,15 @@ export default function OutfitPage() {
         }
         favorableElements={simulatorData?.favorableElements ?? []}
       />
+
       {/* 能量說明 Panel */}
       <EnergyDetailPanel
         open={energyPanelOpen}
         onClose={() => { setEnergyPanelOpen(false); setEnergyPanelPart(null); }}
         part={energyPanelPart}
         item={energyPanelPart ? (outfitSelection[energyPanelPart] ?? null) : null}
-        boostPoints={
-          energyPanelPart && auraBoostResult
-            ? auraBoostResult.boostBreakdown.find(b => b.category === energyPanelPart)?.points
-            : undefined
-        }
-        boostReason={
-          energyPanelPart && auraBoostResult
-            ? auraBoostResult.boostBreakdown.find(b => b.category === energyPanelPart)?.reason
-            : undefined
-        }
+        boostPoints={energyPanelPart && auraBoostResult ? auraBoostResult.boostBreakdown.find(b => b.category === energyPanelPart)?.points : undefined}
+        boostReason={energyPanelPart && auraBoostResult ? auraBoostResult.boostBreakdown.find(b => b.category === energyPanelPart)?.reason : undefined}
       />
     </div>
   );

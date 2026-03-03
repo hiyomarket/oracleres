@@ -1561,3 +1561,17 @@
 
 ## Bug 修復 v4.14 - SharedNav 功能列滑動回彈根本修復（2026-03-03）
 - [x] 徹底修復 SharedNav 功能列水平滑動回彈問題（移除 active:scale-95/transition-transform/scale-105、CSS 加入 overscroll-behavior-x:contain、useEffect 改為只執行一次且使用 instant）
+
+## 功能升級 v4.15 - 神諭穿搭 V10.0 動態策略引擎（2026-03-03）
+- [x] 後端：建立 server/lib/strategyEngine.ts（五大動態策略判定層：強勢補弱/順勢生旺/借力打力/食神生財/均衡守成）
+- [x] 後端：升級 generateOutfitAdviceV9 接受 DailyStrategyObject，穿搭說明加入策略原因
+- [x] 後端：升級 recommendBraceletsV9 接受 DailyStrategyObject，手串解說加入策略語境
+- [x] 後端：getOutfitByShichen 整合 determineDailyStrategy，回傳 strategy 物件
+- [x] 後端：能量邏輯審查 - 全系統統一使用 calculateWeightedElements（storeResonance 已透過 buildDestinyWeightsFromProfile 間接使用）
+- [x] 前端：OutfitPage V10.0 全面重寫 - 七日時間軸日期選擇器
+- [x] 前端：懸浮能量儀表盤（sticky top bar，含 Aura 分數/五行柱狀/策略徽章）
+- [x] 前端：策略橫幅（V10.0 策略名稱/核心策略文字/主攻輔助五行）
+- [x] 前端：五行加權柱狀圖（常駐顯示，取代舊版表格）
+- [x] 前端：穿搭建議展開顯示（移除 Tab 結構，直接展示所有區塊）
+- [x] 前端：互動穿搭模擬器改為可折疊面板
+- [x] 測試：168 項測試全部通過，TypeScript 零錯誤

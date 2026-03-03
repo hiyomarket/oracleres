@@ -2324,9 +2324,16 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
               ...ep.favorableElements.filter(el => !modeBase.includes(el)),
             ];
 
-        const outfit = generateOutfitAdviceV9(wuxingResult, blendedPriority);
-
-        // 時辰能量分數（用於前端時間軸顯示）
+        // V10.0：動態策略判定層
+        const { determineDailyStrategy } = await import('./lib/strategyEngine');
+        const dailyStrategy = determineDailyStrategy(
+          wuxingResult,
+          blendedPriority,
+          ep.unfavorableElements,
+          input.mode,
+        );
+        const outfit = generateOutfitAdviceV9(wuxingResult, blendedPriority, dailyStrategy);
+        // 時辰能量分數（用於前端時間軸顯示））
         const hourDynamicProfile: import('./lib/hourlyEnergy').DynamicHourProfile = {
           hourElementScores: Object.fromEntries(
             ['火', '土', '金', '水', '木'].map(el => [
@@ -2380,11 +2387,11 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
             isCurrent: h.isCurrentHour,
           })),
           favorableElements: ep.favorableElements,
+          strategy: dailyStrategy,
         };
       }),
-
     /**
-     * 神諭穿搭 V4.0 - 取得完整模擬器初始化資料
+     * 神諶穿搭 V4.0 - 取得完整模擬器初始化資料料
      * 包含：Innate Aura 分數、系統推薦穿搭、虛擬衣櫥、手串列表
      */
     getOutfitSimulatorData: protectedProcedure
