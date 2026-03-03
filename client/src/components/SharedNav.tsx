@@ -4,7 +4,7 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
-import { User, LogOut, ChevronDown, Smartphone, LayoutDashboard, Star, Coins, Gift } from "lucide-react";
+import { User, LogOut, ChevronDown, Smartphone, LayoutDashboard, Star, Coins, Gift, ShoppingBag } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
 
 type NavPage = string;
@@ -334,6 +334,25 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
                 我的命格資料
               </Link>
             )}
+
+            {/* 方案兌換中心 */}
+            <Link
+              href="/feature-store"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-300 transition-colors group/item"
+            >
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0 group-hover/item:bg-emerald-500/25 transition-colors">
+                <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <div className="flex-1">
+                <span>方案兌換中心</span>
+                {user.planName ? (
+                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">{user.planName}</span>
+                ) : (
+                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-slate-700/60 text-slate-400 border border-slate-600/30">升級方案</span>
+                )}
+              </div>
+            </Link>
 
             {/* 加入手機主畫面 */}
             <Link

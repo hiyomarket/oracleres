@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Package, Plus, Pencil, Trash2, CheckCircle, XCircle, Gift, RefreshCw } from "lucide-react";
+import { AdminLayout } from "@/components/AdminLayout";
 
 // ==================== 功能方案管理 ====================
 
@@ -574,27 +575,29 @@ function GrantTab() {
 
 export default function AdminFeatureStore() {
   return (
-    <div className="container py-6 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Package className="w-6 h-6 text-amber-400" />
-          功能兌換中心管理
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          設定功能方案、審核付費訂單、手動核發天數
-        </p>
-      </div>
+    <AdminLayout>
+      <div className="container py-6 max-w-4xl">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Package className="w-6 h-6 text-amber-400" />
+            功能兌換中心管理
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            設定功能方案、審核付費訂單、手動核發天數
+          </p>
+        </div>
 
-      <Tabs defaultValue="plans">
-        <TabsList className="mb-6">
-          <TabsTrigger value="plans">功能方案設定</TabsTrigger>
-          <TabsTrigger value="orders">訂單審核</TabsTrigger>
-          <TabsTrigger value="grant">手動核發</TabsTrigger>
-        </TabsList>
-        <TabsContent value="plans"><PlansTab /></TabsContent>
-        <TabsContent value="orders"><OrdersTab /></TabsContent>
-        <TabsContent value="grant"><GrantTab /></TabsContent>
-      </Tabs>
-    </div>
+        <Tabs defaultValue="plans">
+          <TabsList className="mb-6">
+            <TabsTrigger value="plans">功能方案設定</TabsTrigger>
+            <TabsTrigger value="orders">訂單審核</TabsTrigger>
+            <TabsTrigger value="grant">手動核發</TabsTrigger>
+          </TabsList>
+          <TabsContent value="plans"><PlansTab /></TabsContent>
+          <TabsContent value="orders"><OrdersTab /></TabsContent>
+          <TabsContent value="grant"><GrantTab /></TabsContent>
+        </Tabs>
+      </div>
+    </AdminLayout>
   );
 }

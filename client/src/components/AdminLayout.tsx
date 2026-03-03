@@ -49,6 +49,12 @@ const NAV_ITEMS = [
     label: "行銷中心",
     desc: "娛樂城、WBC 賽事管理",
   },
+  {
+    href: "/admin/feature-store",
+    icon: "🎪",
+    label: "功能兌換中心",
+    desc: "方案設定、訂單審核",
+  },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
