@@ -2055,3 +2055,8 @@
 - [x] 審查並優化手機版子頁面排版（profile/services/calendar/bookings 表單/卡片間距）
 - [x] ExpertLayout 底部導覽列訂單管理加入未讀訂單紅點徽章
 - [x] 各子頁面頂部標題列右側加入快捷操作按鈕（新增服務、新增時段等）
+
+## 管理後台提升命理師功能 v8.7（2026-03-04）
+- [x] AdminUsers.tsx：用戶操作列加入「提升為命理師」按鈕（role=user 才顯示）與確認 Dialog（輸入公開名稱）
+- [x] AdminUsers.tsx：已是命理師的用戶顯示「⭐ 命理師」標籤
+- [x] AdminExperts.tsx：專家列表加入「撤銷命理師資格」按鈕

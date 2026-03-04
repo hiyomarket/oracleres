@@ -85,6 +85,16 @@ export default function AdminExperts() {
     onError: (e: { message: string }) => toast.error("更新失敗: " + e.message),
   });
 
+  const [revokeExpertTarget, setRevokeExpertTarget] = useState<{ expertId: number; userId: number; name: string } | null>(null);
+  const revokeExpertMutation = trpc.expert.adminRevokeExpertRole.useMutation({
+    onSuccess: () => {
+      toast.success("已撤銷命理師資格，該用戶已回归一般用戶");
+      setRevokeExpertTarget(null);
+      refetch();
+    },
+    onError: (e: { message: string }) => toast.error("撤銷失敗: " + e.message),
+  });
+
   const handleStatusChange = (expertId: number, newStatus: ExpertStatus) => {
     setSelectedExpert(expertId);
     setPendingStatus(newStatus);
@@ -258,6 +268,14 @@ export default function AdminExperts() {
                               <CheckCircle className="w-3.5 h-3.5 mr-1" /> 恢復上架
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setRevokeExpertTarget({ expertId: expert.id, userId: expert.userId, name: expert.publicName })}
+                            className="border-red-600/50 text-red-400 hover:bg-red-600/20 bg-transparent text-xs"
+                          >
+                            ✕ 撤銷資格
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -387,6 +405,33 @@ export default function AdminExperts() {
               disabled={updateStatusMutation.isPending}
             >
               確認
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 撤銷命理師資格確認 */}
+      <Dialog open={!!revokeExpertTarget} onOpenChange={(open) => { if (!open) setRevokeExpertTarget(null); }}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-red-400">撤銷命理師資格</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              此操作將該用戶的 role 改回 "user"，專家後台將無法登入。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <p className="text-sm text-slate-300">
+              確定要撤銷 <span className="text-amber-300 font-semibold">{revokeExpertTarget?.name}</span> 的命理師資格？
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setRevokeExpertTarget(null)} className="border-slate-700 text-slate-300 bg-transparent hover:bg-slate-800">取消</Button>
+            <Button
+              onClick={() => revokeExpertTarget && revokeExpertMutation.mutate({ userId: revokeExpertTarget.userId })}
+              disabled={revokeExpertMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+            >
+              {revokeExpertMutation.isPending ? "處理中..." : "確認撤銷"}
             </Button>
           </DialogFooter>
         </DialogContent>

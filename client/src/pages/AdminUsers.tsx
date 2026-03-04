@@ -23,7 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Star } from "lucide-react";
 
 const PLAN_LABELS: Record<string, { label: string; color: string }> = {
   basic:        { label: "基礎", color: "bg-slate-600 text-slate-200" },
@@ -560,6 +560,31 @@ export default function AdminUsers() {
     name: string | null;
     gameCoins: number;
   } | null>(null);
+  // 提升/撤銷命理師
+  const [promoteExpertModal, setPromoteExpertModal] = useState<{ id: number; name: string | null } | null>(null);
+  const [promotePublicName, setPromotePublicName] = useState("");
+  const [revokeConfirmUser, setRevokeConfirmUser] = useState<{ id: number; name: string | null } | null>(null);
+  const utils = trpc.useUtils();
+  const grantExpertMutation = trpc.expert.adminGrantExpertRole.useMutation({
+    onSuccess: () => {
+      toast.success("已成功提升為命理師！");
+      setPromoteExpertModal(null);
+      setPromotePublicName("");
+      refetch();
+      utils.expert.adminListExperts.invalidate();
+    },
+    onError: (e) => toast.error(`提升失敗：${e.message}`),
+  });
+  const revokeExpertMutation = trpc.expert.adminRevokeExpertRole.useMutation({
+    onSuccess: () => {
+      toast.success("已撤銷命理師資格");
+      setRevokeConfirmUser(null);
+      refetch();
+      utils.expert.adminListExperts.invalidate();
+    },
+    onError: (e) => toast.error(`撤銷失敗：${e.message}`),
+  });
+
   // 批量選取
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set());
   const [batchModalOpen, setBatchModalOpen] = useState(false);
@@ -817,6 +842,11 @@ export default function AdminUsers() {
                             靈數 {u.profile.lifePathNumber}
                           </span>
                         )}
+                        {u.role === "expert" && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-300 font-medium flex items-center gap-0.5">
+                            <Star className="w-2.5 h-2.5" /> 命理師
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-slate-500 mt-0.5 truncate">
                         {u.email ?? "—"}
@@ -890,8 +920,12 @@ export default function AdminUsers() {
                         </div>
                         <div>
                           <div className="text-slate-500 mb-0.5">角色</div>
-                          <div className={u.role === "admin" ? "text-amber-400 font-medium" : "text-slate-300"}>
-                            {u.role === "admin" ? "👑 管理員" : (plansData ?? []).find(p => p.id === (u.planId ?? 'basic'))?.name ?? "一般用戶"}
+                          <div className={
+                            u.role === "admin" ? "text-amber-400 font-medium" :
+                            u.role === "expert" ? "text-amber-300 font-medium" :
+                            "text-slate-300"
+                          }>
+                            {u.role === "admin" ? "👑 管理員" : u.role === "expert" ? "⭐ 命理師" : "一般用戶"}
                           </div>
                         </div>
                       </div>
@@ -936,6 +970,33 @@ export default function AdminUsers() {
                           >
                             🎫 管理訂閱
                           </Button>
+                          {u.role === "user" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPromotePublicName(u.name ?? "");
+                                setPromoteExpertModal({ id: u.id, name: u.name ?? null });
+                              }}
+                              className="border-yellow-600/50 text-yellow-400 hover:bg-yellow-600/20 bg-transparent text-xs font-semibold shrink-0"
+                            >
+                              ⭐ 提升命理師
+                            </Button>
+                          )}
+                          {u.role === "expert" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setRevokeConfirmUser({ id: u.id, name: u.name ?? null });
+                              }}
+                              className="border-red-600/50 text-red-400 hover:bg-red-600/20 bg-transparent text-xs font-semibold shrink-0"
+                            >
+                              ✕ 撤銷命理師
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -997,6 +1058,69 @@ export default function AdminUsers() {
           onSuccess={() => { refetch(); setCoinsModalUser(null); }}
         />
       )}
+      {/* 提升命理師 Modal */}
+      <Dialog open={!!promoteExpertModal} onOpenChange={(open) => { if (!open) { setPromoteExpertModal(null); setPromotePublicName(""); } }}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-amber-400">⭐ 提升為命理師</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-slate-400">
+              將 <span className="text-slate-200 font-medium">{promoteExpertModal?.name ?? "用戶 #" + promoteExpertModal?.id}</span> 提升為命理師角色，將可以登入專家後台建立個人品牌與提供服務。
+            </p>
+            <div>
+              <label className="text-xs text-slate-400 mb-1 block">公開名稱（展示在專家列表）</label>
+              <Input
+                value={promotePublicName}
+                onChange={(e) => setPromotePublicName(e.target.value)}
+                placeholder="輸入命理師公開名稱..."
+                className="bg-slate-800 border-slate-700 text-slate-200"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setPromoteExpertModal(null); setPromotePublicName(""); }} className="border-slate-700 text-slate-300 bg-transparent hover:bg-slate-800">取消</Button>
+            <Button
+              onClick={() => {
+                if (!promoteExpertModal || !promotePublicName.trim()) {
+                  toast.error("請輸入公開名稱");
+                  return;
+                }
+                grantExpertMutation.mutate({ userId: promoteExpertModal.id, publicName: promotePublicName.trim() });
+              }}
+              disabled={grantExpertMutation.isPending || !promotePublicName.trim()}
+              className="bg-amber-600 hover:bg-amber-700 text-black font-semibold"
+            >
+              {grantExpertMutation.isPending ? "處理中..." : "確認提升"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 撤銷命理師確認 Dialog */}
+      <Dialog open={!!revokeConfirmUser} onOpenChange={(open) => { if (!open) setRevokeConfirmUser(null); }}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-red-400">撤銷命理師資格</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <p className="text-sm text-slate-400">
+              確定要撤銷 <span className="text-slate-200 font-medium">{revokeConfirmUser?.name ?? "用戶 #" + revokeConfirmUser?.id}</span> 的命理師資格？撤銷後該用戶將回归一般用戶，專家後台將無法登入。
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setRevokeConfirmUser(null)} className="border-slate-700 text-slate-300 bg-transparent hover:bg-slate-800">取消</Button>
+            <Button
+              onClick={() => revokeConfirmUser && revokeExpertMutation.mutate({ userId: revokeConfirmUser.id })}
+              disabled={revokeExpertMutation.isPending}
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+            >
+              {revokeExpertMutation.isPending ? "處理中..." : "確認撤銷"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* 批量訂閱 Modal */}
       <Dialog open={batchModalOpen} onOpenChange={setBatchModalOpen}>
         <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 max-w-md">
