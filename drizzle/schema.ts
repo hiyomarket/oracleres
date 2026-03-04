@@ -863,6 +863,8 @@ export const wbcMatches = mysqlTable("wbc_matches", {
   winningTeam: varchar("winningTeam", { length: 5 }),
   // 最終比分（快照，例如 "3-2"）
   finalScore: varchar("finalScore", { length: 20 }),
+  // 下注截止時間（比賽開始前幾分鐘截止，預設 30 分鐘）
+  bettingDeadlineMinutes: int("bettingDeadlineMinutes").notNull().default(30),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

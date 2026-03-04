@@ -2028,7 +2028,7 @@
 - [ ] 修復 OracleCalendar TypeScript 錯誤（calendar router 尚未實作）
 - [ ] 修復 OracleCast TypeScript 錯誤（insight router 尚未實作）
 - [ ] 財運羅盤個人化：依用戶命格（八字/生肖/五行）生成個人化財運建議
-- [ ] WBC 截止時間後台設定：管理員可設定每場比賽的下注截止時間（分鐘數）
+- [x] WBC 截止時間後台設定：管理員可設定每場比賽的下注截止時間（分鐘數）
 
 ## 天命聯盟完善 v8.3（2026-03-04）
 - [x] 審查命理師後台現有頁面（/expert/dashboard, /expert/profile, /expert/services, /expert/calendar, /expert/bookings）
@@ -2038,3 +2038,11 @@
 - [x] ExpertDashboard 修正：admin 首次進入時顯示建立引導画面
 - [x] SharedNav 修正：命理師後台入口只對 expert/admin 顯示
 - [x] 確認用戶前台流程完整（/experts 市集、/experts/:id 個人頁、預約、支付）
+
+## WBC 截止時間後台設定 v8.4（2026-03-04）
+- [x] 分析現有 WBC 資料庫結構和後端 API
+- [x] 後端：wbc_matches 表新增 bettingDeadlineMinutes 欄位（預設 30）
+- [x] 後端：管理員 API 新增設定個別比賽截止時間的 mutation
+- [x] 後台管理頁面：比賽列表新增截止時間設定欄位（分鐘數輸入）
+- [x] 前台競猜頁面：顯示截止倒數計時（距截止時間 X 小時 Y 分）
+- [x] 前台：截止後禁止下注並顯示「投注已截止」狀態

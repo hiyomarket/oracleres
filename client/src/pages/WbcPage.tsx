@@ -179,9 +179,9 @@ export default function WbcPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // 計算距離截止（比賽前30分鐘）的倒數
-  function getBetDeadlineCountdown(matchTime: number): { canBet: boolean; label: string } {
-    const deadline = matchTime - 30 * 60 * 1000;
+  // 計算距離截止（比賽前 N 分鐘）的倒數，N 由 match.bettingDeadlineMinutes 決定（預設 30）
+  function getBetDeadlineCountdown(matchTime: number, deadlineMinutes = 30): { canBet: boolean; label: string } {
+    const deadline = matchTime - deadlineMinutes * 60 * 1000;
     const diff = deadline - now;
     if (diff <= 0) return { canBet: false, label: "下注已截止" };
     const h = Math.floor(diff / 3600000);
@@ -351,8 +351,9 @@ export default function WbcPage() {
             ) : (
               pendingMatches.map(match => {
                 const matchDate = new Date(match.matchTime);
-                const deadline = getBetDeadlineCountdown(match.matchTime);
-                const isUrgent = deadline.canBet && (match.matchTime - 30 * 60 * 1000 - now) < 60 * 60 * 1000; // 截止前1小時內
+                const deadlineMinutes = (match as any).bettingDeadlineMinutes ?? 30;
+                const deadline = getBetDeadlineCountdown(match.matchTime, deadlineMinutes);
+                const isUrgent = deadline.canBet && (match.matchTime - deadlineMinutes * 60 * 1000 - now) < 60 * 60 * 1000; // 截止前1小時內
                 return (
                   <Card key={match.id} className={`bg-slate-900/60 border-slate-700 hover:border-slate-600 transition-colors ${isUrgent ? 'border-amber-700/50' : ''}`}>
                     <CardContent className="p-4">

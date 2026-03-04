@@ -295,6 +295,13 @@
       "when": 1772568031255,
       "tag": "0041_left_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "5",
+      "when": 1772585994283,
+      "tag": "0042_salty_lilandra",
+      "breakpoints": true
     }
   ]
 }

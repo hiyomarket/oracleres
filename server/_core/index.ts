@@ -155,11 +155,12 @@ function startExpiryReminderScheduler() {
 startExpiryReminderScheduler();
 
 /**
- * WBC 賽事下注截止排程：每分鐘掃描 pending 賽事
- * 比賽開始前 30 分鐘自動將狀態改為 live（鎖定下注）
+ * WBC 賽事下注截止排程：每分鐘揃描 pending 賽事
+ * 比賽開始前 N 分鐘自動將狀態改為 live（鎖定下注）
+ * N 由各賽事的 bettingDeadlineMinutes 欄位決定
  */
 function startWbcMatchLockScheduler() {
-  console.log("[WbcMatchLock] Scheduler started. Will lock matches 30 min before start.");
+  console.log("[WbcMatchLock] Scheduler started. Will lock matches based on per-match bettingDeadlineMinutes.");
   setInterval(async () => {
     try {
       await checkAndLockWbcMatches();

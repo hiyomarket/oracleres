@@ -383,4 +383,37 @@ export const wbcRouter = router({
       const betOnB = bets.filter(b => b.betOn === "B").reduce((s, b) => s + b.amount, 0);
       return { totalBets, totalAmount, betOnA, betOnB };
     }),
+
+  /** 管理員設定單場比賽的下注截止時間（分鐘數） */
+  updateMatchDeadline: protectedProcedure
+    .input(z.object({
+      matchId: z.number().int(),
+      bettingDeadlineMinutes: z.number().int().min(0).max(1440),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "資料庫連線失敗" });
+      await db
+        .update(wbcMatches)
+        .set({ bettingDeadlineMinutes: input.bettingDeadlineMinutes })
+        .where(eq(wbcMatches.id, input.matchId));
+      return { success: true, message: `截止時間已設定為比賽前 ${input.bettingDeadlineMinutes} 分鐘` };
+    }),
+
+  /** 管理員批量設定所有待開賽比賽的下注截止時間 */
+  updateAllMatchDeadlines: protectedProcedure
+    .input(z.object({
+      bettingDeadlineMinutes: z.number().int().min(0).max(1440),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "資料庫連線失敗" });
+      await db
+        .update(wbcMatches)
+        .set({ bettingDeadlineMinutes: input.bettingDeadlineMinutes })
+        .where(eq(wbcMatches.status, "pending"));
+      return { success: true, message: `已將所有待開賽比賽的截止時間設為 ${input.bettingDeadlineMinutes} 分鐘` };
+    }),
 });

@@ -9,7 +9,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -150,6 +150,21 @@ export default function AdminMarketing() {
     },
     onError: (e) => toast.error(e.message),
   });
+  const updateMatchDeadline = trpc.wbc.updateMatchDeadline.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      utils.marketing.getAdminMatches.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const updateAllMatchDeadlines = trpc.wbc.updateAllMatchDeadlines.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      utils.marketing.getAdminMatches.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const [globalDeadlineMinutes, setGlobalDeadlineMinutes] = useState("30");
 
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -398,6 +413,9 @@ export default function AdminMarketing() {
                             {match.venue && <span>{match.venue} · </span>}
                             <span>賠率 {match.rateA}/{match.rateB}</span>
                             {match.finalScore && <span className="ml-1.5 text-amber-400">比分：{match.finalScore}</span>}
+                            {match.status === "pending" && (
+                              <span className="ml-1.5 text-blue-400">截止：{(match as any).bettingDeadlineMinutes ?? 30}分前</span>
+                            )}
                           </div>
                         </div>
                         {/* 狀態 */}
@@ -410,6 +428,17 @@ export default function AdminMarketing() {
                             <>
                               <Button size="sm" variant="ghost" onClick={() => openEdit(match)}
                                 className="text-slate-400 hover:text-white h-7 px-1.5 text-xs">編輯</Button>
+                              <Button size="sm" variant="ghost" onClick={() => {
+                                const current = (match as any).bettingDeadlineMinutes ?? 30;
+                                const mins = prompt(
+                                  `設定「${match.teamA} vs ${match.teamB}」的下注截止時間\n（比賽開始前幾分鐘截止，輸入 0 表示比賽開始時才截止）`,
+                                  String(current)
+                                );
+                                if (mins !== null && !isNaN(Number(mins)) && Number(mins) >= 0) {
+                                  updateMatchDeadline.mutate({ matchId: match.id, bettingDeadlineMinutes: Number(mins) });
+                                }
+                              }}
+                                className="text-blue-400 hover:text-blue-300 h-7 px-1.5 text-xs">截止</Button>
                               <Button size="sm" variant="ghost" onClick={() => openSettle(match)}
                                 className="text-green-400 hover:text-green-300 h-7 px-1.5 text-xs">結算</Button>
                             </>
@@ -423,6 +452,35 @@ export default function AdminMarketing() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+              {/* 批量設定截止時間 */}
+              {pendingCount > 0 && (
+                <div className="mt-3 pt-3 border-t border-slate-700/50 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                  <span className="text-slate-400 text-xs whitespace-nowrap">批量設定待開賽截止時間：</span>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number" min="0" max="1440"
+                      value={globalDeadlineMinutes}
+                      onChange={e => setGlobalDeadlineMinutes(e.target.value)}
+                      className="bg-slate-800 border-slate-600 text-white h-7 text-xs w-20"
+                      placeholder="30"
+                    />
+                    <span className="text-slate-500 text-xs">分鐘前截止</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        if (confirm(`確定將所有待開賽比賽的截止時間設為 ${globalDeadlineMinutes} 分鐘？`)) {
+                          updateAllMatchDeadlines.mutate({ bettingDeadlineMinutes: Number(globalDeadlineMinutes) });
+                        }
+                      }}
+                      disabled={updateAllMatchDeadlines.isPending}
+                      className="border-blue-600/50 text-blue-400 hover:bg-blue-600/10 text-xs h-7"
+                    >
+                      {updateAllMatchDeadlines.isPending ? "套用中..." : "套用全部"}
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>

@@ -49,9 +49,9 @@ describe('generateBigLottoNumbers', () => {
     expect(result.energyAnalysis.recommendation.length).toBeGreaterThan(0);
   });
 
-  it('should return 3 sets', () => {
+  it('should return 5 sets', () => {
     const result = generateBigLottoNumbers(mockDate, mockOptions);
-    expect(result.sets).toHaveLength(3);
+    expect(result.sets).toHaveLength(5);
   });
 
   it('each set should have 6 numbers and a special number', () => {
@@ -92,7 +92,7 @@ describe('generatePowerballNumbers', () => {
 
   it('should return sets with correct structure', () => {
     const result = generatePowerballNumbers(mockDate, mockOptions);
-    expect(result.sets).toHaveLength(3);
+    expect(result.sets).toHaveLength(5);
     result.sets.forEach(set => {
       expect(set.numbers).toHaveLength(6);
       expect(typeof set.powerNumber).toBe('number');
@@ -125,9 +125,9 @@ describe('generateThreeStarNumbers', () => {
     expect(result.energyAnalysis.recommendation.length).toBeGreaterThan(0);
   });
 
-  it('should return 3 sets', () => {
+  it('should return 5 sets', () => {
     const result = generateThreeStarNumbers(mockDate, mockOptions);
-    expect(result.sets).toHaveLength(3);
+    expect(result.sets).toHaveLength(5);
   });
 });
 
@@ -155,8 +155,8 @@ describe('generateFourStarNumbers', () => {
     expect(result.energyAnalysis.recommendation.length).toBeGreaterThan(0);
   });
 
-  it('should return 3 sets', () => {
+  it('should return 5 sets', () => {
     const result = generateFourStarNumbers(mockDate, mockOptions);
-    expect(result.sets).toHaveLength(3);
+    expect(result.sets).toHaveLength(5);
   });
 });
