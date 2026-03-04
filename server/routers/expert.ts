@@ -364,6 +364,20 @@ export const expertRouter = router({
         .offset(input.offset);
     }),
 
+  /** 取得專家待處理訂單數量（紅點徽章用） */
+  getPendingBookingsCount: protectedProcedure
+    .query(async ({ ctx }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await findExpert(ctx.user.id);
+      if (!expert) return { count: 0 };
+      const db = (await getDb())!;
+      const [row] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(bookings)
+        .where(and(eq(bookings.expertId, expert.id), eq(bookings.status, "pending_payment")));
+      return { count: Number(row?.count ?? 0) };
+    }),
+
   /** 專家確認付款（pending_payment → confirmed） */
   confirmPayment: protectedProcedure
     .input(z.object({ bookingId: z.number().int() }))

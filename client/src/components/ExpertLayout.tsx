@@ -1,7 +1,7 @@
 /**
  * ExpertLayout - 專家後台路由守衛 + 響應式佈局
  * - 桌機：左側側欄（w-56）
- * - 手機：頂部標題列 + 底部導覽列（全寬主內容）
+ * - 手機：頂部標題列（含快捷操作按鈕插槽）+ 底部五分頁導覽列（含訂單紅點徽章）
  * 只有 role='expert' 或 role='admin' 的用戶才能進入
  */
 import { useEffect } from "react";
@@ -18,20 +18,33 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { path: "/expert/dashboard", label: "儀表盤", icon: LayoutDashboard },
-  { path: "/expert/profile",   label: "個人品牌", icon: User },
-  { path: "/expert/services",  label: "服務項目", icon: Briefcase },
-  { path: "/expert/calendar",  label: "行事曆",   icon: Calendar },
-  { path: "/expert/bookings",  label: "訂單管理", icon: Star },
+  { path: "/expert/dashboard", label: "儀表盤", icon: LayoutDashboard, badgeKey: null },
+  { path: "/expert/profile",   label: "個人品牌", icon: User,            badgeKey: null },
+  { path: "/expert/services",  label: "服務項目", icon: Briefcase,       badgeKey: null },
+  { path: "/expert/calendar",  label: "行事曆",   icon: Calendar,        badgeKey: null },
+  { path: "/expert/bookings",  label: "訂單管理", icon: Star,            badgeKey: "bookings" },
 ];
 
 interface ExpertLayoutProps {
   children: React.ReactNode;
+  /** 頂部標題列右側的快捷操作按鈕（手機版顯示） */
+  headerAction?: React.ReactNode;
+  /** 頁面標題（覆蓋自動偵測） */
+  pageTitle?: string;
 }
 
-export function ExpertLayout({ children }: ExpertLayoutProps) {
+export function ExpertLayout({ children, headerAction, pageTitle }: ExpertLayoutProps) {
   const [location, navigate] = useLocation();
   const { data: user, isLoading } = trpc.auth.me.useQuery();
+  const isExpertOrAdmin = user?.role === "expert" || user?.role === "admin";
+
+  // 待處理訂單數量（紅點徽章）
+  const { data: pendingData } = trpc.expert.getPendingBookingsCount.useQuery(undefined, {
+    enabled: isExpertOrAdmin,
+    staleTime: 30000,
+    refetchInterval: 60000,
+  });
+  const pendingCount = pendingData?.count ?? 0;
 
   useEffect(() => {
     if (!isLoading && (!user || (user.role !== "expert" && user.role !== "admin"))) {
@@ -54,9 +67,9 @@ export function ExpertLayout({ children }: ExpertLayoutProps) {
     return null;
   }
 
-  const currentLabel = NAV_ITEMS.find(
+  const currentLabel = pageTitle ?? (NAV_ITEMS.find(
     (n) => location === n.path || location.startsWith(n.path + "/")
-  )?.label ?? "後台";
+  )?.label ?? "後台");
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,6 +95,7 @@ export function ExpertLayout({ children }: ExpertLayoutProps) {
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.path || location.startsWith(item.path + "/");
+              const badge = item.badgeKey === "bookings" && pendingCount > 0 ? pendingCount : null;
               return (
                 <Link key={item.path} href={item.path}>
                   <div
@@ -93,7 +107,12 @@ export function ExpertLayout({ children }: ExpertLayoutProps) {
                     )}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0" />
-                    <span>{item.label}</span>
+                    <span className="flex-1">{item.label}</span>
+                    {badge !== null && (
+                      <span className="min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
+                        {badge > 99 ? "99+" : badge}
+                      </span>
+                    )}
                   </div>
                 </Link>
               );
@@ -129,22 +148,26 @@ export function ExpertLayout({ children }: ExpertLayoutProps) {
       <div className="md:hidden flex flex-col min-h-screen">
         {/* 頂部標題列 */}
         <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-border bg-card/90 backdrop-blur-md">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
               <Star className="w-3.5 h-3.5 text-amber-400" />
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-amber-400">天命聯盟</span>
-              <span className="text-slate-600 text-xs">/</span>
-              <span className="text-xs text-slate-300 font-medium">{currentLabel}</span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-xs font-bold text-amber-400 shrink-0">天命聯盟</span>
+              <span className="text-slate-600 text-xs shrink-0">/</span>
+              <span className="text-xs text-slate-300 font-medium truncate">{currentLabel}</span>
             </div>
           </div>
-          <Link href="/">
-            <div className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-amber-400 transition-colors px-2 py-1 rounded-lg hover:bg-amber-500/10">
-              <Home className="w-3.5 h-3.5" />
-              <span>前台</span>
-            </div>
-          </Link>
+          {/* 快捷操作按鈕插槽 */}
+          <div className="flex items-center gap-2 shrink-0">
+            {headerAction}
+            <Link href="/">
+              <div className="flex items-center gap-1 text-xs text-slate-400 hover:text-amber-400 transition-colors px-2 py-1 rounded-lg hover:bg-amber-500/10">
+                <Home className="w-3.5 h-3.5" />
+                <span>前台</span>
+              </div>
+            </Link>
+          </div>
         </header>
 
         {/* 主內容（底部留出導覽列高度） */}
@@ -158,21 +181,28 @@ export function ExpertLayout({ children }: ExpertLayoutProps) {
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.path || location.startsWith(item.path + "/");
+              const badge = item.badgeKey === "bookings" && pendingCount > 0 ? pendingCount : null;
               return (
                 <Link key={item.path} href={item.path} className="flex-1">
                   <div
                     className={cn(
-                      "flex flex-col items-center justify-center gap-1 py-2.5 px-1 transition-colors",
-                      isActive
-                        ? "text-amber-400"
-                        : "text-slate-500 hover:text-slate-300"
+                      "relative flex flex-col items-center justify-center gap-1 py-2.5 px-1 transition-colors",
+                      isActive ? "text-amber-400" : "text-slate-500 hover:text-slate-300"
                     )}
                   >
                     {/* 活躍指示條 */}
                     {isActive && (
                       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full bg-amber-400" />
                     )}
-                    <Icon className={cn("w-5 h-5", isActive && "drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]")} />
+                    {/* 圖示 + 紅點徽章 */}
+                    <div className="relative">
+                      <Icon className={cn("w-5 h-5", isActive && "drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]")} />
+                      {badge !== null && (
+                        <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] rounded-full bg-red-500 border border-card text-white text-[9px] font-bold flex items-center justify-center px-0.5">
+                          {badge > 9 ? "9+" : badge}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[10px] font-medium leading-none">{item.label}</span>
                   </div>
                 </Link>
@@ -180,7 +210,7 @@ export function ExpertLayout({ children }: ExpertLayoutProps) {
             })}
           </div>
           {/* iOS 安全區域 */}
-          <div className="h-safe-area-inset-bottom" style={{ height: "env(safe-area-inset-bottom)" }} />
+          <div style={{ height: "env(safe-area-inset-bottom)" }} />
         </nav>
       </div>
     </div>

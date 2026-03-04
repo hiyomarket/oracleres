@@ -33,7 +33,7 @@ export default function ExpertDashboard() {
   // 尚未建立個人品牌時，顯示初始化引導
   if (!profileLoading && !profile) {
     return (
-      <ExpertLayout>
+      <ExpertLayout pageTitle="儀表盤">
         <div className="p-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
           <div className="w-20 h-20 rounded-full bg-amber-500/15 flex items-center justify-center">
             <Star className="w-10 h-10 text-amber-400" />
@@ -80,12 +80,12 @@ export default function ExpertDashboard() {
   }
 
   return (
-    <ExpertLayout>
-      <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <ExpertLayout pageTitle="儀表盤">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-4 md:space-y-6">
         {/* 頂部歡迎 */}
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold">
+            <h1 className="text-2xl font-bold hidden md:block">
               {profile ? `歡迎回來，${profile.publicName}` : "歡迎來到專家後台"}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">

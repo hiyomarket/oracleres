@@ -83,10 +83,21 @@ export default function ExpertProfile() {
     });
   };
 
+  const saveBtn = (
+    <Button
+      size="sm"
+      className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs px-3 h-8"
+      onClick={handleSave}
+      disabled={upsertMutation.isPending}
+    >
+      <Save className="w-3.5 h-3.5 mr-1" /> {upsertMutation.isPending ? "儲存中…" : "儲存"}
+    </Button>
+  );
+
   return (
-    <ExpertLayout>
-      <div className="p-6 max-w-2xl mx-auto space-y-6">
-        <div>
+    <ExpertLayout headerAction={saveBtn} pageTitle="個人品牌">
+      <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-4 md:space-y-6">
+        <div className="hidden md:block">
           <h1 className="text-2xl font-bold">個人品牌編輯</h1>
           <p className="text-muted-foreground text-sm mt-1">設定您的公開形象，讓用戶認識您</p>
         </div>

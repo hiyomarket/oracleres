@@ -91,10 +91,20 @@ export default function ExpertServices() {
     }
   };
 
+  const quickAddBtn = (
+    <Button
+      size="sm"
+      className="bg-amber-500 hover:bg-amber-600 text-black font-semibold text-xs px-3 h-8"
+      onClick={openCreate}
+    >
+      <Plus className="w-3.5 h-3.5 mr-1" /> 新增服務
+    </Button>
+  );
+
   return (
-    <ExpertLayout>
-      <div className="p-6 max-w-3xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+    <ExpertLayout headerAction={quickAddBtn} pageTitle="服務項目">
+      <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4 md:space-y-6">
+        <div className="hidden md:flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">服務項目管理</h1>
             <p className="text-muted-foreground text-sm mt-1">設定您提供的服務類型和收費標準</p>

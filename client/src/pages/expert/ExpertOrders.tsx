@@ -54,9 +54,9 @@ export default function ExpertOrders() {
   ];
 
   return (
-    <ExpertLayout>
-      <div className="p-6 max-w-3xl mx-auto space-y-6">
-        <div>
+    <ExpertLayout pageTitle="訂單管理">
+      <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4 md:space-y-6">
+        <div className="hidden md:block">
           <h1 className="text-2xl font-bold">訂單管理</h1>
           <p className="text-muted-foreground text-sm mt-1">管理用戶的預約訂單</p>
         </div>

@@ -79,10 +79,18 @@ export default function ExpertCalendar() {
     return map;
   }, [availSlots]);
 
+  const monthNavBtn = (
+    <div className="flex items-center gap-1">
+      <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={prevMonth}>‹</Button>
+      <span className="text-xs font-medium w-14 text-center">{year}/{String(month).padStart(2, "0")}</span>
+      <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={nextMonth}>›</Button>
+    </div>
+  );
+
   return (
-    <ExpertLayout>
-      <div className="p-6 max-w-3xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+    <ExpertLayout headerAction={monthNavBtn} pageTitle="行事曆">
+      <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4 md:space-y-6">
+        <div className="hidden md:flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">行事曆管理</h1>
             <p className="text-muted-foreground text-sm mt-1">設定可接受預約的時段</p>
