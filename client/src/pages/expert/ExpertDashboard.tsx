@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 export default function ExpertDashboard() {
-  const { data: profile } = trpc.expert.getMyProfile.useQuery();
+  const { data: profile, isLoading: profileLoading } = trpc.expert.getMyProfile.useQuery();
   const { data: services = [] } = trpc.expert.listMyServices.useQuery();
   const { data: bookings = [] } = trpc.expert.listMyBookings.useQuery({ status: "all", limit: 5, offset: 0 });
 
@@ -29,6 +29,55 @@ export default function ExpertDashboard() {
     completed: "已完成",
     cancelled: "已取消",
   };
+
+  // 尚未建立個人品牌時，顯示初始化引導
+  if (!profileLoading && !profile) {
+    return (
+      <ExpertLayout>
+        <div className="p-6 max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
+          <div className="w-20 h-20 rounded-full bg-amber-500/15 flex items-center justify-center">
+            <Star className="w-10 h-10 text-amber-400" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold">歡迎加入天命聯盟</h1>
+            <p className="text-muted-foreground">
+              您尚未建立命理師個人品牌。請先完成個人資料設定，<br />
+              讓用戶能夠找到您並預約服務。
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+            <Card className="border-amber-500/20">
+              <CardContent className="p-4 text-center space-y-2">
+                <User className="w-8 h-8 text-amber-400 mx-auto" />
+                <p className="text-sm font-medium">步驟一</p>
+                <p className="text-xs text-muted-foreground">建立個人品牌頁面（名稱、介紹、標籤）</p>
+              </CardContent>
+            </Card>
+            <Card className="border-blue-500/20">
+              <CardContent className="p-4 text-center space-y-2">
+                <Briefcase className="w-8 h-8 text-blue-400 mx-auto" />
+                <p className="text-sm font-medium">步驟二</p>
+                <p className="text-xs text-muted-foreground">新增服務項目與定價</p>
+              </CardContent>
+            </Card>
+            <Card className="border-green-500/20">
+              <CardContent className="p-4 text-center space-y-2">
+                <Calendar className="w-8 h-8 text-green-400 mx-auto" />
+                <p className="text-sm font-medium">步驟三</p>
+                <p className="text-xs text-muted-foreground">設定可預約時段</p>
+              </CardContent>
+            </Card>
+          </div>
+          <Link href="/expert/profile">
+            <Button className="bg-amber-500 hover:bg-amber-600 text-black font-semibold px-8">
+              <User className="w-4 h-4 mr-2" />
+              開始建立個人品牌
+            </Button>
+          </Link>
+        </div>
+      </ExpertLayout>
+    );
+  }
 
   return (
     <ExpertLayout>

@@ -30,6 +30,13 @@ async function requireExpert(userId: number) {
   return expert;
 }
 
+/** 取得專家記錄，若無則回傳 null（不拋錯，用於 admin 初始化場景） */
+async function findExpert(userId: number) {
+  const db = (await getDb())!;
+  const [expert] = await db.select().from(experts).where(eq(experts.userId, userId)).limit(1);
+  return expert ?? null;
+}
+
 /** 確保當前用戶是專家或管理員 */
 function requireExpertOrAdmin(role: string) {
   if (role !== "expert" && role !== "admin") {
@@ -96,11 +103,11 @@ export const expertRouter = router({
         paymentQrUrl: input.paymentQrUrl,
       };
       if (existing.length === 0) {
-        // 首次建立
+        // 首次建立：admin 直接設為 active，一般專家需審核
         await db.insert(experts).values({
           userId: ctx.user.id,
           ...profileData,
-          status: "pending_review",
+          status: ctx.user.role === "admin" ? "active" : "pending_review",
         });
       } else {
         await db
@@ -114,7 +121,8 @@ export const expertRouter = router({
   /** 取得當前專家的所有服務項目 */
   listMyServices: protectedProcedure.query(async ({ ctx }) => {
     requireExpertOrAdmin(ctx.user.role);
-    const expert = await requireExpert(ctx.user.id);
+    const expert = await findExpert(ctx.user.id);
+    if (!expert) return []; // admin 尚未建立專家記錄
     const db = (await getDb())!;
     return db
       .select()
@@ -267,7 +275,8 @@ export const expertRouter = router({
     )
     .query(async ({ ctx, input }) => {
       requireExpertOrAdmin(ctx.user.role);
-      const expert = await requireExpert(ctx.user.id);
+      const expert = await findExpert(ctx.user.id);
+      if (!expert) return { availSlots: [], bookings: [] }; // admin 尚未建立專家記錄
       const db = (await getDb())!;
 
       const startOfMonth = new Date(input.year, input.month - 1, 1);
@@ -324,14 +333,13 @@ export const expertRouter = router({
     )
     .query(async ({ ctx, input }) => {
       requireExpertOrAdmin(ctx.user.role);
-      const expert = await requireExpert(ctx.user.id);
+      const expert = await findExpert(ctx.user.id);
+      if (!expert) return []; // admin 尚未建立專家記錄
       const db = (await getDb())!;
-
       const conditions = [eq(bookings.expertId, expert.id)];
-      if (input.status !== "all") {
+       if (input.status !== "all") {
         conditions.push(eq(bookings.status, input.status));
       }
-
       return db
         .select({
           id: bookings.id,

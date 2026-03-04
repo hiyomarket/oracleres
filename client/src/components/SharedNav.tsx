@@ -224,7 +224,7 @@ function NotificationBell() {
 }
 
 /** 使用者頭像下拉選單 */
-function UserMenu({ user }: { user: { name?: string | null; openId?: string; planName?: string | null } }) {
+function UserMenu({ user }: { user: { name?: string | null; openId?: string; planName?: string | null; role?: string | null } }) {
   const [open, setOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -354,7 +354,7 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
               </div>
             </Link>
 
-            {/* 天命聯盟（專家市集）與我的預約 */}
+            {/* 天命聯盟（專家市集）- 所有用戶可瀏覽 */}
             <Link
               href="/experts"
               onClick={() => setOpen(false)}
@@ -365,6 +365,7 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
               </div>
               <span>天命聯盟</span>
             </Link>
+            {/* 我的預約 - 所有已登入用戶 */}
             <Link
               href="/my-bookings"
               onClick={() => setOpen(false)}
@@ -375,6 +376,22 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
               </div>
               <span>我的預約</span>
             </Link>
+            {/* 命理師後台 - 只有 expert 或 admin 才顯示 */}
+            {(user.role === 'expert' || user.role === 'admin') && (
+              <Link
+                href="/expert/dashboard"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-purple-500/10 hover:text-purple-300 transition-colors group/item"
+              >
+                <div className="w-7 h-7 rounded-lg bg-purple-500/20 flex items-center justify-center shrink-0 group-hover/item:bg-purple-500/30 transition-colors">
+                  <Star className="w-3.5 h-3.5 text-purple-300" />
+                </div>
+                <div className="flex flex-col">
+                  <span>命理師後台</span>
+                  <span className="text-[10px] text-purple-400/70">天命聯盟管理</span>
+                </div>
+              </Link>
+            )}
             {/* 加入手機主畫面 */}
             <Link
               href="/add-to-home"
@@ -626,7 +643,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
             ) : (
               <>
                 <PointsBadge />
-                <UserMenu user={{ ...user, planName: (meData as { planName?: string | null } | null)?.planName ?? null }} />
+                <UserMenu user={{ ...user, planName: (meData as { planName?: string | null; role?: string | null } | null)?.planName ?? null, role: (meData as { role?: string | null } | null)?.role ?? null }} />
               </>
             )}
           </div>

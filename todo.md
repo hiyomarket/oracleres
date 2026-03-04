@@ -2022,3 +2022,19 @@
 - [x] SharedNav 加入「天命聯盟」（/experts）和「我的預約」（/my-bookings）導航入口
 - [x] MyBookings 頁面：用戶查看自己的預約記錄（含狀態/時間/專家資訊）
 - [x] App.tsx 加入所有專家系統相關路由
+
+## 功能修復 v8.2 - SharedNav 邏輯修正 + 三項建議實作（2026-03-04）
+- [x] SharedNav 修正：天命聯盟後台入口只對 expert/admin 顯示，一般用戶不顯示
+- [ ] 修復 OracleCalendar TypeScript 錯誤（calendar router 尚未實作）
+- [ ] 修復 OracleCast TypeScript 錯誤（insight router 尚未實作）
+- [ ] 財運羅盤個人化：依用戶命格（八字/生肖/五行）生成個人化財運建議
+- [ ] WBC 截止時間後台設定：管理員可設定每場比賽的下注截止時間（分鐘數）
+
+## 天命聯盟完善 v8.3（2026-03-04）
+- [x] 審查命理師後台現有頁面（/expert/dashboard, /expert/profile, /expert/services, /expert/calendar, /expert/bookings）
+- [x] 確認 admin 可直接使用命理師後台（ExpertLayout 允許 admin 進入）
+- [x] expert.ts 修正：admin 無 expert 記錄時回傳空陣列而非報錯
+- [x] updateMyProfile 修正：admin 建立專家記錄時直接設為 active
+- [x] ExpertDashboard 修正：admin 首次進入時顯示建立引導画面
+- [x] SharedNav 修正：命理師後台入口只對 expert/admin 顯示
+- [x] 確認用戶前台流程完整（/experts 市集、/experts/:id 個人頁、預約、支付）
