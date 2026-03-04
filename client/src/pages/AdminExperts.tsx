@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Users, Search, CheckCircle, XCircle, Clock, Star, Eye, Ban, RefreshCw } from "lucide-react";
+import { Users, Search, CheckCircle, XCircle, Clock, Star, Eye, Ban, RefreshCw, UserPlus } from "lucide-react";
 
 type ExpertStatus = "active" | "inactive" | "pending_review";
 const STATUS_COLOR: Record<ExpertStatus, string> = {
@@ -61,7 +61,20 @@ export default function AdminExperts() {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<ExpertStatus>("active");
   const [adminNote, setAdminNote] = useState("");
-  const [activeTab, setActiveTab] = useState<"experts" | "bookings">("experts");
+  const [activeTab, setActiveTab] = useState<"experts" | "bookings" | "applications">("experts");
+  const [reviewTarget, setReviewTarget] = useState<{ id: number; publicName: string; userName: string; motivation?: string | null | undefined } | null>(null);
+  const [reviewNote, setReviewNote] = useState("");
+  const [reviewAction, setReviewAction] = useState<"approve" | "reject">("approve");
+  const { data: applications = [], refetch: refetchApps } = trpc.expert.adminListApplications.useQuery({ status: "all" });
+  const reviewMutation = trpc.expert.adminReviewApplication.useMutation({
+    onSuccess: () => {
+      toast.success(reviewAction === "approve" ? "已核准申請，用戶已升為命理師" : "已拒絕申請");
+      setReviewTarget(null);
+      setReviewNote("");
+      refetchApps();
+    },
+    onError: (e: { message: string }) => toast.error("操作失敗: " + e.message),
+  });
 
   const { data: experts = [], isLoading, refetch } = trpc.expert.adminListExperts.useQuery({ status: statusFilter });
   const { data: bookingsData = [], isLoading: bookingsLoading } = trpc.expert.adminListAllBookings.useQuery({ status: "all" });
@@ -149,10 +162,11 @@ export default function AdminExperts() {
           {[
             { key: "experts", label: "專家列表" },
             { key: "bookings", label: "預約訂單" },
+            { key: "applications", label: applications.filter(a => a.status === "pending").length > 0 ? `命理師申請 (${applications.filter(a => a.status === "pending").length})` : "命理師申請" },
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as "experts" | "bookings")}
+              onClick={() => setActiveTab(tab.key as "experts" | "bookings" | "applications")}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.key
                   ? "border-amber-500 text-amber-400"
@@ -432,6 +446,110 @@ export default function AdminExperts() {
               className="bg-red-600 hover:bg-red-700 text-white font-semibold"
             >
               {revokeExpertMutation.isPending ? "處理中..." : "確認撤銷"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+        {activeTab === "applications" && (
+          <div className="space-y-3">
+            {applications.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center text-muted-foreground">
+                  <UserPlus className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                  <p>目前沒有命理師申請</p>
+                </CardContent>
+              </Card>
+            ) : (
+              applications.map((app) => (
+                <Card key={app.id} className="border-border/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold">
+                          {app.publicName[0]}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{app.publicName}</span>
+                            <Badge className={`text-xs border ${
+                              app.status === "pending" ? "bg-amber-500/20 text-amber-400 border-amber-500/30" :
+                              app.status === "approved" ? "bg-green-500/20 text-green-400 border-green-500/30" :
+                              "bg-red-500/20 text-red-400 border-red-500/30"
+                            }`}>
+                              {app.status === "pending" ? "待審核" : app.status === "approved" ? "已核准" : "已拒絕"}
+                            </Badge>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">用戶：{app.userName}</div>
+                          {app.motivation && (
+                            <div className="text-xs text-muted-foreground mt-1 max-w-xs">申請理由：{app.motivation}</div>
+                          )}
+                          {app.adminNote && (
+                            <div className="text-xs text-amber-400/70 mt-1">管理員備註：{app.adminNote}</div>
+                          )}
+                        </div>
+                      </div>
+                      {app.status === "pending" && (
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => { setReviewTarget({ id: app.id, publicName: app.publicName, userName: app.userName ?? "", motivation: app.motivation }); setReviewAction("approve"); }}
+                          >
+                            <CheckCircle className="w-3.5 h-3.5 mr-1" /> 核准
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => { setReviewTarget({ id: app.id, publicName: app.publicName, userName: app.userName ?? "", motivation: app.motivation }); setReviewAction("reject"); }}
+                          >
+                            <XCircle className="w-3.5 h-3.5 mr-1" /> 拒絕
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+
+      {/* 申請審核 Dialog */}
+      <Dialog open={!!reviewTarget} onOpenChange={(open) => { if (!open) { setReviewTarget(null); setReviewNote(""); } }}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className={reviewAction === "approve" ? "text-green-400" : "text-red-400"}>
+              {reviewAction === "approve" ? "核准命理師申請" : "拒絕命理師申請"}
+            </DialogTitle>
+            <DialogDescription className="text-slate-400">
+              {reviewAction === "approve"
+                ? "核准後用戶將升為命理師角色，可登入專家後台。"
+                : "拒絕後用戶可重新申請。"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-slate-300">申請人：<span className="text-amber-300 font-semibold">{reviewTarget?.publicName}</span>（{reviewTarget?.userName}）</p>
+            {reviewTarget?.motivation && (
+              <div className="bg-slate-800 rounded-lg p-3 text-xs text-slate-400">申請理由：{reviewTarget.motivation}</div>
+            )}
+            <div>
+              <label className="text-sm text-slate-400 mb-1 block">管理員備註（可選）</label>
+              <Input
+                value={reviewNote}
+                onChange={(e) => setReviewNote(e.target.value)}
+                placeholder="例如：歡迎加入天命聯盟！"
+                className="bg-slate-800 border-slate-600 text-slate-200"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setReviewTarget(null); setReviewNote(""); }} className="border-slate-700 text-slate-300 bg-transparent hover:bg-slate-800">取消</Button>
+            <Button
+              onClick={() => reviewTarget && reviewMutation.mutate({ applicationId: reviewTarget.id, action: reviewAction, adminNote: reviewNote || undefined })}
+              disabled={reviewMutation.isPending}
+              className={reviewAction === "approve" ? "bg-green-600 hover:bg-green-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"}
+            >
+              {reviewMutation.isPending ? "處理中..." : reviewAction === "approve" ? "確認核准" : "確認拒絕"}
             </Button>
           </DialogFooter>
         </DialogContent>

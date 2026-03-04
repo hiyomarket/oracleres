@@ -5,8 +5,9 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { ChevronDown, ChevronUp, TrendingUp, AlertTriangle, Zap, Settings, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronUp, TrendingUp, AlertTriangle, Zap, Settings, ExternalLink, Star, Send, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Link } from "wouter";
+import { toast } from "sonner";
 
 // ─── 主帳號靜態命格資料（蘇祐震 V9.0 歸正版）────────────────────────────────
 const OWNER_STATIC_PROFILE = {
@@ -432,7 +433,126 @@ function YearlyForecastSection() {
   );
 }
 
-// ─── 命格未填寫提示卡片 ──────────────────────────────────────────────────────
+// ─── 申請成為命理師區塊 ──────────────────────────────────────────────
+function ExpertApplySection() {
+  const { user } = useAuth();
+  const [showForm, setShowForm] = useState(false);
+  const [publicName, setPublicName] = useState("");
+  const [motivation, setMotivation] = useState("");
+
+  const { data: myApplication, refetch } = trpc.expert.getMyApplication.useQuery(
+    undefined,
+    { enabled: !!user && user.role === "user" }
+  );
+
+  const applyMutation = trpc.expert.applyForExpert.useMutation({
+    onSuccess: () => {
+      toast.success("申請已提交！請耐心等候管理員審核");
+      setShowForm(false);
+      refetch();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  // 已是命理師或管理員則不顯示
+  if (!user || user.role === "expert" || user.role === "admin") return null;
+
+  const statusMap = {
+    pending: { icon: <Clock className="w-4 h-4 text-amber-400" />, label: "待審核", color: "text-amber-400", bg: "bg-amber-900/20 border-amber-500/30" },
+    approved: { icon: <CheckCircle className="w-4 h-4 text-green-400" />, label: "已核准", color: "text-green-400", bg: "bg-green-900/20 border-green-500/30" },
+    rejected: { icon: <XCircle className="w-4 h-4 text-red-400" />, label: "未通過", color: "text-red-400", bg: "bg-red-900/20 border-red-500/30" },
+  };
+
+  return (
+    <section className="mt-6">
+      <div className="bg-gray-900/60 border border-amber-500/20 rounded-2xl p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <Star className="w-5 h-5 text-amber-400" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-amber-300">成為命理師</h3>
+            <p className="text-xs text-gray-400">申請加入天命聯盟，提供專業命理服務</p>
+          </div>
+        </div>
+
+        {myApplication ? (
+          <div className={`rounded-xl border p-4 ${statusMap[myApplication.status]?.bg ?? ""}`}>
+            <div className="flex items-center gap-2 mb-2">
+              {statusMap[myApplication.status]?.icon}
+              <span className={`text-sm font-medium ${statusMap[myApplication.status]?.color ?? ""}`}>
+                申請狀態：{statusMap[myApplication.status]?.label}
+              </span>
+            </div>
+            <p className="text-xs text-gray-400">公開名稱：{myApplication.publicName}</p>
+            {myApplication.adminNote && (
+              <p className="text-xs text-gray-400 mt-1">管理員備註：{myApplication.adminNote}</p>
+            )}
+            {myApplication.status === "rejected" && (
+              <button
+                onClick={() => { setShowForm(true); }}
+                className="mt-3 text-xs text-amber-400 hover:text-amber-300 underline"
+              >
+                重新申請
+              </button>
+            )}
+          </div>
+        ) : showForm ? (
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-gray-400 mb-1 block">公開名稱 *</label>
+              <input
+                type="text"
+                value={publicName}
+                onChange={(e) => setPublicName(e.target.value)}
+                placeholder="您希望在平台上顯示的名稱"
+                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-amber-500/60 focus:outline-none"
+                maxLength={50}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-400 mb-1 block">申請理由（可選）</label>
+              <textarea
+                value={motivation}
+                onChange={(e) => setMotivation(e.target.value)}
+                placeholder="簡述您的命理經驗、擅長領域或希望提供的服務…"
+                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-amber-500/60 focus:outline-none resize-none"
+                rows={3}
+                maxLength={500}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => applyMutation.mutate({ publicName: publicName.trim(), motivation: motivation.trim() || undefined })}
+                disabled={!publicName.trim() || applyMutation.isPending}
+                className="flex-1 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-medium rounded-lg px-4 py-2 text-sm transition-colors"
+              >
+                <Send className="w-3.5 h-3.5" />
+                {applyMutation.isPending ? "提交中…" : "提交申請"}
+              </button>
+              <button
+                onClick={() => setShowForm(false)}
+                className="px-4 py-2 text-sm text-gray-400 hover:text-gray-300 border border-gray-600 rounded-lg transition-colors"
+              >
+                取消
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowForm(true)}
+            className="w-full flex items-center justify-center gap-2 border border-amber-500/40 hover:border-amber-500/70 hover:bg-amber-500/10 text-amber-400 rounded-xl px-4 py-3 text-sm font-medium transition-colors"
+          >
+            <Star className="w-4 h-4" />
+            申請成為命理師
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ─── 命格未填寫提示卡片 ──────────────────────────────────────────────
 function IncompleteProfilePrompt({ message }: { message: string }) {
   return (
     <div className="bg-amber-900/10 border border-amber-500/30 rounded-xl p-5 flex flex-col items-center gap-3 text-center">
@@ -947,6 +1067,9 @@ export default function ProfilePage() {
             </Link>
           </div>
         )}
+
+        {/* ─── 申請成為命理師區塊 ─── */}
+        <ExpertApplySection />
 
       </div>
     </>

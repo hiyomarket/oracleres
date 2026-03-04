@@ -189,6 +189,8 @@ export const dashboardRouter = router({
       lastActiveFilter: z.enum(["7d", "30d", "90d", "inactive90d"]).optional(),
       // 搜尋名稱
       searchName: z.string().max(50).optional(),
+      // 角色篩選
+      roleFilter: z.enum(["all", "user", "expert", "admin"]).optional(),
     }))
     .query(async ({ input, ctx }) => {
       if (!isOwner(ctx.user.openId, ctx.user.role)) {
@@ -204,6 +206,9 @@ export const dashboardRouter = router({
       const conditions: ReturnType<typeof eq>[] = [];
       if (input.planId) {
         conditions.push(eq(users.planId, input.planId));
+      }
+      if (input.roleFilter && input.roleFilter !== "all") {
+        conditions.push(eq(users.role, input.roleFilter as "user" | "expert" | "admin"));
       }
       if (input.lastActiveFilter) {
         if (input.lastActiveFilter === "7d") {

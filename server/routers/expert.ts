@@ -13,6 +13,7 @@ import {
   privateMessages,
   reviews,
   users,
+  expertApplications,
 } from "../../drizzle/schema";
 import { eq, and, desc, asc, gte, lte, sql, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -858,6 +859,13 @@ export const expertRouter = router({
     .mutation(async ({ input }) => {
       const db = (await getDb())!;
 
+      // 查詢用戶 openId（用於發送站內通知）
+      const userRow = await db
+        .select({ openId: users.openId })
+        .from(users)
+        .where(eq(users.id, input.userId))
+        .limit(1);
+
       // 更新 users.role
       await db
         .update(users)
@@ -877,6 +885,18 @@ export const expertRouter = router({
           publicName: input.publicName,
           status: "active",
         });
+      }
+
+      // 發送站內通知給用戶
+      if (userRow.length > 0) {
+        const { notifyUser } = await import("../lib/notifyUser");
+        await notifyUser({
+          userId: userRow[0].openId,
+          type: "system",
+          title: "🌟 恭喜您成為天命聯盟命理師",
+          content: `您已獲得命理師資格，公開名稱為「${input.publicName}」。請前往專家後台完成個人品牌設定，讓用戶能夠找到您並預約服務。`,
+          linkUrl: "/expert/dashboard",
+        }).catch(() => { /* 通知失敗不影響主要流程 */ });
       }
 
       return { success: true };
@@ -950,5 +970,162 @@ export const expertRouter = router({
         .set({ status: input.status })
         .where(eq(bookings.id, input.bookingId));
       return { success: true };
+    }),
+
+  // ── 命理師申請流程 ────────────────────────────────────────────────────────────
+
+  /** 用戶：申請成為命理師 */
+  applyForExpert: protectedProcedure
+    .input(
+      z.object({
+        publicName: z.string().min(1).max(100),
+        motivation: z.string().max(1000).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      // 如果已是命理師則不需申請
+      if (ctx.user.role === "expert" || ctx.user.role === "admin") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "您已是命理師身份，無需申請" });
+      }
+      // 檢查是否已有待審核申請
+      const pending = await db
+        .select({ id: expertApplications.id })
+        .from(expertApplications)
+        .where(and(eq(expertApplications.userId, ctx.user.id), eq(expertApplications.status, "pending")))
+        .limit(1);
+      if (pending.length > 0) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "您已有待審核的申請，請耐心等候管理員審核" });
+      }
+      await db.insert(expertApplications).values({
+        userId: ctx.user.id,
+        publicName: input.publicName,
+        motivation: input.motivation,
+        status: "pending",
+      });
+      return { success: true };
+    }),
+
+  /** 用戶：查詢自己的申請狀態 */
+  getMyApplication: protectedProcedure.query(async ({ ctx }) => {
+    const db = (await getDb())!;
+    const [app] = await db
+      .select()
+      .from(expertApplications)
+      .where(eq(expertApplications.userId, ctx.user.id))
+      .orderBy(desc(expertApplications.createdAt))
+      .limit(1);
+    return app ?? null;
+  }),
+
+  /** 管理員：取得所有申請列表 */
+  adminListApplications: adminProcedure
+    .input(
+      z.object({
+        status: z.enum(["pending", "approved", "rejected", "all"]).default("pending"),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = (await getDb())!;
+      const conditions = [];
+      if (input.status !== "all") {
+        conditions.push(eq(expertApplications.status, input.status));
+      }
+      return db
+        .select({
+          id: expertApplications.id,
+          userId: expertApplications.userId,
+          publicName: expertApplications.publicName,
+          motivation: expertApplications.motivation,
+          status: expertApplications.status,
+          adminNote: expertApplications.adminNote,
+          createdAt: expertApplications.createdAt,
+          userName: users.name,
+          userEmail: users.email,
+        })
+        .from(expertApplications)
+        .leftJoin(users, eq(expertApplications.userId, users.id))
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(expertApplications.createdAt));
+    }),
+
+  /** 管理員：審核申請（核准/拒絕） */
+  adminReviewApplication: adminProcedure
+    .input(
+      z.object({
+        applicationId: z.number().int(),
+        action: z.enum(["approve", "reject"]),
+        adminNote: z.string().max(500).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = (await getDb())!;
+      // 取得申請資料
+      const [app] = await db
+        .select()
+        .from(expertApplications)
+        .where(eq(expertApplications.id, input.applicationId))
+        .limit(1);
+      if (!app) throw new TRPCError({ code: "NOT_FOUND", message: "申請不存在" });
+
+      const newStatus = input.action === "approve" ? "approved" : "rejected";
+      await db
+        .update(expertApplications)
+        .set({ status: newStatus, adminNote: input.adminNote })
+        .where(eq(expertApplications.id, input.applicationId));
+
+      // 如果核准，自動提升用戶為命理師
+      if (input.action === "approve") {
+        const userRow = await db
+          .select({ openId: users.openId })
+          .from(users)
+          .where(eq(users.id, app.userId))
+          .limit(1);
+
+        await db.update(users).set({ role: "expert" }).where(eq(users.id, app.userId));
+
+        const existing = await db
+          .select({ id: experts.id })
+          .from(experts)
+          .where(eq(experts.userId, app.userId))
+          .limit(1);
+        if (existing.length === 0) {
+          await db.insert(experts).values({
+            userId: app.userId,
+            publicName: app.publicName,
+            status: "active",
+          });
+        }
+        // 發送站內通知
+        if (userRow.length > 0) {
+          const { notifyUser } = await import("../lib/notifyUser");
+          await notifyUser({
+            userId: userRow[0].openId,
+            type: "system",
+            title: "🌟 恭喜！您的命理師申請已通過",
+            content: `您申請成為命理師的請求已獲核准，公開名稱為「${app.publicName}」。請前往專家後台完成個人品牌設定。`,
+            linkUrl: "/expert/dashboard",
+          }).catch(() => {});
+        }
+      } else {
+        // 拒絕通知
+        const userRow = await db
+          .select({ openId: users.openId })
+          .from(users)
+          .where(eq(users.id, app.userId))
+          .limit(1);
+        if (userRow.length > 0) {
+          const { notifyUser } = await import("../lib/notifyUser");
+          await notifyUser({
+            userId: userRow[0].openId,
+            type: "system",
+            title: "命理師申請結果通知",
+            content: `您申請成為命理師的請求未獲核准。${input.adminNote ? `管理員備註：${input.adminNote}` : ""}如有疑問請聯繫管理員。`,
+            linkUrl: "/",
+          }).catch(() => {});
+        }
+      }
+
+      return { success: true, status: newStatus };
     }),
 });

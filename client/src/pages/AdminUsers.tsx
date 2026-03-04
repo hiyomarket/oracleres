@@ -541,6 +541,7 @@ export default function AdminUsers() {
   const [planFilter, setPlanFilter] = useState("all");
   const [lifePathFilter, setLifePathFilter] = useState("all");
   const [lastActiveFilter, setLastActiveFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
   // 動態載入方案列表
   const { data: plansData } = trpc.businessHub.listPlans.useQuery();
   const [expandedUserId, setExpandedUserId] = useState<number | null>(null);
@@ -628,6 +629,7 @@ export default function AdminUsers() {
       lifePathNumber: lifePathFilter === "all" ? undefined : Number(lifePathFilter),
       lastActiveFilter: lastActiveFilter === "all" ? undefined : lastActiveFilter as "7d" | "30d" | "90d" | "inactive90d",
       searchName: debouncedSearch || undefined,
+      roleFilter: roleFilter === "all" ? undefined : roleFilter as "user" | "expert" | "admin",
     },
     {}
   );
@@ -674,7 +676,7 @@ export default function AdminUsers() {
         )}
         {/* 笛選器 */}
         <div className="bg-slate-800/50 rounded-xl p-4 mb-5 border border-slate-700/50">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <Input
               placeholder="搜尋名稱..."
               value={searchName}
@@ -716,6 +718,17 @@ export default function AdminUsers() {
                     {o.label}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+            <Select value={roleFilter} onValueChange={handleFilterChange(setRoleFilter)}>
+              <SelectTrigger className="bg-slate-900/60 border-slate-700 text-slate-200 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-slate-700">
+                <SelectItem value="all" className="text-slate-200 focus:bg-slate-800">全部角色</SelectItem>
+                <SelectItem value="user" className="text-slate-200 focus:bg-slate-800">一般用戶</SelectItem>
+                <SelectItem value="expert" className="text-slate-200 focus:bg-slate-800">⭐ 命理師</SelectItem>
+                <SelectItem value="admin" className="text-slate-200 focus:bg-slate-800">🛡️ 管理員</SelectItem>
               </SelectContent>
             </Select>
           </div>

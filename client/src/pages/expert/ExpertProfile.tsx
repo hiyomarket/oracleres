@@ -10,9 +10,12 @@ import { toast } from "sonner";
 import { User, Tag, Globe, Save, X, Plus } from "lucide-react";
 
 const SPECIALTY_OPTIONS = [
-  "紫微斗數", "八字命理", "塔羅牌", "占星", "風水", "姓名學",
+  "紫微斗數", "八字命理", "塔羅占卜", "占星", "風水", "姓名學",
   "手相", "面相", "奇門遁甲", "六爻", "梅花易數", "數字命理",
   "靈擺", "水晶", "天使牌卡", "催眠", "前世今生", "靈魂解讀",
+  "陰陽宅開運", "生命靈數", "塔羅牌", "威卡牌", "靈歌治療",
+  "星座命盤", "氣場調理", "周易占卜", "天干地支", "後天八卦",
+  "靈數學", "靈氣消除", "山海經", "靈歌治療",
 ];
 
 export default function ExpertProfile() {
@@ -147,7 +150,7 @@ export default function ExpertProfile() {
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground mb-3">選擇您擅長的領域（可多選）</p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mb-4">
               {SPECIALTY_OPTIONS.map((s) => (
                 <button
                   key={s}
@@ -161,6 +164,61 @@ export default function ExpertProfile() {
                   {s}
                 </button>
               ))}
+            </div>
+            {/* 自訂標籤輸入 */}
+            <div className="border-t border-border/50 pt-3">
+              <p className="text-xs text-muted-foreground mb-2">找不到您的領域？手動新增標籤</p>
+              <div className="flex gap-2">
+                <Input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && tagInput.trim()) {
+                      e.preventDefault();
+                      const newTag = tagInput.trim();
+                      if (!form.specialties.includes(newTag)) {
+                        setForm((f) => ({ ...f, specialties: [...f.specialties, newTag] }));
+                      }
+                      setTagInput("");
+                    }
+                  }}
+                  placeholder="輸入自訂領域名稱，按 Enter 新增"
+                  className="flex-1 h-8 text-sm"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-3 border-amber-500/40 text-amber-400 hover:bg-amber-500/10 bg-transparent"
+                  onClick={() => {
+                    const newTag = tagInput.trim();
+                    if (newTag && !form.specialties.includes(newTag)) {
+                      setForm((f) => ({ ...f, specialties: [...f.specialties, newTag] }));
+                    }
+                    setTagInput("");
+                  }}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+              {/* 已選標籤列表（包含自訂） */}
+              {form.specialties.filter((s) => !SPECIALTY_OPTIONS.includes(s)).length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {form.specialties.filter((s) => !SPECIALTY_OPTIONS.includes(s)).map((s) => (
+                    <Badge
+                      key={s}
+                      className="bg-teal-500/20 text-teal-300 border-teal-500/30 border text-xs pr-1 gap-1"
+                    >
+                      {s}
+                      <button
+                        onClick={() => setForm((f) => ({ ...f, specialties: f.specialties.filter((x) => x !== s) }))}
+                        className="hover:text-red-400 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -1185,3 +1185,22 @@ export const reviews = mysqlTable("reviews", {
 });
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = typeof reviews.$inferInsert;
+
+// ─── 命理師申請 ──────────────────────────────────────────────────────────────
+export const expertApplications = mysqlTable("expert_applications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  // 申請者填寫的公開名稱
+  publicName: varchar("publicName", { length: 100 }).notNull(),
+  // 申請理由/自我介紹
+  motivation: text("motivation"),
+  // 申請狀態：pending=待審核, approved=已核准, rejected=已拒絕
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).notNull().default("pending"),
+  // 管理員備註
+  adminNote: text("adminNote"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ExpertApplication = typeof expertApplications.$inferSelect;
+export type InsertExpertApplication = typeof expertApplications.$inferInsert;
