@@ -641,10 +641,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                 登入
               </a>
             ) : (
-              <>
-                <PointsBadge />
-                <UserMenu user={{ ...user, planName: (meData as { planName?: string | null; role?: string | null } | null)?.planName ?? null, role: (meData as { role?: string | null } | null)?.role ?? null }} />
-              </>
+              <UserMenu user={{ ...user, planName: (meData as { planName?: string | null; role?: string | null } | null)?.planName ?? null, role: (meData as { role?: string | null } | null)?.role ?? null }} />
             )}
           </div>
         </div>
