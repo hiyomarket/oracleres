@@ -214,6 +214,40 @@ export const coinsRouter = router({
   }),
 
   /**
+   * 管理員：查詢所有功能的天命幣定價（含詳細資訊，供後台管理頁面使用）
+   */
+  getFeaturePricingAdmin: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    return db
+      .select({
+        id: features.id,
+        name: features.name,
+        coinCostPerUse: features.coinCostPerUse,
+      })
+      .from(features)
+      .orderBy(features.coinCostPerUse);
+  }),
+
+  /**
+   * 管理員：查詢所有方案的贈幣設定
+   */
+  getPlansWithBonusCoins: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    return db
+      .select({
+        id: plans.id,
+        name: plans.name,
+        price: plans.price,
+        firstSubscriptionBonusCoins: plans.firstSubscriptionBonusCoins,
+        monthlyRenewalBonusCoins: plans.monthlyRenewalBonusCoins,
+      })
+      .from(plans)
+      .orderBy(plans.price);
+  }),
+
+  /**
    * 充值天命幣（金流預留口）
    * 目前返回「即將開放」，等金流串接後替換為實際邏輯
    */

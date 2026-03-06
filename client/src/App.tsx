@@ -25,6 +25,7 @@ import WbcPage from "./pages/WbcPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import FeatureStore from "./pages/FeatureStore";
 import AdminFeatureStore from "./pages/AdminFeatureStore";
+import AdminDestinyShop from "./pages/AdminDestinyShop";
 import AdminBanners from "./pages/AdminBanners";
 import AdminExperts from "./pages/AdminExperts";
 import ExpertMarket from "./pages/ExpertMarket";
@@ -68,6 +69,7 @@ function Router() {
         <Route path={"/notifications"} component={NotificationsPage} />
         <Route path={"/feature-store"} component={FeatureStore} />
         <Route path={"/admin/feature-store"} component={AdminFeatureStore} />
+        <Route path={"/admin/destiny-shop"} component={AdminDestinyShop} />
         <Route path={"/admin/banners"} component={AdminBanners} />
         <Route path={"/outfit"} component={OutfitPage} />
         <Route path={"/wardrobe"} component={WardrobePage} />

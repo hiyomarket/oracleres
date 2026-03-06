@@ -583,34 +583,25 @@ export default function AdminMarketing() {
           </CardContent>
         </Card>
 
-        {/* 問卜費用控制 */}
-        <Card className="bg-slate-900 border-slate-700">
+        {/* 問卜費用控制 — 已移至天命小舖管理 */}
+        <Card className="bg-slate-900 border-amber-500/20">
           <CardHeader className="pb-3">
-            <CardTitle className="text-amber-300 text-base">🔮 問卜費用設定</CardTitle>
-            <CardDescription className="text-slate-400 text-sm">設定 /divination 頁面每次問卜所需積分</CardDescription>
+            <CardTitle className="text-amber-300 text-base">🪙 AI 功能天命幣費用設定</CardTitle>
+            <CardDescription className="text-slate-400 text-sm">此功能已統一移至「天命小舖管理」頁面集中管理</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <span className="text-2xl">🪙</span>
               <div className="flex-1">
-                <Label className="text-slate-300 text-sm">每次問卜費用（積分）</Label>
-                <div className="text-xs text-slate-500 mb-1">目前設定：{divinationCostData?.cost ?? 30} 點積分</div>
-                <Input
-                  type="number" min="1" max="1000"
-                  placeholder={String(divinationCostData?.cost ?? 30)}
-                  value={divinationCostInput}
-                  onChange={e => setDivinationCostInput(e.target.value)}
-                  className="bg-slate-800 border-slate-600 text-white max-w-xs"
-                />
+                <p className="text-sm text-amber-300 font-medium">已移至天命小舖管理</p>
+                <p className="text-xs text-slate-400 mt-0.5">問卜、深度解讀、穿搞揃描、天命菜單等所有 AI 功能的天命幣費用，現在在天命小舖管理頁面統一設定</p>
               </div>
-              <Button
-                onClick={() => setDivinationCost.mutate({ cost: Number(divinationCostInput || divinationCostData?.cost || 30) })}
-                disabled={setDivinationCost.isPending || !divinationCostInput}
-                className="bg-amber-600 hover:bg-amber-500 text-black font-semibold shrink-0"
-              >
-                {setDivinationCost.isPending ? "儲存中..." : "儲存費用"}
-              </Button>
+              <a href="/admin/destiny-shop">
+                <Button size="sm" className="bg-amber-600 hover:bg-amber-500 text-black font-semibold shrink-0">
+                  前往設定 →
+                </Button>
+              </a>
             </div>
-            <div className="mt-2 text-xs text-slate-500">⚠️ 修改後即時生效，影響所有用戶的問卜費用</div>
           </CardContent>
         </Card>
       </div>

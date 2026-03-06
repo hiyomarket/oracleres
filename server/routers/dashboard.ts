@@ -23,6 +23,9 @@ import {
   wealthJournal,
   featureRedemptions,
   currencyExchangeLogs,
+  userSubscriptions,
+  plans,
+  features,
 } from "../../drizzle/schema";
 import { eq, desc, and, sql, gte, lte, isNotNull, or, like, count } from "drizzle-orm";
 
@@ -58,8 +61,9 @@ export const dashboardRouter = router({
       totalPointsGrantedRows,
       totalPointsSpentRows,
       todayActiveRows,
-      totalCoinsGrantedRows,
-      avgCoinsRows,
+      totalCoinsSpentRows,
+      totalCoinsTopupRows,
+      avgCoinsBalanceRows,
     ] = await Promise.all([
       // 總用戶數
       db.select({ count: sql<number>`COUNT(*)` }).from(users),
@@ -71,16 +75,18 @@ export const dashboardRouter = router({
       db.select({ count: sql<number>`COUNT(*)` })
         .from(users)
         .where(gte(users.createdAt, weekAgo)),
-      // 方案分佈
+      // 方案分佈（從 user_subscriptions 查詢，加入 plans 表取得方案名稱）
       db.select({
-        planId: users.planId,
+        planId: userSubscriptions.planId,
         count: sql<number>`COUNT(*)`,
-      }).from(users).groupBy(users.planId),
-      // 總發放積分
+      }).from(userSubscriptions)
+        .where(isNotNull(userSubscriptions.planId))
+        .groupBy(userSubscriptions.planId),
+      // 總發放天命幣（admin_grant + top-up + plan_bonus）
       db.select({ total: sql<number>`COALESCE(SUM(amount), 0)` })
         .from(pointsTransactions)
         .where(gte(pointsTransactions.amount, 1)),
-      // 總消耗積分
+      // 總消耗天命幣（spend）
       db.select({ total: sql<number>`COALESCE(SUM(ABS(amount)), 0)` })
         .from(pointsTransactions)
         .where(lte(pointsTransactions.amount, -1)),
@@ -88,12 +94,16 @@ export const dashboardRouter = router({
       db.select({ count: sql<number>`COUNT(DISTINCT userId)` })
         .from(oracleSessions)
         .where(gte(oracleSessions.createdAt, todayStart)),
-      // 累積發放遊戲幣（透過兑換獲得的）
-      db.select({ total: sql<number>`COALESCE(SUM(gameCoinsAmount), 0)` })
-        .from(currencyExchangeLogs)
-        .where(gte(currencyExchangeLogs.gameCoinsAmount, 1)),
-      // 用戶平均遊戲幣
-      db.select({ avg: sql<number>`COALESCE(AVG(gameCoins), 0)` }).from(users),
+      // 天命幣消耗總量（spend 類型）
+      db.select({ total: sql<number>`COALESCE(SUM(ABS(amount)), 0)` })
+        .from(pointsTransactions)
+        .where(and(lte(pointsTransactions.amount, -1), sql`type = 'spend'`)),
+      // 天命幣充値總量（top-up 類型）
+      db.select({ total: sql<number>`COALESCE(SUM(amount), 0)` })
+        .from(pointsTransactions)
+        .where(sql`type = 'top-up'`),
+      // 用戶平均天命幣餘額
+      db.select({ avg: sql<number>`COALESCE(AVG(pointsBalance), 0)` }).from(users),
     ]);
 
     const totalUsers = Number(totalUsersRows[0]?.count ?? 0);
@@ -103,16 +113,20 @@ export const dashboardRouter = router({
     const activatedUsers = Math.min(totalUsers, activatedByInvite + Number(adminCount[0]?.count ?? 0));
     const newUsersThisWeek = Number(newUsersThisWeekRows[0]?.count ?? 0);
     const todayActive = Number(todayActiveRows[0]?.count ?? 0);
-    const totalPointsGranted = Number(totalPointsGrantedRows[0]?.total ?? 0);
-    const totalPointsSpent = Number(totalPointsSpentRows[0]?.total ?? 0);
-    const totalCoinsGranted = Number(totalCoinsGrantedRows[0]?.total ?? 0);
-    const avgCoinsPerUser = Math.round(Number(avgCoinsRows[0]?.avg ?? 0));
+    const totalCoinsGranted = Number(totalPointsGrantedRows[0]?.total ?? 0);
+    const totalCoinsSpent = Number(totalPointsSpentRows[0]?.total ?? 0);
+    const totalAiCoinsSpent = Number(totalCoinsSpentRows[0]?.total ?? 0);
+    const totalCoinsTopup = Number(totalCoinsTopupRows[0]?.total ?? 0);
+    const avgCoinsBalance = Math.round(Number(avgCoinsBalanceRows[0]?.avg ?? 0));
 
-    // 方案分佈轉為物件
-    const planDist: Record<string, number> = { basic: 0, advanced: 0, professional: 0 };
+    // 方案分佈：從 user_subscriptions 查詢，動態對齊實際方案
+    const planDist: Record<string, number> = {};
     for (const row of planDistRows) {
       if (row.planId) planDist[row.planId] = Number(row.count);
     }
+
+    // 取得所有方案資訊（用於前端顯示方案名稱）
+    const plansInfo = await db.select({ id: plans.id, name: plans.name }).from(plans);
 
     return {
       totalUsers,
@@ -120,10 +134,12 @@ export const dashboardRouter = router({
       newUsersThisWeek,
       todayActive,
       planDist,
-      totalPointsGranted,
-      totalPointsSpent,
+      plansInfo,
       totalCoinsGranted,
-      avgCoinsPerUser,
+      totalCoinsSpent,
+      totalAiCoinsSpent,
+      totalCoinsTopup,
+      avgCoinsBalance,
     };
   }),
 
@@ -438,14 +454,19 @@ export const dashboardRouter = router({
       db.select({ c: sql<number>`COUNT(*)` }).from(wealthJournal).where(gte(wealthJournal.createdAt, sevenDaysAgo)),
       db.select({ c: sql<number>`COUNT(*)` }).from(featureRedemptions).where(gte(featureRedemptions.createdAt, thirtyDaysAgo)),
     ]);
+    // 取得 AI 功能的天命幣費用（用於估算消耗）
+    const featurePricing = await db.select({ id: features.id, coinCostPerUse: features.coinCostPerUse }).from(features);
+    const pricingMap: Record<string, number> = {};
+    for (const f of featurePricing) pricingMap[f.id] = f.coinCostPerUse ?? 0;
+
     const rows = [
-      { feature: '擲筊問卦', icon: '🎋', total30d: Number(oT[0]?.c ?? 0), total7d: Number(o7[0]?.c ?? 0) },
-      { feature: '補運樂透', icon: '🎰', total30d: Number(lT[0]?.c ?? 0), total7d: Number(l7[0]?.c ?? 0) },
-      { feature: '刮刮樂日誌', icon: '🎫', total30d: Number(sT[0]?.c ?? 0), total7d: Number(s7[0]?.c ?? 0) },
-      { feature: '擲筊問卦（進階）', icon: '🔮', total30d: Number(dT[0]?.c ?? 0), total7d: Number(d7[0]?.c ?? 0) },
-      { feature: '世界盃競猜', icon: '⚽', total30d: Number(wbcT[0]?.c ?? 0), total7d: Number(wbc7[0]?.c ?? 0) },
-      { feature: '財富日記', icon: '💰', total30d: Number(wjT[0]?.c ?? 0), total7d: Number(wj7[0]?.c ?? 0) },
-      { feature: '功能兌換', icon: '🛒', total30d: Number(frT[0]?.c ?? 0), total7d: 0 },
+      { feature: '擲筊問卦', icon: '🍋', featureId: 'oracle', total30d: Number(oT[0]?.c ?? 0), total7d: Number(o7[0]?.c ?? 0), coinCostPerUse: pricingMap['oracle'] ?? 0 },
+      { feature: '補運樂透', icon: '🍰', featureId: 'lottery', total30d: Number(lT[0]?.c ?? 0), total7d: Number(l7[0]?.c ?? 0), coinCostPerUse: pricingMap['lottery'] ?? 0 },
+      { feature: '刈刈樂日誌', icon: '🎫', featureId: 'weekly', total30d: Number(sT[0]?.c ?? 0), total7d: Number(s7[0]?.c ?? 0), coinCostPerUse: pricingMap['weekly'] ?? 0 },
+      { feature: '天命問卜（進階）', icon: '🔮', featureId: 'warroom_divination', total30d: Number(dT[0]?.c ?? 0), total7d: Number(d7[0]?.c ?? 0), coinCostPerUse: pricingMap['warroom_divination'] ?? 0 },
+      { feature: 'WBC 賽事競猜', icon: '⚽', featureId: 'wbc', total30d: Number(wbcT[0]?.c ?? 0), total7d: Number(wbc7[0]?.c ?? 0), coinCostPerUse: 0 },
+      { feature: '財富日記', icon: '💰', featureId: 'wealth', total30d: Number(wjT[0]?.c ?? 0), total7d: Number(wj7[0]?.c ?? 0), coinCostPerUse: 0 },
+      { feature: '功能兑換', icon: '🛒', featureId: 'feature_store', total30d: Number(frT[0]?.c ?? 0), total7d: 0, coinCostPerUse: 0 },
     ].sort((a, b) => b.total30d - a.total30d);
     return rows;
   }),

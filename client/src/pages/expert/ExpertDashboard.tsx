@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import {
   Star, Briefcase, Calendar, MessageSquare, TrendingUp,
-  Clock, CheckCircle, AlertCircle, User, ChevronRight
+  Clock, CheckCircle, AlertCircle, User, ChevronRight,
+  CreditCard, Zap
 } from "lucide-react";
 
 export default function ExpertDashboard() {
@@ -181,6 +182,28 @@ export default function ExpertDashboard() {
               </CardContent>
             </Card>
           </Link>
+        </div>
+
+        {/* 金流串接預留提示 */}
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 flex items-start gap-3">
+          <div className="w-9 h-9 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0 mt-0.5">
+            <CreditCard className="w-5 h-5 text-amber-400" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-semibold text-amber-400">線上金流付款 — 即將開放</p>
+              <span className="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded-full">開發中</span>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              目前付款方式為用戶手動上傳匯款憑證，由您確認後完成訂單。
+              系統即將整合線上金流（信用卡、轉帳），屆時付款流程將全自動化，
+              收款記錄也會同步顯示於此儀表板。
+            </p>
+            <div className="flex items-center gap-2 mt-2">
+              <Zap className="w-3 h-3 text-amber-400" />
+              <span className="text-[10px] text-amber-400/70">金流串接完成後，此區塊將自動升級為收入統計面板</span>
+            </div>
+          </div>
         </div>
 
         {/* 最近訂單 */}

@@ -1,13 +1,13 @@
 /**
  * AdminDashboard.tsx
- * 管理員儀表板 — 全面升級版
- * - KPI 卡片：用戶、活躍、積分、遊戲幣
- * - 功能使用頻率統計（近 30 天 / 近 7 天）
- * - 24 小時活躍時段分析
- * - 方案分佈
- * - 快速操作入口
+ * 管理員儀表板 — v9.1 鳳凰計畫升級版
+ * - KPI 卡片：用戶統計 + 天命幣流通
+ * - 功能使用頻率統計（含天命幣消耗估算）
+ * - 方案分佈（從 user_subscriptions 動態查詢）
+ * - 天命幣流通統計（取代快速操作）
+ * - 24 小時活躍時段分析（保留，有實際數據）
  */
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -23,16 +23,8 @@ import {
   Cell,
 } from "recharts";
 
-const PLAN_LABELS: Record<string, string> = {
-  basic: "基礎",
-  advanced: "進階",
-  professional: "專業",
-};
-const PLAN_COLORS: Record<string, string> = {
-  basic: "#64748b",
-  advanced: "#f97316",
-  professional: "#a855f7",
-};
+// 動態顏色池（方案分佈用）
+const PLAN_COLOR_POOL = ["#f97316", "#a855f7", "#22d3ee", "#10b981", "#f59e0b", "#ef4444"];
 
 // ─── KPI 卡片 ─────────────────────────────────────────────────────────────────
 function KpiCard({
@@ -54,25 +46,31 @@ function KpiCard({
   );
 }
 
-// ─── 功能使用頻率列 ───────────────────────────────────────────────────────────
+// ─── 功能使用頻率列（含天命幣消耗估算）─────────────────────────────────────
 function FeatureUsageRow({
-  icon, feature, total30d, total7d, maxVal,
+  icon, feature, total30d, total7d, maxVal, coinCostPerUse,
 }: {
-  icon: string; feature: string; total30d: number; total7d: number; maxVal: number;
+  icon: string; feature: string; total30d: number; total7d: number; maxVal: number; coinCostPerUse: number;
 }) {
   const pct30 = maxVal > 0 ? (total30d / maxVal) * 100 : 0;
   const trend = total30d > 0 ? Math.round((total7d / total30d) * 100 * (30 / 7)) : 0;
   const trendColor = trend >= 100 ? "text-emerald-400" : trend >= 60 ? "text-amber-400" : "text-slate-500";
+  const estimatedCoins = total30d * coinCostPerUse;
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-slate-700/30 last:border-0">
       <span className="text-xl w-7 shrink-0 text-center">{icon}</span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-sm text-slate-200 font-medium">{feature}</span>
-          <div className="flex items-center gap-3 text-xs shrink-0">
+          <div className="flex items-center gap-3 text-xs shrink-0 flex-wrap justify-end">
             <span className="text-slate-400">30天: <span className="text-slate-200 font-semibold">{total30d.toLocaleString()}</span></span>
             <span className="text-slate-500">7天: <span className="text-slate-300">{total7d.toLocaleString()}</span></span>
             <span className={`font-semibold ${trendColor}`}>{trend}%</span>
+            {coinCostPerUse > 0 && (
+              <span className="text-amber-400/80 font-medium">
+                🪙 ~{estimatedCoins.toLocaleString()}
+              </span>
+            )}
           </div>
         </div>
         <div className="h-1.5 bg-slate-700/60 rounded-full overflow-hidden">
@@ -110,15 +108,23 @@ export default function AdminDashboard() {
   }
   if (!user || user.role !== "admin") return null;
 
+  // 方案分佈：動態從 plansInfo 取得名稱
   const planDist = kpis?.planDist ?? {};
+  const plansInfo = kpis?.plansInfo ?? [];
   const totalPlanUsers = Object.values(planDist).reduce((a, b) => a + b, 0);
+
+  // 功能使用頻率
   const maxFeatureUsage = Math.max(...(featureUsage ?? []).map(f => f.total30d), 1);
 
-  const HOUR_NAMES = ["子","丑","丑","寅","寅","卯","卯","辰","辰","巳","巳","午","午","未","未","申","申","酉","酉","戌","戌","亥","亥","子"];
+  // 天命幣流通率
+  const totalGranted = kpis?.totalCoinsGranted ?? 0;
+  const totalSpent = kpis?.totalCoinsSpent ?? 0;
+  const circulationRate = totalGranted > 0 ? Math.round((totalSpent / totalGranted) * 100) : 0;
+
+  // 24小時圖表數據
   const chartData = (hourlyData ?? []).map(d => ({
     ...d,
     label: `${d.hour}時`,
-    hourName: HOUR_NAMES[d.hour],
     total: (d.oracle ?? 0) + (d.lottery ?? 0),
   }));
 
@@ -141,9 +147,9 @@ export default function AdminDashboard() {
                 👤 用戶管理
               </button>
             </Link>
-            <Link href="/admin/user-groups">
-              <button className="text-xs bg-slate-700/60 hover:bg-slate-700 border border-slate-600/50 text-slate-300 px-3 py-1.5 rounded-lg transition-colors">
-                👥 分組管理
+            <Link href="/admin/destiny-shop">
+              <button className="text-xs bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-400 px-3 py-1.5 rounded-lg transition-colors">
+                🪙 天命小舖
               </button>
             </Link>
           </div>
@@ -158,16 +164,17 @@ export default function AdminDashboard() {
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <KpiCard label="總用戶數" value={kpis?.totalUsers ?? 0} unit="人" color="text-amber-400" icon="👥" />
-              <KpiCard label="已啟用用戶" value={kpis?.activatedUsers ?? 0} unit="人" color="text-emerald-400" icon="✅" />
               <KpiCard label="本週新增" value={kpis?.newUsersThisWeek ?? 0} unit="人" color="text-sky-400" icon="🆕" />
               <KpiCard label="今日活躍" value={kpis?.todayActive ?? 0} unit="人" color="text-violet-400" icon="⚡" />
+              <KpiCard label="用戶平均天命幣" value={kpis?.avgCoinsBalance ?? 0} unit="枚/人" color="text-amber-300" icon="🪙" />
             </div>
 
-            {/* ── 第二列：積分 & 遊戲幣 ── */}
+            {/* ── 第二列：天命幣流通 KPI ── */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <KpiCard label="累積發放積分" value={kpis?.totalPointsGranted ?? 0} unit="分" color="text-amber-400" icon="🌟" />
-              <KpiCard label="累積消耗積分" value={kpis?.totalPointsSpent ?? 0} unit="分" color="text-rose-400" icon="💸" />              <KpiCard label="累積發放遊戲幣" value={kpis?.totalCoinsGranted ?? 0} unit="枚" color="text-purple-400" icon="🎮" sub="（歷史累計）" />
-              <KpiCard label="用戶平均遊戲幣" value={kpis?.avgCoinsPerUser ?? 0} unit="枚/人" color="text-pink-400" icon="💎" />
+              <KpiCard label="累積發放天命幣" value={kpis?.totalCoinsGranted ?? 0} unit="枚" color="text-emerald-400" icon="✨" sub="（歷史累計）" />
+              <KpiCard label="累積消耗天命幣" value={kpis?.totalCoinsSpent ?? 0} unit="枚" color="text-rose-400" icon="💸" />
+              <KpiCard label="AI 功能消耗" value={kpis?.totalAiCoinsSpent ?? 0} unit="枚" color="text-purple-400" icon="🤖" sub="（AI 計費）" />
+              <KpiCard label="充值總量" value={kpis?.totalCoinsTopup ?? 0} unit="枚" color="text-cyan-400" icon="💳" sub="（付費充值）" />
             </div>
           </>
         )}
@@ -180,7 +187,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-sm font-semibold text-slate-200">功能使用頻率</h2>
-                <p className="text-xs text-slate-500 mt-0.5">各功能近 30 天使用次數排行，右側 % 為 7 天趨勢</p>
+                <p className="text-xs text-slate-500 mt-0.5">各功能近 30 天使用次數排行，🪙 為預估天命幣消耗</p>
               </div>
               <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/30">近 30 天</span>
             </div>
@@ -200,38 +207,42 @@ export default function AdminDashboard() {
                     total30d={f.total30d}
                     total7d={f.total7d}
                     maxVal={maxFeatureUsage}
+                    coinCostPerUse={f.coinCostPerUse ?? 0}
                   />
                 ))}
               </div>
             )}
           </div>
 
-          {/* ── 右側：方案分佈（2欄） ── */}
+          {/* ── 右側：方案分佈 + 天命幣流通統計（2欄） ── */}
           <div className="xl:col-span-2 space-y-4">
-            {/* 方案分佈 */}
+            {/* 方案分佈（動態） */}
             <div className="bg-slate-800/60 rounded-2xl p-5 border border-slate-700/50">
-              <h2 className="text-sm font-semibold text-slate-200 mb-4">方案分佈</h2>
+              <h2 className="text-sm font-semibold text-slate-200 mb-4">方案訂閱分佈</h2>
               {kpisLoading ? (
                 <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-12 bg-slate-700/40 rounded-lg animate-pulse" />)}</div>
+              ) : Object.keys(planDist).length === 0 ? (
+                <div className="text-center py-6 text-slate-500 text-xs">尚無訂閱用戶</div>
               ) : (
                 <div className="space-y-3">
-                  {["basic", "advanced", "professional"].map(planId => {
-                    const cnt = planDist[planId] ?? 0;
+                  {Object.entries(planDist).map(([planId, cnt], idx) => {
+                    const planName = plansInfo.find(p => p.id === planId)?.name ?? planId;
                     const pct = totalPlanUsers > 0 ? Math.round((cnt / totalPlanUsers) * 100) : 0;
+                    const color = PLAN_COLOR_POOL[idx % PLAN_COLOR_POOL.length];
                     return (
                       <div key={planId}>
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-2">
-                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: PLAN_COLORS[planId] }} />
-                            <span className="text-xs text-slate-300">{PLAN_LABELS[planId]}</span>
+                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
+                            <span className="text-xs text-slate-300">{planName}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold" style={{ color: PLAN_COLORS[planId] }}>{cnt}</span>
+                            <span className="text-sm font-bold" style={{ color }}>{cnt}</span>
                             <span className="text-xs text-slate-500">{pct}%</span>
                           </div>
                         </div>
                         <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: PLAN_COLORS[planId] }} />
+                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: color }} />
                         </div>
                       </div>
                     );
@@ -243,27 +254,45 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            {/* 快速操作 */}
+            {/* 天命幣流通統計 */}
             <div className="bg-slate-800/60 rounded-2xl p-5 border border-slate-700/50">
-              <h2 className="text-sm font-semibold text-slate-200 mb-3">快速操作</h2>
-              <div className="space-y-2">
-                {[
-                  { href: "/admin/users", icon: "👤", label: "帳號管理", desc: "查看用戶、調整積分與遊戲幣" },
-                  { href: "/admin/user-groups", icon: "👥", label: "分組管理", desc: "批量操作客群分組" },
-                  { href: "/admin/business-hub", icon: "💰", label: "商業中心", desc: "方案、訂閱與行銷活動" },
-                  { href: "/admin/feature-store", icon: "🛒", label: "功能兌換中心", desc: "管理可兌換功能方案" },
-                ].map(item => (
-                  <Link key={item.href} href={item.href}>
-                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-700/40 hover:bg-slate-700/70 border border-slate-700/30 hover:border-slate-600/50 cursor-pointer transition-all group">
-                      <span className="text-lg">{item.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-semibold text-slate-200 group-hover:text-amber-400 transition-colors">{item.label}</div>
-                        <div className="text-[10px] text-slate-500 truncate">{item.desc}</div>
+              <h2 className="text-sm font-semibold text-slate-200 mb-3">天命幣流通健康度</h2>
+              <div className="space-y-3">
+                {/* 流通率 */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs text-slate-400">整體流通率</span>
+                    <span className={`text-sm font-bold ${circulationRate >= 60 ? "text-emerald-400" : circulationRate >= 30 ? "text-amber-400" : "text-slate-500"}`}>
+                      {circulationRate}%
+                    </span>
+                  </div>
+                  <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-700"
+                      style={{ width: `${Math.min(circulationRate, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-600 mt-1">消耗 / 發放 × 100%</p>
+                </div>
+                {/* 快速導航 */}
+                <div className="pt-2 border-t border-slate-700/50 space-y-1.5">
+                  {[
+                    { href: "/admin/destiny-shop", icon: "🪙", label: "天命小舖管理", desc: "設定 AI 功能費用與方案贈幣" },
+                    { href: "/admin/users", icon: "👤", label: "帳號管理", desc: "查看用戶天命幣餘額" },
+                    { href: "/admin/business-hub", icon: "💰", label: "商業中心", desc: "方案訂閱與行銷活動" },
+                  ].map(item => (
+                    <Link key={item.href} href={item.href}>
+                      <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-slate-700/40 hover:bg-slate-700/70 border border-slate-700/30 hover:border-slate-600/50 cursor-pointer transition-all group">
+                        <span className="text-base">{item.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-semibold text-slate-200 group-hover:text-amber-400 transition-colors">{item.label}</div>
+                          <div className="text-[10px] text-slate-500 truncate">{item.desc}</div>
+                        </div>
+                        <span className="text-slate-600 group-hover:text-slate-400 text-xs">→</span>
                       </div>
-                      <span className="text-slate-600 group-hover:text-slate-400 transition-colors text-xs">→</span>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

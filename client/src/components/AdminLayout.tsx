@@ -50,9 +50,15 @@ const NAV_ITEMS = [
     desc: "娛樂城、WBC 賽事管理",
   },
   {
+    href: "/admin/destiny-shop",
+    icon: "🪙",
+    label: "天命小舖管理",
+    desc: "天命幣費用、方案贈幣設定",
+  },
+  {
     href: "/admin/feature-store",
     icon: "🎪",
-    label: "功能兌換中心",
+    label: "功能兑換中心",
     desc: "方案設定、訂單審核",
   },
   {
