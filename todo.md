@@ -2140,3 +2140,80 @@
 - [x] 修正作戰室每次重整都重新呼叫 LLM 的 Loading 問題（加入當日快取）
 - [x] /my-profile 新增性別必填欄位（資料庫 + 後端 + 前端）
 - [x] /admin/user-groups 新增成員 Modal 加入「全選」功能（全選/取消全選當前頁面用戶）
+
+## 天命聯盟大改版 v10.0
+
+### Schema 擴充
+- [ ] experts 表新增 slug（專屬網址）、bioHtml（HTML介紹）、profileImageUrl 確認
+- [ ] expert_availability 重構：改為時段制（startTime/endTime 代表可接受預約的時間範圍）
+- [ ] expert_calendar_events 新增（線下活動/課程公告，老師可在行事歷標記）
+- [ ] bookings 表新增 endTime（結束時間）、paymentMethod、paymentNote 欄位
+- [ ] 確認 private_messages 表已存在並可用
+
+### 後端 API 重建
+- [ ] expert.updateMyProfile 新增 slug、bioHtml 欄位
+- [ ] expert.getExpertBySlug 新增（用 slug 查詢，供前台 /experts/:slug 使用）
+- [ ] expert.listExperts 改為用 specialties 欄位篩選（非 tags）
+- [ ] expert.setAvailabilityRange 重建：老師設定可接受預約的時間範圍
+- [ ] expert.getAvailableTimeSlots：根據服務時長自動計算可選起始時間
+- [ ] expert.createBooking 重建：傳入 startTime + serviceId，自動計算 endTime
+- [ ] expert.createCalendarEvent / listCalendarEvents（線下活動管理）
+- [ ] expert.sendMessage / getMessages（訊息系統，限下單後）
+- [ ] expert.getBookingDetail（取得單一訂單詳情）
+
+### 師資後台升級
+- [ ] ExpertProfile：照片上傳（S3）
+- [ ] ExpertProfile：HTML 富文本編輯器（bioHtml 欄位，鎖定危險 CSS）
+- [ ] ExpertProfile：個人介紹文字排版（whitespace-pre-wrap）
+- [ ] ExpertProfile：slug 專屬網址設定欄位
+- [ ] ExpertServices：服務項目卡片化重設計
+- [ ] ExpertCalendar：行事歷月曆視圖重建（可視化時段 + 線下活動）
+- [ ] ExpertCalendar：時段範圍設定（設定 from-to 整段時間可預約）
+
+### 前台升級
+- [ ] /experts：篩選連動修正（用 specialties 欄位而非 tags）
+- [ ] /experts/:slug 路由新增（同時保留 /experts/:id 相容）
+- [ ] ExpertDetail：行事歷展示（月曆視圖，顯示可預約時段與活動）
+- [ ] ExpertDetail：預約流程重建（選服務→選日期→選起始時間→確認）
+- [ ] 下單後導向 /booking/:id 確認頁（非回到師資頁）
+
+### 訂單流程優化
+- [ ] /booking/:id 新訂單確認頁（訂單詳情 + 付款說明 + 上傳憑證）
+- [ ] /my-bookings 大改版（更豐富的訂單卡片，含付款狀態、聯絡按鈕）
+- [ ] 付款憑證上傳改為 15 天保留說明
+
+### 訊息互動功能
+- [ ] /messages/:bookingId 聊天室頁面（師生下單後可互動）
+- [ ] ExpertOrders 加入「回覆訊息」入口
+- [ ] /my-bookings 加入「聯絡老師」入口（限已確認訂單）
+
+## 天命聯盟大改版 v10.0
+
+- [x] 資料庫 Schema 擴充：experts 表加入 slug（專屬網址）、bioHtml（HTML 介紹）欄位
+- [x] 資料庫 Schema 擴充：expertCalendarEvents 表（行事歷活動：線下/線上/公告）
+- [x] 資料庫 Schema 擴充：expertAvailability 加入 endTime 欄位（時段制）
+- [x] 資料庫 Schema 擴充：bookings 加入 endTime、paymentMethod 欄位
+- [x] 後端 API：getExpertBySlug（透過 slug 查詢師資）
+- [x] 後端 API：listExpertCalendarEvents（公開行事歷活動查詢）
+- [x] 後端 API：行事歷活動 CRUD（createCalendarEvent、deleteCalendarEvent）
+- [x] 後端 API：getSystemSetting / adminUpdateSystemSetting（天命聯盟名稱可改）
+- [x] 後端 API：updateMyProfile 支援 slug、bioHtml、profileImageUrl 欄位
+- [x] 師資後台 /expert/profile：照片上傳功能（S3 儲存）
+- [x] 師資後台 /expert/profile：HTML 富文本編輯器（@uiw/react-codemirror）
+- [x] 師資後台 /expert/profile：slug 專屬網址設定
+- [x] 師資後台 /expert/services：服務項目卡片化設計
+- [x] 師資後台 /expert/calendar：全月曆格子視圖（可批次新增時段）
+- [x] 師資後台 /expert/calendar：行事歷活動管理（線下活動/線上活動/公告）
+- [x] 師資後台 /expert/calendar：時段制預約邏輯（老師設定時段，用戶選取後付款才佔位）
+- [x] 前台 /experts：篩選連動修正（specialties 欄位與 SPECIALTY_OPTIONS 同步）
+- [x] 前台 /experts：師資卡片升級（照片顯示、評分、標籤）
+- [x] 前台 /experts/:id：Tab 化設計（個人介紹/服務項目/行事曆/評價）
+- [x] 前台 /experts/:id：支援 slug 路由（/experts/my-slug）
+- [x] 前台 /experts/:id：bioHtml 渲染（prose 排版）
+- [x] 前台 /experts/:id：行事曆 Tab 顯示可預約時段與活動
+- [x] 前台 /experts/:id：服務選取後展開時段選擇，付款說明提示
+- [x] 前台 /my-bookings：全面美化（狀態色條、訂單詳情、操作按鈕）
+- [x] 前台 /my-bookings：付款說明 Dialog（ATM 轉帳說明、付款憑證上傳、15天保留提示）
+- [x] 前台 /messages：訂單專屬聊天室（師生下單後溝通，5秒輪詢）
+- [x] 257 項測試全部通過，TypeScript 零錯誤
+- [x] 儲存 v10.0 checkpoint

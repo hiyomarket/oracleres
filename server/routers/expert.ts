@@ -14,6 +14,8 @@ import {
   reviews,
   users,
   expertApplications,
+  expertCalendarEvents,
+  systemSettings,
 } from "../../drizzle/schema";
 import { eq, and, desc, asc, gte, lte, sql, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -70,6 +72,8 @@ export const expertRouter = router({
         publicName: z.string().min(1).max(100),
         title: z.string().max(200).optional(),
         bio: z.string().optional(),
+        bioHtml: z.string().optional(),
+        slug: z.string().max(100).regex(/^[a-z0-9-]*$/, "專屬網址只能包含小寫英文、數字和連字號").optional(),
         profileImageUrl: z.string().max(500).optional(),
         coverImageUrl: z.string().max(500).optional(),
         tags: z.array(z.string()).optional(),
@@ -84,6 +88,17 @@ export const expertRouter = router({
     .mutation(async ({ ctx, input }) => {
       requireExpertOrAdmin(ctx.user.role);
       const db = (await getDb())!;
+      // 檢查 slug 是否被其他人佔用
+      if (input.slug) {
+        const slugConflict = await db
+          .select({ id: experts.id, userId: experts.userId })
+          .from(experts)
+          .where(eq(experts.slug, input.slug))
+          .limit(1);
+        if (slugConflict.length > 0 && slugConflict[0].userId !== ctx.user.id) {
+          throw new TRPCError({ code: "CONFLICT", message: "此專屬網址已被使用，請改用其他名稱" });
+        }
+      }
       const existing = await db
         .select({ id: experts.id })
         .from(experts)
@@ -93,6 +108,8 @@ export const expertRouter = router({
         publicName: input.publicName,
         title: input.title,
         bio: input.bio,
+        bioHtml: input.bioHtml,
+        slug: input.slug || null,
         profileImageUrl: input.profileImageUrl,
         coverImageUrl: input.coverImageUrl,
         tags: input.tags ?? [],
@@ -104,7 +121,6 @@ export const expertRouter = router({
         paymentQrUrl: input.paymentQrUrl,
       };
       if (existing.length === 0) {
-        // 首次建立：admin 直接設為 active，一般專家需審核
         await db.insert(experts).values({
           userId: ctx.user.id,
           ...profileData,
@@ -117,6 +133,26 @@ export const expertRouter = router({
           .where(eq(experts.userId, ctx.user.id));
       }
       return { success: true };
+    }),
+
+  /** 上傳專家照片（封面或頭像）到 S3 */
+  uploadProfileImage: protectedProcedure
+    .input(z.object({
+      imageBase64: z.string(),
+      mimeType: z.string().default("image/jpeg"),
+      imageType: z.enum(["profile", "cover"]).default("profile"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const buffer = Buffer.from(input.imageBase64, "base64");
+      const ext = input.mimeType.split("/")[1] || "jpg";
+      const key = `expert-images/${expert.id}-${input.imageType}-${Date.now()}.${ext}`;
+      const { url } = await storagePut(key, buffer, input.mimeType);
+      const db = (await getDb())!;
+      const updateField = input.imageType === "profile" ? { profileImageUrl: url } : { coverImageUrl: url };
+      await db.update(experts).set(updateField).where(eq(experts.userId, ctx.user.id));
+      return { url, success: true };
     }),
 
   /** 取得當前專家的所有服務項目 */
@@ -440,23 +476,32 @@ export const expertRouter = router({
           title: experts.title,
           profileImageUrl: experts.profileImageUrl,
           tags: experts.tags,
+          specialties: experts.specialties,
+          slug: experts.slug,
+          priceMin: experts.priceMin,
+          priceMax: experts.priceMax,
           ratingAvg: experts.ratingAvg,
           ratingCount: experts.ratingCount,
         })
         .from(experts)
         .where(eq(experts.status, "active"))
         .orderBy(desc(experts.ratingAvg))
-        .limit(input.limit)
-        .offset(input.offset);
+        .limit(200); // 取足夠多再在應用層篩選
 
-      // 若有 tag 篩選，在應用層過濾（JSON 欄位）
+      // 若有 tag 篩選，同時比對 tags 和 specialties 欄位
+      let filtered = allExperts;
       if (input.tag) {
-        return allExperts.filter((e) => {
-          const tags = e.tags as string[] | null;
-          return tags && tags.includes(input.tag!);
+        filtered = allExperts.filter((e) => {
+          const tags = (e.tags as string[] | null) ?? [];
+          const specialties = (e.specialties as string[] | null) ?? [];
+          const combined = [...tags, ...specialties];
+          // 支援模糊比對：如果篩選項目是大類別，匹配小類別
+          return combined.some((t) =>
+            t.includes(input.tag!) || input.tag!.includes(t)
+          );
         });
       }
-      return allExperts;
+      return filtered.slice(input.offset, input.offset + input.limit);
     }),
 
   /** 公開：取得單一專家詳細資料 + 服務 + 未來可預約時段 */
@@ -498,6 +543,43 @@ export const expertRouter = router({
       return { expert, services, availSlots };
     }),
 
+  /** 公開：用 slug 查詢專家 */
+  getExpertBySlug: publicProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ input }) => {
+      const db = (await getDb())!;
+      const [expert] = await db
+        .select()
+        .from(experts)
+        .where(and(eq(experts.slug, input.slug), eq(experts.status, "active")))
+        .limit(1);
+      if (!expert) throw new TRPCError({ code: "NOT_FOUND", message: "找不到此專家" });
+      const now = new Date();
+      const oneMonthLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const [services, availSlots, calEvents] = await Promise.all([
+        db.select().from(expertServices)
+          .where(and(eq(expertServices.expertId, expert.id), eq(expertServices.isActive, 1)))
+          .orderBy(asc(expertServices.sortOrder)),
+        db.select().from(expertAvailability)
+          .where(and(
+            eq(expertAvailability.expertId, expert.id),
+            eq(expertAvailability.isBooked, 0),
+            gte(expertAvailability.startTime, now),
+            lte(expertAvailability.startTime, oneMonthLater)
+          ))
+          .orderBy(asc(expertAvailability.startTime)),
+        db.select().from(expertCalendarEvents)
+          .where(and(
+            eq(expertCalendarEvents.expertId, expert.id),
+            eq(expertCalendarEvents.isPublic, 1),
+            gte(expertCalendarEvents.eventDate, now)
+          ))
+          .orderBy(asc(expertCalendarEvents.eventDate))
+          .limit(20),
+      ]);
+      return { expert, services, availSlots, calEvents };
+    }),
+
   /** 用戶建立預約訂單 */
   createBooking: protectedProcedure
     .input(
@@ -528,12 +610,24 @@ export const expertRouter = router({
         throw new TRPCError({ code: "CONFLICT", message: "此時段已被預約或不存在" });
       }
 
+      // 取得服務時長以計算結束時間
+      const [service] = await db
+        .select({ durationMinutes: expertServices.durationMinutes })
+        .from(expertServices)
+        .where(eq(expertServices.id, input.serviceId))
+        .limit(1);
+
+      const endTime = service
+        ? new Date(slot.startTime.getTime() + service.durationMinutes * 60 * 1000)
+        : null;
+
       // 建立訂單
       const [result] = await db.insert(bookings).values({
         userId: ctx.user.id,
         expertId: input.expertId,
         serviceId: input.serviceId,
         bookingTime: slot.startTime,
+        endTime,
         status: "pending_payment",
         notes: input.notes,
       });
@@ -547,6 +641,51 @@ export const expertRouter = router({
         .where(eq(expertAvailability.id, input.availabilityId));
 
       return { bookingId, success: true };
+    }),
+
+  /** 用戶：取得單一訂單詳情 */
+  getBookingDetail: protectedProcedure
+    .input(z.object({ bookingId: z.number().int() }))
+    .query(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      const [booking] = await db
+        .select({
+          id: bookings.id,
+          expertId: bookings.expertId,
+          serviceId: bookings.serviceId,
+          bookingTime: bookings.bookingTime,
+          endTime: bookings.endTime,
+          status: bookings.status,
+          paymentProofUrl: bookings.paymentProofUrl,
+          paymentNote: bookings.paymentNote,
+          notes: bookings.notes,
+          createdAt: bookings.createdAt,
+          expertName: experts.publicName,
+          expertProfileImage: experts.profileImageUrl,
+          expertSlug: experts.slug,
+          expertPaymentQr: experts.paymentQrUrl,
+          serviceTitle: expertServices.title,
+          servicePrice: expertServices.price,
+          serviceDuration: expertServices.durationMinutes,
+        })
+        .from(bookings)
+        .leftJoin(experts, eq(bookings.expertId, experts.id))
+        .leftJoin(expertServices, eq(bookings.serviceId, expertServices.id))
+        .where(eq(bookings.id, input.bookingId))
+        .limit(1);
+      if (!booking) throw new TRPCError({ code: "NOT_FOUND", message: "找不到此訂單" });
+      // 確認是訂單的用戶或對應的專家
+      const [expertRecord] = await db
+        .select({ id: experts.id })
+        .from(experts)
+        .where(eq(experts.userId, ctx.user.id))
+        .limit(1);
+      const isOwner = booking.id && (
+        (await db.select({ userId: bookings.userId }).from(bookings).where(eq(bookings.id, input.bookingId)).limit(1))[0]?.userId === ctx.user.id ||
+        (expertRecord && booking.expertId === expertRecord.id)
+      );
+      if (!isOwner) throw new TRPCError({ code: "FORBIDDEN" });
+      return booking;
     }),
 
   /** 用戶上傳付款憑證 */
@@ -1006,6 +1145,103 @@ export const expertRouter = router({
       return { success: true };
     }),
 
+  // ── 行事歷活動管理 ─────────────────────────────────────────────────────────
+
+  /** 專家：建立行事歷活動 */
+  createCalendarEvent: protectedProcedure
+    .input(z.object({
+      title: z.string().min(1).max(200),
+      description: z.string().optional(),
+      eventDate: z.date(),
+      endDate: z.date().optional(),
+      eventType: z.enum(["offline", "online", "announcement"]).default("offline"),
+      location: z.string().max(300).optional(),
+      maxAttendees: z.number().int().optional(),
+      price: z.number().int().default(0),
+      isPublic: z.boolean().default(true),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      const [result] = await db.insert(expertCalendarEvents).values({
+        expertId: expert.id,
+        title: input.title,
+        description: input.description,
+        eventDate: input.eventDate,
+        endDate: input.endDate,
+        eventType: input.eventType,
+        location: input.location,
+        maxAttendees: input.maxAttendees,
+        price: input.price,
+        isPublic: input.isPublic ? 1 : 0,
+      });
+      return { id: (result as any).insertId, success: true };
+    }),
+
+  /** 專家：取得自己的行事歷活動 */
+  listMyCalendarEvents: protectedProcedure
+    .input(z.object({
+      year: z.number().int(),
+      month: z.number().int().min(1).max(12),
+    }))
+    .query(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await findExpert(ctx.user.id);
+      if (!expert) return [];
+      const db = (await getDb())!;
+      const startOfMonth = new Date(input.year, input.month - 1, 1);
+      const endOfMonth = new Date(input.year, input.month, 0, 23, 59, 59);
+      return db.select().from(expertCalendarEvents)
+        .where(and(
+          eq(expertCalendarEvents.expertId, expert.id),
+          gte(expertCalendarEvents.eventDate, startOfMonth),
+          lte(expertCalendarEvents.eventDate, endOfMonth)
+        ))
+        .orderBy(asc(expertCalendarEvents.eventDate));
+    }),
+
+  /** 專家：刪除行事歷活動 */
+  deleteCalendarEvent: protectedProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      await db.delete(expertCalendarEvents)
+        .where(and(eq(expertCalendarEvents.id, input.id), eq(expertCalendarEvents.expertId, expert.id)));
+      return { success: true };
+    }),
+
+  // ── 系統設定 ─────────────────────────────────────────────────────────────────
+
+  /** 公開：取得系統設定（如天命聯盟名稱） */
+  getSystemSetting: publicProcedure
+    .input(z.object({ key: z.string() }))
+    .query(async ({ input }) => {
+      const db = (await getDb())!;
+      const [setting] = await db
+        .select()
+        .from(systemSettings)
+        .where(eq(systemSettings.settingKey, input.key))
+        .limit(1);
+      return setting ?? null;
+    }),
+
+  /** 管理員：更新系統設定 */
+  adminUpdateSystemSetting: adminProcedure
+    .input(z.object({
+      key: z.string(),
+      value: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = (await getDb())!;
+      await db.insert(systemSettings)
+        .values({ settingKey: input.key, settingValue: input.value })
+        .onDuplicateKeyUpdate({ set: { settingValue: input.value } });
+      return { success: true };
+    }),
+
   /** 用戶：查詢自己的申請狀態 */
   getMyApplication: protectedProcedure.query(async ({ ctx }) => {
     const db = (await getDb())!;
@@ -1127,5 +1363,26 @@ export const expertRouter = router({
       }
 
       return { success: true, status: newStatus };
+    }),
+
+  /** 公開：取得特定專家的行事歷活動（前台展示用） */
+  listExpertCalendarEvents: publicProcedure
+    .input(z.object({
+      expertId: z.number().int(),
+      year: z.number().int(),
+      month: z.number().int().min(1).max(12),
+    }))
+    .query(async ({ input }) => {
+      const db = (await getDb())!;
+      const startOfMonth = new Date(input.year, input.month - 1, 1);
+      const endOfMonth = new Date(input.year, input.month, 0, 23, 59, 59);
+      return db.select().from(expertCalendarEvents)
+        .where(and(
+          eq(expertCalendarEvents.expertId, input.expertId),
+          eq(expertCalendarEvents.isPublic, 1),
+          gte(expertCalendarEvents.eventDate, startOfMonth),
+          lte(expertCalendarEvents.eventDate, endOfMonth)
+        ))
+        .orderBy(asc(expertCalendarEvents.eventDate));
     }),
 });

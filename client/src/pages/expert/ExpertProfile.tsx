@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ExpertLayout } from "@/components/ExpertLayout";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,8 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { User, Tag, Globe, Save, X, Plus } from "lucide-react";
+import {
+  User, Tag, Globe, Save, X, Plus, Camera, Code, Eye,
+  Link as LinkIcon, AlertCircle, CheckCircle2, Upload,
+} from "lucide-react";
 
 const SPECIALTY_OPTIONS = [
   "紫微斗數", "八字命理", "塔羅占卜", "占星", "風水", "姓名學",
@@ -18,43 +22,83 @@ const SPECIALTY_OPTIONS = [
   "靈數學", "靈氣消除", "山海經", "符咒開運",
 ];
 
-export default function ExpertProfile() {
+// 安全渲染 HTML（過濾危險屬性）
+function SafeHtml({ html }: { html: string }) {
+  // 移除 style 屬性中的 position/fixed/absolute 等危險 CSS
+  const sanitized = html
+    .replace(/style="[^"]*"/gi, (match) => {
+      const safe = match.replace(/(position|z-index|fixed|absolute|overflow|display\s*:\s*none)[^;"]*/gi, "");
+      return safe;
+    })
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/on\w+="[^"]*"/gi, "");
+  return (
+    <div
+      className="prose prose-invert prose-sm max-w-none"
+      dangerouslySetInnerHTML={{ __html: sanitized }}
+    />
+  );
+}
 
+export default function ExpertProfile() {
   const { data: profile, refetch } = trpc.expert.getMyProfile.useQuery();
   const upsertMutation = trpc.expert.updateMyProfile.useMutation({
-    onSuccess: () => {
-      toast("✅ 個人資料已更新");
-      refetch();
-    },
+    onSuccess: () => { toast.success("✅ 個人資料已更新"); refetch(); },
     onError: (e) => toast.error("更新失敗: " + e.message),
   });
+  const uploadImageMutation = trpc.expert.uploadProfileImage.useMutation({
+    onSuccess: (data, variables) => {
+      toast.success(variables.imageType === "profile" ? "頭像已更新" : "封面已更新");
+      refetch();
+    },
+    onError: (e) => toast.error("上傳失敗: " + e.message),
+  });
+
+  const profileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     publicName: "",
+    title: "",
     bio: "",
+    bioHtml: "",
+    slug: "",
     specialties: [] as string[],
     priceMin: 500,
     priceMax: 3000,
     languages: "中文",
     consultationModes: ["video"] as string[],
-    socialLinks: "",
   });
   const [tagInput, setTagInput] = useState("");
+  const [bioTab, setBioTab] = useState<"plain" | "html" | "preview">("plain");
+  const [slugStatus, setSlugStatus] = useState<"idle" | "ok" | "taken">("idle");
 
   useEffect(() => {
     if (profile) {
       setForm({
         publicName: profile.publicName || "",
+        title: profile.title || "",
         bio: profile.bio || "",
+        bioHtml: profile.bioHtml || "",
+        slug: profile.slug || "",
         specialties: (profile.specialties as string[]) || [],
         priceMin: profile.priceMin || 500,
         priceMax: profile.priceMax || 3000,
         languages: profile.languages || "中文",
         consultationModes: (profile.consultationModes as string[]) || ["video"],
-        socialLinks: profile.socialLinks ? JSON.stringify(profile.socialLinks) : "",
       });
     }
   }, [profile]);
+
+  const handleImageUpload = (type: "profile" | "cover", file: File) => {
+    if (file.size > 5 * 1024 * 1024) { toast.error("圖片不能超過 5MB"); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = (e.target?.result as string).split(",")[1];
+      uploadImageMutation.mutate({ imageBase64: base64, mimeType: file.type, imageType: type });
+    };
+    reader.readAsDataURL(file);
+  };
 
   const toggleSpecialty = (s: string) => {
     setForm((f) => ({
@@ -77,7 +121,10 @@ export default function ExpertProfile() {
   const handleSave = () => {
     upsertMutation.mutate({
       publicName: form.publicName,
+      title: form.title,
       bio: form.bio,
+      bioHtml: form.bioHtml,
+      slug: form.slug || undefined,
       specialties: form.specialties,
       priceMin: form.priceMin,
       priceMax: form.priceMax,
@@ -99,7 +146,7 @@ export default function ExpertProfile() {
 
   return (
     <ExpertLayout headerAction={saveBtn} pageTitle="個人品牌">
-      <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-4 md:space-y-6">
+      <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-5">
         <div className="hidden md:block">
           <h1 className="text-2xl font-bold">個人品牌編輯</h1>
           <p className="text-muted-foreground text-sm mt-1">設定您的公開形象，讓用戶認識您</p>
@@ -107,12 +154,96 @@ export default function ExpertProfile() {
 
         {/* 狀態提示 */}
         {profile && profile.status !== "active" && (
-          <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm">
-            ⏳ 您的資料正在審核中，審核通過後將公開顯示於專家市集
+          <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            您的資料正在審核中，審核通過後將公開顯示於天命聯盟
           </div>
         )}
 
-        {/* 基本資料 */}
+        {/* ── 照片區塊 ── */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Camera className="w-4 h-4" /> 個人照片
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-6 items-start">
+              {/* 頭像 */}
+              <div className="flex flex-col items-center gap-2">
+                <div className="relative w-24 h-24 rounded-full overflow-hidden bg-accent/50 border-2 border-border">
+                  {profile?.profileImageUrl ? (
+                    <img src={profile.profileImageUrl} alt="頭像" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-3xl text-muted-foreground">
+                      {form.publicName?.[0] || "?"}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => profileInputRef.current?.click()}
+                    className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center"
+                  >
+                    <Upload className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs h-7 px-2 bg-transparent"
+                  onClick={() => profileInputRef.current?.click()}
+                  disabled={uploadImageMutation.isPending}
+                >
+                  <Camera className="w-3 h-3 mr-1" /> 更換頭像
+                </Button>
+                <input
+                  ref={profileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && handleImageUpload("profile", e.target.files[0])}
+                />
+              </div>
+
+              {/* 封面 */}
+              <div className="flex-1 flex flex-col gap-2">
+                <div
+                  className="relative w-full h-28 rounded-lg overflow-hidden bg-gradient-to-br from-amber-900/30 to-stone-900/50 border border-border cursor-pointer group"
+                  onClick={() => coverInputRef.current?.click()}
+                >
+                  {profile?.coverImageUrl ? (
+                    <img src={profile.coverImageUrl} alt="封面" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                      點擊上傳封面圖片
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Upload className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs h-7 px-2 self-start bg-transparent"
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={uploadImageMutation.isPending}
+                >
+                  <Camera className="w-3 h-3 mr-1" /> 更換封面
+                </Button>
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && handleImageUpload("cover", e.target.files[0])}
+                />
+                <p className="text-xs text-muted-foreground">建議尺寸 1200×400，支援 JPG/PNG，最大 5MB</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── 基本資料 ── */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -120,28 +251,134 @@ export default function ExpertProfile() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">公開顯示名稱 *</label>
-              <Input
-                value={form.publicName}
-                onChange={(e) => setForm((f) => ({ ...f, publicName: e.target.value }))}
-                placeholder="例如：命理師 陳天命"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">公開顯示名稱 *</label>
+                <Input
+                  value={form.publicName}
+                  onChange={(e) => setForm((f) => ({ ...f, publicName: e.target.value }))}
+                  placeholder="例如：命理師 陳天命"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">頭銜/職稱</label>
+                <Input
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                  placeholder="例如：紫微斗數命理師 · 20年經驗"
+                />
+              </div>
             </div>
+
+            {/* 專屬網址 */}
             <div>
-              <label className="text-sm font-medium mb-1.5 block">個人介紹</label>
-              <Textarea
-                value={form.bio}
-                onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-                placeholder="介紹您的專業背景、服務理念和擅長領域…"
-                rows={5}
-              />
-              <p className="text-xs text-muted-foreground mt-1">{form.bio.length}/500 字</p>
+              <label className="text-sm font-medium mb-1.5 block flex items-center gap-1.5">
+                <LinkIcon className="w-3.5 h-3.5" /> 專屬網址（選填）
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
+                  /experts/
+                </span>
+                <div className="relative flex-1">
+                  <Input
+                    value={form.slug}
+                    onChange={(e) => {
+                      const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+                      setForm((f) => ({ ...f, slug: val }));
+                      setSlugStatus("idle");
+                    }}
+                    placeholder="your-name"
+                    className="pr-8"
+                  />
+                  {form.slug && slugStatus === "ok" && (
+                    <CheckCircle2 className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-green-400" />
+                  )}
+                  {form.slug && slugStatus === "taken" && (
+                    <X className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-red-400" />
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                只能使用小寫英文、數字和連字號（-），設定後用戶可用 /experts/your-name 找到您
+              </p>
+            </div>
+
+            {/* 個人介紹 */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium">個人介紹</label>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <button
+                    onClick={() => setBioTab("plain")}
+                    className={`px-2 py-0.5 rounded transition-colors ${bioTab === "plain" ? "bg-accent text-foreground" : "hover:text-foreground"}`}
+                  >
+                    純文字
+                  </button>
+                  <button
+                    onClick={() => setBioTab("html")}
+                    className={`px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${bioTab === "html" ? "bg-accent text-foreground" : "hover:text-foreground"}`}
+                  >
+                    <Code className="w-3 h-3" /> HTML
+                  </button>
+                  <button
+                    onClick={() => setBioTab("preview")}
+                    className={`px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${bioTab === "preview" ? "bg-accent text-foreground" : "hover:text-foreground"}`}
+                  >
+                    <Eye className="w-3 h-3" /> 預覽
+                  </button>
+                </div>
+              </div>
+
+              {bioTab === "plain" && (
+                <>
+                  <Textarea
+                    value={form.bio}
+                    onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+                    placeholder="介紹您的專業背景、服務理念和擅長領域…&#10;&#10;支援換行，文字會依段落顯示在頁面上"
+                    rows={6}
+                    className="resize-y"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">{form.bio.length}/1000 字 · 換行將被正確顯示</p>
+                </>
+              )}
+
+              {bioTab === "html" && (
+                <>
+                  <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2 mb-2 text-xs text-amber-400 flex items-start gap-1.5">
+                    <Code className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span>
+                      您可以使用 HTML 語法美化介紹頁面。<br />
+                      <strong>允許：</strong> &lt;h2&gt;、&lt;p&gt;、&lt;ul&gt;、&lt;li&gt;、&lt;strong&gt;、&lt;em&gt;、&lt;a&gt;、&lt;br&gt;、&lt;hr&gt;、&lt;img&gt;<br />
+                      <strong>限制：</strong> 不允許 &lt;script&gt; 及危險的 CSS 定位屬性（position、z-index 等）
+                    </span>
+                  </div>
+                  <Textarea
+                    value={form.bioHtml}
+                    onChange={(e) => setForm((f) => ({ ...f, bioHtml: e.target.value }))}
+                    placeholder={`<h2>關於我</h2>\n<p>我是一位擁有 20 年經驗的命理師...</p>\n<ul>\n  <li>專精紫微斗數</li>\n  <li>八字命理</li>\n</ul>`}
+                    rows={10}
+                    className="font-mono text-sm resize-y"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">HTML 介紹會優先顯示於您的頁面，若未填寫則顯示純文字介紹</p>
+                </>
+              )}
+
+              {bioTab === "preview" && (
+                <div className="min-h-[150px] rounded-lg border border-border p-4 bg-background">
+                  {form.bioHtml ? (
+                    <SafeHtml html={form.bioHtml} />
+                  ) : form.bio ? (
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{form.bio}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic">尚未填寫個人介紹</p>
+                  )}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* 專業領域 */}
+        {/* ── 專業領域 ── */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -149,7 +386,7 @@ export default function ExpertProfile() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground mb-3">選擇您擅長的領域（可多選）</p>
+            <p className="text-xs text-muted-foreground mb-3">選擇您擅長的領域（可多選），這些標籤將用於前台篩選</p>
             <div className="flex flex-wrap gap-2 mb-4">
               {SPECIALTY_OPTIONS.map((s) => (
                 <button
@@ -165,9 +402,8 @@ export default function ExpertProfile() {
                 </button>
               ))}
             </div>
-            {/* 自訂標籤輸入 */}
             <div className="border-t border-border/50 pt-3">
-              <p className="text-xs text-muted-foreground mb-2">找不到您的領域？手動新增標籤</p>
+              <p className="text-xs text-muted-foreground mb-2">找不到您的領域？手動新增</p>
               <div className="flex gap-2">
                 <Input
                   value={tagInput}
@@ -200,7 +436,6 @@ export default function ExpertProfile() {
                   <Plus className="w-3.5 h-3.5" />
                 </Button>
               </div>
-              {/* 已選標籤列表（包含自訂） */}
               {form.specialties.filter((s) => !SPECIALTY_OPTIONS.includes(s)).length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {form.specialties.filter((s) => !SPECIALTY_OPTIONS.includes(s)).map((s) => (
@@ -223,7 +458,7 @@ export default function ExpertProfile() {
           </CardContent>
         </Card>
 
-        {/* 服務設定 */}
+        {/* ── 服務設定 ── */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -261,10 +496,10 @@ export default function ExpertProfile() {
               <label className="text-sm font-medium mb-2 block">諮詢方式</label>
               <div className="flex gap-2 flex-wrap">
                 {[
-                  { key: "video", label: "視訊" },
-                  { key: "voice", label: "語音" },
-                  { key: "text", label: "文字" },
-                  { key: "in_person", label: "面對面" },
+                  { key: "video", label: "📹 視訊" },
+                  { key: "voice", label: "📞 語音" },
+                  { key: "text", label: "💬 文字" },
+                  { key: "in_person", label: "🤝 面對面" },
                 ].map((m) => (
                   <button
                     key={m.key}

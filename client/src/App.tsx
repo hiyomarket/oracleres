@@ -36,6 +36,7 @@ import ExpertServices from "./pages/expert/ExpertServices";
 import ExpertCalendar from "./pages/expert/ExpertCalendar";
 import ExpertBookings from "./pages/expert/ExpertOrders";
 import MyBookings from "./pages/MyBookings";
+import Messages from "./pages/Messages";
 import OutfitPage from "@/pages/OutfitPage";
 import WardrobePage from "@/pages/WardrobePage";
 import DietPage from "@/pages/DietPage";
@@ -81,6 +82,7 @@ function Router() {
         {/* Expert System Routes */}
         <Route path={"/experts"} component={ExpertMarket} />
         <Route path={"/experts/:id"} component={ExpertDetail} />
+        <Route path={"/messages"} component={Messages} />
         <Route path={"/expert/dashboard"} component={ExpertDashboard} />
         <Route path={"/expert/profile"} component={ExpertProfile} />
         <Route path={"/expert/services"} component={ExpertServices} />

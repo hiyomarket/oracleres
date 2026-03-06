@@ -1107,6 +1107,12 @@ export const experts = mysqlTable("experts", {
   priceMax: int("priceMax").default(0),
   // 收款 QR Code 圖片
   paymentQrUrl: varchar("paymentQrUrl", { length: 500 }),
+  // 【v10.0】專屬網址（slug），如 /experts/william
+  slug: varchar("slug", { length: 100 }).unique(),
+  // 【v10.0】HTML 格式的個人介紹（富文本）
+  bioHtml: text("bioHtml"),
+  // 【v10.0】後台自訂模塊名稱（如「天命聯盟」可改名）
+  sectionTitle: varchar("sectionTitle", { length: 100 }),
   // 累計評分平均分
   ratingAvg: decimal("ratingAvg", { precision: 3, scale: 2 }).default("0.00"),
   ratingCount: int("ratingCount").notNull().default(0),
@@ -1159,9 +1165,13 @@ export const bookings = mysqlTable("bookings", {
   expertId: int("expertId").notNull(),
   serviceId: int("serviceId").notNull(),
   bookingTime: timestamp("bookingTime").notNull(),
+  // 【v10.0】預約結束時間（自動依服務時長推算）
+  endTime: timestamp("endTime"),
   // 狀態： pending_payment=待付款, confirmed=已確認, completed=已完成, cancelled=已取消
   status: mysqlEnum("status", ["pending_payment", "confirmed", "completed", "cancelled"]).notNull().default("pending_payment"),
   paymentProofUrl: varchar("paymentProofUrl", { length: 500 }),
+  // 【v10.0】付款方式説明（如「轉帳、LINE Pay」）
+  paymentNote: text("paymentNote"),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -1216,3 +1226,38 @@ export const expertApplications = mysqlTable("expert_applications", {
 
 export type ExpertApplication = typeof expertApplications.$inferSelect;
 export type InsertExpertApplication = typeof expertApplications.$inferInsert;
+
+/**
+ * 專家行事歷活動表（線下課程/活動公告）
+ */
+export const expertCalendarEvents = mysqlTable("expert_calendar_events", {
+  id: int("id").autoincrement().primaryKey(),
+  expertId: int("expertId").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  eventDate: timestamp("eventDate").notNull(),
+  endDate: timestamp("endDate"),
+  // 活動類型：offline=線下活動, online=線上課程, announcement=公告
+  eventType: mysqlEnum("eventType", ["offline", "online", "announcement"]).notNull().default("offline"),
+  location: varchar("location", { length: 300 }),
+  maxAttendees: int("maxAttendees"),
+  price: int("price").default(0),
+  isPublic: tinyint("isPublic").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ExpertCalendarEvent = typeof expertCalendarEvents.$inferSelect;
+export type InsertExpertCalendarEvent = typeof expertCalendarEvents.$inferInsert;
+
+/**
+ * 系統設定表（可儲存如「天命聯盟」模塊名稱等全域設定）
+ */
+export const systemSettings = mysqlTable("system_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  settingKey: varchar("settingKey", { length: 100 }).notNull().unique(),
+  settingValue: text("settingValue").notNull(),
+  description: varchar("description", { length: 300 }),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SystemSetting = typeof systemSettings.$inferSelect;
+export type InsertSystemSetting = typeof systemSettings.$inferInsert;
