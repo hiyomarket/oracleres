@@ -309,6 +309,13 @@
       "when": 1772590872228,
       "tag": "0043_burly_turbo",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "5",
+      "when": 1772831320748,
+      "tag": "0044_true_golden_guardian",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,50 @@
+{
+  "query": "SELECT * FROM points_transactions LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT * FROM points_transactions LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "userId": "3210620",
+      "amount": "100",
+      "type": "admin_grant",
+      "description": "管理員調整（add）",
+      "createdAt": "2026-02-26 12:31:11"
+    },
+    {
+      "id": "2",
+      "userId": "540175",
+      "amount": "50",
+      "type": "admin_grant",
+      "description": "分組批量積分調整（分組 #30001）",
+      "createdAt": "2026-02-26 13:05:47"
+    },
+    {
+      "id": "3",
+      "userId": "690118",
+      "amount": "50",
+      "type": "admin_grant",
+      "description": "分組批量積分調整（分組 #30001）",
+      "createdAt": "2026-02-26 13:05:48"
+    },
+    {
+      "id": "4",
+      "userId": "1260042",
+      "amount": "50",
+      "type": "admin_grant",
+      "description": "分組批量積分調整（分組 #30001）",
+      "createdAt": "2026-02-26 13:05:48"
+    },
+    {
+      "id": "5",
+      "userId": "1290011",
+      "amount": "50",
+      "type": "admin_grant",
+      "description": "分組批量積分調整（分組 #30001）",
+      "createdAt": "2026-02-26 13:05:48"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tamount\ttype\tdescription\tcreatedAt\n1\t3210620\t100\tadmin_grant\t管理員調整（add）\t2026-02-26 12:31:11\n2\t540175\t50\tadmin_grant\t分組批量積分調整（分組 #30001）\t2026-02-26 13:05:47\n3\t690118\t50\tadmin_grant\t分組批量積分調整（分組 #30001）\t2026-02-26 13:05:48\n4\t1260042\t50\tadmin_grant\t分組批量積分調整（分組 #30001）\t2026-02-26 13:05:48\n5\t1290011\t50\tadmin_grant\t分組批量積分調整（分組 #30001）\t2026-02-26 13:05:48\n",
+  "stderr": "",
+  "execution_time_ms": 1541
+}

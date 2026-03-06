@@ -690,6 +690,36 @@ function PlansTab() {
                 />
                 <p className="text-xs text-slate-500 mt-1">用戶被指派此方案時，自動贈送的積分點數</p>
               </div>
+              <div className="grid grid-cols-2 gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
+                <div>
+                  <label className="text-sm text-amber-400">🪙 首次訂閱贈送天命幣</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={(editingPlan as any).firstSubscriptionBonusCoins ?? 0}
+                    onChange={(e) =>
+                      setEditingPlan({ ...editingPlan, firstSubscriptionBonusCoins: parseInt(e.target.value) || 0 } as any)
+                    }
+                    placeholder="0"
+                    className="bg-slate-800 border-amber-600/50 text-white"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">首次訂閱此方案贈送</p>
+                </div>
+                <div>
+                  <label className="text-sm text-amber-400">🔄 每月續訂贈送天命幣</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={(editingPlan as any).monthlyRenewalBonusCoins ?? 0}
+                    onChange={(e) =>
+                      setEditingPlan({ ...editingPlan, monthlyRenewalBonusCoins: parseInt(e.target.value) || 0 } as any)
+                    }
+                    placeholder="0"
+                    className="bg-slate-800 border-amber-600/50 text-white"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">每月續訂時贈送</p>
+                </div>
+              </div>
               <div>
                 <label className="text-sm text-slate-400 block mb-2">包含模塊</label>
                 <div className="space-y-2">
@@ -748,7 +778,9 @@ function PlansTab() {
                   name: editingPlan.name,
                   price: editingPlan.price,
                   description: editingPlan.description || undefined,
-                  bonusPoints: (editingPlan as Plan & { bonusPoints?: number }).bonusPoints ?? 0,
+                  bonusPoints: (editingPlan as any).bonusPoints ?? 0,
+                  firstSubscriptionBonusCoins: (editingPlan as any).firstSubscriptionBonusCoins ?? 0,
+                  monthlyRenewalBonusCoins: (editingPlan as any).monthlyRenewalBonusCoins ?? 0,
                   moduleIds: editingPlan.modules.map((m) => m.id),
                 });
                 setEditingPlan(null);

@@ -2075,3 +2075,41 @@
 - [x] 後台 /admin/marketing WBC 活動加入啟用/停用開關並關閉
 - [x] /divination 積分改為 30 點（後端 + 前端）
 - [x] 後台加入 /divination 頁面積分控制（可設定每次消耗積分數）
+
+## 鳳凰計畫 - 天命幣經濟系統 v9.0
+### 模塊一：後端核心改造（天命幣系統）
+- [x] drizzle/schema.ts：features 表新增 coinCostPerUse 欄位
+- [x] drizzle/schema.ts：plans 表新增 firstSubscriptionBonusCoins / monthlyRenewalBonusCoins 欄位
+- [x] drizzle/schema.ts：points_transactions 表新增 featureId 欄位
+- [x] pnpm db:push 執行遷移
+- [x] server/routers/coins.ts：新建天命幣核心路由（spendCoins / getBalance / getTransactions）
+- [x] server/routers.ts：topicAdvice 改用 spendCoins 核心函數
+- [x] server/routers/wardrobe.ts：scan/analyze 改用 spendCoins 核心函數
+- [x] server/routers/diet.ts：aiChef 改用 spendCoins 核心函數
+- [x] server/routers.ts：deepRead 改用 spendCoins 核心函數
+- [x] 初始化 features 表的 coinCostPerUse 預設値值
+
+### 模塊二：管理後台升級
+- [x] AdminFeatures 頁面：新增「單次消耗天命幣」欄位編輯
+- [x] AdminPlans 頁面：新增「首次訂閱贈幣」「每月續訂贈幣」欄位
+- [x] 訂閱邏輯：購買方案時自動發放首次贈幣### 模塊三：天命小舖頁面改造
+- [x] /feature-store 改名為「天命小舖」
+- [x] 新增「天命幣餘額」顯示區（醒目樣式）
+- [x] 新增「天命幣充値」 Tab（充値商品卡片 UI）
+- [x] 充値商品：100/550/1200/5000 天命幣四種規格
+- [x] 預留金流串接口（/api/payment/topup + /api/payment/webhook）
+- [x] 「訂閱方案」 Tab 顯示各方案贈幣資訊
+
+### 模塊四：前台 UI 全面適配
+- [x] 天命問卜按鈕顯示消耗天命幣數量（動態從後端讀取）
+- [x] 擲筊深度解讀按鈕顯示消耗天命幣數量
+- [x] 穿搞揃描按鈕顯示消耗天命幣數量
+- [x] 天命菜單按鈕顯示消耗天命幣數量
+- [x] 餘額不足時彈出「前往天命小舖充値」 Modal
+- [x] SharedNav 顯示「天命幣」而非「積分」
+
+### 測試
+- [x] vitest：天命幣 spendCoins 核心邏輯測試
+- [x] vitest：餘額不足時 AI 不被呼叫
+- [x] vitest：方案購買發放贈幣測試
+- [x] 整合測試：完整問卜流程（扣幣 + 記錄）

@@ -287,7 +287,10 @@ export const dietRouter = router({
       healthTags: z.array(z.string()).default([]),
       budgetPreference: z.enum(["budget", "mid", "premium"]).default("mid"),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      // 【鳳凰計畫】扣除天命幣（天命菜單 AI 主廨）
+      const { spendCoins } = await import('./coins');
+      await spendCoins(ctx.user.id, 'warroom_dietary');
       const modeLabels: Record<string, string> = {
         default: "天命模式",
         work: "工作模式",

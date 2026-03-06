@@ -15,6 +15,7 @@ import { SharedNav } from "@/components/SharedNav";
 import { ProfileIncompleteBanner } from "@/components/ProfileIncompleteBanner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
+import { InsufficientCoinsModal, parseInsufficientCoinsError } from "@/components/InsufficientCoinsModal";
 
 type CastPhase = 'idle' | 'animating' | 'result';
 type CastMode = 'single' | 'triple';
@@ -225,11 +226,28 @@ export default function OracleCast() {
   const castMutation = trpc.oracle.cast.useMutation();
   const { data: history } = trpc.oracle.history.useQuery({ limit: 10 });
   const { data: queryGuide } = trpc.insight.queryGuide.useQuery();
+  const [showInsufficientModal, setShowInsufficientModal] = useState(false);
+  const [insufficientRequired, setInsufficientRequired] = useState(0);
+  const [insufficientCurrent, setInsufficientCurrent] = useState(0);
+  const { data: coinsData } = trpc.coins.getBalance.useQuery(undefined, { staleTime: 30000 });
+  const { data: pricingData } = trpc.coins.getFeaturePricing.useQuery(undefined, { staleTime: 60000 });
+  const deepReadCost = pricingData?.['oracle_deepread'] ?? 8;
+  const currentCoins = coinsData?.balance ?? 0;
+
   const deepReadMutation = trpc.insight.deepRead.useMutation({
     onSuccess: (data) => {
       const content = typeof data.content === 'string' ? data.content : String(data.content);
       setLlmInsight(content);
       setShowInsight(true);
+
+    },
+    onError: (err) => {
+      const { isInsufficientCoins, required, current } = parseInsufficientCoinsError(err);
+      if (isInsufficientCoins) {
+        setInsufficientRequired(required || deepReadCost);
+        setInsufficientCurrent(current || currentCoins);
+        setShowInsufficientModal(true);
+      }
     },
   });
 
@@ -382,6 +400,7 @@ export default function OracleCast() {
   const showLoginPrompt = !user;
 
   return (
+    <>
     <div className="min-h-screen oracle-bg relative">
       <BackgroundParticles />
       <SharedNav currentPage="oracle" />
@@ -950,5 +969,15 @@ export default function OracleCast() {
         </div>
       </div>}
     </div>
+
+    {/* 天命幣不足彈窗 */}
+    <InsufficientCoinsModal
+      open={showInsufficientModal}
+      onOpenChange={setShowInsufficientModal}
+      required={insufficientRequired}
+      current={insufficientCurrent}
+      featureName="擲筊深度解讀"
+    />
+    </>
   );
 }

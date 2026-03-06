@@ -143,7 +143,7 @@ export const wardrobeRouter = router({
       return { url };
     }),
 
-  // AI 穿搭點評：分析用戶今日穿搭照片與命格五行匹配度
+  // AI 穿搞點評：分析用戶今日穿搞照片與命格五行匹配度
   aiReview: protectedProcedure
     .input(z.object({
       imageUrl: z.string().url(), // 已上傳到 S3 的圖片 URL
@@ -159,6 +159,9 @@ export const wardrobeRouter = router({
       shichen: z.string().optional(), // 當前時辰
     }))
     .mutation(async ({ ctx, input }) => {
+      // 【鳳凰計畫】扣除天命幣（穿搞圖片分析）
+      const { spendCoins } = await import('./coins');
+      await spendCoins(ctx.user.id, 'wardrobe');
       const { imageUrl, todayWuxing, userProfile, shichen } = input;
 
       const systemPrompt = `你是一位精通八字命理與色彩能量學的穿搭顧問。

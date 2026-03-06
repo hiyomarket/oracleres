@@ -1,0 +1,154 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "aura_engine_config"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "aura_rule_history"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "bookings"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "bracelet_wear_logs"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "campaigns"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "currency_exchange_logs"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "custom_bracelets"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "dietary_logs"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "divination_sessions"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "expert_applications"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "expert_availability"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "expert_services"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "experts"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "favorite_stores"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "feature_plans"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "feature_redemptions"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "features"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "invite_codes"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "lottery_results"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "lottery_sessions"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "marketing_config"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "modules"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "oracle_sessions"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "plan_modules"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "plans"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "points_transactions"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "private_messages"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "purchase_orders"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "redemption_codes"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "restaurant_categories"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "reviews"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "scratch_logs"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "site_banners"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "strategy_thresholds"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "subscription_logs"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "user_diet_preferences"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "user_group_members"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "user_groups"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "user_notifications"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "user_permissions"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "user_profiles"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "user_subscriptions"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "users"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "wardrobe_items"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "wbc_bets"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "wbc_matches"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c": "wealth_journal"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_MLF7bLVZzzxdGTPVXTct3c\n__drizzle_migrations\naura_engine_config\naura_rule_history\nbookings\nbracelet_wear_logs\ncampaigns\ncurrency_exchange_logs\ncustom_bracelets\ndietary_logs\ndivination_sessions\nexpert_applications\nexpert_availability\nexpert_services\nexperts\nfavorite_stores\nfeature_plans\nfeature_redemptions\nfeatures\ninvite_codes\nlottery_results\nlottery_sessions\nmarketing_config\nmodules\noracle_sessions\nplan_modules\nplans\npoints_transactions\nprivate_messages\npurchase_orders\nredemption_codes\nrestaurant_categories\nreviews\nscratch_logs\nsite_banners\nstrategy_thresholds\nsubscription_logs\nuser_diet_preferences\nuser_group_members\nuser_groups\nuser_notifications\nuser_permissions\nuser_profiles\nuser_subscriptions\nusers\nwardrobe_items\nwbc_bets\nwbc_matches\nwealth_journal\n",
+  "stderr": "",
+  "execution_time_ms": 1596
+}

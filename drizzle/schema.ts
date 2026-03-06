@@ -14,8 +14,12 @@ export const plans = mysqlTable("plans", {
   description: text("description"),
   // 是否啟用此方案
   isActive: tinyint("isActive").notNull().default(1),
-  // 訂閱此方案時贈送的積分
+  // 訂閱此方案時贈送的積分（舊欄位，保留相容性）
   bonusPoints: int("bonusPoints").notNull().default(0),
+  // 【鳳凰計畫】首次訂閱贈送天命幣數量
+  firstSubscriptionBonusCoins: int("firstSubscriptionBonusCoins").notNull().default(0),
+  // 【鳳凰計畫】每月續訂贈送天命幣數量
+  monthlyRenewalBonusCoins: int("monthlyRenewalBonusCoins").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -34,6 +38,8 @@ export const features = mysqlTable("features", {
   requiredPlanLevel: int("requiredPlanLevel").notNull().default(1),
   // 是否啟用此功能管理（false = 所有人皆可用）
   isManaged: tinyint("isManaged").notNull().default(0),
+  // 【鳳凰計畫】單次使用此功能消耗的天命幣數量（0 = 免費，NULL = 不適用）
+  coinCostPerUse: int("coinCostPerUse").default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type Feature = typeof features.$inferSelect;
@@ -138,9 +144,13 @@ export const pointsTransactions = mysqlTable("points_transactions", {
   userId: int("userId").notNull(),
   // 正數為獲得，負數為消耗
   amount: int("amount").notNull(),
-  // 類型：daily_signin / feature_redemption / admin_grant / admin_deduct
+  // 類型：daily_signin / feature_redemption / admin_grant / admin_deduct / spend / bonus / top-up
   type: varchar("type", { length: 50 }).notNull(),
   description: varchar("description", { length: 200 }),
+  // 【鳳凰計畫】對應的功能 ID（如 topicAdvice / deepRead / wardrobe_scan 等）
+  featureId: varchar("featureId", { length: 50 }),
+  // 【鳳凰計畫】充値訂單 ID（金流回調用）
+  paymentOrderId: varchar("paymentOrderId", { length: 100 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type PointsTransaction = typeof pointsTransactions.$inferSelect;

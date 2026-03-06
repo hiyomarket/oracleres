@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT \n  DATE(FROM_UNIXTIME(created_at/1000)) as date,\n  description,\n  COUNT(*) as call_count,\n  SUM(ABS(amount)) as total_points_spent\nFROM points_transactions\nWHERE type = 'spend'\n  AND description LIKE '%問卜%'\nGROUP BY DATE(FROM_UNIXTIME(created_at/1000)), description\nORDER BY date DESC, call_count DESC;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nSELECT \n  DATE(FROM_UNIXTIME(created_at/1000)) as date,\n  description,\n  COUNT(*) as call_count,\n  SUM(ABS(amount)) as total_points_spent\nFROM points_transactions\nWHERE type = 'spend'\n  AND description LIKE '%問卜%'\nGROUP BY DATE(FROM_UNIXTIME(created_at/1000)), description\nORDER BY date DESC, call_count DESC;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'created_at' in 'group statement'"
+  ]
+}

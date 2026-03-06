@@ -92,20 +92,20 @@ function RedeemCodeEntry({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** 頂部積分 + 遊戲幣顯示徽章 */
+/** 頂部天命幣 + 遇戲幣顯示徽章 */
 function PointsBadge() {
-  const { data: pointsData } = trpc.points.getBalance.useQuery(undefined, { staleTime: 30000 });
+  const { data: coinsData } = trpc.coins.getBalance.useQuery(undefined, { staleTime: 30000 });
   const { data: balanceData } = trpc.exchange.getBalance.useQuery(undefined, { staleTime: 30000 });
-  const points = pointsData?.balance ?? 0;
+  const destinyCoins = coinsData?.balance ?? 0;
   const gameCoins = balanceData?.gameCoins ?? 0;
   return (
     <div className="flex items-center gap-1.5 shrink-0">
       <div
         className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2.5 py-1.5 cursor-default"
-        title={`積分餘額：${points} 點`}
+        title={`天命幣：${destinyCoins} 枚`}
       >
-        <Coins className="w-3.5 h-3.5 text-amber-400" />
-        <span className="text-xs font-bold text-amber-300">{points.toLocaleString()}</span>
+        <span className="text-xs">🪙</span>
+        <span className="text-xs font-bold text-amber-300">{destinyCoins.toLocaleString()}</span>
       </div>
       {gameCoins > 0 && (
         <div
@@ -335,17 +335,17 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
               </Link>
             )}
 
-            {/* 方案兌換中心 */}
+            {/* 天命小舖 */}
             <Link
               href="/feature-store"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-emerald-500/10 hover:text-emerald-300 transition-colors group/item"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-amber-500/10 hover:text-amber-300 transition-colors group/item"
             >
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0 group-hover/item:bg-emerald-500/25 transition-colors">
-                <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
+              <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0 group-hover/item:bg-amber-500/25 transition-colors">
+                <span className="text-sm">🪙</span>
               </div>
               <div className="flex-1">
-                <span>方案兌換中心</span>
+                <span>天命小舖</span>
                 {user.planName ? (
                   <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">{user.planName}</span>
                 ) : (

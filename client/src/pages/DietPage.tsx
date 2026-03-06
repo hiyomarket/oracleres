@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { InsufficientCoinsModal, parseInsufficientCoinsError } from "@/components/InsufficientCoinsModal";
 import {
   MapPin, Thermometer, Wind, Droplets, RefreshCw, ChevronLeft, ChevronRight,
   AlertCircle, CheckCircle2, Sparkles, BookOpen, ChefHat, Clock, Plus, X,
@@ -230,6 +231,13 @@ function AiChefMenuModal({ open, onClose, targetElement, secondaryElement, mealS
   const aiChefMenu = trpc.diet.aiChefMenu.useMutation();
   const [cachedMenu, setCachedMenu] = useState<AiMenu | null>(null);
   const [fromCache, setFromCache] = useState(false);
+  const [showInsufficientModal, setShowInsufficientModal] = useState(false);
+  const [insufficientRequired, setInsufficientRequired] = useState(0);
+  const [insufficientCurrent, setInsufficientCurrent] = useState(0);
+  const { data: coinsData } = trpc.coins.getBalance.useQuery(undefined, { staleTime: 30000 });
+  const { data: pricingData } = trpc.coins.getFeaturePricing.useQuery(undefined, { staleTime: 60000 });
+  const dietCost = pricingData?.['diet_ai'] ?? 5;
+  const currentCoins = coinsData?.balance ?? 0;
 
   useEffect(() => {
     if (!open) return;
@@ -291,12 +299,29 @@ function AiChefMenuModal({ open, onClose, targetElement, secondaryElement, mealS
             <p className="text-sm text-white/50">天命主廚正在為您準備菜單...</p>
           </div>
         )}
-        {aiChefMenu.isError && (
-          <div className="text-center py-6">
-            <p className="text-sm text-red-400">菜單生成失敗，請稍後再試</p>
-            <Button variant="ghost" size="sm" className="mt-2 text-white/50" onClick={retry}>重試</Button>
-          </div>
-        )}
+        {aiChefMenu.isError && (() => {
+          const { isInsufficientCoins, required, current } = parseInsufficientCoinsError(aiChefMenu.error);
+          if (isInsufficientCoins && !showInsufficientModal) {
+            setTimeout(() => {
+              setInsufficientRequired(required || dietCost);
+              setInsufficientCurrent(current || currentCoins);
+              setShowInsufficientModal(true);
+            }, 0);
+          }
+          return (
+            <div className="text-center py-6">
+              <p className="text-sm text-red-400">{isInsufficientCoins ? '天命幣不足，無法生成菜單' : '菜單生成失敗，請稍後再試'}</p>
+              {!isInsufficientCoins && <Button variant="ghost" size="sm" className="mt-2 text-white/50" onClick={retry}>重試</Button>}
+            </div>
+          );
+        })()}
+        <InsufficientCoinsModal
+          open={showInsufficientModal}
+          onOpenChange={setShowInsufficientModal}
+          required={insufficientRequired}
+          current={insufficientCurrent}
+          featureName="天命菜單"
+        />
         {menu && (
           <div className="space-y-3">
             {fromCache && (

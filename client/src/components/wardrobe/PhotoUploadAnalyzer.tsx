@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Camera, Upload, Loader2, CheckCircle2, X, RotateCcw, Sparkles } from "lucide-react";
+import { InsufficientCoinsModal, parseInsufficientCoinsError } from "@/components/InsufficientCoinsModal";
 
 // ──────────────────────────────────────────────
 // Types
@@ -123,6 +124,13 @@ export default function PhotoUploadAnalyzer({
 
   const analyzeAndAdd = trpc.wardrobe.analyzeAndAdd.useMutation();
   const utils = trpc.useUtils();
+  const { data: coinsData } = trpc.coins.getBalance.useQuery(undefined, { staleTime: 30000 });
+  const { data: pricingData } = trpc.coins.getFeaturePricing.useQuery(undefined, { staleTime: 60000 });
+  const wardrobeCost = pricingData?.['wardrobe_ai'] ?? 15;
+  const currentCoins = coinsData?.balance ?? 0;
+  const [showInsufficientModal, setShowInsufficientModal] = useState(false);
+  const [insufficientRequired, setInsufficientRequired] = useState(0);
+  const [insufficientCurrent, setInsufficientCurrent] = useState(0);
 
   // ── File selection ──────────────────────────
   const handleFile = useCallback(async (file: File) => {
@@ -178,10 +186,18 @@ export default function PhotoUploadAnalyzer({
         utils.wardrobe.list.invalidate();
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "AI 分析失敗，請重試";
-      setError(msg);
-      setStep("upload");
-      toast.error(msg);
+      const { isInsufficientCoins, required, current } = parseInsufficientCoinsError(err);
+      if (isInsufficientCoins) {
+        setInsufficientRequired(required || wardrobeCost);
+        setInsufficientCurrent(current || currentCoins);
+        setShowInsufficientModal(true);
+        setStep("upload");
+      } else {
+        const msg = err instanceof Error ? err.message : "AI 分析失敗，請重試";
+        setError(msg);
+        setStep("upload");
+        toast.error(msg);
+      }
     }
   };
 
@@ -202,10 +218,9 @@ export default function PhotoUploadAnalyzer({
     onClose?.();
   };
 
-  // ──────────────────────────────────────────────
-  // Render
-  // ──────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────
   return (
+    <>
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -468,5 +483,13 @@ export default function PhotoUploadAnalyzer({
         </div>
       )}
     </div>
+    <InsufficientCoinsModal
+      open={showInsufficientModal}
+      onOpenChange={setShowInsufficientModal}
+      required={insufficientRequired}
+      current={insufficientCurrent}
+      featureName="AI 穿搞分析"
+    />
+    </>
   );
 }

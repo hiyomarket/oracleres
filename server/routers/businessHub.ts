@@ -165,6 +165,8 @@ export const businessHubRouter = router({
         level: z.number().int().min(1),
         description: z.string().optional(),
         bonusPoints: z.number().int().min(0).default(0),
+        firstSubscriptionBonusCoins: z.number().int().min(0).default(0),
+        monthlyRenewalBonusCoins: z.number().int().min(0).default(0),
         moduleIds: z.array(z.string()).default([]),
       })
     )
@@ -190,6 +192,8 @@ export const businessHubRouter = router({
         description: z.string().optional(),
         isActive: z.number().int().min(0).max(1).optional(),
         bonusPoints: z.number().int().min(0).optional(),
+        firstSubscriptionBonusCoins: z.number().int().min(0).optional(),
+        monthlyRenewalBonusCoins: z.number().int().min(0).optional(),
         moduleIds: z.array(z.string()).optional(),
       })
     )

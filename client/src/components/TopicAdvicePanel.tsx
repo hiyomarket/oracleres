@@ -6,6 +6,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { InsufficientCoinsModal, parseInsufficientCoinsError } from "@/components/InsufficientCoinsModal";
 
 const TOPICS = [
   { key: "work" as const, icon: "💼", label: "工作", desc: "事業・合作・決策", color: "from-blue-600/30 to-blue-900/20", border: "border-blue-500/50", text: "text-blue-300" },
@@ -220,9 +221,16 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
     staleTime: 30000,
   });
 
-  // 動態問卜費用
-  const { data: divinationCostData } = trpc.marketing.getDivinationCost.useQuery(undefined, { staleTime: 60000 });
-  const divinationCost = divinationCostData?.cost ?? 30;
+  // 動態問卜費用（天命幣）
+  const { data: pricingData } = trpc.coins.getFeaturePricing.useQuery(undefined, { staleTime: 60000 });
+  const { data: coinsData } = trpc.coins.getBalance.useQuery(undefined, { staleTime: 30000 });
+  const divinationCost = pricingData?.['warroom_divination'] ?? 30;
+  const currentCoins = coinsData?.balance ?? 0;
+
+  // 天命幣不足彈窗
+  const [showInsufficientModal, setShowInsufficientModal] = useState(false);
+  const [insufficientRequired, setInsufficientRequired] = useState(0);
+  const [insufficientCurrent, setInsufficientCurrent] = useState(0);
 
   const topicAdviceMutation = trpc.warRoom.topicAdvice.useMutation({
     onSuccess: (res) => {
@@ -233,14 +241,17 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
         context: res.context as DivinationContext,
       });
       setIsAsking(false);
-      utils.points.getBalance.invalidate();
+      utils.coins.getBalance.invalidate();
       utils.warRoom.divinationHistory.invalidate();
     },
     onError: (err) => {
       setIsAsking(false);
       setSelectedTopic(null);
-      if (err.message.includes("積分不足")) {
-        toast.error(`積分不足！問卜需要 ${divinationCost} 點積分，請先完成每日登入領取積分。`, { duration: 5000 });
+      const { isInsufficientCoins, required, current } = parseInsufficientCoinsError(err);
+      if (isInsufficientCoins) {
+        setInsufficientRequired(required || divinationCost);
+        setInsufficientCurrent(current || currentCoins);
+        setShowInsufficientModal(true);
       } else {
         toast.error("問卜失敗，請稍後再試");
       }
@@ -263,6 +274,7 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
   const displayResult = reviewItem ?? result;
 
   return (
+    <>
     <div className="rounded-2xl border border-purple-500/30 bg-purple-950/20 backdrop-blur-sm overflow-hidden">
       {/* 標題列 */}
       <div className="flex items-center gap-2 px-5 py-4 border-b border-purple-700/20">
@@ -551,10 +563,20 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
         {!selectedTopic && !isAsking && !displayResult && !showHistory && (
           <div className="text-center py-4">
             <p className="text-xs text-slate-500/70">選擇上方主題，AI 將結合今日命理給出專屬建議</p>
-            <p className="text-xs text-amber-500/60 mt-1">💰 每次問卜扣除 {divinationCost} 點積分</p>
+            <p className="text-xs text-amber-500/60 mt-1">🪙 每次問卜扣除 {divinationCost} 天命幣（目前餘額：{currentCoins} 枚）</p>
           </div>
         )}
       </div>
     </div>
+
+    {/* 天命幣不足彈窗 */}
+    <InsufficientCoinsModal
+      open={showInsufficientModal}
+      onOpenChange={setShowInsufficientModal}
+      required={insufficientRequired}
+      current={insufficientCurrent}
+      featureName="天命問卜"
+    />
+    </>
   );
 }

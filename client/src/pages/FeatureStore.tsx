@@ -29,7 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Coins, ShoppingCart, Clock, CheckCircle, AlertTriangle, ExternalLink, History, Package, ArrowLeft, Crown, Star, CalendarDays, Zap } from "lucide-react";
+import { Coins, ShoppingCart, Clock, CheckCircle, AlertTriangle, ExternalLink, History, Package, ArrowLeft, Crown, Star, CalendarDays, Zap, Sparkles, Wallet } from "lucide-react";
 import { SharedNav } from "@/components/SharedNav";
 
 type DurationDays = 3 | 7 | 15 | 30;
@@ -190,6 +190,25 @@ export default function FeatureStore() {
   }
 
   const currentPoints = (plans[0] as FeaturePlan | undefined)?.userStatus.currentPoints ?? 0;
+  const { data: coinsData, refetch: refetchCoins } = trpc.coins.getBalance.useQuery(undefined, { staleTime: 10000 });
+  const destinyCoins = coinsData?.balance ?? 0;
+
+  // 天命幣充値套餐
+  const TOPUP_PACKAGES = [
+    { id: 'coins_100' as const, coins: 100, price: 30, label: '100 天命幣', bonus: '', popular: false },
+    { id: 'coins_550' as const, coins: 550, price: 150, label: '550 天命幣', bonus: '贈 10%', popular: true },
+    { id: 'coins_1200' as const, coins: 1200, price: 300, label: '1200 天命幣', bonus: '贈 20%', popular: false },
+    { id: 'coins_5000' as const, coins: 5000, price: 1000, label: '5000 天命幣', bonus: '贈 25%', popular: false },
+  ];
+
+  const topupMutation = trpc.coins.initiateTopup.useMutation({
+    onSuccess: (data) => {
+      toast.info(data.message);
+    },
+    onError: (err) => {
+      toast.error(`充値失敗：${err.message}`);
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -208,16 +227,22 @@ export default function FeatureStore() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Package className="w-6 h-6 text-amber-400" />
-            功能兌換中心
+            <span className="text-2xl">🪙</span>
+            天命小舖
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            使用積分兌換或付費購買進階功能模塊
+            充値天命幣、兑換功能模塊、查看方案權益
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-2">
-          <Coins className="w-4 h-4 text-amber-400" />
-          <span className="text-sm font-medium text-amber-400">{currentPoints.toLocaleString()} 積分</span>
+        {/* 天命幣餘額顯示 */}
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500/20 to-yellow-500/10 border border-amber-500/40 rounded-xl px-4 py-2.5">
+            <span className="text-lg">🪙</span>
+            <div>
+              <p className="text-[10px] text-amber-400/70 leading-none">天命幣</p>
+              <p className="text-base font-bold text-amber-300 leading-tight">{destinyCoins.toLocaleString()}</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -308,17 +333,137 @@ export default function FeatureStore() {
         )}
       </div>
 
-      <Tabs defaultValue="store">
+      <Tabs defaultValue="topup">
         <TabsList className="mb-6">
+          <TabsTrigger value="topup">
+            <span className="mr-1">🪙</span>
+            天命幣充値
+          </TabsTrigger>
           <TabsTrigger value="store">
             <Package className="w-4 h-4 mr-1" />
             功能商城
           </TabsTrigger>
           <TabsTrigger value="history">
             <History className="w-4 h-4 mr-1" />
-            兌換紀錄
+            交易紀錄
           </TabsTrigger>
         </TabsList>
+
+        {/* 天命幣充値 Tab */}
+        <TabsContent value="topup">
+          <div className="space-y-6">
+            {/* 天命幣說明 */}
+            <div className="rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-yellow-500/5 to-transparent p-5">
+              <div className="flex items-start gap-4">
+                <div className="text-4xl">🪙</div>
+                <div>
+                  <h3 className="font-bold text-amber-300 mb-1">天命幣是什麼？</h3>
+                  <p className="text-sm text-muted-foreground">天命幣是啟動 AI 功能模塊的核心貨幣。每次使用天命問卜、擲筊解讀、穿搞分析、天命菜單等 AI 功能時，系統會自動扣除對應的天命幣。</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="flex items-center gap-1.5 text-xs bg-amber-500/10 border border-amber-500/20 rounded-lg px-2.5 py-1.5">
+                      <span>🔮</span>
+                      <span className="text-amber-300">天命問卜 30幣</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs bg-amber-500/10 border border-amber-500/20 rounded-lg px-2.5 py-1.5">
+                      <span>☯️</span>
+                      <span className="text-amber-300">擲筊解讀 8幣</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs bg-amber-500/10 border border-amber-500/20 rounded-lg px-2.5 py-1.5">
+                      <span>👗</span>
+                      <span className="text-amber-300">穿搞分析 15幣</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs bg-amber-500/10 border border-amber-500/20 rounded-lg px-2.5 py-1.5">
+                      <span>🍽️</span>
+                      <span className="text-amber-300">天命菜單 5幣</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 充値套餐 */}
+            <div>
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-amber-400" />
+                選擇充値套餐
+              </h3>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {TOPUP_PACKAGES.map((pkg) => (
+                  <div
+                    key={pkg.id}
+                    className={`relative rounded-xl border p-4 flex flex-col items-center gap-2 transition-all ${
+                      pkg.popular
+                        ? 'border-amber-400 bg-amber-500/10 shadow-lg shadow-amber-500/10'
+                        : 'border-border bg-card hover:border-amber-500/50'
+                    }`}
+                  >
+                    {pkg.popular && (
+                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+                        <span className="text-[10px] bg-amber-500 text-black font-bold px-2 py-0.5 rounded-full">最受歡迎</span>
+                      </div>
+                    )}
+                    <span className="text-2xl">🪙</span>
+                    <div className="text-center">
+                      <p className="font-bold text-amber-300">{pkg.coins.toLocaleString()}</p>
+                      <p className="text-[10px] text-muted-foreground">天命幣</p>
+                    </div>
+                    {pkg.bonus && (
+                      <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2 py-0.5">{pkg.bonus}</span>
+                    )}
+                    <div className="text-center">
+                      <p className="text-sm font-semibold">NT$ {pkg.price}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      className={`w-full text-xs mt-1 ${
+                        pkg.popular
+                          ? 'bg-amber-500 hover:bg-amber-600 text-black'
+                          : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30'
+                      }`}
+                      onClick={() => {
+                        topupMutation.mutate({ packageId: pkg.id, origin: window.location.origin });
+                      }}
+                      disabled={topupMutation.isPending}
+                    >
+                      {topupMutation.isPending ? '處理中...' : '立即充値'}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              {/* 金流即將開放提示 */}
+              <div className="mt-4 flex items-start gap-2 p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                <span className="text-blue-400 text-sm mt-0.5">ℹ️</span>
+                <p className="text-xs text-muted-foreground">線上付款功能即將開放，敖請期待。目前可聯絡管理員進行手動發放天命幣。</p>
+              </div>
+            </div>
+
+            {/* 天命幣交易紀錄 */}
+            {coinsData?.transactions && coinsData.transactions.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <History className="w-4 h-4 text-amber-400" />
+                  最近天命幣交易
+                </h3>
+                <div className="space-y-2">
+                  {coinsData.transactions.slice(0, 10).map((tx) => (
+                    <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg bg-card border border-border text-sm">
+                      <div>
+                        <span className="text-xs text-muted-foreground">{tx.description}</span>
+                        {tx.featureId && <span className="ml-2 text-[10px] text-amber-400/70">[{tx.featureId}]</span>}
+                      </div>
+                      <div className="text-right">
+                        <span className={`font-bold text-sm ${tx.amount > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {tx.amount > 0 ? '+' : ''}{tx.amount}
+                        </span>
+                        <p className="text-[10px] text-muted-foreground">{new Date(tx.createdAt).toLocaleDateString('zh-TW')}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
 
         {/* 功能商城 */}
         <TabsContent value="store">
