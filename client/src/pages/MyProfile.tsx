@@ -117,6 +117,7 @@ export default function MyProfile() {
     occupation: "",
     birthLunar: "",
     notes: "",
+    gender: "" as "male" | "female" | "other" | "",
   });
 
   const [showHourPicker, setShowHourPicker] = useState(false);
@@ -160,6 +161,7 @@ export default function MyProfile() {
         occupation: (profile as any).occupation ?? "",
         birthLunar: (profile as any).birthLunar ?? "",
         notes: profile.notes ?? "",
+        gender: (profile as any).gender ?? "",
       });
     }
   }, [profile]);
@@ -195,12 +197,17 @@ export default function MyProfile() {
   });
 
   const handleSaveBasic = () => {
+    if (!form.gender) {
+      toast.error("請選擇性別，此欄為必填項目");
+      return;
+    }
     saveProfile.mutate({
       displayName: form.displayName || undefined,
       birthPlace: form.birthPlace || undefined,
       occupation: form.occupation || undefined,
       birthLunar: form.birthLunar || undefined,
       notes: form.notes || undefined,
+      gender: form.gender as "male" | "female" | "other",
     });
   };
 
@@ -276,6 +283,36 @@ export default function MyProfile() {
               placeholder="您的姓名"
               className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/60"
             />
+          </div>
+
+          {/* 性別（必填） */}
+          <div>
+            <label className="text-xs text-slate-400 mb-1 block">
+              <span className="text-red-400 mr-1">*</span>性別（必填）
+            </label>
+            <div className="flex gap-2">
+              {([
+                { value: "male", label: "男", icon: "👨" },
+                { value: "female", label: "女", icon: "👩" },
+                { value: "other", label: "其他", icon: "🌈" },
+              ] as const).map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, gender: opt.value }))}
+                  className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all border ${
+                    form.gender === opt.value
+                      ? "bg-amber-500/20 border-amber-500/60 text-amber-300"
+                      : "bg-slate-900/60 border-slate-600/50 text-slate-400 hover:border-slate-500"
+                  }`}
+                >
+                  {opt.icon} {opt.label}
+                </button>
+              ))}
+            </div>
+            {!form.gender && (
+              <p className="text-xs text-red-400/70 mt-1">請選擇性別</p>
+            )}
           </div>
 
           {/* 出生地 */}

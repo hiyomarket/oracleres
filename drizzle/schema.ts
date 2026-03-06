@@ -398,6 +398,8 @@ export const userProfiles = mysqlTable("user_profiles", {
   occupation: varchar("occupation", { length: 200 }),
   // 農曆生日（例：甲子年 閏十月 初四日）
   birthLunar: varchar("birthLunar", { length: 100 }),
+  // 性別（male/female/other）
+  gender: mysqlEnum("gender", ["male", "female", "other"]),
   // 個人備註
   notes: text("notes"),
   // 生命靈數（用於管理員篩選，計算自 birthDate）

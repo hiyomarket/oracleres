@@ -294,6 +294,7 @@ export const accountRouter = router({
       unfavorableElements: z.string().max(100).optional(),
       occupation: z.string().max(200).optional(),
       birthLunar: z.string().max(100).optional(),
+      gender: z.enum(["male", "female", "other"]).optional(),
       notes: z.string().max(2000).optional(),
     }))
      .mutation(async ({ input, ctx }) => {
@@ -359,6 +360,7 @@ export const accountRouter = router({
       displayName: z.string().max(50).optional(),
       birthPlace: z.string().max(100).optional(),
       birthLunar: z.string().max(100).optional(), // 前端已有農曆字串可直接傳入，否則後端自動推算
+      gender: z.enum(["male", "female", "other"]).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const { calculateBazi } = await import('../lib/baziCalculator');
@@ -442,6 +444,7 @@ export const accountRouter = router({
           ...(input.displayName ? { displayName: input.displayName } : {}),
           ...(input.birthPlace ? { birthPlace: input.birthPlace } : {}),
           ...(birthLunarStr ? { birthLunar: birthLunarStr } : {}),
+          ...(input.gender ? { gender: input.gender } : {}),
           updatedAt: new Date(),
         }).where(eq(userProfiles.userId, ctx.user.id));
       } else {
@@ -453,6 +456,7 @@ export const accountRouter = router({
           displayName: input.displayName,
           birthPlace: input.birthPlace,
           ...(birthLunarStr ? { birthLunar: birthLunarStr } : {}),
+          ...(input.gender ? { gender: input.gender } : {}),
           createdAt: new Date(),
         });
       }

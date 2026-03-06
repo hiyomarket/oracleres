@@ -338,6 +338,28 @@ function AddMemberModal({ groupId, groupName, onClose, onSuccess }: AddMemberMod
     });
   };
 
+  const allUsers = usersData?.users ?? [];
+  const allSelected = allUsers.length > 0 && allUsers.every(u => selectedIds.has(u.id));
+  const someSelected = allUsers.some(u => selectedIds.has(u.id));
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      // 全部取消
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        allUsers.forEach(u => next.delete(u.id));
+        return next;
+      });
+    } else {
+      // 全選
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        allUsers.forEach(u => next.add(u.id));
+        return next;
+      });
+    }
+  };
+
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 max-w-lg">
@@ -351,6 +373,25 @@ function AddMemberModal({ groupId, groupName, onClose, onSuccess }: AddMemberMod
             onChange={e => handleSearchChange(e.target.value)}
             className="bg-slate-800 border-slate-700 text-slate-200"
           />
+          {/* 全選列 */}
+          {allUsers.length > 0 && (
+            <div
+              onClick={toggleSelectAll}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer bg-slate-800/40 hover:bg-slate-700/40 border border-slate-700/50 transition-colors"
+            >
+              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${
+                allSelected ? "bg-amber-500 border-amber-500" :
+                someSelected ? "bg-amber-500/40 border-amber-500/60" :
+                "border-slate-500"
+              }`}>
+                {allSelected && <svg className="w-2.5 h-2.5 text-black" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
+                {someSelected && !allSelected && <div className="w-2 h-0.5 bg-amber-400" />}
+              </div>
+              <span className="text-sm font-medium text-amber-300">
+                {allSelected ? `取消全選（${allUsers.length} 位）` : `全選目前頁面全部（${allUsers.length} 位）`}
+              </span>
+            </div>
+          )}
           <div className="max-h-64 overflow-y-auto space-y-1 border border-slate-700/50 rounded-lg p-1">
             {!usersData ? (
               <div className="text-center py-4 text-slate-500 text-sm">載入中...</div>

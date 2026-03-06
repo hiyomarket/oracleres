@@ -68,6 +68,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
     birthDate: "",       // YYYY-MM-DD，空字串表示未填
     birthHour: null as number | null,   // 0-11 時辰索引，null = 不確定
     birthPlace: "",
+    gender: "" as "male" | "female" | "other" | "",
   });
   // 是否已點擊「推算命格」並進入步驟3
   const [showPreview, setShowPreview] = useState(false);
@@ -125,11 +126,12 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
       displayName: form.displayName.trim() || undefined,
       birthPlace: form.birthPlace.trim() || undefined,
       birthLunar: lunarQuery.data?.lunarString ?? undefined,
+      gender: form.gender as "male" | "female" | "other" | undefined,
     });
   };
 
   const canNext = () => {
-    if (step === 1) return form.displayName.trim().length > 0;
+    if (step === 1) return form.displayName.trim().length > 0 && form.gender !== "";
     return true;
   };
 
@@ -194,6 +196,33 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   <p className="text-xs text-slate-500 mt-1.5">
                     此名稱將顯示在系統各頁面中
                   </p>
+                </div>
+
+                {/* 性別（必填） */}
+                <div>
+                  <label className="text-xs text-slate-400 mb-1.5 block">
+                    性別 <span className="text-red-400">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    {([
+                      { value: "male", label: "男", icon: "👨" },
+                      { value: "female", label: "女", icon: "👩" },
+                      { value: "other", label: "其他", icon: "🌈" },
+                    ] as const).map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, gender: opt.value }))}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all border ${
+                          form.gender === opt.value
+                            ? "bg-amber-500/20 border-amber-500/60 text-amber-300"
+                            : "bg-slate-900/60 border-slate-600/50 text-slate-400 hover:border-slate-500"
+                        }`}
+                      >
+                        {opt.icon} {opt.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
             )}

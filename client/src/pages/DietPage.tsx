@@ -743,7 +743,7 @@ export default function DietPage() {
                   favorableElements={favorableElements}
                   unfavorableElements={unfavorableElements}
                   weatherEnabled={!!weather}
-                  weatherElement={weather ? Object.entries(weather.wuxing).sort(([, a], [, b]) => b - a)[0]?.[0] : undefined}
+                  weatherElement={weather ? Object.entries(weather.wuxing).sort(([, a], [, b]) => (b as number) - (a as number))[0]?.[0] : undefined}
                 />
               </motion.div>
             </motion.div>

@@ -423,7 +423,7 @@ export default function WarRoom() {
               const isToday = offset === 0;
               const isSelected = selectedOffset === offset;
               // 查詢本週購彩指數，標記最佳日
-              const weeklyScore = data?.weeklyLotteryScores?.find(s => s.date === dateStr);
+              const weeklyScore = data?.weeklyLotteryScores?.find((s: { date: string; isBest?: boolean }) => s.date === dateStr);
               const isBestDay = weeklyScore?.isBest === true;
               return (
                 <button
@@ -477,7 +477,7 @@ export default function WarRoom() {
 
           {/* 本週最旺時辰橫幅 */}
           {(() => {
-            const bestEntry = data?.weeklyLotteryScores?.find(s => s.isBest);
+            const bestEntry = data?.weeklyLotteryScores?.find((s: { isBest?: boolean }) => s.isBest);
             if (!bestEntry?.bestHour) return null;
             const { bestHour, compositeScore, dateLabel } = bestEntry;
             return (
@@ -626,7 +626,7 @@ export default function WarRoom() {
                   <div className="mt-3 pt-3 border-t border-white/10">
                     <div className="text-white/40 text-xs mb-2">隐藏的能量</div>
                     <div className="flex gap-2 flex-wrap">
-                      {data.tenGod.branchGods.map((bg, i) => (
+                      {data.tenGod.branchGods.map((bg: { stem: string; tenGod: string }, i: number) => (
                         <span key={i} className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/70">
                           {bg.stem} → {bg.tenGod}
                         </span>
