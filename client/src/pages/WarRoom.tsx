@@ -10,11 +10,13 @@ import { toast } from "sonner";
 import { NearbyRestaurants } from "@/components/NearbyRestaurants";
 import { useLocation } from "wouter";
 
-/** WBC 活動推廣橫幅：有待開賽賽事時顯示 */
+/** WBC 活動推廣橫幅：有待開賽賽事時顯示，且 WBC 開關為開啟 */
 function WbcPromoBanner() {
   const [, navigate] = useLocation();
-  const { data: matches } = trpc.wbc.getMatches.useQuery({ status: "pending" }, { staleTime: 60000 });
+  const { data: wbcConfig } = trpc.marketing.getWbcEnabled.useQuery(undefined, { staleTime: 60000 });
+  const { data: matches } = trpc.wbc.getMatches.useQuery({ status: "pending" }, { staleTime: 60000, enabled: wbcConfig?.enabled !== false });
   const pendingMatches = (matches ?? []).filter(m => m.status === "pending");
+  if (!wbcConfig?.enabled) return null;
   if (pendingMatches.length === 0) return null;
   const next = pendingMatches[0];
   const matchDate = new Date(next.matchTime);
@@ -234,9 +236,12 @@ export default function WarRoom() {
   const { data: accountStatus } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
   const isOwner = accountStatus?.isOwner ?? false;
 
-  // WBC 彈窗：每天首次進入顯示
+  // WBC 彈窗：每天首次進入顯示，且 WBC 開關為開啟
+  const { data: wbcEnabledData } = trpc.marketing.getWbcEnabled.useQuery(undefined, { staleTime: 60000 });
   const [showWbcModal, setShowWbcModal] = useState(false);
   useEffect(() => {
+    if (wbcEnabledData?.enabled === false) return; // WBC 已關閉
+    if (wbcEnabledData === undefined) return; // 尚未載入
     const today = new Date().toISOString().split('T')[0];
     const key = `wbc_modal_shown_${today}`;
     if (!localStorage.getItem(key)) {
@@ -247,7 +252,7 @@ export default function WarRoom() {
       }, 1500);
       return () => clearTimeout(t);
     }
-  }, []);
+  }, [wbcEnabledData]);
   // 七日選擇器：0=今天，1=明天，...，-1=昨天
   const [selectedOffset, setSelectedOffset] = useState(0);
   const selectedDate = getTaiwanDateStr(selectedOffset);

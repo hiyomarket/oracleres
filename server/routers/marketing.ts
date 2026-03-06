@@ -6,6 +6,56 @@ import { marketingConfig, wbcMatches } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
 export const marketingRouter = router({
+  // 取得 WBC 活動開關狀態（公開）
+  getWbcEnabled: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return { enabled: true };
+    const configs = await db.select().from(marketingConfig);
+    const configMap = Object.fromEntries(configs.map(c => [c.configKey, c.configValue]));
+    return { enabled: configMap["wbc_enabled"] !== false };
+  }),
+
+  // 更新 WBC 活動開關（管理員）
+  setWbcEnabled: protectedProcedure
+    .input(z.object({ enabled: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const existing = await db.select().from(marketingConfig).where(eq(marketingConfig.configKey, "wbc_enabled")).limit(1);
+      if (existing.length > 0) {
+        await db.update(marketingConfig).set({ configValue: input.enabled }).where(eq(marketingConfig.configKey, "wbc_enabled"));
+      } else {
+        await db.insert(marketingConfig).values({ configKey: "wbc_enabled", configValue: input.enabled, description: "WBC 2026 活動開關" });
+      }
+      return { success: true, enabled: input.enabled };
+    }),
+
+  // 取得問卜積分費用（公開）
+  getDivinationCost: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return { cost: 30 };
+    const configs = await db.select().from(marketingConfig);
+    const configMap = Object.fromEntries(configs.map(c => [c.configKey, c.configValue]));
+    return { cost: (configMap["divination_cost"] as number) ?? 30 };
+  }),
+
+  // 更新問卜積分費用（管理員）
+  setDivinationCost: protectedProcedure
+    .input(z.object({ cost: z.number().int().min(1).max(500) }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const existing = await db.select().from(marketingConfig).where(eq(marketingConfig.configKey, "divination_cost")).limit(1);
+      if (existing.length > 0) {
+        await db.update(marketingConfig).set({ configValue: input.cost }).where(eq(marketingConfig.configKey, "divination_cost"));
+      } else {
+        await db.insert(marketingConfig).values({ configKey: "divination_cost", configValue: input.cost, description: "天命問卜每次積分費用" });
+      }
+      return { success: true, cost: input.cost };
+    }),
+
   // 取得經濟系統配置（公開）
   getEconomyConfig: publicProcedure.query(async () => {
     const db = await getDb();

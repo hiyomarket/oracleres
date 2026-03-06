@@ -31,6 +31,8 @@ export default function DivinationPage() {
     enabled: hasAccess,
     staleTime: 30000,
   });
+  const { data: divinationCostData } = trpc.marketing.getDivinationCost.useQuery(undefined, { staleTime: 60000 });
+  const divinationCost = divinationCostData?.cost ?? 30;
 
   const balance = balanceQuery.data?.balance ?? 0;
 
@@ -50,11 +52,11 @@ export default function DivinationPage() {
             {hasAccess && (
               <div className="flex-shrink-0 text-right">
                 <div className="text-[10px] text-white/30 mb-0.5">可用積分</div>
-                <div className={`text-lg font-bold ${balance >= 10 ? "text-amber-400" : "text-red-400"}`}>
+                <div className={`text-lg font-bold ${balance >= divinationCost ? "text-amber-400" : "text-red-400"}`}>
                   {balanceQuery.isLoading ? "…" : balance}
                   <span className="text-xs font-normal text-white/30 ml-1">點</span>
                 </div>
-                <div className="text-[9px] text-white/25">每次問卜 -10 點</div>
+                <div className="text-[9px] text-white/25">每次問卜 -{divinationCost} 點</div>
               </div>
             )}
           </div>
@@ -112,7 +114,7 @@ export default function DivinationPage() {
               透過 AI 深度分析事業、感情、健康、財運、決策五大主題的能量走勢。
             </p>
             <p>
-              輸入具體問題可獲得更精準的解讀。每次問卜扣除 <span className="text-amber-400">10 點積分</span>，
+              輸入具體問題可獲得更精準的解讀。每次問卜扣除 <span className="text-amber-400">{divinationCost} 點積分</span>，
               每日登入可免費領取積分。
             </p>
           </div>

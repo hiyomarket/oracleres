@@ -220,6 +220,10 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
     staleTime: 30000,
   });
 
+  // 動態問卜費用
+  const { data: divinationCostData } = trpc.marketing.getDivinationCost.useQuery(undefined, { staleTime: 60000 });
+  const divinationCost = divinationCostData?.cost ?? 30;
+
   const topicAdviceMutation = trpc.warRoom.topicAdvice.useMutation({
     onSuccess: (res) => {
       setResult({
@@ -236,7 +240,7 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
       setIsAsking(false);
       setSelectedTopic(null);
       if (err.message.includes("積分不足")) {
-        toast.error("積分不足！問卜需要 10 點積分，請先完成每日登入領取積分。", { duration: 5000 });
+        toast.error(`積分不足！問卜需要 ${divinationCost} 點積分，請先完成每日登入領取積分。`, { duration: 5000 });
       } else {
         toast.error("問卜失敗，請稍後再試");
       }
@@ -547,7 +551,7 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
         {!selectedTopic && !isAsking && !displayResult && !showHistory && (
           <div className="text-center py-4">
             <p className="text-xs text-slate-500/70">選擇上方主題，AI 將結合今日命理給出專屬建議</p>
-            <p className="text-xs text-amber-500/60 mt-1">💰 每次問卜扣除 10 點積分</p>
+            <p className="text-xs text-amber-500/60 mt-1">💰 每次問卜扣除 {divinationCost} 點積分</p>
           </div>
         )}
       </div>

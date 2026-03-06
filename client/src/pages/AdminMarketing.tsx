@@ -166,6 +166,28 @@ export default function AdminMarketing() {
   });
   const [globalDeadlineMinutes, setGlobalDeadlineMinutes] = useState("30");
 
+  // WBC 開關
+  const { data: wbcEnabledData } = trpc.marketing.getWbcEnabled.useQuery();
+  const setWbcEnabled = trpc.marketing.setWbcEnabled.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.enabled ? "WBC 活動已開啟" : "WBC 活動已關閉，前台橫幅和彈窗已隐藏");
+      utils.marketing.getWbcEnabled.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  // 問卜積分費用
+  const { data: divinationCostData } = trpc.marketing.getDivinationCost.useQuery();
+  const [divinationCostInput, setDivinationCostInput] = useState("");
+  const setDivinationCost = trpc.marketing.setDivinationCost.useMutation({
+    onSuccess: (data) => {
+      toast.success(`問卜費用已設為 ${data.cost} 點`);
+      utils.marketing.getDivinationCost.invalidate();
+      setDivinationCostInput("");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -287,7 +309,18 @@ export default function AdminMarketing() {
                       <CardDescription className="text-slate-500 text-xs">世界棒球經典賽競猜</CardDescription>
                     </div>
                   </div>
-                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs shrink-0">進行中</Badge>
+                  <button
+                    onClick={() => setWbcEnabled.mutate({ enabled: !(wbcEnabledData?.enabled ?? true) })}
+                    disabled={setWbcEnabled.isPending}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0 ${
+                      (wbcEnabledData?.enabled ?? true) ? 'bg-green-500' : 'bg-slate-600'
+                    }`}
+                    title={(wbcEnabledData?.enabled ?? true) ? '點擊關閉 WBC 活動' : '點擊開啟 WBC 活動'}
+                  >
+                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                      (wbcEnabledData?.enabled ?? true) ? 'translate-x-4' : 'translate-x-0.5'
+                    }`} />
+                  </button>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
@@ -535,7 +568,7 @@ export default function AdminMarketing() {
                 </div>
               </div>
             )}
-            <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:items-center">
+          <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:items-center">
               <Button
                 onClick={handleSaveConfig}
                 disabled={updateConfig.isPending}
@@ -544,9 +577,40 @@ export default function AdminMarketing() {
                 {updateConfig.isPending ? "儲存中..." : "儲存配置"}
               </Button>
               <div className="text-xs text-slate-500">
-                ⚠️ 修改比率會即時影響所有用戶的兌換操作
+                ⚠️ 修改比率會即時影響所有用戶的尌換操作
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* 問卜費用控制 */}
+        <Card className="bg-slate-900 border-slate-700">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-amber-300 text-base">🔮 問卜費用設定</CardTitle>
+            <CardDescription className="text-slate-400 text-sm">設定 /divination 頁面每次問卜所需積分</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+              <div className="flex-1">
+                <Label className="text-slate-300 text-sm">每次問卜費用（積分）</Label>
+                <div className="text-xs text-slate-500 mb-1">目前設定：{divinationCostData?.cost ?? 30} 點積分</div>
+                <Input
+                  type="number" min="1" max="1000"
+                  placeholder={String(divinationCostData?.cost ?? 30)}
+                  value={divinationCostInput}
+                  onChange={e => setDivinationCostInput(e.target.value)}
+                  className="bg-slate-800 border-slate-600 text-white max-w-xs"
+                />
+              </div>
+              <Button
+                onClick={() => setDivinationCost.mutate({ cost: Number(divinationCostInput || divinationCostData?.cost || 30) })}
+                disabled={setDivinationCost.isPending || !divinationCostInput}
+                className="bg-amber-600 hover:bg-amber-500 text-black font-semibold shrink-0"
+              >
+                {setDivinationCost.isPending ? "儲存中..." : "儲存費用"}
+              </Button>
+            </div>
+            <div className="mt-2 text-xs text-slate-500">⚠️ 修改後即時生效，影響所有用戶的問卜費用</div>
           </CardContent>
         </Card>
       </div>

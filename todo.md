@@ -2069,3 +2069,9 @@
 
 ## Bug 修復 v8.9（2026-03-05）
 - [x] 修復 /calendar 頁面 calendar.monthly tRPC 路由遺失（No procedure found on path "calendar.monthly"）
+
+## WBC 隱藏與 Divination 積分控制 v8.10（2026-03-07）
+- [x] 隱藏今日運勢頁 WBC 橫幅通知（isActive=false 時不顯示）
+- [x] 後台 /admin/marketing WBC 活動加入啟用/停用開關並關閉
+- [x] /divination 積分改為 30 點（後端 + 前端）
+- [x] 後台加入 /divination 頁面積分控制（可設定每次消耗積分數）
