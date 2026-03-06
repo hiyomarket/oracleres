@@ -2066,3 +2066,6 @@
 - [x] 提升命理師後自動發送站內通知給用戶（含後台連結）
 - [x] 用戶個人設定頁加入「申請成為命理師」入口，管理員在 AdminExperts 審核
 - [x] AdminUsers 加入角色篩選下拉選單（全部/一般用戶/命理師/管理員）
+
+## Bug 修復 v8.9（2026-03-05）
+- [x] 修復 /calendar 頁面 calendar.monthly tRPC 路由遺失（No procedure found on path "calendar.monthly"）
