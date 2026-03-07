@@ -374,19 +374,19 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
               </div>
               <span>我的預約</span>
             </Link>
-            {/* 命理師後台 - 只有 expert 或 admin 才顯示 */}
+            {/* 專家後台 - 只有 expert 或 admin 才顯示 */}
             {(user.role === 'expert' || user.role === 'admin') && (
               <Link
                 href="/expert/dashboard"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-purple-500/10 hover:text-purple-300 transition-colors group/item"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-amber-500/10 hover:text-amber-300 transition-colors group/item"
               >
-                <div className="w-7 h-7 rounded-lg bg-purple-500/20 flex items-center justify-center shrink-0 group-hover/item:bg-purple-500/30 transition-colors">
-                  <Star className="w-3.5 h-3.5 text-purple-300" />
+                <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0 group-hover/item:bg-amber-500/25 transition-colors">
+                  <Star className="w-3.5 h-3.5 text-amber-400" />
                 </div>
                 <div className="flex flex-col">
-                  <span>命理師後台</span>
-                  <span className="text-[10px] text-purple-400/70">天命聯盟管理</span>
+                  <span>天命聯盟專家後台</span>
+                  <span className="text-[10px] text-amber-400/70">訂單管理、個人品牌、行事曆</span>
                 </div>
               </Link>
             )}

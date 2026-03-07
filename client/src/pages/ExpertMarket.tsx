@@ -108,18 +108,32 @@ export default function ExpertMarket() {
               const tags = (expert.tags as string[] | null) ?? [];
               const combined = [...specialties, ...tags];
               const displayTags = combined.filter((t, i) => combined.indexOf(t) === i).slice(0, 4);
-              const consultModes = (expert as any).consultationModes as string[] | null;
+              const consultModes = (expert.consultationModes as string[] | null);
+              const coverUrl = expert.coverImageUrl;
               const hasOnline = consultModes?.includes("video") || consultModes?.includes("voice") || consultModes?.includes("text");
               const hasOffline = consultModes?.includes("in_person");
 
               return (
                 <Link key={expert.id} href={href}>
-                  <Card className="cursor-pointer hover:border-amber-500/50 transition-all group h-full">
+                  <Card className="cursor-pointer hover:border-amber-500/50 transition-all group h-full overflow-visible">
                     <CardContent className="p-0">
-                      {/* Cover / Avatar area */}
-                      <div className="relative h-20 bg-gradient-to-br from-amber-900/40 to-stone-900/60 rounded-t-xl overflow-hidden">
-                        <div className="absolute bottom-0 left-4 translate-y-1/2">
-                          <div className="w-14 h-14 rounded-full border-2 border-background bg-gradient-to-br from-amber-500/30 to-amber-700/30 overflow-hidden">
+                      {/* Cover / Avatar area - use overflow-visible on card so avatar can overlap */}
+                      <div className="relative">
+                        {/* Cover image */}
+                        <div className="h-20 rounded-t-xl overflow-hidden bg-gradient-to-br from-amber-900/40 to-stone-900/60 relative">
+                          {coverUrl ? (
+                            <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+                          ) : null}
+                          {/* Price badge */}
+                          {expert.priceMin && (
+                            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/50 text-amber-400 text-xs font-medium">
+                              NT${expert.priceMin.toLocaleString()} 起
+                            </div>
+                          )}
+                        </div>
+                        {/* Avatar - positioned to overlap cover bottom, z-10 to stay above */}
+                        <div className="absolute bottom-0 left-4 translate-y-1/2 z-10">
+                          <div className="w-14 h-14 rounded-full border-2 border-background bg-gradient-to-br from-amber-500/30 to-amber-700/30 overflow-hidden shadow-md">
                             {expert.profileImageUrl ? (
                               <img src={expert.profileImageUrl} alt={expert.publicName} className="w-full h-full object-cover" />
                             ) : (
@@ -129,12 +143,6 @@ export default function ExpertMarket() {
                             )}
                           </div>
                         </div>
-                        {/* Price badge */}
-                        {expert.priceMin && (
-                          <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/50 text-amber-400 text-xs font-medium">
-                            NT${expert.priceMin.toLocaleString()} 起
-                          </div>
-                        )}
                       </div>
 
                       <div className="pt-9 px-4 pb-4">

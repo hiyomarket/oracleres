@@ -214,12 +214,16 @@ export default function ExpertDetail() {
         </button>
 
         {/* Expert Header */}
-        <div className="relative rounded-2xl overflow-hidden">
-          {/* Cover */}
-          <div className="h-32 bg-gradient-to-br from-amber-900/50 via-stone-900/60 to-black/70" />
-          <div className="px-6 pb-6">
+        <div className="relative rounded-2xl">
+          {/* Cover image */}
+          <div className="h-32 rounded-t-2xl overflow-hidden bg-gradient-to-br from-amber-900/50 via-stone-900/60 to-black/70 relative">
+            {(expert as any).coverImageUrl && (
+              <img src={(expert as any).coverImageUrl} alt="" className="w-full h-full object-cover" />
+            )}
+          </div>
+          <div className="px-6 pb-6 bg-card rounded-b-2xl border border-border border-t-0">
             <div className="flex items-end gap-4 -mt-10 mb-4">
-              <div className="w-20 h-20 rounded-full border-3 border-background bg-gradient-to-br from-amber-500/30 to-amber-700/30 flex-shrink-0 overflow-hidden ring-2 ring-amber-500/30">
+              <div className="w-20 h-20 rounded-full border-3 border-background bg-gradient-to-br from-amber-500/30 to-amber-700/30 flex-shrink-0 overflow-hidden ring-2 ring-amber-500/30 relative z-10">
                 {expert.profileImageUrl ? (
                   <img src={expert.profileImageUrl} alt={expert.publicName} className="w-full h-full object-cover" />
                 ) : (

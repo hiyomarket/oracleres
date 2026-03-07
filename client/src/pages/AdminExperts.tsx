@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Users, Search, CheckCircle, XCircle, Clock, Star, Eye, Ban, RefreshCw, UserPlus } from "lucide-react";
+import { Users, Search, CheckCircle, XCircle, Clock, Star, Eye, Ban, RefreshCw, UserPlus, Pencil } from "lucide-react";
 
 type ExpertStatus = "active" | "inactive" | "pending_review";
 const STATUS_COLOR: Record<ExpertStatus, string> = {
@@ -99,6 +99,18 @@ export default function AdminExperts() {
   });
 
   const [revokeExpertTarget, setRevokeExpertTarget] = useState<{ expertId: number; userId: number; name: string } | null>(null);
+  // 編輯專家資料
+  const [editProfileTarget, setEditProfileTarget] = useState<{ expertId: number; publicName: string; title: string } | null>(null);
+  const [editPublicName, setEditPublicName] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const updateProfileMutation = trpc.expert.adminUpdateExpertProfile.useMutation({
+    onSuccess: () => {
+      toast.success("專家資料已更新");
+      setEditProfileTarget(null);
+      refetch();
+    },
+    onError: (e: { message: string }) => toast.error("更新失敗: " + e.message),
+  });
   const revokeExpertMutation = trpc.expert.adminRevokeExpertRole.useMutation({
     onSuccess: () => {
       toast.success("已撤銷命理師資格，該用戶已回归一般用戶");
@@ -282,6 +294,18 @@ export default function AdminExperts() {
                               <CheckCircle className="w-3.5 h-3.5 mr-1" /> 恢復上架
                             </Button>
                           )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setEditProfileTarget({ expertId: expert.id, publicName: expert.publicName, title: expert.title ?? "" });
+                              setEditPublicName(expert.publicName);
+                              setEditTitle(expert.title ?? "");
+                            }}
+                            className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10 bg-transparent text-xs"
+                          >
+                            <Pencil className="w-3.5 h-3.5 mr-1" /> 編輯資料
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
@@ -513,6 +537,48 @@ export default function AdminExperts() {
             )}
           </div>
         )}
+
+      {/* 編輯專家資料 Dialog */}
+      <Dialog open={!!editProfileTarget} onOpenChange={(open) => { if (!open) setEditProfileTarget(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Pencil className="w-4 h-4 text-amber-400" /> 編輯專家資料</DialogTitle>
+            <DialogDescription>修改專家公開名稱與頭銜</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">公開顯示名稱 *</label>
+              <Input
+                value={editPublicName}
+                onChange={(e) => setEditPublicName(e.target.value)}
+                placeholder="例如：命理師 陳天命"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">頭銜/職稱</label>
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                placeholder="例如：紫微斗數命理師・20年經驗"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEditProfileTarget(null)}>取消</Button>
+            <Button
+              className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+              onClick={() => editProfileTarget && updateProfileMutation.mutate({
+                expertId: editProfileTarget.expertId,
+                publicName: editPublicName.trim(),
+                title: editTitle.trim() || undefined,
+              })}
+              disabled={updateProfileMutation.isPending || !editPublicName.trim()}
+            >
+              {updateProfileMutation.isPending ? "儲存中…" : "儲存變更"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* 申請審核 Dialog */}
       <Dialog open={!!reviewTarget} onOpenChange={(open) => { if (!open) { setReviewTarget(null); setReviewNote(""); } }}>

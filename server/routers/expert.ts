@@ -475,6 +475,8 @@ export const expertRouter = router({
           publicName: experts.publicName,
           title: experts.title,
           profileImageUrl: experts.profileImageUrl,
+          coverImageUrl: experts.coverImageUrl,
+          consultationModes: experts.consultationModes,
           tags: experts.tags,
           specialties: experts.specialties,
           slug: experts.slug,
@@ -1054,6 +1056,30 @@ export const expertRouter = router({
         .update(experts)
         .set({ status: "inactive" })
         .where(eq(experts.userId, input.userId));
+      return { success: true };
+    }),
+
+  /** 管理員：更新專家公開名稱與基本資料 */
+  adminUpdateExpertProfile: adminProcedure
+    .input(
+      z.object({
+        expertId: z.number().int(),
+        publicName: z.string().min(1).max(100),
+        title: z.string().max(200).optional(),
+        tags: z.array(z.string()).optional(),
+        specialties: z.array(z.string()).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = (await getDb())!;
+      const updateData: Record<string, unknown> = { publicName: input.publicName };
+      if (input.title !== undefined) updateData.title = input.title;
+      if (input.tags !== undefined) updateData.tags = input.tags;
+      if (input.specialties !== undefined) updateData.specialties = input.specialties;
+      await db
+        .update(experts)
+        .set(updateData)
+        .where(eq(experts.id, input.expertId));
       return { success: true };
     }),
 
