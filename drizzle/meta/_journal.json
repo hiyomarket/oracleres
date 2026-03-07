@@ -337,6 +337,13 @@
       "when": 1772853107299,
       "tag": "0047_purple_squirrel_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "5",
+      "when": 1772856242108,
+      "tag": "0048_open_magma",
+      "breakpoints": true
     }
   ]
 }

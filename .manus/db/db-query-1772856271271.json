@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE user_profiles ADD COLUMN natalWood INT NULL, ADD COLUMN natalFire INT NULL, ADD COLUMN natalEarth INT NULL, ADD COLUMN natalMetal INT NULL, ADD COLUMN natalWater INT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute ALTER TABLE user_profiles ADD COLUMN natalWood INT NULL, ADD COLUMN natalFire INT NULL, ADD COLUMN natalEarth INT NULL, ADD COLUMN natalMetal INT NULL, ADD COLUMN natalWater INT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2330
+}

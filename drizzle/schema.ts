@@ -402,6 +402,12 @@ export const userProfiles = mysqlTable("user_profiles", {
   gender: mysqlEnum("gender", ["male", "female", "other"]),
   // 個人備註
   notes: text("notes"),
+  // 本命五行比例（0-100 整數，由八字計算得出）
+  natalWood: int("natalWood"),
+  natalFire: int("natalFire"),
+  natalEarth: int("natalEarth"),
+  natalMetal: int("natalMetal"),
+  natalWater: int("natalWater"),
   // 生命靈數（用於管理員篩選，計算自 birthDate）
   lifePathNumber: int("lifePathNumber"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

@@ -2256,3 +2256,11 @@
 - [x] ProfilePage 主帳號改為優先使用 DB 資料，無 DB 資料時才用靜態 fallback
 - [x] ProfilePage 主帳號加入「編輯命格資料」按鈕（之前只有一般用戶才有）
 - [x] 測試驗證：新增 theme.profile.test.ts，267 項測試全部通過
+
+## 命理引擎動態化 v10.4
+
+- [x] 審查現有架構：確認 hourlyEnergy/lottery/warRoom 已支援 dynamicProfile 參數
+- [x] DB 新增 natalWood/Fire/Earth/Metal/Water 欄位（直接 SQL 新增，drizzle schema 同步）
+- [x] getUserProfileForEngine 更新：優先用 DB natal 欄位，其次用 calculateBazi 動態計算，最後才估算
+- [x] ProfilePage 更新：優先用 DB natal 欄位顯示圓餅圖，其次四柱估算，最後用靜態 fallback
+- [x] 撰寫 dynamic-engine.test.ts，12 項測試全部通過（共 279 項全部通過）

@@ -771,9 +771,42 @@ export async function getUserProfileForEngine(userId: number): Promise<EnginePro
       : DEFAULT_ENGINE_PROFILE.favorableElementsEn.filter(e => !favorableElementsEn.includes(e));
     const unfavorableElements = unfavorableElementsEn.map(e => EN_TO_ZH[e] || e).filter(Boolean);
 
-    // 本命五行比例：目前從四柱推算較複雜，暫時根據日主五行給出合理預設
-    // 未來可擴充為完整的八字五行計算
-    const natalElementRatio = buildNatalRatioFromDayMaster(dayMasterElement, favorableElements);
+    // 本命五行比例：優先使用 DB 儲存的八字計算結果，如果沒有則用 baziCalculator 動態計算
+    let natalElementRatio: Record<string, number>;
+    if (
+      profile.natalWood != null && profile.natalFire != null &&
+      profile.natalEarth != null && profile.natalMetal != null && profile.natalWater != null
+    ) {
+      // DB 已儲存八字計算的五行比例（整數 0-100），轉換為 0-1 小數
+      const total = (profile.natalWood + profile.natalFire + profile.natalEarth + profile.natalMetal + profile.natalWater) || 100;
+      natalElementRatio = {
+        木: profile.natalWood / total,
+        火: profile.natalFire / total,
+        土: profile.natalEarth / total,
+        金: profile.natalMetal / total,
+        水: profile.natalWater / total,
+      };
+    } else if (profile.birthDate && profile.birthTime) {
+      // 有出生日期和時間但尚未計算五行比例，用 baziCalculator 動態計算
+      try {
+        const { calculateBazi } = await import('./lib/baziCalculator');
+        const baziResult = calculateBazi(profile.birthDate, profile.birthTime);
+        const r = baziResult.elementRatio;
+        const total2 = (r.wood + r.fire + r.earth + r.metal + r.water) || 100;
+        natalElementRatio = {
+          木: r.wood / total2,
+          火: r.fire / total2,
+          土: r.earth / total2,
+          金: r.metal / total2,
+          水: r.water / total2,
+        };
+      } catch {
+        natalElementRatio = buildNatalRatioFromDayMaster(dayMasterElement, favorableElements);
+      }
+    } else {
+      // 尚未填寫生日，用日主五行估算
+      natalElementRatio = buildNatalRatioFromDayMaster(dayMasterElement, favorableElements);
+    }
 
     // 解析出生日期
     const birthDateStr = profile.birthDate || null;

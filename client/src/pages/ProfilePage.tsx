@@ -630,16 +630,34 @@ export default function ProfilePage() {
     });
   }, [effectiveProfile?.yearPillar, effectiveProfile?.monthPillar, effectiveProfile?.dayPillar, effectiveProfile?.hourPillar]);
 
-  // ─── 動態生成五行比例（主帳號若有 DB 資料則用 DB，否則用靜態資料）────────────────
+  // ─── 動態生成五行比例（優先用 DB natal 欄位，其次四柱估算，最後才用靜態 fallback）───────
   const fiveElementsData = useMemo(() => {
+    const p = profile as any;
+    // 優先： DB 已儲存八字計算的五行比例
+    if (p?.natalWood != null && p?.natalFire != null && p?.natalEarth != null && p?.natalMetal != null && p?.natalWater != null) {
+      const total = (p.natalWood + p.natalFire + p.natalEarth + p.natalMetal + p.natalWater) || 100;
+      const EN_TO_ZH: Record<string, string> = { fire: '火', earth: '土', metal: '金', wood: '木', water: '水' };
+      const fav = (p.favorableElements ?? '').split(',').map((e: string) => EN_TO_ZH[e.trim()] ?? e.trim()).filter(Boolean);
+      const unfav = (p.unfavorableElements ?? '').split(',').map((e: string) => EN_TO_ZH[e.trim()] ?? e.trim()).filter(Boolean);
+      return ['木', '火', '土', '金', '水'].map(el => {
+        const raw = { '木': p.natalWood, '火': p.natalFire, '土': p.natalEarth, '金': p.natalMetal, '水': p.natalWater }[el] ?? 0;
+        const value = Math.round((raw / total) * 100);
+        const isFav = fav.includes(el);
+        const isUnfav = unfav.includes(el);
+        const desc = isUnfav ? '過旺・忌神' : isFav ? '用神・補強優先' : '中性';
+        return { name: el, value, color: ELEMENT_COLORS[el], icon: ELEMENT_ICONS[el], desc };
+      });
+    }
+    // 次先：主帳號無 DB 資料時用靜態 fallback
     const hasDbProfile = profile?.dayPillar || profile?.favorableElements;
     if (isOwner && !hasDbProfile) return OWNER_STATIC_PROFILE.staticFiveElements;
+    // 最後：用四柱估算
     return estimateFiveElements(
       (effectiveProfile as any)?.yearPillar, (effectiveProfile as any)?.monthPillar,
       (effectiveProfile as any)?.dayPillar, (effectiveProfile as any)?.hourPillar,
       (effectiveProfile as any)?.favorableElements, (effectiveProfile as any)?.unfavorableElements,
     );
-  }, [isOwner, effectiveProfile, profile?.dayPillar, profile?.favorableElements]);
+  }, [isOwner, effectiveProfile, profile]);
 
   // ─── 動態生成補運策略 ────────────────────────────────────────────────────
   const luckyStrategyData = useMemo(() => {
