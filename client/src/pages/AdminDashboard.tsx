@@ -101,7 +101,7 @@ export default function AdminDashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0e1a] flex items-center justify-center">
+      <div className="min-h-screen oracle-page flex items-center justify-center">
         <div className="text-amber-400 text-lg animate-pulse">載入中...</div>
       </div>
     );

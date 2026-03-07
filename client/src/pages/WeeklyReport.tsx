@@ -33,7 +33,7 @@ function RoiTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   const d = payload[0]?.payload;
   return (
-    <div className="bg-[#0a1628] border border-white/20 rounded-xl p-3 text-xs shadow-2xl min-w-[160px]">
+    <div className="rounded-xl p-3 text-xs shadow-2xl min-w-[160px] border" style={{ background: 'var(--tooltip-bg)', borderColor: 'var(--tooltip-border)' }}>
       <div className="font-bold text-white mb-1">{label}</div>
       <div className={`font-black text-base mb-1 ${d.roi >= 0 ? "text-emerald-400" : "text-red-400"}`}>
         ROI {d.roi >= 0 ? "+" : ""}{d.roi}%
@@ -47,7 +47,7 @@ function HourTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const d = payload[0]?.payload;
   return (
-    <div className="bg-[#0a1628] border border-white/20 rounded-xl p-3 text-xs shadow-2xl min-w-[140px]">
+    <div className="rounded-xl p-3 text-xs shadow-2xl min-w-[140px] border" style={{ background: 'var(--tooltip-bg)', borderColor: 'var(--tooltip-border)' }}>
       <div className="font-bold text-white mb-1">{d.hourLabel} 時</div>
       <div className="text-amber-400 font-black text-base mb-1">{d.winRate}%</div>
       <div className="text-slate-400">共 {d.total} 筆 · 中獎 {d.won} 筆</div>
@@ -126,7 +126,7 @@ export default function WeeklyReport() {
   const isLoading = statsLoading || logsLoading;
 
   return (
-    <div className="min-h-screen bg-[#050d14] text-white">
+    <div className="oracle-page text-foreground">
       {/* 背景裝飾 */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-amber-500/4 rounded-full blur-3xl" />
@@ -471,7 +471,7 @@ export default function WeeklyReport() {
                     </Pie>
                     <Tooltip
                       formatter={(value: number, name: string) => [`${value} 筆`, `${name}行`]}
-                      contentStyle={{ background: "#0a1628", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "12px", fontSize: "12px" }}
+                      contentStyle={{ background: "var(--tooltip-bg)", border: "1px solid var(--tooltip-border)", borderRadius: "12px", fontSize: "12px" }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -513,7 +513,7 @@ export default function WeeklyReport() {
                     <XAxis dataKey="date" tick={{ fontSize: 9, fill: "rgba(255,255,255,0.3)" }} tickFormatter={(v: string) => v.slice(5)} />
                     <YAxis tick={{ fontSize: 9, fill: "rgba(255,255,255,0.3)" }} />
                     <Tooltip
-                      contentStyle={{ background: "#0a1628", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "12px", fontSize: "11px" }}
+                      contentStyle={{ background: "var(--tooltip-bg)", border: "1px solid var(--tooltip-border)", borderRadius: "12px", fontSize: "11px" }}
                       formatter={(value: number, name: string) => [`${value} 筆`, `${name}行`]}
                     />
                     {["火", "木", "水", "土", "金"].map(el => (

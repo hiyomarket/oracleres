@@ -259,12 +259,12 @@ export default function OutfitPage() {
   })();
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen oracle-page text-foreground">
       <SharedNav currentPage="outfit" />
 
       {/* ═══ 懸浮能量儀表盤（sticky top bar）═══ */}
       {simulatorData && (
-        <div className="sticky top-0 z-30 bg-[#0a0a0f]/95 backdrop-blur-md border-b border-amber-500/20 px-4 py-2">
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-amber-500/20 px-4 py-2">
           <div className="max-w-2xl mx-auto flex items-center gap-3">
             {/* 分數區 */}
             <div className="flex items-center gap-2 flex-1 min-w-0">

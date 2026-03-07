@@ -19,8 +19,9 @@ export default function AdminTheme() {
   );
 
   useEffect(() => {
-    if (themeSetting?.settingValue) {
-      setSelectedTheme(themeSetting.settingValue);
+    const val = (themeSetting as any)?.settingValue ?? (themeSetting as any)?.value;
+    if (val) {
+      setSelectedTheme(val);
     }
   }, [themeSetting]);
 
@@ -144,15 +145,36 @@ export default function AdminTheme() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   {/* 顏色預覽色塊 */}
-                  <div className="flex gap-2 mt-1">
+                  <div className="flex gap-1.5 mt-1 mb-2">
                     {theme.previewColors.map((color, i) => (
                       <div
                         key={i}
-                        className="flex-1 h-8 rounded-md shadow-sm border border-white/10"
+                        className="flex-1 h-7 rounded-md shadow-sm"
                         style={{ backgroundColor: color }}
                         title={color}
                       />
                     ))}
+                  </div>
+                  {/* 縮圖 UI 預覽 */}
+                  <div className="rounded-lg overflow-hidden mb-2" style={{ background: theme.vars.pageBg, border: `1px solid ${theme.vars.border}` }}>
+                    <div className="px-2 py-1 flex gap-1.5 items-center" style={{ background: theme.vars.navBg }}>
+                      <div className="w-2 h-2 rounded-full" style={{ background: theme.vars.primary }} />
+                      <div className="w-8 h-1.5 rounded-full" style={{ background: theme.vars.primary }} />
+                      <div className="w-5 h-1.5 rounded-full" style={{ background: theme.vars.muted }} />
+                      <div className="w-5 h-1.5 rounded-full" style={{ background: theme.vars.muted }} />
+                    </div>
+                    <div className="p-2 grid grid-cols-3 gap-1">
+                      {[0.7, 0.9, 0.55].map((w, i) => (
+                        <div key={i} className="rounded p-1.5" style={{ background: theme.vars.card }}>
+                          <div className="h-1 rounded-full mb-1" style={{ background: theme.vars.primary, width: `${w * 100}%` }} />
+                          <div className="h-0.5 rounded-full" style={{ background: theme.vars.muted }} />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="px-2 py-1.5 flex gap-1.5" style={{ borderTop: `1px solid ${theme.vars.border}` }}>
+                      <div className="px-2 py-0.5 rounded text-[9px] font-semibold" style={{ background: theme.vars.primary, color: theme.vars.primaryForeground }}>主要</div>
+                      <div className="px-2 py-0.5 rounded text-[9px] font-semibold" style={{ background: theme.vars.accent, color: theme.vars.accentForeground }}>強調</div>
+                    </div>
                   </div>
                   {/* 操作按鈕 */}
                   <div className="flex gap-2 mt-3">

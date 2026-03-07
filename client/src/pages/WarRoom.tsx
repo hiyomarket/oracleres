@@ -337,7 +337,7 @@ export default function WarRoom() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] flex flex-col">
+      <div className="min-h-screen oracle-page flex flex-col">
           <SharedNav currentPage="warRoom" />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -355,7 +355,7 @@ export default function WarRoom() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] flex flex-col">
+      <div className="min-h-screen oracle-page flex flex-col">
           <SharedNav currentPage="warRoom" />
         <main className="flex-1 flex items-center justify-center">
           <p className="text-red-400">無法載入今日運勢，請稍後再試</p>
@@ -367,7 +367,7 @@ export default function WarRoom() {
   const wuxingTheme = WUXING_COLORS[data.tenGod.wuxing] || WUXING_COLORS["木"];
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] flex flex-col">
+    <div className="min-h-screen oracle-page flex flex-col">
       {/* WBC 活動彈窗 */}
       {showWbcModal && <WbcPromoModal onClose={() => setShowWbcModal(false)} />}
       {/* 背景動態光效 */}

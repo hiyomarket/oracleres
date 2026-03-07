@@ -120,7 +120,7 @@ export default function AccountManager() {
   // 非主帳號
   if (!status?.isOwner) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4">
+      <div className="min-h-screen oracle-page flex items-center justify-center px-4">
         <div className="text-center space-y-3">
           <Shield className="w-12 h-12 text-slate-600 mx-auto" />
           <p className="text-slate-400">此頁面僅限主帳號存取</p>
@@ -131,9 +131,9 @@ export default function AccountManager() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen oracle-page text-foreground">
       {/* Header */}
-      <div className="border-b border-slate-800/60 px-4 py-4 sticky top-0 bg-[#0a0a0f]/95 backdrop-blur-sm z-10">
+      <div className="border-b border-slate-800/60 px-4 py-4 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <Link href="/" className="p-2 rounded-xl hover:bg-slate-800/60 transition-colors">
             <ArrowLeft className="w-4 h-4 text-slate-400" />

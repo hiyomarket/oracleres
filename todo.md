@@ -2264,3 +2264,10 @@
 - [x] getUserProfileForEngine 更新：優先用 DB natal 欄位，其次用 calculateBazi 動態計算，最後才估算
 - [x] ProfilePage 更新：優先用 DB natal 欄位顯示圓餅圖，其次四柱估算，最後用靜態 fallback
 - [x] 撰寫 dynamic-engine.test.ts，12 項測試全部通過（共 279 項全部通過）
+
+## 全站主題色系修復 v10.5
+
+- [x] 診斷根本原因：全站 20+ 個檔案硬編碼背景色（bg-[#050d14]等），導覽列/頁面背景/彈出視窗完全繞過主題系統
+- [x] 重新設計 themes.ts：每套主題新增 pageBg/navBg/tooltipBg/tooltipBorder 等專用 CSS 變數，各主題背景色差異明顯
+- [x] 更新 index.css：新增 .oracle-page 類別，全站 20+ 個檔案的硬編碼色全改為 CSS 變數
+- [x] 更新 AdminTheme 頁面：每張主題卡片加入縮圖 UI 預覽（導覽列+卡片+按鈕實際色彩），279 項測試全部通過

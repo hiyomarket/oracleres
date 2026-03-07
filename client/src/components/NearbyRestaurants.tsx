@@ -927,7 +927,7 @@ export function NearbyRestaurants({ supplements, todayDirections, favorableEleme
                   )}
                 </button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="bg-[#0f0f1a] border-t border-white/10 text-white rounded-t-2xl pb-8">
+              <SheetContent side="bottom" className="bg-popover border-t border-border text-foreground rounded-t-2xl pb-8">
                 <SheetHeader className="mb-4">
                   <SheetTitle className="text-white text-base">進階篩選</SheetTitle>
                 </SheetHeader>

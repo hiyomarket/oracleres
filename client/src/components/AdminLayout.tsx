@@ -93,7 +93,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0e1a] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--page-bg)' }}>
         <div className="text-amber-400 text-lg animate-pulse">載入中...</div>
       </div>
     );
@@ -102,9 +102,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   if (!user || user.role !== "admin") return null;
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-white flex flex-col">
+    <div className="min-h-screen text-foreground flex flex-col" style={{ background: 'var(--page-bg)' }}>
       {/* 頂部 Header */}
-      <header className="border-b border-slate-800 bg-[#0d1220] px-4 py-3 flex items-center gap-3 shrink-0">
+      <header className="border-b border-border px-4 py-3 flex items-center gap-3 shrink-0" style={{ background: 'var(--nav-bg)' }}>
         <Link href="/">
           <span className="text-amber-400 font-bold text-lg cursor-pointer hover:text-amber-300 transition-colors">
             ☯ 天命共振
@@ -122,7 +122,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       <div className="flex flex-1 overflow-hidden">
         {/* 桌面側邊欄 */}
-        <aside className="hidden md:flex flex-col w-52 shrink-0 border-r border-slate-800 bg-[#0d1220] py-4 px-3 gap-1">
+        <aside className="hidden md:flex flex-col w-52 shrink-0 border-r border-border py-4 px-3 gap-1" style={{ background: 'var(--nav-bg)' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = location === item.href || location.startsWith(item.href + "/");
             return (
@@ -169,7 +169,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </aside>
 
         {/* 行動版底部 Tab */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0d1220] border-t border-slate-800 flex">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border flex" style={{ background: 'var(--nav-bg)' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = location === item.href || location.startsWith(item.href + "/");
             return (

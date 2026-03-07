@@ -69,7 +69,7 @@ export function DailyCheckInModal() {
       />
 
       {/* 彈窗內容 */}
-      <div className="relative w-full max-w-sm bg-gradient-to-br from-[#0f1117] to-[#1a1200] border border-amber-500/30 rounded-3xl shadow-2xl shadow-amber-900/30 overflow-hidden">
+      <div className="relative w-full max-w-sm border border-amber-500/30 rounded-3xl shadow-2xl shadow-amber-900/30 overflow-hidden">
         {/* 裝飾背景光效 */}
         <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-orange-500/5 pointer-events-none" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />

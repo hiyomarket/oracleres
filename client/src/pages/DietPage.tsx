@@ -185,7 +185,7 @@ function ElementKnowledgeModal({ open, onClose, knowledge }: { open: boolean; on
   if (!knowledge) return null;
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-[#0f0f1a] border border-white/15 text-white max-w-sm mx-auto">
+      <DialogContent className="bg-popover border border-border text-foreground max-w-sm mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <span className="text-2xl">{ELEMENT_EMOJI[knowledge.element]}</span>
@@ -285,7 +285,7 @@ function AiChefMenuModal({ open, onClose, targetElement, secondaryElement, mealS
   const retry = handleRetry;
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-[#0f0f1a] border border-white/15 text-white max-w-sm mx-auto max-h-[80vh] overflow-y-auto">
+      <DialogContent className="bg-popover border border-border text-foreground max-w-sm mx-auto max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <ChefHat className="w-5 h-5 text-amber-400" /><span>AI 天命主廚菜單</span>

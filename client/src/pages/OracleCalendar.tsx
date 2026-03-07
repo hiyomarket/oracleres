@@ -203,7 +203,7 @@ export default function OracleCalendar() {
   }, [selectedDay, viewYear, viewMonth]);
 
   return (
-    <div className="min-h-screen bg-[#050d14] text-white">
+    <div className="oracle-page text-foreground">
       {/* 背景 */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-0 w-80 h-80 bg-teal-500/5 rounded-full blur-3xl" />

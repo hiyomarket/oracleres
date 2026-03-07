@@ -38,7 +38,7 @@ export default function LuckCyclePage() {
   const hasAccess = isAdmin || hasFeature("profile");
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen oracle-page text-foreground">
       <SharedNav currentPage="luck-cycle" />
       <main className="max-w-2xl mx-auto px-4 py-6">
         {/* 頁面標題 */}

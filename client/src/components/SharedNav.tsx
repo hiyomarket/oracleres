@@ -215,7 +215,7 @@ function NotificationBell() {
     >
       <span className="text-base">🔔</span>
       {count > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] rounded-full bg-red-500 border border-[#050d14] flex items-center justify-center text-[9px] font-bold text-white px-0.5">
+        <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] rounded-full bg-red-500 border border-background flex items-center justify-center text-[9px] font-bold text-white px-0.5">
           {count > 99 ? "99+" : count}
         </span>
       )}
@@ -270,7 +270,7 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
             {displayName?.[0]?.toUpperCase() ?? "?"}
           </div>
           {status?.isOwner && (
-            <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 border border-[#0a0a0f] flex items-center justify-center">
+            <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 border border-background flex items-center justify-center">
               <Star className="w-1.5 h-1.5 text-black" fill="black" />
             </div>
           )}
@@ -280,7 +280,7 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-64 bg-[#0f1117] border border-slate-700/50 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-50">
+        <div className="absolute right-0 top-full mt-2 w-64 bg-popover border border-border rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-50">
 
           {/* 用戶資訊區塊 */}
           <div className="px-4 py-3 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border-b border-slate-700/40">
@@ -579,7 +579,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
   return (
     <>
       {/* ─── 頂部導覽列（桌機 + 手機）：Logo + 右側用戶 ─── */}
-      <nav className="sticky top-0 z-50 border-b border-white/5 backdrop-blur-md bg-[#050d14]/90">
+      <nav className="sticky top-0 z-50 border-b backdrop-blur-md" style={{ background: 'var(--nav-bg, oklch(0.08 0.03 220 / 0.92))', borderColor: 'var(--nav-border, oklch(0.28 0.05 215 / 0.4))' }}>
         {/* 第一行：Logo + 用戶 */}
         <div className="flex items-center justify-between px-4 md:px-6 py-3">
           {/* 左側：Logo */}
@@ -651,12 +651,12 @@ export function SharedNav({ currentPage }: SharedNavProps) {
             {/* 左漸層提示 */}
             {desktopCanScrollLeft && (
               <div className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to right, #050d14 0%, transparent 100%)' }} />
+                style={{ background: 'linear-gradient(to right, var(--page-bg, #050d14) 0%, transparent 100%)' }} />
             )}
             {/* 右漸層提示 */}
             {desktopCanScrollRight && (
               <div className="absolute right-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to left, #050d14 0%, transparent 100%)' }} />
+                style={{ background: 'linear-gradient(to left, var(--page-bg, #050d14) 0%, transparent 100%)' }} />
             )}
             <div
               ref={desktopNavRef}
@@ -701,12 +701,12 @@ export function SharedNav({ currentPage }: SharedNavProps) {
             {/* 左漸層提示 */}
             {mobileCanScrollLeft && (
               <div className="absolute left-0 top-0 bottom-0 w-10 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to right, #050d14 0%, transparent 100%)' }} />
+                style={{ background: 'linear-gradient(to right, var(--page-bg, #050d14) 0%, transparent 100%)' }} />
             )}
             {/* 右漸層提示 */}
             {mobileCanScrollRight && (
               <div className="absolute right-0 top-0 bottom-0 w-10 z-10 pointer-events-none"
-                style={{ background: 'linear-gradient(to left, #050d14 0%, transparent 100%)' }} />
+                style={{ background: 'linear-gradient(to left, var(--page-bg, #050d14) 0%, transparent 100%)' }} />
             )}
             <div
               ref={mobileNavRef}

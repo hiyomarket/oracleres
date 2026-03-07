@@ -3,7 +3,7 @@ import { Smartphone, Share2, Plus, MoreHorizontal, CheckCircle } from "lucide-re
 
 export default function AddToHome() {
   return (
-    <div className="min-h-screen bg-[#050d14] text-white">
+    <div className="oracle-page text-foreground">
       <SharedNav currentPage="profile" />
 
       <div className="max-w-2xl mx-auto px-4 py-10 pb-28 md:pb-10">

@@ -14,25 +14,25 @@ type BannerType = "info" | "warning" | "success" | "promo";
 
 const TYPE_STYLES: Record<BannerType, { bg: string; border: string; text: string; dot: string }> = {
   info: {
-    bg: "bg-[#1a1a2e]/95",
+    bg: "bg-card/95",
     border: "border-amber-500/30",
     text: "text-amber-100",
     dot: "bg-amber-400",
   },
   warning: {
-    bg: "bg-[#1a1a2e]/95",
+    bg: "bg-card/95",
     border: "border-orange-500/40",
     text: "text-orange-100",
     dot: "bg-orange-400",
   },
   success: {
-    bg: "bg-[#1a1a2e]/95",
+    bg: "bg-card/95",
     border: "border-emerald-500/40",
     text: "text-emerald-100",
     dot: "bg-emerald-400",
   },
   promo: {
-    bg: "bg-[#1a1a2e]/95",
+    bg: "bg-card/95",
     border: "border-purple-500/40",
     text: "text-purple-100",
     dot: "bg-purple-400",

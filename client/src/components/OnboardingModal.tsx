@@ -143,7 +143,7 @@ export function OnboardingModal({ onComplete }: OnboardingModalProps) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-md bg-[#0f0f1a] border border-amber-500/20 rounded-3xl overflow-hidden shadow-2xl"
+        className="w-full max-w-md bg-popover border border-amber-500/20 rounded-3xl overflow-hidden shadow-2xl"
       >
         {/* 頂部進度條 */}
         <div className="flex gap-1 p-4 pb-0">

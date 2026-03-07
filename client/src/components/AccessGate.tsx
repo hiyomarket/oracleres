@@ -29,7 +29,7 @@ export function AccessGate({ children }: AccessGateProps) {
   // 載入中
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-screen oracle-page flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
       </div>
     );
@@ -38,7 +38,7 @@ export function AccessGate({ children }: AccessGateProps) {
   // 未登入
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4">
+      <div className="min-h-screen oracle-page flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}

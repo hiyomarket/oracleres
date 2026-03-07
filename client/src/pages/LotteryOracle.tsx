@@ -938,7 +938,7 @@ export default function LotteryOracle() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#050d14] text-white">
+    <div className="oracle-page text-foreground">
       {/* 背景裝飾 */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />

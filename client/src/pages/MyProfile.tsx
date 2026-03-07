@@ -232,14 +232,14 @@ export default function MyProfile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-screen oracle-page flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen oracle-page text-foreground">
       {/* Header */}
       <div className="border-b border-slate-800/60 px-4 py-4">
         <div className="max-w-lg mx-auto flex items-center gap-3">
