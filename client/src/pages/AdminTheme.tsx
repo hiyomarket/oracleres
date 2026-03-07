@@ -104,8 +104,14 @@ export default function AdminTheme() {
         </Card>
 
         {/* 主題卡片網格 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {THEMES.map((theme) => {
+        {/* 深色主題 */}
+        <div>
+          <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
+            <span className="text-lg">🌙</span>深色主題系列
+            <span className="text-xs text-muted-foreground font-normal">（適合夜間、神秘氛圍）</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {THEMES.filter(t => !t.id.endsWith('_light')).map((theme) => {
             const isActive = selectedTheme === theme.id && !previewTheme;
             const isPreviewing = previewTheme === theme.id;
 
@@ -210,6 +216,122 @@ export default function AdminTheme() {
               </Card>
             );
           })}
+          </div>
+        </div>
+
+        {/* 淺色主題 */}
+        <div>
+          <h2 className="text-base font-semibold text-foreground mb-3 flex items-center gap-2">
+            <span className="text-lg">☀️</span>淺色主題系列
+            <span className="text-xs text-muted-foreground font-normal">（適合白天、清新氛圍）</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {THEMES.filter(t => t.id.endsWith('_light')).map((theme) => {
+            const isActive = selectedTheme === theme.id && !previewTheme;
+            const isPreviewing = previewTheme === theme.id;
+
+            return (
+              <Card
+                key={theme.id}
+                className={`cursor-pointer transition-all duration-200 hover:scale-[1.02] ${
+                  isActive || isPreviewing
+                    ? "ring-2 ring-primary shadow-lg shadow-primary/20"
+                    : "glass-card hover:border-primary/40"
+                }`}
+                onClick={() => handlePreview(theme.id)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <span className="text-xl">{theme.emoji}</span>
+                        {theme.name}
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        {theme.description}
+                      </p>
+                    </div>
+                    {(isActive || isPreviewing) && (
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2 ${
+                        isPreviewing ? "bg-amber-500" : "bg-primary"
+                      }`}>
+                        {isPreviewing ? (
+                          <Eye className="w-3 h-3 text-white" />
+                        ) : (
+                          <Check className="w-3 h-3 text-primary-foreground" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  {/* 顏色預覽色塊 */}
+                  <div className="flex gap-1.5 mt-1 mb-2">
+                    {theme.previewColors.map((color, i) => (
+                      <div
+                        key={i}
+                        className="flex-1 h-7 rounded-md shadow-sm"
+                        style={{ backgroundColor: color }}
+                        title={color}
+                      />
+                    ))}
+                  </div>
+                  {/* 縮圖 UI 預覽 */}
+                  <div className="rounded-lg overflow-hidden mb-2" style={{ background: theme.vars.pageBg, border: `1px solid ${theme.vars.border}` }}>
+                    <div className="px-2 py-1 flex gap-1.5 items-center" style={{ background: theme.vars.navBg }}>
+                      <div className="w-2 h-2 rounded-full" style={{ background: theme.vars.primary }} />
+                      <div className="w-8 h-1.5 rounded-full" style={{ background: theme.vars.primary }} />
+                      <div className="w-5 h-1.5 rounded-full" style={{ background: theme.vars.muted }} />
+                      <div className="w-5 h-1.5 rounded-full" style={{ background: theme.vars.muted }} />
+                    </div>
+                    <div className="p-2 grid grid-cols-3 gap-1">
+                      {[0.7, 0.9, 0.55].map((w, i) => (
+                        <div key={i} className="rounded p-1.5" style={{ background: theme.vars.card }}>
+                          <div className="h-1 rounded-full mb-1" style={{ background: theme.vars.primary, width: `${w * 100}%` }} />
+                          <div className="h-0.5 rounded-full" style={{ background: theme.vars.muted }} />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="px-2 py-1.5 flex gap-1.5" style={{ borderTop: `1px solid ${theme.vars.border}` }}>
+                      <div className="px-2 py-0.5 rounded text-[9px] font-semibold" style={{ background: theme.vars.primary, color: theme.vars.primaryForeground }}>主要</div>
+                      <div className="px-2 py-0.5 rounded text-[9px] font-semibold" style={{ background: theme.vars.accent, color: theme.vars.accentForeground }}>強調</div>
+                    </div>
+                  </div>
+                  {/* 操作按鈕 */}
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePreview(theme.id);
+                      }}
+                    >
+                      <Eye className="w-3 h-3 mr-1" />
+                      預覽
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTheme(theme.id);
+                        setPreviewTheme(null);
+                        applyTheme(theme.id);
+                        updateSetting.mutate({ key: "active_theme", value: theme.id });
+                      }}
+                      disabled={updateSetting.isPending}
+                    >
+                      <Check className="w-3 h-3 mr-1" />
+                      {selectedTheme === theme.id && !previewTheme ? "已套用" : "套用"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+          </div>
         </div>
 
         {/* 說明區塊 */}

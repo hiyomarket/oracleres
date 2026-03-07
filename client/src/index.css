@@ -259,6 +259,16 @@
   min-height: 100vh;
   color: var(--foreground);
 }
+/* 淺色主題下的文字顏色修正 */
+.oracle-page .text-white\/60 {
+  color: color-mix(in oklch, var(--foreground) 60%, transparent);
+}
+.oracle-page .text-white\/80 {
+  color: color-mix(in oklch, var(--foreground) 80%, transparent);
+}
+.oracle-page .text-white\/40 {
+  color: color-mix(in oklch, var(--foreground) 40%, transparent);
+}
 .oracle-bg {
   background: var(--oracle-bg, radial-gradient(
     ellipse at 30% 20%,
