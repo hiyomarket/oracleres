@@ -2271,3 +2271,11 @@
 - [x] 重新設計 themes.ts：每套主題新增 pageBg/navBg/tooltipBg/tooltipBorder 等專用 CSS 變數，各主題背景色差異明顯
 - [x] 更新 index.css：新增 .oracle-page 類別，全站 20+ 個檔案的硬編碼色全改為 CSS 變數
 - [x] 更新 AdminTheme 頁面：每張主題卡片加入縮圖 UI 預覽（導覽列+卡片+按鈕實際色彩），279 項測試全部通過
+
+## 淺色主題版本 v10.6
+
+- [ ] 為 6 套主題各新增淺色版本（共 12 套主題）
+- [ ] 更新 themes.ts：淺色主題的 pageBg/navBg/card/foreground 使用淺色值
+- [ ] 更新 AdminTheme 頁面：顯示深色/淺色分組，加入「深色」/「淺色」標籤
+- [ ] 確保淺色主題下文字顏色正確（深色文字在淺色背景上可見）
+- [ ] 測試驗證，279 項測試全部通過
