@@ -819,6 +819,10 @@ export function applyTheme(themeId: string) {
 
   // 儲存到 localStorage 作為即時快取
   localStorage.setItem("oracle_theme", themeId);
+
+  // 設定 data-theme 屬性，供 CSS 選擇器體制深色/淺色主題差異
+  const isLight = themeId.endsWith('_light');
+  root.setAttribute('data-theme-mode', isLight ? 'light' : 'dark');
 }
 
 /**

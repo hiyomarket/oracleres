@@ -259,7 +259,53 @@
   min-height: 100vh;
   color: var(--foreground);
 }
-/* 淺色主題下的文字顏色修正 */
+/* ===== 淺色主題全局文字覆蓋（data-theme-mode="light" 時生效） ===== */
+/* 核心原則：淺色主題下，白色/淺灰文字全部改為深色 foreground */
+:root[data-theme-mode="light"] .text-white,
+:root[data-theme-mode="light"] .text-slate-100,
+:root[data-theme-mode="light"] .text-slate-200,
+:root[data-theme-mode="light"] .text-slate-300 {
+  color: var(--foreground) !important;
+}
+:root[data-theme-mode="light"] .text-white\/90,
+:root[data-theme-mode="light"] .text-white\/80,
+:root[data-theme-mode="light"] .text-white\/70 {
+  color: color-mix(in oklch, var(--foreground) 90%, transparent) !important;
+}
+:root[data-theme-mode="light"] .text-white\/60,
+:root[data-theme-mode="light"] .text-slate-400 {
+  color: color-mix(in oklch, var(--foreground) 65%, transparent) !important;
+}
+:root[data-theme-mode="light"] .text-white\/50,
+:root[data-theme-mode="light"] .text-white\/40,
+:root[data-theme-mode="light"] .text-slate-500 {
+  color: var(--muted-foreground) !important;
+}
+:root[data-theme-mode="light"] .text-white\/30,
+:root[data-theme-mode="light"] .text-white\/20,
+:root[data-theme-mode="light"] .text-slate-600,
+:root[data-theme-mode="light"] .text-slate-700 {
+  color: color-mix(in oklch, var(--muted-foreground) 70%, transparent) !important;
+}
+/* 淺色主題下，深色背景卡片改為淺色 */
+:root[data-theme-mode="light"] .bg-slate-800,
+:root[data-theme-mode="light"] .bg-slate-900,
+:root[data-theme-mode="light"] .bg-black\/50,
+:root[data-theme-mode="light"] .bg-black\/40,
+:root[data-theme-mode="light"] .bg-black\/30 {
+  background-color: color-mix(in oklch, var(--card) 90%, var(--border)) !important;
+}
+/* 淺色主題下的 glass-card 調整 */
+:root[data-theme-mode="light"] .glass-card {
+  background: var(--glass-card-bg, oklch(0.96 0.02 285 / 0.9)) !important;
+  border-color: var(--glass-card-border, oklch(0.78 0.06 285 / 0.5)) !important;
+}
+/* 淺色主題下的分隔線調整 */
+:root[data-theme-mode="light"] .border-white\/10,
+:root[data-theme-mode="light"] .border-white\/20 {
+  border-color: var(--border) !important;
+}
+/* 淺色主題下的 oracle-page 文字修正（小範圍覆蓋） */
 .oracle-page .text-white\/60 {
   color: color-mix(in oklch, var(--foreground) 60%, transparent);
 }
