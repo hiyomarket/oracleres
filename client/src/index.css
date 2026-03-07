@@ -245,35 +245,35 @@
 }
 
 .oracle-bg {
-  background: radial-gradient(
+  background: var(--oracle-bg, radial-gradient(
     ellipse at 30% 20%,
     oklch(0.20 0.08 165 / 0.8) 0%,
     oklch(0.12 0.05 225 / 0.9) 40%,
     oklch(0.08 0.03 220) 100%
-  );
+  ));
 }
 .flame-button {
-  background: linear-gradient(135deg, oklch(0.75 0.22 50) 0%, oklch(0.68 0.24 35) 50%, oklch(0.72 0.20 45) 100%);
+  background: var(--flame-button-gradient, linear-gradient(135deg, oklch(0.75 0.22 50) 0%, oklch(0.68 0.24 35) 50%, oklch(0.72 0.20 45) 100%));
   animation: flamePulse 2.5s ease-in-out infinite;
   transition: all 0.3s ease;
-  color: oklch(0.10 0.02 220);
+  color: var(--primary-foreground, oklch(0.10 0.02 220));
   font-family: 'Noto Serif TC', serif;
   font-weight: 700;
   letter-spacing: 0.1em;
 }
 .flame-button:hover {
-  background: linear-gradient(135deg, oklch(0.82 0.20 60) 0%, oklch(0.75 0.22 40) 50%, oklch(0.80 0.18 50) 100%);
+  filter: brightness(1.15);
   transform: translateY(-2px) scale(1.02);
 }
 .flame-button:active { transform: translateY(0) scale(0.98); }
 .flame-button:disabled { animation: none; opacity: 0.5; cursor: not-allowed; transform: none; }
 .glass-card {
-  background: oklch(0.16 0.04 215 / 0.7);
+  background: var(--glass-card-bg, oklch(0.16 0.04 215 / 0.7));
   backdrop-filter: blur(12px);
-  border: 1px solid oklch(0.35 0.06 215 / 0.5);
+  border: 1px solid var(--glass-card-border, oklch(0.35 0.06 215 / 0.5));
 }
 .oracle-text-gradient {
-  background: linear-gradient(135deg, oklch(0.88 0.18 80), oklch(0.72 0.20 45), oklch(0.65 0.22 35));
+  background: var(--text-gradient, linear-gradient(135deg, oklch(0.88 0.18 80), oklch(0.72 0.20 45), oklch(0.65 0.22 35)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -292,10 +292,10 @@
   animation: shimmer 1.5s ease-in-out infinite;
 }
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: oklch(0.10 0.04 222); }
-::-webkit-scrollbar-thumb { background: oklch(0.30 0.06 215); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: oklch(0.40 0.08 215); }
-::selection { background: oklch(0.72 0.20 45 / 0.4); color: oklch(0.95 0.02 60); }
+::-webkit-scrollbar-track { background: var(--scrollbar-track, oklch(0.10 0.04 222)); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb, oklch(0.30 0.06 215)); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { filter: brightness(1.3); }
+::selection { background: var(--selection-bg, oklch(0.72 0.20 45 / 0.4)); color: oklch(0.95 0.02 60); }
 
 @layer components {
   /**

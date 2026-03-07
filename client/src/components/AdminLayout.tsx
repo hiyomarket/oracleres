@@ -73,6 +73,12 @@ const NAV_ITEMS = [
     label: "專家管理",
     desc: "審核申請、管理訂單",
   },
+  {
+    href: "/admin/theme",
+    icon: "🎨",
+    label: "主題配色管理",
+    desc: "全站色系、女性化主題切換",
+  },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {

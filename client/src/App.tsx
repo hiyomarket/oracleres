@@ -28,6 +28,7 @@ import AdminFeatureStore from "./pages/AdminFeatureStore";
 import AdminDestinyShop from "./pages/AdminDestinyShop";
 import AdminBanners from "./pages/AdminBanners";
 import AdminExperts from "./pages/AdminExperts";
+import AdminTheme from "./pages/AdminTheme";
 import ExpertMarket from "./pages/ExpertMarket";
 import ExpertDetail from "./pages/ExpertDetail";
 import ExpertDashboard from "./pages/expert/ExpertDashboard";
@@ -45,6 +46,7 @@ import LuckCyclePage from "@/pages/LuckCyclePage";
 import WealthPage from "@/pages/WealthPage";
 import { DailySigninModal } from "./components/DailySigninModal";
 import { FloatingBanner } from "./components/FloatingBanner";
+import { ThemeInitializer } from "./components/ThemeInitializer";
 
 function Router() {
   return (
@@ -90,6 +92,7 @@ function Router() {
         <Route path={"/expert/bookings"} component={ExpertBookings} />
         <Route path={"/my-bookings"} component={MyBookings} />
         <Route path={"/admin/experts"} component={AdminExperts} />
+        <Route path={"/admin/theme"} component={AdminTheme} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
@@ -106,6 +109,7 @@ function App() {
         // switchable
       >
         <TooltipProvider>
+          <ThemeInitializer />
           <Toaster />
           <DailySigninModal />
           <FloatingBanner />

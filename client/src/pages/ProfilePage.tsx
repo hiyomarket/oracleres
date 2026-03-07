@@ -581,9 +581,11 @@ export default function ProfilePage() {
     staleTime: 0,
     refetchOnMount: true,
   });
-  // 主帳號使用靜態資料，其他用戶使用 DB 動態資料
-  const effectiveProfile = isOwner ? OWNER_STATIC_PROFILE : profile;
-  const displayName = isOwner ? OWNER_STATIC_PROFILE.displayName : (profile?.displayName ?? user?.name ?? '您');
+  // 主帳號：若 DB 中有命格資料則優先使用 DB，否則用靜態資料作為 fallback
+  const effectiveProfile = isOwner
+    ? (profile?.displayName || profile?.dayPillar ? profile : OWNER_STATIC_PROFILE)
+    : profile;
+  const displayName = (profile?.displayName) ?? (isOwner ? OWNER_STATIC_PROFILE.displayName : (user?.name ?? '您'));
 
   // ─── 動態計算年齡（從 effectiveProfile.birthDate）──────────────────────────
   const ageInfo = useMemo(() => {
@@ -628,14 +630,16 @@ export default function ProfilePage() {
     });
   }, [effectiveProfile?.yearPillar, effectiveProfile?.monthPillar, effectiveProfile?.dayPillar, effectiveProfile?.hourPillar]);
 
-  // ─── 動態生成五行比例（主帳號使用靜態資料）──────────────────────────────────
+  // ─── 動態生成五行比例（主帳號若有 DB 資料則用 DB，否則用靜態資料）────────────────
   const fiveElementsData = useMemo(() => {
-    if (isOwner) return OWNER_STATIC_PROFILE.staticFiveElements;
+    const hasDbProfile = profile?.dayPillar || profile?.favorableElements;
+    if (isOwner && !hasDbProfile) return OWNER_STATIC_PROFILE.staticFiveElements;
     return estimateFiveElements(
-      profile?.yearPillar, profile?.monthPillar, profile?.dayPillar, profile?.hourPillar,
-      profile?.favorableElements, profile?.unfavorableElements,
+      (effectiveProfile as any)?.yearPillar, (effectiveProfile as any)?.monthPillar,
+      (effectiveProfile as any)?.dayPillar, (effectiveProfile as any)?.hourPillar,
+      (effectiveProfile as any)?.favorableElements, (effectiveProfile as any)?.unfavorableElements,
     );
-  }, [isOwner, profile?.yearPillar, profile?.monthPillar, profile?.dayPillar, profile?.hourPillar, profile?.favorableElements, profile?.unfavorableElements]);
+  }, [isOwner, effectiveProfile, profile?.dayPillar, profile?.favorableElements]);
 
   // ─── 動態生成補運策略 ────────────────────────────────────────────────────
   const luckyStrategyData = useMemo(() => {
@@ -1056,17 +1060,15 @@ export default function ProfilePage() {
 
 
 
-        {/* ─── 前往設定按鈕（主帳號不顯示，其他用戶顯示）─── */}
-        {!isOwner && (
-          <div className="flex justify-center pt-4">
-            <Link href="/my-profile">
-              <span className="inline-flex items-center gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/40 rounded-xl px-6 py-3 text-sm font-medium transition-colors cursor-pointer">
-                <Settings className="w-4 h-4" />
-                編輯命格資料
-              </span>
-            </Link>
-          </div>
-        )}
+        {/* ─── 前往設定按鈕（所有用戶包含主帳號）─── */}
+        <div className="flex justify-center pt-4">
+          <Link href="/my-profile">
+            <span className="inline-flex items-center gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/40 rounded-xl px-6 py-3 text-sm font-medium transition-colors cursor-pointer">
+              <Settings className="w-4 h-4" />
+              編輯命格資料
+            </span>
+          </Link>
+        </div>
 
         {/* ─── 申請成為命理師區塊 ─── */}
         <ExpertApplySection />

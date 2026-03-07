@@ -321,19 +321,17 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
 
           <div className="py-1.5">
 
-            {/* 非主帳號：我的命格資料 */}
-            {!status?.isOwner && (
-              <Link
-                href="/my-profile"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
-              >
-                <div className="w-7 h-7 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
-                  <User className="w-3.5 h-3.5 text-blue-400" />
-                </div>
-                我的命格資料
-              </Link>
-            )}
+            {/* 我的命格資料（所有用戶，包含主帳號）*/}
+            <Link
+              href="/my-profile"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800/60 hover:text-white transition-colors"
+            >
+              <div className="w-7 h-7 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
+                <User className="w-3.5 h-3.5 text-blue-400" />
+              </div>
+              我的命格資料
+            </Link>
 
             {/* 天命小舖 */}
             <Link
