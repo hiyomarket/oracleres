@@ -91,6 +91,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
   }, [user, authLoading, navigate]);
 
+  // 切換頁面時自動滾動選中項目到可見範圍
+  useEffect(() => {
+    const nav = document.getElementById('admin-bottom-nav');
+    const active = document.getElementById('admin-nav-active');
+    if (nav && active) {
+      const navRect = nav.getBoundingClientRect();
+      const activeRect = active.getBoundingClientRect();
+      const scrollLeft = active.offsetLeft - navRect.width / 2 + activeRect.width / 2;
+      nav.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+    }
+  }, [location]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--page-bg)' }}>
@@ -168,23 +180,51 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </aside>
 
-        {/* 行動版底部 Tab */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border flex" style={{ background: 'var(--nav-bg)' }}>
-          {NAV_ITEMS.map((item) => {
-            const isActive = location === item.href || location.startsWith(item.href + "/");
-            return (
-              <Link key={item.href} href={item.href} className="flex-1">
+        {/* 行動版底部 Tab - 可水平滑動 */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border" style={{ background: 'var(--nav-bg)' }}>
+          {/* 左右漸層提示可滑動 */}
+          <div className="relative">
+            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 z-10"
+              style={{ background: 'linear-gradient(to right, var(--nav-bg, #0d0d1f), transparent)' }} />
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 z-10"
+              style={{ background: 'linear-gradient(to left, var(--nav-bg, #0d0d1f), transparent)' }} />
+            {/* 滑動容器 */}
+            <div
+              id="admin-bottom-nav"
+              className="nav-scroll-container flex overflow-x-auto"
+              style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+            >
+              {NAV_ITEMS.map((item) => {
+                const isActive = location === item.href || location.startsWith(item.href + "/");
+                return (
+                  <Link key={item.href} href={item.href} className="shrink-0">
+                    <div
+                      id={isActive ? 'admin-nav-active' : undefined}
+                      className={`flex flex-col items-center py-2 px-1 gap-0.5 transition-colors ${
+                        isActive
+                          ? "text-amber-400 border-t-2 border-amber-400"
+                          : "text-slate-500 border-t-2 border-transparent"
+                      }`}
+                      style={{ minWidth: '4.5rem', width: '4.5rem' }}
+                    >
+                      <span className="text-xl leading-none">{item.icon}</span>
+                      <span className="text-[9px] font-medium leading-tight text-center w-full truncate">{item.label}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+              {/* 返回前台 */}
+              <Link href="/" className="shrink-0">
                 <div
-                  className={`flex flex-col items-center py-2 gap-0.5 transition-colors ${
-                    isActive ? "text-amber-400" : "text-slate-500"
-                  }`}
+                  className="flex flex-col items-center py-2 px-1 gap-0.5 transition-colors text-slate-600 border-t-2 border-transparent"
+                  style={{ minWidth: '4.5rem', width: '4.5rem' }}
                 >
-                  <span className="text-lg">{item.icon}</span>
-                  <span className="text-[10px] font-medium">{item.label}</span>
+                  <span className="text-xl leading-none">↩</span>
+                  <span className="text-[9px] font-medium leading-tight text-center">返回前台</span>
                 </div>
               </Link>
-            );
-          })}
+            </div>
+          </div>
         </div>
 
         {/* 主內容區 */}
