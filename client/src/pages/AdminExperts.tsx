@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Users, Search, CheckCircle, XCircle, Clock, Star, Eye, Ban, RefreshCw, UserPlus, Pencil } from "lucide-react";
+import { Users, Search, CheckCircle, XCircle, Clock, Star, Eye, Ban, RefreshCw, UserPlus, Pencil, Edit3, MessageSquare, Send } from "lucide-react";
 
 type ExpertStatus = "active" | "inactive" | "pending_review";
 const STATUS_COLOR: Record<ExpertStatus, string> = {
@@ -61,7 +61,7 @@ export default function AdminExperts() {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<ExpertStatus>("active");
   const [adminNote, setAdminNote] = useState("");
-  const [activeTab, setActiveTab] = useState<"experts" | "bookings" | "applications">("experts");
+  const [activeTab, setActiveTab] = useState<"experts" | "bookings" | "applications" | "team_messages" | "alliance_settings">("experts");
   const [reviewTarget, setReviewTarget] = useState<{ id: number; publicName: string; userName: string; motivation?: string | null | undefined } | null>(null);
   const [reviewNote, setReviewNote] = useState("");
   const [reviewAction, setReviewAction] = useState<"approve" | "reject">("approve");
@@ -99,6 +99,34 @@ export default function AdminExperts() {
   });
 
   const [revokeExpertTarget, setRevokeExpertTarget] = useState<{ expertId: number; userId: number; name: string } | null>(null);
+  // 天命聯盟名稱管理
+  const [allianceNameEdit, setAllianceNameEdit] = useState("");
+  const [showAllianceNameEdit, setShowAllianceNameEdit] = useState(false);
+  const { data: allianceNameData, refetch: refetchAllianceName } = trpc.expert.getAllianceName.useQuery();
+  const updateAllianceNameMutation = trpc.expert.adminUpdateAllianceName.useMutation({
+    onSuccess: () => {
+      toast.success("天命聯盟名稱已更新！");
+      setShowAllianceNameEdit(false);
+      refetchAllianceName();
+      utils.expert.getAllianceName.invalidate();
+    },
+    onError: (e: { message: string }) => toast.error("更新失敗: " + e.message),
+  });
+  // 用戶傳訊給團隊管理
+  const [activeTeamMsgUserId, setActiveTeamMsgUserId] = useState<number | null>(null);
+  const [teamReplyContent, setTeamReplyContent] = useState("");
+  const { data: teamConversations = [], refetch: refetchTeamMsgs } = trpc.expert.adminListTeamMessages.useQuery();
+  const replyTeamMutation = trpc.expert.adminReplyTeamMessage.useMutation({
+    onSuccess: () => {
+      toast.success("回覆已發送");
+      setTeamReplyContent("");
+      refetchTeamMsgs();
+    },
+    onError: (e: { message: string }) => toast.error("發送失敗: " + e.message),
+  });
+  const markTeamReadMutation = trpc.expert.adminMarkTeamMessageRead.useMutation({
+    onSuccess: () => refetchTeamMsgs(),
+  });
   // 編輯專家資料
   const [editProfileTarget, setEditProfileTarget] = useState<{ expertId: number; publicName: string; title: string } | null>(null);
   const [editPublicName, setEditPublicName] = useState("");
@@ -170,15 +198,17 @@ export default function AdminExperts() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 border-b border-border/50">
+        <div className="flex gap-1 border-b border-border/50 flex-wrap">
           {[
             { key: "experts", label: "專家列表" },
             { key: "bookings", label: "預約訂單" },
             { key: "applications", label: applications.filter(a => a.status === "pending").length > 0 ? `命理師申請 (${applications.filter(a => a.status === "pending").length})` : "命理師申請" },
+            { key: "team_messages", label: teamConversations.reduce((acc, c) => acc + c.unreadCount, 0) > 0 ? `用戶訊息 (${teamConversations.reduce((acc, c) => acc + c.unreadCount, 0)})` : "用戶訊息" },
+            { key: "alliance_settings", label: "聯盟設定" },
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as "experts" | "bookings" | "applications")}
+              onClick={() => setActiveTab(tab.key as "experts" | "bookings" | "applications" | "team_messages" | "alliance_settings")}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.key
                   ? "border-amber-500 text-amber-400"
@@ -535,6 +565,191 @@ export default function AdminExperts() {
                 </Card>
               ))
             )}
+           </div>
+        )}
+
+        {/* 用戶訊息 Tab */}
+        {activeTab === "team_messages" && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 用戶列表 */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" /> 用戶對話列表
+              </h3>
+              {teamConversations.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                    <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                    <p>目前沒有用戶訊息</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                teamConversations.map((conv) => (
+                  <Card
+                    key={conv.userId}
+                    className={`cursor-pointer border transition-colors ${
+                      activeTeamMsgUserId === conv.userId
+                        ? "border-amber-500/50 bg-amber-500/5"
+                        : "border-border/50 hover:border-border"
+                    }`}
+                    onClick={() => {
+                      setActiveTeamMsgUserId(conv.userId);
+                      if (conv.unreadCount > 0) markTeamReadMutation.mutate({ userId: conv.userId });
+                    }}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 text-sm font-bold">
+                            {(conv.userName || "?")[0]}
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium">{conv.userName}</div>
+                            <div className="text-xs text-muted-foreground">{conv.messages[conv.messages.length - 1]?.content.slice(0, 20)}...</div>
+                          </div>
+                        </div>
+                        {conv.unreadCount > 0 && (
+                          <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 min-w-5 text-center">{conv.unreadCount}</Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* 對話內容 */}
+            <div className="md:col-span-2">
+              {activeTeamMsgUserId === null ? (
+                <Card className="h-full">
+                  <CardContent className="flex items-center justify-center h-64 text-muted-foreground">
+                    <div className="text-center">
+                      <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">選擇左側用戶查看對話</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (() => {
+                const conv = teamConversations.find(c => c.userId === activeTeamMsgUserId);
+                if (!conv) return null;
+                return (
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h4 className="font-semibold">{conv.userName}</h4>
+                          <p className="text-xs text-muted-foreground">{conv.userEmail}</p>
+                        </div>
+                        <Badge className="text-xs bg-amber-500/20 text-amber-600 border-amber-500/30 border">
+                          訊息保存至 {new Date(conv.messages[conv.messages.length - 1]?.expiresAt ?? Date.now()).toLocaleDateString()}
+                        </Badge>
+                      </div>
+                      {/* 對話記錄 */}
+                      <div className="space-y-3 max-h-72 overflow-y-auto mb-4 pr-1">
+                        {conv.messages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`flex ${
+                              msg.direction === "team_to_user" ? "justify-end" : "justify-start"
+                            }`}
+                          >
+                            <div className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
+                              msg.direction === "team_to_user"
+                                ? "bg-amber-500/20 text-foreground rounded-br-sm"
+                                : "bg-muted text-foreground rounded-bl-sm"
+                            }`}>
+                              {msg.direction === "user_to_team" && (
+                                <div className="text-xs text-muted-foreground mb-1 font-medium">{conv.userName}</div>
+                              )}
+                              {msg.direction === "team_to_user" && (
+                                <div className="text-xs text-amber-600 mb-1 font-medium">天命管理團隊</div>
+                              )}
+                              <p>{msg.content}</p>
+                              <div className="text-xs text-muted-foreground mt-1 text-right">
+                                {new Date(msg.createdAt).toLocaleString()}
+                                {msg.direction === "team_to_user" && (
+                                  <span className="ml-1">{msg.isRead ? " ✓✓" : " ✓"}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* 回覆輸入框 */}
+                      <div className="flex gap-2">
+                        <Input
+                          value={teamReplyContent}
+                          onChange={(e) => setTeamReplyContent(e.target.value)}
+                          placeholder="以天命管理團隊身份回覆..."
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey && teamReplyContent.trim()) {
+                              e.preventDefault();
+                              replyTeamMutation.mutate({ userId: activeTeamMsgUserId, content: teamReplyContent.trim() });
+                            }
+                          }}
+                        />
+                        <Button
+                          className="bg-amber-500 hover:bg-amber-600 text-black"
+                          disabled={!teamReplyContent.trim() || replyTeamMutation.isPending}
+                          onClick={() => replyTeamMutation.mutate({ userId: activeTeamMsgUserId, content: teamReplyContent.trim() })}
+                        >
+                          <Send className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">回覆將以「天命管理團隊」身份顯示給用戶</p>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* 聯盟設定 Tab */}
+        {activeTab === "alliance_settings" && (
+          <div className="space-y-4 max-w-lg">
+            <Card className="border-border/50">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Edit3 className="w-5 h-5 text-amber-400" />
+                  <h3 className="font-semibold">天命聯盟名稱設定</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  修改此名稱後，前台「天命聯盟」頁面標題、用戶下拉選單、專家後台等位置的顯示名稱將同步更新。
+                </p>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 mb-4">
+                  <span className="text-sm text-muted-foreground">目前名稱：</span>
+                  <span className="font-semibold text-amber-600">{allianceNameData?.name ?? "天命聯盟"}</span>
+                </div>
+                {showAllianceNameEdit ? (
+                  <div className="space-y-3">
+                    <Input
+                      value={allianceNameEdit}
+                      onChange={(e) => setAllianceNameEdit(e.target.value)}
+                      placeholder="輸入新名稱（最多 50 字）"
+                      maxLength={50}
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+                        disabled={!allianceNameEdit.trim() || updateAllianceNameMutation.isPending}
+                        onClick={() => updateAllianceNameMutation.mutate({ name: allianceNameEdit.trim() })}
+                      >
+                        {updateAllianceNameMutation.isPending ? "儲存中…" : "確認更新"}
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowAllianceNameEdit(false)}>取消</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => { setAllianceNameEdit(allianceNameData?.name ?? "天命聯盟"); setShowAllianceNameEdit(true); }}
+                  >
+                    <Edit3 className="w-4 h-4 mr-2" /> 修改名稱
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
           </div>
         )}
 

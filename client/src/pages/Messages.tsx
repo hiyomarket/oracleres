@@ -212,8 +212,18 @@ export default function Messages() {
               month: "short", day: "numeric",
             });
             return (
-              <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[75%] space-y-1 ${isMe ? "items-end" : "items-start"} flex flex-col`}>
+              <div key={msg.id} className={`flex items-end gap-2 ${
+                isMe ? "justify-end" : "justify-start"
+              }`}>
+                {/* 對方頭像（非自己訊息才顯示） */}
+                {!isMe && (
+                  <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-xs font-bold shrink-0 mb-0.5 text-foreground">
+                    {(msg.senderName ?? "專")?.[0]}
+                  </div>
+                )}
+                <div className={`max-w-[72%] space-y-0.5 flex flex-col ${
+                  isMe ? "items-end" : "items-start"
+                }`}>
                   {!isMe && (
                     <p className="text-xs text-muted-foreground px-1">{msg.senderName ?? "對方"}</p>
                   )}
@@ -226,9 +236,21 @@ export default function Messages() {
                   >
                     {msg.content}
                   </div>
-                  <p className="text-xs text-muted-foreground/50 px-1">
-                    {dateStr} {timeStr}
-                  </p>
+                  <div className={`flex items-center gap-1.5 px-1 ${
+                    isMe ? "justify-end" : "justify-start"
+                  }`}>
+                    <p className="text-[11px] text-muted-foreground/50">
+                      {dateStr} {timeStr}
+                    </p>
+                    {/* 已讀狀態（只顯示在自己發送的訊息下） */}
+                    {isMe && (
+                      <span className={`text-[11px] font-medium ${
+                        (msg as any).isRead ? "text-amber-400" : "text-muted-foreground/40"
+                      }`}>
+                        {(msg as any).isRead ? "已讀" : "✓"}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             );

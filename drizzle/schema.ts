@@ -1194,10 +1194,34 @@ export const privateMessages = mysqlTable("private_messages", {
   senderId: int("senderId").notNull(),
   content: text("content").notNull(),
   imageUrl: varchar("imageUrl", { length: 500 }),
+  // 已讀功能：對方是否已讀
+  isRead: tinyint("isRead").notNull().default(0),
+  readAt: timestamp("readAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type PrivateMessage = typeof privateMessages.$inferSelect;
 export type InsertPrivateMessage = typeof privateMessages.$inferInsert;
+/**
+ * 用戶傳訊給天命管理團隊（主帳號）
+ * 保存三天，三天無回應自動清除
+ */
+export const teamMessages = mysqlTable("team_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  // 發送者（用戶）
+  userId: int("userId").notNull(),
+  // 訊息內容
+  content: text("content").notNull(),
+  // 方向：user_to_team = 用戶發給團隊，team_to_user = 團隊回覆用戶
+  direction: mysqlEnum("direction", ["user_to_team", "team_to_user"]).notNull().default("user_to_team"),
+  // 已讀標記（用戶端看到團隊回覆後標記已讀）
+  isRead: tinyint("isRead").notNull().default(0),
+  readAt: timestamp("readAt"),
+  // 自動清除時間（三天後）
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type TeamMessage = typeof teamMessages.$inferSelect;
+export type InsertTeamMessage = typeof teamMessages.$inferInsert;
 
 /**
  * 評論表

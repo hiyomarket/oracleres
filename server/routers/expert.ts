@@ -11,13 +11,14 @@ import {
   expertAvailability,
   bookings,
   privateMessages,
+  teamMessages,
   reviews,
   users,
   expertApplications,
   expertCalendarEvents,
   systemSettings,
 } from "../../drizzle/schema";
-import { eq, and, desc, asc, gte, lte, sql, ne } from "drizzle-orm";
+import { eq, and, desc, asc, gte, lte, sql, ne, not } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { storagePut } from "../storage";
 
@@ -790,8 +791,18 @@ export const expertRouter = router({
         booking.userId === ctx.user.id ||
         (expertRecord && booking.expertId === expertRecord.id);
 
-      if (!isParticipant) throw new TRPCError({ code: "FORBIDDEN" });
-
+        if (!isParticipant) throw new TRPCError({ code: "FORBIDDEN" });
+      // 自動標記對方發給我的訊息為已讀
+      await db
+        .update(privateMessages)
+        .set({ isRead: 1, readAt: new Date() })
+        .where(
+          and(
+            eq(privateMessages.bookingId, input.bookingId),
+            not(eq(privateMessages.senderId, ctx.user.id)),
+            eq(privateMessages.isRead, 0)
+          )
+        );
       return db
         .select({
           id: privateMessages.id,
@@ -800,13 +811,14 @@ export const expertRouter = router({
           imageUrl: privateMessages.imageUrl,
           createdAt: privateMessages.createdAt,
           senderName: users.name,
+          isRead: privateMessages.isRead,
+          readAt: privateMessages.readAt,
         })
         .from(privateMessages)
         .leftJoin(users, eq(privateMessages.senderId, users.id))
         .where(eq(privateMessages.bookingId, input.bookingId))
         .orderBy(asc(privateMessages.createdAt));
     }),
-
   /** 發送訊息 */
   sendMessage: protectedProcedure
     .input(
@@ -1562,7 +1574,7 @@ export const expertRouter = router({
       return { bookingId, success: true };
     }),
 
-  /** 公開：取得特定專家的行事歷活動（前台展示用） */
+  /** 公開：取得特定專家的行事曆活動（前台展示用） */
   listExpertCalendarEvents: publicProcedure
     .input(z.object({
       expertId: z.number().int(),
@@ -1581,5 +1593,254 @@ export const expertRouter = router({
           lte(expertCalendarEvents.eventDate, endOfMonth)
         ))
         .orderBy(asc(expertCalendarEvents.eventDate));
+    }),
+
+  // ── 訂單訊息已讀標記 ────────────────────────────────────────────────────────────────────────────
+
+  /** 標記訂單訊息已讀（當前用戶進入訊息頁面時自動呼叫） */
+  markMessagesRead: protectedProcedure
+    .input(z.object({ bookingId: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      const [booking] = await db
+        .select({ userId: bookings.userId, expertId: bookings.expertId })
+        .from(bookings)
+        .where(eq(bookings.id, input.bookingId))
+        .limit(1);
+      if (!booking) throw new TRPCError({ code: "NOT_FOUND" });
+      // 只標記對方發給我的訊息（不是我發的）
+      await db
+        .update(privateMessages)
+        .set({ isRead: 1, readAt: new Date() })
+        .where(
+          and(
+            eq(privateMessages.bookingId, input.bookingId),
+            eq(privateMessages.isRead, 0),
+            // 不是我發的訊息才標記已讀
+            ne(privateMessages.senderId, ctx.user.id)
+          )
+        );
+      return { success: true };
+    }),
+
+  /** 取得訂單未讀訊息數量（用於小紅點顯示） */
+  getUnreadMessageCount: protectedProcedure
+    .input(z.object({ bookingId: z.number().int() }))
+    .query(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      const [result] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(privateMessages)
+        .where(
+          and(
+            eq(privateMessages.bookingId, input.bookingId),
+            eq(privateMessages.isRead, 0),
+            ne(privateMessages.senderId, ctx.user.id)
+          )
+        );
+      return { count: result?.count ?? 0 };
+    }),
+
+  // ── 天命管理團隊傳訊功能 ────────────────────────────────────────────────────────────────────────────
+
+  /** 用戶：發送訊息給天命管理團隊 */
+  sendTeamMessage: protectedProcedure
+    .input(z.object({ content: z.string().min(1).max(2000) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      // 清除該用戶已過期的訊息
+      await db
+        .delete(teamMessages)
+        .where(
+          and(
+            eq(teamMessages.userId, ctx.user.id),
+            lte(teamMessages.expiresAt, new Date())
+          )
+        );
+      const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 天後
+      await db.insert(teamMessages).values({
+        userId: ctx.user.id,
+        content: input.content,
+        direction: "user_to_team",
+        expiresAt,
+      });
+      return { success: true };
+    }),
+
+  /** 用戶：取得自己與團隊的對話記錄 */
+  getTeamConversation: protectedProcedure.query(async ({ ctx }) => {
+    const db = (await getDb())!;
+    // 先清除已過期訊息
+    await db
+      .delete(teamMessages)
+      .where(lte(teamMessages.expiresAt, new Date()));
+    const msgs = await db
+      .select()
+      .from(teamMessages)
+      .where(eq(teamMessages.userId, ctx.user.id))
+      .orderBy(asc(teamMessages.createdAt));
+    return msgs;
+  }),
+
+  /** 用戶：標記團隊回覆已讀 */
+  markTeamMessagesRead: protectedProcedure.mutation(async ({ ctx }) => {
+    const db = (await getDb())!;
+    await db
+      .update(teamMessages)
+      .set({ isRead: 1, readAt: new Date() })
+      .where(
+        and(
+          eq(teamMessages.userId, ctx.user.id),
+          eq(teamMessages.direction, "team_to_user"),
+          eq(teamMessages.isRead, 0)
+        )
+      );
+    return { success: true };
+  }),
+
+  /** 用戶：取得未讀的團隊回覆數量 */
+  getUnreadTeamReplyCount: protectedProcedure.query(async ({ ctx }) => {
+    const db = (await getDb())!;
+    const [result] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(teamMessages)
+      .where(
+        and(
+          eq(teamMessages.userId, ctx.user.id),
+          eq(teamMessages.direction, "team_to_user"),
+          eq(teamMessages.isRead, 0),
+          gte(teamMessages.expiresAt, new Date())
+        )
+      );
+    return { count: result?.count ?? 0 };
+  }),
+
+  // ── 管理員：天命管理團隊訊息管理 ────────────────────────────────────────────────────────────────────────────
+
+  /** 管理員：取得所有用戶的團隊訊息（分用戶分組） */
+  adminListTeamMessages: adminProcedure.query(async () => {
+    const db = (await getDb())!;
+    // 先清除已過期訊息
+    await db.delete(teamMessages).where(lte(teamMessages.expiresAt, new Date()));
+    // 取得所有未過期的訊息，帶用戶資訊
+    const msgs = await db
+      .select({
+        id: teamMessages.id,
+        userId: teamMessages.userId,
+        content: teamMessages.content,
+        direction: teamMessages.direction,
+        isRead: teamMessages.isRead,
+        readAt: teamMessages.readAt,
+        expiresAt: teamMessages.expiresAt,
+        createdAt: teamMessages.createdAt,
+        userName: users.name,
+        userEmail: users.email,
+      })
+      .from(teamMessages)
+      .leftJoin(users, eq(teamMessages.userId, users.id))
+      .orderBy(asc(teamMessages.userId), asc(teamMessages.createdAt));
+    // 將訊息按用戶分組
+    const grouped: Record<number, {
+      userId: number;
+      userName: string;
+      userEmail: string;
+      unreadCount: number;
+      lastMessageAt: Date;
+      messages: typeof msgs;
+    }> = {};
+    for (const msg of msgs) {
+      if (!grouped[msg.userId]) {
+        grouped[msg.userId] = {
+          userId: msg.userId,
+          userName: msg.userName ?? "未知用戶",
+          userEmail: msg.userEmail ?? "",
+          unreadCount: 0,
+          lastMessageAt: msg.createdAt,
+          messages: [],
+        };
+      }
+      grouped[msg.userId].messages.push(msg);
+      if (msg.direction === "user_to_team" && !msg.isRead) {
+        grouped[msg.userId].unreadCount++;
+      }
+      if (msg.createdAt > grouped[msg.userId].lastMessageAt) {
+        grouped[msg.userId].lastMessageAt = msg.createdAt;
+      }
+    }
+    return Object.values(grouped).sort(
+      (a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime()
+    );
+  }),
+
+  /** 管理員：回覆用戶訊息 */
+  adminReplyTeamMessage: adminProcedure
+    .input(z.object({
+      userId: z.number().int(),
+      content: z.string().min(1).max(2000),
+    }))
+    .mutation(async ({ input }) => {
+      const db = (await getDb())!;
+      const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+      await db.insert(teamMessages).values({
+        userId: input.userId,
+        content: input.content,
+        direction: "team_to_user",
+        expiresAt,
+      });
+      // 標記該用戶所有未讀的 user_to_team 訊息為已讀
+      await db
+        .update(teamMessages)
+        .set({ isRead: 1, readAt: new Date() })
+        .where(
+          and(
+            eq(teamMessages.userId, input.userId),
+            eq(teamMessages.direction, "user_to_team"),
+            eq(teamMessages.isRead, 0)
+          )
+        );
+      return { success: true };
+    }),
+
+  /** 管理員：對用戶訊息標記已讀 */
+  adminMarkTeamMessageRead: adminProcedure
+    .input(z.object({ userId: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = (await getDb())!;
+      await db
+        .update(teamMessages)
+        .set({ isRead: 1, readAt: new Date() })
+        .where(
+          and(
+            eq(teamMessages.userId, input.userId),
+            eq(teamMessages.direction, "user_to_team"),
+            eq(teamMessages.isRead, 0)
+          )
+        );
+      return { success: true };
+    }),
+
+  // ── 天命聯盟名稱管理 ────────────────────────────────────────────────────────────────────────────
+
+  /** 公開：取得天命聯盟名稱（前台顯示用） */
+  getAllianceName: publicProcedure.query(async () => {
+    const db = (await getDb())!;
+    const [setting] = await db
+      .select()
+      .from(systemSettings)
+      .where(eq(systemSettings.settingKey, "alliance_name"))
+      .limit(1);
+    return { name: setting?.settingValue ?? "天命聯盟" };
+  }),
+
+  /** 管理員：更新天命聯盟名稱 */
+  adminUpdateAllianceName: adminProcedure
+    .input(z.object({ name: z.string().min(1).max(50) }))
+    .mutation(async ({ input }) => {
+      const db = (await getDb())!;
+      await db
+        .insert(systemSettings)
+        .values({ settingKey: "alliance_name", settingValue: input.name, description: "天命聯盟模塊名稱" })
+        .onDuplicateKeyUpdate({ set: { settingValue: input.name } });
+      return { success: true };
     }),
 });

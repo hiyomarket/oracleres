@@ -2321,3 +2321,17 @@
 - [x] 新增 adminUpdateExpertProfile 後端 API
 - [x] 更新用戶下拉選單：「命理師後台」改為「天命聯盟專家後台」並更新描述文字
 - [x] 284 項測試全部通過
+
+## v11.0 完成紀錄
+- [x] 後台 AdminExperts 新增「天命聯盟名稱設定」區塊，管理員可修改前台顯示名稱
+- [x] 新增 getAllianceName / adminUpdateAllianceName 後端 API（使用 systemSettings 表）
+- [x] DB schema 新增 team_messages 表（用戶傳訊給天命管理團隊，保存三天）
+- [x] DB schema 新增 private_messages.isRead / readAt 欄位
+- [x] 新增 sendTeamMessage / getTeamConversation / markTeamMessagesRead 用戶端 API
+- [x] 新增 adminListTeamMessages / adminReplyTeamMessage / adminMarkTeamMessageRead 管理員 API
+- [x] 用戶下拉選單新增「傳訊給團隊」按鈕，開啟 TeamMessageDialog 對話框
+- [x] TeamMessageDialog：對外顯示「天命管理團隊」、訊息保存 3 天、三天無回應自動清除
+- [x] 後台 AdminExperts 新增「用戶訊息」分頁，管理員可查看並回覆用戶傳來的訊息
+- [x] Messages.tsx 改為 LINE 式左右呈現（自己在右、對方在左）
+- [x] Messages.tsx 加入已讀功能：自己發送的訊息顯示「✓」或「已讀」
+- [x] getMessages 後端 API 自動標記對方訊息為已讀，並回傳 isRead 欄位

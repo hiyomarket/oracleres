@@ -4,7 +4,7 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
-import { User, LogOut, ChevronDown, Smartphone, LayoutDashboard, Star, Coins, Gift, ShoppingBag, Calendar } from "lucide-react";
+import { User, LogOut, ChevronDown, Smartphone, LayoutDashboard, Star, Coins, Gift, ShoppingBag, Calendar, MessageSquare, Send, X } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
 
 type NavPage = string;
@@ -223,10 +223,114 @@ function NotificationBell() {
   );
 }
 
+/** 天命管理團隊傳訊對話框 */
+function TeamMessageDialog({ onClose }: { onClose: () => void }) {
+  const [input, setInput] = useState("");
+  const { data: conversation = [], refetch } = trpc.expert.getTeamConversation.useQuery();
+  const sendMutation = trpc.expert.sendTeamMessage.useMutation({
+    onSuccess: () => { setInput(""); refetch(); },
+    onError: (e) => toast.error("發送失敗: " + e.message),
+  });
+  const markReadMutation = trpc.expert.markTeamMessagesRead.useMutation();
+  useEffect(() => {
+    markReadMutation.mutate();
+  }, []);
+  return (
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div
+        className="w-full sm:max-w-md bg-slate-900 border border-slate-700 rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[80vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 標題 */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+              <span className="text-sm">✨</span>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-slate-200">天命管理團隊</div>
+              <div className="text-[10px] text-slate-500">訊息保存 3 天，將於到期後自動清除</div>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        {/* 對話記錄 */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+          {conversation.length === 0 ? (
+            <div className="text-center py-8">
+              <MessageSquare className="w-10 h-10 mx-auto mb-2 text-slate-600" />
+              <p className="text-sm text-slate-500">還沒有訊息，傳送您的第一則訊息給團隊吧！</p>
+            </div>
+          ) : (
+            conversation.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex ${
+                  msg.direction === "user_to_team" ? "justify-end" : "justify-start"
+                }`}
+              >
+                {msg.direction === "team_to_user" && (
+                  <div className="w-7 h-7 rounded-full bg-amber-500/20 flex items-center justify-center mr-2 shrink-0 self-end">
+                    <span className="text-xs">✨</span>
+                  </div>
+                )}
+                <div className={`max-w-[75%] ${
+                  msg.direction === "user_to_team"
+                    ? "bg-amber-600/20 border border-amber-500/20 rounded-2xl rounded-br-sm"
+                    : "bg-slate-800 border border-slate-700 rounded-2xl rounded-bl-sm"
+                } px-3 py-2`}>
+                  {msg.direction === "team_to_user" && (
+                    <div className="text-[10px] text-amber-400 font-semibold mb-1">天命管理團隊</div>
+                  )}
+                  <p className="text-sm text-slate-200">{msg.content}</p>
+                  <div className="flex items-center justify-end gap-1 mt-1">
+                    <span className="text-[10px] text-slate-600">{new Date(msg.createdAt).toLocaleString()}</span>
+                    {msg.direction === "user_to_team" && (
+                      <span className="text-[10px] text-slate-600">{msg.isRead ? "已讀" : ""}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        {/* 輸入框 */}
+        <div className="px-4 py-3 border-t border-slate-700">
+          <div className="flex gap-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && input.trim()) {
+                  e.preventDefault();
+                  sendMutation.mutate({ content: input.trim() });
+                }
+              }}
+              placeholder="傳訊給天命管理團隊..."
+              className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 outline-none focus:border-amber-500/50"
+            />
+            <button
+              onClick={() => input.trim() && sendMutation.mutate({ content: input.trim() })}
+              disabled={!input.trim() || sendMutation.isPending}
+              className="w-9 h-9 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-40 flex items-center justify-center transition-colors"
+            >
+              <Send className="w-4 h-4 text-black" />
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-600 mt-1.5">回覆將以「天命管理團隊」身份顯示，訊息保存 3 天</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** 使用者頭像下拉選單 */
 function UserMenu({ user }: { user: { name?: string | null; openId?: string; planName?: string | null; role?: string | null } }) {
   const [open, setOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showTeamMsg, setShowTeamMsg] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { data: status } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
   const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
@@ -374,6 +478,19 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
               </div>
               <span>我的預約</span>
             </Link>
+            {/* 傳訊給團隊 - 所有已登入用戶 */}
+            <button
+              onClick={() => { setOpen(false); setShowTeamMsg(true); }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-teal-500/10 hover:text-teal-300 transition-colors group/item"
+            >
+              <div className="w-7 h-7 rounded-lg bg-teal-500/15 flex items-center justify-center shrink-0 group-hover/item:bg-teal-500/25 transition-colors">
+                <MessageSquare className="w-3.5 h-3.5 text-teal-400" />
+              </div>
+              <div className="flex flex-col items-start">
+                <span>傳訊給團隊</span>
+                <span className="text-[10px] text-teal-400/70">聯繫天命管理團隊</span>
+              </div>
+            </button>
             {/* 專家後台 - 只有 expert 或 admin 才顯示 */}
             {(user.role === 'expert' || user.role === 'admin') && (
               <Link
@@ -497,10 +614,11 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
           </div>
         </div>
       )}
+      {/* 天命管理團隊傳訊對話框 */}
+      {showTeamMsg && <TeamMessageDialog onClose={() => setShowTeamMsg(false)} />}
     </div>
   );
 }
-
 export function SharedNav({ currentPage }: SharedNavProps) {
   const [, navigate] = useLocation();
   const { user } = useAuth();
