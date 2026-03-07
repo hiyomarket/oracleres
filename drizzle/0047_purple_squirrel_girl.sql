@@ -1,0 +1,1 @@
+ALTER TABLE `user_notifications` MODIFY COLUMN `type` enum('wbc_result','system','reward','announcement','daily_briefing','fortune_reminder','scratch_milestone','booking_update') NOT NULL DEFAULT 'system';

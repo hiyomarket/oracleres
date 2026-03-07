@@ -14,7 +14,8 @@ export type NotificationType =
   | "announcement"
   | "daily_briefing"
   | "fortune_reminder"
-  | "scratch_milestone";
+  | "scratch_milestone"
+  | "booking_update";
 
 export interface NotifyUserOptions {
   userId: string;

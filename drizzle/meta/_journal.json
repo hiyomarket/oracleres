@@ -330,6 +330,13 @@
       "when": 1772839536537,
       "tag": "0046_absent_captain_britain",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "5",
+      "when": 1772853107299,
+      "tag": "0047_purple_squirrel_girl",
+      "breakpoints": true
     }
   ]
 }

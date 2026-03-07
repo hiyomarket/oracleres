@@ -301,6 +301,19 @@ export default function ExpertCalendar() {
                     const hasBookings = bookingsByDay[day]?.length > 0;
                     const isPast = new Date(dateStr) < new Date(now.toDateString());
 
+                    // Determine cell background color based on content
+                    const hasAvailableSlots = slotInfo && slotInfo.total > 0 && slotInfo.booked < slotInfo.total;
+                    const allBooked = slotInfo && slotInfo.total > 0 && slotInfo.booked >= slotInfo.total;
+
+                    let cellBg = "border-transparent hover:bg-accent/50";
+                    if (isSelected) cellBg = "bg-amber-500/20 border-amber-500/50";
+                    else if (isBatchSelected) cellBg = "bg-violet-500/20 border-violet-500/50";
+                    else if (isToday) cellBg = "bg-accent border-amber-500/30";
+                    else if (isPast) cellBg = "border-transparent opacity-50";
+                    else if (allBooked) cellBg = "bg-orange-500/10 border-orange-500/20 hover:bg-orange-500/15";
+                    else if (hasAvailableSlots) cellBg = "bg-green-500/10 border-green-500/20 hover:bg-green-500/15";
+                    else if (hasEvents) cellBg = "bg-blue-500/10 border-blue-500/20 hover:bg-blue-500/15";
+
                     return (
                       <button
                         key={day}
@@ -311,36 +324,49 @@ export default function ExpertCalendar() {
                             setSelectedDate(isSelected ? null : dateStr);
                           }
                         }}
-                        className={`relative aspect-square rounded-lg text-xs flex flex-col items-center justify-start pt-1 transition-all border ${
-                          isSelected
-                            ? "bg-amber-500/20 border-amber-500/50 text-amber-400"
-                            : isBatchSelected
-                            ? "bg-blue-500/20 border-blue-500/50 text-blue-400"
-                            : isToday
-                            ? "bg-accent border-amber-500/30 text-foreground"
-                            : isPast
-                            ? "border-transparent text-muted-foreground/50"
-                            : "border-transparent hover:bg-accent/50 text-foreground"
-                        }`}
+                        className={`relative aspect-square rounded-lg text-xs flex flex-col items-center justify-start pt-1 transition-all border ${cellBg}`}
                       >
-                        <span className={`font-medium ${isToday ? "text-amber-400" : ""}`}>{day}</span>
+                        <span className={`font-semibold text-[11px] ${
+                          isSelected ? "text-amber-400"
+                          : isBatchSelected ? "text-violet-400"
+                          : isToday ? "text-amber-400"
+                          : allBooked ? "text-orange-400"
+                          : hasAvailableSlots ? "text-green-400"
+                          : isPast ? "text-muted-foreground/40"
+                          : "text-foreground"
+                        }`}>{day}</span>
                         <div className="flex gap-0.5 mt-0.5 flex-wrap justify-center">
-                          {slotInfo && slotInfo.total > 0 && (
-                            <div className={`w-1.5 h-1.5 rounded-full ${slotInfo.booked > 0 ? "bg-red-400" : "bg-green-400"}`} />
+                          {hasAvailableSlots && !allBooked && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-400" title="可預約" />
                           )}
-                          {hasEvents && <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
-                          {hasBookings && <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
+                          {allBooked && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-orange-400" title="已滿" />
+                          )}
+                          {slotInfo && slotInfo.booked > 0 && !allBooked && (
+                            <div className="w-1.5 h-1.5 rounded-full bg-orange-400" title="部分預約" />
+                          )}
+                          {hasEvents && <div className="w-1.5 h-1.5 rounded-full bg-blue-400" title="活動" />}
+                          {hasBookings && <div className="w-1.5 h-1.5 rounded-full bg-amber-400" title="訂單" />}
                         </div>
+                        {/* Slot count badge */}
+                        {slotInfo && slotInfo.total > 0 && (
+                          <span className={`absolute bottom-0.5 right-0.5 text-[8px] font-bold ${
+                            allBooked ? "text-orange-400/70" : "text-green-400/70"
+                          }`}>
+                            {slotInfo.booked}/{slotInfo.total}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
                 </div>
                 {/* 圖例 */}
-                <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-border/50 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-400 inline-block" /> 可預約時段</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> 已被預約</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /> 活動公告</span>
-                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-400 inline-block" /> 訂單</span>
+                <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3 pt-3 border-t border-border/50 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-green-500/20 border border-green-500/30 inline-block" /> 可預約</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-orange-500/20 border border-orange-500/30 inline-block" /> 已預約/滿</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded bg-blue-500/20 border border-blue-500/30 inline-block" /> 活動公告</span>
+                  <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" /> 訂單</span>
+                  <span className="flex items-center gap-1.5"><span className="text-[9px] text-green-400/70 font-bold">已/總</span> 預約比例</span>
                 </div>
               </CardContent>
             </Card>

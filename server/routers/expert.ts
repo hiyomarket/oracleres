@@ -1404,6 +1404,20 @@ export const expertRouter = router({
         ? `✅ 老師已確認預約！${input.message}`
         : "✅ 老師已確認您的預約，請依約定完成付款。";
       await db.insert(privateMessages).values({ bookingId: input.bookingId, senderId: ctx.user.id, content: confirmMsg });
+      // 推播站內通知給用戶
+      try {
+        const { notifyUser } = await import("../lib/notifyUser");
+        await notifyUser({
+          userId: String(booking.userId),
+          type: "booking_update",
+          title: "預約已確認 ✅",
+          content: input.message
+            ? `您的預約已獲老師確認！${input.message}請前往「我的預約」完成付款。`
+            : `您的預約已獲老師確認，請前往「我的預約」依約定完成付款。`,
+          linkUrl: `/my-bookings`,
+          relatedId: String(input.bookingId),
+        });
+      } catch (_) { /* 通知失敗不影響主流程 */ }
       return { success: true };
     }),
 
@@ -1422,12 +1436,33 @@ export const expertRouter = router({
       if (!booking) throw new TRPCError({ code: "NOT_FOUND", message: "訂單不存在" });
       if (booking.status === "completed") throw new TRPCError({ code: "BAD_REQUEST", message: "已完成的訂單無法取消" });
       if (booking.status === "cancelled") throw new TRPCError({ code: "BAD_REQUEST", message: "訂單已取消" });
+      const [bookingForCancel] = await db
+        .select({ userId: bookings.userId })
+        .from(bookings)
+        .where(eq(bookings.id, input.bookingId))
+        .limit(1);
       await db.update(bookings).set({ status: "cancelled" }).where(eq(bookings.id, input.bookingId));
       await db.update(expertAvailability).set({ isBooked: 0, bookingId: null }).where(eq(expertAvailability.bookingId, input.bookingId));
       const cancelMsg = input.reason
         ? `❌ 老師已取消此預約。原因：${input.reason}`
         : "❌ 老師已取消此預約。如有疑問請透過訊息聯繫。";
       await db.insert(privateMessages).values({ bookingId: input.bookingId, senderId: ctx.user.id, content: cancelMsg });
+      // 推播站內通知給用戶
+      if (bookingForCancel) {
+        try {
+          const { notifyUser } = await import("../lib/notifyUser");
+          await notifyUser({
+            userId: String(bookingForCancel.userId),
+            type: "booking_update",
+            title: "預約已取消 ❌",
+            content: input.reason
+              ? `您的預約已被老師取消。原因：${input.reason}如有疑問請透過訊息聯繫。`
+              : `您的預約已被老師取消，如有疑問請透過訊息與老師溝通。`,
+            linkUrl: `/my-bookings`,
+            relatedId: String(input.bookingId),
+          });
+        } catch (_) { /* 通知失敗不影響主流程 */ }
+      }
       return { success: true };
     }),
 

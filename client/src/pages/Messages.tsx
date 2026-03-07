@@ -4,7 +4,7 @@
  * 初期版本：僅限下單後師生溝通；未來可擴充為全站訊息系統
  */
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -31,14 +31,15 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function Messages() {
   const { user } = useAuth();
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
+  const search = useSearch(); // wouter v3: useSearch() returns the query string
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Parse bookingId from query string
-  const params = new URLSearchParams(location.split("?")[1] ?? "");
+  // Parse bookingId from query string using wouter's useSearch
+  const params = new URLSearchParams(search ?? window.location.search ?? "");
   const bookingIdStr = params.get("bookingId");
-  const bookingId = bookingIdStr ? parseInt(bookingIdStr) : null;
+  const bookingId = bookingIdStr ? parseInt(bookingIdStr, 10) : null;
 
   // Fetch messages
   const {
@@ -170,6 +171,15 @@ export default function Messages() {
           <span>
             此聊天室為訂單專屬頻道，僅您與命理師可以查看。
             如有付款問題，請在此與命理師溝通確認。
+          </span>
+        </div>
+
+        {/* 15-day retention notice */}
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-amber-400/80 text-xs">
+          <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+          <span>
+            <strong className="text-amber-400">訊息保留說明：</strong>
+            聊天記錄僅保留 <strong className="text-amber-400">15 天</strong>，請自行截圖或記錄重要溝通內容，以便日後查閱。
           </span>
         </div>
 
