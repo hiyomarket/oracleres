@@ -231,7 +231,7 @@ export default function OracleCast() {
   const [insufficientCurrent, setInsufficientCurrent] = useState(0);
   const { data: coinsData } = trpc.coins.getBalance.useQuery(undefined, { staleTime: 30000 });
   const { data: pricingData } = trpc.coins.getFeaturePricing.useQuery(undefined, { staleTime: 60000 });
-  const deepReadCost = pricingData?.['oracle_deepread'] ?? 8;
+  const deepReadCost = pricingData?.['oracle'] ?? 15;
   const currentCoins = coinsData?.balance ?? 0;
 
   const deepReadMutation = trpc.insight.deepRead.useMutation({
@@ -417,6 +417,18 @@ export default function OracleCast() {
                 <h1 className="text-xl font-black oracle-text-gradient tracking-widest">天命共振</h1>
                 <p className="text-[10px] text-muted-foreground tracking-[0.25em]">{displayName} 專屬神諭系統</p>
               </div>
+              {/* 天命幣餘額 + 模式切換 */}
+              <div className="flex items-center gap-2">
+                {user && (
+                  <div className="flex-shrink-0 text-right mr-1">
+                    <div className="text-[9px] text-muted-foreground/60 mb-0.5">可用積分</div>
+                    <div className={`text-base font-bold ${currentCoins >= deepReadCost ? 'text-amber-400' : 'text-red-400'}`}>
+                      {coinsData ? currentCoins : '…'}
+                      <span className="text-[10px] font-normal text-muted-foreground/50 ml-0.5">點</span>
+                    </div>
+                    <div className="text-[9px] text-muted-foreground/40">神諭解讀 -{deepReadCost} 點</div>
+                  </div>
+                )}
               {/* 擲筊模式切換 */}
               <div className="flex gap-1.5">
                 <button
@@ -439,6 +451,7 @@ export default function OracleCast() {
                 >
                   🔴🔴🔴 三聖杯
                 </button>
+              </div>
               </div>
             </div>
 

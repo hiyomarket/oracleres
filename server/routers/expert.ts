@@ -1365,6 +1365,142 @@ export const expertRouter = router({
       return { success: true, status: newStatus };
     }),
 
+  /** 用戶：取消訂單（pending_payment 或 confirmed 狀態可取消） */
+  cancelBooking: protectedProcedure
+    .input(z.object({ bookingId: z.number().int(), reason: z.string().max(300).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      const [booking] = await db
+        .select({ id: bookings.id, userId: bookings.userId, status: bookings.status })
+        .from(bookings)
+        .where(and(eq(bookings.id, input.bookingId), eq(bookings.userId, ctx.user.id)))
+        .limit(1);
+      if (!booking) throw new TRPCError({ code: "NOT_FOUND", message: "訂單不存在" });
+      if (booking.status === "completed") throw new TRPCError({ code: "BAD_REQUEST", message: "已完成的訂單無法取消" });
+      if (booking.status === "cancelled") throw new TRPCError({ code: "BAD_REQUEST", message: "訂單已取消" });
+      const updateData: Record<string, unknown> = { status: "cancelled" };
+      if (input.reason) updateData.notes = `[用戶取消] ${input.reason}`;
+      await db.update(bookings).set(updateData).where(eq(bookings.id, input.bookingId));
+      await db.update(expertAvailability).set({ isBooked: 0, bookingId: null }).where(eq(expertAvailability.bookingId, input.bookingId));
+      return { success: true };
+    }),
+
+  /** 師資：確認訂單（將 pending_payment 改為 confirmed） */
+  expertConfirmBooking: protectedProcedure
+    .input(z.object({ bookingId: z.number().int(), message: z.string().max(500).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      const [booking] = await db
+        .select({ id: bookings.id, status: bookings.status, expertId: bookings.expertId, userId: bookings.userId })
+        .from(bookings)
+        .where(and(eq(bookings.id, input.bookingId), eq(bookings.expertId, expert.id)))
+        .limit(1);
+      if (!booking) throw new TRPCError({ code: "NOT_FOUND", message: "訂單不存在" });
+      if (booking.status !== "pending_payment") throw new TRPCError({ code: "BAD_REQUEST", message: "只能確認待付款狀態的訂單" });
+      await db.update(bookings).set({ status: "confirmed" }).where(eq(bookings.id, input.bookingId));
+      const confirmMsg = input.message
+        ? `✅ 老師已確認預約！${input.message}`
+        : "✅ 老師已確認您的預約，請依約定完成付款。";
+      await db.insert(privateMessages).values({ bookingId: input.bookingId, senderId: ctx.user.id, content: confirmMsg });
+      return { success: true };
+    }),
+
+  /** 師資：取消訂單 */
+  expertCancelBooking: protectedProcedure
+    .input(z.object({ bookingId: z.number().int(), reason: z.string().max(300).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      const [booking] = await db
+        .select({ id: bookings.id, status: bookings.status, expertId: bookings.expertId })
+        .from(bookings)
+        .where(and(eq(bookings.id, input.bookingId), eq(bookings.expertId, expert.id)))
+        .limit(1);
+      if (!booking) throw new TRPCError({ code: "NOT_FOUND", message: "訂單不存在" });
+      if (booking.status === "completed") throw new TRPCError({ code: "BAD_REQUEST", message: "已完成的訂單無法取消" });
+      if (booking.status === "cancelled") throw new TRPCError({ code: "BAD_REQUEST", message: "訂單已取消" });
+      await db.update(bookings).set({ status: "cancelled" }).where(eq(bookings.id, input.bookingId));
+      await db.update(expertAvailability).set({ isBooked: 0, bookingId: null }).where(eq(expertAvailability.bookingId, input.bookingId));
+      const cancelMsg = input.reason
+        ? `❌ 老師已取消此預約。原因：${input.reason}`
+        : "❌ 老師已取消此預約。如有疑問請透過訊息聯繫。";
+      await db.insert(privateMessages).values({ bookingId: input.bookingId, senderId: ctx.user.id, content: cancelMsg });
+      return { success: true };
+    }),
+
+  /** 師資：新增可用時段區間（用戶可在區間內自由選取時間） */
+  setAvailabilityWindow: protectedProcedure
+    .input(z.object({
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      startHour: z.number().int().min(0).max(23),
+      startMinute: z.number().int().min(0).max(59).default(0),
+      endHour: z.number().int().min(0).max(23),
+      endMinute: z.number().int().min(0).max(59).default(0),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      requireExpertOrAdmin(ctx.user.role);
+      const expert = await requireExpert(ctx.user.id);
+      const db = (await getDb())!;
+      const [y, m, d] = input.date.split("-").map(Number);
+      const startTime = new Date(y, m - 1, d, input.startHour, input.startMinute, 0);
+      const endTime = new Date(y, m - 1, d, input.endHour, input.endMinute, 0);
+      if (endTime <= startTime) throw new TRPCError({ code: "BAD_REQUEST", message: "結束時間必須晚於開始時間" });
+      await db.insert(expertAvailability).values({ expertId: expert.id, startTime, endTime, isBooked: 0 });
+      return { success: true };
+    }),
+
+  /** 用戶：在老師可用區間內建立預約（自選時間段） */
+  createBookingInWindow: protectedProcedure
+    .input(z.object({
+      expertId: z.number().int(),
+      serviceId: z.number().int(),
+      availabilityId: z.number().int(),
+      requestedStartTime: z.date(),
+      requestedEndTime: z.date(),
+      notes: z.string().max(500).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      const [slot] = await db
+        .select()
+        .from(expertAvailability)
+        .where(and(
+          eq(expertAvailability.id, input.availabilityId),
+          eq(expertAvailability.expertId, input.expertId),
+          eq(expertAvailability.isBooked, 0)
+        ))
+        .limit(1);
+      if (!slot) throw new TRPCError({ code: "CONFLICT", message: "此時段已被預約或不存在" });
+      if (input.requestedStartTime < slot.startTime || input.requestedEndTime > slot.endTime) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "請求的時間超出老師的可用區間" });
+      }
+      if (input.requestedEndTime <= input.requestedStartTime) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "結束時間必須晚於開始時間" });
+      }
+      const [result] = await db.insert(bookings).values({
+        userId: ctx.user.id,
+        expertId: input.expertId,
+        serviceId: input.serviceId,
+        bookingTime: input.requestedStartTime,
+        endTime: input.requestedEndTime,
+        status: "pending_payment",
+        notes: input.notes,
+      });
+      const bookingId = (result as any).insertId;
+      await db.update(expertAvailability).set({ isBooked: 1, bookingId }).where(eq(expertAvailability.id, input.availabilityId));
+      const startStr = input.requestedStartTime.toLocaleString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+      const endStr = input.requestedEndTime.toLocaleString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+      await db.insert(privateMessages).values({
+        bookingId,
+        senderId: ctx.user.id,
+        content: `📅 新預約請求！希望預約時間：${startStr} ~ ${endStr}。${input.notes ? `備註：${input.notes}` : ''}請老師確認後回覆。`,
+      });
+      return { bookingId, success: true };
+    }),
+
   /** 公開：取得特定專家的行事歷活動（前台展示用） */
   listExpertCalendarEvents: publicProcedure
     .input(z.object({

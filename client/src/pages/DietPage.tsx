@@ -510,6 +510,10 @@ export default function DietPage() {
   const { data: userPrefs } = trpc.diet.getUserPreferences.useQuery(undefined, { staleTime: 60 * 1000 });
 
   const isAccessible = isAdmin || hasFeature("warroom_dietary");
+  const { data: coinsData } = trpc.coins.getBalance.useQuery(undefined, { staleTime: 30000, enabled: isAccessible });
+  const { data: pricingData } = trpc.coins.getFeaturePricing.useQuery(undefined, { staleTime: 60000, enabled: isAccessible });
+  const dietAiCost = pricingData?.['warroom_dietary'] ?? 5;
+  const currentCoins = coinsData?.balance ?? 0;
   const isLoading = dietLoading || warRoomLoading;
   const weather = warRoomData?.weather;
   const dietary = dietData?.advice;
@@ -537,9 +541,23 @@ export default function DietPage() {
       <main className="max-w-2xl mx-auto px-4 pt-20 pb-32 space-y-5">
 
         {/* 頁頭 */}
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center pt-2">
-          <h1 className="text-2xl font-bold tracking-tight">飲食羅盤</h1>
-          <p className="text-sm text-white/40 mt-1">以五行能量為你選擇今日最佳補運餐食</p>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="pt-2">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">飲食羅盤</h1>
+              <p className="text-sm text-white/40 mt-1">以五行能量為你選擇今日最佳補運餐食</p>
+            </div>
+            {isAccessible && (
+              <div className="flex-shrink-0 text-right">
+                <div className="text-[10px] text-white/30 mb-0.5">可用積分</div>
+                <div className={`text-lg font-bold ${currentCoins >= dietAiCost ? 'text-amber-400' : 'text-red-400'}`}>
+                  {coinsData ? currentCoins : '…'}
+                  <span className="text-xs font-normal text-white/30 ml-1">點</span>
+                </div>
+                <div className="text-[9px] text-white/25">AI 菜單 -{dietAiCost} 點</div>
+              </div>
+            )}
+          </div>
         </motion.div>
 
         {/* 日期選擇器 */}

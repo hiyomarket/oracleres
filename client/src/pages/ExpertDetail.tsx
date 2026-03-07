@@ -31,6 +31,9 @@ export default function ExpertDetail() {
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
   const [bookingSuccess, setBookingSuccess] = useState<number | null>(null);
+  // Window booking: user picks start/end within the slot window
+  const [requestedStart, setRequestedStart] = useState("");
+  const [requestedEnd, setRequestedEnd] = useState("");
 
   // Calendar state for public view
   const now = new Date();
@@ -63,12 +66,14 @@ export default function ExpertDetail() {
     { enabled: expertId > 0 }
   );
 
-  const bookMutation = trpc.expert.createBooking.useMutation({
+  const bookMutation = trpc.expert.createBookingInWindow.useMutation({
     onSuccess: (data) => {
-      toast.success("✅ 預約成功！請完成付款以確認訂單");
+      toast.success("✅ 預約請求已送出！老師確認後將通知您");
       utils.expert.getExpertDetails.invalidate();
       setBookingSuccess(data.bookingId);
       setSelectedSlotId(null);
+      setRequestedStart("");
+      setRequestedEnd("");
       setNotes("");
     },
     onError: (e) => toast.error("預約失敗: " + e.message),
@@ -80,10 +85,25 @@ export default function ExpertDetail() {
       toast.error("請選擇服務項目和時段");
       return;
     }
+    if (!requestedStart || !requestedEnd) {
+      toast.error("請填寫希望預約的開始與結束時間");
+      return;
+    }
+    const slot = availableSlots.find((s) => s.id === selectedSlotId);
+    if (!slot) return;
+    const slotDate = new Date(slot.startTime).toISOString().slice(0, 10);
+    const start = new Date(`${slotDate}T${requestedStart}:00`);
+    const end = new Date(`${slotDate}T${requestedEnd}:00`);
+    if (end <= start) { toast.error("結束時間必須晚於開始時間"); return; }
+    if (start < slot.startTime || end > slot.endTime) {
+      toast.error("請在老師的可用區間內選擇時間"); return;
+    }
     bookMutation.mutate({
       expertId: expertId,
       serviceId: selectedServiceId,
       availabilityId: selectedSlotId,
+      requestedStartTime: start,
+      requestedEndTime: end,
       notes: notes.trim() || undefined,
     });
   };
@@ -351,26 +371,67 @@ export default function ExpertDetail() {
                   {Object.keys(slotsByDate).length === 0 ? (
                     <p className="text-sm text-muted-foreground">近期暫無可預約時段，請稍後再查或聯繫專家</p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
+                      <p className="text-xs text-muted-foreground">選擇老師的可用區間，再填寫您希望的具體時間段</p>
                       {Object.entries(slotsByDate).map(([date, slots]) => (
                         <div key={date}>
-                          <p className="text-xs font-medium text-muted-foreground mb-1.5">{date}</p>
-                          <div className="flex flex-wrap gap-2">
-                            {slots.map((slot) => (
-                              <button
-                                key={slot.id}
-                                onClick={() => setSelectedSlotId(slot.id)}
-                                className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
-                                  selectedSlotId === slot.id
-                                    ? "bg-amber-500 text-black border-amber-500 font-medium"
-                                    : "border-border/50 hover:border-amber-500/50 hover:bg-amber-500/5"
-                                }`}
-                              >
-                                {new Date(slot.startTime).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
-                                {" – "}
-                                {new Date(slot.endTime).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
-                              </button>
-                            ))}
+                          <p className="text-xs font-medium text-muted-foreground mb-2">{date}</p>
+                          <div className="space-y-2">
+                            {slots.map((slot) => {
+                              const slotStart = new Date(slot.startTime).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
+                              const slotEnd = new Date(slot.endTime).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
+                              const isSelected = selectedSlotId === slot.id;
+                              return (
+                                <div key={slot.id} className={`rounded-lg border p-3 transition-all ${isSelected ? "border-amber-500/60 bg-amber-500/8" : "border-border/50 hover:border-amber-500/30"}`}>
+                                  <button
+                                    className="w-full text-left"
+                                    onClick={() => {
+                                      setSelectedSlotId(isSelected ? null : slot.id);
+                                      if (!isSelected) {
+                                        // Pre-fill with slot start/end
+                                        setRequestedStart(new Date(slot.startTime).toTimeString().slice(0, 5));
+                                        setRequestedEnd(new Date(slot.endTime).toTimeString().slice(0, 5));
+                                      }
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <Clock className="w-3.5 h-3.5 text-amber-400" />
+                                      <span className="text-sm font-medium">可用區間：{slotStart} – {slotEnd}</span>
+                                      {isSelected && <Badge className="ml-auto text-xs bg-amber-500/20 text-amber-400 border-amber-500/30">已選取</Badge>}
+                                    </div>
+                                  </button>
+                                  {isSelected && (
+                                    <div className="mt-3 pt-3 border-t border-border/40 space-y-2">
+                                      <p className="text-xs text-muted-foreground">填寫您希望預約的具體時間（在區間內）</p>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                          <label className="text-xs text-muted-foreground mb-1 block">開始時間</label>
+                                          <input
+                                            type="time"
+                                            value={requestedStart}
+                                            onChange={(e) => setRequestedStart(e.target.value)}
+                                            min={new Date(slot.startTime).toTimeString().slice(0, 5)}
+                                            max={new Date(slot.endTime).toTimeString().slice(0, 5)}
+                                            className="w-full h-8 px-2 rounded-md border border-border bg-background text-sm text-foreground"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="text-xs text-muted-foreground mb-1 block">結束時間</label>
+                                          <input
+                                            type="time"
+                                            value={requestedEnd}
+                                            onChange={(e) => setRequestedEnd(e.target.value)}
+                                            min={new Date(slot.startTime).toTimeString().slice(0, 5)}
+                                            max={new Date(slot.endTime).toTimeString().slice(0, 5)}
+                                            className="w-full h-8 px-2 rounded-md border border-border bg-background text-sm text-foreground"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       ))}
@@ -390,13 +451,13 @@ export default function ExpertDetail() {
                     <Button
                       className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
                       onClick={handleBook}
-                      disabled={!selectedSlotId || bookMutation.isPending}
+                      disabled={!selectedSlotId || !requestedStart || !requestedEnd || bookMutation.isPending}
                     >
-                      {bookMutation.isPending ? "預約中…" : "確認預約"}
+                      {bookMutation.isPending ? "預約中…" : "送出預約請求"}
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={() => { setSelectedServiceId(null); setSelectedSlotId(null); }}
+                      onClick={() => { setSelectedServiceId(null); setSelectedSlotId(null); setRequestedStart(""); setRequestedEnd(""); }}
                     >
                       取消
                     </Button>
@@ -411,9 +472,9 @@ export default function ExpertDetail() {
                 <CardContent className="p-5 text-center space-y-3">
                   <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto" />
                   <div>
-                    <h3 className="font-semibold text-lg">預約成功！</h3>
+                    <h3 className="font-semibold text-lg">預約請求已送出！</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      請前往「我的預約」完成付款，付款確認後訂單將正式生效。
+                      老師收到請求後將透過訊息與您確認時間，確認後再完成付款。
                     </p>
                   </div>
                   <div className="flex gap-2 justify-center">

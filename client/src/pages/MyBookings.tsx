@@ -50,6 +50,8 @@ export default function MyBookings() {
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "credit_card" | "other">("bank_transfer");
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [uploadingProof, setUploadingProof] = useState(false);
+  const [cancelBookingId, setCancelBookingId] = useState<number | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
 
   const { data: bookings = [], isLoading } = trpc.expert.myBookings.useQuery({ status: statusFilter });
 
@@ -62,6 +64,16 @@ export default function MyBookings() {
       utils.expert.myBookings.invalidate();
     },
     onError: (e: { message: string }) => toast.error("送出失敗: " + e.message),
+  });
+
+  const cancelMutation = trpc.expert.cancelBooking.useMutation({
+    onSuccess: () => {
+      toast.success("訂單已取消");
+      setCancelBookingId(null);
+      setCancelReason("");
+      utils.expert.myBookings.invalidate();
+    },
+    onError: (e: { message: string }) => toast.error("取消失敗: " + e.message),
   });
 
   const uploadProofMutation = trpc.expert.uploadPaymentProof.useMutation({
@@ -274,7 +286,7 @@ export default function MyBookings() {
                           className="text-xs"
                           onClick={() => navigate(`/messages?bookingId=${booking.id}`)}
                         >
-                          <MessageCircle className="w-3.5 h-3.5 mr-1" /> 聯絡專家
+                          <MessageCircle className="w-3.5 h-3.5 mr-1" /> 聯絡老師
                         </Button>
                       )}
                       {booking.status === "completed" && (
@@ -286,6 +298,16 @@ export default function MyBookings() {
                           <Star className="w-3.5 h-3.5 mr-1" /> 留下評價
                         </Button>
                       )}
+                      {(booking.status === "pending_payment" || booking.status === "confirmed") && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs text-red-400 border-red-500/30 hover:border-red-500/60 hover:bg-red-500/10"
+                          onClick={() => { setCancelBookingId(booking.id); setCancelReason(""); }}
+                        >
+                          取消訂單
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -294,6 +316,35 @@ export default function MyBookings() {
           </div>
         )}
       </div>
+
+      {/* 取消訂單 Dialog */}
+      <Dialog open={cancelBookingId !== null} onOpenChange={(open) => !open && setCancelBookingId(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-red-400">確認取消訂單</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">取消後無法恢復，確定要取消此預約嗎？</p>
+            <Textarea
+              placeholder="取消原因（選填，將通知老師）"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              rows={3}
+              className="text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelBookingId(null)}>保留訂單</Button>
+            <Button
+              variant="destructive"
+              onClick={() => cancelBookingId && cancelMutation.mutate({ bookingId: cancelBookingId, reason: cancelReason || undefined })}
+              disabled={cancelMutation.isPending}
+            >
+              {cancelMutation.isPending ? "取消中…" : "確認取消"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* 付款說明 Dialog */}
       <Dialog open={paymentBookingId !== null} onOpenChange={(open) => !open && setPaymentBookingId(null)}>
