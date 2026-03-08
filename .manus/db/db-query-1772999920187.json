@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, teamA, teamB, status, FROM_UNIXTIME(matchTime/1000) as matchDateTime, TIMESTAMPDIFF(HOUR, FROM_UNIXTIME(matchTime/1000), NOW()) as hours_ago FROM wbc_matches WHERE status = 'live' ORDER BY matchTime ASC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, teamA, teamB, status, FROM_UNIXTIME(matchTime/1000) as matchDateTime, TIMESTAMPDIFF(HOUR, FROM_UNIXTIME(matchTime/1000), NOW()) as hours_ago FROM wbc_matches WHERE status = 'live' ORDER BY matchTime ASC LIMIT 10;",
+  "rows": [
+    {
+      "id": "60001",
+      "teamA": "波多黎各",
+      "teamB": "尼加拉瓜",
+      "status": "live",
+      "matchDateTime": "2026-03-05 00:00:00.0000",
+      "hours_ago": "91"
+    },
+    {
+      "id": "60081",
+      "teamA": "波多黎各",
+      "teamB": "尼加拉瓜",
+      "status": "live",
+      "matchDateTime": "2026-03-05 00:00:00.0000",
+      "hours_ago": "91"
+    },
+    {
+      "id": "60111",
+      "teamA": "委內瑞拉",
+      "teamB": "多明尼加",
+      "status": "live",
+      "matchDateTime": "2026-03-05 01:00:00.0000",
+      "hours_ago": "90"
+    },
+    {
+      "id": "60091",
+      "teamA": "美國",
+      "teamB": "巴西",
+      "status": "live",
+      "matchDateTime": "2026-03-05 01:00:00.0000",
+      "hours_ago": "90"
+    },
+    {
+      "id": "60031",
+      "teamA": "委內瑞拉",
+      "teamB": "多明尼加",
+      "status": "live",
+      "matchDateTime": "2026-03-05 01:00:00.0000",
+      "hours_ago": "90"
+    },
+    {
+      "id": "60042",
+      "teamA": "哥倫比亞",
+      "teamB": "巴拿馬",
+      "status": "live",
+      "matchDateTime": "2026-03-05 04:00:00.0000",
+      "hours_ago": "87"
+    },
+    {
+      "id": "60082",
+      "teamA": "哥倫比亞",
+      "teamB": "巴拿馬",
+      "status": "live",
+      "matchDateTime": "2026-03-05 04:00:00.0000",
+      "hours_ago": "87"
+    },
+    {
+      "id": "60072",
+      "teamA": "荷蘭",
+      "teamB": "以色列",
+      "status": "live",
+      "matchDateTime": "2026-03-05 05:00:00.0000",
+      "hours_ago": "86"
+    },
+    {
+      "id": "60052",
+      "teamA": "墨西哥",
+      "teamB": "古巴",
+      "status": "live",
+      "matchDateTime": "2026-03-05 05:00:00.0000",
+      "hours_ago": "86"
+    },
+    {
+      "id": "60092",
+      "teamA": "墨西哥",
+      "teamB": "古巴",
+      "status": "live",
+      "matchDateTime": "2026-03-05 05:00:00.0000",
+      "hours_ago": "86"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tteamA\tteamB\tstatus\tmatchDateTime\thours_ago\n60001\t波多黎各\t尼加拉瓜\tlive\t2026-03-05 00:00:00.0000\t91\n60081\t波多黎各\t尼加拉瓜\tlive\t2026-03-05 00:00:00.0000\t91\n60111\t委內瑞拉\t多明尼加\tlive\t2026-03-05 01:00:00.0000\t90\n60091\t美國\t巴西\tlive\t2026-03-05 01:00:00.0000\t90\n60031\t委內瑞拉\t多明尼加\tlive\t2026-03-05 01:00:00.0000\t90\n60042\t哥倫比亞\t巴拿馬\tlive\t2026-03-05 04:00:00.0000\t87\n60082\t哥倫比亞\t巴拿馬\tlive\t2026-03-05 04:00:00.0000\t87\n60072\t荷蘭\t以色列\tlive\t2026-03-05 05:00:00.0000\t86\n60052\t墨西哥\t古巴\tlive\t2026-03-05 05:00:00.0000\t86\n60092\t墨西哥\t古巴\tlive\t2026-03-05 05:00:00.0000\t86\n",
+  "stderr": "",
+  "execution_time_ms": 1510
+}

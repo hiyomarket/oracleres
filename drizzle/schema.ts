@@ -883,6 +883,8 @@ export const wbcMatches = mysqlTable("wbc_matches", {
   finalScore: varchar("finalScore", { length: 20 }),
   // 下注截止時間（比賽開始前幾分鐘截止，預設 30 分鐘）
   bettingDeadlineMinutes: int("bettingDeadlineMinutes").notNull().default(30),
+  // AI 比分查詢重試次數（超過 MAX_AI_RETRY 次自動取消，防止無限消耗算力）
+  aiRetryCount: int("aiRetryCount").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

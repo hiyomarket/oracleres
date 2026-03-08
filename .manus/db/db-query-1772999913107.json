@@ -1,0 +1,298 @@
+{
+  "query": "SELECT id, teamA, teamB, status, FROM_UNIXTIME(matchTime/1000) as matchDateTime, finalScore FROM wbc_matches WHERE status = 'live';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, teamA, teamB, status, FROM_UNIXTIME(matchTime/1000) as matchDateTime, finalScore FROM wbc_matches WHERE status = 'live';",
+  "rows": [
+    {
+      "id": "60001",
+      "teamA": "波多黎各",
+      "teamB": "尼加拉瓜",
+      "status": "live",
+      "matchDateTime": "2026-03-05 00:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60031",
+      "teamA": "委內瑞拉",
+      "teamB": "多明尼加",
+      "status": "live",
+      "matchDateTime": "2026-03-05 01:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60042",
+      "teamA": "哥倫比亞",
+      "teamB": "巴拿馬",
+      "status": "live",
+      "matchDateTime": "2026-03-05 04:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60052",
+      "teamA": "墨西哥",
+      "teamB": "古巴",
+      "status": "live",
+      "matchDateTime": "2026-03-05 05:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60072",
+      "teamA": "荷蘭",
+      "teamB": "以色列",
+      "status": "live",
+      "matchDateTime": "2026-03-05 05:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60081",
+      "teamA": "波多黎各",
+      "teamB": "尼加拉瓜",
+      "status": "live",
+      "matchDateTime": "2026-03-05 00:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60082",
+      "teamA": "哥倫比亞",
+      "teamB": "巴拿馬",
+      "status": "live",
+      "matchDateTime": "2026-03-05 04:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60083",
+      "teamA": "尼加拉瓜",
+      "teamB": "哥倫比亞",
+      "status": "live",
+      "matchDateTime": "2026-03-06 00:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60084",
+      "teamA": "波多黎各",
+      "teamB": "巴拿馬",
+      "status": "live",
+      "matchDateTime": "2026-03-06 04:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60085",
+      "teamA": "巴拿馬",
+      "teamB": "尼加拉瓜",
+      "status": "live",
+      "matchDateTime": "2026-03-07 00:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60086",
+      "teamA": "哥倫比亞",
+      "teamB": "波多黎各",
+      "status": "live",
+      "matchDateTime": "2026-03-07 04:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60087",
+      "teamA": "巴拿馬",
+      "teamB": "哥倫比亞",
+      "status": "live",
+      "matchDateTime": "2026-03-08 00:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60088",
+      "teamA": "尼加拉瓜",
+      "teamB": "波多黎各",
+      "status": "live",
+      "matchDateTime": "2026-03-08 04:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60091",
+      "teamA": "美國",
+      "teamB": "巴西",
+      "status": "live",
+      "matchDateTime": "2026-03-05 01:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60092",
+      "teamA": "墨西哥",
+      "teamB": "古巴",
+      "status": "live",
+      "matchDateTime": "2026-03-05 05:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60093",
+      "teamA": "巴西",
+      "teamB": "墨西哥",
+      "status": "live",
+      "matchDateTime": "2026-03-06 01:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60094",
+      "teamA": "古巴",
+      "teamB": "美國",
+      "status": "live",
+      "matchDateTime": "2026-03-06 05:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60095",
+      "teamA": "墨西哥",
+      "teamB": "美國",
+      "status": "live",
+      "matchDateTime": "2026-03-07 01:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60096",
+      "teamA": "巴西",
+      "teamB": "古巴",
+      "status": "live",
+      "matchDateTime": "2026-03-07 05:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60097",
+      "teamA": "美國",
+      "teamB": "墨西哥",
+      "status": "live",
+      "matchDateTime": "2026-03-08 01:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60098",
+      "teamA": "古巴",
+      "teamB": "巴西",
+      "status": "live",
+      "matchDateTime": "2026-03-08 05:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60102",
+      "teamA": "捷克",
+      "teamB": "南韓",
+      "status": "live",
+      "matchDateTime": "2026-03-05 10:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60103",
+      "teamA": "澳大利亞",
+      "teamB": "捷克",
+      "status": "live",
+      "matchDateTime": "2026-03-06 03:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60104",
+      "teamA": "日本",
+      "teamB": "中華臺北",
+      "status": "live",
+      "matchDateTime": "2026-03-06 10:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60105",
+      "teamA": "中華臺北",
+      "teamB": "捷克",
+      "status": "live",
+      "matchDateTime": "2026-03-07 03:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60106",
+      "teamA": "南韓",
+      "teamB": "日本",
+      "status": "live",
+      "matchDateTime": "2026-03-07 10:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60107",
+      "teamA": "中華臺北",
+      "teamB": "南韓",
+      "status": "live",
+      "matchDateTime": "2026-03-08 03:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60108",
+      "teamA": "澳大利亞",
+      "teamB": "日本",
+      "status": "live",
+      "matchDateTime": "2026-03-08 10:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60111",
+      "teamA": "委內瑞拉",
+      "teamB": "多明尼加",
+      "status": "live",
+      "matchDateTime": "2026-03-05 01:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60112",
+      "teamA": "荷蘭",
+      "teamB": "以色列",
+      "status": "live",
+      "matchDateTime": "2026-03-05 05:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60113",
+      "teamA": "多明尼加",
+      "teamB": "荷蘭",
+      "status": "live",
+      "matchDateTime": "2026-03-06 01:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60114",
+      "teamA": "以色列",
+      "teamB": "委內瑞拉",
+      "status": "live",
+      "matchDateTime": "2026-03-06 05:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60115",
+      "teamA": "委內瑞拉",
+      "teamB": "荷蘭",
+      "status": "live",
+      "matchDateTime": "2026-03-07 01:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60116",
+      "teamA": "多明尼加",
+      "teamB": "以色列",
+      "status": "live",
+      "matchDateTime": "2026-03-07 05:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60117",
+      "teamA": "多明尼加",
+      "teamB": "委內瑞拉",
+      "status": "live",
+      "matchDateTime": "2026-03-08 01:00:00.0000",
+      "finalScore": "NULL"
+    },
+    {
+      "id": "60118",
+      "teamA": "荷蘭",
+      "teamB": "以色列",
+      "status": "live",
+      "matchDateTime": "2026-03-08 05:00:00.0000",
+      "finalScore": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tteamA\tteamB\tstatus\tmatchDateTime\tfinalScore\n60001\t波多黎各\t尼加拉瓜\tlive\t2026-03-05 00:00:00.0000\tNULL\n60031\t委內瑞拉\t多明尼加\tlive\t2026-03-05 01:00:00.0000\tNULL\n60042\t哥倫比亞\t巴拿馬\tlive\t2026-03-05 04:00:00.0000\tNULL\n60052\t墨西哥\t古巴\tlive\t2026-03-05 05:00:00.0000\tNULL\n60072\t荷蘭\t以色列\tlive\t2026-03-05 05:00:00.0000\tNULL\n60081\t波多黎各\t尼加拉瓜\tlive\t2026-03-05 00:00:00.0000\tNULL\n60082\t哥倫比亞\t巴拿馬\tlive\t2026-03-05 04:00:00.0000\tNULL\n60083\t尼加拉瓜\t哥倫比亞\tlive\t2026-03-06 00:00:00.0000\tNULL\n60084\t波多黎各\t巴拿馬\tlive\t2026-03-06 04:00:00.0000\tNULL\n60085\t巴拿馬\t尼加拉瓜\tlive\t2026-03-07 00:00:00.0000\tNULL\n60086\t哥倫比亞\t波多黎各\tlive\t2026-03-07 04:00:00.0000\tNULL\n60087\t巴拿馬\t哥倫比亞\tlive\t2026-03-08 00:00:00.0000\tNULL\n60088\t尼加拉瓜\t波多黎各\tlive\t2026-03-08 04:00:00.0000\tNULL\n60091\t美國\t巴西\tlive\t2026-03-05 01:00:00.0000\tNULL\n60092\t墨西哥\t古巴\tlive\t2026-03-05 05:00:00.0000\tNULL\n60093\t巴西\t墨西哥\tlive\t2026-03-06 01:00:00.0000\tNULL\n60094\t古巴\t美國\tlive\t2026-03-06 05:00:00.0000\tNULL\n60095\t墨西哥\t美國\tlive\t2026-03-07 01:00:00.0000\tNULL\n60096\t巴西\t古巴\tlive\t2026-03-07 05:00:00.0000\tNULL\n60097\t美國\t墨西哥\tlive\t2026-03-08 01:00:00.0000\tNULL\n60098\t古巴\t巴西\tlive\t2026-03-08 05:00:00.0000\tNULL\n60102\t捷克\t南韓\tlive\t2026-03-05 10:00:00.0000\tNULL\n60103\t澳大利亞\t捷克\tlive\t2026-03-06 03:00:00.0000\tNULL\n60104\t日本\t中華臺北\tlive\t2026-03-06 10:00:00.0000\tNULL\n60105\t中華臺北\t捷克\tlive\t2026-03-07 03:00:00.0000\tNULL\n60106\t南韓\t日本\tlive\t2026-03-07 10:00:00.0000\tNULL\n60107\t中華臺北\t南韓\tlive\t2026-03-08 03:00:00.0000\tNULL\n60108\t澳大利亞\t日本\tlive\t2026-03-08 10:00:00.0000\tNULL\n60111\t委內瑞拉\t多明尼加\tlive\t2026-03-05 01:00:00.0000\tNULL\n60112\t荷蘭\t以色列\tlive\t2026-03-05 05:00:00.0000\tNULL\n60113\t多明尼加\t荷蘭\tlive\t2026-03-06 01:00:00.0000\tNULL\n60114\t以色列\t委內瑞拉\tlive\t2026-03-06 05:00:00.0000\tNULL\n60115\t委內瑞拉\t荷蘭\tlive\t2026-03-07 01:00:00.0000\tNULL\n60116\t多明尼加\t以色列\tlive\t2026-03-07 05:00:00.0000\tNULL\n60117\t多明尼加\t委內瑞拉\tlive\t2026-03-08 01:00:00.0000\tNULL\n60118\t荷蘭\t以色列\tlive\t2026-03-08 05:00:00.0000\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1517
+}

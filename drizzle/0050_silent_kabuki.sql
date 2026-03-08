@@ -1,0 +1,1 @@
+ALTER TABLE `wbc_matches` ADD `aiRetryCount` int DEFAULT 0 NOT NULL;

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, name, description, coin_cost_per_use, is_active FROM features ORDER BY coin_cost_per_use DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, description, coin_cost_per_use, is_active FROM features ORDER BY coin_cost_per_use DESC;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'coin_cost_per_use' in 'field list'"
+  ]
+}

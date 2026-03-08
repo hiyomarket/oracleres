@@ -1,0 +1,127 @@
+{
+  "query": "SELECT * FROM features ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT * FROM features ORDER BY id;",
+  "rows": [
+    {
+      "id": "ai_report",
+      "name": "AI 深度命格解析",
+      "description": "個人化 AI 命格深度報告",
+      "requiredPlanLevel": "3",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "0"
+    },
+    {
+      "id": "calendar",
+      "name": "命理日曆",
+      "description": "每日吉凶評分與農曆日曆",
+      "requiredPlanLevel": "1",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "0"
+    },
+    {
+      "id": "lottery",
+      "name": "天命選號",
+      "description": "基於命格的彩券號碼推薦",
+      "requiredPlanLevel": "2",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "0"
+    },
+    {
+      "id": "monthly_report",
+      "name": "流月分析",
+      "description": "詳細流月流日能量預測",
+      "requiredPlanLevel": "3",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "0"
+    },
+    {
+      "id": "oracle",
+      "name": "天命擲筊",
+      "description": "基於命格的天命共振擲筊",
+      "requiredPlanLevel": "1",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "15"
+    },
+    {
+      "id": "profile",
+      "name": "命格身份證",
+      "description": "八字四柱、五行比例、紫微命盤",
+      "requiredPlanLevel": "1",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "0"
+    },
+    {
+      "id": "stats",
+      "name": "擲筊分析",
+      "description": "擲筊歷史統計與能量分析",
+      "requiredPlanLevel": "2",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "0"
+    },
+    {
+      "id": "warroom",
+      "name": "每日運勢",
+      "description": "每日能量分析、十神解讀、塔羅流日",
+      "requiredPlanLevel": "1",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "0"
+    },
+    {
+      "id": "warroom_dietary",
+      "name": "飲食建議",
+      "description": "五行飲食調補建議",
+      "requiredPlanLevel": "2",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "10"
+    },
+    {
+      "id": "warroom_divination",
+      "name": "天命問卜",
+      "description": "AI 命理主題深度分析",
+      "requiredPlanLevel": "2",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "30"
+    },
+    {
+      "id": "warroom_outfit",
+      "name": "穿搭手串建議",
+      "description": "每日穿搭顏色與手串推薦",
+      "requiredPlanLevel": "2",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "0"
+    },
+    {
+      "id": "warroom_wealth",
+      "name": "財運羅盤",
+      "description": "偏財指數與商業建議",
+      "requiredPlanLevel": "2",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "0"
+    },
+    {
+      "id": "weekly",
+      "name": "刮刮樂驗證",
+      "description": "刮刮樂購買記錄與分析",
+      "requiredPlanLevel": "2",
+      "isManaged": "0",
+      "createdAt": "2026-02-25 17:22:21",
+      "coinCostPerUse": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdescription\trequiredPlanLevel\tisManaged\tcreatedAt\tcoinCostPerUse\nai_report\tAI 深度命格解析\t個人化 AI 命格深度報告\t3\t0\t2026-02-25 17:22:21\t0\ncalendar\t命理日曆\t每日吉凶評分與農曆日曆\t1\t0\t2026-02-25 17:22:21\t0\nlottery\t天命選號\t基於命格的彩券號碼推薦\t2\t0\t2026-02-25 17:22:21\t0\nmonthly_report\t流月分析\t詳細流月流日能量預測\t3\t0\t2026-02-25 17:22:21\t0\noracle\t天命擲筊\t基於命格的天命共振擲筊\t1\t0\t2026-02-25 17:22:21\t15\nprofile\t命格身份證\t八字四柱、五行比例、紫微命盤\t1\t0\t2026-02-25 17:22:21\t0\nstats\t擲筊分析\t擲筊歷史統計與能量分析\t2\t0\t2026-02-25 17:22:21\t0\nwarroom\t每日運勢\t每日能量分析、十神解讀、塔羅流日\t1\t0\t2026-02-25 17:22:21\t0\nwarroom_dietary\t飲食建議\t五行飲食調補建議\t2\t0\t2026-02-25 17:22:21\t10\nwarroom_divination\t天命問卜\tAI 命理主題深度分析\t2\t0\t2026-02-25 17:22:21\t30\nwarroom_outfit\t穿搭手串建議\t每日穿搭顏色與手串推薦\t2\t0\t2026-02-25 17:22:21\t0\nwarroom_wealth\t財運羅盤\t偏財指數與商業建議\t2\t0\t2026-02-25 17:22:21\t0\nweekly\t刮刮樂驗證\t刮刮樂購買記錄與分析\t2\t0\t2026-02-25 17:22:21\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1501
+}

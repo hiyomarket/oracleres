@@ -4,11 +4,17 @@
  * - 每 5 分鐘掃描「live」狀態且比賽時間已過 3 小時的賽事
  * - 呼叫 LLM 搜尋最新比分
  * - 若 LLM 回傳確定比分，自動更新資料庫並結算下注
+ *
+ * 防護機制：
+ * - MAX_AI_RETRY = 10：每場賽事最多查詢 10 次（約 50 分鐘），超過自動取消，防止算力無限消耗
  */
 import { getDb } from "../db";
 import { wbcMatches, wbcBets } from "../../drizzle/schema";
 import { eq, and, lte, lt } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
+
+/** 每場賽事 AI 比分查詢的最大重試次數，超過後自動取消該賽事 */
+const MAX_AI_RETRY = 10;
 
 interface ScoreResult {
   found: boolean;
@@ -104,7 +110,6 @@ async function settleMatchBets(
     .where(eq(wbcBets.matchId, matchId));
 
   // 實際結算邏輯在 wbc.settleMatch 程序中，這裡只記錄日誌
-
   console.log(`[WbcScoreFetcher] Match #${matchId}: ${bets.length} bets found, settlement pending manual confirmation`);
 }
 
@@ -116,14 +121,15 @@ export async function checkAndFetchWbcScores(): Promise<void> {
   // 比賽時間超過 3 小時前（比賽應已結束）
   const finishedThreshold = now - 3 * 60 * 60 * 1000;
 
-  // 找出所有「live」狀態且比賽時間已過 3 小時的賽事
+  // 找出所有「live」狀態且比賽時間已過 3 小時，且重試次數未超過上限的賽事
   const matchesToCheck = await db
     .select()
     .from(wbcMatches)
     .where(
       and(
         eq(wbcMatches.status, "live"),
-        lte(wbcMatches.matchTime, finishedThreshold)
+        lte(wbcMatches.matchTime, finishedThreshold),
+        lt(wbcMatches.aiRetryCount, MAX_AI_RETRY)
       )
     );
 
@@ -132,17 +138,48 @@ export async function checkAndFetchWbcScores(): Promise<void> {
   console.log(`[WbcScoreFetcher] Checking scores for ${matchesToCheck.length} matches...`);
 
   for (const match of matchesToCheck) {
-    console.log(`[WbcScoreFetcher] Fetching score for Match #${match.id}: ${match.teamA} vs ${match.teamB}`);
+    const newRetryCount = (match.aiRetryCount ?? 0) + 1;
+
+    // 先更新重試次數，防止同一輪重複計算
+    await db
+      .update(wbcMatches)
+      .set({ aiRetryCount: newRetryCount })
+      .where(eq(wbcMatches.id, match.id));
+
+    // 若已達最大重試次數，自動取消此賽事並通知管理員
+    if (newRetryCount >= MAX_AI_RETRY) {
+      await db
+        .update(wbcMatches)
+        .set({ status: "cancelled", aiRetryCount: newRetryCount })
+        .where(eq(wbcMatches.id, match.id));
+
+      console.warn(
+        `[WbcScoreFetcher] ⚠️ Match #${match.id} (${match.teamA} vs ${match.teamB}) auto-cancelled after ${MAX_AI_RETRY} retries — no confirmed score found.`
+      );
+
+      try {
+        const { notifyOwner } = await import("../_core/notification");
+        await notifyOwner({
+          title: `⚠️ WBC 賽事自動取消：${match.teamA} vs ${match.teamB}`,
+          content: `AI 已嘗試查詢比分 ${MAX_AI_RETRY} 次，仍無法確認結果，已自動將此賽事標記為「取消」。\n\n請前往後台手動確認並結算 → 管理中心 → WBC 競猜`,
+        });
+      } catch (e) {
+        // 通知失敗不影響主流程
+      }
+      continue;
+    }
+
+    console.log(`[WbcScoreFetcher] Fetching score for Match #${match.id}: ${match.teamA} vs ${match.teamB} (retry ${newRetryCount}/${MAX_AI_RETRY})`);
 
     const scoreResult = await fetchScoreWithAI(match.teamA, match.teamB, match.matchTime);
 
     if (!scoreResult) {
-      console.log(`[WbcScoreFetcher] No result for Match #${match.id}, will retry later`);
+      console.log(`[WbcScoreFetcher] No result for Match #${match.id}, will retry later (${newRetryCount}/${MAX_AI_RETRY})`);
       continue;
     }
 
     if (!scoreResult.found || scoreResult.confidence === "low") {
-      console.log(`[WbcScoreFetcher] Match #${match.id}: Score not confirmed yet (found=${scoreResult.found}, confidence=${scoreResult.confidence})`);
+      console.log(`[WbcScoreFetcher] Match #${match.id}: Score not confirmed yet (found=${scoreResult.found}, confidence=${scoreResult.confidence}) (${newRetryCount}/${MAX_AI_RETRY})`);
       continue;
     }
 
