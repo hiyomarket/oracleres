@@ -489,18 +489,18 @@ export default function WealthPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
-        <div className="text-white/50">請先登入</div>
+      <div className="min-h-screen oracle-page flex items-center justify-center">
+        <div className="text-foreground/50">請先登入</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white">
+    <div className="min-h-screen oracle-page text-foreground">
       <SharedNav currentPage="wealth" />
 
       {/* 頁面標題 */}
-      <div className="sticky top-0 z-20 bg-[#0a0f1a]/95 backdrop-blur-sm border-b border-white/5 px-4 py-3 flex items-center gap-3">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border/30 px-4 py-3 flex items-center gap-3">
         <button
           onClick={() => navigate("/")}
           className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"

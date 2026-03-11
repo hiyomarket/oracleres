@@ -536,7 +536,7 @@ export default function DietPage() {
   useEffect(() => { refetchDiet(); }, [selectedMode, refetchDiet]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen oracle-page text-foreground">
       <SharedNav currentPage="diet" />
       <main className="max-w-2xl mx-auto px-4 pt-20 pb-32 space-y-5">
 

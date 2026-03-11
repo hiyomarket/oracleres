@@ -2335,3 +2335,22 @@
 - [x] Messages.tsx 改為 LINE 式左右呈現（自己在右、對方在左）
 - [x] Messages.tsx 加入已讀功能：自己發送的訊息顯示「✓」或「已讀」
 - [x] getMessages 後端 API 自動標記對方訊息為已讀，並回傳 isRead 欄位
+
+## 淺色主題修復 v11.1
+
+- [x] 擴充 index.css：補充 bg-gray-950/slate-950 極深色頁面底色覆蓋
+- [x] 擴充 index.css：補充 bg-gray-800/900 帶透明度（/10~/80）覆蓋
+- [x] 擴充 index.css：補充 bg-slate-800/900 帶透明度覆蓋
+- [x] 擴充 index.css：補充 bg-purple-900/950 及帶透明度覆蓋（DivinationPage）
+- [x] 擴充 index.css：補充 bg-indigo-900/950 覆蓋
+- [x] 擴充 index.css：補充 bg-white/5~25 半透明白色背景覆蓋（WealthPage/DietPage）
+- [x] 擴充 index.css：補充 border-white/5~15 半透明白色邊框覆蓋
+- [x] 擴充 index.css：補充 text-teal-500、text-gray-100 等缺漏文字色覆蓋
+- [x] WealthPage.tsx：將 bg-[#0a0f1a] 替換為 oracle-page（主題感知）
+- [x] DietPage.tsx：將 bg-[#0a0a0f] 替換為 oracle-page（主題感知）
+- [x] ProfilePage.tsx：將 min-h-screen bg-gray-950 替換為 oracle-page，修復輸入框
+- [x] CasinoPage.tsx：將 bg-[#0a0e1a] 替換為 oracle-page
+- [x] WbcPage.tsx：將 bg-[#0a0e1a] 替換為 oracle-page
+- [x] NotificationsPage.tsx：將 bg-[#0a0e1a] 替換為 oracle-page
+- [x] WardrobePage.tsx：將 Dialog/SheetContent 的 bg-[#1a1a2e] 替換為 bg-popover
+- [x] 295 項測試全部通過，TypeScript 零錯誤

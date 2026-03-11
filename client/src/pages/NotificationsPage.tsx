@@ -55,15 +55,15 @@ export default function NotificationsPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0e1a] flex items-center justify-center">
-        <div className="text-slate-400">載入中...</div>
+      <div className="min-h-screen oracle-page flex items-center justify-center">
+        <div className="text-muted-foreground">載入中...</div>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0e1a] flex items-center justify-center">
+      <div className="min-h-screen oracle-page flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="text-4xl">🔔</div>
           <p className="text-slate-400">請先登入查看通知</p>
@@ -76,11 +76,11 @@ export default function NotificationsPage() {
   const unreadCount = unreadData?.count ?? 0;
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-white pb-24">
+    <div className="min-h-screen oracle-page text-foreground pb-24">
       <SharedNav currentPage="notifications" />
 
       {/* 頂部 */}
-      <div className="bg-gradient-to-b from-slate-800/40 to-[#0a0e1a] border-b border-slate-700/40">
+      <div className="bg-gradient-to-b from-slate-800/40 to-background border-b border-slate-700/40">
         <div className="max-w-2xl mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

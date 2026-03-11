@@ -506,7 +506,7 @@ function ExpertApplySection() {
                 value={publicName}
                 onChange={(e) => setPublicName(e.target.value)}
                 placeholder="您希望在平台上顯示的名稱"
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-amber-500/60 focus:outline-none"
+                className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:border-amber-500/60 focus:outline-none"
                 maxLength={50}
               />
             </div>
@@ -516,7 +516,7 @@ function ExpertApplySection() {
                 value={motivation}
                 onChange={(e) => setMotivation(e.target.value)}
                 placeholder="簡述您的命理經驗、擅長領域或希望提供的服務…"
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-amber-500/60 focus:outline-none resize-none"
+                className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:border-amber-500/60 focus:outline-none resize-none"
                 rows={3}
                 maxLength={500}
               />
@@ -680,12 +680,12 @@ export default function ProfilePage() {
   const hasBasicProfile = isOwner || !!(profile?.displayName || profile?.birthDate);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 pb-16">
+    <div className="min-h-screen oracle-page text-foreground pb-16">
       <SharedNav currentPage="profile" />
       {!isAdmin && !hasFeature("profile") && <FeatureLockedCard feature="profile" />}
       {(isAdmin || hasFeature("profile")) && <>
       {/* ─── 頂部英雄區 ─── */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-950 to-black border-b border-orange-500/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-card via-background to-background border-b border-orange-500/20">
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-4 left-8 text-8xl font-bold text-orange-400 select-none">命</div>
           <div className="absolute top-4 right-8 text-8xl font-bold text-orange-400 select-none">格</div>

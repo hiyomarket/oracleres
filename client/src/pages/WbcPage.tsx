@@ -211,12 +211,12 @@ export default function WbcPage() {
   }, [betState, selectedMatch, comboRate]);
 
   if (authLoading) {
-    return <div className="min-h-screen bg-[#0a0e1a] flex items-center justify-center"><div className="text-amber-400 animate-pulse">載入中...</div></div>;
+    return <div className="min-h-screen oracle-page flex items-center justify-center"><div className="text-amber-400 animate-pulse">載入中...</div></div>;
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0e1a] flex flex-col items-center justify-center gap-6 px-4">
+      <div className="min-h-screen oracle-page flex flex-col items-center justify-center gap-6 px-4">
         <div className="text-6xl">⚾</div>
         <h1 className="text-2xl font-bold text-amber-400">WBC 世界棒球競猜</h1>
         <p className="text-slate-400 text-center max-w-sm">登入後即可參與 WBC 2026 世界棒球經典賽競猜</p>
@@ -226,10 +226,10 @@ export default function WbcPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-white pb-24">
+    <div className="min-h-screen oracle-page text-foreground pb-24">
       <SharedNav currentPage="casino" />
       {/* 頂部 */}
-      <div className="bg-gradient-to-b from-green-900/20 to-[#0a0e1a] border-b border-green-800/30">
+      <div className="bg-gradient-to-b from-green-900/20 to-background border-b border-green-800/30">
         <div className="max-w-4xl mx-auto px-4 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

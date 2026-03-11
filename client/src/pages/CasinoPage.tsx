@@ -60,7 +60,7 @@ export default function CasinoPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0e1a] flex items-center justify-center">
+      <div className="min-h-screen oracle-page flex items-center justify-center">
         <div className="text-amber-400 animate-pulse">載入中...</div>
       </div>
     );
@@ -68,7 +68,7 @@ export default function CasinoPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0e1a] flex flex-col items-center justify-center gap-6 px-4">
+      <div className="min-h-screen oracle-page flex flex-col items-center justify-center gap-6 px-4">
         <div className="text-6xl">🎰</div>
         <h1 className="text-3xl font-bold text-amber-400">天命娛樂城</h1>
         <p className="text-slate-400 text-center max-w-sm">登入後即可使用遊戲點參與 WBC 世界棒球經典賽競猜，贏取豐厚遊戲點獎勵</p>
@@ -80,10 +80,10 @@ export default function CasinoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-white pb-24">
+    <div className="min-h-screen oracle-page text-foreground pb-24">
       <SharedNav currentPage="casino" />
       {/* 頂部 Hero */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-amber-900/30 to-[#0a0e1a] border-b border-amber-800/30">
+      <div className="relative overflow-hidden bg-gradient-to-b from-amber-900/30 to-background border-b border-amber-800/30">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-600/10 via-transparent to-transparent" />
         <div className="relative max-w-4xl mx-auto px-4 py-8">
           <div className="flex items-center gap-3 mb-2">

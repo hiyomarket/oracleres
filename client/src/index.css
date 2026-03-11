@@ -305,6 +305,37 @@
 :root[data-theme-mode="light"] .border-white\/20 {
   border-color: var(--border) !important;
 }
+/* 淺色主題下的半透明白色背景（WealthPage/DietPage 等使用 bg-white/5 等） */
+:root[data-theme-mode="light"] .bg-white\/5 {
+  background-color: oklch(0.88 0.01 60 / 0.5) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/10 {
+  background-color: oklch(0.86 0.015 60 / 0.55) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/15 {
+  background-color: oklch(0.84 0.015 60 / 0.6) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/20 {
+  background-color: oklch(0.82 0.02 60 / 0.65) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/25 {
+  background-color: oklch(0.80 0.02 60 / 0.7) !important;
+}
+/* 淺色主題下的半透明白色邊框 */
+:root[data-theme-mode="light"] .border-white\/5 {
+  border-color: oklch(0.70 0.02 60 / 0.25) !important;
+}
+:root[data-theme-mode="light"] .border-white\/15 {
+  border-color: oklch(0.65 0.02 60 / 0.35) !important;
+}
+/* 淺色主題下 WealthPage/DietPage 輸入框修正 */
+:root[data-theme-mode="light"] .bg-white\/5.border-white\/10,
+:root[data-theme-mode="light"] input.bg-white\/5,
+:root[data-theme-mode="light"] textarea.bg-white\/5 {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
 /* 淺色主題下的 oracle-page 文字修正（小範圍覆蓋） */
 .oracle-page .text-white\/60 {
   color: color-mix(in oklch, var(--foreground) 60%, transparent);
@@ -598,6 +629,181 @@
 }
 :root[data-theme-mode="light"] .text-slate-500.uppercase {
   color: var(--muted-foreground) !important;
+}
+
+/* ===================================================================
+   淺色主題：補充缺漏的深色背景覆蓋（帶透明度版本 + 極深色）
+   =================================================================== */
+
+/* ── 極深色頁面底色（ProfilePage min-h-screen bg-gray-950 等）── */
+:root[data-theme-mode="light"] .bg-gray-950,
+:root[data-theme-mode="light"] .bg-slate-950,
+:root[data-theme-mode="light"] .bg-zinc-950,
+:root[data-theme-mode="light"] .bg-neutral-950,
+:root[data-theme-mode="light"] .bg-stone-950 {
+  background-color: var(--background) !important;
+}
+
+/* ── 深灰色帶透明度背景（gray）── */
+:root[data-theme-mode="light"] .bg-gray-800\/10,
+:root[data-theme-mode="light"] .bg-gray-800\/20 {
+  background-color: oklch(0.90 0.01 60 / 0.5) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-800\/30,
+:root[data-theme-mode="light"] .bg-gray-800\/40,
+:root[data-theme-mode="light"] .bg-gray-800\/50 {
+  background-color: oklch(0.88 0.015 60 / 0.6) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-800\/60,
+:root[data-theme-mode="light"] .bg-gray-800\/70,
+:root[data-theme-mode="light"] .bg-gray-800\/80 {
+  background-color: oklch(0.86 0.015 60 / 0.7) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-900\/10,
+:root[data-theme-mode="light"] .bg-gray-900\/20 {
+  background-color: oklch(0.92 0.01 60 / 0.4) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-900\/30,
+:root[data-theme-mode="light"] .bg-gray-900\/40 {
+  background-color: oklch(0.90 0.01 60 / 0.5) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-900\/50,
+:root[data-theme-mode="light"] .bg-gray-900\/60 {
+  background-color: oklch(0.88 0.015 60 / 0.6) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-900\/70,
+:root[data-theme-mode="light"] .bg-gray-900\/80 {
+  background-color: oklch(0.86 0.015 60 / 0.7) !important;
+}
+
+/* ── 深灰色帶透明度背景（slate）── */
+:root[data-theme-mode="light"] .bg-slate-800\/10,
+:root[data-theme-mode="light"] .bg-slate-800\/20 {
+  background-color: oklch(0.91 0.01 270 / 0.4) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800\/30 {
+  background-color: oklch(0.89 0.01 270 / 0.5) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800\/60,
+:root[data-theme-mode="light"] .bg-slate-800\/70,
+:root[data-theme-mode="light"] .bg-slate-800\/80 {
+  background-color: oklch(0.86 0.015 270 / 0.7) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/10,
+:root[data-theme-mode="light"] .bg-slate-900\/20 {
+  background-color: oklch(0.92 0.01 270 / 0.4) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/30 {
+  background-color: oklch(0.90 0.01 270 / 0.5) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/70,
+:root[data-theme-mode="light"] .bg-slate-900\/80 {
+  background-color: oklch(0.87 0.015 270 / 0.7) !important;
+}
+
+/* ── 深紫色背景（DivinationPage、TopicAdvicePanel）── */
+:root[data-theme-mode="light"] .bg-purple-950,
+:root[data-theme-mode="light"] .bg-purple-900 {
+  background-color: oklch(0.92 0.03 300) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-950\/10,
+:root[data-theme-mode="light"] .bg-purple-950\/20 {
+  background-color: oklch(0.88 0.04 300 / 0.25) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-950\/30,
+:root[data-theme-mode="light"] .bg-purple-950\/40 {
+  background-color: oklch(0.86 0.04 300 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-900\/10,
+:root[data-theme-mode="light"] .bg-purple-900\/15,
+:root[data-theme-mode="light"] .bg-purple-900\/20 {
+  background-color: oklch(0.88 0.04 300 / 0.20) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-900\/30,
+:root[data-theme-mode="light"] .bg-purple-900\/40 {
+  background-color: oklch(0.86 0.04 300 / 0.30) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-900\/50 {
+  background-color: oklch(0.84 0.04 300 / 0.40) !important;
+}
+
+/* ── 深靛藍色背景（TopicAdvicePanel 歷史標籤）── */
+:root[data-theme-mode="light"] .bg-indigo-900,
+:root[data-theme-mode="light"] .bg-indigo-950 {
+  background-color: oklch(0.92 0.03 270) !important;
+}
+:root[data-theme-mode="light"] .bg-indigo-900\/10,
+:root[data-theme-mode="light"] .bg-indigo-900\/20,
+:root[data-theme-mode="light"] .bg-indigo-900\/30 {
+  background-color: oklch(0.88 0.04 270 / 0.25) !important;
+}
+
+/* ── 深色 border 補充 ── */
+:root[data-theme-mode="light"] .border-gray-700\/30,
+:root[data-theme-mode="light"] .border-gray-700\/50 {
+  border-color: oklch(0.75 0.02 60 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .border-gray-600\/30,
+:root[data-theme-mode="light"] .border-gray-600\/50 {
+  border-color: oklch(0.72 0.02 60 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-slate-700\/30 {
+  border-color: oklch(0.75 0.02 270 / 0.30) !important;
+}
+:root[data-theme-mode="light"] .border-purple-700\/20,
+:root[data-theme-mode="light"] .border-purple-700\/40 {
+  border-color: oklch(0.55 0.12 300 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .border-indigo-700\/30 {
+  border-color: oklch(0.52 0.12 270 / 0.35) !important;
+}
+
+/* ── 補充缺漏的螢光文字色 ── */
+:root[data-theme-mode="light"] .text-teal-500 {
+  color: oklch(0.38 0.12 185) !important;
+}
+:root[data-theme-mode="light"] .text-cyan-300\/80,
+:root[data-theme-mode="light"] .text-cyan-400\/80 {
+  color: oklch(0.38 0.14 210 / 0.9) !important;
+}
+:root[data-theme-mode="light"] .text-purple-300\/80,
+:root[data-theme-mode="light"] .text-purple-400\/80 {
+  color: oklch(0.42 0.14 300 / 0.9) !important;
+}
+:root[data-theme-mode="light"] .text-pink-300\/80,
+:root[data-theme-mode="light"] .text-pink-400\/80 {
+  color: oklch(0.42 0.18 350 / 0.9) !important;
+}
+
+/* ── 淺色主題下輸入框修正 ── */
+:root[data-theme-mode="light"] input.bg-gray-800,
+:root[data-theme-mode="light"] input.bg-slate-800,
+:root[data-theme-mode="light"] textarea.bg-gray-800,
+:root[data-theme-mode="light"] textarea.bg-slate-800 {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+:root[data-theme-mode="light"] input.bg-slate-800\/60,
+:root[data-theme-mode="light"] textarea.bg-slate-800\/60 {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+:root[data-theme-mode="light"] input::placeholder,
+:root[data-theme-mode="light"] textarea::placeholder {
+  color: var(--muted-foreground) !important;
+  opacity: 0.7;
+}
+
+/* ── 淺色主題下 oracle-page 背景修正 ── */
+:root[data-theme-mode="light"] .oracle-page {
+  background: var(--background) !important;
+}
+
+/* ── 淺色主題下 ProfilePage 的 text-gray-100 修正 ── */
+:root[data-theme-mode="light"] .text-gray-100 {
+  color: var(--foreground) !important;
 }
 
 .oracle-bg {

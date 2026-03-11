@@ -390,7 +390,7 @@ export default function WardrobePage() {
       <Sheet open={photoSheetOpen} onOpenChange={setPhotoSheetOpen}>
         <SheetContent
           side="bottom"
-          className="bg-[#1a1a2e] border-t border-white/20 text-white max-h-[90vh] overflow-y-auto rounded-t-2xl"
+          className="bg-popover border-t border-border text-popover-foreground max-h-[90vh] overflow-y-auto rounded-t-2xl"
         >
           <div className="max-w-md mx-auto py-4">
             <PhotoUploadAnalyzer
@@ -406,7 +406,7 @@ export default function WardrobePage() {
 
       {/* 新增/編輯 Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(v) => { setDialogOpen(v); if (!v) setEditItem(null); }}>
-        <DialogContent className="bg-[#1a1a2e] border-white/20 text-white max-w-md">
+        <DialogContent className="bg-popover border-border text-popover-foreground max-w-md">
           <DialogHeader>
             <DialogTitle>{editItem ? "編輯衣物" : "新增衣物"}</DialogTitle>
           </DialogHeader>
@@ -427,7 +427,7 @@ export default function WardrobePage() {
                   <SelectTrigger className="bg-white/10 border-white/20 text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1a1a2e] border-white/20 text-white">
+                  <SelectContent className="bg-popover border-border text-popover-foreground">
                     {CATEGORIES.map((c) => (
                       <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                     ))}
@@ -450,7 +450,7 @@ export default function WardrobePage() {
                 <SelectTrigger className="bg-white/10 border-white/20 text-white">
                   <SelectValue placeholder="自動推算" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#1a1a2e] border-white/20 text-white">
+                <SelectContent className="bg-popover border-border text-popover-foreground">
                   {WUXING_OPTIONS.map((w) => (
                     <SelectItem key={w.value} value={w.value}>{w.label}</SelectItem>
                   ))}
@@ -493,7 +493,7 @@ export default function WardrobePage() {
 
       {/* 刪除確認 Dialog */}
       <Dialog open={deleteConfirmId !== null} onOpenChange={(v) => { if (!v) setDeleteConfirmId(null); }}>
-        <DialogContent className="bg-[#1a1a2e] border-white/20 text-white max-w-sm">
+        <DialogContent className="bg-popover border-border text-popover-foreground max-w-sm">
           <DialogHeader>
             <DialogTitle>確認刪除</DialogTitle>
           </DialogHeader>
