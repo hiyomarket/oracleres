@@ -6,7 +6,7 @@
  * - 顯示已計算的命格結果（唯讀）
  * - 提供「重新推算」按鈕
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -80,12 +80,20 @@ function birthTimeToHourIndex(birthTime: string): number | null {
   return null;
 }
 
-// ─── 農曆即時換算提示元件 ────────────────────────────────────────────────────
-function LunarDateHint({ solarDate }: { solarDate: string }) {
+// ─── 農曆即時換算提示元件 ────────────────────────────────────────────
+function LunarDateHint({ solarDate, onLunarResolved }: { solarDate: string; onLunarResolved?: (s: string) => void }) {
   const { data, isFetching } = trpc.utils.toLunar.useQuery(
     { date: solarDate },
     { enabled: !!solarDate && solarDate.length === 10 }
   );
+
+  // 如果有回調，將換算結果回傳給父元件
+  useEffect(() => {
+    if (data?.lunarString && onLunarResolved) {
+      onLunarResolved(data.lunarString);
+    }
+  }, [data?.lunarString, onLunarResolved]);
+
   if (!solarDate || solarDate.length < 10) {
     return (
       <p className="text-xs text-slate-600 mt-1.5 pl-1">
@@ -153,18 +161,26 @@ export default function MyProfile() {
   useEffect(() => {
     if (profile) {
       const hourIndex = profile.birthTime ? birthTimeToHourIndex(profile.birthTime) : null;
+      const rawLunar = (profile as any).birthLunar ?? "";
+      // 若 DB 農曆字串含有 undefined，清空以便前端重新換算
+      const cleanLunar = (rawLunar.includes('undefined') || rawLunar.includes('null')) ? '' : rawLunar;
       setForm({
         displayName: profile.displayName ?? "",
         birthDate: profile.birthDate ?? "",
         birthHour: hourIndex,
         birthPlace: profile.birthPlace ?? "",
         occupation: (profile as any).occupation ?? "",
-        birthLunar: (profile as any).birthLunar ?? "",
+        birthLunar: cleanLunar,
         notes: profile.notes ?? "",
         gender: (profile as any).gender ?? "",
       });
     }
   }, [profile]);
+
+  // 農曆自動填入回調：当 birthLunar 為空時才填入
+  const handleLunarResolved = useCallback((lunarStr: string) => {
+    setForm(f => f.birthLunar ? f : { ...f, birthLunar: lunarStr });
+  }, []);
 
   const deleteSelf = trpc.account.deleteSelf.useMutation({
     onSuccess: () => {
@@ -393,7 +409,7 @@ export default function MyProfile() {
               onChange={e => setForm(f => ({ ...f, birthDate: e.target.value }))}
               className="w-full bg-slate-900/60 border border-slate-600/50 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/60"
             />
-            <LunarDateHint solarDate={form.birthDate} />
+            <LunarDateHint solarDate={form.birthDate} onLunarResolved={handleLunarResolved} />
           </div>
 
           {/* 出生時辰 */}

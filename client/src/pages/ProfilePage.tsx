@@ -679,6 +679,18 @@ export default function ProfilePage() {
   // 主帳號永遠有完整資料，其他用戶才需要判斷
   const hasBasicProfile = isOwner || !!(profile?.displayName || profile?.birthDate);
 
+  // 即時農曆換算：若 DB 農曆字串有問題（含 undefined）則即時重算
+  const birthDateForLunar = effectiveProfile?.birthDate ?? null;
+  const storedLunar = effectiveProfile?.birthLunar ?? null;
+  const needsLunarRecalc = !storedLunar || storedLunar.includes('undefined') || storedLunar.includes('null');
+  const { data: lunarData } = trpc.utils.toLunar.useQuery(
+    { date: birthDateForLunar! },
+    { enabled: !!birthDateForLunar && needsLunarRecalc, staleTime: Infinity }
+  );
+  const displayLunar = needsLunarRecalc
+    ? (lunarData?.lunarString ?? (birthDateForLunar ? '農曆換算中...' : '未設定'))
+    : (storedLunar ?? '未設定');
+
   return (
     <div className="min-h-screen oracle-page text-foreground pb-16">
       <SharedNav currentPage="profile" />
@@ -716,7 +728,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">🌙</span>
-                  <span>{effectiveProfile?.birthLunar ?? '未設定'}</span>
+                  <span>{displayLunar}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-300">
                   <span className="text-orange-400">⏰</span>
@@ -1078,15 +1090,17 @@ export default function ProfilePage() {
 
 
 
-        {/* ─── 前往設定按鈕（所有用戶包含主帳號）─── */}
-        <div className="flex justify-center pt-4">
-          <Link href="/my-profile">
-            <span className="inline-flex items-center gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/40 rounded-xl px-6 py-3 text-sm font-medium transition-colors cursor-pointer">
-              <Settings className="w-4 h-4" />
-              編輯命格資料
-            </span>
-          </Link>
-        </div>
+        {/* ─── 前往設定按鈕（僅自己的命格頁面才顯示）─── */}
+        {(isOwner || (user && profile)) && (
+          <div className="flex justify-center pt-4">
+            <Link href="/my-profile">
+              <span className="inline-flex items-center gap-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 border border-orange-500/40 rounded-xl px-6 py-3 text-sm font-medium transition-colors cursor-pointer">
+                <Settings className="w-4 h-4" />
+                {hasBasicProfile ? '編輯命格資料' : '建立命格檔案'}
+              </span>
+            </Link>
+          </div>
+        )}
 
         {/* ─── 申請成為命理師區塊 ─── */}
         <ExpertApplySection />

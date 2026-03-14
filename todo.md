@@ -2354,3 +2354,13 @@
 - [x] NotificationsPage.tsx：將 bg-[#0a0e1a] 替換為 oracle-page
 - [x] WardrobePage.tsx：將 Dialog/SheetContent 的 bg-[#1a1a2e] 替換為 bg-popover
 - [x] 295 項測試全部通過，TypeScript 零錯誤
+
+## 農曆顯示修復 v11.2
+
+- [x] 修復後端 calculateAndSaveBazi 使用 lunar-typescript 正確換算農曆（支援 1900-2100 年）
+- [x] ProfilePage 農曆欄位：若 DB 值含 undefined 則即時呼叫 toLunar 重新換算
+- [x] MyProfile 載入時清除含 undefined 的舊農曆字串
+- [x] MyProfile LunarDateHint 加入 onLunarResolved 回調，birthLunar 空時自動填入
+- [x] ProfilePage 底部「編輯命格資料」按鈕：僅在自己的命格頁面才顯示
+- [x] 按鈕文字依狀態切換：有資料顯示「編輯命格資料」，無資料顯示「建立命格檔案」
+- [x] 295 項測試全部通過，TypeScript 零錯誤

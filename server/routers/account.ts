@@ -424,16 +424,34 @@ export const accountRouter = router({
       let birthLunarStr = input.birthLunar ?? null;
       if (!birthLunarStr) {
         try {
-          const { solarToLunarByYMD } = await import('../lib/lunarConverter');
-          const { getYearPillar } = await import('../lib/lunarCalendar');
+          // 優先使用 lunar-typescript（支援 1900-2100 年，精確度高）
+          const { Solar } = await import('lunar-typescript');
           const [ly, lm, ld] = input.birthDate.split('-').map(Number);
-          const lunar = solarToLunarByYMD(ly, lm, ld);
-          const yearPillarLunar = getYearPillar(lunar.lunarYear);
-          const yearName = `${yearPillarLunar.stem}${yearPillarLunar.branch}`;
-          const leapPrefix = lunar.isLeapMonth ? '閏' : '';
-          birthLunarStr = `農曆：${yearName}年${leapPrefix}${lunar.lunarMonthName}${lunar.lunarDayName}`;
+          const solar = Solar.fromYmd(ly, lm, ld);
+          const lunar = solar.getLunar();
+          const yearGanzhi = lunar.getYearInGanZhi();
+          const lunarMonthNum = lunar.getMonth();
+          const isLeap = lunarMonthNum < 0;
+          const leapPrefix = isLeap ? '閏' : '';
+          const monthChinese = lunar.getMonthInChinese();
+          const dayChinese = lunar.getDayInChinese();
+          birthLunarStr = `農曆：${yearGanzhi}年${leapPrefix}${monthChinese}月${dayChinese}`;
         } catch {
-          // 農曆推算失敗不阻斷儲存
+          // 備用：使用內建轉換
+          try {
+            const { solarToLunarByYMD } = await import('../lib/lunarConverter');
+            const { getYearPillar } = await import('../lib/lunarCalendar');
+            const [ly, lm, ld] = input.birthDate.split('-').map(Number);
+            const lunar = solarToLunarByYMD(ly, lm, ld);
+            const yearPillarLunar = getYearPillar(lunar.lunarYear);
+            const yearName = `${yearPillarLunar.stem}${yearPillarLunar.branch}`;
+            const leapPrefix = lunar.isLeapMonth ? '閏' : '';
+            if (lunar.lunarMonthName && lunar.lunarDayName) {
+              birthLunarStr = `農曆：${yearName}年${leapPrefix}${lunar.lunarMonthName}${lunar.lunarDayName}`;
+            }
+          } catch {
+            // 農曆推算失敗不阻斷儲存
+          }
         }
       }
       if (existing.length > 0) {
