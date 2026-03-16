@@ -1,0 +1,65 @@
+{
+  "query": "SELECT displayName, dayPillar, yearPillar, monthPillar, hourPillar, dayMasterElement, favorableElements, unfavorableElements, birthLunar FROM user_profiles WHERE displayName IS NOT NULL LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT displayName, dayPillar, yearPillar, monthPillar, hourPillar, dayMasterElement, favorableElements, unfavorableElements, birthLunar FROM user_profiles WHERE displayName IS NOT NULL LIMIT 5;",
+  "rows": [
+    {
+      "displayName": "胡庭瑀",
+      "dayPillar": "壬申",
+      "yearPillar": "乙亥",
+      "monthPillar": "戊子",
+      "hourPillar": "丙午",
+      "dayMasterElement": "water",
+      "favorableElements": "water,metal",
+      "unfavorableElements": "wood,fire",
+      "birthLunar": "農曆：乙巳年undefined-15日"
+    },
+    {
+      "displayName": "bb",
+      "dayPillar": "己未",
+      "yearPillar": "癸亥",
+      "monthPillar": "癸亥",
+      "hourPillar": "甲戌",
+      "dayMasterElement": "earth",
+      "favorableElements": "earth,fire",
+      "unfavorableElements": "metal,water",
+      "birthLunar": "NULL"
+    },
+    {
+      "displayName": "陳禮揚",
+      "dayPillar": "甲子",
+      "yearPillar": "辛巳",
+      "monthPillar": "己丑",
+      "hourPillar": "乙亥",
+      "dayMasterElement": "wood",
+      "favorableElements": "fire,earth",
+      "unfavorableElements": "wood,water",
+      "birthLunar": "農曆：乙巳年undefined-24日"
+    },
+    {
+      "displayName": "蘇金育",
+      "dayPillar": "丁丑",
+      "yearPillar": "己亥",
+      "monthPillar": "丙子",
+      "hourPillar": "庚子",
+      "dayMasterElement": "fire",
+      "favorableElements": "fire,wood",
+      "unfavorableElements": "earth,metal",
+      "birthLunar": "NULL"
+    },
+    {
+      "displayName": "呂學成",
+      "dayPillar": "癸亥",
+      "yearPillar": "辛未",
+      "monthPillar": "丙申",
+      "hourPillar": "戊午",
+      "dayMasterElement": "water",
+      "favorableElements": "water,metal",
+      "unfavorableElements": "wood,fire",
+      "birthLunar": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "displayName\tdayPillar\tyearPillar\tmonthPillar\thourPillar\tdayMasterElement\tfavorableElements\tunfavorableElements\tbirthLunar\n胡庭瑀\t壬申\t乙亥\t戊子\t丙午\twater\twater,metal\twood,fire\t農曆：乙巳年undefined-15日\nbb\t己未\t癸亥\t癸亥\t甲戌\tearth\tearth,fire\tmetal,water\tNULL\n陳禮揚\t甲子\t辛巳\t己丑\t乙亥\twood\tfire,earth\twood,water\t農曆：乙巳年undefined-24日\n蘇金育\t丁丑\t己亥\t丙子\t庚子\tfire\tfire,wood\tearth,metal\tNULL\n呂學成\t癸亥\t辛未\t丙申\t戊午\twater\twater,metal\twood,fire\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1537
+}

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT display_name, birth_date, birth_time, birth_place, day_pillar, month_pillar, year_pillar, hour_pillar, day_master_element, favorable_elements, unfavorable_elements, notes, birth_lunar FROM user_profiles LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT display_name, birth_date, birth_time, birth_place, day_pillar, month_pillar, year_pillar, hour_pillar, day_master_element, favorable_elements, unfavorable_elements, notes, birth_lunar FROM user_profiles LIMIT 5;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'display_name' in 'field list'"
+  ]
+}

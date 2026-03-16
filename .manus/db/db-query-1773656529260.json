@@ -1,0 +1,49 @@
+{
+  "query": "SELECT displayName, birthDate, dayPillar, monthPillar, yearPillar, hourPillar, dayMasterElement, favorableElements, unfavorableElements, notes, birthLunar FROM user_profiles LIMIT 3;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT displayName, birthDate, dayPillar, monthPillar, yearPillar, hourPillar, dayMasterElement, favorableElements, unfavorableElements, notes, birthLunar FROM user_profiles LIMIT 3;",
+  "rows": [
+    {
+      "displayName": "胡庭瑀",
+      "birthDate": "1995-12-07",
+      "dayPillar": "壬申",
+      "monthPillar": "戊子",
+      "yearPillar": "乙亥",
+      "hourPillar": "丙午",
+      "dayMasterElement": "water",
+      "favorableElements": "water,metal",
+      "unfavorableElements": "wood,fire",
+      "notes": "NULL",
+      "birthLunar": "農曆：乙巳年undefined-15日"
+    },
+    {
+      "displayName": "bb",
+      "birthDate": "1983-11-27",
+      "dayPillar": "己未",
+      "monthPillar": "癸亥",
+      "yearPillar": "癸亥",
+      "hourPillar": "甲戌",
+      "dayMasterElement": "earth",
+      "favorableElements": "earth,fire",
+      "unfavorableElements": "metal,water",
+      "notes": "NULL",
+      "birthLunar": "NULL"
+    },
+    {
+      "displayName": "陳禮揚",
+      "birthDate": "2001-01-01",
+      "dayPillar": "甲子",
+      "monthPillar": "己丑",
+      "yearPillar": "辛巳",
+      "hourPillar": "乙亥",
+      "dayMasterElement": "wood",
+      "favorableElements": "fire,earth",
+      "unfavorableElements": "wood,water",
+      "notes": "NULL",
+      "birthLunar": "農曆：乙巳年undefined-24日"
+    }
+  ],
+  "messages": [],
+  "stdout": "displayName\tbirthDate\tdayPillar\tmonthPillar\tyearPillar\thourPillar\tdayMasterElement\tfavorableElements\tunfavorableElements\tnotes\tbirthLunar\n胡庭瑀\t1995-12-07\t壬申\t戊子\t乙亥\t丙午\twater\twater,metal\twood,fire\tNULL\t農曆：乙巳年undefined-15日\nbb\t1983-11-27\t己未\t癸亥\t癸亥\t甲戌\tearth\tearth,fire\tmetal,water\tNULL\tNULL\n陳禮揚\t2001-01-01\t甲子\t己丑\t辛巳\t乙亥\twood\tfire,earth\twood,water\tNULL\t農曆：乙巳年undefined-24日\n",
+  "stderr": "",
+  "execution_time_ms": 1546
+}

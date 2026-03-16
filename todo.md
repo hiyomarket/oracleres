@@ -2364,3 +2364,9 @@
 - [x] ProfilePage 底部「編輯命格資料」按鈕：僅在自己的命格頁面才顯示
 - [x] 按鈕文字依狀態切換：有資料顯示「編輯命格資料」，無資料顯示「建立命格檔案」
 - [x] 295 項測試全部通過，TypeScript 零錯誤
+
+## ProfilePage 命格備注與 IncompleteProfilePrompt 修復 v11.3
+
+- [x] effectiveProfile 改為智慧合併：DB 有四柱用 DB，無四柱時合併靜態四柱與 DB 基本資料
+- [x] IncompleteProfilePrompt 三處加入 `user ?` 條件，訪客不顯示「請填寫」提示
+- [x] 295 項測試全部通過，TypeScript 零錯誤

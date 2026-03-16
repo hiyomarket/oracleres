@@ -581,10 +581,27 @@ export default function ProfilePage() {
     staleTime: 0,
     refetchOnMount: true,
   });
-  // 主帳號：若 DB 中有命格資料則優先使用 DB，否則用靜態資料作為 fallback
-  const effectiveProfile = isOwner
-    ? (profile?.displayName || profile?.dayPillar ? profile : OWNER_STATIC_PROFILE)
-    : profile;
+  // 主帳號：智慧合併 DB 資料與靜態 fallback
+  // - DB 有四柱：全部用 DB
+  // - DB 有基本資料但無四柱：基本資料用 DB，四柱/喜忘神/日主用靜態
+  // - DB 無任何資料：全部用靜態
+  const effectiveProfile = (() => {
+    if (!isOwner) return profile;
+    if (!profile) return OWNER_STATIC_PROFILE;
+    if (profile.dayPillar) return profile; // DB 有完整四柱
+    // DB 有基本資料但無四柱：合併
+    return {
+      ...OWNER_STATIC_PROFILE,
+      ...profile,
+      dayPillar: OWNER_STATIC_PROFILE.dayPillar,
+      monthPillar: OWNER_STATIC_PROFILE.monthPillar,
+      yearPillar: OWNER_STATIC_PROFILE.yearPillar,
+      hourPillar: OWNER_STATIC_PROFILE.hourPillar,
+      favorableElements: profile.favorableElements ?? OWNER_STATIC_PROFILE.favorableElements,
+      unfavorableElements: profile.unfavorableElements ?? OWNER_STATIC_PROFILE.unfavorableElements,
+      dayMasterElement: profile.dayMasterElement ?? OWNER_STATIC_PROFILE.dayMasterElement,
+    };
+  })();
   const displayName = (profile?.displayName) ?? (isOwner ? OWNER_STATIC_PROFILE.displayName : (user?.name ?? '您'));
 
   // ─── 動態計算年齡（從 effectiveProfile.birthDate）──────────────────────────
@@ -830,9 +847,9 @@ export default function ProfilePage() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : user ? (
             <IncompleteProfilePrompt message="尚未填寫八字四柱（年柱、月柱、日柱、時柱），請至命格設定頁填寫以顯示個人化四柱分析。" />
-          )}
+          ) : null}
         </section>
 
         {/* ─── 五行比例 + 補運策略 ─── */}
@@ -879,9 +896,9 @@ export default function ProfilePage() {
                   ))}
                 </div>
               </>
-            ) : (
-              <IncompleteProfilePrompt message="請填寫八字四柱或喜忌神以顯示五行比例分析。" />
-            )}
+            ) : user ? (
+              <IncompleteProfilePrompt message="請填寫八字四柱或喜忘神以顯示五行比例分析。" />
+            ) : null}
           </div>
 
           {/* 補運策略 */}
@@ -932,9 +949,9 @@ export default function ProfilePage() {
                   </div>
                 )}
               </>
-            ) : (
+            ) : user ? (
               <IncompleteProfilePrompt message="請填寫喜用神（favorableElements）以顯示個人化補運策略。" />
-            )}
+            ) : null}
           </div>
         </section>
 
