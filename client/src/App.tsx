@@ -29,6 +29,8 @@ import AdminDestinyShop from "./pages/AdminDestinyShop";
 import AdminBanners from "./pages/AdminBanners";
 import AdminExperts from "./pages/AdminExperts";
 import AdminTheme from "./pages/AdminTheme";
+import AdminAccessTokens from "./pages/AdminAccessTokens";
+import AiView from "./pages/AiView";
 import ExpertMarket from "./pages/ExpertMarket";
 import ExpertDetail from "./pages/ExpertDetail";
 import ExpertDashboard from "./pages/expert/ExpertDashboard";
@@ -93,6 +95,8 @@ function Router() {
         <Route path={"/my-bookings"} component={MyBookings} />
         <Route path={"/admin/experts"} component={AdminExperts} />
         <Route path={"/admin/theme"} component={AdminTheme} />
+        <Route path={"/admin/access-tokens"} component={AdminAccessTokens} />
+        <Route path={"/ai-view"} component={AiView} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />

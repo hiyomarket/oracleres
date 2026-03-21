@@ -1,0 +1,371 @@
+/**
+ * AdminAccessTokens - 特殊存取 Token 管理頁面
+ * 管理員可生成、廢止、刪除供 AI 渠道使用的存取 Token
+ */
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { AdminLayout } from "@/components/AdminLayout";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { Plus, Trash2, Copy, Key, CheckCircle, XCircle, Clock, ShieldCheck } from "lucide-react";
+
+interface AccessToken {
+  id: number;
+  token: string;
+  name: string;
+  description: string | null;
+  isActive: number;
+  createdBy: number;
+  expiresAt: Date | null;
+  lastUsedAt: Date | null;
+  useCount: number;
+  createdAt: Date;
+}
+
+const EMPTY_FORM = {
+  name: "",
+  description: "",
+  expiresAt: "", // ISO datetime string or empty
+};
+
+export default function AdminAccessTokens() {
+  const { readOnly } = useAdminRole();
+  const utils = trpc.useUtils();
+  const { data: tokens = [], isLoading } = trpc.accessTokens.list.useQuery();
+
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showNewTokenDialog, setShowNewTokenDialog] = useState(false);
+  const [newTokenValue, setNewTokenValue] = useState("");
+  const [newTokenName, setNewTokenName] = useState("");
+  const [form, setForm] = useState({ ...EMPTY_FORM });
+
+  const createMutation = trpc.accessTokens.create.useMutation({
+    onSuccess: (data) => {
+      setNewTokenValue(data.token);
+      setNewTokenName(data.name);
+      setShowCreateDialog(false);
+      setShowNewTokenDialog(true);
+      utils.accessTokens.list.invalidate();
+    },
+    onError: (e) => toast.error(`建立失敗：${e.message}`),
+  });
+
+  const setActiveMutation = trpc.accessTokens.setActive.useMutation({
+    onSuccess: () => utils.accessTokens.list.invalidate(),
+    onError: (e) => toast.error(`操作失敗：${e.message}`),
+  });
+
+  const deleteMutation = trpc.accessTokens.delete.useMutation({
+    onSuccess: () => { toast.success("Token 已刪除"); utils.accessTokens.list.invalidate(); },
+    onError: (e) => toast.error(`刪除失敗：${e.message}`),
+  });
+
+  const handleCreate = () => {
+    if (!form.name.trim()) {
+      toast.error("Token 名稱為必填");
+      return;
+    }
+    createMutation.mutate({
+      name: form.name.trim(),
+      description: form.description.trim() || undefined,
+      expiresAt: form.expiresAt ? new Date(form.expiresAt).getTime() : undefined,
+    });
+  };
+
+  const handleCopyToken = (token: string) => {
+    navigator.clipboard.writeText(token).then(() => {
+      toast.success("Token 已複製到剪貼簿");
+    }).catch(() => {
+      toast.error("複製失敗，請手動複製");
+    });
+  };
+
+  const handleCopyUrl = (token: string) => {
+    const url = `${window.location.origin}/ai-view?token=${token}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success("存取連結已複製");
+    }).catch(() => {
+      toast.error("複製失敗，請手動複製");
+    });
+  };
+
+  const formatDate = (date: Date | null) => {
+    if (!date) return "—";
+    return new Date(date).toLocaleString("zh-TW", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit",
+    });
+  };
+
+  const isExpired = (token: AccessToken) => {
+    return token.expiresAt !== null && new Date(token.expiresAt) < new Date();
+  };
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        {/* 頁面標題 */}
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+            <Key className="w-5 h-5 text-amber-400" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white">特殊存取 Token</h1>
+            <p className="text-white/40 text-xs">管理 AI 渠道與特殊存取權限</p>
+          </div>
+        </div>
+        {/* 說明區塊 */}
+        <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
+          <div className="flex items-start gap-3">
+            <Key className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-blue-300 font-semibold text-sm mb-1">特殊存取 Token 說明</p>
+              <p className="text-blue-200/70 text-xs leading-relaxed">
+                此功能供 AI 系統或無法完成 OAuth 登入的特殊渠道使用。Token 持有者可透過
+                <code className="mx-1 px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300 font-mono text-xs">/ai-view?token=xxx</code>
+                存取系統唯讀視圖，無需登入。請妥善保管 Token，避免外洩。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 操作列 */}
+        <div className="flex items-center justify-between">
+          <p className="text-white/50 text-sm">共 {tokens.length} 個 Token</p>
+          <Button
+            onClick={() => { setForm({ ...EMPTY_FORM }); setShowCreateDialog(true); }}
+            disabled={readOnly}
+            className="flex items-center gap-2"
+            size="sm"
+          >
+            <Plus className="w-4 h-4" />
+            生成新 Token
+          </Button>
+        </div>
+
+        {/* Token 列表 */}
+        {isLoading ? (
+          <div className="text-center py-12 text-white/40">載入中...</div>
+        ) : tokens.length === 0 ? (
+          <div className="text-center py-12 text-white/40">
+            <Key className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p>尚未建立任何 Token</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {(tokens as AccessToken[]).map((token) => {
+              const expired = isExpired(token);
+              const active = token.isActive === 1 && !expired;
+              return (
+                <div
+                  key={token.id}
+                  className={`rounded-xl border p-4 transition-all ${
+                    active
+                      ? "border-emerald-500/30 bg-emerald-500/5"
+                      : "border-white/10 bg-white/3 opacity-70"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="font-semibold text-white">{token.name}</span>
+                        {active ? (
+                          <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">
+                            <CheckCircle className="w-3 h-3 mr-1" /> 啟用中
+                          </Badge>
+                        ) : expired ? (
+                          <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 text-xs">
+                            <Clock className="w-3 h-3 mr-1" /> 已過期
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-xs">
+                            <XCircle className="w-3 h-3 mr-1" /> 已停用
+                          </Badge>
+                        )}
+                      </div>
+                      {token.description && (
+                        <p className="text-white/50 text-xs mb-2">{token.description}</p>
+                      )}
+                      <div className="flex items-center gap-2 mb-2">
+                        <code className="text-xs font-mono text-white/40 bg-white/5 px-2 py-1 rounded truncate max-w-[200px] sm:max-w-xs">
+                          {token.token.slice(0, 16)}...{token.token.slice(-8)}
+                        </code>
+                        <button
+                          onClick={() => handleCopyToken(token.token)}
+                          className="text-white/40 hover:text-white/70 transition-colors"
+                          title="複製 Token"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/40">
+                        <span>建立：{formatDate(token.createdAt)}</span>
+                        <span>最後使用：{formatDate(token.lastUsedAt)}</span>
+                        <span>使用次數：{token.useCount}</span>
+                        {token.expiresAt && (
+                          <span className={expired ? "text-orange-400" : ""}>
+                            到期：{formatDate(token.expiresAt)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {/* 複製存取連結 */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopyUrl(token.token)}
+                        className="text-xs h-8 px-2"
+                        title="複製存取連結"
+                      >
+                        <Copy className="w-3.5 h-3.5 mr-1" />
+                        複製連結
+                      </Button>
+                      {/* 啟用/停用切換 */}
+                      <Switch
+                        checked={token.isActive === 1}
+                        disabled={readOnly || expired}
+                        onCheckedChange={(checked) =>
+                          setActiveMutation.mutate({ id: token.id, isActive: checked })
+                        }
+                      />
+                      {/* 刪除 */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={readOnly}
+                        onClick={() => {
+                          if (confirm(`確定要刪除 Token「${token.name}」嗎？此操作無法復原。`)) {
+                            deleteMutation.mutate({ id: token.id });
+                          }
+                        }}
+                        className="text-red-400 border-red-500/30 hover:bg-red-500/10 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* 建立 Token 對話框 */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5 text-amber-400" />
+              生成新存取 Token
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Token 名稱 <span className="text-red-400">*</span></Label>
+              <Input
+                placeholder="例如：Claude AI 助手、GPT 分析機器人"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>用途說明（選填）</Label>
+              <Textarea
+                placeholder="說明此 Token 的使用場景或持有者"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                rows={2}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>到期時間（選填，留空 = 永不過期）</Label>
+              <Input
+                type="datetime-local"
+                value={form.expiresAt}
+                onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>取消</Button>
+            <Button
+              onClick={handleCreate}
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? "生成中..." : "生成 Token"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 新 Token 顯示對話框（僅顯示一次） */}
+      <Dialog open={showNewTokenDialog} onOpenChange={setShowNewTokenDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-emerald-400">
+              <CheckCircle className="w-5 h-5" />
+              Token 已生成：{newTokenName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+              <p className="text-amber-300 text-xs font-semibold mb-1">⚠️ 請立即複製並妥善保存</p>
+              <p className="text-amber-200/70 text-xs">此 Token 只會顯示一次，關閉後無法再查看完整值。</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white/60 text-xs">Token 值</Label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs font-mono text-emerald-300 bg-emerald-900/20 border border-emerald-500/30 px-3 py-2 rounded-lg break-all">
+                  {newTokenValue}
+                </code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopyToken(newTokenValue)}
+                  className="shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white/60 text-xs">存取連結</Label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-xs font-mono text-blue-300 bg-blue-900/20 border border-blue-500/30 px-3 py-2 rounded-lg break-all">
+                  {window.location.origin}/ai-view?token={newTokenValue}
+                </code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopyUrl(newTokenValue)}
+                  className="shrink-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowNewTokenDialog(false)}>我已複製，關閉</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </AdminLayout>
+  );
+}

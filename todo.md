@@ -2392,9 +2392,11 @@
 
 ## 特殊存取 Token 系統 (AI 渠道) v11.5
 
-- [ ] DB schema 新增 access_tokens 資料表
-- [ ] 後端：管理員可生成/廢止 Token（adminProcedure）
-- [ ] 後端： Token 驗證 middleware（特殊公開路由）
-- [ ] 前台： /admin/access-tokens 管理頁面
-- [ ] 前台： /ai-view?token=xxx 特殊進入路由
-- [ ] 295 項測試全部通過，TypeScript 零錯誤
+- [x] DB schema 新增 access_tokens 資料表（直接 SQL 建表）
+- [x] 後端： server/routers/accessTokens.ts（list/create/setActive/delete/verify）
+- [x] 後端： Token 驗證為 publicProcedure，不需登入
+- [x] 前台： /admin/access-tokens 管理頁面（生成/廢止/刪除/複製連結）
+- [x] 前台： /ai-view?token=xxx 特殊進入路由（今日運勢全景展示）
+- [x] AdminLayout 導覽加入 AI 渠道 Token 項目
+- [x] 撰寫 accessTokens.test.ts（13 項測試）
+- [x] 308 項測試全部通過，TypeScript 零錯誤
