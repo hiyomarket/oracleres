@@ -2455,3 +2455,10 @@
 - [x] /ai-entry 導覽頁底部加入 /api/ai-data JSON API 說明文件區塊
 - [x] 說明文件包含：端點格式、欄位說明表格、範例回應 JSON、錯誤碼說明、複製 API 端點按鈕
 - [x] 333 項測試全部通過，TypeScript 零錯誤
+
+## API 即時測試工具 v11.12
+
+- [x] /ai-entry 說明文件區塊加入「立即測試」按鈕
+- [x] 點擊後呼叫 /api/ai-data?token=xxx 並展示格式化 JSON 回應
+- [x] 顯示請求狀態（載入中、成功、失敗）、HTTP 狀態碼、耗時、重新測試按鈕
+- [x] 333 項測試全部通過，TypeScript 零錯誤

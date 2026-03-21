@@ -86,6 +86,30 @@ export default function AiEntry() {
   const [errorMsg, setErrorMsg] = useState("");
   const [session, setSession] = useState<AiSession | null>(null);
 
+  // API 測試工具狀態
+  const [testStatus, setTestStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [testResult, setTestResult] = useState<{ statusCode: number; body: unknown } | null>(null);
+  const [testDuration, setTestDuration] = useState<number | null>(null);
+
+  async function handleApiTest() {
+    if (!session?.token) return;
+    setTestStatus("loading");
+    setTestResult(null);
+    setTestDuration(null);
+    const start = Date.now();
+    try {
+      const res = await fetch(`/api/ai-data?token=${session.token}`);
+      const body = await res.json();
+      setTestDuration(Date.now() - start);
+      setTestResult({ statusCode: res.status, body });
+      setTestStatus(res.ok ? "success" : "error");
+    } catch (e) {
+      setTestDuration(Date.now() - start);
+      setTestResult({ statusCode: 0, body: { error: String(e) } });
+      setTestStatus("error");
+    }
+  }
+
   const params = new URLSearchParams(window.location.search);
   const token = params.get("token") ?? "";
 
@@ -402,8 +426,8 @@ export default function AiEntry() {
               </div>
             </div>
 
-            {/* 複製 API 端點按鈕 */}
-            <div className="pt-2 border-t border-white/10">
+            {/* 複製 + 立即測試按鈕 */}
+            <div className="pt-2 border-t border-white/10 flex flex-wrap gap-2">
               <button
                 onClick={() => {
                   const url = `${window.location.origin}/api/ai-data?token=${session?.token ?? "YOUR_TOKEN"}`;
@@ -416,7 +440,61 @@ export default function AiEntry() {
                 <span>📋</span>
                 複製我的 API 端點（含 Token）
               </button>
+              <button
+                onClick={handleApiTest}
+                disabled={testStatus === "loading"}
+                className="flex items-center gap-2 text-xs text-emerald-300 hover:text-emerald-200 transition-colors border border-emerald-500/30 hover:border-emerald-400/50 px-3 py-2 rounded-lg bg-emerald-500/5 hover:bg-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>{testStatus === "loading" ? "⏳" : "▶️"}</span>
+                {testStatus === "loading" ? "呼叫中…" : "立即測試 API"}
+              </button>
             </div>
+
+            {/* 測試結果展示 */}
+            {testResult && (
+              <div className={`rounded-xl border p-4 space-y-3 ${
+                testStatus === "success"
+                  ? "border-emerald-500/30 bg-emerald-950/30"
+                  : "border-red-500/30 bg-red-950/30"
+              }`}>
+                {/* 狀態列 */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${
+                      testStatus === "success"
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : "bg-red-500/20 text-red-300"
+                    }`}>
+                      HTTP {testResult.statusCode}
+                    </span>
+                    <span className={`text-xs font-semibold ${
+                      testStatus === "success" ? "text-emerald-300" : "text-red-300"
+                    }`}>
+                      {testStatus === "success" ? "✅ 請求成功" : "❌ 請求失敗"}
+                    </span>
+                  </div>
+                  {testDuration !== null && (
+                    <span className="text-white/30 text-xs">耗時 {testDuration} ms</span>
+                  )}
+                </div>
+
+                {/* JSON 回應內容 */}
+                <div>
+                  <p className="text-white/40 text-xs mb-1">回應內容：</p>
+                  <pre className="rounded-lg bg-black/50 border border-white/10 p-3 text-xs font-mono text-white/70 overflow-x-auto max-h-80 leading-relaxed">
+                    {JSON.stringify(testResult.body, null, 2)}
+                  </pre>
+                </div>
+
+                {/* 重新測試按鈕 */}
+                <button
+                  onClick={handleApiTest}
+                  className="text-xs text-white/40 hover:text-white/60 transition-colors"
+                >
+                  重新測試
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
