@@ -2449,3 +2449,9 @@
 - [x] 修復：Token 列表「複製連結」按鈕依 accessMode 自動切換路徑
 - [x] 重建 /ai-entry 導覽頁（列出所有前台+後台區域與快速連結）
 - [x] 333 項測試全部通過，TypeScript 零錯誤
+
+## JSON API 說明文件 v11.11
+
+- [x] /ai-entry 導覽頁底部加入 /api/ai-data JSON API 說明文件區塊
+- [x] 說明文件包含：端點格式、欄位說明表格、範例回應 JSON、錯誤碼說明、複製 API 端點按鈕
+- [x] 333 項測試全部通過，TypeScript 零錯誤

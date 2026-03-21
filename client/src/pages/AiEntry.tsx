@@ -288,6 +288,138 @@ export default function AiEntry() {
           </div>
         </div>
 
+        {/* JSON API 說明文件 */}
+        <div className="space-y-4">
+          <h2 className="text-white/70 text-sm font-semibold uppercase tracking-wider flex items-center gap-2">
+            <span className="w-4 h-px bg-blue-500/50 inline-block" />
+            結構化資料 JSON API
+            <span className="flex-1 h-px bg-white/10 inline-block" />
+          </h2>
+
+          <div className="rounded-xl border border-blue-500/20 bg-blue-950/30 p-5 space-y-5">
+            {/* 端點說明 */}
+            <div>
+              <p className="text-blue-300 font-semibold text-sm mb-2">📡 端點格式</p>
+              <div className="rounded-lg bg-black/40 border border-white/10 px-4 py-3">
+                <code className="text-emerald-300 font-mono text-sm break-all">
+                  GET {window.location.origin}/api/ai-data?token=<span className="text-amber-300">YOUR_TOKEN</span>
+                </code>
+              </div>
+              <p className="text-white/40 text-xs mt-2">無需登入，直接 HTTP GET 請求即可取得今日完整命理資料。</p>
+            </div>
+
+            {/* 欄位說明 */}
+            <div>
+              <p className="text-blue-300 font-semibold text-sm mb-3">📋 回應欄位說明</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left text-white/50 font-medium pb-2 pr-4">欄位</th>
+                      <th className="text-left text-white/50 font-medium pb-2 pr-4">類型</th>
+                      <th className="text-left text-white/50 font-medium pb-2">說明</th>
+                    </tr>
+                  </thead>
+                  <tbody className="space-y-1">
+                    {[
+                      ["date", "string", "查詢日期，格式 YYYY-MM-DD"],
+                      ["dayPillar", "string", "今日日柱，例如 甲午"],
+                      ["monthPillar", "string", "月柱，例如 辛卯"],
+                      ["yearPillar", "string", "年柱，例如 丙午"],
+                      ["tenGod", "string", "今日主十神，例如 比肩"],
+                      ["dailyScore", "number", "今日能量分數（0–10）"],
+                      ["headline", "string", "天命一句話（AI 生成）"],
+                      ["tarot.card", "string", "塔羅牌名稱（需開放塔羅模組）"],
+                      ["tarot.guidance", "string", "塔羅指引文字"],
+                      ["wealthIndex", "number", "偶財指數（0–10，需開放偶財模組）"],
+                      ["wealthTip", "string", "偶財建議文字"],
+                      ["hourlyEnergy[]", "array", "時辰能量陣列（需開放時辰模組）"],
+                      ["hourlyEnergy[].hour", "string", "時辰名稱，例如 子時"],
+                      ["hourlyEnergy[].score", "number", "時辰能量分數（0–10）"],
+                      ["lunarDate", "string", "農曆日期，例如 丙午年辛卯月甲午日"],
+                      ["moonPhase", "string", "月相名稱，例如 眉月"],
+                    ].map(([field, type, desc]) => (
+                      <tr key={field} className="border-b border-white/5">
+                        <td className="py-1.5 pr-4 font-mono text-emerald-300/80">{field}</td>
+                        <td className="py-1.5 pr-4 text-amber-300/70">{type}</td>
+                        <td className="py-1.5 text-white/40">{desc}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 範例回應 */}
+            <div>
+              <p className="text-blue-300 font-semibold text-sm mb-2">📄 範例回應（JSON）</p>
+              <pre className="rounded-lg bg-black/50 border border-white/10 p-4 text-xs font-mono text-white/60 overflow-x-auto leading-relaxed">{`{
+  "date": "2026-03-21",
+  "dayPillar": "甲午",
+  "monthPillar": "辛卯",
+  "yearPillar": "丙午",
+  "tenGod": "比肩",
+  "dailyScore": 7.5,
+  "headline": "自強不息，獨立前行。今日以實力說話。",
+  "lunarDate": "丙午年辛卯月甲午日",
+  "moonPhase": "眉月",
+  "tarot": {
+    "card": "力量",
+    "guidance": "以內在力量面對挑戰，溫柔而堅定。"
+  },
+  "wealthIndex": 6,
+  "wealthTip": "適合小額嘗試，避免大筆投入。",
+  "hourlyEnergy": [
+    { "hour": "子時", "score": 5 },
+    { "hour": "丑時", "score": 7 }
+  ]
+}`}</pre>
+            </div>
+
+            {/* 錯誤碼說明 */}
+            <div>
+              <p className="text-blue-300 font-semibold text-sm mb-3">⚠️ 錯誤回應格式</p>
+              <div className="space-y-2">
+                {[
+                  ["400", "missing_token", "缺少 token 參數"],
+                  ["401", "token_not_found", "Token 不存在"],
+                  ["401", "token_revoked", "Token 已被停用"],
+                  ["401", "token_expired", "Token 已過期"],
+                  ["403", "wrong_access_mode", "此 Token 不支援 API 存取（僅限 daily_view 模式）"],
+                  ["500", "internal_error", "伺服器內部錯誤"],
+                ].map(([code, reason, desc]) => (
+                  <div key={reason} className="flex items-start gap-3 text-xs">
+                    <span className={`shrink-0 px-1.5 py-0.5 rounded font-mono font-semibold ${
+                      code === "400" ? "bg-orange-500/20 text-orange-300" :
+                      code === "401" ? "bg-red-500/20 text-red-300" :
+                      code === "403" ? "bg-purple-500/20 text-purple-300" :
+                      "bg-gray-500/20 text-gray-300"
+                    }`}>{code}</span>
+                    <span className="font-mono text-white/50 shrink-0">{reason}</span>
+                    <span className="text-white/30">{desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 複製 API 端點按鈕 */}
+            <div className="pt-2 border-t border-white/10">
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/api/ai-data?token=${session?.token ?? "YOUR_TOKEN"}`;
+                  navigator.clipboard.writeText(url)
+                    .then(() => alert("API 端點已複製！"))
+                    .catch(() => {});
+                }}
+                className="flex items-center gap-2 text-xs text-blue-300 hover:text-blue-200 transition-colors border border-blue-500/30 hover:border-blue-400/50 px-3 py-2 rounded-lg bg-blue-500/5 hover:bg-blue-500/10"
+              >
+                <span>📋</span>
+                複製我的 API 端點（含 Token）
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* 底部說明 */}
         <div className="rounded-xl border border-white/10 bg-white/3 p-4 text-center">
           <p className="text-white/30 text-xs leading-relaxed">
