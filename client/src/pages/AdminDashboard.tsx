@@ -89,14 +89,16 @@ export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
   const [, navigate] = useLocation();
 
-  const enabled = !!user && user.role === "admin";
+  const isAdminOrViewer = !!user && (user.role === "admin" || user.role === "viewer");
+  const isViewer = !!user && user.role === "viewer";
+  const enabled = isAdminOrViewer;
 
   const { data: kpis, isLoading: kpisLoading } = trpc.dashboard.getKpis.useQuery(undefined, { enabled, retry: false });
   const { data: hourlyData, isLoading: hourlyLoading } = trpc.dashboard.getHourlyActivity.useQuery(undefined, { enabled, retry: false });
   const { data: featureUsage, isLoading: featureLoading } = trpc.dashboard.getFeatureUsage.useQuery(undefined, { enabled, retry: false });
 
   useEffect(() => {
-    if (!authLoading && user && user.role !== "admin") navigate("/");
+    if (!authLoading && user && user.role !== "admin" && user.role !== "viewer") navigate("/");
   }, [user, authLoading, navigate]);
 
   if (authLoading) {
@@ -106,7 +108,7 @@ export default function AdminDashboard() {
       </div>
     );
   }
-  if (!user || user.role !== "admin") return null;
+  if (!user || (user.role !== "admin" && user.role !== "viewer")) return null;
 
   // 方案分佈：動態從 plansInfo 取得名稱
   const planDist = kpis?.planDist ?? {};
@@ -134,6 +136,17 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto px-4 py-8">
+
+        {/* ── 唯讀模式提示橫幅 ── */}
+        {isViewer && (
+          <div className="mb-6 flex items-center gap-3 bg-blue-500/10 border border-blue-500/30 rounded-xl px-4 py-3 text-blue-300 text-sm">
+            <span className="text-lg">👁️</span>
+            <div>
+              <span className="font-medium">唯讀模式</span>
+              <span className="ml-2 text-blue-400/80">您目前以顧問身份瀏覽後台，僅可查看資料，無法進行新增、修改或刪除操作。</span>
+            </div>
+          </div>
+        )}
 
         {/* ── 標題列 ── */}
         <div className="flex items-start justify-between mb-8">

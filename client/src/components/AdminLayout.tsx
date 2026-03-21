@@ -78,7 +78,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   });
 
   useEffect(() => {
-    if (!authLoading && user && user.role !== "admin") {
+    if (!authLoading && user && user.role !== "admin" && user.role !== "viewer") {
       navigate("/");
     }
   }, [user, authLoading, navigate]);
@@ -112,7 +112,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  if (!user || user.role !== "admin") return null;
+  const isViewer = user?.role === "viewer";
+  if (!user || (user.role !== "admin" && user.role !== "viewer")) return null;
 
   const toggleGroup = (label: string) => {
     setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }));
@@ -137,6 +138,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             {user.name?.[0]?.toUpperCase() ?? "A"}
           </div>
           <span className="text-xs text-muted-foreground hidden sm:block">{user.name}</span>
+          {isViewer && (
+            <span className="text-xs bg-blue-500/20 border border-blue-500/40 text-blue-300 px-2 py-0.5 rounded-full hidden sm:block">
+              👁️ 唯讀
+            </span>
+          )}
         </div>
       </header>
 

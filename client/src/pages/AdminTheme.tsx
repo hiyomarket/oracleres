@@ -1,3 +1,4 @@
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ import { Check, Palette, RefreshCw, Eye } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 
 export default function AdminTheme() {
+  const { readOnly } = useAdminRole();
   const [selectedTheme, setSelectedTheme] = useState<string>(DEFAULT_THEME_ID);
   const [previewTheme, setPreviewTheme] = useState<string | null>(null);
 
@@ -76,8 +78,9 @@ export default function AdminTheme() {
               </Button>
             )}
             <Button
+              disabled={readOnly || updateSetting.isPending}
+              title={readOnly ? "唯讀模式，無法操作" : undefined}
               onClick={handleSave}
-              disabled={updateSetting.isPending}
               className="flame-button"
             >
               {updateSetting.isPending ? "儲存中..." : "儲存並套用"}
@@ -199,6 +202,8 @@ export default function AdminTheme() {
                     <Button
                       size="sm"
                       className="flex-1 text-xs"
+                      disabled={readOnly || updateSetting.isPending}
+                      title={readOnly ? "唯讀模式，無法操作" : undefined}
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedTheme(theme.id);
@@ -206,7 +211,6 @@ export default function AdminTheme() {
                         applyTheme(theme.id);
                         updateSetting.mutate({ key: "active_theme", value: theme.id });
                       }}
-                      disabled={updateSetting.isPending}
                     >
                       <Check className="w-3 h-3 mr-1" />
                       {selectedTheme === theme.id && !previewTheme ? "已套用" : "套用"}
@@ -314,6 +318,8 @@ export default function AdminTheme() {
                     <Button
                       size="sm"
                       className="flex-1 text-xs"
+                      disabled={readOnly || updateSetting.isPending}
+                      title={readOnly ? "唯讀模式，無法操作" : undefined}
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedTheme(theme.id);
@@ -321,7 +327,6 @@ export default function AdminTheme() {
                         applyTheme(theme.id);
                         updateSetting.mutate({ key: "active_theme", value: theme.id });
                       }}
-                      disabled={updateSetting.isPending}
                     >
                       <Check className="w-3 h-3 mr-1" />
                       {selectedTheme === theme.id && !previewTheme ? "已套用" : "套用"}

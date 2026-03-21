@@ -1422,7 +1422,7 @@ function CampaignsTab() {
 export default function AdminBusinessHub() {
   const { user } = useAuth();
 
-  if (!user || user.role !== "admin") {
+  if (!user || (user.role !== "admin" && user.role !== "viewer")) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
         需要管理員權限

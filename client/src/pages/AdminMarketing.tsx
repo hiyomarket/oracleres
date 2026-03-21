@@ -3,6 +3,7 @@
  * 行銷中心 - 天命娛樂城後台管理
  * 重構版：活動卡片化架構，支援多個行銷活動並排，手機版友善
  */
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
@@ -94,6 +95,7 @@ function MatchFormFields({ value, onChange }: { value: MatchForm; onChange: (v: 
 }
 
 export default function AdminMarketing() {
+  const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
 
   // Economy config
@@ -310,12 +312,12 @@ export default function AdminMarketing() {
                     </div>
                   </div>
                   <button
+                    disabled={readOnly || setWbcEnabled.isPending}
+                    title={readOnly ? "唯讀模式，無法操作" : ((wbcEnabledData?.enabled ?? true) ? '點擊關閉 WBC 活動' : '點擊開啟 WBC 活動')}
                     onClick={() => setWbcEnabled.mutate({ enabled: !(wbcEnabledData?.enabled ?? true) })}
-                    disabled={setWbcEnabled.isPending}
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0 ${
                       (wbcEnabledData?.enabled ?? true) ? 'bg-green-500' : 'bg-slate-600'
                     }`}
-                    title={(wbcEnabledData?.enabled ?? true) ? '點擊關閉 WBC 活動' : '點擊開啟 WBC 活動'}
                   >
                     <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
                       (wbcEnabledData?.enabled ?? true) ? 'translate-x-4' : 'translate-x-0.5'
@@ -459,8 +461,11 @@ export default function AdminMarketing() {
                         <div className="flex gap-1 shrink-0">
                           {match.status === "pending" && (
                             <>
+                              disabled={readOnly || readOnly}
+                              title={readOnly ? "唯讀模式，無法操作" : undefined}
                               <Button size="sm" variant="ghost" onClick={() => openEdit(match)}
                                 className="text-slate-400 hover:text-white h-7 px-1.5 text-xs">編輯</Button>
+                              title={readOnly ? "唯讀模式，無法操作" : undefined}
                               <Button size="sm" variant="ghost" onClick={() => {
                                 const current = (match as any).bettingDeadlineMinutes ?? 30;
                                 const mins = prompt(
@@ -478,6 +483,8 @@ export default function AdminMarketing() {
                           )}
                           {match.status !== "finished" && (
                             <Button size="sm" variant="ghost"
+                              disabled={readOnly}
+                              title={readOnly ? "唯讀模式，無法操作" : undefined}
                               onClick={() => { if (confirm("確定刪除此賽事？")) deleteMatch.mutate({ id: match.id }); }}
                               className="text-red-400 hover:text-red-300 h-7 px-1.5 text-xs">刪除</Button>
                           )}
@@ -503,12 +510,13 @@ export default function AdminMarketing() {
                     <Button
                       size="sm"
                       variant="outline"
+                      disabled={readOnly || updateAllMatchDeadlines.isPending}
+                      title={readOnly ? "唯讀模式，無法操作" : undefined}
                       onClick={() => {
                         if (confirm(`確定將所有待開賽比賽的截止時間設為 ${globalDeadlineMinutes} 分鐘？`)) {
                           updateAllMatchDeadlines.mutate({ bettingDeadlineMinutes: Number(globalDeadlineMinutes) });
                         }
                       }}
-                      disabled={updateAllMatchDeadlines.isPending}
                       className="border-blue-600/50 text-blue-400 hover:bg-blue-600/10 text-xs h-7"
                     >
                       {updateAllMatchDeadlines.isPending ? "套用中..." : "套用全部"}
@@ -570,8 +578,9 @@ export default function AdminMarketing() {
             )}
           <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:items-center">
               <Button
+                disabled={readOnly || updateConfig.isPending}
+                title={readOnly ? "唯讀模式，無法操作" : undefined}
                 onClick={handleSaveConfig}
-                disabled={updateConfig.isPending}
                 className="bg-amber-600 hover:bg-amber-500 text-black font-semibold"
               >
                 {updateConfig.isPending ? "儲存中..." : "儲存配置"}
@@ -708,8 +717,9 @@ export default function AdminMarketing() {
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="ghost" onClick={() => setShowImportDialog(false)} className="text-slate-400">取消</Button>
             <Button
+              disabled={readOnly || importSchedule.isPending}
+              title={readOnly ? "唯讀模式，無法操作" : undefined}
               onClick={() => { importSchedule.mutate(); setShowImportDialog(false); }}
-              disabled={importSchedule.isPending}
               className="bg-amber-600 hover:bg-amber-500 text-black font-semibold"
             >
               {importSchedule.isPending ? "匯入中..." : "確認匯入"}

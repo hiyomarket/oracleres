@@ -3,6 +3,7 @@
  * 管理後台 — 客群分組管理 (/admin/user-groups)
  * 功能：建立/管理分組、新增/移除成員、批量調整方案與積分
  */
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
@@ -448,8 +449,9 @@ function AddMemberModal({ groupId, groupName, onClose, onSuccess }: AddMemberMod
 interface GroupDetailPanelProps {
   groupId: number;
   onRefreshGroups: () => void;
+  readOnly?: boolean;
 }
-function GroupDetailPanel({ groupId, onRefreshGroups }: GroupDetailPanelProps) {
+function GroupDetailPanel({ groupId, onRefreshGroups, readOnly }: GroupDetailPanelProps) {
   const { data: group, refetch } = trpc.userGroups.getGroup.useQuery({ groupId });
   const [batchPlanOpen, setBatchPlanOpen] = useState(false);
   const [batchPointsOpen, setBatchPointsOpen] = useState(false);
@@ -522,9 +524,10 @@ function GroupDetailPanel({ groupId, onRefreshGroups }: GroupDetailPanelProps) {
                 <div className="text-[10px] text-slate-500">積分</div>
               </div>
               <button
+                disabled={readOnly}
+                title={readOnly ? "唯讀模式，無法操作" : "移除成員"}
                 onClick={() => removeMutation.mutate({ groupId, userId: m.userId })}
                 className="text-slate-500 hover:text-red-400 transition-colors ml-1"
-                title="移除成員"
               >
                 <UserMinus className="w-4 h-4" />
               </button>
@@ -575,6 +578,7 @@ function GroupDetailPanel({ groupId, onRefreshGroups }: GroupDetailPanelProps) {
 
 // ─── 主頁面 ─────────────────────────────────────────────────────────────────
 export default function AdminUserGroups() {
+  const { readOnly } = useAdminRole();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editGroup, setEditGroup] = useState<{ id: number; name: string; description?: string | null; color?: string | null; icon?: string | null } | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
@@ -599,6 +603,8 @@ export default function AdminUserGroups() {
             <h1 className="text-xl font-bold text-amber-400 mb-1">客群分組管理</h1>
             <p className="text-slate-400 text-sm">建立分組、批量管理成員方案與積分</p>
           </div>
+          disabled={readOnly}
+          title={readOnly ? "唯讀模式，無法操作" : undefined}
           <Button onClick={() => setCreateModalOpen(true)} className="bg-amber-600 hover:bg-amber-700 text-black font-semibold gap-1.5">
             <Plus className="w-4 h-4" /> 建立分組
           </Button>
@@ -646,9 +652,10 @@ export default function AdminUserGroups() {
                         <Settings className="w-3.5 h-3.5" />
                       </button>
                       <button
+                        disabled={readOnly}
+                        title={readOnly ? "唯讀模式，無法操作" : "刪除分組"}
                         onClick={(e) => { e.stopPropagation(); handleDeleteGroup(g.id, g.name); }}
                         className="text-slate-500 hover:text-red-400 transition-colors p-1"
-                        title="刪除分組"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -662,7 +669,7 @@ export default function AdminUserGroups() {
           {/* 分組詳情 */}
           <div className="lg:col-span-2">
             {selectedGroupId ? (
-              <GroupDetailPanel groupId={selectedGroupId} onRefreshGroups={refetch} />
+              <GroupDetailPanel groupId={selectedGroupId} onRefreshGroups={refetch} readOnly={readOnly} />
             ) : (
               <div className="flex flex-col items-center justify-center h-64 text-slate-500">
                 <ChevronDown className="w-8 h-8 mb-2 opacity-40 rotate-[-90deg]" />

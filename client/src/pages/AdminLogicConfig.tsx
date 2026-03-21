@@ -6,6 +6,7 @@
  * Tab 2：手串/配飾管理（新增/編輯/刪除/啟停用）
  * Tab 3：餐廳分類管理（新增/編輯/刪除/排序/啟停用）
  */
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
@@ -57,6 +58,7 @@ const ELEMENT_COLORS: Record<string, string> = {
 // Tab 1：能量模擬器規則
 // ============================================================
 function AuraRulesTab() {
+  const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
   const { data: grouped, isLoading } = trpc.adminConfig.getAuraRules.useQuery();
   const { data: history, isLoading: historyLoading } = trpc.adminConfig.getAuraRuleHistory.useQuery();
@@ -142,8 +144,9 @@ function AuraRulesTab() {
                   <Button
                     size="sm"
                     className="w-full bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+                    disabled={readOnly || snapshot.isPending || !snapshotLabel.trim()}
+                    title={readOnly ? "唯讀模式，無法操作" : undefined}
                     onClick={() => snapshotLabel.trim() && snapshot.mutate({ label: snapshotLabel.trim() })}
-                    disabled={snapshot.isPending || !snapshotLabel.trim()}
                   >
                     {snapshot.isPending ? "建立中..." : "💾 建立快照"}
                   </Button>
@@ -169,11 +172,12 @@ function AuraRulesTab() {
                             size="sm"
                             variant="outline"
                             className="h-7 px-2 text-xs border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                            disabled={readOnly || restore.isPending}
+                            title={readOnly ? "唯讀模式，無法操作" : undefined}
                             onClick={() => {
                               if (confirm(`確定還原到「${h.snapshotLabel}」？當前規則將被覆蓋。`))
                                 restore.mutate({ id: h.id });
                             }}
-                            disabled={restore.isPending}
                           >
                             還原
                           </Button>
@@ -181,6 +185,8 @@ function AuraRulesTab() {
                             size="sm"
                             variant="ghost"
                             className="h-7 px-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                            disabled={readOnly}
+                            title={readOnly ? "唯讀模式，無法操作" : undefined}
                             onClick={() => {
                               if (confirm("確定刪除此快照？"))
                                 deleteSnapshot.mutate({ id: h.id });
@@ -201,8 +207,9 @@ function AuraRulesTab() {
             variant="outline"
             size="sm"
             className="border-slate-600 text-slate-300 hover:bg-slate-700"
+            disabled={readOnly || resetRules.isPending}
+            title={readOnly ? "唯讀模式，無法操作" : undefined}
             onClick={() => resetRules.mutate()}
-            disabled={resetRules.isPending}
           >
             🔄 重置為預設値
           </Button>
@@ -261,8 +268,9 @@ function AuraRulesTab() {
                     <Button
                       size="sm"
                       className="h-8 px-3 bg-amber-500 hover:bg-amber-600 text-black text-xs font-semibold"
+                      disabled={readOnly || updateRule.isPending}
+                      title={readOnly ? "唯讀模式，無法操作" : undefined}
                       onClick={() => handleSave(rule.id, currentVal)}
-                      disabled={updateRule.isPending}
                     >
                       儲存
                     </Button>
@@ -294,6 +302,7 @@ interface BraceletFormData {
 }
 
 function BraceletsTab() {
+  const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
   const { data: bracelets, isLoading } = trpc.adminConfig.getCustomBracelets.useQuery();
 
@@ -414,8 +423,9 @@ function BraceletsTab() {
               variant="outline"
               size="sm"
               className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              disabled={readOnly || syncBuiltin.isPending}
+              title={readOnly ? "唯讀模式，無法操作" : undefined}
               onClick={() => syncBuiltin.mutate()}
-              disabled={syncBuiltin.isPending}
             >
               🔄 同步內建手串
             </Button>
@@ -495,6 +505,8 @@ function BraceletsTab() {
                   variant="ghost"
                   size="sm"
                   className="h-7 px-2 text-slate-400 hover:text-white hover:bg-slate-700"
+                  disabled={readOnly}
+                  title={readOnly ? "唯讀模式，無法操作" : undefined}
                   onClick={() => openEdit(b)}
                 >
                   ✏️
@@ -504,6 +516,8 @@ function BraceletsTab() {
                     variant="ghost"
                     size="sm"
                     className="h-7 px-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                    disabled={readOnly}
+                    title={readOnly ? "唯讀模式，無法操作" : undefined}
                     onClick={() => {
                       if (confirm(`確定刪除「${b.name}」？`)) deleteBracelet.mutate({ id: b.id });
                     }}
@@ -630,8 +644,9 @@ function BraceletsTab() {
             </Button>
             <Button
               className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+              disabled={readOnly || upsert.isPending || !form.code || !form.name || !form.color || !form.functionDesc}
+              title={readOnly ? "唯讀模式，無法操作" : undefined}
               onClick={handleSubmit}
-              disabled={upsert.isPending || !form.code || !form.name || !form.color || !form.functionDesc}
             >
               {upsert.isPending ? "儲存中..." : "儲存"}
             </Button>
@@ -689,6 +704,7 @@ interface CategoryFormData {
 }
 
 function RestaurantCategoriesTab() {
+  const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
   const { data: categories, isLoading } = trpc.adminConfig.getRestaurantCategories.useQuery();
 
@@ -851,6 +867,8 @@ function RestaurantCategoriesTab() {
                 variant="ghost"
                 size="sm"
                 className="h-7 px-2 text-slate-400 hover:text-white hover:bg-slate-700"
+                disabled={readOnly}
+                title={readOnly ? "唯讀模式，無法操作" : undefined}
                 onClick={() => openEdit(c)}
               >
                 ✏️
@@ -860,6 +878,8 @@ function RestaurantCategoriesTab() {
                   variant="ghost"
                   size="sm"
                   className="h-7 px-2 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                  disabled={readOnly}
+                  title={readOnly ? "唯讀模式，無法操作" : undefined}
                   onClick={() => {
                     if (confirm(`確定刪除分類「${c.label}」？`)) deleteCategory.mutate({ id: c.id });
                   }}
@@ -1001,8 +1021,9 @@ function RestaurantCategoriesTab() {
             </Button>
             <Button
               className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+              disabled={readOnly || upsert.isPending || !form.categoryId || !form.label || !form.types}
+              title={readOnly ? "唯讀模式，無法操作" : undefined}
               onClick={handleSubmit}
-              disabled={upsert.isPending || !form.categoryId || !form.label || !form.types}
             >
               {upsert.isPending ? "儲存中..." : "儲存"}
             </Button>
@@ -1234,6 +1255,7 @@ function ElementColorMapPanel() {
 // 主頁面（主從佈局）
 // ============================================================
 export default function AdminLogicConfig() {
+  const { readOnly } = useAdminRole();
   const [activeSection, setActiveSection] = useState<string>("strategy");
 
   const navItems = [

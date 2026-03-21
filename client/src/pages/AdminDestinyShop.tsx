@@ -6,6 +6,7 @@
  * - 充值套餐說明
  * - 天命幣使用統計
  */
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { AdminLayout } from "@/components/AdminLayout";
@@ -19,12 +20,14 @@ function FeatureCostRow({
   currentCost,
   onSave,
   saving,
+  readOnly,
 }: {
   featureId: string;
   featureName: string;
   currentCost: number;
   onSave: (featureId: string, cost: number) => void;
   saving: boolean;
+  readOnly?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [inputVal, setInputVal] = useState(String(currentCost));
@@ -77,8 +80,9 @@ function FeatureCostRow({
           />
           <button
             onClick={() => { onSave(featureId, Number(inputVal)); setEditing(false); }}
-            disabled={saving}
-            className="p-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 transition-colors"
+            disabled={saving || readOnly}
+            title={readOnly ? "唯讀模式" : undefined}
+            className="p-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Check className="w-3.5 h-3.5" />
           </button>
@@ -100,7 +104,9 @@ function FeatureCostRow({
           </div>
           <button
             onClick={() => { setInputVal(String(currentCost)); setEditing(true); }}
-            className="p-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-400 hover:text-amber-400 transition-colors"
+            disabled={readOnly}
+            title={readOnly ? "唯讀模式" : undefined}
+            className="p-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-400 hover:text-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
@@ -119,6 +125,7 @@ function PlanBonusRow({
   renewalBonus,
   onSave,
   saving,
+  readOnly,
 }: {
   planId: string;
   planName: string;
@@ -127,6 +134,7 @@ function PlanBonusRow({
   renewalBonus: number;
   onSave: (planId: string, first: number, renewal: number) => void;
   saving: boolean;
+  readOnly?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [firstInput, setFirstInput] = useState(String(firstBonus));
@@ -168,8 +176,9 @@ function PlanBonusRow({
           <div className="flex flex-col gap-1">
             <button
               onClick={() => { onSave(planId, Number(firstInput), Number(renewalInput)); setEditing(false); }}
-              disabled={saving}
-              className="p-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 transition-colors"
+              disabled={saving || readOnly}
+              title={readOnly ? "唯讀模式" : undefined}
+              className="p-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Check className="w-3.5 h-3.5" />
             </button>
@@ -195,7 +204,9 @@ function PlanBonusRow({
           </div>
           <button
             onClick={() => setEditing(true)}
-            className="p-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-400 hover:text-amber-400 transition-colors"
+            disabled={readOnly}
+            title={readOnly ? "唯讀模式" : undefined}
+            className="p-1.5 rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-400 hover:text-amber-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
@@ -207,6 +218,7 @@ function PlanBonusRow({
 
 // ─── 主頁面 ─────────────────────────────────────────────────────────────────
 export default function AdminDestinyShop() {
+  const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
 
   // 功能列表（含 coinCostPerUse）
@@ -303,6 +315,7 @@ export default function AdminDestinyShop() {
                     currentCost={f.coinCostPerUse ?? 0}
                     onSave={(fId, cost) => updateFeaturePricing.mutate({ featureId: fId, coinCostPerUse: cost })}
                     saving={updateFeaturePricing.isPending}
+                    readOnly={readOnly}
                   />
                 ))}
               </div>
@@ -344,6 +357,7 @@ export default function AdminDestinyShop() {
                         updatePlanBonus.mutate({ planId: pId, firstSubscriptionBonusCoins: first, monthlyRenewalBonusCoins: renewal })
                       }
                       saving={updatePlanBonus.isPending}
+                      readOnly={readOnly}
                     />
                   ))}
                 </div>

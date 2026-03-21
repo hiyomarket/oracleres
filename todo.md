@@ -2370,3 +2370,23 @@
 - [x] effectiveProfile 改為智慧合併：DB 有四柱用 DB，無四柱時合併靜態四柱與 DB 基本資料
 - [x] IncompleteProfilePrompt 三處加入 `user ?` 條件，訪客不顯示「請填寫」提示
 - [x] 295 項測試全部通過，TypeScript 零錯誤
+
+## 唯讀管理員角色 (viewer) v11.4
+
+- [x] 擴充 users 資料表 role enum 加入 viewer 角色
+- [x] 後端加入 viewerProcedure（可讀取所有管理資料，但寫入操作拒絕）
+- [x] 後台所有 Admin 頁面套用唯讀限制（按鈕 disabled + tooltip + useAdminRole hook）
+- [x] 設定 williamtsengring@gmail.com 帳號為 viewer 角色
+- [x] 修復 AdminExperts Card disabled 屬性錯誤
+- [x] 修復 AdminFeatureStore 重複 disabled 屬性錯誤
+- [x] 修復 AdminMarketing 重複 title 屬性錯誤
+- [x] 295 項測試全部通過，TypeScript 零錯誤
+
+## 特殊存取 Token 系統 (AI 渠道) v11.5
+
+- [ ] DB schema 新增 access_tokens 資料表
+- [ ] 後端：管理員可生成/廢止 Token（adminProcedure）
+- [ ] 後端： Token 驗證 middleware（特殊公開路由）
+- [ ] 前台： /admin/access-tokens 管理頁面
+- [ ] 前台： /ai-view?token=xxx 特殊進入路由
+- [ ] 295 項測試全部通過，TypeScript 零錯誤

@@ -6,7 +6,7 @@
  * - listUsersFiltered：進階用戶篩選（生命靈數/方案/最後上線）+ 分頁
  */
 import { z } from "zod";
-import { router, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { router, protectedProcedure, adminProcedure, viewerProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { ENV } from "../_core/env";
 import { getDb } from "../db";
@@ -30,7 +30,7 @@ import {
 import { eq, desc, and, sql, gte, lte, isNotNull, or, like, count } from "drizzle-orm";
 
 function isOwner(openId: string, role?: string | null): boolean {
-  if (role === "admin") return true;
+  if (role === "admin" || role === "viewer") return true;
   return ENV.ownerOpenId !== "" && openId === ENV.ownerOpenId;
 }
 
@@ -434,7 +434,7 @@ export const dashboardRouter = router({
     }),
 
   /** 取得各功能使用頻率統計（近 30 天 / 近 7 天） */
-  getFeatureUsage: adminProcedure.query(async () => {
+  getFeatureUsage: viewerProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

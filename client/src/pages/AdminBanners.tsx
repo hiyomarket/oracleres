@@ -2,6 +2,7 @@
  * AdminBanners - 後台全站廣告/公告管理
  * 管理員可新增、編輯、啟用/停用、刪除全站懸浮橫幅
  */
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { AdminLayout } from "@/components/AdminLayout";
@@ -73,6 +74,7 @@ const EMPTY_FORM = {
 };
 
 export default function AdminBanners() {
+  const { readOnly } = useAdminRole();
   const { data: banners = [], refetch } = trpc.siteBanner.list.useQuery();
   const [showDialog, setShowDialog] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -159,6 +161,8 @@ export default function AdminBanners() {
               管理全站懸浮橫幅廣告，用戶可一鍵收納成小圓球
             </p>
           </div>
+          disabled={readOnly}
+          title={readOnly ? "唯讀模式，無法操作" : undefined}
           <Button onClick={openCreate} className="gap-2">
             <Plus className="w-4 h-4" />
             新增廣告
@@ -217,9 +221,10 @@ export default function AdminBanners() {
                 {/* 操作按鈕 */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
+                    disabled={readOnly}
+                    title={readOnly ? "唯讀模式，無法操作" : (b.isActive === 1 ? "停用" : "啟用")}
                     onClick={() => toggleMutation.mutate({ id: b.id, isActive: b.isActive !== 1 })}
                     className="w-8 h-8 rounded-lg bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                    title={b.isActive === 1 ? "停用" : "啟用"}
                   >
                     {b.isActive === 1 ? (
                       <Eye className="w-4 h-4 text-emerald-400" />
@@ -228,20 +233,22 @@ export default function AdminBanners() {
                     )}
                   </button>
                   <button
+                    disabled={readOnly}
+                    title={readOnly ? "唯讀模式，無法操作" : "編輯"}
                     onClick={() => openEdit(b)}
                     className="w-8 h-8 rounded-lg bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-                    title="編輯"
                   >
                     <Pencil className="w-4 h-4 text-blue-400" />
                   </button>
                   <button
+                    disabled={readOnly}
+                    title={readOnly ? "唯讀模式，無法操作" : "刪除"}
                     onClick={() => {
                       if (confirm(`確定刪除「${b.title}」嗎？`)) {
                         deleteMutation.mutate({ id: b.id });
                       }
                     }}
                     className="w-8 h-8 rounded-lg bg-muted hover:bg-red-500/20 flex items-center justify-center transition-colors"
-                    title="刪除"
                   >
                     <Trash2 className="w-4 h-4 text-red-400" />
                   </button>
@@ -371,8 +378,9 @@ export default function AdminBanners() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>取消</Button>
             <Button
+              disabled={readOnly || createMutation.isPending || updateMutation.isPending}
+              title={readOnly ? "唯讀模式，無法操作" : undefined}
               onClick={handleSubmit}
-              disabled={createMutation.isPending || updateMutation.isPending}
             >
               {createMutation.isPending || updateMutation.isPending ? "儲存中..." : "儲存"}
             </Button>

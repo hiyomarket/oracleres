@@ -358,6 +358,13 @@
       "when": 1773000184196,
       "tag": "0050_silent_kabuki",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "5",
+      "when": 1773854634309,
+      "tag": "0051_furry_rogue",
+      "breakpoints": true
     }
   ]
 }

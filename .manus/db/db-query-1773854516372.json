@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, name, email, role FROM users WHERE email = 'williamtsengring@gmail.com' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, email, role FROM users WHERE email = 'williamtsengring@gmail.com' LIMIT 1;",
+  "rows": [
+    {
+      "id": "3270013",
+      "name": "祐震 蘇",
+      "email": "williamtsengring@gmail.com",
+      "role": "user"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\n3270013\t祐震 蘇\twilliamtsengring@gmail.com\tuser\n",
+  "stderr": "",
+  "execution_time_ms": 1569
+}

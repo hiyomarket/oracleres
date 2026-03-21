@@ -3,7 +3,7 @@
  * 處理積分兌換、付費訂單、衝突檢查、管理員審核等
  */
 import { z } from "zod";
-import { router, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { router, protectedProcedure, adminProcedure, viewerProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import {
   featurePlans,
@@ -353,7 +353,7 @@ export const featureStoreRouter = router({
   // ==================== 管理員 API ====================
 
   /** 管理員：取得所有功能方案（含停用） */
-  adminListPlans: adminProcedure.query(async () => {
+  adminListPlans: viewerProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
     return db.select().from(featurePlans).orderBy(featurePlans.sortOrder);
@@ -422,7 +422,7 @@ export const featureStoreRouter = router({
     }),
 
   /** 管理員：取得待審核訂單列表 */
-  adminListOrders: adminProcedure
+  adminListOrders: viewerProcedure
     .input(
       z.object({
         status: z.enum(["pending", "approved", "rejected", "all"]).default("pending"),

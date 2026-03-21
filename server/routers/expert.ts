@@ -3,7 +3,7 @@
  * 包含 Phase 1-4 的所有 API
  */
 import { z } from "zod";
-import { router, protectedProcedure, publicProcedure, adminProcedure } from "../_core/trpc";
+import { router, protectedProcedure, publicProcedure, adminProcedure, viewerProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import {
   experts,
@@ -951,7 +951,7 @@ export const expertRouter = router({
   // ── 管理員控管 ───────────────────────────────────────────────────────────────
 
   /** 管理員：取得所有專家列表（含待審核） */
-  adminListExperts: adminProcedure
+  adminListExperts: viewerProcedure
     .input(
       z.object({
         status: z.enum(["active", "inactive", "pending_review", "all"]).default("all"),
@@ -1096,7 +1096,7 @@ export const expertRouter = router({
     }),
 
   /** 管理員：取得所有訂單（全平台） */
-  adminListAllBookings: adminProcedure
+  adminListAllBookings: viewerProcedure
     .input(
       z.object({
         status: z.enum(["pending_payment", "confirmed", "completed", "cancelled", "all"]).default("all"),
@@ -1293,7 +1293,7 @@ export const expertRouter = router({
   }),
 
   /** 管理員：取得所有申請列表 */
-  adminListApplications: adminProcedure
+  adminListApplications: viewerProcedure
     .input(
       z.object({
         status: z.enum(["pending", "approved", "rejected", "all"]).default("pending"),
@@ -1718,7 +1718,7 @@ export const expertRouter = router({
   // ── 管理員：天命管理團隊訊息管理 ────────────────────────────────────────────────────────────────────────────
 
   /** 管理員：取得所有用戶的團隊訊息（分用戶分組） */
-  adminListTeamMessages: adminProcedure.query(async () => {
+  adminListTeamMessages: viewerProcedure.query(async () => {
     const db = (await getDb())!;
     // 先清除已過期訊息
     await db.delete(teamMessages).where(lte(teamMessages.expiresAt, new Date()));

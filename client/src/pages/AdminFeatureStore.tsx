@@ -1,3 +1,4 @@
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -71,6 +72,7 @@ const emptyPlanForm: PlanFormData = {
 };
 
 function PlansTab() {
+  const { readOnly } = useAdminRole();
   const [showDialog, setShowDialog] = useState(false);
   const [form, setForm] = useState<PlanFormData>(emptyPlanForm);
   const [isEditing, setIsEditing] = useState(false);
@@ -144,6 +146,8 @@ function PlansTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">設定可供用戶兌換的功能方案</p>
+        disabled={readOnly}
+        title={readOnly ? "唯讀模式，無法操作" : undefined}
         <Button size="sm" onClick={openCreate}>
           <Plus className="w-4 h-4 mr-1" />
           新增方案
@@ -175,6 +179,8 @@ function PlansTab() {
                 </div>
               </div>
               <div className="flex gap-1 ml-2">
+                disabled={readOnly || readOnly}
+                title={readOnly ? "唯讀模式，無法操作" : undefined}
                 <Button variant="ghost" size="sm" onClick={() => openEdit(plan)}>
                   <Pencil className="w-3.5 h-3.5" />
                 </Button>
@@ -182,6 +188,7 @@ function PlansTab() {
                   variant="ghost"
                   size="sm"
                   className="text-destructive hover:text-destructive"
+                  title={readOnly ? "唯讀模式，無法操作" : undefined}
                   onClick={() => {
                     if (confirm(`確定要刪除「${plan.name}」嗎？`)) {
                       deleteMutation.mutate({ id: plan.id });
@@ -329,6 +336,7 @@ function PlansTab() {
 // ==================== 訂單審核 ====================
 
 function OrdersTab() {
+  const { readOnly } = useAdminRole();
   const [statusFilter, setStatusFilter] = useState<"pending" | "approved" | "rejected" | "all">("pending");
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
@@ -405,8 +413,9 @@ function OrdersTab() {
                       <Button
                         size="sm"
                         className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 text-xs"
+                        disabled={readOnly || reviewMutation.isPending}
+                        title={readOnly ? "唯讀模式，無法操作" : undefined}
                         onClick={() => reviewMutation.mutate({ orderId: order.id, action: "approve" })}
-                        disabled={reviewMutation.isPending}
                       >
                         <CheckCircle className="w-3 h-3 mr-1" />
                         核准
@@ -459,6 +468,8 @@ function OrdersTab() {
             <Button variant="outline" onClick={() => setShowRejectDialog(false)}>取消</Button>
             <Button
               variant="destructive"
+              disabled={readOnly || reviewMutation.isPending}
+              title={readOnly ? "唯讀模式，無法操作" : undefined}
               onClick={() => {
                 if (selectedOrderId) {
                   reviewMutation.mutate({
@@ -468,7 +479,6 @@ function OrdersTab() {
                   });
                 }
               }}
-              disabled={reviewMutation.isPending}
             >
               確認拒絕
             </Button>
@@ -482,6 +492,7 @@ function OrdersTab() {
 // ==================== 手動核發 ====================
 
 function GrantTab() {
+  const { readOnly } = useAdminRole();
   const [userId, setUserId] = useState("");
   const [featurePlanId, setFeaturePlanId] = useState("");
   const [durationDays, setDurationDays] = useState("30");
@@ -549,6 +560,8 @@ function GrantTab() {
       </div>
 
       <Button
+        disabled={readOnly || grantMutation.isPending}
+        title={readOnly ? "唯讀模式，無法操作" : undefined}
         onClick={() => {
           if (!userId || !featurePlanId || !durationDays) {
             toast.error("請填寫所有必填欄位");
@@ -561,7 +574,6 @@ function GrantTab() {
             note: note || undefined,
           });
         }}
-        disabled={grantMutation.isPending}
         className="w-full"
       >
         <Gift className="w-4 h-4 mr-2" />
@@ -574,6 +586,7 @@ function GrantTab() {
 // ==================== 主頁面 ====================
 
 export default function AdminFeatureStore() {
+  const { readOnly } = useAdminRole();
   return (
     <AdminLayout>
       <div className="container py-6 max-w-4xl">

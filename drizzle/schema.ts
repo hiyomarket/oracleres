@@ -162,7 +162,7 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "expert", "admin"]).default("user").notNull(),
+  role: mysqlEnum("role", ["user", "expert", "admin", "viewer"]).default("user").notNull(),
   // 當前方案 ID（對應 plans.id）
   planId: varchar("planId", { length: 50 }).notNull().default("basic"),
   // 方案到期日（null = 永久有效，適用基礎免費方案）

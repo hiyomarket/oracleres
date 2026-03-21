@@ -1,3 +1,4 @@
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
@@ -54,6 +55,7 @@ const BOOKING_STATUS_LABEL: Record<string, string> = {
 };
 
 export default function AdminExperts() {
+  const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "pending_review" | "all">("all");
@@ -412,6 +414,8 @@ export default function AdminExperts() {
                               <Button
                                 size="sm"
                                 className="bg-green-600 hover:bg-green-700 text-white"
+                                disabled={readOnly}
+                                title={readOnly ? "唯讀模式，無法操作" : undefined}
                                 onClick={() => updateBookingStatusMutation.mutate({ bookingId: booking.id, status: "confirmed" })}
                               >
                                 確認付款
@@ -419,6 +423,8 @@ export default function AdminExperts() {
                               <Button
                                 size="sm"
                                 variant="destructive"
+                                disabled={readOnly}
+                                title={readOnly ? "唯讀模式，無法操作" : undefined}
                                 onClick={() => updateBookingStatusMutation.mutate({ bookingId: booking.id, status: "cancelled" })}
                               >
                                 取消
@@ -429,6 +435,8 @@ export default function AdminExperts() {
                             <Button
                               size="sm"
                               className="bg-blue-600 hover:bg-blue-700 text-white"
+                              disabled={readOnly}
+                              title={readOnly ? "唯讀模式，無法操作" : undefined}
                               onClick={() => updateBookingStatusMutation.mutate({ bookingId: booking.id, status: "completed" })}
                             >
                               標記完成
@@ -495,8 +503,9 @@ export default function AdminExperts() {
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setRevokeExpertTarget(null)} className="border-slate-700 text-slate-300 bg-transparent hover:bg-slate-800">取消</Button>
             <Button
+              disabled={readOnly || revokeExpertMutation.isPending}
+              title={readOnly ? "唯讀模式，無法操作" : undefined}
               onClick={() => revokeExpertTarget && revokeExpertMutation.mutate({ userId: revokeExpertTarget.userId })}
-              disabled={revokeExpertMutation.isPending}
               className="bg-red-600 hover:bg-red-700 text-white font-semibold"
             >
               {revokeExpertMutation.isPending ? "處理中..." : "確認撤銷"}
@@ -587,12 +596,15 @@ export default function AdminExperts() {
                 teamConversations.map((conv) => (
                   <Card
                     key={conv.userId}
-                    className={`cursor-pointer border transition-colors ${
+                    className={`border transition-colors ${
+                      readOnly ? 'cursor-default opacity-60' : 'cursor-pointer'
+                    } ${
                       activeTeamMsgUserId === conv.userId
                         ? "border-amber-500/50 bg-amber-500/5"
                         : "border-border/50 hover:border-border"
                     }`}
                     onClick={() => {
+                      if (readOnly) return;
                       setActiveTeamMsgUserId(conv.userId);
                       if (conv.unreadCount > 0) markTeamReadMutation.mutate({ userId: conv.userId });
                     }}
@@ -690,7 +702,8 @@ export default function AdminExperts() {
                         />
                         <Button
                           className="bg-amber-500 hover:bg-amber-600 text-black"
-                          disabled={!teamReplyContent.trim() || replyTeamMutation.isPending}
+                          disabled={readOnly || !teamReplyContent.trim() || replyTeamMutation.isPending}
+                          title={readOnly ? "唯讀模式，無法操作" : undefined}
                           onClick={() => replyTeamMutation.mutate({ userId: activeTeamMsgUserId, content: teamReplyContent.trim() })}
                         >
                           <Send className="w-4 h-4" />
@@ -732,7 +745,8 @@ export default function AdminExperts() {
                     <div className="flex gap-2">
                       <Button
                         className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
-                        disabled={!allianceNameEdit.trim() || updateAllianceNameMutation.isPending}
+                        disabled={readOnly || !allianceNameEdit.trim() || updateAllianceNameMutation.isPending}
+                        title={readOnly ? "唯讀模式，無法操作" : undefined}
                         onClick={() => updateAllianceNameMutation.mutate({ name: allianceNameEdit.trim() })}
                       >
                         {updateAllianceNameMutation.isPending ? "儲存中…" : "確認更新"}
@@ -782,12 +796,13 @@ export default function AdminExperts() {
             <Button variant="outline" onClick={() => setEditProfileTarget(null)}>取消</Button>
             <Button
               className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+              disabled={readOnly || updateProfileMutation.isPending || !editPublicName.trim()}
+              title={readOnly ? "唯讀模式，無法操作" : undefined}
               onClick={() => editProfileTarget && updateProfileMutation.mutate({
                 expertId: editProfileTarget.expertId,
                 publicName: editPublicName.trim(),
                 title: editTitle.trim() || undefined,
               })}
-              disabled={updateProfileMutation.isPending || !editPublicName.trim()}
             >
               {updateProfileMutation.isPending ? "儲存中…" : "儲存變更"}
             </Button>
@@ -826,8 +841,9 @@ export default function AdminExperts() {
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => { setReviewTarget(null); setReviewNote(""); }} className="border-slate-700 text-slate-300 bg-transparent hover:bg-slate-800">取消</Button>
             <Button
+              disabled={readOnly || reviewMutation.isPending}
+              title={readOnly ? "唯讀模式，無法操作" : undefined}
               onClick={() => reviewTarget && reviewMutation.mutate({ applicationId: reviewTarget.id, action: reviewAction, adminNote: reviewNote || undefined })}
-              disabled={reviewMutation.isPending}
               className={reviewAction === "approve" ? "bg-green-600 hover:bg-green-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"}
             >
               {reviewMutation.isPending ? "處理中..." : reviewAction === "approve" ? "確認核准" : "確認拒絕"}

@@ -8,7 +8,7 @@
  * - 餘額不足時拋出 PAYMENT_REQUIRED 錯誤，前端攔截後引導至天命小舖
  * - 所有交易記錄到 points_transactions 表，含 featureId 欄位追蹤功能使用
  */
-import { router, protectedProcedure, adminProcedure } from "../_core/trpc";
+import { router, protectedProcedure, adminProcedure, viewerProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { getDb } from "../db";
@@ -216,7 +216,7 @@ export const coinsRouter = router({
   /**
    * 管理員：查詢所有功能的天命幣定價（含詳細資訊，供後台管理頁面使用）
    */
-  getFeaturePricingAdmin: adminProcedure.query(async () => {
+  getFeaturePricingAdmin: viewerProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
     return db
@@ -232,7 +232,7 @@ export const coinsRouter = router({
   /**
    * 管理員：查詢所有方案的贈幣設定
    */
-  getPlansWithBonusCoins: adminProcedure.query(async () => {
+  getPlansWithBonusCoins: viewerProcedure.query(async () => {
     const db = await getDb();
     if (!db) return [];
     return db
@@ -384,7 +384,7 @@ export const coinsRouter = router({
   /**
    * 管理員：查詢天命幣使用統計（AI 成本分析）
    */
-  adminGetUsageStats: adminProcedure.query(async () => {
+  adminGetUsageStats: viewerProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "資料庫連線失敗" });
 

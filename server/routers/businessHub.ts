@@ -5,7 +5,7 @@
  */
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, protectedProcedure } from "../_core/trpc";
+import { router, protectedProcedure, viewerProcedure } from "../_core/trpc";
 import { getDb } from "../db";
 import { randomBytes } from "crypto";
 import {
@@ -22,13 +22,16 @@ import {
 import { eq, asc, desc, and, ne } from "drizzle-orm";
 import { hasAccess } from "../PermissionService";
 
-// Admin guard middleware
+// Admin guard middleware (write operations only)
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
     throw new TRPCError({ code: "FORBIDDEN", message: "需要管理員權限" });
   }
   return next({ ctx });
 });
+
+// Viewer procedure alias (admin + viewer can read)
+const adminViewerProcedure = viewerProcedure;
 
 export const businessHubRouter = router({
   // ─── Modules ────────────────────────────────────────────────────────────
@@ -65,7 +68,7 @@ export const businessHubRouter = router({
   }),
 
   /** 取得所有功能模塊 */
-  listModules: adminProcedure.query(async () => {
+  listModules: adminViewerProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     return db.select().from(modules).orderBy(asc(modules.sortOrder));
@@ -142,7 +145,7 @@ export const businessHubRouter = router({
   // ─── Plans ──────────────────────────────────────────────────────────────
 
   /** 取得所有方案（含各方案包含的模塊） */
-  listPlans: adminProcedure.query(async () => {
+  listPlans: adminViewerProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     const allPlans = await db.select().from(plans).orderBy(asc(plans.level));
@@ -216,7 +219,7 @@ export const businessHubRouter = router({
   // ─── Campaigns ──────────────────────────────────────────────────────────
 
   /** 取得所有行銷活動 */
-  listCampaigns: adminProcedure.query(async () => {
+  listCampaigns: adminViewerProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     return db.select().from(campaigns).orderBy(desc(campaigns.createdAt));
@@ -365,7 +368,7 @@ export const businessHubRouter = router({
     }),
 
   /** 查看訂閱審計日誌 */
-  listSubscriptionLogs: adminProcedure
+  listSubscriptionLogs: adminViewerProcedure
     .input(z.object({
       targetUserId: z.number().int().optional(),
       limit: z.number().int().min(1).max(100).default(50),
@@ -403,7 +406,7 @@ export const businessHubRouter = router({
     }),
 
   /** 列出某行銷活動的所有兌換碼 */
-  listRedemptionCodes: adminProcedure
+  listRedemptionCodes: adminViewerProcedure
     .input(z.object({ campaignId: z.number().int() }))
     .query(async ({ input }) => {
       const db = await getDb();

@@ -6,6 +6,7 @@
 import { useState, useCallback } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
+import { useAdminRole } from "@/hooks/useAdminRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -534,6 +535,7 @@ function RecalcLifePathButton() {
 
 // ─── 主頁面 ─────────────────────────────────────────────────────────────────
 export default function AdminUsers() {
+  const { readOnly } = useAdminRole();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [searchName, setSearchName] = useState("");
@@ -662,7 +664,9 @@ export default function AdminUsers() {
             <Button
               size="sm"
               onClick={() => setBatchModalOpen(true)}
-              className="bg-amber-600 hover:bg-amber-700 text-black text-xs h-7 px-3"
+              disabled={readOnly}
+              title={readOnly ? "唯讀模式，無法操作" : undefined}
+              className="bg-amber-600 hover:bg-amber-700 text-black text-xs h-7 px-3 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               批量指派訂閱
             </Button>
@@ -949,24 +953,28 @@ export default function AdminUsers() {
                           <Button
                             size="sm"
                             variant="outline"
+                            disabled={readOnly}
+                            title={readOnly ? "唯讀模式" : undefined}
                             onClick={(e) => {
                               e.stopPropagation();
                               setPointsModalUser({ id: u.id, name: u.name ?? null, balance: Number(u.pointsBalance ?? 0) });
                             }}
-                            className="border-amber-600/50 text-amber-400 hover:bg-amber-600/20 bg-transparent text-xs font-semibold shrink-0"
+                            className="border-amber-600/50 text-amber-400 hover:bg-amber-600/20 bg-transparent text-xs font-semibold shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             💰 調整積分
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
+                            disabled={readOnly}
+                            title={readOnly ? "唯讀模式" : undefined}
                             onClick={(e) => {
                               e.stopPropagation();
                               setCoinsModalUser({ id: u.id, name: u.name ?? null, gameCoins: Number((u as any).gameCoins ?? 0) });
                             }}
-                            className="border-purple-600/50 text-purple-400 hover:bg-purple-600/20 bg-transparent text-xs font-semibold shrink-0"
+                            className="border-purple-600/50 text-purple-400 hover:bg-purple-600/20 bg-transparent text-xs font-semibold shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
-                            🎮 贈送遊戲幣
+                            🎮 贈送遇戲幣
                           </Button>
                           <Button
                             size="sm"
@@ -979,7 +987,9 @@ export default function AdminUsers() {
                                 planExpiresAt: u.planExpiresAt ? new Date(u.planExpiresAt) : null,
                               });
                             }}
-                            className="bg-amber-600/80 hover:bg-amber-600 text-black text-xs font-semibold shrink-0"
+                            disabled={readOnly}
+                            title={readOnly ? "唯讀模式" : undefined}
+                            className="bg-amber-600/80 hover:bg-amber-600 text-black text-xs font-semibold shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
                             🎫 管理訂閱
                           </Button>
@@ -992,7 +1002,9 @@ export default function AdminUsers() {
                                 setPromotePublicName(u.name ?? "");
                                 setPromoteExpertModal({ id: u.id, name: u.name ?? null });
                               }}
-                              className="border-yellow-600/50 text-yellow-400 hover:bg-yellow-600/20 bg-transparent text-xs font-semibold shrink-0"
+                              disabled={readOnly}
+                              title={readOnly ? "唯讀模式" : undefined}
+                              className="border-yellow-600/50 text-yellow-400 hover:bg-yellow-600/20 bg-transparent text-xs font-semibold shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               ⭐ 提升命理師
                             </Button>
@@ -1005,7 +1017,9 @@ export default function AdminUsers() {
                                 e.stopPropagation();
                                 setRevokeConfirmUser({ id: u.id, name: u.name ?? null });
                               }}
-                              className="border-red-600/50 text-red-400 hover:bg-red-600/20 bg-transparent text-xs font-semibold shrink-0"
+                              disabled={readOnly}
+                              title={readOnly ? "唯讀模式" : undefined}
+                              className="border-red-600/50 text-red-400 hover:bg-red-600/20 bg-transparent text-xs font-semibold shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               ✕ 撤銷命理師
                             </Button>
