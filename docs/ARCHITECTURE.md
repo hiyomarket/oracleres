@@ -40,58 +40,49 @@ oracleres/
 │
 ├── README.md                      # 專案總覽 + Agent 入口索引
 │
-├── CLAW-TEAM/                    # ⭐ ClawTeam 規劃區（我們的文件）
+├── MANUS-AGENTS/                 # ⭐⭐⭐ Manus Agent 專用入口（最重要！）
+│   │                                （Manus System / Art Agent 只讀這個資料夾）
+│   ├── FOR-SYSTEM/                # Manus System Agent 看這個
+│   │   ├── CURRENT-TASK.md        # 目前任務（System Agent 每次第一個讀）
+│   │   └── INSTRUCTIONS/          # 系統建設詳細指令
+│   │       └── 20260322-天命共振mvp開發-第一版-INSTRUCTION.md
 │   │
-│   ├── INSTRUCTIONS/             # 給 Manus 的指令文件
-│   │   ├── 20260322-天命共振mvp開發-第一版-MANUS-INSTRUCTION.md
-│   │   └── ...
+│   ├── FOR-ART/                   # Manus Art Agent 看這個
+│   │   ├── CURRENT-TASK.md        # 目前任務（Art Agent 每次第一個讀）
+│   │   └── SPECS/                 # 美術設計規格
 │   │
-│   ├── SPECS/                    # 詳細規格文件
-│   │   ├── 網站首頁規格/
-│   │   ├── 遊戲系統規格/
-│   │   └── UI設計規格/
-│   │
-│   ├── DECISIONS/                # 決策記錄（命名、配色、架構）
-│   │   ├── 20260322-網站命名共識.md
-│   │   └── 20260322-配色方案確認.md
-│   │
-│   └── REVIEWS/                  # ClawTeam 審查報告
+│   └── README.md                  # 說明：每個 Agent 該讀哪個資料夾
 │
-├── ART/                          # ⭐ 美術素材區（Manus Art Agent 產出）
-│   │
-│   ├── SPEC/                     # 美術設計規格（ClawTeam 撰寫）
-│   │   └── homepage-design-spec.md
-│   │
-│   ├── SOURCE/                   # 原始檔案（PSD, AI, FIGMA）
-│   │   └── homepage/
-│   │
-│   ├── OUTPUTS/                  # 產出素材（可直接使用）
+├── ART/                           # 美術素材產出區（Art Agent 上傳）
+│   ├── OUTPUTS/                   # 產出素材（System Agent 從這裡抓）
 │   │   ├── homepage/
 │   │   │   ├── hero-banner.png
-│   │   │   ├── logo.svg
-│   │   │   ├── button-ok.png
-│   │   │   └── ...
-│   │   ├── icons/
-│   │   └── backgrounds/
-│   │
-│   └── MANIFEST.json             # 素材清單（讓其他 Agent 知道有哪些素材）
+│   │   │   └── logo.svg
+│   │   └── icons/
+│   └── MANIFEST.json              # 素材清單（System Agent 讀這個找素材）
 │
-├── SYSTEM/                       # ⭐ 系統 Agent 工作追蹤區
-│   │                                （網站程式碼在 Manus System Agent 本地）
-│   ├── TASKS/                    # 任務追蹤（System Agent 更新）
-│   │   ├── TASK-001-首頁MVP/
-│   │   │   └── STATUS.md        # 任務狀態
-│   │   │
-│   │   └── TASK-002-遊戲系統/
-│   │       └── ...
+├── CLAW-TEAM/                     # ⭐ ClawTeam 內部規劃區（我們自己看）
 │   │
-│   └── README.md                 # System Agent 的任務索引
+│   ├── DECISIONS/                 # 決策記錄（命名、配色、架構）
+│   │   └── 20260322-網站命名共識-DECISION.md
+│   │
+│   ├── REVIEWS/                   # ClawTeam 審查報告
+│   │
+│   └── INTERNAL/                  # 內部規劃文件（不給 Manus 看）
 │
-└── ASSETS/                       # 共享素材（System + Art 共用）
-    ├── fonts/
-    ├── audio/
-    └── shared/
+└── STATUS/                        # 任務狀態追蹤（所有 Agent 共同使用）
+    ├── TASK-001-首頁MVP/
+    │   └── STATUS.md
+    └── TASK-002-遊戲系統/
+        └── STATUS.md
 ```
+
+### 📌 核心原則
+
+> **MANUS-AGENTS/ 是 Manus 唯一的閱讀入口。**
+> - Manus System Agent → 只讀 `MANUS-AGENTS/FOR-SYSTEM/`
+> - Manus Art Agent → 只讀 `MANUS-AGENTS/FOR-ART/`
+> - CLAW-TEAM/ 是我們內部規劃區，**不給 Manus 看**
 
 ---
 
@@ -101,17 +92,18 @@ oracleres/
 
 ```
 1. ClawTeam 寫作指令規格
-   → CLAW-TEAM/INSTRUCTIONS/TASK-XXX.md
+   → 寫入 MANUS-AGENTS/FOR-SYSTEM/INSTRUCTIONS/對應任務.md
+   → 更新 MANUS-AGENTS/FOR-SYSTEM/CURRENT-TASK.md
 
 2. ClawTeam 在 GitHub push + 通知 Manus System Agent
 
-3. Manus System Agent pull 最新指令
-   → 閱讀 CLAW-TEAM/INSTRUCTIONS/
+3. Manus System Agent pull 最新
+   → 第一個讀 MANUS-AGENTS/FOR-SYSTEM/CURRENT-TASK.md
+   → 再讀 INSTRUCTIONS/ 裡的詳細指令
 
-4. Manus System Agent 執行任務
-   → 產出放入 SYSTEM/TASKS/TASK-XXX/OUTPUT/
+4. Manus System Agent 執行任務（程式碼在本地）
 
-5. Manus System Agent push 產出 + 更新 STATUS.md
+5. Manus System Agent 更新 STATUS/對應任務/STATUS.md
 
 6. ClawTeam pull → 審查 → 通過或不通過
 ```
@@ -120,12 +112,14 @@ oracleres/
 
 ```
 1. ClawTeam 寫作美術設計規格
-   → ART/SPEC/hw-design-spec.md
+   → 寫入 MANUS-AGENTS/FOR-ART/SPECS/對應任務.md
+   → 更新 MANUS-AGENTS/FOR-ART/CURRENT-TASK.md
 
 2. ClawTeam 在 GitHub push + 通知 Manus Art Agent
 
-3. Manus Art Agent pull 最新規格
-   → 閱讀 ART/SPEC/
+3. Manus Art Agent pull 最新
+   → 第一個讀 MANUS-AGENTS/FOR-ART/CURRENT-TASK.md
+   → 再讀 SPECS/ 裡的詳細規格
 
 4. Manus Art Agent 設計並產出素材
    → 上傳至 ART/OUTPUTS/對應資料夾
@@ -140,15 +134,15 @@ oracleres/
 ### 流程 C：System Agent 使用 Art Agent 素材
 
 ```
-1. Art Agent 完成素材，上傳並更新 MANIFEST.json
+1. Art Agent 完成素材，上傳並更新 ART/MANIFEST.json
 
-2. System Agent pull 最新素材
+2. System Agent pull 最新
    → 閱讀 ART/MANIFEST.json
 
 3. System Agent 在本地專案中引用素材
    → 使用路徑：從 ART/OUTPUTS/ 對應位置取得
 
-4. System Agent 更新 SYSTEM/TASKS/TASK-XXX/STATUS.md
+4. System Agent 更新 STATUS/對應任務/STATUS.md
 ```
 
 ---
