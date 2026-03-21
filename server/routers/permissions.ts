@@ -101,6 +101,14 @@ export const permissionsRouter = router({
         allFeatures: ALL_FEATURES,
       };
     }
+    // ai_full 身分：開放全部功能
+    if (ctx.aiToken?.identityType === "ai_full") {
+      return {
+        features: ALL_FEATURES.map(f => f.id) as FeatureId[],
+        isAdmin: false,
+        allFeatures: ALL_FEATURES,
+      };
+    }
     // 對每個 feature 調用 PermissionService
     const results = await Promise.all(
       ALL_FEATURES.map(async (f) => {

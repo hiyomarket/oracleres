@@ -3,12 +3,9 @@ import type { User } from "../../drizzle/schema";
 import { sdk } from "./sdk";
 import { hasAccess, type AccessResult } from "../PermissionService";
 import { getDb } from "../db";
-import { accessTokens, userProfiles } from "../../drizzle/schema";
+import { accessTokens, userProfiles, users } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
-/**
- * 自動初始化虛擬用戶的 userProfile（含完整命格推算）
- * 如果已存在則跳過，避免重複寫入
- */
+
 /** 生命靈數約分到 1-22 */
 function reduceToMasterNum(n: number): number {
   while (n > 22) {
@@ -17,17 +14,64 @@ function reduceToMasterNum(n: number): number {
   return n;
 }
 
+/**
+ * 確保虛擬用戶在 users 表中有真實記錄（以 openId 為唯一鍵）
+ * 回傳真實的 userId（正整數）
+ */
+async function ensureVirtualUserInDb(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  db: any,
+  tokenId: number,
+  tokenName: string
+): Promise<number> {
+  const openId = `ai-token-${tokenId}`;
+
+  // 先查詢是否已存在
+  const [existing] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.openId, openId))
+    .limit(1);
+
+  if (existing) return existing.id as number;
+
+  // 不存在則建立
+  const result = await db.insert(users).values({
+    openId,
+    name: `AI Token: ${tokenName}`,
+    email: null,
+    loginMethod: "ai_token",
+    role: "viewer",
+    planId: null as unknown as string,
+    planExpiresAt: null,
+    pointsBalance: 0,
+    lastDailyCheckIn: null,
+    signinStreak: 0,
+    gameCoins: 0,
+    availableDiscounts: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastSignedIn: new Date(),
+  });
+
+  return result[0].insertId as number;
+}
+
+/**
+ * 自動初始化虛擬用戶的 userProfile（含完整命格推算）
+ * 如果已存在則跳過，避免重複寫入
+ */
 async function autoInitGuestProfile(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db: any,
-  virtualUserId: number,
+  realUserId: number,
   guestProfile: { name: string; gender: "male" | "female"; birthYear: number; birthMonth: number; birthDay: number; birthHour: number }
 ): Promise<void> {
   try {
     // 檢查是否已存在
     const existing = await db.select({ id: userProfiles.id })
       .from(userProfiles)
-      .where(eq(userProfiles.userId, virtualUserId))
+      .where(eq(userProfiles.userId, realUserId))
       .limit(1);
     if (existing.length > 0) return; // 已存在，跳過
 
@@ -36,7 +80,6 @@ async function autoInitGuestProfile(
       '00:30', '02:30', '04:30', '06:30', '08:30', '10:30',
       '12:30', '14:30', '16:30', '18:30', '20:30', '22:30'
     ];
-    // birthHour 是偶數小時（0/2/4.../22），轉為時辰索引
     const hourIndex = Math.floor(guestProfile.birthHour / 2);
     const birthTime = HOUR_INDEX_TO_TIME[hourIndex] ?? '12:30';
     const birthDate = `${guestProfile.birthYear}-${String(guestProfile.birthMonth).padStart(2, '0')}-${String(guestProfile.birthDay).padStart(2, '0')}`;
@@ -71,7 +114,7 @@ async function autoInitGuestProfile(
 
     // 寫入 userProfiles
     await db.insert(userProfiles).values({
-      userId: virtualUserId,
+      userId: realUserId,
       displayName: guestProfile.name,
       gender: guestProfile.gender,
       birthDate,
@@ -93,17 +136,13 @@ async function autoInitGuestProfile(
       notes: '虛擬體驗命盤（系統自動生成）',
       createdAt: new Date(),
     });
+
+    console.log(`[Context] autoInitGuestProfile: userId=${realUserId} 命盤寫入成功`);
   } catch (err) {
-    // 命盤初始化失敗不阻斷請求
-    console.warn('[Context] autoInitGuestProfile failed:', err);
+    // 命盤初始化失敗不阻斷請求，但記錄詳細錯誤
+    console.error('[Context] autoInitGuestProfile failed:', err);
   }
 }
-
-// PermissionService 注入到 ctx 的小工具函數
-export const permissionService = {
-  checkAccess: (userId: number, featureId: string): Promise<AccessResult> =>
-    hasAccess(userId, featureId),
-};
 
 /**
  * AI Token 虛擬用戶資訊
@@ -123,6 +162,8 @@ export interface AiTokenContext {
     birthDay: number;
     birthHour: number;
   } | null;
+  /** 虛擬用戶在 users 表中的真實 ID（用於 userProfiles 查詢） */
+  realUserId?: number;
 }
 
 export type TrpcContext = {
@@ -136,17 +177,17 @@ export type TrpcContext = {
 
 /**
  * 建立虛擬 viewer 用戶物件
- * 讓 viewerProcedure 可以正常通過 ctx.user 檢查
+ * 使用真實 userId（從 users 表取得），確保 userProfiles 外鍵合法
  */
-function buildVirtualUser(tokenId: number, tokenName: string): User {
+function buildVirtualUser(realUserId: number, tokenId: number, tokenName: string): User {
   return {
-    id: -(tokenId), // 負數 ID 代表虛擬用戶，避免與真實用戶衝突
+    id: realUserId,
     openId: `ai-token-${tokenId}`,
     name: `AI Token: ${tokenName}`,
     email: null,
     loginMethod: "ai_token",
     role: "viewer",
-    planId: "basic",
+    planId: null as unknown as string,
     planExpiresAt: null,
     pointsBalance: 0,
     lastDailyCheckIn: null,
@@ -158,6 +199,18 @@ function buildVirtualUser(tokenId: number, tokenName: string): User {
     lastSignedIn: new Date(),
   } as User;
 }
+
+// PermissionService 注入到 ctx 的小工具函數
+// 支援 ai_full 身分繞過方案權限檢查（全功能開放）
+export const permissionService = {
+  checkAccess: (userId: number, featureId: string, aiToken?: AiTokenContext | null): Promise<AccessResult> => {
+    // ai_full 身分：繞過所有方案權限，直接開放全部功能
+    if (aiToken && aiToken.identityType === "ai_full") {
+      return Promise.resolve({ hasAccess: true, reason: "ai_full" });
+    }
+    return hasAccess(userId, featureId);
+  },
+};
 
 export async function createContext(
   opts: CreateExpressContextOptions
@@ -190,10 +243,6 @@ export async function createContext(
               record.isActive &&
               !(record.expiresAt && new Date(record.expiresAt) < new Date())
             ) {
-              // Token 有效：注入虛擬 viewer 用戶
-              const virtualUser = buildVirtualUser(record.id, record.name);
-              user = virtualUser;
-
               const identityType = (record.identityType ?? "ai_readonly") as string;
               const hasGuestProfile = identityType !== "ai_readonly" && record.guestName;
 
@@ -208,11 +257,26 @@ export async function createContext(
                   }
                 : null;
 
+              // 確保虛擬用戶在 users 表中有真實記錄（取得正整數 ID）
+              let realUserId: number;
+              try {
+                realUserId = await ensureVirtualUserInDb(db, record.id, record.name);
+              } catch (err) {
+                console.error('[Context] ensureVirtualUserInDb failed:', err);
+                // 降級：使用負數 ID（命盤寫入可能失敗，但不阻斷請求）
+                realUserId = -(record.id);
+              }
+
+              // Token 有效：注入虛擬 viewer 用戶（使用真實 userId）
+              const virtualUser = buildVirtualUser(realUserId, record.id, record.name);
+              user = virtualUser;
+
               aiToken = {
                 tokenId: record.id,
                 tokenName: record.name,
                 identityType,
                 guestProfile,
+                realUserId,
               };
 
               // 非同步更新使用記錄，不阻塞請求
@@ -223,8 +287,9 @@ export async function createContext(
 
               // 有虛擬命盤：非同步自動寫入 userProfiles（如果尚未寫入）
               if (guestProfile) {
-                const virtualUserId = virtualUser.id; // 負數 ID
-                autoInitGuestProfile(db, virtualUserId, guestProfile).catch(() => {});
+                autoInitGuestProfile(db, realUserId, guestProfile).catch((err) => {
+                  console.error('[Context] autoInitGuestProfile async error:', err);
+                });
               }
             }
         }

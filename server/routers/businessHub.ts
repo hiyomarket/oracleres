@@ -48,12 +48,14 @@ export const businessHubRouter = router({
       .from(modules)
       .where(eq(modules.isActive, 1))
       .orderBy(asc(modules.sortOrder));
+    // ai_full 身分：全部模塊開放
+    const isAiFull = ctx.aiToken?.identityType === "ai_full";
     // 對每個模塊檢查權限：取第一個 containedFeature 作為代表
     const result = await Promise.all(
       allModules.map(async (m) => {
         const features = m.containedFeatures as string[];
-        // admin 永遠有權限
-        if (ctx.user.role === "admin") {
+        // admin / ai_full 永遠有權限
+        if (ctx.user.role === "admin" || isAiFull) {
           return { ...m, hasAccess: true };
         }
         if (features.length === 0) {

@@ -2501,3 +2501,10 @@
 - [x] 後端 context.ts：Token 有虛擬命盤時，非同步自動寫入 userProfiles（八字推算 + 生命靈數 + 農曆），已存在則跳過
 - [x] 前端 AiReadOnlyBanner：身分類型改為動態判斷（非 ai_readonly 就顯示虛擬命盤提示），加入「非真實命盤」說明
 - [x] 前端 AiReadOnlyBanner：所有身分類型都加入「導覽頁」按鈕，點擊後返回 /ai-entry 導覽頁
+
+## v12.4 ai_full 體驗 Token 根本問題修正
+
+- [x] 修正虛擬用戶 userId 設計：ensureVirtualUserInDb() 在 users 表建立真實記錄（以 openId=ai-token-{id} 為唯一鍵），回傳正整數 userId
+- [x] 修正 businessHub.ts getVisibleNav：ai_full 身分繞過方案權限，全部模塊開放
+- [x] 修正 permissions.ts myFeatures：ai_full 身分回傳全部功能清單
+- [x] TypeScript 無錯誤，353 項測試全部通過
