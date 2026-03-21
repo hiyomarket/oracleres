@@ -265,8 +265,46 @@ export const accountRouter = router({
 
   /**
    * 取得個人命格資料
+   * AI Token 體驗/基礎方案：回傳虛擬命盤資料
    */
   getProfile: protectedProcedure.query(async ({ ctx }) => {
+    // AI Token 體驗模式：回傳虛擬命盤
+    if (ctx.aiToken?.guestProfile) {
+      const gp = ctx.aiToken.guestProfile;
+      const HOUR_TO_PILLAR: Record<number, string> = {
+        0: '子', 2: '丑', 4: '寅', 6: '卯', 8: '辰', 10: '巳',
+        12: '午', 14: '未', 16: '申', 18: '酉', 20: '戌', 22: '亥',
+      };
+      const hourBranch = HOUR_TO_PILLAR[Math.floor(gp.birthHour / 2) * 2] ?? '午';
+      return {
+        id: -(ctx.aiToken.tokenId),
+        userId: ctx.user.id,
+        displayName: gp.name,
+        gender: gp.gender as "male" | "female" | "other",
+        birthDate: `${gp.birthYear}-${String(gp.birthMonth).padStart(2, '0')}-${String(gp.birthDay).padStart(2, '0')}`,
+        birthTime: `${String(gp.birthHour).padStart(2, '0')}:00`,
+        birthHour: hourBranch,
+        birthPlace: null,
+        yearPillar: null,
+        monthPillar: null,
+        dayPillar: null,
+        hourPillar: null,
+        dayMasterElement: null,
+        favorableElements: null,
+        unfavorableElements: null,
+        occupation: null,
+        birthLunar: null,
+        notes: `體驗命盤（${ctx.aiToken.identityType === 'trial' ? '體驗方案' : '基礎方案'}）`,
+        natalWood: null,
+        natalFire: null,
+        natalEarth: null,
+        natalMetal: null,
+        natalWater: null,
+        lifePathNumber: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    }
     const db = await getDb();
     if (!db) return null;
     const rows = await db.select().from(userProfiles)

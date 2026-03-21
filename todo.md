@@ -2468,3 +2468,17 @@
 - [x] 診斷：/ai-entry 被 AccessGate 殔止，導致 Token 驗證邏輯無法執行
 - [x] 修復：將 /ai-entry 與 /ai-view 路由移至 AccessGate 之外，不需登入即可存取
 - [x] 333 項測試全部通過，TypeScript 零錯誤
+
+### v12.0 Token 虛擬身分系統
+- [x] DB schema：access_tokens 加入 identityType（ai_readonly/trial/basic）欄位
+- [x] DB schema：access_tokens 加入虛擬命盤欄位（guestName, guestGender, guestBirthYear, guestBirthMonth, guestBirthDay, guestBirthHour）
+- [x] DB migration：SQL ALTER TABLE 直接新增欄位
+- [x] 後端 context.ts：讀取 X-AI-Token header，驗證後注入虛擬 viewer 用戶
+- [x] 後端 trpc.ts：viewerProcedure 支援虛擬用戶（ctx.user 為虛擬 viewer）
+- [x] 後端 accessTokens router：create 時依 identityType 隨機生成虛擬命盤
+- [x] 後端 account router：getProfile 支援虛擬命盤（AI session 模式回傳虛擬資料）
+- [x] 前端 main.tsx：tRPC httpBatchLink 加入 X-AI-Token header（從 sessionStorage 讀取）
+- [x] 前端 AiReadOnlyBanner：體驗/基礎方案顯示琥珀色體驗模式提示條，顯示虛擬命盤姓名與出生日期
+- [x] 前端 AdminAccessTokens：生成 Token 時加入 identityType 選擇（AI 全站唯讀 / 體驗方案 / 基礎方案）
+- [x] 前端 AiEntry：AiSession 介面加入 identityType 和 guestProfile 欄位
+- [x] 測試：accesTokens.guestProfile.test.ts 新增 21 項測試，348 項全部通過

@@ -6,7 +6,21 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
+import { AI_SESSION_KEY } from "./pages/AiEntry";
 import "./index.css";
+
+/** 讀取目前有效的 AI Token（如果有） */
+function getStoredAiToken(): string | null {
+  try {
+    const raw = sessionStorage.getItem(AI_SESSION_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    if (session.expiresAt && session.expiresAt < Date.now()) return null;
+    return session.token ?? null;
+  } catch {
+    return null;
+  }
+}
 
 const queryClient = new QueryClient();
 
@@ -42,6 +56,10 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
+      headers() {
+        const aiToken = getStoredAiToken();
+        return aiToken ? { "X-AI-Token": aiToken } : {};
+      },
       fetch(input, init) {
         return globalThis.fetch(input, {
           ...(init ?? {}),

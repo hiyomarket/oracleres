@@ -1331,6 +1331,15 @@ export const accessTokens = mysqlTable("access_tokens", {
   allowedModules: text("allowedModules"),
   // 存取模式：daily_view（今日運勢頁）、admin_view（後台唯讀瀏覽）
   accessMode: varchar("access_mode", { length: 20 }).notNull().default("daily_view"),
+  // 身分類型：ai_readonly（AI 全站唯讀）、trial（體驗方案）、basic（基礎方案）
+  identityType: mysqlEnum("identityType", ["ai_readonly", "trial", "basic"]).notNull().default("ai_readonly"),
+  // 虛擬命盤（體驗/基礎方案 Token 使用，隨機生成）
+  guestName: varchar("guestName", { length: 20 }),
+  guestGender: mysqlEnum("guestGender", ["male", "female"]),
+  guestBirthYear: int("guestBirthYear"),
+  guestBirthMonth: int("guestBirthMonth"),
+  guestBirthDay: int("guestBirthDay"),
+  guestBirthHour: int("guestBirthHour"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

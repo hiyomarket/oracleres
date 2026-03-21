@@ -26,6 +26,15 @@ export interface AiSession {
   expiresAt: number | null;
   allowedModules: string[] | null;
   accessMode: "daily_view" | "admin_view";
+  identityType: "ai_readonly" | "trial" | "basic";
+  guestProfile: {
+    name: string;
+    gender: "male" | "female";
+    birthYear: number;
+    birthMonth: number;
+    birthDay: number;
+    birthHour: number;
+  } | null;
   grantedAt: number;
 }
 
@@ -164,6 +173,8 @@ export default function AiEntry() {
       expiresAt: result.expiresAt ?? null,
       allowedModules: result.allowedModules ?? null,
       accessMode: "admin_view",
+      identityType: result.identityType ?? "ai_readonly",
+      guestProfile: result.guestProfile ?? null,
       grantedAt: Date.now(),
     };
     sessionStorage.setItem(AI_SESSION_KEY, JSON.stringify(aiSession));

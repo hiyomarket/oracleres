@@ -25,12 +25,19 @@ import { toast } from "sonner";
 import { Plus, Trash2, Copy, Key, CheckCircle, XCircle, Clock, Zap, AlertTriangle, ChevronDown, ChevronUp, Activity } from "lucide-react";
 
 type ModuleId = "daily" | "tarot" | "wealth" | "hourly";
+type IdentityType = "ai_readonly" | "trial" | "basic";
 
 const MODULE_OPTIONS: { id: ModuleId; label: string; emoji: string }[] = [
   { id: "daily", label: "運勢摘要", emoji: "☀️" },
-  { id: "tarot", label: "塔羅指引", emoji: "🃏" },
+  { id: "tarot", label: "塔羅指引", emoji: "🃃" },
   { id: "wealth", label: "偶財指數", emoji: "💰" },
   { id: "hourly", label: "時辰能量", emoji: "⏰" },
+];
+
+const IDENTITY_OPTIONS: { id: IdentityType; label: string; emoji: string; desc: string; color: string }[] = [
+  { id: "ai_readonly", label: "AI 全站唯讀", emoji: "🤖", desc: "AI 系統使用，無虛擬命盤", color: "emerald" },
+  { id: "trial", label: "體驗方案", emoji: "✨", desc: "新訪客體驗，隨機生成虛擬命盤", color: "amber" },
+  { id: "basic", label: "基礎方案", emoji: "🔵", desc: "基礎方案體驗，隨機生成虛擬命盤", color: "blue" },
 ];
 
 interface AccessToken {
@@ -45,6 +52,13 @@ interface AccessToken {
   useCount: number;
   createdAt: Date;
   allowedModules: ModuleId[] | null;
+  identityType?: IdentityType;
+  guestName?: string | null;
+  guestGender?: "male" | "female" | null;
+  guestBirthYear?: number | null;
+  guestBirthMonth?: number | null;
+  guestBirthDay?: number | null;
+  guestBirthHour?: number | null;
 }
 
 const EMPTY_FORM = {
@@ -53,6 +67,7 @@ const EMPTY_FORM = {
   expiresAt: "",
   allowedModules: [] as ModuleId[], // 空陣列 = 全部開放
   accessMode: "daily_view" as "daily_view" | "admin_view",
+  identityType: "ai_readonly" as IdentityType,
 };
 
 /** 距到期天數（負數表示已過期） */
@@ -72,6 +87,8 @@ export default function AdminAccessTokens() {
   const [newTokenValue, setNewTokenValue] = useState("");
   const [newTokenName, setNewTokenName] = useState("");
   const [newTokenMode, setNewTokenMode] = useState<"daily_view" | "admin_view">("daily_view");
+  const [newTokenIdentity, setNewTokenIdentity] = useState<IdentityType>("ai_readonly");
+  const [newTokenGuestName, setNewTokenGuestName] = useState<string | null>(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [expandedLogs, setExpandedLogs] = useState<number | null>(null);
 
@@ -86,6 +103,8 @@ export default function AdminAccessTokens() {
       setNewTokenValue(data.token);
       setNewTokenName(data.name);
       setNewTokenMode(form.accessMode);
+      setNewTokenIdentity(data.identityType ?? "ai_readonly");
+      setNewTokenGuestName(data.guestName ?? null);
       setShowCreateDialog(false);
       setShowNewTokenDialog(true);
       utils.accessTokens.list.invalidate();
@@ -114,6 +133,7 @@ export default function AdminAccessTokens() {
       expiresAt: form.expiresAt ? new Date(form.expiresAt).getTime() : undefined,
       allowedModules: form.allowedModules.length > 0 ? form.allowedModules : undefined,
       accessMode: form.accessMode,
+      identityType: form.identityType,
     });
   };
 
@@ -264,7 +284,7 @@ export default function AdminAccessTokens() {
                         </button>
                       </div>
 
-                      {/* 存取模式標籤 */}
+                      {/* 存取模式 + 身分類型標籤 */}
                       <div className="flex flex-wrap gap-1 mb-1">
                         {(token as AccessToken & { accessMode?: string }).accessMode === "admin_view" ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
@@ -273,6 +293,26 @@ export default function AdminAccessTokens() {
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300/60 text-xs">
                             ☀️ 今日運勢
+                          </span>
+                        )}
+                        {token.identityType === "trial" && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs">
+                            ✨ 體驗方案
+                          </span>
+                        )}
+                        {token.identityType === "basic" && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/40 text-blue-300 text-xs">
+                            🔵 基礎方案
+                          </span>
+                        )}
+                        {token.guestName && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300/80 text-xs">
+                            👤 虛擬命盤：{token.guestName}
+                            {token.guestBirthYear && (
+                              <span className="opacity-60">
+                                {token.guestBirthYear}/{token.guestBirthMonth}/{token.guestBirthDay}
+                              </span>
+                            )}
                           </span>
                         )}
                       </div>
@@ -459,6 +499,43 @@ export default function AdminAccessTokens() {
               )}
             </div>
 
+            {/* 身分類型選擇 */}
+            <div className="space-y-2">
+              <Label>身分類型</Label>
+              <div className="grid grid-cols-1 gap-2">
+                {IDENTITY_OPTIONS.map(opt => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setForm({ ...form, identityType: opt.id })}
+                    className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                      form.identityType === opt.id
+                        ? opt.color === "emerald"
+                          ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300"
+                          : opt.color === "amber"
+                          ? "border-amber-500/60 bg-amber-500/10 text-amber-300"
+                          : "border-blue-500/60 bg-blue-500/10 text-blue-300"
+                        : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+                    }`}
+                  >
+                    <span className="text-lg">{opt.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{opt.label}</p>
+                      <p className="text-xs opacity-60">{opt.desc}</p>
+                    </div>
+                    {form.identityType === opt.id && (
+                      <CheckCircle className="w-4 h-4 shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+              {(form.identityType === "trial" || form.identityType === "basic") && (
+                <p className="text-amber-400/60 text-xs">
+                  🎲 系統將自動隨機生成虛擬命盤：姓名、性別、出生日期，讓體驗用戶不需輸入即可看到完整系統內容。
+                </p>
+              )}
+            </div>
+
             {/* 模組勾選（僅今日運勢模式有效） */}
             {form.accessMode === "daily_view" && (
             <div className="space-y-2">
@@ -523,6 +600,13 @@ export default function AdminAccessTokens() {
                 <span className={`ml-2 px-1.5 py-0.5 rounded text-xs font-normal ${newTokenMode === "admin_view" ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
                   {newTokenMode === "admin_view" ? "🏠 全站唯讀" : "☀️ 今日運勢"}
                 </span>
+                {newTokenIdentity !== "ai_readonly" && (
+                  <span className={`ml-1 px-1.5 py-0.5 rounded text-xs font-normal ${
+                    newTokenIdentity === "trial" ? "bg-amber-500/20 text-amber-300" : "bg-blue-500/20 text-blue-300"
+                  }`}>
+                    {newTokenIdentity === "trial" ? "✨ 體驗方案" : "🔵 基礎方案"}
+                  </span>
+                )}
               </Label>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs font-mono text-blue-300 bg-blue-900/20 border border-blue-500/30 px-3 py-2 rounded-lg break-all">
@@ -533,6 +617,15 @@ export default function AdminAccessTokens() {
                 </Button>
               </div>
             </div>
+            {/* 虛擬命盤資訊顯示 */}
+            {newTokenGuestName && (
+              <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3">
+                <p className="text-purple-300 text-xs font-semibold mb-1">👤 已自動生成虛擬命盤</p>
+                <p className="text-purple-200/70 text-xs">
+                  示範命盤姓名：<span className="text-purple-300 font-semibold">{newTokenGuestName}</span>，體驗用戶進入後將看到此命盤的完整天命內容。
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button onClick={() => setShowNewTokenDialog(false)}>我已複製，關閉</Button>

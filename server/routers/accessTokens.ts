@@ -36,6 +36,46 @@ function generateSecureToken(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
+/** 隨機生成虛擬命盤（體驗/基礎方案 Token 使用） */
+function generateGuestProfile(): {
+  guestName: string;
+  guestGender: "male" | "female";
+  guestBirthYear: number;
+  guestBirthMonth: number;
+  guestBirthDay: number;
+  guestBirthHour: number;
+} {
+  const maleNames = ["志輩", "宇軒", "建宏", "志明", "嘉輩", "志強", "建輩", "嘉強", "宇明", "志宇",
+    "建明", "志嘉", "宇強", "建嘉", "嘉明", "嘉宇", "建宇", "志宇", "宇嘉", "建強"];
+  const femaleNames = ["子晴", "清娟", "怀萃", "子潔", "清怀", "娟晴", "怀晴", "子萃", "清潔", "娟萃",
+    "子清", "怀潔", "娟潔", "清子", "娟子", "怀子", "子娟", "清萃", "娟清", "怀清"];
+  const surnames = ["陳", "林", "黃", "張", "王", "劉", "李", "吴", "趙", "陳",
+    "魏", "周", "徐", "孫", "馬", "朱", "胡", "郭", "何", "高"];
+  const gender = Math.random() < 0.5 ? "male" : "female";
+  const namePool = gender === "male" ? maleNames : femaleNames;
+  const surname = surnames[Math.floor(Math.random() * surnames.length)];
+  const givenName = namePool[Math.floor(Math.random() * namePool.length)];
+  // 出生年份：1970-2000 隨機
+  const birthYear = 1970 + Math.floor(Math.random() * 31);
+  const birthMonth = 1 + Math.floor(Math.random() * 12);
+  // 簡化日期計算（每月取 1-28 避免越界）
+  const birthDay = 1 + Math.floor(Math.random() * 28);
+  // 時辰：偶數小時（0/2/4/.../22）
+  const birthHour = Math.floor(Math.random() * 12) * 2;
+  return {
+    guestName: surname + givenName,
+    guestGender: gender,
+    guestBirthYear: birthYear,
+    guestBirthMonth: birthMonth,
+    guestBirthDay: birthDay,
+    guestBirthHour: birthHour,
+  };
+}
+
+/** 身分類型 */
+export const IDENTITY_TYPES = ["ai_readonly", "trial", "basic"] as const;
+export type IdentityType = typeof IDENTITY_TYPES[number];
+
 /** 解析 allowedModules JSON 字串 */
 function parseModules(raw: string | null | undefined): ModuleId[] | null {
   if (!raw) return null; // null = 全部開放
@@ -97,6 +137,7 @@ export const accessTokensRouter = router({
         expiresAt: z.number().optional(),
         allowedModules: z.array(z.enum(["daily", "tarot", "wealth", "hourly"])).optional(),
         accessMode: z.enum(["daily_view", "admin_view"]).default("daily_view"),
+        identityType: z.enum(["ai_readonly", "trial", "basic"]).default("ai_readonly"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -109,6 +150,11 @@ export const accessTokensRouter = router({
         ? JSON.stringify(input.allowedModules)
         : null;
 
+      // 體驗/基礎方案：隨機生成虛擬命盤
+      const guestData = input.identityType !== "ai_readonly"
+        ? generateGuestProfile()
+        : {};
+
       await db.insert(accessTokens).values({
         token,
         name: input.name,
@@ -119,9 +165,17 @@ export const accessTokensRouter = router({
         useCount: 0,
         allowedModules: modulesJson ?? undefined,
         accessMode: input.accessMode,
+        identityType: input.identityType,
+        ...guestData,
       });
 
-      return { token, name: input.name, accessMode: input.accessMode };
+      return {
+        token,
+        name: input.name,
+        accessMode: input.accessMode,
+        identityType: input.identityType,
+        guestName: (guestData as { guestName?: string }).guestName ?? null,
+      };
     }),
 
   /** 廢止或啟用 Token（僅管理員） */
@@ -187,6 +241,7 @@ export const accessTokensRouter = router({
         accessedAt: new Date(),
       }).catch(() => {});
 
+      const identityType = (record.identityType ?? "ai_readonly") as IdentityType;
       return {
         valid: true,
         name: record.name,
@@ -194,6 +249,17 @@ export const accessTokensRouter = router({
         expiresAt: record.expiresAt ? record.expiresAt.getTime() : null,
         allowedModules: parseModules(record.allowedModules),
         accessMode: (record.accessMode ?? "daily_view") as AccessMode,
+        identityType,
+        guestProfile: identityType !== "ai_readonly" && record.guestName
+          ? {
+              name: record.guestName,
+              gender: (record.guestGender ?? "male") as "male" | "female",
+              birthYear: record.guestBirthYear ?? 1990,
+              birthMonth: record.guestBirthMonth ?? 1,
+              birthDay: record.guestBirthDay ?? 1,
+              birthHour: record.guestBirthHour ?? 12,
+            }
+          : null,
       };
     }),
 
