@@ -1,6 +1,7 @@
 /**
  * AdminAccessTokens - 特殊存取 Token 管理頁面
- * 管理員可生成、廢止、刪除供 AI 渠道使用的存取 Token
+ * 管理員可生成（含模組勾選）、廢止、刪除供 AI 渠道使用的存取 Token
+ * v11.7：加入模組勾選、到期警示標籤、使用次數顯示
  */
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
@@ -12,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +22,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Copy, Key, CheckCircle, XCircle, Clock, ShieldCheck } from "lucide-react";
+import { Plus, Trash2, Copy, Key, CheckCircle, XCircle, Clock, Zap, AlertTriangle } from "lucide-react";
+
+type ModuleId = "daily" | "tarot" | "wealth" | "hourly";
+
+const MODULE_OPTIONS: { id: ModuleId; label: string; emoji: string }[] = [
+  { id: "daily", label: "運勢摘要", emoji: "☀️" },
+  { id: "tarot", label: "塔羅指引", emoji: "🃏" },
+  { id: "wealth", label: "偶財指數", emoji: "💰" },
+  { id: "hourly", label: "時辰能量", emoji: "⏰" },
+];
 
 interface AccessToken {
   id: number;
@@ -33,13 +44,22 @@ interface AccessToken {
   lastUsedAt: Date | null;
   useCount: number;
   createdAt: Date;
+  allowedModules: ModuleId[] | null;
 }
 
 const EMPTY_FORM = {
   name: "",
   description: "",
-  expiresAt: "", // ISO datetime string or empty
+  expiresAt: "",
+  allowedModules: [] as ModuleId[], // 空陣列 = 全部開放
 };
+
+/** 距到期天數（負數表示已過期） */
+function daysUntilExpiry(expiresAt: Date | null): number | null {
+  if (!expiresAt) return null;
+  const diff = new Date(expiresAt).getTime() - Date.now();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
 
 export default function AdminAccessTokens() {
   const { readOnly } = useAdminRole();
@@ -82,24 +102,30 @@ export default function AdminAccessTokens() {
       name: form.name.trim(),
       description: form.description.trim() || undefined,
       expiresAt: form.expiresAt ? new Date(form.expiresAt).getTime() : undefined,
+      allowedModules: form.allowedModules.length > 0 ? form.allowedModules : undefined,
     });
   };
 
+  const toggleModule = (id: ModuleId) => {
+    setForm(prev => ({
+      ...prev,
+      allowedModules: prev.allowedModules.includes(id)
+        ? prev.allowedModules.filter(m => m !== id)
+        : [...prev.allowedModules, id],
+    }));
+  };
+
   const handleCopyToken = (token: string) => {
-    navigator.clipboard.writeText(token).then(() => {
-      toast.success("Token 已複製到剪貼簿");
-    }).catch(() => {
-      toast.error("複製失敗，請手動複製");
-    });
+    navigator.clipboard.writeText(token)
+      .then(() => toast.success("Token 已複製到剪貼簿"))
+      .catch(() => toast.error("複製失敗，請手動複製"));
   };
 
   const handleCopyUrl = (token: string) => {
     const url = `${window.location.origin}/ai-view?token=${token}`;
-    navigator.clipboard.writeText(url).then(() => {
-      toast.success("存取連結已複製");
-    }).catch(() => {
-      toast.error("複製失敗，請手動複製");
-    });
+    navigator.clipboard.writeText(url)
+      .then(() => toast.success("存取連結已複製"))
+      .catch(() => toast.error("複製失敗，請手動複製"));
   };
 
   const formatDate = (date: Date | null) => {
@@ -110,9 +136,8 @@ export default function AdminAccessTokens() {
     });
   };
 
-  const isExpired = (token: AccessToken) => {
-    return token.expiresAt !== null && new Date(token.expiresAt) < new Date();
-  };
+  const isExpired = (token: AccessToken) =>
+    token.expiresAt !== null && new Date(token.expiresAt) < new Date();
 
   return (
     <AdminLayout>
@@ -127,6 +152,7 @@ export default function AdminAccessTokens() {
             <p className="text-white/40 text-xs">管理 AI 渠道與特殊存取權限</p>
           </div>
         </div>
+
         {/* 說明區塊 */}
         <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
           <div className="flex items-start gap-3">
@@ -136,7 +162,7 @@ export default function AdminAccessTokens() {
               <p className="text-blue-200/70 text-xs leading-relaxed">
                 此功能供 AI 系統或無法完成 OAuth 登入的特殊渠道使用。Token 持有者可透過
                 <code className="mx-1 px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300 font-mono text-xs">/ai-view?token=xxx</code>
-                存取系統唯讀視圖，無需登入。請妥善保管 Token，避免外洩。
+                存取系統唯讀視圖，無需登入。可在生成時勾選開放的模組，未勾選則全部開放。
               </p>
             </div>
           </div>
@@ -169,17 +195,22 @@ export default function AdminAccessTokens() {
             {(tokens as AccessToken[]).map((token) => {
               const expired = isExpired(token);
               const active = token.isActive === 1 && !expired;
+              const days = daysUntilExpiry(token.expiresAt);
+              const expiringSoon = days !== null && days > 0 && days <= 7;
               return (
                 <div
                   key={token.id}
                   className={`rounded-xl border p-4 transition-all ${
                     active
-                      ? "border-emerald-500/30 bg-emerald-500/5"
+                      ? expiringSoon
+                        ? "border-orange-500/40 bg-orange-500/5"
+                        : "border-emerald-500/30 bg-emerald-500/5"
                       : "border-white/10 bg-white/3 opacity-70"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
+                      {/* 名稱 + 狀態標籤 */}
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className="font-semibold text-white">{token.name}</span>
                         {active ? (
@@ -195,10 +226,19 @@ export default function AdminAccessTokens() {
                             <XCircle className="w-3 h-3 mr-1" /> 已停用
                           </Badge>
                         )}
+                        {/* 7 天內到期警示 */}
+                        {expiringSoon && (
+                          <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/40 text-xs">
+                            <AlertTriangle className="w-3 h-3 mr-1" /> {days} 天後到期
+                          </Badge>
+                        )}
                       </div>
+
                       {token.description && (
                         <p className="text-white/50 text-xs mb-2">{token.description}</p>
                       )}
+
+                      {/* Token 值（遮蔽） */}
                       <div className="flex items-center gap-2 mb-2">
                         <code className="text-xs font-mono text-white/40 bg-white/5 px-2 py-1 rounded truncate max-w-[200px] sm:max-w-xs">
                           {token.token.slice(0, 16)}...{token.token.slice(-8)}
@@ -211,12 +251,35 @@ export default function AdminAccessTokens() {
                           <Copy className="w-3.5 h-3.5" />
                         </button>
                       </div>
+
+                      {/* 開放模組標籤 */}
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {token.allowedModules === null ? (
+                          <span className="text-xs text-white/30 italic">全部模組開放</span>
+                        ) : token.allowedModules.length === 0 ? (
+                          <span className="text-xs text-white/30 italic">全部模組開放</span>
+                        ) : (
+                          token.allowedModules.map(m => {
+                            const opt = MODULE_OPTIONS.find(o => o.id === m);
+                            return opt ? (
+                              <span key={m} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
+                                {opt.emoji} {opt.label}
+                              </span>
+                            ) : null;
+                          })
+                        )}
+                      </div>
+
+                      {/* 統計資訊 */}
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/40">
                         <span>建立：{formatDate(token.createdAt)}</span>
+                        <span className="flex items-center gap-1">
+                          <Zap className="w-3 h-3" />
+                          使用 {token.useCount} 次
+                        </span>
                         <span>最後使用：{formatDate(token.lastUsedAt)}</span>
-                        <span>使用次數：{token.useCount}</span>
                         {token.expiresAt && (
-                          <span className={expired ? "text-orange-400" : ""}>
+                          <span className={expired ? "text-orange-400" : expiringSoon ? "text-orange-300 font-semibold" : ""}>
                             到期：{formatDate(token.expiresAt)}
                           </span>
                         )}
@@ -287,7 +350,7 @@ export default function AdminAccessTokens() {
             <div className="space-y-1.5">
               <Label>用途說明（選填）</Label>
               <Textarea
-                placeholder="說明此 Token 的使用場景或持有者"
+                placeholder="說明此 Token 的用途或使用者..."
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 rows={2}
@@ -301,13 +364,31 @@ export default function AdminAccessTokens() {
                 onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
               />
             </div>
+            {/* 模組勾選 */}
+            <div className="space-y-2">
+              <Label>開放模組（不勾選 = 全部開放）</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {MODULE_OPTIONS.map(opt => (
+                  <label
+                    key={opt.id}
+                    className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 cursor-pointer hover:bg-white/10 transition-colors"
+                  >
+                    <Checkbox
+                      checked={form.allowedModules.includes(opt.id)}
+                      onCheckedChange={() => toggleModule(opt.id)}
+                    />
+                    <span className="text-sm text-white/80">{opt.emoji} {opt.label}</span>
+                  </label>
+                ))}
+              </div>
+              {form.allowedModules.length === 0 && (
+                <p className="text-white/30 text-xs">未勾選任何模組，將開放全部內容</p>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>取消</Button>
-            <Button
-              onClick={handleCreate}
-              disabled={createMutation.isPending}
-            >
+            <Button onClick={handleCreate} disabled={createMutation.isPending}>
               {createMutation.isPending ? "生成中..." : "生成 Token"}
             </Button>
           </DialogFooter>
@@ -334,12 +415,7 @@ export default function AdminAccessTokens() {
                 <code className="flex-1 text-xs font-mono text-emerald-300 bg-emerald-900/20 border border-emerald-500/30 px-3 py-2 rounded-lg break-all">
                   {newTokenValue}
                 </code>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleCopyToken(newTokenValue)}
-                  className="shrink-0"
-                >
+                <Button variant="outline" size="sm" onClick={() => handleCopyToken(newTokenValue)} className="shrink-0">
                   <Copy className="w-4 h-4" />
                 </Button>
               </div>
@@ -350,12 +426,7 @@ export default function AdminAccessTokens() {
                 <code className="flex-1 text-xs font-mono text-blue-300 bg-blue-900/20 border border-blue-500/30 px-3 py-2 rounded-lg break-all">
                   {window.location.origin}/ai-view?token={newTokenValue}
                 </code>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleCopyUrl(newTokenValue)}
-                  className="shrink-0"
-                >
+                <Button variant="outline" size="sm" onClick={() => handleCopyUrl(newTokenValue)} className="shrink-0">
                   <Copy className="w-4 h-4" />
                 </Button>
               </div>

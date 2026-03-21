@@ -580,12 +580,22 @@ export default function AdminUsers() {
   });
   const revokeExpertMutation = trpc.expert.adminRevokeExpertRole.useMutation({
     onSuccess: () => {
-      toast.success("已撤銷命理師資格");
+      toast.success("已撤销命理師資格");
       setRevokeConfirmUser(null);
       refetch();
       utils.expert.adminListExperts.invalidate();
     },
-    onError: (e) => toast.error(`撤銷失敗：${e.message}`),
+    onError: (e) => toast.error(`撤销失敗：${e.message}`),
+  });
+
+  // 角色切換
+  const setRoleMutation = trpc.account.setUserRole.useMutation({
+    onSuccess: (res) => {
+      const roleLabel: Record<string, string> = { admin: '管理員', viewer: '唯讀觀察員', user: '一般用戶' };
+      toast.success(`角色已變更為「${roleLabel[res.newRole] ?? res.newRole}」`);
+      refetch();
+    },
+    onError: (e) => toast.error(`角色變更失敗：${e.message}`),
   });
 
   // 批量選取
@@ -937,13 +947,30 @@ export default function AdminUsers() {
                         </div>
                         <div>
                           <div className="text-slate-500 mb-0.5">角色</div>
-                          <div className={
-                            u.role === "admin" ? "text-amber-400 font-medium" :
-                            u.role === "expert" ? "text-amber-300 font-medium" :
-                            "text-slate-300"
-                          }>
-                            {u.role === "admin" ? "👑 管理員" : u.role === "expert" ? "⭐ 命理師" : "一般用戶"}
-                          </div>
+                          {/* 角色切換下拉選單（僅主帳號可操作） */}
+                          {u.role === "expert" ? (
+                            <span className="text-amber-300 font-medium">⭐ 命理師</span>
+                          ) : (
+                            <Select
+                              value={u.role ?? "user"}
+                              disabled={readOnly || setRoleMutation.isPending}
+                              onValueChange={(newRole) => {
+                                setRoleMutation.mutate({ userId: u.id, role: newRole as "admin" | "viewer" | "user" });
+                              }}
+                            >
+                              <SelectTrigger
+                                className="h-7 text-xs w-32 bg-slate-800 border-slate-600"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-slate-900 border-slate-700">
+                                <SelectItem value="admin" className="text-amber-400 focus:bg-slate-800">👑 管理員</SelectItem>
+                                <SelectItem value="viewer" className="text-blue-300 focus:bg-slate-800">👁️ 唯讀觀察員</SelectItem>
+                                <SelectItem value="user" className="text-slate-300 focus:bg-slate-800">👤 一般用戶</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
                         </div>
                       </div>
                       {/* 操作列 */}

@@ -348,6 +348,42 @@ export default function AdminDashboard() {
         </div>
 
       </div>
+
+      {/* Token 到期警示區塊 */}
+      <TokenExpiryWarning />
     </AdminLayout>
+  );
+}
+
+// ─── Token 到期警示區塊 ──────────────────────────────────────────────────────────
+function TokenExpiryWarning() {
+  const { data: expiring = [] } = trpc.accessTokens.listExpiringSoon.useQuery();
+  if (expiring.length === 0) return null;
+  return (
+    <div className="mt-6 rounded-2xl border border-orange-500/40 bg-orange-500/10 p-5">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-xl">⚠️</span>
+        <h2 className="text-sm font-semibold text-orange-300">特殊存取 Token 即將到期</h2>
+        <span className="ml-auto text-xs text-orange-400/60">{expiring.length} 個 Token 將於 7 天內到期</span>
+      </div>
+      <div className="space-y-2">
+        {expiring.map((t: { id: number; name: string; expiresAt: number | null }) => {
+          const days = t.expiresAt
+            ? Math.ceil((t.expiresAt - Date.now()) / (1000 * 60 * 60 * 24))
+            : null;
+          return (
+            <div key={t.id} className="flex items-center justify-between rounded-lg bg-orange-500/10 border border-orange-500/20 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className="text-orange-300 font-medium text-sm">{t.name}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-orange-400 text-xs font-semibold">剩 {days} 天</span>
+                <Link href="/admin/access-tokens" className="text-xs text-orange-300/70 hover:text-orange-300 underline underline-offset-2">前往管理</Link>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

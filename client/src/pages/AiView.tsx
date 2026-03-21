@@ -45,6 +45,10 @@ export default function AiView() {
     { enabled: !!token, retry: false }
   );
 
+  // 模組可見性：null = 全部開放，陣列 = 只顯示指定模組
+  const allowedModules: string[] | null = (tokenInfo as { allowedModules?: string[] | null })?.allowedModules ?? null;
+  const canShow = (moduleId: string) => !allowedModules || allowedModules.includes(moduleId);
+
   // 取得今日運勢（僅在 Token 有效時）
   const todayDate = new Date().toLocaleDateString("zh-TW", {
     timeZone: "Asia/Taipei",
@@ -244,7 +248,7 @@ export default function AiView() {
             </motion.div>
 
             {/* 時辰能量摘要（最佳 + 最差） */}
-            <motion.div
+            {canShow("hourly") && <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
@@ -288,10 +292,10 @@ export default function AiView() {
                   ) : null;
                 })()}
               </div>
-            </motion.div>
+            </motion.div>}
 
             {/* 塔羅牌 */}
-            <motion.div
+            {canShow("tarot") && <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -323,10 +327,10 @@ export default function AiView() {
                   <p className="text-white/50 text-xs">{dailyData.tarot.advice}</p>
                 </div>
               </div>
-            </motion.div>
+            </motion.div>}
 
             {/* 購彩指數 */}
-            {dailyData.wealthCompass && (
+            {canShow("wealth") && dailyData.wealthCompass && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

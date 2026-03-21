@@ -2400,3 +2400,21 @@
 - [x] AdminLayout 導覽加入 AI 渠道 Token 項目
 - [x] 撰寫 accessTokens.test.ts（13 項測試）
 - [x] 308 項測試全部通過，TypeScript 零錯誤
+
+## 用戶角色管理 UI v11.6
+
+- [x] 後端：account router 加入 setUserRole adminProcedure
+- [x] 前台：AdminUsers 頁面每個用戶列加入角色切換下拉選單
+- [x] 防護：主帳號（owner）不可被降級，自己不可改自己角色
+- [x] 撰寫測試，325 項全部通過，TypeScript 零錯誤
+
+## Token 管理強化 + 角色 UI v11.7
+
+- [x] AdminUsers：每個用戶列加入角色切換下拉選單（admin/viewer/user）
+- [x] AdminUsers：角色切換即時生效，樂觀更新 + toast 提示
+- [x] AdminAccessTokens：生成 Token 時可勾選開放模組（運勢/塔羅/偶財/時辰）
+- [x] AdminAccessTokens：Token 列表顯示已開放模組標籤
+- [x] AiView：依 Token 設定的模組動態顯示/隱藏對應區塊
+- [x] AdminAccessTokens：Token 到期前 7 天顯示橙色警示標籤
+- [x] AdminDashboard：加入 Token 到期警示區塊（列出 7 天內到期的 Token）
+- [x] 撰寫測試，325 項全部通過，TypeScript 零錯誤

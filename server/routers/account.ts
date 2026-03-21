@@ -604,4 +604,44 @@ export const accountRouter = router({
 
       return { success: true };
     }),
+
+  /**
+   * 主帳號設定指定用戶的角色（admin / viewer / user）
+   * 防護：
+   * 1. 不能修改自己的角色
+   * 2. 不能降級主帳號（role='admin' 且 openId 符合 OWNER_OPEN_ID）
+   */
+  setUserRole: protectedProcedure
+    .input(z.object({
+      userId: z.number().int(),
+      role: z.enum(['admin', 'viewer', 'user']),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      if (!isOwner(ctx.user.openId, ctx.user.role)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: '僅主帳號可設定角色' });
+      }
+      // 不能修改自己
+      if (input.userId === ctx.user.id) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '不能修改自己的角色' });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR' });
+
+      // 查詢目標用戶，防止降級其他 admin
+      const [target] = await db.select({ id: users.id, openId: users.openId, role: users.role })
+        .from(users).where(eq(users.id, input.userId)).limit(1);
+      if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: '用戶不存在' });
+
+      // 主帳號（OWNER_OPEN_ID）不可被降級
+      const ownerOpenId = process.env.OWNER_OPEN_ID ?? '';
+      if (target.openId === ownerOpenId && input.role !== 'admin') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '主帳號不可被降級' });
+      }
+
+      await db.update(users)
+        .set({ role: input.role })
+        .where(eq(users.id, input.userId));
+
+      return { success: true, userId: input.userId, newRole: input.role };
+    }),
 });

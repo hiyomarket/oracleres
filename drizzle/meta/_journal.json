@@ -372,6 +372,13 @@
       "when": 1774070899380,
       "tag": "0052_fresh_warpath",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "5",
+      "when": 1774072936568,
+      "tag": "0053_strong_the_hood",
+      "breakpoints": true
     }
   ]
 }
