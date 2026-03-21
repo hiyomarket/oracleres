@@ -94,25 +94,39 @@ describe("generateGuestProfile", () => {
   });
 });
 
-// ── 測試 identityType 邏輯 ────────────────────────────────────────────────────
+// ── 測試 identityType 邏輯（v12.1 動態方案 ID） ──────────────────────────────
 
-describe("identityType 邏輯", () => {
+/** 複製 needsGuestProfile 邏輯供測試使用 */
+function needsGuestProfile(identityType: string): boolean {
+  return identityType !== "ai_readonly";
+}
+
+describe("needsGuestProfile (v12.1 動態方案 ID)", () => {
   it("ai_readonly 身分不應有虛擬命盤", () => {
-    const identityType = "ai_readonly";
-    const shouldHaveGuest = identityType !== "ai_readonly";
-    expect(shouldHaveGuest).toBe(false);
+    expect(needsGuestProfile("ai_readonly")).toBe(false);
   });
 
-  it("trial 身分應有虛擬命盤", () => {
-    const identityType = "trial";
-    const shouldHaveGuest = identityType !== "ai_readonly";
-    expect(shouldHaveGuest).toBe(true);
+  it("ai_full 身分應有虛擬命盤（AI 可體驗完整前台）", () => {
+    expect(needsGuestProfile("ai_full")).toBe(true);
   });
 
-  it("basic 身分應有虛擬命盤", () => {
-    const identityType = "basic";
-    const shouldHaveGuest = identityType !== "ai_readonly";
-    expect(shouldHaveGuest).toBe(true);
+  it("方案 ID 'basic' 應有虛擬命盤", () => {
+    expect(needsGuestProfile("basic")).toBe(true);
+  });
+
+  it("方案 ID 'advanced' 應有虛擬命盤", () => {
+    expect(needsGuestProfile("advanced")).toBe(true);
+  });
+
+  it("方案 ID 'professional' 應有虛擬命盤", () => {
+    expect(needsGuestProfile("professional")).toBe(true);
+  });
+
+  it("任意非 ai_readonly 的字串都應有虛擬命盤", () => {
+    const testCases = ["ai_full", "basic", "advanced", "trial", "premium", "custom_plan"];
+    testCases.forEach(id => {
+      expect(needsGuestProfile(id)).toBe(true);
+     });
   });
 });
 
@@ -136,19 +150,24 @@ describe("buildVirtualUser ID 邏輯", () => {
 
 // ── 測試 AiReadOnlyBanner 身分類型判斷邏輯 ────────────────────────────────────
 
-describe("AiReadOnlyBanner 身分類型判斷", () => {
-  it("trial 和 basic 應顯示體驗模式橫幅", () => {
-    const trialType = "trial";
-    const basicType = "basic";
-    const isTrialOrBasic = (t: string) => t === "trial" || t === "basic";
-    expect(isTrialOrBasic(trialType)).toBe(true);
-    expect(isTrialOrBasic(basicType)).toBe(true);
+describe("AiReadOnlyBanner 身分類型判斷（v12.1）", () => {
+  /** v12.1 的體驗模式判斷：除 ai_readonly 外全部顯示體驗橫幅 */
+  const isGuestMode = (t: string) => t !== "ai_readonly";
+
+  it("ai_full 應顯示體驗橫幅（AI 全功能）", () => {
+    expect(isGuestMode("ai_full")).toBe(true);
   });
 
-  it("ai_readonly 應顯示 AI 唯讀橫幅", () => {
-    const aiType = "ai_readonly";
-    const isTrialOrBasic = (t: string) => t === "trial" || t === "basic";
-    expect(isTrialOrBasic(aiType)).toBe(false);
+  it("方案 ID 'basic' 應顯示體驗橫幅", () => {
+    expect(isGuestMode("basic")).toBe(true);
+  });
+
+  it("方案 ID 'advanced' 應顯示體驗橫幅", () => {
+    expect(isGuestMode("advanced")).toBe(true);
+  });
+
+  it("ai_readonly 不應顯示體驗橫幅（純 AI 唯讀）", () => {
+    expect(isGuestMode("ai_readonly")).toBe(false);
   });
 
   it("時辰標籤轉換應正確", () => {

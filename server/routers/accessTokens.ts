@@ -72,9 +72,17 @@ function generateGuestProfile(): {
   };
 }
 
-/** 身分類型 */
-export const IDENTITY_TYPES = ["ai_readonly", "trial", "basic"] as const;
-export type IdentityType = typeof IDENTITY_TYPES[number];
+/** 身分類型
+ *   'ai_readonly' = AI 全站唯讀（無虛擬命盤）
+ *   'ai_full'     = AI 全功能（含虛擬命盤，可體驗完整前台）
+ *   其他值     = 後台方案 ID（如 'basic', 'advanced'），訪客體驗方案，含虛擬命盤
+ */
+export type IdentityType = string; // 動態方案 ID 或特殊值
+
+/** 判斷是否需要虛擬命盤 */
+function needsGuestProfile(identityType: string): boolean {
+  return identityType !== "ai_readonly";
+}
 
 /** 解析 allowedModules JSON 字串 */
 function parseModules(raw: string | null | undefined): ModuleId[] | null {
@@ -128,6 +136,20 @@ export const accessTokensRouter = router({
     }));
   }),
 
+  /** 列出後台已啟用的方案清單（供生成 Token 時選擇） */
+  listPlans: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    const { plans } = await import("../../drizzle/schema");
+    const { asc } = await import("drizzle-orm");
+    const rows = await db
+      .select({ id: plans.id, name: plans.name, level: plans.level })
+      .from(plans)
+      .where(eq(plans.isActive, 1))
+      .orderBy(asc(plans.level));
+    return rows;
+  }),
+
   /** 生成新 Token（僅管理員） */
   create: adminProcedure
     .input(
@@ -137,7 +159,8 @@ export const accessTokensRouter = router({
         expiresAt: z.number().optional(),
         allowedModules: z.array(z.enum(["daily", "tarot", "wealth", "hourly"])).optional(),
         accessMode: z.enum(["daily_view", "admin_view"]).default("daily_view"),
-        identityType: z.enum(["ai_readonly", "trial", "basic"]).default("ai_readonly"),
+        // 身分類型：'ai_readonly' | 'ai_full' | 方案 ID（如 'basic', 'advanced'）
+        identityType: z.string().min(1).max(50).default("ai_readonly"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -150,8 +173,8 @@ export const accessTokensRouter = router({
         ? JSON.stringify(input.allowedModules)
         : null;
 
-      // 體驗/基礎方案：隨機生成虛擬命盤
-      const guestData = input.identityType !== "ai_readonly"
+      // 除了 ai_readonly 以外，其他所有身分都附虛擬命盤
+      const guestData = needsGuestProfile(input.identityType)
         ? generateGuestProfile()
         : {};
 
@@ -250,7 +273,8 @@ export const accessTokensRouter = router({
         allowedModules: parseModules(record.allowedModules),
         accessMode: (record.accessMode ?? "daily_view") as AccessMode,
         identityType,
-        guestProfile: identityType !== "ai_readonly" && record.guestName
+        // 除 ai_readonly 外全部有虛擬命盤（包含 ai_full 和所有方案 ID）
+        guestProfile: needsGuestProfile(identityType) && record.guestName
           ? {
               name: record.guestName,
               gender: (record.guestGender ?? "male") as "male" | "female",

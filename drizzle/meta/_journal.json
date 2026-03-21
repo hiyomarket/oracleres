@@ -400,6 +400,13 @@
       "when": 1774077876970,
       "tag": "0056_groovy_mole_man",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "5",
+      "when": 1774088051543,
+      "tag": "0057_glorious_banshee",
+      "breakpoints": true
     }
   ]
 }

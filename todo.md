@@ -2482,3 +2482,12 @@
 - [x] 前端 AdminAccessTokens：生成 Token 時加入 identityType 選擇（AI 全站唯讀 / 體驗方案 / 基礎方案）
 - [x] 前端 AiEntry：AiSession 介面加入 identityType 和 guestProfile 欄位
 - [x] 測試：accesTokens.guestProfile.test.ts 新增 21 項測試，348 項全部通過
+
+## v12.1 Token 虛擬身分系統修正
+
+- [x] 後端 schema：identityType 改為 varchar（支援動態方案 ID），移除硬編碼 enum
+- [x] 後端 accessTokens router：AI Token（ai_full）也附帶虛擬命盤；新增 listPlans 查詢供前端動態讀取
+- [x] 後端 accessTokens router：needsGuestProfile() 函數取代硬編碼 enum 判斷
+- [x] 前端 AdminAccessTokens：身分類型改為動態讀取後台 plans 清單的下拉選單，加入「AI 全功能（含虛擬命盤）」固定選項
+- [x] 前端 AiEntry.tsx：AiSession.identityType 改為 string（支援動態方案 ID）
+- [x] 測試更新：353 項全部通過，新增 ai_full 和動態方案 ID 邏輯測試

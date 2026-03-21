@@ -26,7 +26,8 @@ export interface AiSession {
   expiresAt: number | null;
   allowedModules: string[] | null;
   accessMode: "daily_view" | "admin_view";
-  identityType: "ai_readonly" | "trial" | "basic";
+  /** 身分類型：'ai_readonly' | 'ai_full' | 方案 ID（如 'basic', 'advanced'） */
+  identityType: string;
   guestProfile: {
     name: string;
     gender: "male" | "female";
