@@ -1,0 +1,9 @@
+{
+  "query": "\nCREATE TABLE IF NOT EXISTS token_access_logs (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  token_id INT NOT NULL,\n  ip VARCHAR(64),\n  path VARCHAR(255) DEFAULT '/ai-view',\n  accessed_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_token_id (token_id),\n  INDEX idx_accessed_at (accessed_at)\n);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nCREATE TABLE IF NOT EXISTS token_access_logs (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  token_id INT NOT NULL,\n  ip VARCHAR(64),\n  path VARCHAR(255) DEFAULT '/ai-view',\n  accessed_at DATETIME DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_token_id (token_id),\n  INDEX idx_accessed_at (accessed_at)\n);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1641
+}

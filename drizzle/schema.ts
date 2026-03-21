@@ -1299,6 +1299,14 @@ export type InsertSystemSetting = typeof systemSettings.$inferInsert;
  * 供 AI 系統或無法完成 OAuth 登入的特殊渠道使用
  * 管理員可生成/廢止 Token，Token 持有者獲得 viewer 等級的唯讀存取權
  */
+export const tokenAccessLogs = mysqlTable("token_access_logs", {
+  id: int("id").primaryKey().autoincrement(),
+  tokenId: int("token_id").notNull(),
+  ip: varchar("ip", { length: 64 }),
+  path: varchar("path", { length: 255 }).default("/ai-view"),
+  accessedAt: timestamp("accessed_at").defaultNow(),
+});
+
 export const accessTokens = mysqlTable("access_tokens", {
   id: int("id").autoincrement().primaryKey(),
   // Token 值（隨機生成的 32 字元 hex 字串）

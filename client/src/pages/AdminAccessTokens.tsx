@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Copy, Key, CheckCircle, XCircle, Clock, Zap, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Copy, Key, CheckCircle, XCircle, Clock, Zap, AlertTriangle, ChevronDown, ChevronUp, Activity } from "lucide-react";
 
 type ModuleId = "daily" | "tarot" | "wealth" | "hourly";
 
@@ -71,12 +71,21 @@ export default function AdminAccessTokens() {
   const [showNewTokenDialog, setShowNewTokenDialog] = useState(false);
   const [newTokenValue, setNewTokenValue] = useState("");
   const [newTokenName, setNewTokenName] = useState("");
+  const [newTokenMode, setNewTokenMode] = useState<"daily_view" | "admin_view">("daily_view");
   const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [expandedLogs, setExpandedLogs] = useState<number | null>(null);
+
+  // 存取紀錄查詢（僅展開時載入）
+  const { data: logsData, isLoading: logsLoading } = trpc.accessTokens.getLogs.useQuery(
+    { tokenId: expandedLogs ?? 0, limit: 10 },
+    { enabled: expandedLogs !== null }
+  );
 
   const createMutation = trpc.accessTokens.create.useMutation({
     onSuccess: (data) => {
       setNewTokenValue(data.token);
       setNewTokenName(data.name);
+      setNewTokenMode(form.accessMode);
       setShowCreateDialog(false);
       setShowNewTokenDialog(true);
       utils.accessTokens.list.invalidate();
@@ -302,6 +311,40 @@ export default function AdminAccessTokens() {
                           </span>
                         )}
                       </div>
+
+                      {/* 存取紀錄展開按鈕 */}
+                      <button
+                        onClick={() => setExpandedLogs(expandedLogs === token.id ? null : token.id)}
+                        className="mt-2 flex items-center gap-1.5 text-xs text-white/40 hover:text-white/70 transition-colors"
+                      >
+                        <Activity className="w-3 h-3" />
+                        存取紀錄
+                        {expandedLogs === token.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      </button>
+
+                      {/* 存取紀錄面板 */}
+                      {expandedLogs === token.id && (
+                        <div className="mt-2 rounded-lg border border-white/10 bg-black/20 p-3">
+                          {logsLoading ? (
+                            <p className="text-xs text-white/30 text-center py-2">載入中...</p>
+                          ) : !logsData || logsData.length === 0 ? (
+                            <p className="text-xs text-white/30 text-center py-2">尚無存取紀錄</p>
+                          ) : (
+                            <div className="space-y-1">
+                              <p className="text-xs text-white/30 mb-2">最近 {logsData.length} 次存取</p>
+                              {logsData.map((log) => (
+                                <div key={log.id} className="flex items-center justify-between text-xs">
+                                  <span className="text-white/50 font-mono">{log.ip ?? "未知 IP"}</span>
+                                  <span className="text-white/30 text-xs">{log.path}</span>
+                                  <span className="text-white/30">
+                                    {log.accessedAt ? new Date(log.accessedAt).toLocaleString("zh-TW", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—"}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
@@ -475,12 +518,17 @@ export default function AdminAccessTokens() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-white/60 text-xs">存取連結</Label>
+              <Label className="text-white/60 text-xs">
+                存取連結
+                <span className={`ml-2 px-1.5 py-0.5 rounded text-xs font-normal ${newTokenMode === "admin_view" ? "bg-emerald-500/20 text-emerald-300" : "bg-amber-500/20 text-amber-300"}`}>
+                  {newTokenMode === "admin_view" ? "🏠 全站唯讀" : "☀️ 今日運勢"}
+                </span>
+              </Label>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs font-mono text-blue-300 bg-blue-900/20 border border-blue-500/30 px-3 py-2 rounded-lg break-all">
-                  {window.location.origin}/ai-view?token={newTokenValue}
+                  {window.location.origin}{newTokenMode === "admin_view" ? "/ai-entry" : "/ai-view"}?token={newTokenValue}
                 </code>
-                <Button variant="outline" size="sm" onClick={() => handleCopyUrl(newTokenValue)} className="shrink-0">
+                <Button variant="outline" size="sm" onClick={() => handleCopyUrl(newTokenValue, newTokenMode)} className="shrink-0">
                   <Copy className="w-4 h-4" />
                 </Button>
               </div>

@@ -8,6 +8,7 @@
  * 3. 管理員可列出所有 Token（adminProcedure）
  * 4. 公開驗證 Token（publicProcedure）—供 /ai-view 與 /ai-entry 頁面使用
  * 5. 列出即將到期 Token（adminProcedure）—供儀表板警示
+ * 6. 查詢 Token 存取紀錄（adminProcedure）—最近 N 筆
  *
  * accessMode：
  *   daily_view  → 只能看 /ai-view 今日運勢頁
@@ -18,7 +19,7 @@ import { z } from "zod";
 import { router, adminProcedure, publicProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
-import { accessTokens } from "../../drizzle/schema";
+import { accessTokens, tokenAccessLogs } from "../../drizzle/schema";
 import { eq, desc, and, isNotNull, lte, gt } from "drizzle-orm";
 import crypto from "crypto";
 
@@ -151,7 +152,11 @@ export const accessTokensRouter = router({
    * 回傳有效性、accessMode、allowedModules
    */
   verify: publicProcedure
-    .input(z.object({ token: z.string() }))
+    .input(z.object({
+      token: z.string(),
+      path: z.string().optional(),
+      ip: z.string().optional(),
+    }))
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return { valid: false, reason: "db_unavailable" as const };
@@ -174,6 +179,14 @@ export const accessTokensRouter = router({
         .where(eq(accessTokens.id, record.id))
         .catch(() => {});
 
+      // 寫入存取紀錄（非同步）
+      db.insert(tokenAccessLogs).values({
+        tokenId: record.id,
+        ip: input.ip ?? null,
+        path: input.path ?? "/ai-view",
+        accessedAt: new Date(),
+      }).catch(() => {});
+
       return {
         valid: true,
         name: record.name,
@@ -182,5 +195,31 @@ export const accessTokensRouter = router({
         allowedModules: parseModules(record.allowedModules),
         accessMode: (record.accessMode ?? "daily_view") as AccessMode,
       };
+    }),
+
+  /**
+   * 查詢指定 Token 的存取紀錄（僅管理員）
+   * 回傳最近 N 筆（預設 10 筆）
+   */
+  getLogs: adminProcedure
+    .input(z.object({
+      tokenId: z.number(),
+      limit: z.number().min(1).max(50).default(10),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const logs = await db
+        .select()
+        .from(tokenAccessLogs)
+        .where(eq(tokenAccessLogs.tokenId, input.tokenId))
+        .orderBy(desc(tokenAccessLogs.accessedAt))
+        .limit(input.limit);
+      return logs.map(l => ({
+        id: l.id,
+        ip: l.ip,
+        path: l.path,
+        accessedAt: l.accessedAt ? l.accessedAt.getTime() : null,
+      }));
     }),
 });

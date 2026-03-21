@@ -2432,3 +2432,20 @@
 - [x] AdminAccessTokens Token 列表顯示存取模式標籤，複製連結自動切換路徑
 - [x] App.tsx 註冊 /ai-entry 路由
 - [x] 撰寫 8 項 accessMode 測試，333 項全部通過，TypeScript 零錯誤
+
+## AI JSON API + Token 使用紀錄 v11.9
+
+- [x] 後端：/api/ai-data?token=xxx 純 JSON 端點（Token 驗證 + 結構化資料輸出）
+- [x] 後端：JSON 輸出包含四柱、十神、塔羅、偶財指數、時辰摘要等欄位
+- [x] DB：建立 token_access_logs 資料表（token_id/ip/path/accessed_at）
+- [x] 後端：每次 Token 驗證時自動寫入存取紀錄
+- [x] 後端：accessTokens.getLogs adminProcedure（查詢指定 Token 最近 10 次紀錄）
+- [x] 前端：AdminAccessTokens 每個 Token 卡片加入「使用紀錄」展開面板
+- [x] 撰寫測試，333 項全部通過，TypeScript 零錯誤
+
+## Token 連結修復 + /ai-entry 導覽頁 v11.10
+
+- [x] 修復：AdminAccessTokens 生成對話框的存取連結依 accessMode 自動切換（admin_view → /ai-entry）
+- [x] 修復：Token 列表「複製連結」按鈕依 accessMode 自動切換路徑
+- [x] 重建 /ai-entry 導覽頁（列出所有前台+後台區域與快速連結）
+- [x] 333 項測試全部通過，TypeScript 零錯誤
