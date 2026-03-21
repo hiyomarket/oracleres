@@ -2462,3 +2462,9 @@
 - [x] 點擊後呼叫 /api/ai-data?token=xxx 並展示格式化 JSON 回應
 - [x] 顯示請求狀態（載入中、成功、失敗）、HTTP 狀態碼、耗時、重新測試按鈕
 - [x] 333 項測試全部通過，TypeScript 零錯誤
+
+## 修復 AI Token 仍要求登入問題 v11.13
+
+- [x] 診斷：/ai-entry 被 AccessGate 殔止，導致 Token 驗證邏輯無法執行
+- [x] 修復：將 /ai-entry 與 /ai-view 路由移至 AccessGate 之外，不需登入即可存取
+- [x] 333 項測試全部通過，TypeScript 零錯誤
