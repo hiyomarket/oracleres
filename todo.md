@@ -2496,3 +2496,8 @@
 
 - [x] AdminAccessTokens 新增 Token Dialog：加入 overflow-y-auto + max-height，確保手機上可滾動
 - [x] DialogContent 改為 flex flex-col max-h-[90vh]，Footer 固定在底部（shrink-0），內容區塊加 overflow-y-auto flex-1
+## v12.3 體驗流程修正
+
+- [x] 後端 context.ts：Token 有虛擬命盤時，非同步自動寫入 userProfiles（八字推算 + 生命靈數 + 農曆），已存在則跳過
+- [x] 前端 AiReadOnlyBanner：身分類型改為動態判斷（非 ai_readonly 就顯示虛擬命盤提示），加入「非真實命盤」說明
+- [x] 前端 AiReadOnlyBanner：所有身分類型都加入「導覽頁」按鈕，點擊後返回 /ai-entry 導覽頁
