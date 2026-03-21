@@ -76,21 +76,16 @@ oracleres/
 │   │
 │   └── MANIFEST.json             # 素材清單（讓其他 Agent 知道有哪些素材）
 │
-├── SYSTEM/                       # ⭐ 系統建造區（Manus System Agent 產出）
-│   │
-│   ├── TASKS/                    # 任務追蹤
+├── SYSTEM/                       # ⭐ 系統 Agent 工作追蹤區
+│   │                                （網站程式碼在 Manus System Agent 本地）
+│   ├── TASKS/                    # 任務追蹤（System Agent 更新）
 │   │   ├── TASK-001-首頁MVP/
-│   │   │   ├── STATUS.md        # 任務狀態
-│   │   │   └── OUTPUT/          # Agent 產出
-│   │   │       ├── homepage/
-│   │   │       └── database/
+│   │   │   └── STATUS.md        # 任務狀態
 │   │   │
 │   │   └── TASK-002-遊戲系統/
 │   │       └── ...
 │   │
-│   └── CODE/                     # 系統程式碼
-│       ├── src/
-│       └── public/
+│   └── README.md                 # System Agent 的任務索引
 │
 └── ASSETS/                       # 共享素材（System + Art 共用）
     ├── fonts/
@@ -150,10 +145,10 @@ oracleres/
 2. System Agent pull 最新素材
    → 閱讀 ART/MANIFEST.json
 
-3. System Agent 在 SYSTEM/CODE/ 中引用素材
-   → 使用相對路徑：../../ART/OUTPUTS/homepage/logo.svg
+3. System Agent 在本地專案中引用素材
+   → 使用路徑：從 ART/OUTPUTS/ 對應位置取得
 
-4. System Agent push CODE
+4. System Agent 更新 SYSTEM/TASKS/TASK-XXX/STATUS.md
 ```
 
 ---
