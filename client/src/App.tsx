@@ -31,6 +31,7 @@ import AdminExperts from "./pages/AdminExperts";
 import AdminTheme from "./pages/AdminTheme";
 import AdminAccessTokens from "./pages/AdminAccessTokens";
 import AiView from "./pages/AiView";
+import AiEntry from "./pages/AiEntry";
 import ExpertMarket from "./pages/ExpertMarket";
 import ExpertDetail from "./pages/ExpertDetail";
 import ExpertDashboard from "./pages/expert/ExpertDashboard";
@@ -48,6 +49,7 @@ import LuckCyclePage from "@/pages/LuckCyclePage";
 import WealthPage from "@/pages/WealthPage";
 import { DailySigninModal } from "./components/DailySigninModal";
 import { FloatingBanner } from "./components/FloatingBanner";
+import { AiReadOnlyBanner } from "./components/AiReadOnlyBanner";
 import { ThemeInitializer } from "./components/ThemeInitializer";
 
 function Router() {
@@ -97,6 +99,7 @@ function Router() {
         <Route path={"/admin/theme"} component={AdminTheme} />
         <Route path={"/admin/access-tokens"} component={AdminAccessTokens} />
         <Route path={"/ai-view"} component={AiView} />
+        <Route path={"/ai-entry"} component={AiEntry} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />
@@ -115,6 +118,7 @@ function App() {
         <TooltipProvider>
           <ThemeInitializer />
           <Toaster />
+          <AiReadOnlyBanner />
           <DailySigninModal />
           <FloatingBanner />
           <Router />

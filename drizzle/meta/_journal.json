@@ -379,6 +379,13 @@
       "when": 1774072936568,
       "tag": "0053_strong_the_hood",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "5",
+      "when": 1774074174870,
+      "tag": "0054_aspiring_kate_bishop",
+      "breakpoints": true
     }
   ]
 }

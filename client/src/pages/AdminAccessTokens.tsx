@@ -52,6 +52,7 @@ const EMPTY_FORM = {
   description: "",
   expiresAt: "",
   allowedModules: [] as ModuleId[], // 空陣列 = 全部開放
+  accessMode: "daily_view" as "daily_view" | "admin_view",
 };
 
 /** 距到期天數（負數表示已過期） */
@@ -103,6 +104,7 @@ export default function AdminAccessTokens() {
       description: form.description.trim() || undefined,
       expiresAt: form.expiresAt ? new Date(form.expiresAt).getTime() : undefined,
       allowedModules: form.allowedModules.length > 0 ? form.allowedModules : undefined,
+      accessMode: form.accessMode,
     });
   };
 
@@ -121,8 +123,9 @@ export default function AdminAccessTokens() {
       .catch(() => toast.error("複製失敗，請手動複製"));
   };
 
-  const handleCopyUrl = (token: string) => {
-    const url = `${window.location.origin}/ai-view?token=${token}`;
+  const handleCopyUrl = (token: string, mode?: string) => {
+    const path = mode === "admin_view" ? "/ai-entry" : "/ai-view";
+    const url = `${window.location.origin}${path}?token=${token}`;
     navigator.clipboard.writeText(url)
       .then(() => toast.success("存取連結已複製"))
       .catch(() => toast.error("複製失敗，請手動複製"));
@@ -160,9 +163,9 @@ export default function AdminAccessTokens() {
             <div>
               <p className="text-blue-300 font-semibold text-sm mb-1">特殊存取 Token 說明</p>
               <p className="text-blue-200/70 text-xs leading-relaxed">
-                此功能供 AI 系統或無法完成 OAuth 登入的特殊渠道使用。Token 持有者可透過
-                <code className="mx-1 px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300 font-mono text-xs">/ai-view?token=xxx</code>
-                存取系統唯讀視圖，無需登入。可在生成時勾選開放的模組，未勾選則全部開放。
+                此功能供 AI 系統或無法完成 OAuth 登入的特殊渠道使用。支援兩種存取模式：
+                <strong className="text-blue-300">今日運勢</strong>（<code className="mx-1 px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300 font-mono text-xs">/ai-view?token=xxx</code>）僅顯示今日運勢摘要；
+                <strong className="text-emerald-300">全站唯讀</strong>（<code className="mx-1 px-1.5 py-0.5 rounded bg-blue-900/50 text-blue-300 font-mono text-xs">/ai-entry?token=xxx</code>）可瀏覽前台、後台、專家後台所有頁面，但不能執行任何操作。
               </p>
             </div>
           </div>
@@ -252,7 +255,21 @@ export default function AdminAccessTokens() {
                         </button>
                       </div>
 
-                      {/* 開放模組標籤 */}
+                      {/* 存取模式標籤 */}
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        {(token as AccessToken & { accessMode?: string }).accessMode === "admin_view" ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
+                            🏠 全站唯讀
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300/60 text-xs">
+                            ☀️ 今日運勢
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 開放模組標籤（仅今日運勢模式顯示） */}
+                      {(token as AccessToken & { accessMode?: string }).accessMode !== "admin_view" && (
                       <div className="flex flex-wrap gap-1 mb-2">
                         {token.allowedModules === null ? (
                           <span className="text-xs text-white/30 italic">全部模組開放</span>
@@ -269,6 +286,7 @@ export default function AdminAccessTokens() {
                           })
                         )}
                       </div>
+                      )}
 
                       {/* 統計資訊 */}
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/40">
@@ -291,7 +309,7 @@ export default function AdminAccessTokens() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleCopyUrl(token.token)}
+                        onClick={() => handleCopyUrl(token.token, (token as AccessToken & { accessMode?: string }).accessMode)}
                         className="text-xs h-8 px-2"
                         title="複製存取連結"
                       >
@@ -364,7 +382,42 @@ export default function AdminAccessTokens() {
                 onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
               />
             </div>
-            {/* 模組勾選 */}
+            {/* 存取模式 */}
+            <div className="space-y-2">
+              <Label>存取模式</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, accessMode: "daily_view" })}
+                  className={`flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                    form.accessMode === "daily_view"
+                      ? "border-amber-500/60 bg-amber-500/10 text-amber-300"
+                      : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+                  }`}
+                >
+                  <span className="text-base">☀️ 今日運勢</span>
+                  <span className="text-xs opacity-70">只看今日運勢摘要頁</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, accessMode: "admin_view" })}
+                  className={`flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                    form.accessMode === "admin_view"
+                      ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300"
+                      : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+                  }`}
+                >
+                  <span className="text-base">🏠 全站唯讀</span>
+                  <span className="text-xs opacity-70">可瀏覽前台+後台所有頁面</span>
+                </button>
+              </div>
+              {form.accessMode === "admin_view" && (
+                <p className="text-emerald-400/60 text-xs">💡 全站唯讀模式：AI 系統可瀏覽前台、後台、專家後台所有頁面，但不能執行任何操作</p>
+              )}
+            </div>
+
+            {/* 模組勾選（僅今日運勢模式有效） */}
+            {form.accessMode === "daily_view" && (
             <div className="space-y-2">
               <Label>開放模組（不勾選 = 全部開放）</Label>
               <div className="grid grid-cols-2 gap-2">
@@ -385,6 +438,7 @@ export default function AdminAccessTokens() {
                 <p className="text-white/30 text-xs">未勾選任何模組，將開放全部內容</p>
               )}
             </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>取消</Button>

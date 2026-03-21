@@ -2418,3 +2418,17 @@
 - [x] AdminAccessTokens：Token 到期前 7 天顯示橙色警示標籤
 - [x] AdminDashboard：加入 Token 到期警示區塊（列出 7 天內到期的 Token）
 - [x] 撰寫測試，325 項全部通過，TypeScript 零錯誤
+
+## AI Token 後台唯讀模式 + 全站唯讀 v11.8
+
+- [x] DB：access_tokens 新增 accessMode 欄位（daily_view / admin_view）
+- [x] 後端：accessTokens router 的 create/list/verify 支援 accessMode
+- [x] AiEntry.tsx：Token 驗證 → sessionStorage 寫入 AI session → 跳轉後台
+- [x] useAdminRole hook：讀取 AI session，讓後台認為是 viewer 模式
+- [x] AdminLayout：支援 AI session（跳過 OAuth 登入檢查，直接以 viewer 身份進入）
+- [x] AccessGate：支援 AI session（跳過 OAuth 登入檢查）
+- [x] AiReadOnlyBanner 全站横幅提示條（前台+後台共用，顯示 Token 名稱與到期時間、退出按鈕）
+- [x] AdminAccessTokens：生成對話框加入存取模式選擇（今日運勢 / 全站唯讀）
+- [x] AdminAccessTokens Token 列表顯示存取模式標籤，複製連結自動切換路徑
+- [x] App.tsx 註冊 /ai-entry 路由
+- [x] 撰寫 8 項 accessMode 測試，333 項全部通過，TypeScript 零錯誤

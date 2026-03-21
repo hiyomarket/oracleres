@@ -3,11 +3,15 @@
  * 特殊存取 Token 管理 Router
  *
  * 功能：
- * 1. 管理員可生成新 Token（adminProcedure）—含模組勾選
+ * 1. 管理員可生成新 Token（adminProcedure）—含模組勾選、存取模式
  * 2. 管理員可廢止/啟用 Token（adminProcedure）
  * 3. 管理員可列出所有 Token（adminProcedure）
- * 4. 公開驗證 Token（publicProcedure）—供 /ai-view 頁面使用，回傳 allowedModules
+ * 4. 公開驗證 Token（publicProcedure）—供 /ai-view 與 /ai-entry 頁面使用
  * 5. 列出即將到期 Token（adminProcedure）—供儀表板警示
+ *
+ * accessMode：
+ *   daily_view  → 只能看 /ai-view 今日運勢頁
+ *   admin_view  → 可進入後台唯讀瀏覽（等同 viewer 角色）
  */
 
 import { z } from "zod";
@@ -21,6 +25,10 @@ import crypto from "crypto";
 /** 可選模組清單 */
 export const ALLOWED_MODULE_IDS = ["daily", "tarot", "wealth", "hourly"] as const;
 export type ModuleId = typeof ALLOWED_MODULE_IDS[number];
+
+/** 存取模式 */
+export const ACCESS_MODES = ["daily_view", "admin_view"] as const;
+export type AccessMode = typeof ACCESS_MODES[number];
 
 /** 產生安全隨機 Token（64 字元 hex） */
 function generateSecureToken(): string {
@@ -49,6 +57,7 @@ export const accessTokensRouter = router({
     return tokens.map(t => ({
       ...t,
       allowedModules: parseModules(t.allowedModules),
+      accessMode: (t.accessMode ?? "daily_view") as AccessMode,
     }));
   }),
 
@@ -64,8 +73,8 @@ export const accessTokensRouter = router({
       .where(
         and(
           isNotNull(accessTokens.expiresAt),
-          gt(accessTokens.expiresAt, now),       // 尚未過期
-          lte(accessTokens.expiresAt, sevenDaysLater), // 7 天內到期
+          gt(accessTokens.expiresAt, now),
+          lte(accessTokens.expiresAt, sevenDaysLater),
           eq(accessTokens.isActive, 1),
         )
       )
@@ -74,6 +83,7 @@ export const accessTokensRouter = router({
       id: t.id,
       name: t.name,
       expiresAt: t.expiresAt ? t.expiresAt.getTime() : null,
+      accessMode: (t.accessMode ?? "daily_view") as AccessMode,
     }));
   }),
 
@@ -85,6 +95,7 @@ export const accessTokensRouter = router({
         description: z.string().max(300).optional(),
         expiresAt: z.number().optional(),
         allowedModules: z.array(z.enum(["daily", "tarot", "wealth", "hourly"])).optional(),
+        accessMode: z.enum(["daily_view", "admin_view"]).default("daily_view"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -106,9 +117,10 @@ export const accessTokensRouter = router({
         expiresAt: expiresAt ?? undefined,
         useCount: 0,
         allowedModules: modulesJson ?? undefined,
+        accessMode: input.accessMode,
       });
 
-      return { token, name: input.name };
+      return { token, name: input.name, accessMode: input.accessMode };
     }),
 
   /** 廢止或啟用 Token（僅管理員） */
@@ -134,8 +146,9 @@ export const accessTokensRouter = router({
     }),
 
   /**
-   * 驗證 Token（公開，供 /ai-view 頁面呼叫）
-   * 回傳有效性、基本資訊與 allowedModules
+   * 驗證 Token（公開）
+   * 供 /ai-view（daily_view）與 /ai-entry（admin_view）頁面呼叫
+   * 回傳有效性、accessMode、allowedModules
    */
   verify: publicProcedure
     .input(z.object({ token: z.string() }))
@@ -166,7 +179,8 @@ export const accessTokensRouter = router({
         name: record.name,
         description: record.description,
         expiresAt: record.expiresAt ? record.expiresAt.getTime() : null,
-        allowedModules: parseModules(record.allowedModules), // null = 全部開放
+        allowedModules: parseModules(record.allowedModules),
+        accessMode: (record.accessMode ?? "daily_view") as AccessMode,
       };
     }),
 });

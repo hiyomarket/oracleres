@@ -2,8 +2,9 @@
  * AccessGate.tsx
  * 全站存取守衛：
  * 1. 未登入 → 顯示登入頁
- * 2. 已登入 → 顯示子頁面（開放式，不需邀請碼）
- * 3. 首次登入未填命格 → 顯示 OnboardingModal
+ * 2. AI Token（admin_view）→ 跳過 OAuth，直接放行（全站唯讀）
+ * 3. 已登入 → 顯示子頁面（開放式，不需邀請碼）
+ * 4. 首次登入未填命格 → 顯示 OnboardingModal
  */
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -12,6 +13,8 @@ import { getLoginUrl } from "@/const";
 import { Loader2, ShieldCheck, LogIn } from "lucide-react";
 import { OnboardingModal } from "./OnboardingModal";
 import { trpc } from "@/lib/trpc";
+import { getAiSession } from "@/pages/AiEntry";
+import { AiReadOnlyBanner } from "./AiReadOnlyBanner";
 
 interface AccessGateProps {
   children: React.ReactNode;
@@ -25,6 +28,19 @@ export function AccessGate({ children }: AccessGateProps) {
     undefined,
     { enabled: !!user && !authLoading }
   );
+
+  // AI Token 全站唯讀模式：跳過 OAuth 登入檢查，直接放行
+  const aiSession = getAiSession();
+  if (aiSession?.accessMode === "admin_view") {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <AiReadOnlyBanner />
+        <div className="flex-1">
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   // 載入中
   if (authLoading) {

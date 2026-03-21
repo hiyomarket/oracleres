@@ -8,6 +8,7 @@ import { useLocation, Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { getAiSession } from "@/pages/AiEntry";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -62,6 +63,8 @@ const ALL_NAV_ITEMS = NAV_GROUPS.flatMap(g => g.items);
 export function AdminLayout({ children }: AdminLayoutProps) {
   const { user, loading: authLoading } = useAuth();
   const [location, navigate] = useLocation();
+  const aiSession = getAiSession();
+  const isAiMode = aiSession?.accessMode === "admin_view";
 
   // 桌面側邊欄分組折疊狀態
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
@@ -79,10 +82,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   });
 
   useEffect(() => {
+    // AI Token 模式：跳過 OAuth 檢查
+    if (isAiMode) return;
     if (!authLoading && user && user.role !== "admin" && user.role !== "viewer") {
       navigate("/");
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, isAiMode]);
 
   // 切換頁面時自動滾動行動版 Tab 選中項目到可見範圍
   useEffect(() => {
@@ -105,7 +110,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     });
   }, [location]);
 
-  if (authLoading) {
+  if (authLoading && !isAiMode) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--page-bg)" }}>
         <div className="text-amber-400 text-lg animate-pulse">載入中...</div>
@@ -113,8 +118,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  const isViewer = user?.role === "viewer";
-  if (!user || (user.role !== "admin" && user.role !== "viewer")) return null;
+  const isViewer = user?.role === "viewer" || isAiMode;
+  // AI 模式不需要 OAuth 登入
+  if (!isAiMode && (!user || (user.role !== "admin" && user.role !== "viewer"))) return null;
 
   const toggleGroup = (label: string) => {
     setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }));
@@ -136,13 +142,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <span className="text-foreground/70 text-sm font-medium">管理後台</span>
         <div className="ml-auto flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center text-xs font-bold text-black">
-            {user.name?.[0]?.toUpperCase() ?? "A"}
+            {isAiMode ? "🤖" : (user?.name?.[0]?.toUpperCase() ?? "A")}
           </div>
-          <span className="text-xs text-muted-foreground hidden sm:block">{user.name}</span>
-          {isViewer && (
+          {isViewer && !isAiMode && (
             <span className="text-xs bg-blue-500/20 border border-blue-500/40 text-blue-300 px-2 py-0.5 rounded-full hidden sm:block">
               👁️ 唯讀
             </span>
+          )}
+          {isAiMode && (
+            <span className="text-xs bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded-full hidden sm:block">
+              🤖 AI 唯讀
+            </span>
+          )}
+          {isAiMode && (
+            <span className="text-xs text-muted-foreground hidden sm:block">{aiSession?.name}</span>
+          )}
+          {!isAiMode && (
+            <span className="text-xs text-muted-foreground hidden sm:block">{user?.name}</span>
           )}
         </div>
       </header>

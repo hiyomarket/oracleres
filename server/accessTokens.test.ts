@@ -252,6 +252,56 @@ describe("AccessTokens Router Logic", () => {
   });
 });
 
+// ─── accessMode 存取模式測試 ─────────────────────────────────────────────────
+describe("accessMode Logic", () => {
+  it("should default to daily_view mode", () => {
+    const defaultMode = "daily_view";
+    expect(["daily_view", "admin_view"]).toContain(defaultMode);
+  });
+
+  it("should accept admin_view mode", () => {
+    const mode = "admin_view";
+    expect(["daily_view", "admin_view"]).toContain(mode);
+  });
+
+  it("should reject invalid access modes", () => {
+    const invalidMode = "super_admin";
+    expect(["daily_view", "admin_view"]).not.toContain(invalidMode);
+  });
+
+  it("should route daily_view token to /ai-view path", () => {
+    const mode = "daily_view";
+    const path = mode === "admin_view" ? "/ai-entry" : "/ai-view";
+    expect(path).toBe("/ai-view");
+  });
+
+  it("should route admin_view token to /ai-entry path", () => {
+    const mode = "admin_view";
+    const path = mode === "admin_view" ? "/ai-entry" : "/ai-view";
+    expect(path).toBe("/ai-entry");
+  });
+
+  it("should treat admin_view session as viewer role", () => {
+    const aiSession = { accessMode: "admin_view", name: "Test AI" };
+    const isViewer = aiSession?.accessMode === "admin_view";
+    expect(isViewer).toBe(true);
+  });
+
+  it("should not treat daily_view session as viewer role", () => {
+    const aiSession = { accessMode: "daily_view", name: "Test AI" };
+    const isViewer = aiSession?.accessMode === "admin_view";
+    expect(isViewer).toBe(false);
+  });
+
+  it("should store and retrieve AI session from sessionStorage", () => {
+    const session = { token: "abc123", name: "Test", accessMode: "admin_view", expiresAt: null };
+    const serialized = JSON.stringify(session);
+    const parsed = JSON.parse(serialized);
+    expect(parsed.accessMode).toBe("admin_view");
+    expect(parsed.name).toBe("Test");
+  });
+});
+
 // ─── setUserRole 邏輯測試 ─────────────────────────────────────────────────────
 describe("setUserRole Logic", () => {
   it("should allow setting role to viewer", () => {

@@ -1321,6 +1321,8 @@ export const accessTokens = mysqlTable("access_tokens", {
   // 可選項目：daily（運勢摘要）、tarot（塔羅牌）、wealth（偶財指數）、hourly（時辰能量）
   // null = 全部開放
   allowedModules: text("allowedModules"),
+  // 存取模式：daily_view（今日運勢頁）、admin_view（後台唯讀瀏覽）
+  accessMode: varchar("access_mode", { length: 20 }).notNull().default("daily_view"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

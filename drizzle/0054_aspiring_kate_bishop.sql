@@ -1,0 +1,1 @@
+ALTER TABLE `access_tokens` ADD `access_mode` varchar(20) DEFAULT 'daily_view' NOT NULL;
