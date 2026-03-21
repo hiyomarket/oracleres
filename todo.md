@@ -2491,3 +2491,8 @@
 - [x] 前端 AdminAccessTokens：身分類型改為動態讀取後台 plans 清單的下拉選單，加入「AI 全功能（含虛擬命盤）」固定選項
 - [x] 前端 AiEntry.tsx：AiSession.identityType 改為 string（支援動態方案 ID）
 - [x] 測試更新：353 項全部通過，新增 ai_full 和動態方案 ID 邏輯測試
+
+## v12.2 Dialog 滾動修正
+
+- [x] AdminAccessTokens 新增 Token Dialog：加入 overflow-y-auto + max-height，確保手機上可滾動
+- [x] DialogContent 改為 flex flex-col max-h-[90vh]，Footer 固定在底部（shrink-0），內容區塊加 overflow-y-auto flex-1

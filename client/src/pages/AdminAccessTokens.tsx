@@ -438,14 +438,14 @@ export default function AdminAccessTokens() {
 
       {/* 建立 Token 對話框 */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-md flex flex-col max-h-[90vh]">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <Key className="w-5 h-5 text-amber-400" />
               生成新存取 Token
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2 overflow-y-auto flex-1 pr-1">
             <div className="space-y-1.5">
               <Label>Token 名稱 <span className="text-red-400">*</span></Label>
               <Input
@@ -600,7 +600,7 @@ export default function AdminAccessTokens() {
             </div>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="shrink-0 pt-2 border-t border-white/10">
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>取消</Button>
             <Button onClick={handleCreate} disabled={createMutation.isPending}>
               {createMutation.isPending ? "生成中..." : "生成 Token"}
@@ -611,14 +611,14 @@ export default function AdminAccessTokens() {
 
       {/* 新 Token 顯示對話框（僅顯示一次） */}
       <Dialog open={showNewTokenDialog} onOpenChange={setShowNewTokenDialog}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-lg flex flex-col max-h-[90vh]">
+          <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2 text-emerald-400">
               <CheckCircle className="w-5 h-5" />
               Token 已生成：{newTokenName}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-4 py-2 overflow-y-auto flex-1 pr-1">
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
               <p className="text-amber-300 text-xs font-semibold mb-1">⚠️ 請立即複製並妥善保存</p>
               <p className="text-amber-200/70 text-xs">此 Token 只會顯示一次，關閉後無法再查看完整值。</p>
@@ -670,7 +670,7 @@ export default function AdminAccessTokens() {
               </div>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="shrink-0 pt-2 border-t border-white/10">
             <Button onClick={() => setShowNewTokenDialog(false)}>我已複製，關閉</Button>
           </DialogFooter>
         </DialogContent>
