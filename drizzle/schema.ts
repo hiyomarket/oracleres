@@ -1293,3 +1293,32 @@ export const systemSettings = mysqlTable("system_settings", {
 });
 export type SystemSetting = typeof systemSettings.$inferSelect;
 export type InsertSystemSetting = typeof systemSettings.$inferInsert;
+
+/**
+ * 特殊存取 Token 資料表
+ * 供 AI 系統或無法完成 OAuth 登入的特殊渠道使用
+ * 管理員可生成/廢止 Token，Token 持有者獲得 viewer 等級的唯讀存取權
+ */
+export const accessTokens = mysqlTable("access_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  // Token 值（隨機生成的 32 字元 hex 字串）
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  // Token 名稱（方便管理員識別用途）
+  name: varchar("name", { length: 100 }).notNull(),
+  // 描述（說明此 Token 的用途）
+  description: varchar("description", { length: 300 }),
+  // 是否啟用
+  isActive: tinyint("isActive").notNull().default(1),
+  // 建立者（管理員 userId）
+  createdBy: int("createdBy").notNull(),
+  // 到期時間（null = 永不過期）
+  expiresAt: timestamp("expiresAt"),
+  // 最後使用時間
+  lastUsedAt: timestamp("lastUsedAt"),
+  // 使用次數
+  useCount: int("useCount").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AccessToken = typeof accessTokens.$inferSelect;
+export type InsertAccessToken = typeof accessTokens.$inferInsert;

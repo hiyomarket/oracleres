@@ -365,6 +365,13 @@
       "when": 1773854634309,
       "tag": "0051_furry_rogue",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "5",
+      "when": 1774070899380,
+      "tag": "0052_fresh_warpath",
+      "breakpoints": true
     }
   ]
 }

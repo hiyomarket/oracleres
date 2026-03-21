@@ -333,6 +333,16 @@ export default function WarRoom() {
     return () => clearInterval(timer);
   }, []);
 
+  // SEO: 動態設定頁面標題（需在資料載入後設定）
+  useEffect(() => {
+    if (!data) return;
+    const dateLabel = isViewingToday ? '今日' : data.date.gregorian.replace(/\d{4}年/, '');
+    document.title = `天命共振 — ${dateLabel}運勢·${data.tenGod.main}·${data.date.dayPillar}日柱·月相${data.moon.phase} | 八字命理系統`;
+    return () => {
+      document.title = '天命共振 — 八字命理、每日運勢、擲筊問卦、選號輔助系統 | 命理智慧平台';
+    };
+  }, [data, isViewingToday]);
+
   const timeStr = currentTime.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
 
   if (isLoading) {
@@ -594,8 +604,9 @@ export default function WarRoom() {
             </div>
           </div>
         </motion.div>
-
         {/* ═══ 垂直排列區塊：本日天命格言 + 十神分析 + 月相 + 塔羅流日 + 時辰能量 ═══ */}
+        {/* SEO H2 標題：視覚隱藏但機器可讀 */}
+        <h2 className="sr-only">今日天命分析—十神能量、塔羅流日、時辰運勢與命理格言</h2>
         <div className="space-y-6">
           {/* ═══ 本日天命格言 ═══ */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>

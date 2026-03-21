@@ -2382,6 +2382,14 @@
 - [x] 修復 AdminMarketing 重複 title 屬性錯誤
 - [x] 295 項測試全部通過，TypeScript 零錯誤
 
+## 首頁 SEO 修復 v11.4.1
+
+- [x] 縮減 meta keywords 由 9 個改為 6 個（八字命理,紫微斗數,擲筊問卦,每日運勢,命格分析,天命共振）
+- [x] 延長 index.html title 至 37 字元（80-60 範圍）
+- [x] WarRoom.tsx 加入 document.title 動態設定（33-36 字元）
+- [x] WarRoom.tsx 加入 sr-only H2 標題（視覺隱藏但機器可讀）
+- [x] 295 項測試全部通過，TypeScript 零錯誤
+
 ## 特殊存取 Token 系統 (AI 渠道) v11.5
 
 - [ ] DB schema 新增 access_tokens 資料表
