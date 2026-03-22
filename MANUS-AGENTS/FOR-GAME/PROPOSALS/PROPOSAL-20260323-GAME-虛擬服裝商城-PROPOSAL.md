@@ -1,0 +1,145 @@
+# 遊戲功能提案：虛擬服裝商城
+
+> **使用說明**：本提案為天命共振遊戲化模組的第二階段實作，建立在已完成的「靈相換裝系統」之上，提供用戶獲取虛擬服裝的途徑。
+
+---
+
+## 提案基本資訊
+
+| 欄位 | 內容 |
+|------|------|
+| **提案編號** | PROPOSAL-20260323-GAME-虛擬服裝商城 |
+| **提案日期** | 2026/03/23 |
+| **提案者** | 遊戲 Agent |
+| **狀態** | `pending` |
+| **優先級** | 🔴 高 |
+
+---
+
+## 遊戲功能說明 [必填]
+
+### 功能名稱
+虛擬服裝商城與獲取機制 (Virtual Wardrobe Shop & Acquisition)
+
+### 功能描述
+先提出我的看法：目前靈相換裝系統的底層架構已經就緒，但用戶的衣櫃是空的。我們需要一個機制讓用戶能獲得服裝，這樣才能驅動他們每天回來玩穿搭、賺取 Aura Score。
+
+再來執行你的提案：本提案將實作「虛擬服裝商城」，提供兩種獲取服裝的途徑：
+1. **天命幣直購/盲盒**：使用現有的 `users.gameCoins` 購買高品質、帶有特殊特效的服裝部件。
+2. **靈石兌換/任務獎勵**：使用遊戲內賺取的靈石（需新增欄位）兌換基礎款服裝，或透過完成特定命理任務獲得。
+
+這將是我們第一個**高衝擊目標**，直接打通「命理服務 -> 遊戲化展示 -> 商業變現」的循環。
+
+### 命理連結說明 [必填]
+商城的商品將根據「節氣」與「當月五行運勢」進行輪替。例如，在火旺的夏季，商城會主推能平衡五行的「水屬性」限定服裝。用戶為了在每日穿搭中獲得更高的 Aura Score，會有強烈動機去收集不同五行屬性的服裝部件。
+
+### 用戶遊玩流程
+1. 用戶在靈相空間點擊「商城」按鈕，進入 `/game/shop`。
+2. 商城分為「天命幣專區（精選/盲盒）」與「靈石專區（基礎）」。
+3. 用戶選擇商品，系統顯示預覽（套用在當前角色上）。
+4. 確認購買後，系統扣除對應貨幣，並將服裝資料寫入 `game_wardrobe`。
+5. 用戶返回靈相空間，即可在衣櫃中看到新獲得的服裝並進行穿搭。
+
+---
+
+## 技術規格 [必填]
+
+### 遊戲路由
+```
+/game/shop
+```
+
+### 影響的現有檔案
+| 檔案路徑 | 修改內容說明 |
+|----------|-------------|
+| `server/db/schema.ts` | 在 `users` 表中新增 `gameStones` 欄位（靈石） |
+| `server/routers/appRouter.ts` | 註冊新的 `gameShopRouter` |
+
+### 新增的檔案
+| 檔案路徑 | 用途說明 |
+|----------|---------|
+| `client/src/pages/game/Shop.tsx` | 商城主頁面 |
+| `client/src/components/game/ShopItemCard.tsx` | 商品展示卡片元件 |
+| `server/routers/gameShop.ts` | 處理商品列表、購買邏輯的 tRPC 路由 |
+
+### 資料庫異動 [必填]
+> 依據 2026-03-23 技術決策，天命幣共用現有欄位，靈石新增欄位。
+
+```typescript
+import { mysqlTable, int, varchar, text, tinyint, timestamp } from 'drizzle-orm/mysql-core';
+
+// 擴充現有 users 表 (示意)
+// alter table users add column gameStones int default 0;
+
+// 遊戲商品型錄
+export const gameItems = mysqlTable('game_items', {
+  id: int('id').primaryKey().autoincrement(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  layer: varchar('layer', { length: 20 }).notNull(),  // 對應 game_wardrobe.layer
+  imageUrl: text('image_url').notNull(),     // 預覽圖/圖層 URL
+  wuxing: varchar('wuxing', { length: 10 }).notNull(),
+  rarity: varchar('rarity', { length: 10 }).notNull(),
+  currencyType: varchar('currency_type', { length: 20 }).notNull(), // 'coins' (天命幣) 或 'stones' (靈石)
+  price: int('price').notNull(),
+  isOnSale: tinyint('is_on_sale').default(1),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+```
+
+### 新的 tRPC Procedures
+```typescript
+gameShop: {
+  // 取得商城上架商品列表
+  getItems: publicProcedure.query(...),
+  
+  // 購買商品 (需包含交易事務：扣款 + 寫入 game_wardrobe)
+  purchaseItem: protectedProcedure.input(z.object({
+    itemId: z.number()
+  })).mutation(...)
+}
+```
+
+---
+
+## UI 設計說明 [必填]
+
+### 版面配置
+```text
+┌─────────────────────────────────────────┐
+│ [返回]  天命商城                [儲值]  │
+│                                         │
+│  [ 天命幣專區 ]  [ 靈石專區 ]  [ 盲盒 ] │
+│ ─────────────────────────────────────── │
+│                                         │
+│  ┌────────┐  ┌────────┐  ┌────────┐     │
+│  │ [預覽] │  │ [預覽] │  │ [預覽] │     │
+│  │ 緋紅衣 │  │ 蒼翠髮 │  │ 玄武靴 │     │
+│  │ 🪙 300 │  │ 💎 500 │  │ 🪙 150 │     │
+│  └────────┘  └────────┘  └────────┘     │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### 命理視覺元素
+- **重點配色優化**：商城的促銷標籤與按鈕，應採用使用者偏好的**重點配色**（如：若使用者偏好金色，則購買按鈕與稀有度高光應以金色為主），以提升視覺吸引力與點擊率。
+- **五行分類**：商品列表支援按五行屬性篩選，篩選按鈕需帶有對應的五行顏色。
+
+---
+
+## 衝突檢查 [必填]
+
+### 與現有功能的關係
+- **貨幣共用**：購買邏輯需呼叫現有 `coinsRouter` 的扣點機制，確保天命幣餘額的全站一致性。
+- **資料連動**：購買成功後，寫入的資料必須完全符合 `game_wardrobe` 的 Schema，以便靈相空間能正確讀取。
+
+### 效能影響評估
+- **交易安全**：購買過程必須使用資料庫 Transaction（事務），確保扣款與發放道具的原子性（Atomicity），避免並發購買導致的資料不一致。
+
+---
+
+## 審核結果（由天命主系統填寫）
+
+**狀態**：[待填寫]
+**審核時間**：[待填寫]
+**審核意見**：[待填寫]
