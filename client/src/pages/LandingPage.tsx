@@ -41,10 +41,10 @@ function getTheme(dark: boolean) {
         textSub: "text-slate-400",
         textMuted: "text-slate-500",
         textBody: "text-slate-300",
-        cardText: "text-slate-200",
-        cardTextLocked: "text-slate-400",
-        cardDesc: "text-slate-400",
-        cardDescLocked: "text-slate-500",
+        cardText: "text-slate-100",
+        cardTextLocked: "text-slate-300",
+        cardDesc: "text-slate-300",
+        cardDescLocked: "text-slate-400",
         footerBorder: "border-slate-800/50",
         footerText: "text-slate-500",
         footerCopy: "text-slate-600",
@@ -89,9 +89,9 @@ const ELEMENT_COLORS: Record<string, { gradient: string; text: string; bg: strin
 };
 
 const FEATURE_CARDS = [
-  { img: CDN.iconDestinyCard, title: "命格身份證", subtitle: "解讀你的天命密碼", desc: "根據生辰八字，生成專屬命格身份證，揭示你的天生特質與人生主線。", tag: "會員限定", tagColor: "bg-slate-700/60 text-slate-300", locked: true },
+  { img: CDN.iconDestinyCard, title: "命格身份證", subtitle: "解讀你的天命密碼", desc: "根據生辰八字，生成專屬命格身份證，揭示你的天生特質與人生主線。", tag: "會員限定", tagColor: "bg-amber-900/40 text-amber-300", locked: true },
   { img: CDN.iconWarRoom, title: "今日作戰室", subtitle: "每日策略指引", desc: "結合今日流年流月，提供最佳行動時機與避忌事項，讓你每天都能精準出擊。", tag: "每日更新", tagColor: "bg-emerald-500/20 text-emerald-600", locked: false },
-  { img: CDN.iconOracle, title: "天命問卜", subtitle: "AI 命理諮詢", desc: "以天命 AI 為媒介，針對感情、事業、財運提出問題，獲得深度命理解析。", tag: "會員限定", tagColor: "bg-slate-700/60 text-slate-300", locked: true },
+  { img: CDN.iconOracle, title: "天命問卜", subtitle: "AI 命理詮詢", desc: "以天命 AI 為媒介，針對感情、事業、財運提出問題，獲得深度命理解析。", tag: "會員限定", tagColor: "bg-amber-900/40 text-amber-300", locked: true },
   { img: CDN.iconWealth, title: "財運羅盤", subtitle: "財富流向預測", desc: "精算流年財星位置，分析最佳投資時機與財富增長方向，掌握天時地利。", tag: "免費體驗", tagColor: "bg-amber-500/20 text-amber-600", locked: false },
   { img: CDN.iconDestinyCard, title: "天命日曆", subtitle: "吉凶宜忌一覽", desc: "整合農曆節氣、個人命盤，標示每日吉凶宜忌，讓重要決策都能順天應時。", tag: "核心功能", tagColor: "bg-blue-500/20 text-blue-600", locked: false },
   { img: CDN.iconLottery, title: "數位錦囊", subtitle: "隨身命理秘書", desc: "隨時隨地開啟錦囊，獲取當下最需要的命理指引，如同隨身攜帶命理師。", tag: "核心功能", tagColor: "bg-purple-500/20 text-purple-600", locked: false },

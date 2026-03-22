@@ -327,7 +327,10 @@ export default function DestinyShareCard({
         canvas,
         `天命共振-${displayName}-命格身份證.png`,
         `${displayName} 的天命命格身份證`,
-        `我的塔羅原型是「${tarotInfo.nameZh}」，快來天命共振探索你的命格！`,
+        `我的塔羅原型是「${tarotInfo.nameZh}」，快來天命共振探索你的命格！
+
+🔮 天命共振 — 融合塔羅、八字、擲籤的命理系統
+快來探索你的天命： https://oracleres-mlf7blvz.manus.space`,
       );
     } catch (err) {
       console.error('Share error:', err);

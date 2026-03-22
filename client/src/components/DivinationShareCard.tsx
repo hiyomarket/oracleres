@@ -325,7 +325,10 @@ export default function DivinationShareCard({
         canvas,
         `天命共振-${displayName}-${topicName}問卜.png`,
         `${displayName} 的天命問卜結果`,
-        `本日流日能量「${tarotCardName}」，命運指數 ${fortuneIndex}！快來天命共振探索你的今日運勢！`,
+        `本日流日能量「${tarotCardName}」，命運指數 ${fortuneIndex}！
+
+🔮 天命共振 — 融合塔羅、八字、擲籤的命理系統
+快來探索你的天命： https://oracleres-mlf7blvz.manus.space`,
       );
     } catch (err) {
       console.error('Share error:', err);

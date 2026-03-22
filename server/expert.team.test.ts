@@ -40,18 +40,19 @@ describe("Team Message Logic", () => {
   });
 
   it("should identify expired messages (older than 3 days)", () => {
-    const fourDaysAgo = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000);
-    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
-    const now = new Date();
+    // 使用固定基準時間避免競態條件
+    const BASE = Date.now();
+    const fourDaysAgo = new Date(BASE - 4 * 24 * 60 * 60 * 1000 - 1000);
+    const oneDayAgo = new Date(BASE - 1 * 24 * 60 * 60 * 1000);
+    const now = new Date(BASE);
     
     const isExpired = (date: Date) => {
-      const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+      const cutoff = new Date(BASE - 3 * 24 * 60 * 60 * 1000);
       return date < cutoff;
     };
     
     expect(isExpired(fourDaysAgo)).toBe(true);
-    // threeDaysAgo is at or near the cutoff boundary - timing dependent
-    expect(isExpired(threeDaysAgo)).toBe(isExpired(threeDaysAgo)); // boundary: either true or false is valid
+    expect(isExpired(oneDayAgo)).toBe(false);
     expect(isExpired(now)).toBe(false);
   });
 

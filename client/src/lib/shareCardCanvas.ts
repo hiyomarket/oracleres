@@ -61,6 +61,7 @@ export async function ensureFonts(): Promise<void> {
 
 /**
  * 在 Canvas 上繪製多行文字（自動換行）
+ * @returns 實際渲染的行數（不含第一行，即額外換行次數 + 1）
  */
 export function drawWrappedText(
   ctx: CanvasRenderingContext2D,
@@ -71,24 +72,28 @@ export function drawWrappedText(
   lineHeight: number,
   maxLines = 6,
 ): number {
-  const words = text.split('');
+  if (!text) return 1;
+  const chars = text.split('');
   let line = '';
-  let lineCount = 0;
+  let lineCount = 1; // 至少一行
   let currentY = y;
 
-  for (let i = 0; i < words.length; i++) {
-    const testLine = line + words[i];
+  for (let i = 0; i < chars.length; i++) {
+    const testLine = line + chars[i];
     const metrics = ctx.measureText(testLine);
     if (metrics.width > maxWidth && line !== '') {
       ctx.fillText(line, x, currentY);
-      line = words[i];
+      line = chars[i];
       currentY += lineHeight;
       lineCount++;
       if (lineCount >= maxLines) {
         // 超過最大行數，加省略號
-        const truncated = line.slice(0, -1) + '…';
-        ctx.fillText(truncated, x, currentY);
-        return currentY + lineHeight;
+        let truncated = line;
+        while (ctx.measureText(truncated + '…').width > maxWidth && truncated.length > 0) {
+          truncated = truncated.slice(0, -1);
+        }
+        ctx.fillText(truncated + '…', x, currentY);
+        return lineCount;
       }
     } else {
       line = testLine;
@@ -96,9 +101,8 @@ export function drawWrappedText(
   }
   if (line) {
     ctx.fillText(line, x, currentY);
-    currentY += lineHeight;
   }
-  return currentY;
+  return lineCount;
 }
 
 /**

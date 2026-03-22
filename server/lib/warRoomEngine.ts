@@ -54,8 +54,10 @@ export const TAROT_CARDS: Record<number, {
  * 規則：出生月份數字相加（≥10才相加）+ 出生日期數字相加（≥10才相加），若>22再歸約
  */
 export function calculateMiddlePersonality(birthMonth: number, birthDay: number): number {
+  // 月份：≥ 10 才拆位數相加（最大 12，需要拆）
   const monthSum = birthMonth >= 10 ? Math.floor(birthMonth / 10) + (birthMonth % 10) : birthMonth;
-  const daySum = birthDay >= 10 ? Math.floor(birthDay / 10) + (birthDay % 10) : birthDay;
+  // 日期：≤ 22 直接用原數，> 22 才拆位數相加（正確的蘇祈系統規則）
+  const daySum = birthDay > 22 ? Math.floor(birthDay / 10) + (birthDay % 10) : birthDay;
   const raw = monthSum + daySum;
   return raw > 22 ? String(raw).split('').map(Number).reduce((a, b) => a + b, 0) : raw;
 }
