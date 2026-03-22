@@ -1,17 +1,24 @@
 # 天命輔助系統 — 目前任務
 
-> 最後更新：2026/03/22 by 天命輔助系統（初始化完成）
+> 最後更新：2026/03/22 by 天命輔助系統（提案完成）
 
 ---
 
 ## 目前狀態
 
 **系統版本**：ae7c8ed4（2026/03/22）
-**輔助系統狀態**：🟢 初始化完成，已了解系統架構，待 Boss 分配任務
+**輔助系統狀態**：🟡 提案已提交，等待主系統審核
 
 ---
 
 ## 已完成的工作
+
+### 提案工作（2026/03/22）
+
+| 提案 ID | 檔案 | 狀態 |
+|---------|------|------|
+| PROPOSAL-001 | `PROPOSALS/20260322-PROPOSAL-001-性別設定功能.md` | `pending` 等待審核 |
+| PROPOSAL-002 | `PROPOSALS/20260322-PROPOSAL-002-功能開發優先序建議.md` | `pending` 等待審核 |
 
 ### 初始化學習（2026/03/22）
 
@@ -28,6 +35,10 @@
 | 7 | `SYSTEM-BACKUP/userProfile.snapshot.ts` | 核心命格：蘇祐震，1984/11/26，四柱甲子年乙亥月甲子日己巳時，日主甲木，水木極旺（77%），喜火土 |
 | 8 | `CLAW-TEAM/FEATURE-LIST.md` | 已完成功能 v1.3、規劃中功能（日間模式、性別設定、手串記錄、遊戲化） |
 | 9 | `FOR-ASSISTANT/INSTRUCTIONS/20260322-天命輔助系統初始化指令-第一版-INSTRUCTION.md` | 初始化完整流程確認 |
+| 10 | `CLAW-TEAM/ARCHITECTURE/20260322-GitHub多Agent協作架構-ARCHITECTURE.md` | 多 Agent 協作模型、倉庫資料夾結構、工作流程 |
+| 11 | `CLAW-TEAM/DECISIONS/20260322-MultiAgent自動化協作決策-DECISION.md` | 採用 Cron Job 方案（每 60 分鐘巡邏 MANIFEST.json）而非 Webhook |
+| 12 | `RESPONSES/20260322-主系統回應輔助系統初始化補充.md` | 主系統確認三個缺口均為真實問題，指派提案任務 |
+| 13 | `SYSTEM-BACKUP/routers.snapshot.ts`（重點段落） | 確認 `userProfiles.gender` 欄位已存在，`auth.me`、`userProfile` router 結構，`braceletWear` router 已有後端實作 |
 
 ---
 
@@ -55,15 +66,17 @@
 
 ## 待處理任務
 
-目前無待處理任務。等待 Boss 分配功能規劃任務。
+- [ ] 等待主系統審核 PROPOSAL-001（性別設定功能）
+- [ ] 等待主系統審核 PROPOSAL-002（功能開發優先序建議）
+- [ ] 審核通過後，依主系統指示準備 PROPOSAL-003（日間模式切換）
 
 ---
 
-## 備注（初始化過程中的觀察）
+## 備注
 
 1. **SYSTEM-BACKUP 版本差異**：LAST-UPDATED.md 顯示版本 ae7c8ed4（v1.3），但 oracle-resonance 的 Manus Checkpoint 最新為 bb400d90，兩者為不同快照時間點，提案時應以 SYSTEM-BACKUP 為準。
-2. **功能豐富度**：系統已相當完整（30+ 頁面），輔助系統的提案應聚焦在「規劃中功能」或「現有功能的體驗優化」，避免重複建置。
-3. **命格個人化**：所有功能均以蘇祐震的甲木命格為核心計算基礎，提案時需考慮與 `userProfile.snapshot.ts` 的整合。
+2. **braceletWear 後端已存在**：`routers.snapshot.ts` 中已有 `braceletWear` router 的完整後端（4 個 procedures），但 FEATURE-LIST.md 仍列為「規劃中」。已在 PROPOSAL-002 中標記此觀察，請主系統確認。
+3. **工作邊界確認**：「幫主系統想清楚邏輯」= 不需要提案；「幫主系統做一個新東西」= 需要提案。
 
 ---
 
