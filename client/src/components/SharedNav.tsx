@@ -699,7 +699,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
       {/* ─── 頂部導覽列（桌機 + 手機）：Logo + 右側用戶 ─── */}
       <nav className="sticky top-0 z-50 border-b backdrop-blur-md" style={{ background: 'var(--nav-bg, oklch(0.08 0.03 220 / 0.92))', borderColor: 'var(--nav-border, oklch(0.28 0.05 215 / 0.4))' }}>
         {/* 第一行：Logo + 用戶 */}
-        <div className="flex items-center justify-between px-4 md:px-6 py-3">
+        <div className="max-w-screen-xl mx-auto w-full flex items-center justify-between px-4 md:px-6 py-3">
           {/* 左側：Logo */}
           <div className="flex items-center gap-3 shrink-0">
             <button
@@ -766,6 +766,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
         <div className="border-t border-white/5">
           {/* 桌機：可左右滑動，加漸層提示 */}
           <div className="hidden md:block relative">
+            <div className="max-w-screen-xl mx-auto">
             {/* 左漸層提示 */}
             {desktopCanScrollLeft && (
               <div className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
@@ -812,6 +813,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                 );
               })}
             </div>
+            </div>{/* end max-w-screen-2xl */}
           </div>
 
           {/* 手機：可左右滑動，加漸層提示 */}

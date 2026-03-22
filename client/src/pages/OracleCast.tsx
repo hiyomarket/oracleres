@@ -189,6 +189,147 @@ function TripleProgress({ current, results }: { current: number; results: string
   );
 }
 
+// ─── 筊杯結果疊加浮層 ────────────────────────────────────────────────────────
+
+function CastResultOverlay({ result, isTripleConfirmed }: { result: string; isTripleConfirmed?: boolean }) {
+  const configs: Record<string, {
+    bg: string;
+    border: string;
+    glow: string;
+    icon: string;
+    label: string;
+    subtext: string;
+    textColor: string;
+  }> = {
+    sheng: {
+      bg: 'radial-gradient(ellipse at center, oklch(0.35 0.18 22 / 0.92) 0%, oklch(0.18 0.10 20 / 0.85) 100%)',
+      border: 'oklch(0.72 0.22 35 / 0.9)',
+      glow: '0 0 60px oklch(0.72 0.22 35 / 0.5), 0 0 120px oklch(0.72 0.22 35 / 0.2)',
+      icon: '🔴',
+      label: '聖杯',
+      subtext: isTripleConfirmed ? '三度天命應允！' : '神明應允，此事可行',
+      textColor: 'oklch(0.92 0.15 45)',
+    },
+    xiao: {
+      bg: 'radial-gradient(ellipse at center, oklch(0.32 0.12 55 / 0.92) 0%, oklch(0.18 0.08 50 / 0.85) 100%)',
+      border: 'oklch(0.68 0.16 55 / 0.8)',
+      glow: '0 0 40px oklch(0.68 0.16 55 / 0.3)',
+      icon: '😄',
+      label: '笑杯',
+      subtext: '神明在笑，請再思慮',
+      textColor: 'oklch(0.88 0.12 60)',
+    },
+    yin: {
+      bg: 'radial-gradient(ellipse at center, oklch(0.18 0.05 220 / 0.92) 0%, oklch(0.10 0.03 220 / 0.88) 100%)',
+      border: 'oklch(0.40 0.06 220 / 0.7)',
+      glow: '0 0 30px oklch(0.30 0.05 220 / 0.3)',
+      icon: '🌚',
+      label: '陰杯',
+      subtext: '時機未到，建議稍候',
+      textColor: 'oklch(0.65 0.06 220)',
+    },
+    li: {
+      bg: 'radial-gradient(ellipse at center, oklch(0.40 0.20 75 / 0.95) 0%, oklch(0.22 0.12 70 / 0.90) 100%)',
+      border: 'oklch(0.88 0.22 80 / 0.9)',
+      glow: '0 0 80px oklch(0.88 0.22 80 / 0.6), 0 0 160px oklch(0.88 0.22 80 / 0.3)',
+      icon: '✨',
+      label: '立筊',
+      subtext: '天命彩蛋！極稀有顯靈',
+      textColor: 'oklch(0.98 0.18 82)',
+    },
+  };
+
+  const cfg = configs[result] || configs['yin'];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.6, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.8, y: -10 }}
+      transition={{ type: 'spring', stiffness: 280, damping: 18 }}
+      className="absolute inset-0 flex items-center justify-center z-20 rounded-2xl overflow-hidden"
+      style={{ pointerEvents: 'none' }}
+    >
+      {/* 背景遮罩 */}
+      <div
+        className="absolute inset-0"
+        style={{ background: cfg.bg }}
+      />
+      {/* 光暈邊框 */}
+      <div
+        className="absolute inset-0 rounded-2xl"
+        style={{ boxShadow: `inset 0 0 0 2px ${cfg.border}, ${cfg.glow}` }}
+      />
+      {/* 結果內容 */}
+      <div className="relative z-10 flex flex-col items-center gap-3 px-6 py-4">
+        {/* 大圖示 */}
+        <motion.div
+          className="text-7xl leading-none"
+          animate={{ scale: [1, 1.15, 1] }}
+          transition={{ duration: 0.6, repeat: 3, ease: 'easeInOut' }}
+        >
+          {cfg.icon}
+        </motion.div>
+
+        {/* 結果名稱 */}
+        <div
+          className="text-4xl font-black tracking-[0.3em]"
+          style={{ color: cfg.textColor, textShadow: `0 0 20px ${cfg.border}` }}
+        >
+          {cfg.label}
+        </div>
+
+        {/* 副文字 */}
+        <div
+          className="text-sm font-semibold tracking-wider text-center"
+          style={{ color: cfg.textColor, opacity: 0.85 }}
+        >
+          {cfg.subtext}
+        </div>
+
+        {/* 三聖杯特效 */}
+        {isTripleConfirmed && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border"
+            style={{ borderColor: cfg.border, background: `${cfg.border}22` }}
+          >
+            <span className="text-sm">🎊</span>
+            <span className="text-xs font-bold" style={{ color: cfg.textColor }}>三聖杯確認</span>
+          </motion.div>
+        )}
+      </div>
+
+      {/* 放射粒子效果 */}
+      {result === 'sheng' && (
+        <>
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 rounded-full"
+              style={{
+                background: cfg.textColor,
+                top: '50%',
+                left: '50%',
+              }}
+              initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+              animate={{
+                x: Math.cos((i / 8) * Math.PI * 2) * 80,
+                y: Math.sin((i / 8) * Math.PI * 2) * 60,
+                opacity: 0,
+                scale: 0,
+              }}
+              transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+            />
+          ))}
+        </>
+      )}
+    </motion.div>
+  );
+}
+
 // ─── 主頁面 ───────────────────────────────────────────────────────────────────
 
 export default function OracleCast() {
@@ -219,6 +360,9 @@ export default function OracleCast() {
   const [tripleResults, setTripleResults] = useState<string[]>([]);
   const [tripleConfirmed, setTripleConfirmed] = useState(false);
 
+  // 結果展開（點擊筊杯後展開詳細解讀）
+  const [showFullResult, setShowFullResult] = useState(false);
+
   const audioCtxRef = useRef<AudioContext | null>(null);
   const { user } = useAuth();
   const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
@@ -231,7 +375,7 @@ export default function OracleCast() {
   const [showInsufficientModal, setShowInsufficientModal] = useState(false);
   const [insufficientRequired, setInsufficientRequired] = useState(0);
   const [insufficientCurrent, setInsufficientCurrent] = useState(0);
-  const { data: coinsData } = trpc.coins.getBalance.useQuery(undefined, { staleTime: 30000 });
+  const { data: coinsData, refetch: refetchCoins } = trpc.coins.getBalance.useQuery(undefined, { staleTime: 30000 });
   const { data: pricingData } = trpc.coins.getFeaturePricing.useQuery(undefined, { staleTime: 60000 });
   const deepReadCost = pricingData?.['oracle'] ?? 15;
   const currentCoins = coinsData?.balance ?? 0;
@@ -241,7 +385,7 @@ export default function OracleCast() {
       const content = typeof data.content === 'string' ? data.content : String(data.content);
       setLlmInsight(content);
       setShowInsight(true);
-
+      refetchCoins();
     },
     onError: (err) => {
       const { isInsufficientCoins, required, current } = parseInsufficientCoinsError(err);
@@ -289,6 +433,7 @@ export default function OracleCast() {
   // 單次擲筊
   const executeSingleCast = useCallback(async () => {
     setPhase('animating');
+    setShowFullResult(false);
     if (audioCtxRef.current) {
       if (audioCtxRef.current.state === 'suspended') await audioCtxRef.current.resume();
       playWoodKnock(audioCtxRef.current, 0.3);
@@ -311,6 +456,7 @@ export default function OracleCast() {
   // 三聖杯連擲
   const executeTripleCast = useCallback(async (castIndex: number, prevResults: string[]) => {
     setPhase('animating');
+    setShowFullResult(false);
     if (audioCtxRef.current) {
       if (audioCtxRef.current.state === 'suspended') await audioCtxRef.current.resume();
       playWoodKnock(audioCtxRef.current, 0.3);
@@ -366,6 +512,7 @@ export default function OracleCast() {
     setLlmInsight(null);
     setShowInsight(false);
     setShowOracleShareCard(false);
+    setShowFullResult(false);
     // 注意：不清空 query，讓使用者可以修改後再問
   }, []);
 
@@ -412,26 +559,50 @@ export default function OracleCast() {
       {(isAdmin || hasFeature("oracle")) && <div className="relative z-10 container mx-auto px-4 pb-12 oracle-page-content">
         <div className="max-w-2xl mx-auto">
 
+          {/* ═══ 天命幣餘額橫幅（頂部顯眼顯示） ═══ */}
+          {user && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mt-2 mb-3 flex items-center justify-between px-4 py-2.5 rounded-xl border ${
+                currentCoins >= deepReadCost
+                  ? 'border-amber-600/30 bg-amber-900/15'
+                  : 'border-red-600/40 bg-red-900/15'
+              }`}
+            >
+              {/* 左側：積分顯示 */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-lg">🪙</span>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground/60 leading-none mb-0.5">天命幣餘額</div>
+                    <div className={`text-xl font-black leading-none ${currentCoins >= deepReadCost ? 'text-amber-300' : 'text-red-400'}`}>
+                      {coinsData ? currentCoins.toLocaleString() : '…'}
+                    </div>
+                  </div>
+                </div>
+                {currentCoins < deepReadCost && (
+                  <div className="text-xs text-red-400/80 border border-red-500/30 rounded-lg px-2 py-1">
+                    積分不足以進行深度解讀
+                  </div>
+                )}
+              </div>
+              {/* 右側：費用說明 */}
+              <div className="text-right">
+                <div className="text-[10px] text-muted-foreground/50">擲筊：免費</div>
+                <div className="text-[10px] text-purple-400/80">AI 深度解讀：-{deepReadCost} 點</div>
+              </div>
+            </motion.div>
+          )}
+
           {/* ═══ 區塊一：筊杯動畫區（置頂，始終顯示） ═══ */}
-          <div className="glass-card rounded-2xl overflow-hidden mb-4 mt-2">
+          <div className="glass-card rounded-2xl overflow-hidden mb-4">
             {/* 頂部標題列 */}
             <div className="flex items-center justify-between px-5 pt-4 pb-2">
               <div>
                 <h1 className="text-xl font-black oracle-text-gradient tracking-widest">天命共振</h1>
                 <p className="text-[10px] text-muted-foreground tracking-[0.25em]">{displayName} 專屬神諭系統</p>
               </div>
-              {/* 天命幣餘額 + 模式切換 */}
-              <div className="flex items-center gap-2">
-                {user && (
-                  <div className="flex-shrink-0 text-right mr-1">
-                    <div className="text-[9px] text-muted-foreground/60 mb-0.5">可用積分</div>
-                    <div className={`text-base font-bold ${currentCoins >= deepReadCost ? 'text-amber-400' : 'text-red-400'}`}>
-                      {coinsData ? currentCoins : '…'}
-                      <span className="text-[10px] font-normal text-muted-foreground/50 ml-0.5">點</span>
-                    </div>
-                    <div className="text-[9px] text-muted-foreground/40">神諭解讀 -{deepReadCost} 點</div>
-                  </div>
-                )}
               {/* 擲筊模式切換 */}
               <div className="flex gap-1.5">
                 <button
@@ -454,7 +625,6 @@ export default function OracleCast() {
                 >
                   🔴🔴🔴 三聖杯
                 </button>
-              </div>
               </div>
             </div>
 
@@ -482,7 +652,7 @@ export default function OracleCast() {
               )}
             </AnimatePresence>
 
-            {/* 筊杯動畫主區 */}
+            {/* ─── 筊杯動畫主區（含結果疊加浮層） ─── */}
             <div className="relative px-5 py-6 text-center">
               {/* 狀態文字 */}
               <div className="text-xs text-muted-foreground tracking-widest mb-4 h-4">
@@ -491,152 +661,140 @@ export default function OracleCast() {
                     神明感應中...
                   </motion.span>
                 ) : phase === 'result' ? (
-                  <span className="text-amber-400/70">擲筊完成 · 問題已記錄</span>
+                  <span className="text-amber-400/70">擲筊完成 · 點擊查看詳細解讀</span>
                 ) : (
                   '靜心，默念所問之事'
                 )}
               </div>
 
-              {/* 筊杯 */}
-              <div className="flex justify-center gap-10 mb-6 min-h-[140px] items-end">
-                <motion.div
-                  animate={phase === 'animating' ? {
-                    y: [0, -140, -110, 0],
-                    x: [0, -45, -30, 0],
-                    rotate: [0, 200, 310, 0],
-                  } : {}}
-                  transition={phase === 'animating' ? {
-                    duration: 1.2,
-                    ease: [0.25, 0.46, 0.45, 0.94],
-                  } : {}}
-                >
-                  <MoonBlock face={phase === 'result' ? leftFace : 'front'} size="lg" />
-                </motion.div>
-                <motion.div
-                  animate={phase === 'animating' ? {
-                    y: [0, -140, -110, 0],
-                    x: [0, 45, 30, 0],
-                    rotate: [0, -200, -310, 0],
-                  } : {}}
-                  transition={phase === 'animating' ? {
-                    duration: 1.2,
-                    ease: [0.25, 0.46, 0.45, 0.94],
-                    delay: 0.05,
-                  } : {}}
-                >
-                  <MoonBlock face={phase === 'result' ? rightFace : 'back'} size="lg" />
-                </motion.div>
+              {/* 筊杯 + 結果疊加浮層（相對定位容器） */}
+              <div
+                className={`relative rounded-2xl overflow-hidden transition-all duration-300 ${
+                  phase === 'result' ? 'cursor-pointer' : ''
+                }`}
+                style={{ minHeight: 200 }}
+                onClick={() => { if (phase === 'result') setShowFullResult(v => !v); }}
+              >
+                {/* 筊杯動畫 */}
+                <div className="flex justify-center gap-10 py-6 items-end">
+                  <motion.div
+                    animate={phase === 'animating' ? {
+                      y: [0, -140, -110, 0],
+                      x: [0, -45, -30, 0],
+                      rotate: [0, 200, 310, 0],
+                    } : {}}
+                    transition={phase === 'animating' ? {
+                      duration: 1.2,
+                      ease: [0.25, 0.46, 0.45, 0.94],
+                    } : {}}
+                  >
+                    <MoonBlock face={phase === 'result' ? leftFace : 'front'} size="lg" />
+                  </motion.div>
+                  <motion.div
+                    animate={phase === 'animating' ? {
+                      y: [0, -140, -110, 0],
+                      x: [0, 45, 30, 0],
+                      rotate: [0, -200, -310, 0],
+                    } : {}}
+                    transition={phase === 'animating' ? {
+                      duration: 1.2,
+                      ease: [0.25, 0.46, 0.45, 0.94],
+                      delay: 0.05,
+                    } : {}}
+                  >
+                    <MoonBlock face={phase === 'result' ? rightFace : 'back'} size="lg" />
+                  </motion.div>
+                </div>
+
+                {/* 能量光環（動畫中） */}
+                <AnimatePresence>
+                  {phase === 'animating' && (
+                    <motion.div
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      {[1, 2, 3].map((i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute rounded-full border border-amber-500/30"
+                          style={{ width: 100 + i * 40, height: 100 + i * 40 }}
+                          animate={{ scale: [1, 2], opacity: [0.6, 0] }}
+                          transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
+                        />
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* 結果疊加浮層（直接覆蓋在筊杯上） */}
+                <AnimatePresence>
+                  {phase === 'result' && castResult && (
+                    <CastResultOverlay
+                      result={castResult.result}
+                      isTripleConfirmed={castResult.isTripleConfirmed}
+                    />
+                  )}
+                </AnimatePresence>
               </div>
 
-              {/* 能量光環（動畫中） */}
-              <AnimatePresence>
-                {phase === 'animating' && (
-                  <motion.div
-                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    {[1, 2, 3].map((i) => (
-                      <motion.div
-                        key={i}
-                        className="absolute rounded-full border border-amber-500/30"
-                        style={{ width: 100 + i * 40, height: 100 + i * 40 }}
-                        animate={{ scale: [1, 2], opacity: [0.6, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
-                      />
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              {/* 擲筊結果即時顯示（在筊杯下方，不需滚動） */}
-              <AnimatePresence>
-                {phase === 'result' && castResult && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                    className={`mb-4 px-5 py-4 rounded-2xl border-2 text-center ${
-                      castResult.result === 'sheng'
-                        ? 'border-amber-400/80 bg-amber-900/40 shadow-[0_0_30px_rgba(251,191,36,0.3)]'
-                        : castResult.result === 'xiao'
-                        ? 'border-orange-400/60 bg-orange-900/30 shadow-[0_0_20px_rgba(251,146,60,0.2)]'
-                        : 'border-slate-500/60 bg-slate-800/40'
+              {/* 結果後的操作按鈕列 */}
+              {phase === 'result' && castResult && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex items-center justify-center gap-3 mt-4"
+                >
+                  {/* 查看詳細解讀 */}
+                  <button
+                    onClick={() => setShowFullResult(v => !v)}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all border ${
+                      showFullResult
+                        ? 'border-amber-600/60 bg-amber-900/30 text-amber-300'
+                        : 'border-amber-600/30 bg-amber-900/15 text-amber-400 hover:bg-amber-900/30'
                     }`}
                   >
-                    <motion.div
-                      className="text-4xl mb-2"
-                      animate={{ scale: [1, 1.3, 1] }}
-                      transition={{ duration: 0.5, repeat: 2 }}
-                    >
-                      {castResult.result === 'sheng' ? '🔴' : castResult.result === 'xiao' ? '🟤' : '⚫'}
-                    </motion.div>
-                    <div className={`text-2xl font-black tracking-widest mb-2 ${
-                      castResult.result === 'sheng' ? 'text-amber-300' :
-                      castResult.result === 'xiao' ? 'text-orange-300' : 'text-slate-400'
-                    }`}>
-                      {castResult.result === 'sheng' ? '✨ 聖杯' :
-                       castResult.result === 'xiao' ? '😄 笑杯' : '🌚 陰杯'}
-                    </div>
-                    <div className={`text-sm font-semibold mb-2 ${
-                      castResult.result === 'sheng' ? 'text-amber-200' :
-                      castResult.result === 'xiao' ? 'text-orange-200' : 'text-slate-400'
-                    }`}>
-                      {castResult.result === 'sheng' ? '神明應允，此事可行' :
-                       castResult.result === 'xiao' ? '神明在笑，請再思慮' : '時機未到，建議稍候'}
-                    </div>
-                    {castResult.interpretation?.summary && (
-                      <p className="text-xs text-white/60 leading-relaxed max-w-xs mx-auto">
-                        {castResult.interpretation.summary}
-                      </p>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <span>{showFullResult ? '▲' : '▼'}</span>
+                    <span>{showFullResult ? '收起解讀' : '查看詳細解讀'}</span>
+                  </button>
 
-              {/* 三聖杯確認特效 */}
-              <AnimatePresence>
-                {tripleConfirmed && phase === 'result' && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="mb-3 p-3 bg-amber-900/30 border border-amber-500/60 rounded-xl"
+                  {/* 分享按鈕 */}
+                  <button
+                    onClick={() => setShowOracleShareCard(true)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border border-border/30 text-muted-foreground hover:border-amber-600/30 hover:text-amber-400 transition-all"
                   >
-                    <motion.div
-                      className="text-2xl mb-1"
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 1, repeat: 3 }}
-                    >
-                      🎊
-                    </motion.div>
-                    <p className="text-amber-300 font-bold tracking-wider text-xs">
-                      三聖杯確認！神明三度應允，此事天命已定。
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <span>📤</span>
+                    <span>分享</span>
+                  </button>
 
-              {/* 擲筊按鈕 */}
-              {phase !== 'result' && (
-                <button
-                  onClick={handleCast}
-                  disabled={phase !== 'idle'}
-                  className="flame-button px-10 py-3.5 rounded-full text-base font-black tracking-widest shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {castButtonLabel()}
-                </button>
+                  {/* 重新擲筊 */}
+                  <button
+                    onClick={handleReset}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border border-border/30 text-muted-foreground hover:border-border/60 hover:text-foreground transition-all"
+                  >
+                    <span>↩</span>
+                    <span>再問</span>
+                  </button>
+                </motion.div>
               )}
 
-              {/* 結果後：重新擲筊按鈕 */}
-              {phase === 'result' && (
-                <button
-                  onClick={handleReset}
-                  className="px-8 py-3 rounded-full text-sm font-semibold tracking-wider border border-amber-600/40 bg-amber-900/20 text-amber-300 hover:bg-amber-900/40 transition-all"
-                >
-                  ↩ 再問一次
-                </button>
+              {/* 擲筊按鈕（idle 狀態） */}
+              {phase !== 'result' && (
+                <div className="mt-4">
+                  <button
+                    onClick={handleCast}
+                    disabled={phase !== 'idle'}
+                    className="flame-button px-10 py-3.5 rounded-full text-base font-black tracking-widest shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {castButtonLabel()}
+                  </button>
+                  {/* 擲筊費用說明（緊貼按鈕下方） */}
+                  <div className="mt-2 text-[10px] text-muted-foreground/50 tracking-wider">
+                    擲筊免費 · AI 深度解讀消耗 {deepReadCost} 天命幣
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -813,15 +971,16 @@ export default function OracleCast() {
             )}
           </div>
 
-          {/* ═══ 區塊三：結果顯示 ═══ */}
+          {/* ═══ 區塊三：詳細解讀（展開後顯示） ═══ */}
           <AnimatePresence>
-            {phase === 'result' && castResult && (
+            {phase === 'result' && castResult && showFullResult && (
               <motion.div
-                key="result"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mb-4"
+                key="full-result"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.4, ease: 'easeInOut' }}
+                className="mb-4 overflow-hidden"
               >
                 <OracleResult
                   result={castResult.result}
@@ -833,16 +992,6 @@ export default function OracleCast() {
                   isSpecialEgg={castResult.isSpecialEgg}
                   onReset={handleReset}
                 />
-
-                {/* 分享結果按鈕 */}
-                <div className="mt-2 flex justify-end">
-                  <button
-                    onClick={() => setShowOracleShareCard(true)}
-                    className="text-[11px] px-3 py-1.5 bg-amber-900/30 border border-amber-600/40 text-amber-300 rounded-full hover:bg-amber-900/50 transition-all flex items-center gap-1"
-                  >
-                    📤 分享擲筊結果
-                  </button>
-                </div>
 
                 {/* LLM 深度解讀 */}
                 <div className="mt-3">
@@ -858,7 +1007,7 @@ export default function OracleCast() {
                           神明深度解讀中...
                         </span>
                       ) : (
-                        '✦ 請求 AI 神諭深度解讀'
+                        `✦ 請求 AI 神諭深度解讀（消耗 ${deepReadCost} 天命幣）`
                       )}
                     </button>
                   ) : llmInsight && (
