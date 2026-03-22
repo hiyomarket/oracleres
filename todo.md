@@ -2535,5 +2535,26 @@
 
 ### 測試與部署
 - [x] vitest 測試更新（15 項全部通過）
-- [ ] checkpoint 儲存
-- [ ] GitHub CURRENT-TASK.md 狀態更新
+- [x] checkpoint 儲存（version 7884f9ab）
+- [x] GitHub CURRENT-TASK.md 狀態更新
+
+## Multi-Agent 自動化協作機制
+
+### MANIFEST.json 規格設計
+- [x] 設計 MANIFEST.json 標準格式（含 status 欄位：pending/ready/integrated）
+- [x] 更新 GitHub 倉庫 ART/MANIFEST.json 為新格式（v2.0）
+- [x] 在 GitHub 建立 MANIFEST 規格說明文件（ART/MANIFEST-SPEC.md）
+
+### 後端素材同步邏輯
+- [x] 建立 server/lib/artSync.ts（GitHub API 拉取 + 版本比對邏輯）
+- [x] 建立 tRPC procedure：system.patrolArtAssets（巡邏素材同步）
+- [x] 巡邏結果格式化輸出（formatPatrolSummary）
+
+### 排程巡邏任務
+- [x] 設定每 2 小時排程任務（Manus Schedule）
+- [x] 排程任務觸發 system.patrolArtAssets
+
+### 協作文件
+- [x] 草擬給美術 Agent 的 MANIFEST 規格文件（ART/MANIFEST-SPEC.md）
+- [x] 草擬給美術 Agent 的協作說明（FOR-ART/COLLABORATION-GUIDE.md）
+- [x] 更新 GitHub 倉庫（commit 1f957f9）
