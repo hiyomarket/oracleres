@@ -1381,3 +1381,54 @@ export const dailyEnergyLogs = mysqlTable("daily_energy_logs", {
 });
 export type DailyEnergyLog = typeof dailyEnergyLogs.$inferSelect;
 export type InsertDailyEnergyLog = typeof dailyEnergyLogs.$inferInsert;
+
+// ============================================================
+// 遊戲化模組：靈相換裝系統（PROPOSAL-20260323-GAME-靈相換裝系統）
+// ============================================================
+
+/**
+ * 遊戲虛擬服裝庫
+ * 儲存用戶擁有的所有虛擬服裝部件（商城購買 / 任務獲得）
+ * 與現有 wardrobe_items（真實衣物）完全獨立，採 game_ 前綴
+ */
+export const gameWardrobe = mysqlTable("game_wardrobe", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  /** 對應商品 ID（未來 game_items 資料表） */
+  itemId: int("itemId").notNull().default(0),
+  /** 圖層類型：body / hair / top / bottom / shoes / accessory / background */
+  layer: varchar("layer", { length: 20 }).notNull(),
+  /** PNG 透明圖層 URL（S3 CDN） */
+  imageUrl: text("imageUrl").notNull(),
+  /** 五行屬性（wood / fire / earth / metal / water） */
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  /** 稀有度：common / rare / epic / legendary */
+  rarity: varchar("rarity", { length: 10 }).notNull().default("common"),
+  /** 1 = 裝備中，0 = 未裝備 */
+  isEquipped: tinyint("isEquipped").notNull().default(0),
+  acquiredAt: timestamp("acquiredAt").defaultNow().notNull(),
+});
+export type GameWardrobeItem = typeof gameWardrobe.$inferSelect;
+export type InsertGameWardrobeItem = typeof gameWardrobe.$inferInsert;
+
+/**
+ * 每日穿搭紀錄與 Aura Score
+ * 記錄用戶每日完成靈相穿搭後的氣場分數與祝福等級
+ */
+export const gameDailyAura = mysqlTable("game_daily_aura", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  /** 日期字串 YYYY-MM-DD（台灣時間） */
+  recordDate: varchar("recordDate", { length: 10 }).notNull(),
+  /** Aura Score（0-100） */
+  score: int("score").notNull(),
+  /** 祝福等級：none / normal / good / destiny */
+  blessingLevel: varchar("blessingLevel", { length: 20 }).notNull().default("none"),
+  /** 當日裝備的五行屬性組合（JSON 字串，例如 ["wood","fire","water"]） */
+  equippedWuxing: text("equippedWuxing"),
+  /** 今日建議五行（來自 wuxingEngine） */
+  recommendedWuxing: varchar("recommendedWuxing", { length: 10 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameDailyAura = typeof gameDailyAura.$inferSelect;
+export type InsertGameDailyAura = typeof gameDailyAura.$inferInsert;

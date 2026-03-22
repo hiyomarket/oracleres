@@ -2788,3 +2788,20 @@
 - [x] 擲筊頁面：結果後操作列（查看詳細/分享/再問）改為底部按鈕列，不遮擋筊杯
 - [x] 擲筊頁面：AI 深度解讀費用說明整合至按鈕文字（消耗 N 天命幣）
 - [x] 438 項測試全部通過，TypeScript 零錯誤
+
+## V11.5 靈相換裝系統（PROPOSAL-20260323-GAME）（2026-03-23）
+
+- [x] 資料庫：建立 game_wardrobe 資料表（9 欄位：userId/itemId/layer/imageUrl/wuxing/rarity/isEquipped/acquiredAt）
+- [x] 資料庫：建立 game_daily_aura 資料表（8 欄位：userId/recordDate/score/blessingLevel/equippedWuxing/recommendedWuxing/createdAt）
+- [x] 後端：server/routers/gameAvatar.ts 建立（6 個 tRPC Procedures）
+- [x] 後端：getEquipped — 取得當前裝備（無道具時返回預設示範服裝）
+- [x] 後端：getInventory — 取得全部虛擬服裝（依圖層分組）
+- [x] 後端：saveOutfit — 儲存換裝設定（切換 isEquipped 旗標）
+- [x] 後端：submitDailyAura — 提交每日穿搭並計算 Aura Score（直接 import wuxingEngine.ts）
+- [x] 後端：getTodayAura — 查詢今日 Aura Score 狀態
+- [x] 後端：getDailyAdvice — 取得今日五行建議（供頁面頂部橫幅顯示）
+- [x] 前端：client/src/components/game/AvatarRenderer.tsx（7 層 PNG 絕對定位疊加渲染組件）
+- [x] 前端：client/src/pages/game/AvatarRoom.tsx（靈相空間主頁面，含衣櫃面板 + Aura 結算）
+- [x] 路由：App.tsx 新增 /game/avatar 路由
+- [x] 測試：server/gameAvatar.test.ts（11 項測試全部通過）
+- [x] 449 項測試全部通過，TypeScript 零錯誤

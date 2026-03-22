@@ -19,6 +19,7 @@ import { siteBannerRouter } from './routers/siteBanner';
 import { expertRouter } from './routers/expert';
 import { coinsRouter } from './routers/coins';
 import { accessTokensRouter } from './routers/accessTokens';
+import { gameAvatarRouter } from './routers/gameAvatar';
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -62,6 +63,7 @@ export const appRouter = router({
   points: pointsRouter,
   coins: coinsRouter,
   accessTokens: accessTokensRouter,
+  gameAvatar: gameAvatarRouter,
   businessHub: businessHubRouter,
   userGroups: userGroupsRouter,
   auth: router({

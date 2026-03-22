@@ -1,0 +1,441 @@
+/**
+ * gameAvatar.ts
+ * 靈相換裝系統 tRPC Router
+ * PROPOSAL-20260323-GAME-靈相換裝系統
+ *
+ * 四個 Procedures：
+ *   gameAvatar.getEquipped       - 取得用戶當前裝備中的所有部件
+ *   gameAvatar.getInventory      - 取得用戶擁有的所有虛擬服裝（含裝備狀態）
+ *   gameAvatar.saveOutfit        - 儲存換裝設定（切換 isEquipped 旗標）
+ *   gameAvatar.submitDailyAura   - 提交每日穿搭並計算 Aura Score
+ *
+ * Aura Score 計算直接 import 現有 wuxingEngine.ts，不重複建立五行邏輯。
+ */
+
+import { z } from "zod";
+import { eq, and } from "drizzle-orm";
+import { router, protectedProcedure } from "../_core/trpc";
+import { getDb } from "../db";
+import { gameWardrobe, gameDailyAura } from "../../drizzle/schema";
+import {
+  calculateEnvironmentElements,
+  calculateWeightedElements,
+  SUPPLEMENT_PRIORITY,
+} from "../lib/wuxingEngine";
+import { getFullDateInfo, getTaiwanDate } from "../lib/lunarCalendar";
+
+/** 取得台灣時間的 YYYY-MM-DD 字串 */
+function getTaiwanDateStr(): string {
+  const tw = getTaiwanDate();
+  const y = tw.getUTCFullYear();
+  const m = String(tw.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(tw.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+// ─── 五行屬性 → 中文對照 ───────────────────────────────────────
+const WUXING_ZH: Record<string, string> = {
+  wood: "木",
+  fire: "火",
+  earth: "土",
+  metal: "金",
+  water: "水",
+};
+
+// ─── 圖層順序（渲染時由下至上疊加） ──────────────────────────────
+export const LAYER_ORDER = [
+  "background",
+  "body",
+  "bottom",
+  "top",
+  "shoes",
+  "hair",
+  "accessory",
+] as const;
+export type AvatarLayer = (typeof LAYER_ORDER)[number];
+
+// ─── 計算 Aura Score ──────────────────────────────────────────
+/**
+ * 根據裝備的五行屬性陣列與今日建議五行，計算 Aura Score（0-100）
+ *
+ * 計分規則：
+ *   - 每件裝備的五行與「補運優先級」（火>土>金）的契合度決定基礎分
+ *   - 今日加權五行最高的元素若與裝備吻合，給予額外加成
+ *   - 裝備數量（7 件齊全）給予完整度加成
+ */
+function computeAuraScore(
+  equippedWuxingList: string[],
+  supplementPriority: readonly string[],
+  todayTopElement: string
+): number {
+  if (equippedWuxingList.length === 0) return 0;
+
+  // 補運優先級分數映射（火=1st=40, 土=2nd=25, 金=3rd=15, 其餘=5）
+  const priorityScore: Record<string, number> = {};
+  supplementPriority.forEach((el, idx) => {
+    priorityScore[el] = idx === 0 ? 40 : idx === 1 ? 25 : 15;
+  });
+
+  let baseScore = 0;
+  for (const wuxing of equippedWuxingList) {
+    const zhEl = WUXING_ZH[wuxing] ?? wuxing;
+    baseScore += priorityScore[zhEl] ?? 5;
+  }
+  // 平均分（避免堆砌同一件衣服刷分）
+  const avgScore = baseScore / equippedWuxingList.length;
+
+  // 今日最旺元素加成（最多 +20）
+  const todayBonus = equippedWuxingList.some(
+    (w) => (WUXING_ZH[w] ?? w) === todayTopElement
+  )
+    ? 20
+    : 0;
+
+  // 裝備完整度加成（7 件齊全 +10，5-6 件 +5）
+  const completenessBonus =
+    equippedWuxingList.length >= 7 ? 10 : equippedWuxingList.length >= 5 ? 5 : 0;
+
+  return Math.min(100, Math.round(avgScore + todayBonus + completenessBonus));
+}
+
+// ─── 祝福等級判定 ─────────────────────────────────────────────
+function getBlessingLevel(score: number): "none" | "normal" | "good" | "destiny" {
+  if (score >= 80) return "destiny";
+  if (score >= 60) return "good";
+  if (score >= 30) return "normal";
+  return "none";
+}
+
+// ─── 祝福等級說明 ─────────────────────────────────────────────
+export const BLESSING_DESCRIPTIONS: Record<string, { label: string; effects: string[] }> = {
+  none: {
+    label: "無祝福",
+    effects: ["未完成穿搭或五行嚴重失調，今日無加成"],
+  },
+  normal: {
+    label: "普通祝福",
+    effects: ["今日 HP 上限 +10%", "今日採集數量 +1", "今日逃跑率 +30%"],
+  },
+  good: {
+    label: "良好祝福",
+    effects: ["今日全屬性 +8%", "今日怪物掉落率 +15%", "今日捕捉率 +20%"],
+  },
+  destiny: {
+    label: "天命祝福",
+    effects: ["今日全屬性 +15%", "今日稀有掉落 +30%", "今日可視範圍 +1 格"],
+  },
+};
+
+// ─── 預設示範服裝（無任何道具時的 fallback） ─────────────────────
+const DEFAULT_ITEMS: Array<{
+  layer: AvatarLayer;
+  imageUrl: string;
+  wuxing: string;
+  rarity: string;
+  itemId: number;
+}> = [
+  {
+    layer: "body",
+    imageUrl: "https://placehold.co/200x400/1a2a3a/gold?text=素體",
+    wuxing: "wood",
+    rarity: "common",
+    itemId: 0,
+  },
+  {
+    layer: "hair",
+    imageUrl: "https://placehold.co/200x400/1a2a3a/gold?text=髮型",
+    wuxing: "wood",
+    rarity: "common",
+    itemId: 0,
+  },
+  {
+    layer: "top",
+    imageUrl: "https://placehold.co/200x400/1a2a3a/gold?text=上衣",
+    wuxing: "fire",
+    rarity: "common",
+    itemId: 0,
+  },
+  {
+    layer: "bottom",
+    imageUrl: "https://placehold.co/200x400/1a2a3a/gold?text=下衣",
+    wuxing: "earth",
+    rarity: "common",
+    itemId: 0,
+  },
+  {
+    layer: "shoes",
+    imageUrl: "https://placehold.co/200x400/1a2a3a/gold?text=鞋子",
+    wuxing: "metal",
+    rarity: "common",
+    itemId: 0,
+  },
+  {
+    layer: "accessory",
+    imageUrl: "https://placehold.co/200x400/1a2a3a/gold?text=飾品",
+    wuxing: "water",
+    rarity: "common",
+    itemId: 0,
+  },
+  {
+    layer: "background",
+    imageUrl: "https://placehold.co/400x500/0d1b2a/1a3a5a?text=背景",
+    wuxing: "water",
+    rarity: "common",
+    itemId: 0,
+  },
+];
+
+// ─── Router ───────────────────────────────────────────────────
+export const gameAvatarRouter = router({
+  /**
+   * 取得用戶當前裝備中的所有部件（isEquipped = 1）
+   * 若用戶尚無任何道具，返回預設示範服裝
+   */
+  getEquipped: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("DB unavailable");
+
+    const equipped = await db
+      .select()
+      .from(gameWardrobe)
+      .where(
+        and(
+          eq(gameWardrobe.userId, ctx.user.id),
+          eq(gameWardrobe.isEquipped, 1)
+        )
+      );
+
+    // 若沒有任何裝備，返回預設示範服裝（不寫入 DB）
+    if (equipped.length === 0) {
+      return DEFAULT_ITEMS.map((item, idx) => ({
+        id: -(idx + 1), // 負數 ID 代表預設道具
+        userId: ctx.user.id,
+        itemId: item.itemId,
+        layer: item.layer,
+        imageUrl: item.imageUrl,
+        wuxing: item.wuxing,
+        rarity: item.rarity,
+        isEquipped: 1,
+        acquiredAt: new Date(),
+        isDefault: true,
+      }));
+    }
+
+    return equipped.map((item) => ({ ...item, isDefault: false }));
+  }),
+
+  /**
+   * 取得用戶擁有的所有虛擬服裝（含裝備狀態）
+   * 依圖層分組返回，方便前端衣櫃面板渲染
+   */
+  getInventory: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("DB unavailable");
+
+    const items = await db
+      .select()
+      .from(gameWardrobe)
+      .where(eq(gameWardrobe.userId, ctx.user.id));
+
+    // 依圖層分組
+    const grouped: Record<string, typeof items> = {};
+    for (const layer of LAYER_ORDER) {
+      grouped[layer] = items.filter((i) => i.layer === layer);
+    }
+
+    return { items, grouped };
+  }),
+
+  /**
+   * 儲存換裝設定
+   * 傳入 equippedIds（要裝備的 ID 陣列），系統會：
+   *   1. 將該用戶所有 isEquipped 設為 0
+   *   2. 將 equippedIds 中的 ID 設為 1
+   *   注意：每個圖層只能裝備一件（由前端保證，後端不重複驗證）
+   */
+  saveOutfit: protectedProcedure
+    .input(
+      z.object({
+        equippedIds: z.array(z.number()).max(7, "最多 7 件裝備"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB unavailable");
+
+      // 先全部取消裝備
+      await db
+        .update(gameWardrobe)
+        .set({ isEquipped: 0 })
+        .where(eq(gameWardrobe.userId, ctx.user.id));
+
+      // 再裝備選中的
+      if (input.equippedIds.length > 0) {
+        // 逐一更新（避免 IN 語法的 Drizzle 複雜性）
+        for (const id of input.equippedIds) {
+          await db
+            .update(gameWardrobe)
+            .set({ isEquipped: 1 })
+            .where(
+              and(
+                eq(gameWardrobe.id, id),
+                eq(gameWardrobe.userId, ctx.user.id) // 安全驗證：只能更新自己的道具
+              )
+            );
+        }
+      }
+
+      return { success: true, equippedCount: input.equippedIds.length };
+    }),
+
+  /**
+   * 提交每日穿搭並計算 Aura Score
+   * 每日只能提交一次（以台灣時間 YYYY-MM-DD 為 key）
+   * 計算邏輯直接使用 wuxingEngine.ts，確保與全站五行邏輯一致
+   */
+  submitDailyAura: protectedProcedure.mutation(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("DB unavailable");
+
+    // 取得台灣今日日期
+    const todayStr = getTaiwanDateStr();
+
+    // 檢查今日是否已提交
+    const existing = await db
+      .select()
+      .from(gameDailyAura)
+      .where(
+        and(
+          eq(gameDailyAura.userId, ctx.user.id),
+          eq(gameDailyAura.recordDate, todayStr)
+        )
+      );
+
+    if (existing.length > 0) {
+      return {
+        alreadySubmitted: true,
+        score: existing[0].score,
+        blessingLevel: existing[0].blessingLevel,
+        blessing: BLESSING_DESCRIPTIONS[existing[0].blessingLevel] ?? BLESSING_DESCRIPTIONS.none,
+        recordDate: todayStr,
+      };
+    }
+
+    // 取得當前裝備的五行屬性
+    const equipped = await db
+      .select({ wuxing: gameWardrobe.wuxing })
+      .from(gameWardrobe)
+      .where(
+        and(
+          eq(gameWardrobe.userId, ctx.user.id),
+          eq(gameWardrobe.isEquipped, 1)
+        )
+      );
+
+    const equippedWuxingList = equipped.map((e) => e.wuxing);
+
+    // 使用 wuxingEngine 計算今日最旺五行（作為建議方向）
+    const now = new Date();
+    const dateInfo = getFullDateInfo(now);
+    const env = calculateEnvironmentElements(
+      dateInfo.yearPillar.stem,
+      dateInfo.yearPillar.branch,
+      dateInfo.monthPillar.stem,
+      dateInfo.monthPillar.branch,
+      dateInfo.dayPillar.stem,
+      dateInfo.dayPillar.branch
+    );
+    const weighted = calculateWeightedElements(env, undefined, undefined, undefined, now);
+
+    // 找出今日加權最高的五行
+    const todayTopElement = Object.entries(weighted.weighted).reduce(
+      (best, [el, val]) => (val > best.val ? { el, val } : best),
+      { el: "火", val: 0 }
+    ).el;
+
+    // 計算 Aura Score
+    const score = computeAuraScore(equippedWuxingList, SUPPLEMENT_PRIORITY, todayTopElement);
+    const blessingLevel = getBlessingLevel(score);
+
+    // 寫入資料庫
+    await db.insert(gameDailyAura).values({
+      userId: ctx.user.id,
+      recordDate: todayStr,
+      score,
+      blessingLevel,
+      equippedWuxing: JSON.stringify(equippedWuxingList),
+      recommendedWuxing: todayTopElement,
+      createdAt: new Date(),
+    });
+
+    return {
+      alreadySubmitted: false,
+      score,
+      blessingLevel,
+      blessing: BLESSING_DESCRIPTIONS[blessingLevel],
+      todayTopElement,
+      equippedCount: equippedWuxingList.length,
+      recordDate: todayStr,
+    };
+  }),
+
+  /**
+   * 取得今日 Aura Score 狀態（用於頁面初始化顯示）
+   */
+  getTodayAura: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return null;
+
+    const todayStr = getTaiwanDateStr();
+
+    const [record] = await db
+      .select()
+      .from(gameDailyAura)
+      .where(
+        and(
+          eq(gameDailyAura.userId, ctx.user.id),
+          eq(gameDailyAura.recordDate, todayStr)
+        )
+      );
+
+    if (!record) return null;
+
+    return {
+      ...record,
+      blessing: BLESSING_DESCRIPTIONS[record.blessingLevel] ?? BLESSING_DESCRIPTIONS.none,
+    };
+  }),
+
+  /**
+   * 取得今日五行建議（供換裝頁面頂部顯示）
+   */
+  getDailyAdvice: protectedProcedure.query(async () => {
+    const now = new Date();
+    const dateInfo = getFullDateInfo(now);
+    const env = calculateEnvironmentElements(
+      dateInfo.yearPillar.stem,
+      dateInfo.yearPillar.branch,
+      dateInfo.monthPillar.stem,
+      dateInfo.monthPillar.branch,
+      dateInfo.dayPillar.stem,
+      dateInfo.dayPillar.branch
+    );
+    const weighted = calculateWeightedElements(env, undefined, undefined, undefined, now);
+
+    // 補運優先級（用神）
+    const supplementPriority = [...SUPPLEMENT_PRIORITY];
+
+    // 今日最旺五行
+    const sorted = Object.entries(weighted.weighted).sort(([, a], [, b]) => b - a);
+    const topElement = sorted[0][0];
+    const weakElement = sorted[sorted.length - 1][0];
+
+    return {
+      topElement,
+      weakElement,
+      supplementPriority,
+      dayPillar: dateInfo.dayPillar,
+      advice: `今日${topElement}能量旺盛，建議穿搭${supplementPriority[0]}、${supplementPriority[1]}屬性服裝以補運`,
+    };
+  }),
+});
