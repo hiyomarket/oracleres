@@ -20,6 +20,25 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="天命共振" />
+    <!-- 主題初始化：在 React 載入前立刻套用深/淺色 class，避免閃爍 -->
+    <script>
+      (function() {
+        try {
+          var oracleTheme = localStorage.getItem('oracle_theme');
+          var isLight = oracleTheme && oracleTheme.endsWith('_light');
+          if (isLight) {
+            document.documentElement.removeAttribute('class');
+            document.documentElement.setAttribute('data-theme-mode', 'light');
+          } else {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme-mode', 'dark');
+          }
+        } catch(e) {
+          // 若 localStorage 不可用，預設深色
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
 
   <body>

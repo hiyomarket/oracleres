@@ -801,6 +801,136 @@
   background: var(--background) !important;
 }
 
+/* ── WUXING_COLORS 五行主題深色背景（WarRoom 今日天命一句話、本日天命格言）── */
+/* 木：bg-emerald-950/40 */
+:root[data-theme-mode="light"] .bg-emerald-950\/40 {
+  background-color: oklch(0.92 0.04 162 / 0.18) !important;
+}
+/* 火：bg-red-950/40 */
+:root[data-theme-mode="light"] .bg-red-950\/40 {
+  background-color: oklch(0.92 0.04 22 / 0.18) !important;
+}
+/* 土：bg-amber-950/40 */
+:root[data-theme-mode="light"] .bg-amber-950\/40 {
+  background-color: oklch(0.92 0.04 58 / 0.18) !important;
+}
+/* 水：bg-blue-950/40 */
+:root[data-theme-mode="light"] .bg-blue-950\/40 {
+  background-color: oklch(0.92 0.04 255 / 0.18) !important;
+}
+/* 金：bg-slate-800/40 */
+:root[data-theme-mode="light"] .bg-slate-800\/40 {
+  background-color: oklch(0.91 0.01 270 / 0.20) !important;
+}
+
+/* ── WUXING_COLORS 五行邊框（帶透明度）── */
+:root[data-theme-mode="light"] .border-emerald-500\/50 {
+  border-color: oklch(0.50 0.14 162 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-red-500\/50 {
+  border-color: oklch(0.50 0.18 22 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-amber-500\/50 {
+  border-color: oklch(0.50 0.14 58 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-blue-500\/50 {
+  border-color: oklch(0.50 0.14 255 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-slate-400\/50 {
+  border-color: oklch(0.55 0.04 270 / 0.40) !important;
+}
+
+/* ── 塔羅牌卡片背景（bg-gradient-to-b from-amber-950/60 to-slate-900/60）── */
+:root[data-theme-mode="light"] .from-amber-950\/60 {
+  --tw-gradient-from: oklch(0.90 0.04 58 / 0.30) var(--tw-gradient-from-position) !important;
+}
+:root[data-theme-mode="light"] .to-slate-900\/60 {
+  --tw-gradient-to: oklch(0.88 0.01 270 / 0.30) var(--tw-gradient-to-position) !important;
+}
+
+/* ── 時辰格子當前高亮（bg-amber-500/60）── */
+:root[data-theme-mode="light"] .border-amber-500\/60 {
+  border-color: oklch(0.50 0.14 58 / 0.55) !important;
+}
+
+/* ── bg-white/3 時辰格子背景 ── */
+:root[data-theme-mode="light"] .bg-white\/3 {
+  background-color: oklch(0.88 0.01 60 / 0.45) !important;
+}
+
+/* ── 月相進度條（bg-gradient-to-r from-slate-400 to-white）── */
+:root[data-theme-mode="light"] .from-slate-400 {
+  --tw-gradient-from: oklch(0.55 0.04 270) var(--tw-gradient-from-position) !important;
+}
+:root[data-theme-mode="light"] .to-white {
+  --tw-gradient-to: oklch(0.92 0.01 270) var(--tw-gradient-to-position) !important;
+}
+
+/* ── text-amber-500/60 塔羅牌副標題 ── */
+:root[data-theme-mode="light"] .text-amber-500\/60 {
+  color: oklch(0.44 0.14 58 / 0.70) !important;
+}
+
+/* ── 淺色主題下 bg-amber-500/5 微弱背景 ── */
+:root[data-theme-mode="light"] .bg-amber-500\/5 {
+  background-color: oklch(0.44 0.14 58 / 0.08) !important;
+}
+
+/* ── 淺色主題下 border-amber-500/40 ── */
+:root[data-theme-mode="light"] .border-amber-500\/40 {
+  border-color: oklch(0.44 0.14 58 / 0.45) !important;
+}
+
+/* ── 淺色主題下 bg-yellow-400/8 本週最旺橫幅 ── */
+:root[data-theme-mode="light"] .bg-yellow-400\/8 {
+  background-color: oklch(0.80 0.14 80 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-yellow-400\/30 {
+  border-color: oklch(0.60 0.14 80 / 0.45) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-400\/50 {
+  color: oklch(0.50 0.14 80 / 0.70) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-300 {
+  color: oklch(0.48 0.14 80) !important;
+}
+:root[data-theme-mode="light"] .bg-yellow-400\/10 {
+  background-color: oklch(0.80 0.14 80 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .bg-yellow-400\/15 {
+  background-color: oklch(0.80 0.14 80 / 0.15) !important;
+}
+:root[data-theme-mode="light"] .bg-yellow-400\/25 {
+  background-color: oklch(0.80 0.14 80 / 0.22) !important;
+}
+:root[data-theme-mode="light"] .bg-yellow-400 {
+  background-color: oklch(0.72 0.16 80) !important;
+}
+
+/* ── 淺色主題下 text-slate-300（金五行文字）── */
+:root[data-theme-mode="light"] .text-slate-300 {
+  color: oklch(0.40 0.04 270) !important;
+}
+
+/* ── 淺色主題下 bg-red-500 紅色圓點 ── */
+:root[data-theme-mode="light"] .bg-red-500 {
+  background-color: oklch(0.50 0.18 22) !important;
+}
+:root[data-theme-mode="light"] .border-red-400 {
+  border-color: oklch(0.55 0.18 22) !important;
+}
+
+/* ── 淺色主題下 bg-emerald-500/20 border-emerald-500/40（已套用狀態）── */
+:root[data-theme-mode="light"] .bg-emerald-500\/20 {
+  background-color: oklch(0.50 0.14 162 / 0.15) !important;
+}
+:root[data-theme-mode="light"] .border-emerald-500\/40 {
+  border-color: oklch(0.50 0.14 162 / 0.45) !important;
+}
+:root[data-theme-mode="light"] .text-emerald-400 {
+  color: oklch(0.38 0.14 162) !important;
+}
+
 /* ── 淺色主題下 ProfilePage 的 text-gray-100 修正 ── */
 :root[data-theme-mode="light"] .text-gray-100 {
   color: var(--foreground) !important;

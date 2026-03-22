@@ -823,6 +823,15 @@ export function applyTheme(themeId: string) {
   // 設定 data-theme 屬性，供 CSS 選擇器體制深色/淺色主題差異
   const isLight = themeId.endsWith('_light');
   root.setAttribute('data-theme-mode', isLight ? 'light' : 'dark');
+
+  // 同步管理 Tailwind 的 dark class：
+  // 淺色主題移除 dark class，深色主題加上 dark class
+  // 這確保 Tailwind dark: 前綴規則與主題模式一致
+  if (isLight) {
+    root.classList.remove('dark');
+  } else {
+    root.classList.add('dark');
+  }
 }
 
 /**
