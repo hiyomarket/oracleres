@@ -126,14 +126,14 @@ export function drawRoundRect(
 }
 
 /**
- * 將 Canvas 轉為 Blob
+ * 將 Canvas 轉為 Blob（非同步，避免大圖 toDataURL 記憶體崩潰）
  */
-export function canvasToBlob(canvas: HTMLCanvasElement, quality = 0.95): Promise<Blob> {
+export function canvasToBlob(canvas: HTMLCanvasElement, quality = 0.92): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => {
         if (blob) resolve(blob);
-        else reject(new Error('Canvas toBlob failed'));
+        else reject(new Error('Canvas toBlob 失敗'));
       },
       'image/png',
       quality,
@@ -142,15 +142,21 @@ export function canvasToBlob(canvas: HTMLCanvasElement, quality = 0.95): Promise
 }
 
 /**
- * 下載 Canvas 為 PNG
+ * 下載 Canvas 為 PNG（使用 toBlob 避免手機記憶體崩潰）
  */
-export function downloadCanvas(canvas: HTMLCanvasElement, filename: string): void {
+export async function downloadCanvas(canvas: HTMLCanvasElement, filename: string): Promise<void> {
+  const blob = await canvasToBlob(canvas);
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.download = filename;
-  link.href = canvas.toDataURL('image/png', 0.95);
+  link.href = url;
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  // 延遲清理，確保下載觸發
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 200);
 }
 
 /**
@@ -169,6 +175,15 @@ export async function shareCanvas(
     await navigator.share({ title, text, files: [file] });
   } else {
     // fallback：下載
-    downloadCanvas(canvas, filename);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 200);
   }
 }

@@ -1,11 +1,16 @@
 /**
- * 擲筊結果分享卡（OracleShareCard v2.0）
+ * 擲筊結果分享卡（OracleShareCard v2.1）
  *
  * 設計規格：
  * - 輸出尺寸：1080×1920px（9:16 手機分享比例）
  * - 以擲筊結果的色彩主題作為背景漸層，中央大圖示作為視覺焦點
  * - 文字疊加在半透明遮罩上方，確保可讀性
  * - 完全使用 Canvas 2D API，不依賴 html2canvas
+ *
+ * v2.1 修正：
+ * - downloadCanvas 改為 async（使用 toBlob 避免手機記憶體崩潰）
+ * - 加強所有按鈕的錯誤捕捉，防止頁面當掉
+ * - 放大預覽容器（max-w-sm → max-w-md）
  */
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Download, Share2, X, Loader2, RefreshCw } from "lucide-react";
@@ -97,6 +102,7 @@ export default function OracleShareCard({
   const [isExporting, setIsExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const cfg = RESULT_CONFIG[result];
 
@@ -120,14 +126,14 @@ export default function OracleShareCard({
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, CARD_W, CARD_H);
 
-      // 2. 中央光暈（擲筊結果的色彩主題）
+      // 2. 中央光暈
       const glowGrad = ctx.createRadialGradient(CARD_W / 2, CARD_H * 0.3, 0, CARD_W / 2, CARD_H * 0.3, 500);
       glowGrad.addColorStop(0, cfg.glowColor);
       glowGrad.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = glowGrad;
       ctx.fillRect(0, 0, CARD_W, CARD_H);
 
-      // 3. 半透明深色遮罩（底部加重）
+      // 3. 半透明深色遮罩
       const maskGrad = ctx.createLinearGradient(0, 0, 0, CARD_H);
       maskGrad.addColorStop(0, 'rgba(0,0,0,0.45)');
       maskGrad.addColorStop(0.45, 'rgba(0,0,0,0.15)');
@@ -149,24 +155,21 @@ export default function OracleShareCard({
       ctx.textAlign = 'center';
       ctx.fillText(dateString, CARD_W / 2, 158);
 
-      // 5. 擲筊大圖示（中央視覺焦點）
+      // 5. 擲筊大圖示
       ctx.font = '220px serif';
       ctx.textAlign = 'center';
       ctx.fillText(cfg.symbol, CARD_W / 2, 480);
 
-      // 結果名稱
       ctx.font = '700 90px "Noto Serif TC", serif';
       ctx.fillStyle = cfg.accentColor;
       ctx.textAlign = 'center';
       ctx.fillText(cfg.name, CARD_W / 2, 590);
 
-      // 副標題
       ctx.font = '400 44px "Noto Serif TC", serif';
       ctx.fillStyle = 'rgba(255,255,255,0.60)';
       ctx.textAlign = 'center';
       ctx.fillText(cfg.subtitle, CARD_W / 2, 655);
 
-      // 三聖杯標記
       if (isTripleConfirmed) {
         ctx.font = '500 34px "Noto Serif TC", serif';
         ctx.fillStyle = cfg.accentColor;
@@ -200,7 +203,6 @@ export default function OracleShareCard({
       const innerW = panelW - 128;
       let y = panelY + 72;
 
-      // 天命詮釋
       ctx.font = '400 28px "Noto Serif TC", serif';
       ctx.fillStyle = 'rgba(255,255,255,0.38)';
       ctx.textAlign = 'left';
@@ -213,7 +215,6 @@ export default function OracleShareCard({
       const intLines = drawWrappedText(ctx, interpretation, innerX, y, innerW, 48, 6);
       y += intLines * 48 + 44;
 
-      // 分隔線
       ctx.strokeStyle = `${cfg.accentColor}33`;
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -222,7 +223,6 @@ export default function OracleShareCard({
       ctx.stroke();
       y += 52;
 
-      // 能量共鳴
       ctx.font = '400 28px "Noto Serif TC", serif';
       ctx.fillStyle = 'rgba(255,255,255,0.38)';
       ctx.textAlign = 'left';
@@ -258,21 +258,26 @@ export default function OracleShareCard({
 
   const handleDownload = useCallback(async () => {
     const canvas = canvasRef.current;
-    if (!canvas || isRendering) return;
+    if (!canvas || isRendering || isExporting) return;
     setIsExporting(true);
+    setExportError(null);
     try {
-      downloadCanvas(canvas, `天命共振-${displayName}-擲筊問卜.png`);
+      await downloadCanvas(canvas, `天命共振-${displayName}-擲筊問卜.png`);
       setExportDone(true);
       setTimeout(() => setExportDone(false), 3000);
+    } catch (err) {
+      console.error('Download error:', err);
+      setExportError('下載失敗，請重試');
     } finally {
       setIsExporting(false);
     }
-  }, [displayName, isRendering]);
+  }, [displayName, isRendering, isExporting]);
 
   const handleShare = useCallback(async () => {
     const canvas = canvasRef.current;
-    if (!canvas || isRendering) return;
+    if (!canvas || isRendering || isExporting) return;
     setIsExporting(true);
+    setExportError(null);
     try {
       await shareCanvas(
         canvas,
@@ -280,40 +285,74 @@ export default function OracleShareCard({
         `${displayName} 的擲筊問卜結果`,
         `我的擲筊結果是「${cfg.name}」—— ${cfg.subtitle}！快來天命共振體驗神聖擲筊！`,
       );
+    } catch (err) {
+      console.error('Share error:', err);
+      setExportError('分享失敗，已改為下載');
+      try {
+        await downloadCanvas(canvas, `天命共振-${displayName}-擲筊問卜.png`);
+      } catch {
+        // ignore
+      }
     } finally {
       setIsExporting(false);
     }
-  }, [displayName, cfg, isRendering]);
+  }, [displayName, cfg, isRendering, isExporting]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(8px)' }}>
-      <div className="w-full max-w-sm flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-400">擲筊結果分享卡 · 點擊下載或分享</div>
-          <div className="flex items-center gap-2">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3"
+      style={{ background: 'rgba(0,0,0,0.90)', backdropFilter: 'blur(8px)' }}
+    >
+      <div className="w-full max-w-md flex flex-col gap-3">
+        {/* 頂部操作列 */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm text-gray-400 shrink-0">擲筊結果分享卡</div>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             {renderError && (
               <Button variant="ghost" size="sm" onClick={renderCard} className="text-amber-400 hover:text-amber-300">
                 <RefreshCw className="w-4 h-4 mr-1" />重試
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handleShare} disabled={isExporting || isRendering}
-              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10">
+            <Button
+              variant="outline" size="sm"
+              onClick={handleShare}
+              disabled={isExporting || isRendering}
+              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10 min-w-[72px]"
+            >
               {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
               <span className="ml-1">分享</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownload} disabled={isExporting || isRendering}
-              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10">
+            <Button
+              variant="outline" size="sm"
+              onClick={handleDownload}
+              disabled={isExporting || isRendering}
+              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10 min-w-[72px]"
+            >
               {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
               <span className="ml-1">{exportDone ? '已下載！' : '下載'}</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-400 hover:text-white">
-              <X className="w-4 h-4" />
+            <Button
+              variant="ghost" size="sm"
+              onClick={onClose}
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
             </Button>
           </div>
         </div>
 
-        <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: '9/16', background: '#080808' }}>
+        {/* 錯誤提示 */}
+        {exportError && (
+          <div className="text-xs text-center text-red-400 bg-red-900/20 rounded-lg py-2 px-3">
+            {exportError}
+          </div>
+        )}
+
+        {/* Canvas 預覽 */}
+        <div
+          className="relative rounded-2xl overflow-hidden shadow-2xl"
+          style={{ aspectRatio: '9/16', background: '#080808' }}
+        >
           {isRendering && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60">
               <Loader2 className="w-8 h-8 animate-spin text-amber-400" />

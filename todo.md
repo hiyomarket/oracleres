@@ -2667,4 +2667,14 @@
 - [x] DivinationShareCard 改用 Canvas 2D API 直接繪製（修正 drawWrappedText 參數錯誤）
 - [x] OracleShareCard 改用 Canvas 2D API 直接繪製（全新重寫）
 - [x] TypeScript 零錯誤，414 項測試全部通過
-- [ ] 儲存 v1.6 checkpoint
+- [x] 儲存 v1.6 checkpoint
+
+## Bug 修正 v1.7 - 分享卡按鈕當機修正 + 預覽放大
+
+- [x] 修正 DestinyShareCard 下載/分享按鈕點擊後頁面當機的問題
+- [x] 修正 DivinationShareCard 下載/分享按鈕點擊後頁面當機的問題
+- [x] 修正 OracleShareCard 下載/分享按鈕點擊後頁面當機的問題
+- [x] 修正關閉按鈕無效的問題
+- [x] 放大三個分享卡的預覽尺寸（手機上顯示更大）
+- [x] TypeScript 零錯誤，414 項測試全部通過
+- [ ] 儲存 v1.7 checkpoint

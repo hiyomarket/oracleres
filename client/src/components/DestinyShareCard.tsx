@@ -1,11 +1,16 @@
 /**
- * 命格身份證分享卡（DestinyShareCard v2.0）
+ * 命格身份證分享卡（DestinyShareCard v2.1）
  *
  * 設計規格：
  * - 輸出尺寸：1080×1920px（9:16 手機分享比例）
  * - 塔羅牌作為全版背景底圖（帶半透明深色遮罩）
  * - 文字疊加在遮罩上方，確保可讀性
  * - 完全使用 Canvas 2D API，不依賴 html2canvas，繞開 CORS 問題
+ *
+ * v2.1 修正：
+ * - downloadCanvas 改為 async（使用 toBlob 避免手機記憶體崩潰）
+ * - 加強所有按鈕的錯誤捕捉，防止頁面當掉
+ * - 放大預覽容器（max-w-sm → max-w-md）
  */
 import { useState, useCallback, useRef, useEffect } from "react";
 import { getTarotCardUrl, getTarotCardInfo } from "@/lib/tarotCards";
@@ -57,6 +62,7 @@ export default function DestinyShareCard({
   const [isExporting, setIsExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const primaryTarotNum = lifeNums?.primary.num ?? 0;
   const tarotInfo = getTarotCardInfo(primaryTarotNum);
@@ -296,21 +302,26 @@ export default function DestinyShareCard({
 
   const handleDownload = useCallback(async () => {
     const canvas = canvasRef.current;
-    if (!canvas || isRendering) return;
+    if (!canvas || isRendering || isExporting) return;
     setIsExporting(true);
+    setExportError(null);
     try {
-      downloadCanvas(canvas, `天命共振-${displayName}-命格身份證.png`);
+      await downloadCanvas(canvas, `天命共振-${displayName}-命格身份證.png`);
       setExportDone(true);
       setTimeout(() => setExportDone(false), 3000);
+    } catch (err) {
+      console.error('Download error:', err);
+      setExportError('下載失敗，請重試');
     } finally {
       setIsExporting(false);
     }
-  }, [displayName, isRendering]);
+  }, [displayName, isRendering, isExporting]);
 
   const handleShare = useCallback(async () => {
     const canvas = canvasRef.current;
-    if (!canvas || isRendering) return;
+    if (!canvas || isRendering || isExporting) return;
     setIsExporting(true);
+    setExportError(null);
     try {
       await shareCanvas(
         canvas,
@@ -318,40 +329,74 @@ export default function DestinyShareCard({
         `${displayName} 的天命命格身份證`,
         `我的塔羅原型是「${tarotInfo.nameZh}」，快來天命共振探索你的命格！`,
       );
+    } catch (err) {
+      console.error('Share error:', err);
+      setExportError('分享失敗，已改為下載');
+      try {
+        await downloadCanvas(canvas, `天命共振-${displayName}-命格身份證.png`);
+      } catch {
+        // ignore
+      }
     } finally {
       setIsExporting(false);
     }
-  }, [displayName, tarotInfo.nameZh, isRendering]);
+  }, [displayName, tarotInfo.nameZh, isRendering, isExporting]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(8px)' }}>
-      <div className="w-full max-w-sm flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-400">命格身份證 · 點擊下載或分享</div>
-          <div className="flex items-center gap-2">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3"
+      style={{ background: 'rgba(0,0,0,0.90)', backdropFilter: 'blur(8px)' }}
+    >
+      <div className="w-full max-w-md flex flex-col gap-3">
+        {/* 頂部操作列 */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm text-gray-400 shrink-0">命格身份證</div>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             {renderError && (
               <Button variant="ghost" size="sm" onClick={renderCard} className="text-amber-400 hover:text-amber-300">
                 <RefreshCw className="w-4 h-4 mr-1" />重試
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handleShare} disabled={isExporting || isRendering}
-              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10">
+            <Button
+              variant="outline" size="sm"
+              onClick={handleShare}
+              disabled={isExporting || isRendering}
+              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10 min-w-[72px]"
+            >
               {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
               <span className="ml-1">分享</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownload} disabled={isExporting || isRendering}
-              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10">
+            <Button
+              variant="outline" size="sm"
+              onClick={handleDownload}
+              disabled={isExporting || isRendering}
+              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10 min-w-[72px]"
+            >
               {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
               <span className="ml-1">{exportDone ? '已下載！' : '下載'}</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-400 hover:text-white">
-              <X className="w-4 h-4" />
+            <Button
+              variant="ghost" size="sm"
+              onClick={onClose}
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
             </Button>
           </div>
         </div>
 
-        <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: '9/16', background: '#0a0814' }}>
+        {/* 錯誤提示 */}
+        {exportError && (
+          <div className="text-xs text-center text-red-400 bg-red-900/20 rounded-lg py-2 px-3">
+            {exportError}
+          </div>
+        )}
+
+        {/* Canvas 預覽 */}
+        <div
+          className="relative rounded-2xl overflow-hidden shadow-2xl"
+          style={{ aspectRatio: '9/16', background: '#0a0814' }}
+        >
           {isRendering && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60">
               <Loader2 className="w-8 h-8 animate-spin text-amber-400" />

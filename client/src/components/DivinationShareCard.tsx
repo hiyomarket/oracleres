@@ -296,23 +296,30 @@ export default function DivinationShareCard({
 
   useEffect(() => { renderCard(); }, [renderCard]);
 
+  const [exportError, setExportError] = useState<string | null>(null);
+
   const handleDownload = useCallback(async () => {
     const canvas = canvasRef.current;
-    if (!canvas || isRendering) return;
+    if (!canvas || isRendering || isExporting) return;
     setIsExporting(true);
+    setExportError(null);
     try {
-      downloadCanvas(canvas, `天命共振-${displayName}-${topicName}問卜.png`);
+      await downloadCanvas(canvas, `天命共振-${displayName}-${topicName}問卜.png`);
       setExportDone(true);
       setTimeout(() => setExportDone(false), 3000);
+    } catch (err) {
+      console.error('Download error:', err);
+      setExportError('下載失敗，請重試');
     } finally {
       setIsExporting(false);
     }
-  }, [displayName, topicName, isRendering]);
+  }, [displayName, topicName, isRendering, isExporting]);
 
   const handleShare = useCallback(async () => {
     const canvas = canvasRef.current;
-    if (!canvas || isRendering) return;
+    if (!canvas || isRendering || isExporting) return;
     setIsExporting(true);
+    setExportError(null);
     try {
       await shareCanvas(
         canvas,
@@ -320,38 +327,66 @@ export default function DivinationShareCard({
         `${displayName} 的天命問卜結果`,
         `本日流日能量「${tarotCardName}」，命運指數 ${fortuneIndex}！快來天命共振探索你的今日運勢！`,
       );
+    } catch (err) {
+      console.error('Share error:', err);
+      setExportError('分享失敗，已改為下載');
+      try {
+        await downloadCanvas(canvas, `天命共振-${displayName}-${topicName}問卜.png`);
+      } catch {
+        // ignore
+      }
     } finally {
       setIsExporting(false);
     }
-  }, [displayName, topicName, tarotCardName, fortuneIndex, isRendering]);
+  }, [displayName, topicName, tarotCardName, fortuneIndex, isRendering, isExporting]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(8px)' }}>
-      <div className="w-full max-w-sm flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-400">問卜結果分享卡 · 點擊下載或分享</div>
-          <div className="flex items-center gap-2">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3"
+      style={{ background: 'rgba(0,0,0,0.90)', backdropFilter: 'blur(8px)' }}
+    >
+      <div className="w-full max-w-md flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm text-gray-400 shrink-0">問卜結果分享卡</div>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             {renderError && (
               <Button variant="ghost" size="sm" onClick={renderCard} className="text-amber-400 hover:text-amber-300">
                 <RefreshCw className="w-4 h-4 mr-1" />重試
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handleShare} disabled={isExporting || isRendering}
-              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10">
+            <Button
+              variant="outline" size="sm"
+              onClick={handleShare}
+              disabled={isExporting || isRendering}
+              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10 min-w-[72px]"
+            >
               {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
               <span className="ml-1">分享</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleDownload} disabled={isExporting || isRendering}
-              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10">
+            <Button
+              variant="outline" size="sm"
+              onClick={handleDownload}
+              disabled={isExporting || isRendering}
+              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10 min-w-[72px]"
+            >
               {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
               <span className="ml-1">{exportDone ? '已下載！' : '下載'}</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-400 hover:text-white">
-              <X className="w-4 h-4" />
+            <Button
+              variant="ghost" size="sm"
+              onClick={onClose}
+              className="text-gray-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
             </Button>
           </div>
         </div>
+
+        {exportError && (
+          <div className="text-xs text-center text-red-400 bg-red-900/20 rounded-lg py-2 px-3">
+            {exportError}
+          </div>
+        )}
 
         <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: '9/16', background: '#08060f' }}>
           {isRendering && (
