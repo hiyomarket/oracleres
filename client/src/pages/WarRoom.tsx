@@ -295,6 +295,21 @@ export default function WarRoom() {
     { date: selectedDate },
     { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false }
   );
+
+  // V11.2 情境共振穿搭 V3.0（依 selectedEvent 動態查詢）
+  const { data: outfitV3Data, isLoading: outfitV3Loading } = trpc.v11.getOutfitV3.useQuery(
+    {
+      tenGod: data?.tenGod?.main ?? '食神',
+      dailyStrategy: (data?.strategy as { strategyName?: string })?.strategyName ?? '均衡守成',
+      moonPhaseName: data?.moon?.phase ?? '上弦月',
+      moonPhaseType: (data?.moon as { phaseType?: string })?.phaseType ?? 'first_quarter',
+      userContext: selectedEvent ? { event: selectedEvent as 'important_meeting' | 'date' | 'interview' | 'creative_work' | 'negotiation' | 'rest' | 'creative_presentation' | 'rest_day' } : undefined,
+    },
+    {
+      enabled: !!selectedEvent && !!data,
+      staleTime: 0,
+    }
+  );
   // Tab 已移除，改為垂直排列
 
   // 本週最旺時辰通知
@@ -729,36 +744,71 @@ export default function WarRoom() {
 
           {/* ═══ 時辰能量 ═══ */}
           <SectionCard title="今日各時段運勢" icon="⏰">
+            {/* V11.2 決策指南最佳時辰提示橫幅 */}
+            {decisionData && (() => {
+              const bestAdv = decisionData.advices?.find((a: { category: string; bestHour?: string }) => a.category === decisionData.bestCategory);
+              const CATEGORY_LABELS: Record<string, string> = {
+                career: '事業', finance: '財務', relationships: '人際', health: '健康', creativity: '創意', travel: '出行'
+              };
+              return bestAdv?.bestHour ? (
+                <div className="mb-3 rounded-lg bg-purple-500/10 border border-purple-500/30 px-3 py-2 flex items-center gap-2">
+                  <span className="text-purple-300 text-xs">★</span>
+                  <p className="text-purple-200 text-xs">
+                    今日 <span className="text-purple-300 font-semibold">{CATEGORY_LABELS[decisionData.bestCategory] ?? decisionData.bestCategory}</span> 評分最高，最佳行動時辰為 <span className="text-purple-300 font-semibold">{bestAdv.bestHour}</span>
+                  </p>
+                </div>
+              ) : null;
+            })()}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {data.hourEnergy.allHours.map((h: { name: string; branch: string; stem: string; score: number; level: string; label: string; isCurrent: boolean; displayTime: string }, i: number) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.03 }}
-                  className={`rounded-lg p-3 border transition-all ${h.isCurrent ? "bg-amber-500/20 border-amber-500/60 shadow-lg shadow-amber-500/10" : "bg-white/3 border-white/10"}`}
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`font-medium text-sm ${h.isCurrent ? "text-amber-300" : "text-white/70"}`}>
-                      {h.name} {h.isCurrent && <span className="text-amber-400 text-xs ml-1">●當前</span>}
-                    </span>
-                    <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${h.label === "大吉" ? "bg-amber-500/20 text-amber-400" : h.label === "吉" ? "bg-emerald-500/20 text-emerald-400" : h.label === "平" ? "bg-blue-500/20 text-blue-400" : "bg-red-500/20 text-red-400"}`}>
-                      {h.label}
-                    </span>
-                  </div>
-                  <div className="text-white/40 text-[10px]">{h.displayTime}</div>
-                  <div className="mt-1.5">
-                    <div className="w-full bg-white/10 rounded-full h-1.5">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${h.score}%` }}
-                        transition={{ duration: 0.8, delay: i * 0.04 }}
-                        className={`h-full rounded-full ${h.score >= 80 ? "bg-gradient-to-r from-amber-500 to-orange-400" : h.score >= 60 ? "bg-gradient-to-r from-emerald-500 to-teal-400" : h.score >= 40 ? "bg-gradient-to-r from-blue-500 to-cyan-400" : "bg-gradient-to-r from-red-600 to-red-500"}`}
-                      />
+              {data.hourEnergy.allHours.map((h: { name: string; branch: string; stem: string; score: number; level: string; label: string; isCurrent: boolean; displayTime: string }, i: number) => {
+                // V11.2 決策指南最佳時辰高亮邏輯
+                const bestAdv = decisionData?.advices?.find((a: { category: string; bestHour?: string }) => a.category === decisionData.bestCategory);
+                const isDecisionBest = bestAdv?.bestHour ? bestAdv.bestHour.includes(h.name.replace('時', '')) : false;
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.03 }}
+                    className={`rounded-lg p-3 border transition-all ${
+                      isDecisionBest
+                        ? 'bg-purple-500/15 border-purple-400/60 shadow-lg shadow-purple-500/10 ring-1 ring-purple-400/30'
+                        : h.isCurrent ? 'bg-amber-500/20 border-amber-500/60 shadow-lg shadow-amber-500/10' : 'bg-white/3 border-white/10'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`font-medium text-sm ${
+                        isDecisionBest ? 'text-purple-300' : h.isCurrent ? 'text-amber-300' : 'text-white/70'
+                      }`}>
+                        {h.name}
+                        {h.isCurrent && <span className="text-amber-400 text-xs ml-1">●當前</span>}
+                        {isDecisionBest && <span className="text-purple-300 text-[10px] ml-1">★最佳</span>}
+                      </span>
+                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${h.label === "大吉" ? "bg-amber-500/20 text-amber-400" : h.label === "吉" ? "bg-emerald-500/20 text-emerald-400" : h.label === "平" ? "bg-blue-500/20 text-blue-400" : "bg-red-500/20 text-red-400"}`}>
+                        {h.label}
+                      </span>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                    <div className="text-white/40 text-[10px]">{h.displayTime}</div>
+                    <div className="mt-1.5">
+                      <div className="w-full bg-white/10 rounded-full h-1.5">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${h.score}%` }}
+                          transition={{ duration: 0.8, delay: i * 0.04 }}
+                          className={`h-full rounded-full ${
+                            isDecisionBest
+                              ? 'bg-gradient-to-r from-purple-500 to-violet-400'
+                              : h.score >= 80 ? 'bg-gradient-to-r from-amber-500 to-orange-400'
+                              : h.score >= 60 ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                              : h.score >= 40 ? 'bg-gradient-to-r from-blue-500 to-cyan-400'
+                              : 'bg-gradient-to-r from-red-600 to-red-500'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </SectionCard>
 
@@ -798,29 +848,55 @@ export default function WarRoom() {
                 animate={{ opacity: 1, y: 0 }}
                 className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3"
               >
-                <div className="text-amber-400 text-xs font-semibold uppercase tracking-widest">情境共振穿搭建議</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {[{
-                    label: '上衣', value: data.outfit?.topColor ?? '—', element: data.outfit?.topElement ?? ''
-                  }, {
-                    label: '下裝', value: data.outfit?.bottomColor ?? '—', element: data.outfit?.bottomElement ?? ''
-                  }, {
-                    label: '鞋子', value: data.outfit?.shoesColor ?? '—', element: data.outfit?.shoesElement ?? ''
-                  }, {
-                    label: '配件', value: data.outfit?.accentColor ?? '—', element: ''
-                  }].map((item, i) => (
-                    <div key={i} className="rounded-lg bg-white/5 border border-white/10 p-2.5">
-                      <div className="text-white/40 text-[10px] mb-1">{item.label}</div>
-                      <div className="text-white text-sm font-medium">{item.value}</div>
-                      {item.element && <div className="text-amber-400/60 text-[10px] mt-0.5">{item.element}</div>}
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <div className="text-amber-400 text-xs font-semibold uppercase tracking-widest">情境共振穿搭建議</div>
+                  {outfitV3Loading && <div className="text-amber-400/60 text-[10px] animate-pulse">天命共振計算中…</div>}
                 </div>
-                {selectedEvent === 'rest_day' && (
-                  <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
-                    <p className="text-emerald-300 text-xs">🌿 靜養充電日已切換「均衡守成」模式——不強制補強，讓命格自然呼吸。今日穿著舒適中性色系，是對自己最好的照顧。</p>
+                {outfitV3Data ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[{
+                        label: '上衣', value: outfitV3Data.topColor ?? '—', element: outfitV3Data.topElement ?? ''
+                      }, {
+                        label: '下裝', value: outfitV3Data.bottomColor ?? '—', element: outfitV3Data.bottomElement ?? ''
+                      }, {
+                        label: '鞋子', value: outfitV3Data.shoesColor ?? '—', element: outfitV3Data.shoesElement ?? ''
+                      }, {
+                        label: '配件', value: outfitV3Data.accentColor ?? '—', element: ''
+                      }].map((item, i) => (
+                        <div key={i} className="rounded-lg bg-white/5 border border-white/10 p-2.5">
+                          <div className="text-white/40 text-[10px] mb-1">{item.label}</div>
+                          <div className="text-white text-sm font-medium">{item.value}</div>
+                          {item.element && <div className="text-amber-400/60 text-[10px] mt-0.5">{item.element}</div>}
+                        </div>
+                      ))}
+                    </div>
+                    {outfitV3Data.contextNote && (
+                      <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3">
+                        <p className="text-amber-200/80 text-xs leading-relaxed">{outfitV3Data.contextNote}</p>
+                      </div>
+                    )}
+                    {outfitV3Data.reasoning && (
+                      <div className="rounded-lg bg-white/3 border border-white/8 p-3">
+                        <p className="text-white/60 text-xs leading-relaxed">{outfitV3Data.reasoning}</p>
+                      </div>
+                    )}
+                    {selectedEvent === 'rest_day' && (
+                      <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
+                        <p className="text-emerald-300 text-xs">🌿 靜養充電日已切換「均衡守成」模式——不強制補強，讓命格自然呼吸。今日穿著舒適中性色系，是對自己最好的照顧。</p>
+                      </div>
+                    )}
+                  </>
+                ) : !outfitV3Loading ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {['上衣', '下裝', '鞋子', '配件'].map((label, i) => (
+                      <div key={i} className="rounded-lg bg-white/5 border border-white/10 p-2.5">
+                        <div className="text-white/40 text-[10px] mb-1">{label}</div>
+                        <div className="text-white/30 text-sm">—</div>
+                      </div>
+                    ))}
                   </div>
-                )}
+                ) : null}
               </motion.div>
             )}
           </SectionCard>

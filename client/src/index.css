@@ -2624,3 +2624,36 @@
 }
 
 /* glass-card hover 效果已整合到上方主定義 */
+
+/* ═══════════════════════════════════════════════════════
+   V11.2 淺色主題修正：確保新增元素在淺色背景上可見
+   ═══════════════════════════════════════════════════════ */
+:root[data-theme-mode="light"] {
+  /* 時辰能量條決策高亮提示橫幅 */
+  .bg-purple-500\/10 {
+    background-color: oklch(0.55 0.18 290 / 0.12) !important;
+  }
+  .bg-purple-500\/15 {
+    background-color: oklch(0.55 0.18 290 / 0.18) !important;
+  }
+  .border-purple-500\/30 {
+    border-color: oklch(0.55 0.18 290 / 0.35) !important;
+  }
+  .border-purple-400\/60 {
+    border-color: oklch(0.55 0.18 290 / 0.55) !important;
+  }
+  .text-purple-200 { color: oklch(0.30 0.14 290) !important; }
+  .text-purple-300 { color: oklch(0.35 0.16 290) !important; }
+
+  /* 情境共振穿搭建議卡片 */
+  .text-amber-200\/80 { color: oklch(0.38 0.12 70) !important; }
+
+  /* 大運共振指數卡片 */
+  .bg-white\/3 { background-color: oklch(0.0 0 0 / 0.04) !important; }
+  .border-white\/8 { border-color: oklch(0.0 0 0 / 0.10) !important; }
+
+  /* 決策指南雷達圖標籤 */
+  .text-amber-300 { color: oklch(0.48 0.16 70) !important; }
+  .text-red-400 { color: oklch(0.45 0.22 25) !important; }
+  .text-emerald-300 { color: oklch(0.40 0.16 150) !important; }
+}

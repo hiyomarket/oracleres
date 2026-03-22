@@ -2764,3 +2764,12 @@
 - [ ] 靜養充電日觸發「均衡守成」模式，建議中性舒適色系
 - [ ] 創意發表/提案強化食傷（火）能量，建議暖色系
 - [ ] 選擇事件後穿搭推薦即時更新並顯示情境推理文案
+
+## V11.2 作戰室修正（2026-03-23）
+
+- [x] 修正今日特殊事件點擊無觸發問題（新增 outfitV3 query，selectedEvent 改變時重新查詢後端）
+- [x] 穿搭 V3.0 接入後端：將 selectedEvent 傳入 trpc.v11.getOutfitV3，顯示 contextNote + reasoning
+- [x] 決策指南最佳時辰高亮連動時辰能量條（紫色高亮 + 頂部提示橫幅）
+- [x] 修正淺色背景上文字顏色對比度不足問題（index.css V11.2 規則）
+- [x] 在 dailyReport moon 物件加入 phaseType 英文欄位供 getOutfitV3 使用
+- [x] 435 項測試全部通過，TypeScript 零錯誤
