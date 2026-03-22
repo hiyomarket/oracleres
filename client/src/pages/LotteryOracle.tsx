@@ -991,7 +991,7 @@ export default function LotteryOracle() {
             <span className="text-amber-400 text-lg shrink-0 mt-0.5">⚠️</span>
             <div>
               <p className="text-amber-300 text-xs font-bold mb-1 tracking-wide">重要聲明 · 僅供參考</p>
-              <p className="text-amber-200/70 text-xs leading-relaxed">
+              <p className="text-amber-200/70 text-xs leading-relaxed light-text-amber-800">
                 本功能依據個人命格五行與天干地支推算，提供選號靈感參考。樂透彩券涉及一群人的集體大運，影響因素複雜，
                 <strong className="text-amber-300">無法保證中獎</strong>，亦不構成任何投資或購買建議。
                 請量力而為，理性購彩，切勿沉迷。
