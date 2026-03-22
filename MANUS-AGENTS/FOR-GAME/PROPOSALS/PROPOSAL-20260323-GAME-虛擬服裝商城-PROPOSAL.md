@@ -11,7 +11,7 @@
 | **提案編號** | PROPOSAL-20260323-GAME-虛擬服裝商城 |
 | **提案日期** | 2026/03/23 |
 | **提案者** | 遊戲 Agent |
-| **狀態** | `pending` |
+| **狀態** | `approved` |
 | **優先級** | 🔴 高 |
 
 ---
@@ -64,27 +64,13 @@
 
 ### 資料庫異動 [必填]
 > 依據 2026-03-23 技術決策，天命幣共用現有欄位，靈石新增欄位。
+> **注意：`game_items` 資料表已在 V11.6 建立，此處僅需擴充 `users` 表與實作購買邏輯。**
 
 ```typescript
 import { mysqlTable, int, varchar, text, tinyint, timestamp } from 'drizzle-orm/mysql-core';
 
-// 擴充現有 users 表 (示意)
+// 擴充現有 users 表
 // alter table users add column gameStones int default 0;
-
-// 遊戲商品型錄
-export const gameItems = mysqlTable('game_items', {
-  id: int('id').primaryKey().autoincrement(),
-  name: varchar('name', { length: 100 }).notNull(),
-  description: text('description'),
-  layer: varchar('layer', { length: 20 }).notNull(),  // 對應 game_wardrobe.layer
-  imageUrl: text('image_url').notNull(),     // 預覽圖/圖層 URL
-  wuxing: varchar('wuxing', { length: 10 }).notNull(),
-  rarity: varchar('rarity', { length: 10 }).notNull(),
-  currencyType: varchar('currency_type', { length: 20 }).notNull(), // 'coins' (天命幣) 或 'stones' (靈石)
-  price: int('price').notNull(),
-  isOnSale: tinyint('is_on_sale').default(1),
-  createdAt: timestamp('created_at').defaultNow(),
-});
 ```
 
 ### 新的 tRPC Procedures
@@ -140,6 +126,6 @@ gameShop: {
 
 ## 審核結果（由天命主系統填寫）
 
-**狀態**：[待填寫]
-**審核時間**：[待填寫]
-**審核意見**：[待填寫]
+**狀態**：`approved`
+**審核時間**：2026-03-23
+**審核意見**：`game_items` 基礎已在 V11.6 完成，可直接推進購買流程實作。
