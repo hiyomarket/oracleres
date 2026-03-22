@@ -188,3 +188,209 @@ export const MOON_PHASE_OUTFIT_MODIFIER: Record<string, string> = {
   下弦月: "下弦月能量收斂，建議整體穿搭偏向低調沉穩，以大地色系為主，減少亮色配件，專注於內在積累。",
   殘月: "殘月之日，以靜制動。選擇舒適、低調的穿搭，為下一個月相周期蓄積能量，深色系或中性色最為適合。",
 };
+
+// ─── V11.0 神喻穿搭引擎 V3.0 ─────────────────────────────────────
+/**
+ * 用戶情境輸入（前端傳入）
+ */
+export interface UserContext {
+  /** 今日特殊事件 */
+  event?: 'important_meeting' | 'date' | 'interview' | 'creative_work' | 'negotiation' | 'rest' | null;
+  /** 今日心情 */
+  mood?: 'confident' | 'anxious' | 'creative' | 'tired' | 'focused' | null;
+}
+
+/**
+ * V3.0 穿搭建議（情境共振版）
+ */
+export interface OutfitAdviceV11 {
+  topColor: string;
+  topElement: string;
+  bottomColor: string;
+  bottomElement: string;
+  shoesColor: string;
+  shoesElement: string;
+  accentColor: string;
+  energyTag: string;
+  summary: string;
+  /** V3.0 新增：動態推理文案（情境感知） */
+  reasoning: string;
+  /** V3.0 新增：大運背景色影響說明 */
+  daYunNote: string;
+  /** V3.0 新增：月相影響說明 */
+  moonPhaseNote: string;
+  /** V3.0 新增：情境修正說明（若有） */
+  contextNote?: string;
+}
+
+// 事件對應的能量強化方向
+const EVENT_ELEMENT_BOOST: Record<string, { element: string; reason: string }> = {
+  important_meeting: { element: '金', reason: '重要會議需要官殺之金的決斷力與威信' },
+  interview:         { element: '金', reason: '面試場合需要正官之金的規範與可信度' },
+  date:              { element: '火', reason: '約會場合需要食傷之火的魅力與表達力' },
+  creative_work:     { element: '火', reason: '創意工作需要食神之火的靈感與才華輸出' },
+  negotiation:       { element: '土', reason: '談判場合需要財星之土的穩健與落地感' },
+  rest:              { element: '水', reason: '休息日可順應水的流動，選擇舒適低調的穿搭' },
+};
+
+// 心情對應的穿搭微調
+const MOOD_MODIFIER: Record<string, string> = {
+  confident: '今日心情自信，可大膽選擇主色系中較鮮豔的色調，讓自信從外在展現。',
+  anxious:   '今日心情焦慮，建議選擇大地色系的穩重配色，讓土的能量幫助你安定心神。',
+  creative:  '今日創意湧現，可在配件上加入一個火色系的亮點，讓靈感能量有出口。',
+  tired:     '今日能量偏低，選擇舒適的棉麻材質，以自然系大地色為主，不需刻意補運。',
+  focused:   '今日需要專注，選擇金色系的純淨配色，讓金的精準幫助你集中注意力。',
+};
+
+/**
+ * 生成動態推理文案（V3.0 核心功能）
+ * 將穿搭建議轉化為有溫度、有邏輯的命理解釋
+ */
+export function generateReasoningText(
+  tenGod: string,
+  strategy: string,
+  topColor: string,
+  bottomColor: string,
+  daYunRole: string,
+  moonPhaseName: string,
+  userContext?: UserContext
+): string {
+  const baseStrategy = strategy || '均衡守成';
+
+  // 策略對應的核心邏輯說明
+  const strategyLogic: Record<string, string> = {
+    '強勢補弱': '今日宇宙能量有所缺失，我們需要主動出擊，用穿搭的顏色來補充命格中最需要的能量。',
+    '借力打力': `今日${tenGod}入局，帶來一定的壓力與挑戰。聰明的做法不是硬碰硬，而是借助這股能量，轉化為前進的動力。`,
+    '順勢生旺': `今日${tenGod}與你的用神完美共振，宇宙能量正在順行。我們不需要刻意去「補」，而是要「順勢」，讓自然的能量流動為你加持。`,
+    '食神生財': `今日食神/傷官能量旺盛，你的才華（火）正處於高點。穿搭的重點是讓這股才華能量流動起來，最終化為實際的財富（土）。`,
+    '均衡守成': '今日能量相對平衡，穿搭策略以守成為主，選擇能讓你感到舒適自在的配色，保持穩定的能量輸出。',
+  };
+
+  const logicText = strategyLogic[baseStrategy] || strategyLogic['均衡守成'];
+
+  // 大運背景色說明
+  const daYunText = daYunRole
+    ? `（大運背景：你目前正走「${daYunRole}」大運，這是今日穿搭的長期底色。）`
+    : '';
+
+  // 月相說明
+  const moonText = moonPhaseName
+    ? `今日月相為「${moonPhaseName}」，月亮的能量也在影響著今日的氣場。`
+    : '';
+
+  // 情境說明
+  let contextText = '';
+  if (userContext?.event && EVENT_ELEMENT_BOOST[userContext.event]) {
+    const boost = EVENT_ELEMENT_BOOST[userContext.event];
+    contextText = `特別提醒：今日你有「${getEventLabel(userContext.event)}」，${boost.reason}，穿搭已針對此情境進行微調。`;
+  }
+  if (userContext?.mood && MOOD_MODIFIER[userContext.mood]) {
+    contextText += (contextText ? ' ' : '') + MOOD_MODIFIER[userContext.mood];
+  }
+
+  return [
+    logicText,
+    `今日建議：**${topColor}上衣**搭配**${bottomColor}下裝**。`,
+    moonText,
+    daYunText,
+    contextText,
+  ].filter(Boolean).join(' ');
+}
+
+function getEventLabel(event: string): string {
+  const labels: Record<string, string> = {
+    important_meeting: '重要會議',
+    date: '約會',
+    interview: '面試',
+    creative_work: '創意工作',
+    negotiation: '商業談判',
+    rest: '休息日',
+  };
+  return labels[event] || event;
+}
+
+/**
+ * 生成 V3.0 情境共振穿搭建議
+ * 整合：基礎十神策略 + 大運背景色 + 月相 + 用戶情境
+ */
+export function generateOutfitAdviceV11(
+  tenGod: string,
+  dailyStrategy: string,
+  daYunRole: string,
+  daYunKeyTheme: string,
+  moonPhaseName: string,
+  moonPhaseType: string,
+  userContext?: UserContext
+): OutfitAdviceV11 {
+  // Step 1: 取得基礎十神穿搭策略
+  const baseOutfit = OUTFIT_STRATEGY_BY_TENGOD[tenGod] ?? OUTFIT_STRATEGY_BY_TENGOD['食神'];
+
+  // Step 2: 情境修正（事件導向的顏色微調）
+  let topColor = baseOutfit.topColor;
+  let bottomColor = baseOutfit.bottomColor;
+  let shoesColor = baseOutfit.shoesColor;
+  let contextNote: string | undefined;
+
+  if (userContext?.event) {
+    const boost = EVENT_ELEMENT_BOOST[userContext.event];
+    if (boost) {
+      // 重要會議/面試：強化金元素（白色/銀色）
+      if ((userContext.event === 'important_meeting' || userContext.event === 'interview')
+          && baseOutfit.topElement !== '金') {
+        topColor = `${baseOutfit.topColor}（建議加入白色或銀色配件強化決斷力）`;
+        contextNote = `今日有${getEventLabel(userContext.event)}，已在穿搭中強化金元素的決斷氣場。`;
+      }
+      // 約會/創意工作：強化火元素
+      if ((userContext.event === 'date' || userContext.event === 'creative_work')
+          && baseOutfit.topElement !== '火') {
+        topColor = `${baseOutfit.topColor}（建議加入一件暖色系配件提升魅力）`;
+        contextNote = `今日有${getEventLabel(userContext.event)}，已在穿搭中加強火元素的表達力。`;
+      }
+    }
+  }
+
+  // Step 3: 月相微調（滿月加強主色，新月加入白色）
+  let moonPhaseNote = MOON_PHASE_OUTFIT_MODIFIER['殘月']; // 預設
+  if (moonPhaseName === '滿月' || moonPhaseType === 'full_moon') {
+    moonPhaseNote = MOON_PHASE_OUTFIT_MODIFIER['滿月'];
+    topColor = topColor.replace('/', '/ 可選更鮮豔的');
+  } else if (moonPhaseName === '新月' || moonPhaseType === 'new_moon') {
+    moonPhaseNote = MOON_PHASE_OUTFIT_MODIFIER['新月'];
+  } else if (moonPhaseType === 'first_quarter') {
+    moonPhaseNote = MOON_PHASE_OUTFIT_MODIFIER['上弦月'];
+  } else if (moonPhaseType === 'last_quarter') {
+    moonPhaseNote = MOON_PHASE_OUTFIT_MODIFIER['下弦月'];
+  }
+
+  // Step 4: 大運背景色注記
+  const daYunNote = daYunKeyTheme
+    ? `大運主題「${daYunKeyTheme.slice(0, 15)}...」正在影響你的長期能量背景色，今日穿搭已納入此背景。`
+    : '';
+
+  // Step 5: 生成推理文案
+  const reasoning = generateReasoningText(
+    tenGod,
+    dailyStrategy,
+    topColor,
+    bottomColor,
+    daYunRole,
+    moonPhaseName,
+    userContext
+  );
+
+  return {
+    topColor,
+    topElement: baseOutfit.topElement,
+    bottomColor,
+    bottomElement: baseOutfit.bottomElement,
+    shoesColor,
+    shoesElement: baseOutfit.shoesElement,
+    accentColor: baseOutfit.accentColor,
+    energyTag: baseOutfit.energyTag,
+    summary: baseOutfit.summary,
+    reasoning,
+    daYunNote,
+    moonPhaseNote,
+    contextNote,
+  };
+}

@@ -2716,3 +2716,29 @@
 - [ ] 撰寫 /config/resonance_rules.json 初始配置
 - [ ] 撰寫 /docs/agent-persona.md Agent 人格與規則文件
 - [ ] 提供給用戶可複製的指令文字
+
+## V11.0 全鏈路動態共振系統升級（依命理顧問 Agent 規格）
+
+### Part 1：大運計算層整合
+- [x] 新建 server/lib/daYunEngine.ts（大運計算引擎，含 DaYunResult 接口與 calculateDaYun 函數）
+- [x] 在 userProfile.ts 新增 daYunTable 大運排列靜態數據
+- [x] 修改 wuxingEngine.ts calculateWeightedElements 整合大運 weightAdjustment（Δt）
+
+### Part 2：神喻穿搭引擎 V3.0 升級
+- [x] 重構 outfitStrategy.ts：新增 generateOutfitAdviceV11 函數（情境共振決策樹）
+- [x] 新增 generateReasoningText 函數（動態生成穿搭推理文案）
+- [ ] 修改 strategyEngine.ts 支援 userContext（event/mood）情境參數（已整合進 outfitStrategy.ts）
+- [ ] 前端 WarRoom 作戰室加入「今日特殊事件」輸入欄位（待前端整合）
+
+### Part 3：核心計算引擎升級
+- [x] 在 wuxingEngine.ts 整合 getMoonPhase 月相微調邏輯（新月/滿月各五行加成）
+- [x] 動態加權比例：envWeight = 0.70 + Δt，selfWeight = 0.30 - Δt
+
+### Part 4：新功能模塊開發
+- [x] 新建 server/lib/energyTracker.ts（logDailyEnergy + getEnergyTrend）
+- [x] 新建 server/lib/decisionSupportEngine.ts（三層結構：快速洞察→深度解讀→可操作建議）
+- [x] 在 drizzle/schema.ts 新增 daily_energy_logs 資料表
+- [x] 資料庫 daily_energy_logs 表建立完成
+- [x] tRPC v11 router 整合（getDaYun / getOutfitV3 / getEnergyTrend / getDailyDecision）
+- [ ] 前端新增能量趨勢圖表頁面（/energy-trend）（待前端開發）
+- [ ] 所有新模組新增 Vitest 單元測試（待撰寫）

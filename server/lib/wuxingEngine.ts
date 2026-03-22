@@ -1,8 +1,11 @@
 /**
- * 五行加權計算引擎 V9.0
- * 核心算法：今日五行 = 本命五行×30% + 環境五行×70%
+ * 五行加權計算引擎 V11.0
+ * 核心算法：今日五行 = 本命五行×(30%-Δt) + 環境五行×(70%+Δt)
+ * Δt 由大運計算引擎提供，反映十年大運週期的背景色影響
  * 日主：甲木，終身補運優先級：火>土>金
  */
+import { type DaYunResult } from './daYunEngine';
+import { getMoonPhase } from './moonPhase';
 
 // ============================================================
 // 天干地支五行屬性表
@@ -299,14 +302,19 @@ export interface EnergyLevel {
 }
 
 /**
- * 計算加權五行比例
+ * 計算加權五行比例 V11.0
  * @param env 環境五行比例
  * @param dynamicNatalRatio 可選：動態本命五行比例（用戶個人命格），若不傳則使用預設甲木命格
+ * @param weatherRatio 可選：天氣五行比例
+ * @param daYunResult 可選：大運計算結果（V11.0 新增，提供 Δt 動態加權調整）
+ * @param currentDate 可選：當前日期（用於月相計算，預設今日）
  */
 export function calculateWeightedElements(
   env: ElementRatio,
   dynamicNatalRatio?: Record<string, number>,
-  weatherRatio?: ElementRatio
+  weatherRatio?: ElementRatio,
+  daYunResult?: DaYunResult,
+  currentDate?: Date
 ): WeightedElementResult {
   const natalSource = dynamicNatalRatio || NATAL_ELEMENT_RATIO;
   const natal: ElementRatio = {
@@ -317,21 +325,53 @@ export function calculateWeightedElements(
     水: natalSource['水'] ?? NATAL_ELEMENT_RATIO.水,
   };
 
-  // 三維加權公式：本命30% + 環境50% + 天氣20%（若無天氣則回退：本命30% + 環境70%）
+  // V11.0：大運動態加權調整（Δt 由大運引擎提供）
+  const delta = daYunResult?.daYunInfluence.weightAdjustment ?? 0;
+  const envBaseWeight = Math.min(0.85, Math.max(0.55, 0.70 + delta));
+  const selfBaseWeight = Math.min(0.45, Math.max(0.15, 0.30 - delta));
+
+  // 三維加權公式：本命(30%-Δt) + 環境(50%+Δt) + 天氣20%（若無天氣則回退：本命(30%-Δt) + 環境(70%+Δt)）
   const weather = weatherRatio;
-  const weighted: ElementRatio = weather ? {
-    木: natal.木 * 0.3 + env.木 * 0.5 + weather.木 * 0.2,
-    火: natal.火 * 0.3 + env.火 * 0.5 + weather.火 * 0.2,
-    土: natal.土 * 0.3 + env.土 * 0.5 + weather.土 * 0.2,
-    金: natal.金 * 0.3 + env.金 * 0.5 + weather.金 * 0.2,
-    水: natal.水 * 0.3 + env.水 * 0.5 + weather.水 * 0.2,
+  let weighted: ElementRatio = weather ? {
+    木: natal.木 * selfBaseWeight * (3/5) + env.木 * (envBaseWeight * (5/7)) + weather.木 * 0.2,
+    火: natal.火 * selfBaseWeight * (3/5) + env.火 * (envBaseWeight * (5/7)) + weather.火 * 0.2,
+    土: natal.土 * selfBaseWeight * (3/5) + env.土 * (envBaseWeight * (5/7)) + weather.土 * 0.2,
+    金: natal.金 * selfBaseWeight * (3/5) + env.金 * (envBaseWeight * (5/7)) + weather.金 * 0.2,
+    水: natal.水 * selfBaseWeight * (3/5) + env.水 * (envBaseWeight * (5/7)) + weather.水 * 0.2,
   } : {
-    木: natal.木 * 0.3 + env.木 * 0.7,
-    火: natal.火 * 0.3 + env.火 * 0.7,
-    土: natal.土 * 0.3 + env.土 * 0.7,
-    金: natal.金 * 0.3 + env.金 * 0.7,
-    水: natal.水 * 0.3 + env.水 * 0.7,
+    木: natal.木 * selfBaseWeight + env.木 * envBaseWeight,
+    火: natal.火 * selfBaseWeight + env.火 * envBaseWeight,
+    土: natal.土 * selfBaseWeight + env.土 * envBaseWeight,
+    金: natal.金 * selfBaseWeight + env.金 * envBaseWeight,
+    水: natal.水 * selfBaseWeight + env.水 * envBaseWeight,
   };
+
+  // V11.0：月相微調（月相對五行能量的週期性影響）
+  const moonPhaseInfo = getMoonPhase(currentDate);
+  const moonPhase = moonPhaseInfo.phase;
+  if (moonPhase === 'new_moon' || moonPhase === 'waning_crescent') {
+    // 新月/晦月：水能量增強 10%，金能量微增 5%
+    weighted.水 *= 1.10;
+    weighted.金 *= 1.05;
+  } else if (moonPhase === 'full_moon') {
+    // 滿月：火能量增強 10%，土能量微增 5%
+    weighted.火 *= 1.10;
+    weighted.土 *= 1.05;
+  } else if (moonPhase === 'first_quarter') {
+    // 上弦月：木能量增強 5%（生長之力）
+    weighted.木 *= 1.05;
+  } else if (moonPhase === 'last_quarter') {
+    // 下弦月：金能量增強 5%（收斂之力）
+    weighted.金 *= 1.05;
+  }
+
+  // 歸一化處理（確保總和為 1.0）
+  const total = Object.values(weighted).reduce((s, v) => s + v, 0);
+  if (total > 0) {
+    for (const k of Object.keys(weighted) as (keyof ElementRatio)[]) {
+      weighted[k] = weighted[k] / total;
+    }
+  }
 
   const levels: Record<string, EnergyLevel> = {};
   for (const el of ["木", "火", "土", "金", "水"] as const) {

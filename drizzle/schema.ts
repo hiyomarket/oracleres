@@ -1348,3 +1348,36 @@ export const accessTokens = mysqlTable("access_tokens", {
 });
 export type AccessToken = typeof accessTokens.$inferSelect;
 export type InsertAccessToken = typeof accessTokens.$inferInsert;
+
+/**
+ * 每日五行能量記錄表（V11.0 新增）
+ * 用於追蹤命格進化軌跡，提供趨勢分析
+ */
+export const dailyEnergyLogs = mysqlTable("daily_energy_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  /** 日期字串 YYYY-MM-DD */
+  date: varchar("date", { length: 10 }).notNull(),
+  /** 木能量比例（0-100，整數） */
+  wood: int("wood").notNull().default(0),
+  /** 火能量比例（0-100，整數） */
+  fire: int("fire").notNull().default(0),
+  /** 土能量比例（0-100，整數） */
+  earth: int("earth").notNull().default(0),
+  /** 金能量比例（0-100，整數） */
+  metal: int("metal").notNull().default(0),
+  /** 水能量比例（0-100，整數） */
+  water: int("water").notNull().default(0),
+  /** 當日主導五行 */
+  dominantElement: varchar("dominantElement", { length: 10 }).notNull(),
+  /** 當日最弱五行 */
+  weakestElement: varchar("weakestElement", { length: 10 }).notNull(),
+  /** 當日策略 */
+  strategy: varchar("strategy", { length: 20 }),
+  /** 當日十神 */
+  tenGod: varchar("tenGod", { length: 10 }),
+  createdAt: bigint("createdAt", { mode: "number" }).notNull(),
+  updatedAt: bigint("updatedAt", { mode: "number" }).notNull(),
+});
+export type DailyEnergyLog = typeof dailyEnergyLogs.$inferSelect;
+export type InsertDailyEnergyLog = typeof dailyEnergyLogs.$inferInsert;

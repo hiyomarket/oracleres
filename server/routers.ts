@@ -47,6 +47,10 @@ import {
   generateDietaryAdvice,
   recommendBraceletsV9,
 } from "./lib/wuxingEngine";
+import { calculateDaYun, formatDaYunSummary } from "./lib/daYunEngine";
+import { generateOutfitAdviceV11, type UserContext } from "./lib/outfitStrategy";
+import { logDailyEnergy, getEnergyTrend } from "./lib/energyTracker";
+import { generateDailyDecisionReport } from "./lib/decisionSupportEngine";
 
 export const appRouter = router({
   system: systemRouter,
@@ -3415,6 +3419,89 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
 
         const fortune = JSON.parse(response.choices[0].message.content as string);
         return { success: true, fortune, birthdate: input.birthdate, lifePath };
+      }),
+  }),
+
+  // ═══════════════════════════════════════════════════════════════
+  // V11.0 全鏈路動態共振系統新路由
+  // ═══════════════════════════════════════════════════════════════
+  v11: router({
+    /**
+     * 大運計算：取得命主當前大運資訊
+     */
+    getDaYun: publicProcedure.query(() => {
+      const result = calculateDaYun(1984);
+      return {
+        ...result,
+        summary: formatDaYunSummary(result),
+      };
+    }),
+
+    /**
+     * V3.0 情境共振穿搭建議
+     */
+    getOutfitV3: publicProcedure
+      .input((input: unknown) => {
+        const i = input as {
+          tenGod?: string;
+          dailyStrategy?: string;
+          moonPhaseName?: string;
+          moonPhaseType?: string;
+          userContext?: UserContext;
+        };
+        return i;
+      })
+      .query(({ input }) => {
+        const daYun = calculateDaYun(1984);
+        return generateOutfitAdviceV11(
+          input.tenGod ?? '食神',
+          input.dailyStrategy ?? '均衡守成',
+          daYun.currentDaYun.role,
+          daYun.currentDaYun.theme,
+          input.moonPhaseName ?? '上弦月',
+          input.moonPhaseType ?? 'first_quarter',
+          input.userContext
+        );
+      }),
+
+    /**
+     * 能量趨勢查詢
+     */
+    getEnergyTrend: protectedProcedure
+      .input((input: unknown) => {
+        const i = input as { period?: '7d' | '30d' | '90d' };
+        return i;
+      })
+      .query(async ({ ctx, input }) => {
+        return getEnergyTrend(ctx.user.id, input.period ?? '30d');
+      }),
+
+    /**
+     * 每日決策支持報告
+     */
+    getDailyDecision: publicProcedure
+      .input((input: unknown) => {
+        const i = input as {
+          date?: string;
+          birthYear?: number;
+        };
+        return i;
+      })
+      .query(({ input }) => {
+        const now = new Date();
+        const date = input.date ?? now.toISOString().slice(0, 10);
+        const daYun = calculateDaYun(input.birthYear ?? 1984, now);
+
+        // 簡化的五行計算（使用当前日期的環境五行）
+        const dateInfo = getFullDateInfo(now);
+        const env = calculateEnvironmentElements(
+          dateInfo.yearPillar.stem, dateInfo.yearPillar.branch,
+          dateInfo.monthPillar.stem, dateInfo.monthPillar.branch,
+          dateInfo.dayPillar.stem, dateInfo.dayPillar.branch
+        );
+        const weighted = calculateWeightedElements(env, undefined, undefined, daYun, now);
+
+        return generateDailyDecisionReport(weighted, daYun, date);
       }),
   }),
 });
