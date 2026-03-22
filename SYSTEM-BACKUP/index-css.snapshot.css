@@ -1,0 +1,2626 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500;600;700;900&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  /* 天命共振主題 - 深邃水藍/墨綠 */
+  --primary: oklch(0.72 0.20 45);
+  --primary-foreground: oklch(0.10 0.02 220);
+  --sidebar-primary: oklch(0.72 0.20 45);
+  --sidebar-primary-foreground: oklch(0.10 0.02 220);
+  --chart-1: oklch(0.72 0.20 45);
+  --chart-2: oklch(0.55 0.15 200);
+  --chart-3: oklch(0.45 0.12 150);
+  --chart-4: oklch(0.65 0.20 30);
+  --chart-5: oklch(0.50 0.10 270);
+  --radius: 0.75rem;
+  --background: oklch(0.10 0.04 222);
+  --foreground: oklch(0.92 0.02 60);
+  --card: oklch(0.14 0.05 218);
+  --card-foreground: oklch(0.90 0.02 60);
+  --popover: oklch(0.13 0.04 220);
+  --popover-foreground: oklch(0.90 0.02 60);
+  --secondary: oklch(0.20 0.06 210);
+  --secondary-foreground: oklch(0.85 0.04 60);
+  --muted: oklch(0.18 0.04 215);
+  --muted-foreground: oklch(0.58 0.04 200);
+  --accent: oklch(0.65 0.20 40);
+  --accent-foreground: oklch(0.10 0.02 220);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.26 0.05 215);
+  --input: oklch(0.20 0.05 215);
+  --ring: oklch(0.72 0.18 45);
+  --sidebar: oklch(0.12 0.05 220);
+  --sidebar-foreground: oklch(0.90 0.02 60);
+  --sidebar-accent: oklch(0.20 0.06 210);
+  --sidebar-accent-foreground: oklch(0.90 0.02 60);
+  --sidebar-border: oklch(0.26 0.05 215);
+  --sidebar-ring: oklch(0.72 0.18 45);
+  /* 導覽列 / 頁面 / tooltip 專用 */
+  --nav-bg: oklch(0.08 0.03 220 / 0.92);
+  --nav-border: oklch(0.28 0.05 215 / 0.4);
+  --page-bg: oklch(0.07 0.03 222);
+  --tooltip-bg: oklch(0.15 0.05 218);
+  --tooltip-border: oklch(0.30 0.05 215 / 0.6);
+}
+.dark {
+  --primary: oklch(0.72 0.20 45);
+  --primary-foreground: oklch(0.10 0.02 220);
+  --background: oklch(0.10 0.04 222);
+  --foreground: oklch(0.92 0.02 60);
+  --card: oklch(0.14 0.05 218);
+  --card-foreground: oklch(0.90 0.02 60);
+  --popover: oklch(0.13 0.04 220);
+  --popover-foreground: oklch(0.90 0.02 60);
+  --secondary: oklch(0.20 0.06 210);
+  --secondary-foreground: oklch(0.85 0.04 60);
+  --muted: oklch(0.18 0.04 215);
+  --muted-foreground: oklch(0.58 0.04 200);
+  --accent: oklch(0.65 0.20 40);
+  --accent-foreground: oklch(0.10 0.02 220);
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.26 0.05 215);
+  --input: oklch(0.20 0.05 215);
+  --ring: oklch(0.72 0.18 45);
+  /* 導覽列 / 頁面 / tooltip 專用 */
+  --nav-bg: oklch(0.08 0.03 220 / 0.92);
+  --nav-border: oklch(0.28 0.05 215 / 0.4);
+  --page-bg: oklch(0.07 0.03 222);
+  --tooltip-bg: oklch(0.15 0.05 218);
+  --tooltip-border: oklch(0.30 0.05 215 / 0.6);
+}
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Noto Serif TC', 'Noto Sans TC', serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Noto Serif TC', serif;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+/* ===== 天命共振動畫 ===== */
+@keyframes waterFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes flamePulse {
+  0%, 100% {
+    box-shadow: 0 0 10px oklch(0.72 0.20 45 / 0.6), 0 0 25px oklch(0.72 0.20 45 / 0.4), 0 0 50px oklch(0.72 0.20 45 / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px oklch(0.82 0.18 75 / 0.8), 0 0 45px oklch(0.72 0.20 45 / 0.6), 0 0 80px oklch(0.72 0.20 45 / 0.3);
+  }
+}
+@keyframes shimmer {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+@keyframes throwUpLeft {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); }
+  35% { transform: translateY(-160px) translateX(-50px) rotate(200deg); }
+  65% { transform: translateY(-120px) translateX(-35px) rotate(310deg); }
+  100% { transform: translateY(0) translateX(0) rotate(var(--final-rotation, 0deg)); }
+}
+@keyframes throwUpRight {
+  0% { transform: translateY(0) translateX(0) rotate(0deg); }
+  35% { transform: translateY(-160px) translateX(50px) rotate(-200deg); }
+  65% { transform: translateY(-120px) translateX(35px) rotate(-310deg); }
+  100% { transform: translateY(0) translateX(0) rotate(var(--final-rotation, 0deg)); }
+}
+@keyframes resultReveal {
+  0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes liJiaoFloat {
+  0%, 100% { transform: translateY(0) rotate(90deg); }
+  50% { transform: translateY(-15px) rotate(90deg); }
+}
+@keyframes energyRing {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+@keyframes textFadeIn {
+  0% { opacity: 0; letter-spacing: 0.5em; }
+  100% { opacity: 1; letter-spacing: normal; }
+}
+@keyframes ripple {
+  0% { transform: scale(0); opacity: 0.8; }
+  100% { transform: scale(4); opacity: 0; }
+}
+@keyframes bambooSway {
+  0%, 100% { transform: rotate(-1.5deg) skewX(-0.5deg); transform-origin: bottom center; }
+  50% { transform: rotate(1.5deg) skewX(0.5deg); transform-origin: bottom center; }
+}
+@keyframes particleFloat {
+  0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.8; }
+  100% { transform: translateY(-80px) translateX(var(--tx, 20px)) scale(0); opacity: 0; }
+}
+
+/* ===== 天命共振組件 ===== */
+/* ===== 手機 UI 全站優化 ===== */
+
+/* 手機底部安全區域（iOS Home Bar） */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 手機版頁面底部 padding（避免被底部導覽列遮擋） */
+@media (max-width: 768px) {
+  .oracle-page-content {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 改善手機觸控回饋 */
+  button, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  /* 導覽列水平滾動容器：允許 pan-x 手勢，防止回彈 */
+  .nav-scroll-container {
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    will-change: scroll-position;
+    /* 防止 iOS 慣性回彈 */
+    -webkit-scroll-snap-type: none;
+    scroll-snap-type: none;
+  }
+  /* 導覽列容器內的按鈕：允許 pan-x，禁止 transform 動畫干擾滾動 */
+  .nav-scroll-container button,
+  .nav-scroll-container [role="button"] {
+    touch-action: manipulation;
+    /* 禁用 active transform，防止 iOS 把滑動誤判為點擊 */
+    transform: none !important;
+  }
+
+  /* 手機版卡片間距縮小 */
+  .glass-card {
+    border-radius: 1rem;
+  }
+
+  /* 手機版輸入框字體大小（防止 iOS 自動縮放） */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* 手機版滾動優化 */
+@supports (-webkit-overflow-scrolling: touch) {
+  .overflow-y-auto, .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+.oracle-page {
+  background: var(--page-bg, oklch(0.07 0.03 222));
+  min-height: 100vh;
+  color: var(--foreground);
+}
+/* ===== 淺色主題全局文字覆蓋（data-theme-mode="light" 時生效） ===== */
+/* 核心原則：淺色主題下，白色/淺灰文字全部改為深色 foreground */
+:root[data-theme-mode="light"] .text-white,
+:root[data-theme-mode="light"] .text-slate-100,
+:root[data-theme-mode="light"] .text-slate-200,
+:root[data-theme-mode="light"] .text-slate-300 {
+  color: var(--foreground) !important;
+}
+:root[data-theme-mode="light"] .text-white\/90,
+:root[data-theme-mode="light"] .text-white\/80,
+:root[data-theme-mode="light"] .text-white\/70 {
+  color: color-mix(in oklch, var(--foreground) 90%, transparent) !important;
+}
+:root[data-theme-mode="light"] .text-white\/60,
+:root[data-theme-mode="light"] .text-slate-400 {
+  color: color-mix(in oklch, var(--foreground) 65%, transparent) !important;
+}
+:root[data-theme-mode="light"] .text-white\/50,
+:root[data-theme-mode="light"] .text-white\/40,
+:root[data-theme-mode="light"] .text-slate-500 {
+  color: var(--muted-foreground) !important;
+}
+:root[data-theme-mode="light"] .text-white\/30,
+:root[data-theme-mode="light"] .text-white\/20,
+:root[data-theme-mode="light"] .text-slate-600,
+:root[data-theme-mode="light"] .text-slate-700 {
+  color: color-mix(in oklch, var(--muted-foreground) 70%, transparent) !important;
+}
+/* 淺色主題下，深色背景卡片改為淺色 */
+:root[data-theme-mode="light"] .bg-slate-800,
+:root[data-theme-mode="light"] .bg-slate-900,
+:root[data-theme-mode="light"] .bg-black\/50,
+:root[data-theme-mode="light"] .bg-black\/40,
+:root[data-theme-mode="light"] .bg-black\/30 {
+  background-color: color-mix(in oklch, var(--card) 90%, var(--border)) !important;
+}
+/* 淺色主題下的 glass-card 調整 */
+:root[data-theme-mode="light"] .glass-card {
+  background: var(--glass-card-bg, oklch(0.96 0.02 285 / 0.9)) !important;
+  border-color: var(--glass-card-border, oklch(0.78 0.06 285 / 0.5)) !important;
+}
+/* 淺色主題下的分隔線調整 */
+:root[data-theme-mode="light"] .border-white\/10,
+:root[data-theme-mode="light"] .border-white\/20 {
+  border-color: var(--border) !important;
+}
+/* 淺色主題下的半透明白色背景（WealthPage/DietPage 等使用 bg-white/5 等） */
+:root[data-theme-mode="light"] .bg-white\/5 {
+  background-color: oklch(0.88 0.01 60 / 0.5) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/10 {
+  background-color: oklch(0.86 0.015 60 / 0.55) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/15 {
+  background-color: oklch(0.84 0.015 60 / 0.6) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/20 {
+  background-color: oklch(0.82 0.02 60 / 0.65) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/25 {
+  background-color: oklch(0.80 0.02 60 / 0.7) !important;
+}
+/* 淺色主題下的半透明白色邊框 */
+:root[data-theme-mode="light"] .border-white\/5 {
+  border-color: oklch(0.70 0.02 60 / 0.25) !important;
+}
+:root[data-theme-mode="light"] .border-white\/15 {
+  border-color: oklch(0.65 0.02 60 / 0.35) !important;
+}
+/* 淺色主題下 WealthPage/DietPage 輸入框修正 */
+:root[data-theme-mode="light"] .bg-white\/5.border-white\/10,
+:root[data-theme-mode="light"] input.bg-white\/5,
+:root[data-theme-mode="light"] textarea.bg-white\/5 {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+/* 淺色主題下的 oracle-page 文字修正（小範圍覆蓋） */
+.oracle-page .text-white\/60 {
+  color: color-mix(in oklch, var(--foreground) 60%, transparent);
+}
+.oracle-page .text-white\/80 {
+  color: color-mix(in oklch, var(--foreground) 80%, transparent);
+}
+.oracle-page .text-white\/40 {
+  color: color-mix(in oklch, var(--foreground) 40%, transparent);
+}
+
+/* ===================================================================
+   淺色主題：螢光色全面改為深色系
+   原則：淺色背景上，所有 -300/-400 亮色改為 -700/-800 深色
+   這讓淺色主題有足夠對比度，視覺沉穩不刺眼
+   =================================================================== */
+
+/* ── amber（金/橙）系列 ── */
+:root[data-theme-mode="light"] .text-amber-300,
+:root[data-theme-mode="light"] .text-amber-400 {
+  color: oklch(0.44 0.14 58) !important;
+}
+:root[data-theme-mode="light"] .text-amber-500 {
+  color: oklch(0.40 0.14 56) !important;
+}
+:root[data-theme-mode="light"] .text-amber-400\/80 {
+  color: oklch(0.44 0.14 58 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .hover\:text-amber-400:hover,
+:root[data-theme-mode="light"] .group-hover\:text-amber-400 {
+  color: oklch(0.40 0.14 56) !important;
+}
+:root[data-theme-mode="light"] .fill-amber-400 {
+  fill: oklch(0.44 0.14 58) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-500\/10,
+:root[data-theme-mode="light"] .bg-amber-500\/15 {
+  background-color: oklch(0.44 0.14 58 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-500\/20,
+:root[data-theme-mode="light"] .bg-amber-500\/25 {
+  background-color: oklch(0.44 0.14 58 / 0.18) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-500\/30 {
+  background-color: oklch(0.44 0.14 58 / 0.22) !important;
+}
+:root[data-theme-mode="light"] .border-amber-500\/20 {
+  border-color: oklch(0.44 0.14 58 / 0.30) !important;
+}
+:root[data-theme-mode="light"] .border-amber-500\/30 {
+  border-color: oklch(0.44 0.14 58 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .ring-amber-500\/30 {
+  --tw-ring-color: oklch(0.44 0.14 58 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-400\/20 {
+  background-color: oklch(0.44 0.14 58 / 0.15) !important;
+}
+:root[data-theme-mode="light"] .border-amber-400 {
+  border-color: oklch(0.44 0.14 58) !important;
+}
+
+/* ── red（紅）系列 ── */
+:root[data-theme-mode="light"] .text-red-300,
+:root[data-theme-mode="light"] .text-red-400 {
+  color: oklch(0.40 0.20 22) !important;
+}
+:root[data-theme-mode="light"] .text-red-500 {
+  color: oklch(0.36 0.20 22) !important;
+}
+:root[data-theme-mode="light"] .bg-red-500\/10,
+:root[data-theme-mode="light"] .bg-red-500\/15,
+:root[data-theme-mode="light"] .bg-red-500\/20 {
+  background-color: oklch(0.40 0.20 22 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-red-500\/20,
+:root[data-theme-mode="light"] .border-red-500\/30 {
+  border-color: oklch(0.40 0.20 22 / 0.35) !important;
+}
+
+/* ── blue（藍）系列 ── */
+:root[data-theme-mode="light"] .text-blue-300,
+:root[data-theme-mode="light"] .text-blue-400 {
+  color: oklch(0.38 0.16 255) !important;
+}
+:root[data-theme-mode="light"] .bg-blue-500\/10,
+:root[data-theme-mode="light"] .bg-blue-500\/15,
+:root[data-theme-mode="light"] .bg-blue-500\/20 {
+  background-color: oklch(0.38 0.16 255 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-blue-500\/20,
+:root[data-theme-mode="light"] .border-blue-500\/30 {
+  border-color: oklch(0.38 0.16 255 / 0.35) !important;
+}
+
+/* ── green（綠）系列 ── */
+:root[data-theme-mode="light"] .text-green-300,
+:root[data-theme-mode="light"] .text-green-400 {
+  color: oklch(0.38 0.16 145) !important;
+}
+:root[data-theme-mode="light"] .bg-green-500\/10,
+:root[data-theme-mode="light"] .bg-green-500\/15,
+:root[data-theme-mode="light"] .bg-green-500\/20 {
+  background-color: oklch(0.38 0.16 145 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-green-500\/20,
+:root[data-theme-mode="light"] .border-green-500\/30 {
+  border-color: oklch(0.38 0.16 145 / 0.35) !important;
+}
+
+/* ── emerald（翠綠）系列 ── */
+:root[data-theme-mode="light"] .text-emerald-300,
+:root[data-theme-mode="light"] .text-emerald-400 {
+  color: oklch(0.38 0.16 162) !important;
+}
+:root[data-theme-mode="light"] .bg-emerald-500\/10,
+:root[data-theme-mode="light"] .bg-emerald-500\/15,
+:root[data-theme-mode="light"] .bg-emerald-500\/20 {
+  background-color: oklch(0.38 0.16 162 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-emerald-500\/20,
+:root[data-theme-mode="light"] .border-emerald-500\/30 {
+  border-color: oklch(0.38 0.16 162 / 0.35) !important;
+}
+
+/* ── purple（紫）系列 ── */
+:root[data-theme-mode="light"] .text-purple-300,
+:root[data-theme-mode="light"] .text-purple-400 {
+  color: oklch(0.38 0.18 305) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-500\/10,
+:root[data-theme-mode="light"] .bg-purple-500\/15,
+:root[data-theme-mode="light"] .bg-purple-500\/20 {
+  background-color: oklch(0.38 0.18 305 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-purple-500\/20,
+:root[data-theme-mode="light"] .border-purple-500\/30 {
+  border-color: oklch(0.38 0.18 305 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .hover\:bg-purple-500\/10:hover {
+  background-color: oklch(0.38 0.18 305 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .hover\:text-purple-300:hover {
+  color: oklch(0.38 0.18 305) !important;
+}
+:root[data-theme-mode="light"] .text-purple-400\/70 {
+  color: oklch(0.38 0.18 305 / 0.75) !important;
+}
+
+/* ── violet（紫羅蘭）系列 ── */
+:root[data-theme-mode="light"] .text-violet-300,
+:root[data-theme-mode="light"] .text-violet-400 {
+  color: oklch(0.38 0.18 295) !important;
+}
+
+/* ── orange（橙）系列 ── */
+:root[data-theme-mode="light"] .text-orange-300,
+:root[data-theme-mode="light"] .text-orange-400 {
+  color: oklch(0.42 0.16 42) !important;
+}
+:root[data-theme-mode="light"] .bg-orange-500\/10,
+:root[data-theme-mode="light"] .bg-orange-500\/20 {
+  background-color: oklch(0.42 0.16 42 / 0.12) !important;
+}
+
+/* ── yellow（黃）系列 ── */
+:root[data-theme-mode="light"] .text-yellow-300,
+:root[data-theme-mode="light"] .text-yellow-400 {
+  color: oklch(0.42 0.14 80) !important;
+}
+
+/* ── cyan（青）系列 ── */
+:root[data-theme-mode="light"] .text-cyan-300,
+:root[data-theme-mode="light"] .text-cyan-400,
+:root[data-theme-mode="light"] .text-cyan-500 {
+  color: oklch(0.38 0.14 210) !important;
+}
+:root[data-theme-mode="light"] .border-cyan-500\/30 {
+  border-color: oklch(0.38 0.14 210 / 0.35) !important;
+}
+
+/* ── teal（藍綠）系列 ── */
+:root[data-theme-mode="light"] .text-teal-300,
+:root[data-theme-mode="light"] .text-teal-400 {
+  color: oklch(0.38 0.12 195) !important;
+}
+
+/* ── sky（天空藍）系列 ── */
+:root[data-theme-mode="light"] .text-sky-300,
+:root[data-theme-mode="light"] .text-sky-400 {
+  color: oklch(0.38 0.14 235) !important;
+}
+:root[data-theme-mode="light"] .bg-sky-500\/15 {
+  background-color: oklch(0.38 0.14 235 / 0.12) !important;
+}
+
+/* ── pink（粉紅）系列 ── */
+:root[data-theme-mode="light"] .text-pink-300,
+:root[data-theme-mode="light"] .text-pink-400 {
+  color: oklch(0.42 0.18 350) !important;
+}
+
+/* ── rose（玫瑰）系列 ── */
+:root[data-theme-mode="light"] .text-rose-300,
+:root[data-theme-mode="light"] .text-rose-400 {
+  color: oklch(0.40 0.18 10) !important;
+}
+
+/* ── indigo（靛藍）系列 ── */
+:root[data-theme-mode="light"] .text-indigo-300,
+:root[data-theme-mode="light"] .text-indigo-400 {
+  color: oklch(0.38 0.18 275) !important;
+}
+
+/* ── fuchsia（紫紅）系列 ── */
+:root[data-theme-mode="light"] .text-fuchsia-300,
+:root[data-theme-mode="light"] .text-fuchsia-400 {
+  color: oklch(0.40 0.20 325) !important;
+}
+
+/* ── lime（黃綠）系列 ── */
+:root[data-theme-mode="light"] .text-lime-300,
+:root[data-theme-mode="light"] .text-lime-400 {
+  color: oklch(0.40 0.14 125) !important;
+}
+
+/* ── gray 系列修正 ── */
+:root[data-theme-mode="light"] .text-gray-200,
+:root[data-theme-mode="light"] .text-gray-300,
+:root[data-theme-mode="light"] .text-gray-400 {
+  color: color-mix(in oklch, var(--foreground) 70%, transparent) !important;
+}
+
+/* ── 淺色主題下的深色背景修正 ── */
+:root[data-theme-mode="light"] .bg-gray-800,
+:root[data-theme-mode="light"] .bg-gray-900,
+:root[data-theme-mode="light"] .bg-zinc-800,
+:root[data-theme-mode="light"] .bg-zinc-900,
+:root[data-theme-mode="light"] .bg-neutral-800,
+:root[data-theme-mode="light"] .bg-neutral-900 {
+  background-color: color-mix(in oklch, var(--card) 90%, var(--border)) !important;
+}
+
+/* ── 淺色主題下的深色漸層背景修正 ── */
+:root[data-theme-mode="light"] .bg-black\/60,
+:root[data-theme-mode="light"] .bg-black\/70,
+:root[data-theme-mode="light"] .bg-black\/80 {
+  background-color: oklch(0.85 0.02 60 / 0.35) !important;
+}
+
+/* ── 淺色主題下的 Recharts 圖表顏色修正 ── */
+:root[data-theme-mode="light"] .recharts-cartesian-axis-tick text,
+:root[data-theme-mode="light"] .recharts-cartesian-axis-tick-value {
+  fill: var(--foreground) !important;
+  opacity: 0.75;
+}
+:root[data-theme-mode="light"] .recharts-cartesian-grid line,
+:root[data-theme-mode="light"] .recharts-cartesian-grid-horizontal line,
+:root[data-theme-mode="light"] .recharts-cartesian-grid-vertical line {
+  stroke: var(--border) !important;
+  stroke-opacity: 1 !important;
+}
+:root[data-theme-mode="light"] .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+:root[data-theme-mode="light"] .recharts-legend-item-text {
+  color: var(--foreground) !important;
+}
+:root[data-theme-mode="light"] .recharts-text,
+:root[data-theme-mode="light"] .recharts-label {
+  fill: var(--foreground) !important;
+}
+:root[data-theme-mode="light"] .recharts-reference-line-label {
+  fill: var(--foreground) !important;
+}
+
+/* ── 淺色主題下的 drop-shadow 螢光效果移除 ── */
+:root[data-theme-mode="light"] [class*="drop-shadow"] {
+  filter: none !important;
+}
+
+/* ── 淺色主題下 SharedNav 下拉選單修正 ── */
+:root[data-theme-mode="light"] .bg-slate-800\/95,
+:root[data-theme-mode="light"] .bg-slate-900\/95 {
+  background-color: var(--popover) !important;
+}
+:root[data-theme-mode="light"] .border-slate-700\/50 {
+  border-color: var(--border) !important;
+}
+:root[data-theme-mode="light"] .text-slate-500.uppercase {
+  color: var(--muted-foreground) !important;
+}
+
+/* ===================================================================
+   淺色主題：補充缺漏的深色背景覆蓋（帶透明度版本 + 極深色）
+   =================================================================== */
+
+/* ── 極深色頁面底色（ProfilePage min-h-screen bg-gray-950 等）── */
+:root[data-theme-mode="light"] .bg-gray-950,
+:root[data-theme-mode="light"] .bg-slate-950,
+:root[data-theme-mode="light"] .bg-zinc-950,
+:root[data-theme-mode="light"] .bg-neutral-950,
+:root[data-theme-mode="light"] .bg-stone-950 {
+  background-color: var(--background) !important;
+}
+
+/* ── 深灰色帶透明度背景（gray）── */
+:root[data-theme-mode="light"] .bg-gray-800\/10,
+:root[data-theme-mode="light"] .bg-gray-800\/20 {
+  background-color: oklch(0.90 0.01 60 / 0.5) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-800\/30,
+:root[data-theme-mode="light"] .bg-gray-800\/40,
+:root[data-theme-mode="light"] .bg-gray-800\/50 {
+  background-color: oklch(0.88 0.015 60 / 0.6) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-800\/60,
+:root[data-theme-mode="light"] .bg-gray-800\/70,
+:root[data-theme-mode="light"] .bg-gray-800\/80 {
+  background-color: oklch(0.86 0.015 60 / 0.7) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-900\/10,
+:root[data-theme-mode="light"] .bg-gray-900\/20 {
+  background-color: oklch(0.92 0.01 60 / 0.4) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-900\/30,
+:root[data-theme-mode="light"] .bg-gray-900\/40 {
+  background-color: oklch(0.90 0.01 60 / 0.5) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-900\/50,
+:root[data-theme-mode="light"] .bg-gray-900\/60 {
+  background-color: oklch(0.88 0.015 60 / 0.6) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-900\/70,
+:root[data-theme-mode="light"] .bg-gray-900\/80 {
+  background-color: oklch(0.86 0.015 60 / 0.7) !important;
+}
+
+/* ── 深灰色帶透明度背景（slate）── */
+:root[data-theme-mode="light"] .bg-slate-800\/10,
+:root[data-theme-mode="light"] .bg-slate-800\/20 {
+  background-color: oklch(0.91 0.01 270 / 0.4) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800\/30 {
+  background-color: oklch(0.89 0.01 270 / 0.5) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800\/60,
+:root[data-theme-mode="light"] .bg-slate-800\/70,
+:root[data-theme-mode="light"] .bg-slate-800\/80 {
+  background-color: oklch(0.86 0.015 270 / 0.7) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/10,
+:root[data-theme-mode="light"] .bg-slate-900\/20 {
+  background-color: oklch(0.92 0.01 270 / 0.4) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/30 {
+  background-color: oklch(0.90 0.01 270 / 0.5) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/70,
+:root[data-theme-mode="light"] .bg-slate-900\/80 {
+  background-color: oklch(0.87 0.015 270 / 0.7) !important;
+}
+
+/* ── 深紫色背景（DivinationPage、TopicAdvicePanel）── */
+:root[data-theme-mode="light"] .bg-purple-950,
+:root[data-theme-mode="light"] .bg-purple-900 {
+  background-color: oklch(0.92 0.03 300) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-950\/10,
+:root[data-theme-mode="light"] .bg-purple-950\/20 {
+  background-color: oklch(0.88 0.04 300 / 0.25) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-950\/30,
+:root[data-theme-mode="light"] .bg-purple-950\/40 {
+  background-color: oklch(0.86 0.04 300 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-900\/10,
+:root[data-theme-mode="light"] .bg-purple-900\/15,
+:root[data-theme-mode="light"] .bg-purple-900\/20 {
+  background-color: oklch(0.88 0.04 300 / 0.20) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-900\/30,
+:root[data-theme-mode="light"] .bg-purple-900\/40 {
+  background-color: oklch(0.86 0.04 300 / 0.30) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-900\/50 {
+  background-color: oklch(0.84 0.04 300 / 0.40) !important;
+}
+
+/* ── 深靛藍色背景（TopicAdvicePanel 歷史標籤）── */
+:root[data-theme-mode="light"] .bg-indigo-900,
+:root[data-theme-mode="light"] .bg-indigo-950 {
+  background-color: oklch(0.92 0.03 270) !important;
+}
+:root[data-theme-mode="light"] .bg-indigo-900\/10,
+:root[data-theme-mode="light"] .bg-indigo-900\/20,
+:root[data-theme-mode="light"] .bg-indigo-900\/30 {
+  background-color: oklch(0.88 0.04 270 / 0.25) !important;
+}
+
+/* ── 深色 border 補充 ── */
+:root[data-theme-mode="light"] .border-gray-700\/30,
+:root[data-theme-mode="light"] .border-gray-700\/50 {
+  border-color: oklch(0.75 0.02 60 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .border-gray-600\/30,
+:root[data-theme-mode="light"] .border-gray-600\/50 {
+  border-color: oklch(0.72 0.02 60 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-slate-700\/30 {
+  border-color: oklch(0.75 0.02 270 / 0.30) !important;
+}
+:root[data-theme-mode="light"] .border-purple-700\/20,
+:root[data-theme-mode="light"] .border-purple-700\/40 {
+  border-color: oklch(0.55 0.12 300 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .border-indigo-700\/30 {
+  border-color: oklch(0.52 0.12 270 / 0.35) !important;
+}
+
+/* ── 補充缺漏的螢光文字色 ── */
+:root[data-theme-mode="light"] .text-teal-500 {
+  color: oklch(0.38 0.12 185) !important;
+}
+:root[data-theme-mode="light"] .text-cyan-300\/80,
+:root[data-theme-mode="light"] .text-cyan-400\/80 {
+  color: oklch(0.38 0.14 210 / 0.9) !important;
+}
+:root[data-theme-mode="light"] .text-purple-300\/80,
+:root[data-theme-mode="light"] .text-purple-400\/80 {
+  color: oklch(0.42 0.14 300 / 0.9) !important;
+}
+:root[data-theme-mode="light"] .text-pink-300\/80,
+:root[data-theme-mode="light"] .text-pink-400\/80 {
+  color: oklch(0.42 0.18 350 / 0.9) !important;
+}
+
+/* ── 淺色主題下輸入框修正 ── */
+:root[data-theme-mode="light"] input.bg-gray-800,
+:root[data-theme-mode="light"] input.bg-slate-800,
+:root[data-theme-mode="light"] textarea.bg-gray-800,
+:root[data-theme-mode="light"] textarea.bg-slate-800 {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+:root[data-theme-mode="light"] input.bg-slate-800\/60,
+:root[data-theme-mode="light"] textarea.bg-slate-800\/60 {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+:root[data-theme-mode="light"] input::placeholder,
+:root[data-theme-mode="light"] textarea::placeholder {
+  color: var(--muted-foreground) !important;
+  opacity: 0.7;
+}
+
+/* ── 淺色主題下 oracle-page 背景修正 ── */
+:root[data-theme-mode="light"] .oracle-page {
+  background: var(--background) !important;
+}
+
+/* ── WUXING_COLORS 五行主題深色背景（WarRoom 今日天命一句話、本日天命格言）── */
+/* 木：bg-emerald-950/40 */
+:root[data-theme-mode="light"] .bg-emerald-950\/40 {
+  background-color: oklch(0.92 0.04 162 / 0.18) !important;
+}
+/* 火：bg-red-950/40 */
+:root[data-theme-mode="light"] .bg-red-950\/40 {
+  background-color: oklch(0.92 0.04 22 / 0.18) !important;
+}
+/* 土：bg-amber-950/40 */
+:root[data-theme-mode="light"] .bg-amber-950\/40 {
+  background-color: oklch(0.92 0.04 58 / 0.18) !important;
+}
+/* 水：bg-blue-950/40 */
+:root[data-theme-mode="light"] .bg-blue-950\/40 {
+  background-color: oklch(0.92 0.04 255 / 0.18) !important;
+}
+/* 金：bg-slate-800/40 */
+:root[data-theme-mode="light"] .bg-slate-800\/40 {
+  background-color: oklch(0.91 0.01 270 / 0.20) !important;
+}
+
+/* ── WUXING_COLORS 五行邊框（帶透明度）── */
+:root[data-theme-mode="light"] .border-emerald-500\/50 {
+  border-color: oklch(0.50 0.14 162 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-red-500\/50 {
+  border-color: oklch(0.50 0.18 22 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-amber-500\/50 {
+  border-color: oklch(0.50 0.14 58 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-blue-500\/50 {
+  border-color: oklch(0.50 0.14 255 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-slate-400\/50 {
+  border-color: oklch(0.55 0.04 270 / 0.40) !important;
+}
+
+/* ── 塔羅牌卡片背景（bg-gradient-to-b from-amber-950/60 to-slate-900/60）── */
+:root[data-theme-mode="light"] .from-amber-950\/60 {
+  --tw-gradient-from: oklch(0.90 0.04 58 / 0.30) var(--tw-gradient-from-position) !important;
+}
+:root[data-theme-mode="light"] .to-slate-900\/60 {
+  --tw-gradient-to: oklch(0.88 0.01 270 / 0.30) var(--tw-gradient-to-position) !important;
+}
+
+/* ── 時辰格子當前高亮（bg-amber-500/60）── */
+:root[data-theme-mode="light"] .border-amber-500\/60 {
+  border-color: oklch(0.50 0.14 58 / 0.55) !important;
+}
+
+/* ── bg-white/3 時辰格子背景 ── */
+:root[data-theme-mode="light"] .bg-white\/3 {
+  background-color: oklch(0.88 0.01 60 / 0.45) !important;
+}
+
+/* ── 月相進度條（bg-gradient-to-r from-slate-400 to-white）── */
+:root[data-theme-mode="light"] .from-slate-400 {
+  --tw-gradient-from: oklch(0.55 0.04 270) var(--tw-gradient-from-position) !important;
+}
+:root[data-theme-mode="light"] .to-white {
+  --tw-gradient-to: oklch(0.92 0.01 270) var(--tw-gradient-to-position) !important;
+}
+
+/* ── text-amber-500/60 塔羅牌副標題 ── */
+:root[data-theme-mode="light"] .text-amber-500\/60 {
+  color: oklch(0.44 0.14 58 / 0.70) !important;
+}
+
+/* ── 淺色主題下 bg-amber-500/5 微弱背景 ── */
+:root[data-theme-mode="light"] .bg-amber-500\/5 {
+  background-color: oklch(0.44 0.14 58 / 0.08) !important;
+}
+
+/* ── 淺色主題下 border-amber-500/40 ── */
+:root[data-theme-mode="light"] .border-amber-500\/40 {
+  border-color: oklch(0.44 0.14 58 / 0.45) !important;
+}
+
+/* ── 淺色主題下 bg-yellow-400/8 本週最旺橫幅 ── */
+:root[data-theme-mode="light"] .bg-yellow-400\/8 {
+  background-color: oklch(0.80 0.14 80 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-yellow-400\/30 {
+  border-color: oklch(0.60 0.14 80 / 0.45) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-400\/50 {
+  color: oklch(0.50 0.14 80 / 0.70) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-300 {
+  color: oklch(0.48 0.14 80) !important;
+}
+:root[data-theme-mode="light"] .bg-yellow-400\/10 {
+  background-color: oklch(0.80 0.14 80 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .bg-yellow-400\/15 {
+  background-color: oklch(0.80 0.14 80 / 0.15) !important;
+}
+:root[data-theme-mode="light"] .bg-yellow-400\/25 {
+  background-color: oklch(0.80 0.14 80 / 0.22) !important;
+}
+:root[data-theme-mode="light"] .bg-yellow-400 {
+  background-color: oklch(0.72 0.16 80) !important;
+}
+
+/* ── 淺色主題下 text-slate-300（金五行文字）── */
+:root[data-theme-mode="light"] .text-slate-300 {
+  color: oklch(0.40 0.04 270) !important;
+}
+
+/* ── 淺色主題下 bg-red-500 紅色圓點 ── */
+:root[data-theme-mode="light"] .bg-red-500 {
+  background-color: oklch(0.50 0.18 22) !important;
+}
+:root[data-theme-mode="light"] .border-red-400 {
+  border-color: oklch(0.55 0.18 22) !important;
+}
+
+/* ── 淺色主題下 bg-emerald-500/20 border-emerald-500/40（已套用狀態）── */
+:root[data-theme-mode="light"] .bg-emerald-500\/20 {
+  background-color: oklch(0.50 0.14 162 / 0.15) !important;
+}
+:root[data-theme-mode="light"] .border-emerald-500\/40 {
+  border-color: oklch(0.50 0.14 162 / 0.45) !important;
+}
+:root[data-theme-mode="light"] .text-emerald-400 {
+  color: oklch(0.38 0.14 162) !important;
+}
+
+/* ── 淺色主題下 ProfilePage 的 text-gray-100 修正 ── */
+:root[data-theme-mode="light"] .text-gray-100 {
+  color: var(--foreground) !important;
+}
+
+.oracle-bg {
+  background: var(--oracle-bg, radial-gradient(
+    ellipse at 30% 20%,
+    oklch(0.20 0.08 165 / 0.8) 0%,
+    oklch(0.12 0.05 225 / 0.9) 40%,
+    oklch(0.08 0.03 220) 100%
+  ));
+}
+.flame-button {
+  background: var(--flame-button-gradient, linear-gradient(135deg, oklch(0.75 0.22 50) 0%, oklch(0.68 0.24 35) 50%, oklch(0.72 0.20 45) 100%));
+  animation: flamePulse 2.5s ease-in-out infinite;
+  transition: all 0.3s ease;
+  color: var(--primary-foreground, oklch(0.10 0.02 220));
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.flame-button:hover {
+  filter: brightness(1.15);
+  transform: translateY(-2px) scale(1.02);
+}
+.flame-button:active { transform: translateY(0) scale(0.98); }
+.flame-button:disabled { animation: none; opacity: 0.5; cursor: not-allowed; transform: none; }
+.glass-card {
+  background: var(--glass-card-bg, oklch(0.16 0.04 215 / 0.7));
+  backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.68 0.13 75 / 0.25);
+  transition: border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card:hover {
+  border-color: rgba(199, 139, 40, 0.65);
+  transform: translateY(-4px);
+  box-shadow: rgba(199, 139, 40, 0.2) 0px 0px 24px, rgba(0, 0, 0, 0.25) 0px 8px 32px, rgba(255, 255, 255, 0.1) 0px 1px inset;
+}
+.oracle-text-gradient {
+  background: var(--text-gradient, linear-gradient(135deg, oklch(0.88 0.18 80), oklch(0.72 0.20 45), oklch(0.65 0.22 35)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.wood-texture-face {
+  background: linear-gradient(160deg, oklch(0.60 0.14 55) 0%, oklch(0.52 0.12 50) 30%, oklch(0.58 0.13 58) 60%, oklch(0.50 0.11 48) 100%);
+}
+.sacred-red-face {
+  background: linear-gradient(160deg, oklch(0.55 0.24 22) 0%, oklch(0.48 0.26 18) 50%, oklch(0.52 0.22 25) 100%);
+}
+.dark-black-face {
+  background: linear-gradient(160deg, oklch(0.14 0.02 220) 0%, oklch(0.09 0.01 215) 50%, oklch(0.12 0.02 220) 100%);
+}
+.gold-special-face {
+  background: linear-gradient(135deg, oklch(0.88 0.18 80) 0%, oklch(0.82 0.20 70) 50%, oklch(0.85 0.16 85) 100%);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track, oklch(0.10 0.04 222)); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb, oklch(0.30 0.06 215)); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { filter: brightness(1.3); }
+::selection { background: var(--selection-bg, oklch(0.72 0.20 45 / 0.4)); color: oklch(0.95 0.02 60); }
+
+@layer components {
+  /**
+   * Custom container utility that centers content and adds responsive padding.
+   *
+   * This overrides Tailwind's default container behavior to:
+   * - Auto-center content (mx-auto)
+   * - Add responsive horizontal padding
+   * - Set max-width for large screens
+   *
+   * Usage: <div className="container">...</div>
+   *
+   * For custom widths, use max-w-* utilities directly:
+   * <div className="max-w-6xl mx-auto px-4">...</div>
+   */
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem; /* 16px - mobile padding */
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem; /* 32px - desktop padding */
+      padding-right: 2rem;
+      max-width: 1280px; /* Standard content width */
+    }
+  }
+}
+/* ══════════════════════════════════════════════════════════════════
+   淺色主題全面修正（第三輪）
+   原則：淺色背景下所有文字必須是深色；色塊背景改為淺色版本；
+         不能出現螢光色、深色區塊配深色字
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 螢光色文字 → 深色可讀版本 ── */
+/* amber/yellow 系列（最常見的螢光色） */
+:root[data-theme-mode="light"] .text-amber-400,
+:root[data-theme-mode="light"] .text-amber-300 {
+  color: oklch(0.42 0.14 58) !important;
+}
+:root[data-theme-mode="light"] .text-amber-500 {
+  color: oklch(0.40 0.14 58) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-400,
+:root[data-theme-mode="light"] .text-yellow-300 {
+  color: oklch(0.44 0.14 80) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-500 {
+  color: oklch(0.42 0.14 80) !important;
+}
+
+/* green/emerald/teal 系列 */
+:root[data-theme-mode="light"] .text-green-400,
+:root[data-theme-mode="light"] .text-green-300 {
+  color: oklch(0.36 0.14 142) !important;
+}
+:root[data-theme-mode="light"] .text-green-500 {
+  color: oklch(0.34 0.14 142) !important;
+}
+:root[data-theme-mode="light"] .text-teal-400,
+:root[data-theme-mode="light"] .text-teal-300 {
+  color: oklch(0.36 0.12 185) !important;
+}
+:root[data-theme-mode="light"] .text-cyan-400,
+:root[data-theme-mode="light"] .text-cyan-300 {
+  color: oklch(0.36 0.12 210) !important;
+}
+
+/* blue/indigo 系列 */
+:root[data-theme-mode="light"] .text-blue-400,
+:root[data-theme-mode="light"] .text-blue-300 {
+  color: oklch(0.38 0.14 255) !important;
+}
+:root[data-theme-mode="light"] .text-blue-500 {
+  color: oklch(0.36 0.14 255) !important;
+}
+:root[data-theme-mode="light"] .text-indigo-400,
+:root[data-theme-mode="light"] .text-indigo-300 {
+  color: oklch(0.38 0.14 270) !important;
+}
+
+/* purple/violet 系列 */
+:root[data-theme-mode="light"] .text-purple-400,
+:root[data-theme-mode="light"] .text-purple-300 {
+  color: oklch(0.40 0.14 300) !important;
+}
+:root[data-theme-mode="light"] .text-violet-400,
+:root[data-theme-mode="light"] .text-violet-300 {
+  color: oklch(0.40 0.14 290) !important;
+}
+
+/* pink/rose 系列 */
+:root[data-theme-mode="light"] .text-pink-400,
+:root[data-theme-mode="light"] .text-pink-300 {
+  color: oklch(0.42 0.16 350) !important;
+}
+:root[data-theme-mode="light"] .text-rose-400,
+:root[data-theme-mode="light"] .text-rose-300 {
+  color: oklch(0.42 0.16 10) !important;
+}
+
+/* red/orange 系列 */
+:root[data-theme-mode="light"] .text-red-400,
+:root[data-theme-mode="light"] .text-red-300 {
+  color: oklch(0.42 0.18 22) !important;
+}
+:root[data-theme-mode="light"] .text-orange-400,
+:root[data-theme-mode="light"] .text-orange-300 {
+  color: oklch(0.42 0.16 40) !important;
+}
+
+/* white 系列（淺色背景下白色文字完全不可見） */
+:root[data-theme-mode="light"] .text-white {
+  color: var(--foreground) !important;
+}
+:root[data-theme-mode="light"] .text-white\/90,
+:root[data-theme-mode="light"] .text-white\/80,
+:root[data-theme-mode="light"] .text-white\/70 {
+  color: oklch(0.25 0.02 60 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .text-white\/60,
+:root[data-theme-mode="light"] .text-white\/50 {
+  color: oklch(0.30 0.02 60 / 0.70) !important;
+}
+:root[data-theme-mode="light"] .text-white\/40,
+:root[data-theme-mode="light"] .text-white\/30 {
+  color: oklch(0.35 0.02 60 / 0.55) !important;
+}
+
+/* gray/slate 過淺文字 */
+:root[data-theme-mode="light"] .text-gray-400,
+:root[data-theme-mode="light"] .text-gray-300,
+:root[data-theme-mode="light"] .text-gray-200 {
+  color: oklch(0.42 0.02 60) !important;
+}
+:root[data-theme-mode="light"] .text-slate-400,
+:root[data-theme-mode="light"] .text-slate-300,
+:root[data-theme-mode="light"] .text-slate-200 {
+  color: oklch(0.40 0.02 270) !important;
+}
+:root[data-theme-mode="light"] .text-zinc-400,
+:root[data-theme-mode="light"] .text-zinc-300 {
+  color: oklch(0.40 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-neutral-400,
+:root[data-theme-mode="light"] .text-neutral-300 {
+  color: oklch(0.40 0.01 60) !important;
+}
+
+/* ── 深色背景卡片 → 淺色版本 ── */
+/* slate 系列 */
+:root[data-theme-mode="light"] .bg-slate-900,
+:root[data-theme-mode="light"] .bg-slate-950 {
+  background-color: oklch(0.92 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800 {
+  background-color: oklch(0.90 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-700 {
+  background-color: oklch(0.88 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/40,
+:root[data-theme-mode="light"] .bg-slate-900\/50,
+:root[data-theme-mode="light"] .bg-slate-900\/60 {
+  background-color: oklch(0.88 0.01 270 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800\/30,
+:root[data-theme-mode="light"] .bg-slate-800\/40,
+:root[data-theme-mode="light"] .bg-slate-800\/50,
+:root[data-theme-mode="light"] .bg-slate-800\/60 {
+  background-color: oklch(0.88 0.01 270 / 0.30) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-700\/50,
+:root[data-theme-mode="light"] .bg-slate-700\/60 {
+  background-color: oklch(0.86 0.01 270 / 0.35) !important;
+}
+
+/* gray 系列 */
+:root[data-theme-mode="light"] .bg-gray-900,
+:root[data-theme-mode="light"] .bg-gray-950 {
+  background-color: oklch(0.92 0.01 60) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-800 {
+  background-color: oklch(0.90 0.01 60) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-700 {
+  background-color: oklch(0.88 0.01 60) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-800\/30,
+:root[data-theme-mode="light"] .bg-gray-800\/40,
+:root[data-theme-mode="light"] .bg-gray-800\/50 {
+  background-color: oklch(0.88 0.01 60 / 0.30) !important;
+}
+
+/* zinc/neutral/stone 系列 */
+:root[data-theme-mode="light"] .bg-zinc-900,
+:root[data-theme-mode="light"] .bg-zinc-800 {
+  background-color: oklch(0.90 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .bg-neutral-900,
+:root[data-theme-mode="light"] .bg-neutral-800 {
+  background-color: oklch(0.90 0.01 60) !important;
+}
+
+/* ── 深色背景帶透明度（bg-black/XX 系列）── */
+:root[data-theme-mode="light"] .bg-black\/10,
+:root[data-theme-mode="light"] .bg-black\/20 {
+  background-color: oklch(0.85 0.01 270 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .bg-black\/30,
+:root[data-theme-mode="light"] .bg-black\/40,
+:root[data-theme-mode="light"] .bg-black\/50 {
+  background-color: oklch(0.82 0.01 270 / 0.18) !important;
+}
+:root[data-theme-mode="light"] .bg-black\/60,
+:root[data-theme-mode="light"] .bg-black\/70,
+:root[data-theme-mode="light"] .bg-black\/80 {
+  background-color: oklch(0.80 0.01 270 / 0.22) !important;
+}
+
+/* ── bg-white/5 ~ bg-white/20 微弱白色背景 → 淺色版本 ── */
+:root[data-theme-mode="light"] .bg-white\/5 {
+  background-color: oklch(0.88 0.01 60 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/8 {
+  background-color: oklch(0.87 0.01 60 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/10 {
+  background-color: oklch(0.86 0.01 60 / 0.45) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/15 {
+  background-color: oklch(0.85 0.01 60 / 0.50) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/20 {
+  background-color: oklch(0.84 0.01 60 / 0.55) !important;
+}
+
+/* ── border-white 系列 ── */
+:root[data-theme-mode="light"] .border-white\/5,
+:root[data-theme-mode="light"] .border-white\/8,
+:root[data-theme-mode="light"] .border-white\/10 {
+  border-color: oklch(0.60 0.02 60 / 0.25) !important;
+}
+:root[data-theme-mode="light"] .border-white\/15,
+:root[data-theme-mode="light"] .border-white\/20 {
+  border-color: oklch(0.55 0.02 60 / 0.30) !important;
+}
+:root[data-theme-mode="light"] .border-white\/30,
+:root[data-theme-mode="light"] .border-white\/40 {
+  border-color: oklch(0.50 0.02 60 / 0.35) !important;
+}
+
+/* ── 深色 border 系列 ── */
+:root[data-theme-mode="light"] .border-slate-600,
+:root[data-theme-mode="light"] .border-slate-700,
+:root[data-theme-mode="light"] .border-slate-800 {
+  border-color: oklch(0.70 0.02 270 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-gray-600,
+:root[data-theme-mode="light"] .border-gray-700,
+:root[data-theme-mode="light"] .border-gray-800 {
+  border-color: oklch(0.70 0.02 60 / 0.40) !important;
+}
+
+/* ── 特定功能頁深色背景 ── */
+/* /oracle 頁面 oracle-bg */
+:root[data-theme-mode="light"] .oracle-bg {
+  background: var(--background) !important;
+}
+/* /profile 頁面靈數卡片 bg-gray-800/50 */
+:root[data-theme-mode="light"] .bg-gray-800\/50 {
+  background-color: oklch(0.90 0.01 60 / 0.30) !important;
+}
+/* /profile 頁面 text-purple-300 */
+:root[data-theme-mode="light"] .text-purple-300 {
+  color: oklch(0.40 0.14 300) !important;
+}
+/* /profile 頁面 text-gray-400 過淺 */
+:root[data-theme-mode="light"] .text-gray-500 {
+  color: oklch(0.38 0.02 60) !important;
+}
+:root[data-theme-mode="light"] .text-slate-500 {
+  color: oklch(0.38 0.02 270) !important;
+}
+
+/* ── /calendar 頁面色塊 ── */
+:root[data-theme-mode="light"] .bg-emerald-900\/20,
+:root[data-theme-mode="light"] .bg-emerald-900\/30 {
+  background-color: oklch(0.88 0.04 162 / 0.20) !important;
+}
+:root[data-theme-mode="light"] .bg-red-900\/20,
+:root[data-theme-mode="light"] .bg-red-900\/30 {
+  background-color: oklch(0.88 0.04 22 / 0.20) !important;
+}
+:root[data-theme-mode="light"] .bg-blue-900\/20,
+:root[data-theme-mode="light"] .bg-blue-900\/30 {
+  background-color: oklch(0.88 0.04 255 / 0.20) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-900\/20,
+:root[data-theme-mode="light"] .bg-amber-900\/30 {
+  background-color: oklch(0.88 0.04 58 / 0.20) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-900\/10 {
+  background-color: oklch(0.90 0.04 58 / 0.12) !important;
+}
+
+/* ── /outfit 頁面時辰格子深色背景 ── */
+:root[data-theme-mode="light"] .bg-amber-500\/30 {
+  background-color: oklch(0.85 0.08 58 / 0.30) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800\/30 {
+  background-color: oklch(0.88 0.01 270 / 0.20) !important;
+}
+
+/* ── /lottery 頁面 ── */
+:root[data-theme-mode="light"] .text-amber-400\/80 {
+  color: oklch(0.42 0.14 58 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .text-emerald-400\/80 {
+  color: oklch(0.38 0.14 162 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .text-blue-400\/80 {
+  color: oklch(0.38 0.14 255 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-700 {
+  background-color: oklch(0.86 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-slate-200 {
+  color: oklch(0.35 0.02 270) !important;
+}
+
+/* ── 輸入框、表單元素深色背景 ── */
+:root[data-theme-mode="light"] input[class*="bg-slate"],
+:root[data-theme-mode="light"] input[class*="bg-gray"],
+:root[data-theme-mode="light"] input[class*="bg-white/"],
+:root[data-theme-mode="light"] textarea[class*="bg-slate"],
+:root[data-theme-mode="light"] textarea[class*="bg-gray"],
+:root[data-theme-mode="light"] select[class*="bg-slate"],
+:root[data-theme-mode="light"] select[class*="bg-gray"] {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── FeatureLockedCard 深色背景 ── */
+:root[data-theme-mode="light"] .bg-slate-900\/90,
+:root[data-theme-mode="light"] .bg-slate-900\/80 {
+  background-color: oklch(0.90 0.01 270 / 0.85) !important;
+}
+
+/* ── OnboardingModal 深色背景 ── */
+:root[data-theme-mode="light"] .bg-slate-700 {
+  background-color: oklch(0.86 0.01 270) !important;
+}
+
+/* ── 深色 divider/separator ── */
+:root[data-theme-mode="light"] .bg-amber-900\/30 {
+  background-color: oklch(0.75 0.06 58 / 0.25) !important;
+}
+:root[data-theme-mode="light"] .bg-emerald-700\/30 {
+  background-color: oklch(0.55 0.10 162 / 0.25) !important;
+}
+
+/* ── 確保深色文字在淺色背景上可讀 ── */
+:root[data-theme-mode="light"] .text-gray-900,
+:root[data-theme-mode="light"] .text-gray-800,
+:root[data-theme-mode="light"] .text-gray-700 {
+  color: oklch(0.20 0.02 60) !important;
+}
+:root[data-theme-mode="light"] .text-slate-900,
+:root[data-theme-mode="light"] .text-slate-800,
+:root[data-theme-mode="light"] .text-slate-700 {
+  color: oklch(0.20 0.02 270) !important;
+}
+
+/* ── 圖表和進度條的深色背景 ── */
+:root[data-theme-mode="light"] .bg-slate-900.rounded-full,
+:root[data-theme-mode="light"] .h-2.bg-slate-900 {
+  background-color: oklch(0.82 0.01 270) !important;
+}
+:root[data-theme-mode="light"] [class*="bg-gradient-to-r"][class*="from-red-700"] {
+  background: linear-gradient(to right, oklch(0.45 0.18 22), oklch(0.40 0.18 22)) !important;
+}
+
+/* ── 確保 text-foreground 在淺色主題下正確 ── */
+:root[data-theme-mode="light"] .text-foreground {
+  color: var(--foreground) !important;
+}
+:root[data-theme-mode="light"] .text-muted-foreground {
+  color: var(--muted-foreground) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   全面淺色主題修正（第三輪）- 根據用戶截圖回饋逐一修正
+   原則：淺色背景下所有文字必須是深色，所有色塊背景必須是淺色
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── WarRoom：今日能量指引「宜/忌」色塊 ── */
+/* 宜：灰色背景 + 螢光綠文字 → 淺灰背景 + 深綠文字 */
+:root[data-theme-mode="light"] .bg-teal-900\/30,
+:root[data-theme-mode="light"] .bg-teal-900\/40,
+:root[data-theme-mode="light"] .bg-teal-900\/50,
+:root[data-theme-mode="light"] .bg-teal-950\/30,
+:root[data-theme-mode="light"] .bg-teal-950\/40,
+:root[data-theme-mode="light"] .bg-teal-950\/50 {
+  background-color: oklch(0.93 0.04 165) !important;
+}
+:root[data-theme-mode="light"] .text-teal-300,
+:root[data-theme-mode="light"] .text-teal-400 {
+  color: oklch(0.35 0.10 165) !important;
+}
+:root[data-theme-mode="light"] .text-teal-200 {
+  color: oklch(0.30 0.10 165) !important;
+}
+/* 忌：紅色背景 + 螢光紅文字 → 淺紅背景 + 深紅文字 */
+:root[data-theme-mode="light"] .bg-red-900\/30,
+:root[data-theme-mode="light"] .bg-red-900\/40,
+:root[data-theme-mode="light"] .bg-red-900\/50,
+:root[data-theme-mode="light"] .bg-red-950\/30,
+:root[data-theme-mode="light"] .bg-red-950\/40,
+:root[data-theme-mode="light"] .bg-red-950\/50 {
+  background-color: oklch(0.94 0.04 22) !important;
+}
+:root[data-theme-mode="light"] .text-red-300,
+:root[data-theme-mode="light"] .text-red-400 {
+  color: oklch(0.40 0.18 22) !important;
+}
+:root[data-theme-mode="light"] .text-red-200 {
+  color: oklch(0.35 0.18 22) !important;
+}
+
+/* ── 能量指數進度條文字（「能量平吉」按鈕）── */
+:root[data-theme-mode="light"] .bg-teal-900,
+:root[data-theme-mode="light"] .bg-teal-800 {
+  background-color: oklch(0.88 0.06 165) !important;
+}
+:root[data-theme-mode="light"] .text-teal-100,
+:root[data-theme-mode="light"] .text-teal-50 {
+  color: oklch(0.25 0.10 165) !important;
+}
+
+/* ── ProfilePage：大限流年卡片 ── */
+/* 當前年份高亮：cyan 深色背景 → 淺青色 */
+:root[data-theme-mode="light"] .border-cyan-500\/60,
+:root[data-theme-mode="light"] .bg-cyan-900\/10 {
+  background-color: oklch(0.93 0.04 200) !important;
+  border-color: oklch(0.55 0.12 200) !important;
+}
+:root[data-theme-mode="light"] .text-cyan-300,
+:root[data-theme-mode="light"] .text-cyan-400 {
+  color: oklch(0.35 0.12 200) !important;
+}
+:root[data-theme-mode="light"] .text-cyan-200 {
+  color: oklch(0.30 0.12 200) !important;
+}
+/* 一般年份卡片 */
+:root[data-theme-mode="light"] .border-gray-700\/50,
+:root[data-theme-mode="light"] .bg-gray-800\/20 {
+  background-color: oklch(0.96 0.005 270) !important;
+  border-color: oklch(0.75 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-gray-200 {
+  color: oklch(0.25 0.01 270) !important;
+}
+
+/* ── ProfilePage：靈數卡片背景 ── */
+:root[data-theme-mode="light"] .bg-gray-900\/40,
+:root[data-theme-mode="light"] .bg-gray-900\/50 {
+  background-color: oklch(0.95 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-800\/50 {
+  background-color: oklch(0.93 0.008 270) !important;
+}
+:root[data-theme-mode="light"] .border-gray-700\/30 {
+  border-color: oklch(0.78 0.01 270) !important;
+}
+
+/* ── ProfilePage：過淺的輔助文字 ── */
+:root[data-theme-mode="light"] .text-gray-400 {
+  color: oklch(0.42 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-gray-300 {
+  color: oklch(0.32 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-gray-500 {
+  color: oklch(0.50 0.01 270) !important;
+}
+
+/* ── ProfilePage：圖表容器 bg-gray-900 ── */
+:root[data-theme-mode="light"] .bg-gray-900 {
+  background-color: oklch(0.96 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .border-gray-700\/50 {
+  border-color: oklch(0.78 0.01 270) !important;
+}
+
+/* ── OracleCalendar：日曆色塊文字 ── */
+:root[data-theme-mode="light"] .bg-indigo-900\/30,
+:root[data-theme-mode="light"] .bg-indigo-900\/40,
+:root[data-theme-mode="light"] .bg-indigo-950\/30,
+:root[data-theme-mode="light"] .bg-indigo-950\/40 {
+  background-color: oklch(0.93 0.04 270) !important;
+}
+:root[data-theme-mode="light"] .text-indigo-300,
+:root[data-theme-mode="light"] .text-indigo-400 {
+  color: oklch(0.35 0.12 270) !important;
+}
+:root[data-theme-mode="light"] .text-indigo-200 {
+  color: oklch(0.30 0.12 270) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-900\/30,
+:root[data-theme-mode="light"] .bg-purple-900\/40,
+:root[data-theme-mode="light"] .bg-purple-950\/30,
+:root[data-theme-mode="light"] .bg-purple-950\/40 {
+  background-color: oklch(0.93 0.04 300) !important;
+}
+:root[data-theme-mode="light"] .text-purple-300,
+:root[data-theme-mode="light"] .text-purple-400 {
+  color: oklch(0.35 0.12 300) !important;
+}
+:root[data-theme-mode="light"] .text-purple-200 {
+  color: oklch(0.30 0.12 300) !important;
+}
+:root[data-theme-mode="light"] .bg-violet-900\/30,
+:root[data-theme-mode="light"] .bg-violet-900\/40,
+:root[data-theme-mode="light"] .bg-violet-950\/30,
+:root[data-theme-mode="light"] .bg-violet-950\/40 {
+  background-color: oklch(0.93 0.04 295) !important;
+}
+:root[data-theme-mode="light"] .text-violet-300,
+:root[data-theme-mode="light"] .text-violet-400 {
+  color: oklch(0.35 0.12 295) !important;
+}
+
+/* ── OutfitPage：情境模式卡片（選中的深棕色背景）── */
+:root[data-theme-mode="light"] .bg-stone-800,
+:root[data-theme-mode="light"] .bg-stone-900,
+:root[data-theme-mode="light"] .bg-stone-800\/60,
+:root[data-theme-mode="light"] .bg-stone-900\/60 {
+  background-color: oklch(0.90 0.02 60) !important;
+}
+:root[data-theme-mode="light"] .text-stone-300,
+:root[data-theme-mode="light"] .text-stone-400 {
+  color: oklch(0.35 0.03 60) !important;
+}
+:root[data-theme-mode="light"] .text-stone-200 {
+  color: oklch(0.28 0.03 60) !important;
+}
+/* 時辰能量時間軸（空白格子）*/
+:root[data-theme-mode="light"] .bg-slate-800\/30,
+:root[data-theme-mode="light"] .bg-slate-800\/40,
+:root[data-theme-mode="light"] .bg-slate-800\/50,
+:root[data-theme-mode="light"] .bg-slate-800\/60 {
+  background-color: oklch(0.93 0.008 270) !important;
+}
+:root[data-theme-mode="light"] .text-slate-300,
+:root[data-theme-mode="light"] .text-slate-400 {
+  color: oklch(0.40 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-slate-200 {
+  color: oklch(0.30 0.01 270) !important;
+}
+
+/* ── LotteryOracle：色塊和文字 ── */
+:root[data-theme-mode="light"] .bg-yellow-900\/30,
+:root[data-theme-mode="light"] .bg-yellow-900\/40,
+:root[data-theme-mode="light"] .bg-yellow-950\/30,
+:root[data-theme-mode="light"] .bg-yellow-950\/40 {
+  background-color: oklch(0.94 0.06 85) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-300,
+:root[data-theme-mode="light"] .text-yellow-400 {
+  color: oklch(0.42 0.12 85) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-200 {
+  color: oklch(0.35 0.12 85) !important;
+}
+:root[data-theme-mode="light"] .bg-orange-900\/30,
+:root[data-theme-mode="light"] .bg-orange-900\/40,
+:root[data-theme-mode="light"] .bg-orange-950\/30,
+:root[data-theme-mode="light"] .bg-orange-950\/40 {
+  background-color: oklch(0.93 0.05 50) !important;
+}
+:root[data-theme-mode="light"] .text-orange-300,
+:root[data-theme-mode="light"] .text-orange-400 {
+  color: oklch(0.42 0.14 50) !important;
+}
+:root[data-theme-mode="light"] .text-orange-200 {
+  color: oklch(0.35 0.14 50) !important;
+}
+
+/* ── 通用：所有 text-white 在淺色主題下變深色 ── */
+:root[data-theme-mode="light"] .text-white {
+  color: oklch(0.20 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-white\/90,
+:root[data-theme-mode="light"] .text-white\/80 {
+  color: oklch(0.25 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-white\/70,
+:root[data-theme-mode="light"] .text-white\/60 {
+  color: oklch(0.35 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-white\/50,
+:root[data-theme-mode="light"] .text-white\/40 {
+  color: oklch(0.45 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-white\/30,
+:root[data-theme-mode="light"] .text-white\/20 {
+  color: oklch(0.55 0.01 270) !important;
+}
+
+/* ── PurifyMind（/oracle）：淺色主題下的竹林場景 ── */
+:root[data-theme-mode="light"] .oracle-page-light-bg {
+  background: radial-gradient(ellipse at 30% 20%, oklch(0.92 0.04 145 / 0.9) 0%, oklch(0.96 0.02 160) 50%, oklch(0.98 0.01 180) 100%) !important;
+}
+
+/* ── 通用：zinc 深色背景 ── */
+:root[data-theme-mode="light"] .bg-zinc-900,
+:root[data-theme-mode="light"] .bg-zinc-800 {
+  background-color: oklch(0.96 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .bg-zinc-900\/50,
+:root[data-theme-mode="light"] .bg-zinc-900\/60,
+:root[data-theme-mode="light"] .bg-zinc-900\/70 {
+  background-color: oklch(0.94 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .text-zinc-300,
+:root[data-theme-mode="light"] .text-zinc-400 {
+  color: oklch(0.40 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-zinc-200 {
+  color: oklch(0.30 0.01 270) !important;
+}
+
+/* ── 通用：neutral 深色背景 ── */
+:root[data-theme-mode="light"] .bg-neutral-900,
+:root[data-theme-mode="light"] .bg-neutral-800 {
+  background-color: oklch(0.96 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .text-neutral-300,
+:root[data-theme-mode="light"] .text-neutral-400 {
+  color: oklch(0.40 0.01 270) !important;
+}
+
+/* ── 通用：border 顏色在淺色主題下 ── */
+:root[data-theme-mode="light"] .border-white\/10,
+:root[data-theme-mode="light"] .border-white\/20,
+:root[data-theme-mode="light"] .border-white\/30 {
+  border-color: oklch(0.80 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .border-gray-700,
+:root[data-theme-mode="light"] .border-gray-600 {
+  border-color: oklch(0.75 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .border-slate-700,
+:root[data-theme-mode="light"] .border-slate-600 {
+  border-color: oklch(0.75 0.01 270) !important;
+}
+
+/* ── 通用：bg-black 和極深色 ── */
+:root[data-theme-mode="light"] .bg-black,
+:root[data-theme-mode="light"] .bg-black\/50,
+:root[data-theme-mode="light"] .bg-black\/60,
+:root[data-theme-mode="light"] .bg-black\/70,
+:root[data-theme-mode="light"] .bg-black\/80 {
+  background-color: oklch(0.95 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .bg-black\/10,
+:root[data-theme-mode="light"] .bg-black\/20,
+:root[data-theme-mode="light"] .bg-black\/30 {
+  background-color: oklch(0.97 0.003 270) !important;
+}
+
+/* ── 輸入框和表單元素 ── */
+:root[data-theme-mode="light"] input.bg-gray-900,
+:root[data-theme-mode="light"] textarea.bg-gray-900,
+:root[data-theme-mode="light"] select.bg-gray-900 {
+  background-color: oklch(0.98 0.003 270) !important;
+  color: oklch(0.20 0.01 270) !important;
+  border-color: oklch(0.75 0.01 270) !important;
+}
+:root[data-theme-mode="light"] input.bg-gray-800,
+:root[data-theme-mode="light"] textarea.bg-gray-800,
+:root[data-theme-mode="light"] select.bg-gray-800 {
+  background-color: oklch(0.97 0.003 270) !important;
+  color: oklch(0.20 0.01 270) !important;
+  border-color: oklch(0.75 0.01 270) !important;
+}
+
+/* ── 確保 placeholder 在淺色主題下可見 ── */
+:root[data-theme-mode="light"] input::placeholder,
+:root[data-theme-mode="light"] textarea::placeholder {
+  color: oklch(0.60 0.01 270) !important;
+}
+
+/* ===================================================================
+   淺色主題補充修正 v2 — 涵蓋所有透明度變體與遺漏類別
+   =================================================================== */
+
+/* ── amber 透明度變體 ── */
+:root[data-theme-mode="light"] .text-amber-400\/70,
+:root[data-theme-mode="light"] .text-amber-400\/60,
+:root[data-theme-mode="light"] .text-amber-400\/50 {
+  color: oklch(0.44 0.14 58 / 0.80) !important;
+}
+:root[data-theme-mode="light"] .text-amber-300\/80,
+:root[data-theme-mode="light"] .text-amber-300\/70 {
+  color: oklch(0.44 0.14 58 / 0.80) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-900\/20,
+:root[data-theme-mode="light"] .bg-amber-900\/25,
+:root[data-theme-mode="light"] .bg-amber-900\/30 {
+  background-color: oklch(0.44 0.14 58 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-amber-500\/50,
+:root[data-theme-mode="light"] .border-amber-600\/50,
+:root[data-theme-mode="light"] .border-amber-700\/30 {
+  border-color: oklch(0.44 0.14 58 / 0.45) !important;
+}
+:root[data-theme-mode="light"] .hover\:bg-amber-900\/30:hover {
+  background-color: oklch(0.44 0.14 58 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .hover\:bg-amber-600\/20:hover {
+  background-color: oklch(0.44 0.14 58 / 0.15) !important;
+}
+
+/* ── teal 透明度變體 ── */
+:root[data-theme-mode="light"] .text-teal-400\/70,
+:root[data-theme-mode="light"] .text-teal-400\/60,
+:root[data-theme-mode="light"] .text-teal-400\/50 {
+  color: oklch(0.38 0.12 195 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .bg-teal-500\/10,
+:root[data-theme-mode="light"] .bg-teal-500\/15,
+:root[data-theme-mode="light"] .bg-teal-500\/20 {
+  background-color: oklch(0.38 0.12 195 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .border-teal-500\/30,
+:root[data-theme-mode="light"] .border-teal-500\/40 {
+  border-color: oklch(0.38 0.12 195 / 0.35) !important;
+}
+
+/* ── purple 透明度變體 ── */
+:root[data-theme-mode="light"] .text-purple-300,
+:root[data-theme-mode="light"] .text-purple-400 {
+  color: oklch(0.40 0.16 295) !important;
+}
+:root[data-theme-mode="light"] .text-purple-400\/70,
+:root[data-theme-mode="light"] .text-purple-400\/60 {
+  color: oklch(0.40 0.16 295 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .border-purple-600\/50,
+:root[data-theme-mode="light"] .border-purple-600\/30 {
+  border-color: oklch(0.40 0.16 295 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .hover\:bg-purple-600\/20:hover {
+  background-color: oklch(0.40 0.16 295 / 0.12) !important;
+}
+
+/* ── red 透明度變體 ── */
+:root[data-theme-mode="light"] .text-red-400\/70,
+:root[data-theme-mode="light"] .text-red-400\/60 {
+  color: oklch(0.40 0.20 22 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .border-red-600\/50,
+:root[data-theme-mode="light"] .border-red-600\/30 {
+  border-color: oklch(0.40 0.20 22 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .hover\:bg-red-600\/20:hover {
+  background-color: oklch(0.40 0.20 22 / 0.12) !important;
+}
+
+/* ── yellow 透明度變體 ── */
+:root[data-theme-mode="light"] .text-yellow-400\/70,
+:root[data-theme-mode="light"] .text-yellow-400\/60 {
+  color: oklch(0.42 0.12 85 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .border-yellow-600\/50,
+:root[data-theme-mode="light"] .border-yellow-600\/30 {
+  border-color: oklch(0.42 0.12 85 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .hover\:bg-yellow-600\/20:hover {
+  background-color: oklch(0.42 0.12 85 / 0.12) !important;
+}
+
+/* ── blue 透明度變體 ── */
+:root[data-theme-mode="light"] .text-blue-400\/70,
+:root[data-theme-mode="light"] .text-blue-400\/60 {
+  color: oklch(0.38 0.16 255 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .border-blue-600\/50,
+:root[data-theme-mode="light"] .border-blue-600\/30 {
+  border-color: oklch(0.38 0.16 255 / 0.40) !important;
+}
+
+/* ── emerald 透明度變體 ── */
+:root[data-theme-mode="light"] .text-emerald-400\/70,
+:root[data-theme-mode="light"] .text-emerald-400\/60 {
+  color: oklch(0.38 0.16 162 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .border-emerald-500\/40,
+:root[data-theme-mode="light"] .border-emerald-600\/50 {
+  border-color: oklch(0.38 0.16 162 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .bg-emerald-500\/15 {
+  background-color: oklch(0.38 0.16 162 / 0.12) !important;
+}
+
+/* ── orange 透明度變體 ── */
+:root[data-theme-mode="light"] .text-orange-400\/70,
+:root[data-theme-mode="light"] .text-orange-400\/60 {
+  color: oklch(0.42 0.14 50 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .text-orange-400\/60 {
+  color: oklch(0.42 0.14 50 / 0.80) !important;
+}
+:root[data-theme-mode="light"] .border-orange-500\/40,
+:root[data-theme-mode="light"] .border-orange-500\/30 {
+  border-color: oklch(0.42 0.14 50 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .bg-orange-500\/20 {
+  background-color: oklch(0.42 0.14 50 / 0.12) !important;
+}
+
+/* ── 用戶選單下拉（SharedNav）：副標題文字修正 ── */
+:root[data-theme-mode="light"] .text-teal-400 {
+  color: oklch(0.38 0.12 195) !important;
+}
+
+/* ── ExpertDashboard：藍色數字修正 ── */
+:root[data-theme-mode="light"] .text-blue-500,
+:root[data-theme-mode="light"] .text-blue-600 {
+  color: oklch(0.35 0.18 255) !important;
+}
+
+/* ── LotteryPage：重要聲明黃色文字修正 ── */
+:root[data-theme-mode="light"] .text-yellow-200,
+:root[data-theme-mode="light"] .text-yellow-100 {
+  color: oklch(0.35 0.12 85) !important;
+}
+
+/* ── WealthPage：財運走勢「繼旺」等文字 ── */
+:root[data-theme-mode="light"] .text-slate-500 {
+  color: oklch(0.42 0.02 270) !important;
+}
+
+/* ── DivinationPage：積分文字 ── */
+:root[data-theme-mode="light"] .text-amber-400 {
+  color: oklch(0.44 0.14 58) !important;
+}
+
+/* ── ProfilePage：生命靈數卡片內文字 ── */
+:root[data-theme-mode="light"] .text-purple-300 {
+  color: oklch(0.40 0.16 295) !important;
+}
+:root[data-theme-mode="light"] .text-purple-400 {
+  color: oklch(0.40 0.16 295) !important;
+}
+
+/* ── 淺色主題下 bg-amber-900/25 等深色背景 ── */
+:root[data-theme-mode="light"] .bg-amber-900\/25 {
+  background-color: oklch(0.44 0.14 58 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-amber-700\/30 {
+  border-color: oklch(0.44 0.14 58 / 0.35) !important;
+}
+
+/* ── 淺色主題下 text-slate-200（用於深色卡片內文字）── */
+:root[data-theme-mode="light"] .text-slate-200 {
+  color: oklch(0.30 0.01 270) !important;
+}
+
+/* ── 淺色主題下 bg-green-900 等深色背景 ── */
+:root[data-theme-mode="light"] .bg-green-900\/20,
+:root[data-theme-mode="light"] .bg-green-900\/30 {
+  background-color: oklch(0.38 0.16 145 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .border-green-500\/30,
+:root[data-theme-mode="light"] .border-green-500\/40 {
+  border-color: oklch(0.38 0.16 145 / 0.35) !important;
+}
+
+/* ── 淺色主題下 text-gray-300（通用淺色文字）── */
+:root[data-theme-mode="light"] .text-gray-300 {
+  color: oklch(0.40 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-gray-400 {
+  color: oklch(0.45 0.01 270) !important;
+}
+
+/* ── 淺色主題下 streak 連勝文字 ── */
+:root[data-theme-mode="light"] .text-yellow-300 {
+  color: oklch(0.42 0.12 85) !important;
+}
+:root[data-theme-mode="light"] .text-orange-400 {
+  color: oklch(0.42 0.14 50) !important;
+}
+
+/* ── 淺色主題下 AdminDashboard 橙色 Token 到期警示 ── */
+:root[data-theme-mode="light"] .text-orange-400\/60 {
+  color: oklch(0.42 0.14 50 / 0.80) !important;
+}
+
+/* ── 淺色主題下 WealthPage 財運日記儲存成功狀態 ── */
+:root[data-theme-mode="light"] .bg-emerald-500\/20.border.border-emerald-500\/40.text-emerald-400 {
+  background-color: oklch(0.38 0.16 162 / 0.12) !important;
+  border-color: oklch(0.38 0.16 162 / 0.35) !important;
+  color: oklch(0.38 0.16 162) !important;
+}
+
+/* ── LotteryOracle 重要聲明文字（text-amber-200/70）── */
+:root[data-theme-mode="light"] .text-amber-200\/70 {
+  color: oklch(0.38 0.12 58) !important;
+}
+:root[data-theme-mode="light"] .text-amber-200 {
+  color: oklch(0.35 0.12 58) !important;
+}
+:root[data-theme-mode="light"] .text-amber-100 {
+  color: oklch(0.32 0.10 58) !important;
+}
+/* ── LotteryOracle 重要聲明背景（bg-amber-950/40）── */
+:root[data-theme-mode="light"] .bg-amber-950\/40,
+:root[data-theme-mode="light"] .bg-amber-950\/30,
+:root[data-theme-mode="light"] .bg-amber-950\/20 {
+  background-color: oklch(0.94 0.06 80 / 0.60) !important;
+}
+/* ── WealthPage 財運走勢「繼旺」等文字修正 ── */
+:root[data-theme-mode="light"] .text-slate-600 {
+  color: oklch(0.38 0.01 270) !important;
+}
+/* ── ExpertDashboard 藍色數字（平均評分）── */
+:root[data-theme-mode="light"] .text-blue-400 {
+  color: oklch(0.38 0.16 255) !important;
+}
+/* ── SharedNav 用戶選單：teal 副標題 ── */
+:root[data-theme-mode="light"] .text-teal-400\/70 {
+  color: oklch(0.38 0.12 195 / 0.90) !important;
+}
+/* ── SharedNav 用戶選單：amber 副標題 ── */
+:root[data-theme-mode="light"] .text-amber-400\/70 {
+  color: oklch(0.44 0.14 58 / 0.90) !important;
+}
+/* ── ProfilePage 生命靈數卡片：purple-300 文字 ── */
+:root[data-theme-mode="light"] .text-purple-300 {
+  color: oklch(0.40 0.16 295) !important;
+}
+/* ── DivinationPage 積分文字（amber-400）── 已有覆蓋，補充 span 內 ── */
+:root[data-theme-mode="light"] span.text-amber-400 {
+  color: oklch(0.44 0.14 58) !important;
+}
+/* ── 淺色主題下 bg-amber-950 完整深色背景 ── */
+:root[data-theme-mode="light"] .bg-amber-950 {
+  background-color: oklch(0.94 0.06 80) !important;
+}
+/* ── 淺色主題下 bg-slate-900/60 日期選擇器背景 ── */
+:root[data-theme-mode="light"] .bg-slate-900\/60 {
+  background-color: oklch(0.97 0.005 270 / 0.95) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/50 {
+  background-color: oklch(0.97 0.005 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/40 {
+  background-color: oklch(0.97 0.005 270 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/30 {
+  background-color: oklch(0.97 0.005 270 / 0.80) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/20 {
+  background-color: oklch(0.97 0.005 270 / 0.70) !important;
+}
+/* ── 淺色主題下 bg-slate-800/80 ── */
+:root[data-theme-mode="light"] .bg-slate-800\/80 {
+  background-color: oklch(0.96 0.005 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800\/60 {
+  background-color: oklch(0.96 0.005 270 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800\/40 {
+  background-color: oklch(0.96 0.005 270 / 0.80) !important;
+}
+/* ── 淺色主題下 border-slate-700/50 ── */
+:root[data-theme-mode="light"] .border-slate-700\/50 {
+  border-color: oklch(0.80 0.01 270 / 0.60) !important;
+}
+:root[data-theme-mode="light"] .border-slate-700\/30 {
+  border-color: oklch(0.80 0.01 270 / 0.40) !important;
+}
+/* ── 淺色主題下 text-slate-500（通用次要文字）── */
+:root[data-theme-mode="light"] .text-slate-500 {
+  color: oklch(0.45 0.02 270) !important;
+}
+/* ── 淺色主題下 text-slate-400（通用次要文字）── */
+:root[data-theme-mode="light"] .text-slate-400 {
+  color: oklch(0.42 0.02 270) !important;
+}
+
+/* ── SharedNav 日曆面板：orange-300/green-300/cyan-300 文字 ── */
+:root[data-theme-mode="light"] .text-orange-300 {
+  color: oklch(0.42 0.14 50) !important;
+}
+:root[data-theme-mode="light"] .text-green-300 {
+  color: oklch(0.38 0.16 145) !important;
+}
+:root[data-theme-mode="light"] .text-cyan-300 {
+  color: oklch(0.38 0.14 210) !important;
+}
+/* ── SharedNav 日曆面板：orange-200 文字 ── */
+:root[data-theme-mode="light"] .text-orange-200 {
+  color: oklch(0.38 0.14 50) !important;
+}
+/* ── SharedNav 日曆面板：bg-orange-500/30 已簽到格子 ── */
+:root[data-theme-mode="light"] .bg-orange-500\/30 {
+  background-color: oklch(0.42 0.14 50 / 0.18) !important;
+}
+:root[data-theme-mode="light"] .border-orange-400\/60 {
+  border-color: oklch(0.42 0.14 50 / 0.50) !important;
+}
+/* ── SharedNav 日曆面板：bg-slate-700/60 今日格子 ── */
+:root[data-theme-mode="light"] .bg-slate-700\/60 {
+  background-color: oklch(0.92 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .border-cyan-500\/50 {
+  border-color: oklch(0.38 0.14 210 / 0.50) !important;
+}
+/* ── SharedNav 日曆面板：bg-slate-800/40 未簽到格子 ── */
+:root[data-theme-mode="light"] .bg-slate-800\/40 {
+  background-color: oklch(0.95 0.005 270 / 0.80) !important;
+}
+:root[data-theme-mode="light"] .border-slate-700\/30 {
+  border-color: oklch(0.82 0.01 270 / 0.50) !important;
+}
+/* ── SharedNav 日曆面板：text-slate-600（圖例文字）── */
+:root[data-theme-mode="light"] .text-slate-600 {
+  color: oklch(0.40 0.01 270) !important;
+}
+/* ── SharedNav 日曆面板：bg-slate-800/60 日曆容器 ── */
+:root[data-theme-mode="light"] .bg-slate-800\/60 {
+  background-color: oklch(0.96 0.005 270 / 0.90) !important;
+}
+/* ── SharedNav 日曆面板：border-orange-500/20 ── */
+:root[data-theme-mode="light"] .border-orange-500\/20 {
+  border-color: oklch(0.42 0.14 50 / 0.30) !important;
+}
+/* ── WarRoom ScoreBar：bg-gradient-to-r from-blue-500 to-cyan-400 ── */
+/* 進度條本身用 inline style 設定顏色，不需要 CSS 覆蓋 */
+/* ── WarRoom：bg-white/10 進度條背景 ── */
+:root[data-theme-mode="light"] .bg-white\/10 {
+  background-color: oklch(0.88 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/5 {
+  background-color: oklch(0.96 0.005 270 / 0.80) !important;
+}
+:root[data-theme-mode="light"] .border-white\/10 {
+  border-color: oklch(0.82 0.01 270 / 0.50) !important;
+}
+
+/* ── ProfilePage 生命靈數卡片：gray 系列 ── */
+:root[data-theme-mode="light"] .bg-gray-800\/50 {
+  background-color: oklch(0.96 0.005 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-800\/20 {
+  background-color: oklch(0.96 0.005 270 / 0.70) !important;
+}
+:root[data-theme-mode="light"] .border-gray-700\/50 {
+  border-color: oklch(0.80 0.01 270 / 0.50) !important;
+}
+:root[data-theme-mode="light"] .border-gray-700\/30 {
+  border-color: oklch(0.80 0.01 270 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .text-gray-500 {
+  color: oklch(0.45 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-gray-400 {
+  color: oklch(0.42 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-gray-200 {
+  color: oklch(0.25 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-gray-300 {
+  color: oklch(0.35 0.01 270) !important;
+}
+/* ── ProfilePage 生命靈數卡片：purple-200 ── */
+:root[data-theme-mode="light"] .text-purple-200 {
+  color: oklch(0.38 0.16 295) !important;
+}
+:root[data-theme-mode="light"] .text-purple-300\/70 {
+  color: oklch(0.40 0.16 295 / 0.85) !important;
+}
+/* ── ProfilePage 生命靈數卡片：bg-purple-900/30 ── */
+:root[data-theme-mode="light"] .bg-purple-900\/30 {
+  background-color: oklch(0.40 0.16 295 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .border-purple-400\/60 {
+  border-color: oklch(0.40 0.16 295 / 0.50) !important;
+}
+:root[data-theme-mode="light"] .shadow-purple-900\/30 {
+  --tw-shadow-color: oklch(0.40 0.16 295 / 0.15) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-500\/30 {
+  background-color: oklch(0.40 0.16 295 / 0.15) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-900\/10 {
+  background-color: oklch(0.40 0.16 295 / 0.08) !important;
+}
+:root[data-theme-mode="light"] .border-purple-500\/20 {
+  border-color: oklch(0.40 0.16 295 / 0.30) !important;
+}
+/* ── ProfilePage 大運流年：cyan-900/10 ── */
+:root[data-theme-mode="light"] .bg-cyan-900\/10 {
+  background-color: oklch(0.38 0.14 210 / 0.08) !important;
+}
+:root[data-theme-mode="light"] .border-cyan-500\/60 {
+  border-color: oklch(0.38 0.14 210 / 0.50) !important;
+}
+/* ── ProfilePage 大運流年：bg-gray-600/20 ── */
+:root[data-theme-mode="light"] .bg-gray-600\/20 {
+  background-color: oklch(0.95 0.005 270 / 0.80) !important;
+}
+:root[data-theme-mode="light"] .border-gray-600\/40 {
+  border-color: oklch(0.78 0.01 270 / 0.50) !important;
+}
+:root[data-theme-mode="light"] .border-gray-500\/50 {
+  border-color: oklch(0.75 0.01 270 / 0.50) !important;
+}
+/* ── ProfilePage 大運流年：border-gray-700/50 ── */
+:root[data-theme-mode="light"] .border-t.border-gray-700\/50 {
+  border-color: oklch(0.80 0.01 270 / 0.40) !important;
+}
+
+/* ── OutfitPage 策略顏色：blue-300/emerald-300/purple-300/amber-300 ── */
+:root[data-theme-mode="light"] .text-blue-300 {
+  color: oklch(0.38 0.16 255) !important;
+}
+:root[data-theme-mode="light"] .text-emerald-300 {
+  color: oklch(0.38 0.16 162) !important;
+}
+:root[data-theme-mode="light"] .text-amber-300 {
+  color: oklch(0.44 0.14 58) !important;
+}
+/* ── OutfitPage 策略背景：blue-950/40 等 ── */
+:root[data-theme-mode="light"] .bg-blue-950\/40 {
+  background-color: oklch(0.94 0.04 255 / 0.60) !important;
+}
+:root[data-theme-mode="light"] .bg-emerald-950\/40 {
+  background-color: oklch(0.94 0.04 162 / 0.60) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-950\/40 {
+  background-color: oklch(0.94 0.04 295 / 0.60) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-900\/40 {
+  background-color: oklch(0.96 0.005 270 / 0.80) !important;
+}
+/* ── OutfitPage 策略邊框 ── */
+:root[data-theme-mode="light"] .border-blue-500\/40 {
+  border-color: oklch(0.38 0.16 255 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-emerald-500\/40 {
+  border-color: oklch(0.38 0.16 162 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-gray-500\/40 {
+  border-color: oklch(0.75 0.01 270 / 0.40) !important;
+}
+/* ── OutfitPage 策略 badge ── */
+:root[data-theme-mode="light"] .bg-blue-500\/20 {
+  background-color: oklch(0.38 0.16 255 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .bg-emerald-500\/20 {
+  background-color: oklch(0.38 0.16 162 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-500\/20 {
+  background-color: oklch(0.75 0.01 270 / 0.12) !important;
+}
+/* ── OutfitPage 五行顏色 WUXING_COLORS ── */
+:root[data-theme-mode="light"] .text-amber-300\/60 {
+  color: oklch(0.44 0.14 58 / 0.80) !important;
+}
+/* ── OutfitPage 「建議行動」emerald-400 ── */
+:root[data-theme-mode="light"] .text-emerald-400 {
+  color: oklch(0.38 0.16 162) !important;
+}
+/* ── OutfitPage 穿搭建議卡片：amber-400 連結文字 ── */
+:root[data-theme-mode="light"] .text-amber-400 {
+  color: oklch(0.44 0.14 58) !important;
+}
+
+/* ── OracleCalendar 宜忌文字：emerald-500/red-500 ── */
+:root[data-theme-mode="light"] .text-emerald-500 {
+  color: oklch(0.35 0.16 162) !important;
+}
+:root[data-theme-mode="light"] .text-red-500 {
+  color: oklch(0.38 0.20 22) !important;
+}
+/* ── OracleCalendar 宜忌文字：emerald-300 ── */
+:root[data-theme-mode="light"] .text-emerald-300 {
+  color: oklch(0.38 0.16 162) !important;
+}
+/* ── OracleCalendar 吉時 badge ── */
+:root[data-theme-mode="light"] .bg-emerald-500\/20 {
+  background-color: oklch(0.38 0.16 162 / 0.12) !important;
+}
+/* ── OracleCalendar 宜忌背景 ── */
+:root[data-theme-mode="light"] .bg-emerald-500\/15 {
+  background-color: oklch(0.38 0.16 162 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .border-emerald-500\/40 {
+  border-color: oklch(0.38 0.16 162 / 0.40) !important;
+}
+/* ── OracleCalendar 宜忌 badge ── */
+:root[data-theme-mode="light"] .bg-emerald-500\/20.text-emerald-300 {
+  background-color: oklch(0.38 0.16 162 / 0.12) !important;
+  color: oklch(0.38 0.16 162) !important;
+}
+/* ── OracleCalendar 好日子 dot ── */
+:root[data-theme-mode="light"] .bg-emerald-400 {
+  background-color: oklch(0.38 0.16 162) !important;
+}
+/* ── OracleCalendar 日期格子 slate-600 ── */
+:root[data-theme-mode="light"] .text-slate-600 {
+  color: oklch(0.40 0.01 270) !important;
+}
+
+/* ── DailyEnergyPanel 能量顏色 ── */
+:root[data-theme-mode="light"] .bg-emerald-900\/30 {
+  background-color: oklch(0.38 0.16 162 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .border-emerald-600\/50 {
+  border-color: oklch(0.38 0.16 162 / 0.45) !important;
+}
+:root[data-theme-mode="light"] .bg-emerald-400 {
+  background-color: oklch(0.38 0.16 162) !important;
+}
+:root[data-theme-mode="light"] .bg-blue-900\/30 {
+  background-color: oklch(0.38 0.16 255 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .border-blue-600\/50 {
+  border-color: oklch(0.38 0.16 255 / 0.45) !important;
+}
+:root[data-theme-mode="light"] .bg-blue-400 {
+  background-color: oklch(0.38 0.16 255) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-900\/30 {
+  background-color: oklch(0.44 0.14 58 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .border-amber-600\/50 {
+  border-color: oklch(0.44 0.14 58 / 0.45) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-400 {
+  background-color: oklch(0.44 0.14 58) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-400 {
+  background-color: oklch(0.40 0.16 295) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-500 {
+  background-color: oklch(0.55 0.01 270) !important;
+}
+/* ── DailyEnergyPanel 宜忌區塊 ── */
+:root[data-theme-mode="light"] .bg-emerald-900\/20 {
+  background-color: oklch(0.38 0.16 162 / 0.08) !important;
+}
+:root[data-theme-mode="light"] .border-emerald-700\/30 {
+  border-color: oklch(0.38 0.16 162 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .text-emerald-300\/80 {
+  color: oklch(0.38 0.16 162 / 0.90) !important;
+}
+
+/* ── SharedNav 用戶選單：teal 背景 ── */
+:root[data-theme-mode="light"] .bg-teal-500\/15 {
+  background-color: oklch(0.38 0.12 195 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .bg-teal-500\/25 {
+  background-color: oklch(0.38 0.12 195 / 0.15) !important;
+}
+:root[data-theme-mode="light"] .hover\:bg-teal-500\/10:hover {
+  background-color: oklch(0.38 0.12 195 / 0.08) !important;
+}
+:root[data-theme-mode="light"] .hover\:text-teal-300:hover {
+  color: oklch(0.38 0.12 195) !important;
+}
+/* ── SharedNav 用戶選單：amber 背景 ── */
+:root[data-theme-mode="light"] .bg-amber-500\/15 {
+  background-color: oklch(0.44 0.14 58 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-500\/25 {
+  background-color: oklch(0.44 0.14 58 / 0.15) !important;
+}
+:root[data-theme-mode="light"] .hover\:bg-amber-500\/10:hover {
+  background-color: oklch(0.44 0.14 58 / 0.08) !important;
+}
+:root[data-theme-mode="light"] .hover\:text-amber-300:hover {
+  color: oklch(0.44 0.14 58) !important;
+}
+/* ── SharedNav 用戶選單：amber-300 文字 ── */
+:root[data-theme-mode="light"] .text-amber-300 {
+  color: oklch(0.44 0.14 58) !important;
+}
+/* ── SharedNav 用戶選單：bg-amber-800/60 頭像背景 ── */
+:root[data-theme-mode="light"] .bg-amber-800\/60,
+:root[data-theme-mode="light"] .bg-amber-900\/60 {
+  background-color: oklch(0.44 0.14 58 / 0.15) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-700\/30,
+:root[data-theme-mode="light"] .bg-amber-600\/30 {
+  background-color: oklch(0.44 0.14 58 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-amber-600\/50 {
+  border-color: oklch(0.44 0.14 58 / 0.45) !important;
+}
+:root[data-theme-mode="light"] .border-amber-600\/40 {
+  border-color: oklch(0.44 0.14 58 / 0.40) !important;
+}
+
+/* ── SharedNav 下拉選單背景 ── */
+:root[data-theme-mode="light"] .bg-slate-900 {
+  background-color: oklch(0.98 0.003 270) !important;
+}
+:root[data-theme-mode="light"] .border-slate-700 {
+  border-color: oklch(0.82 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .border-slate-700\/40 {
+  border-color: oklch(0.82 0.01 270 / 0.50) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/80 {
+  background-color: oklch(0.97 0.003 270 / 0.95) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-700\/60 {
+  background-color: oklch(0.93 0.005 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-700 {
+  background-color: oklch(0.92 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800 {
+  background-color: oklch(0.96 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800\/60 {
+  background-color: oklch(0.96 0.005 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .border-slate-600\/30 {
+  border-color: oklch(0.78 0.01 270 / 0.40) !important;
+}
+/* ── SharedNav 下拉選單：text-slate-300 ── */
+:root[data-theme-mode="light"] .text-slate-300 {
+  color: oklch(0.35 0.01 270) !important;
+}
+/* ── SharedNav 下拉選單：hover:bg-slate-800/60 ── */
+:root[data-theme-mode="light"] .hover\:bg-slate-800\/60:hover {
+  background-color: oklch(0.94 0.005 270 / 0.90) !important;
+}
+/* ── SharedNav 下拉選單：bg-slate-700/60 升級方案 badge ── */
+:root[data-theme-mode="light"] .bg-slate-700\/60 {
+  background-color: oklch(0.93 0.005 270 / 0.80) !important;
+}
+/* ── SharedNav 下拉選單：bg-gradient-to-br from-slate-800/60 to-slate-900/60 ── */
+:root[data-theme-mode="light"] .from-slate-800\/60 {
+  --tw-gradient-from: oklch(0.96 0.005 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .to-slate-900\/60 {
+  --tw-gradient-to: oklch(0.97 0.003 270 / 0.90) !important;
+}
+
+/* ── WarRoom ScoreBar 進度條漸層 ── */
+:root[data-theme-mode="light"] .from-emerald-500 {
+  --tw-gradient-from: oklch(0.38 0.16 162) !important;
+}
+:root[data-theme-mode="light"] .to-teal-400 {
+  --tw-gradient-to: oklch(0.38 0.12 195) !important;
+}
+:root[data-theme-mode="light"] .from-blue-500 {
+  --tw-gradient-from: oklch(0.38 0.16 255) !important;
+}
+:root[data-theme-mode="light"] .to-cyan-400 {
+  --tw-gradient-to: oklch(0.38 0.14 210) !important;
+}
+:root[data-theme-mode="light"] .from-amber-500 {
+  --tw-gradient-from: oklch(0.44 0.14 58) !important;
+}
+:root[data-theme-mode="light"] .to-orange-400 {
+  --tw-gradient-to: oklch(0.42 0.14 50) !important;
+}
+:root[data-theme-mode="light"] .from-slate-500 {
+  --tw-gradient-from: oklch(0.55 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .to-slate-400 {
+  --tw-gradient-to: oklch(0.60 0.01 270) !important;
+}
+/* ── WarRoom 時辰進度條漸層 ── */
+:root[data-theme-mode="light"] .from-amber-500.to-orange-400 {
+  background: linear-gradient(to right, oklch(0.44 0.14 58), oklch(0.42 0.14 50)) !important;
+}
+:root[data-theme-mode="light"] .from-emerald-500.to-teal-400 {
+  background: linear-gradient(to right, oklch(0.38 0.16 162), oklch(0.38 0.12 195)) !important;
+}
+:root[data-theme-mode="light"] .from-blue-500.to-cyan-400 {
+  background: linear-gradient(to right, oklch(0.38 0.16 255), oklch(0.38 0.14 210)) !important;
+}
+:root[data-theme-mode="light"] .from-red-600.to-red-500 {
+  background: linear-gradient(to right, oklch(0.40 0.20 22), oklch(0.45 0.20 22)) !important;
+}
+
+/* ── WarRoom 日期選擇器：yellow-400 最旺標籤 ── */
+:root[data-theme-mode="light"] .bg-yellow-400 {
+  background-color: oklch(0.72 0.16 80) !important;
+}
+:root[data-theme-mode="light"] .border-yellow-400\/60 {
+  border-color: oklch(0.60 0.14 80 / 0.60) !important;
+}
+:root[data-theme-mode="light"] .bg-yellow-400\/10 {
+  background-color: oklch(0.80 0.14 80 / 0.12) !important;
+}
+/* ── WarRoom 日期選擇器：amber-400/20 選中狀態 ── */
+:root[data-theme-mode="light"] .bg-amber-400\/20 {
+  background-color: oklch(0.44 0.14 58 / 0.15) !important;
+}
+:root[data-theme-mode="light"] .border-amber-400 {
+  border-color: oklch(0.44 0.14 58) !important;
+}
+/* ── WarRoom 日期選擇器：text-amber-300 選中文字 ── */
+:root[data-theme-mode="light"] .text-amber-300 {
+  color: oklch(0.44 0.14 58) !important;
+}
+/* ── WarRoom 日期選擇器：text-yellow-300 最佳日文字 ── */
+:root[data-theme-mode="light"] .text-yellow-300 {
+  color: oklch(0.42 0.12 85) !important;
+}
+/* ── WarRoom 日期選擇器：text-yellow-400 ── */
+:root[data-theme-mode="light"] .text-yellow-400 {
+  color: oklch(0.42 0.12 85) !important;
+}
+/* ── WarRoom 日期選擇器：text-amber-400/80 今日標籤 ── */
+:root[data-theme-mode="light"] .text-amber-400\/80 {
+  color: oklch(0.44 0.14 58 / 0.90) !important;
+}
+/* ── WarRoom 日期選擇器：text-red-400/60 低分 ── */
+:root[data-theme-mode="light"] .text-red-400\/60 {
+  color: oklch(0.40 0.20 22 / 0.80) !important;
+}
+
+/* ── ExpertDashboard 藍色數字/橙色連結 ── */
+:root[data-theme-mode="light"] .text-blue-400 {
+  color: oklch(0.38 0.16 255) !important;
+}
+:root[data-theme-mode="light"] .bg-blue-500\/20 {
+  background-color: oklch(0.38 0.16 255 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-blue-500\/30 {
+  border-color: oklch(0.38 0.16 255 / 0.35) !important;
+}
+/* ── ExpertDashboard amber-400/70 ── */
+:root[data-theme-mode="light"] .text-amber-400\/70 {
+  color: oklch(0.44 0.14 58 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-500\/20 {
+  background-color: oklch(0.44 0.14 58 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-amber-500\/30 {
+  border-color: oklch(0.44 0.14 58 / 0.35) !important;
+}
+
+/* ── LotteryOracle 重要聲明：amber-950/40 背景 ── */
+:root[data-theme-mode="light"] .bg-amber-950\/40 {
+  background-color: oklch(0.44 0.14 58 / 0.10) !important;
+}
+/* ── LotteryOracle 重要聲明：amber-200/70 文字 ── */
+:root[data-theme-mode="light"] .text-amber-200\/70 {
+  color: oklch(0.40 0.12 58 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .text-amber-200 {
+  color: oklch(0.40 0.12 58) !important;
+}
+/* ── LotteryOracle 日期選擇器：slate-900/60 背景 ── */
+:root[data-theme-mode="light"] .bg-slate-900\/60 {
+  background-color: oklch(0.97 0.003 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .border-slate-700\/50 {
+  border-color: oklch(0.82 0.01 270 / 0.50) !important;
+}
+/* ── LotteryOracle yellow-500 土 ── */
+:root[data-theme-mode="light"] .text-yellow-500 {
+  color: oklch(0.42 0.12 85) !important;
+}
+:root[data-theme-mode="light"] .bg-yellow-600\/20 {
+  background-color: oklch(0.42 0.12 85 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .border-yellow-600\/40 {
+  border-color: oklch(0.42 0.12 85 / 0.40) !important;
+}
+
+/* ── WealthPage text-white 透明度覆蓋 ── */
+:root[data-theme-mode="light"] .text-white\/70 {
+  color: oklch(0.25 0.01 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .text-white\/60 {
+  color: oklch(0.30 0.01 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .text-white\/40 {
+  color: oklch(0.40 0.01 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .text-white\/30 {
+  color: oklch(0.45 0.01 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .text-white\/25 {
+  color: oklch(0.50 0.01 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .text-white\/20 {
+  color: oklch(0.55 0.01 270 / 0.90) !important;
+}
+:root[data-theme-mode="light"] .text-white\/10 {
+  color: oklch(0.60 0.01 270 / 0.80) !important;
+}
+/* ── WealthPage emerald-400/70 ── */
+:root[data-theme-mode="light"] .text-emerald-400\/70 {
+  color: oklch(0.38 0.16 162 / 0.90) !important;
+}
+/* ── WealthPage bg-emerald-500/15 ── */
+:root[data-theme-mode="light"] .bg-emerald-500\/15 {
+  background-color: oklch(0.38 0.16 162 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .border-emerald-500\/30 {
+  border-color: oklch(0.38 0.16 162 / 0.35) !important;
+}
+/* ── WealthPage bg-blue-500/15 ── */
+:root[data-theme-mode="light"] .bg-blue-500\/15 {
+  background-color: oklch(0.38 0.16 255 / 0.10) !important;
+}
+:root[data-theme-mode="light"] .border-blue-500\/30 {
+  border-color: oklch(0.38 0.16 255 / 0.35) !important;
+}
+
+/* ── DivinationPage text-white/50 ── */
+:root[data-theme-mode="light"] .text-white\/50 {
+  color: oklch(0.35 0.01 270 / 0.90) !important;
+}
+/* ── DivinationPage bg-white/5 按鈕 ── */
+:root[data-theme-mode="light"] .bg-white\/5 {
+  background-color: oklch(0.95 0.005 270 / 0.80) !important;
+}
+:root[data-theme-mode="light"] .hover\:bg-white\/10:hover {
+  background-color: oklch(0.93 0.005 270 / 0.80) !important;
+}
+:root[data-theme-mode="light"] .hover\:text-white\/70:hover {
+  color: oklch(0.25 0.01 270 / 0.90) !important;
+}
+/* ── DivinationPage text-red-400 ── */
+:root[data-theme-mode="light"] .text-red-400 {
+  color: oklch(0.40 0.20 22) !important;
+}
+
+
+/* ===== LandingPage 設計系統（對齊排程 Agent 設計稿）===== */
+
+/* Keyframes */
+@keyframes holographic-shift {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}
+@keyframes gold-pulse-anim {
+  0%, 100% {
+    box-shadow: rgba(199, 139, 40, 0.4) 0px 0px 8px, rgba(199, 139, 40, 0.2) 0px 0px 16px;
+  }
+  50% {
+    box-shadow: rgba(199, 139, 40, 0.8) 0px 0px 20px, rgba(199, 139, 40, 0.4) 0px 0px 40px, rgba(199, 139, 40, 0.2) 0px 0px 60px;
+  }
+}
+@keyframes orb-float-anim {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-14px) rotate(2deg); }
+  66% { transform: translateY(-7px) rotate(-1deg); }
+}
+@keyframes ripple-expand {
+  0% { opacity: 0.8; transform: scale(0.5); }
+  100% { opacity: 0; transform: scale(2); }
+}
+@keyframes slide-up {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0px); }
+}
+@keyframes fade-in-anim {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes count-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0px); }
+}
+
+/* 自定義類別 */
+.text-gold-gradient {
+  -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, rgb(201, 162, 39), rgb(245, 208, 106), rgb(201, 162, 39)) text;
+  background-clip: text;
+}
+.text-holographic {
+  -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, rgb(201, 162, 39), rgb(232, 216, 240), rgb(0, 206, 209) 60%, rgb(201, 162, 39)) 0px 0px / 200% 200% text;
+  background-clip: text;
+  animation: holographic-shift 4s ease infinite;
+}
+.gold-pulse {
+  animation: gold-pulse-anim 2s ease-in-out infinite;
+}
+.orb-float {
+  animation: orb-float-anim 6s ease-in-out infinite;
+}
+.animate-slide-up {
+  animation: slide-up 0.7s ease-out forwards;
+}
+.animate-fade-in {
+  animation: fade-in-anim 0.5s ease-out forwards;
+}
+.animate-count-up {
+  animation: count-up 0.6s ease-out forwards;
+}
+
+/* glass-card hover 效果已整合到上方主定義 */
