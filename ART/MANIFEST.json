@@ -1,6 +1,11 @@
 {
-  "version": "1.0",
+  "version": "2.0",
+  "schema": "ART/MANIFEST-SPEC.md",
   "last_updated": "2026/03/22",
-  "updated_by": "ClawTeam",
+  "updated_by": "Manus System Agent",
+  "sync_status": {
+    "last_checked_by_system": null,
+    "last_integrated_version": null
+  },
   "assets": {}
 }
