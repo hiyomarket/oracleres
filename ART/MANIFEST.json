@@ -2,10 +2,11 @@
   "version": "2.0",
   "schema": "ART/MANIFEST-SPEC.md",
   "last_updated": "2026/03/22",
-  "updated_by": "Manus Art Agent",
+  "updated_by": "Manus System Agent",
   "sync_status": {
-    "last_checked_by_system": null,
-    "last_integrated_version": null
+    "last_checked_by_system": "2026/03/22",
+    "last_integrated_version": "1.0",
+    "integration_notes": "8 assets integrated into oracle-resonance project via CDN. All assets uploaded via manus-upload-file --webdev."
   },
   "assets": {
     "landing-hero-bg": {
@@ -15,9 +16,12 @@
       "file": "ART/OUTPUTS/TASK-001/landing-hero-bg.png",
       "format": "PNG",
       "dimensions": "2752x1536",
-      "status": "ready",
+      "cdn_url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/hChTlYALXKlQYYHK.png",
+      "status": "integrated",
       "version": "1.0",
       "created_at": "2026/03/22",
+      "integrated_at": "2026/03/22",
+      "integration_location": "client/src/pages/Home.tsx - Hero section background",
       "notes": "夜間模式深色背景 #1A1A2A，流動光效取代傳統八卦，目標受眾 18-35 歲女性"
     },
     "landing-hero-orb": {
@@ -27,9 +31,12 @@
       "file": "ART/OUTPUTS/TASK-001/landing-hero-orb.png",
       "format": "PNG",
       "dimensions": "2048x2048",
-      "status": "ready",
+      "cdn_url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/xTiPmUdIAkfCoSJN.png",
+      "status": "integrated",
       "version": "1.0",
       "created_at": "2026/03/22",
+      "integrated_at": "2026/03/22",
+      "integration_location": "client/src/pages/Home.tsx - Hero orb + CTA section",
       "notes": "透明背景，全息珍珠光效，可疊加於 Hero 背景圖上使用"
     },
     "icon-destiny-card": {
@@ -39,9 +46,12 @@
       "file": "ART/OUTPUTS/TASK-001/icon-destiny-card.png",
       "format": "PNG",
       "dimensions": "2048x2048",
-      "status": "ready",
+      "cdn_url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/ZFvnAJUJlzuVEglU.png",
+      "status": "integrated",
       "version": "1.0",
       "created_at": "2026/03/22",
+      "integrated_at": "2026/03/22",
+      "integration_location": "client/src/pages/Home.tsx - Feature card: 命格身份證",
       "notes": "透明背景，日系輕奢線條風格，可縮放至 128x128 使用"
     },
     "icon-war-room": {
@@ -51,9 +61,12 @@
       "file": "ART/OUTPUTS/TASK-001/icon-war-room.png",
       "format": "PNG",
       "dimensions": "2048x2048",
-      "status": "ready",
+      "cdn_url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/BJHWLyfZZKQMjTtB.png",
+      "status": "integrated",
       "version": "1.0",
       "created_at": "2026/03/22",
+      "integrated_at": "2026/03/22",
+      "integration_location": "client/src/pages/Home.tsx - Feature card: 今日作戰室",
       "notes": "透明背景，金色線條風格，現代幾何感"
     },
     "icon-oracle": {
@@ -63,9 +76,12 @@
       "file": "ART/OUTPUTS/TASK-001/icon-oracle.png",
       "format": "PNG",
       "dimensions": "2048x2048",
-      "status": "ready",
+      "cdn_url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/MpBerwmFyOZCscJA.png",
+      "status": "integrated",
       "version": "1.0",
       "created_at": "2026/03/22",
+      "integrated_at": "2026/03/22",
+      "integration_location": "client/src/pages/Home.tsx - Feature card: 天命問卜",
       "notes": "透明背景，可愛魔法少女風格"
     },
     "icon-wealth": {
@@ -75,9 +91,12 @@
       "file": "ART/OUTPUTS/TASK-001/icon-wealth.png",
       "format": "PNG",
       "dimensions": "2048x2048",
-      "status": "ready",
+      "cdn_url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/LPLnlcokDBVxAsxH.png",
+      "status": "integrated",
       "version": "1.0",
       "created_at": "2026/03/22",
+      "integrated_at": "2026/03/22",
+      "integration_location": "client/src/pages/Home.tsx - Feature card: 財運羅盤",
       "notes": "透明背景，輕奢金色質感，象徵財富與精準"
     },
     "icon-calendar": {
@@ -87,9 +106,12 @@
       "file": "ART/OUTPUTS/TASK-001/icon-calendar.png",
       "format": "PNG",
       "dimensions": "2048x2048",
-      "status": "ready",
+      "cdn_url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/GpZgmWnVnWsuRAXp.png",
+      "status": "integrated",
       "version": "1.0",
       "created_at": "2026/03/22",
+      "integrated_at": "2026/03/22",
+      "integration_location": "client/src/pages/Home.tsx - Feature card: 天命日曆",
       "notes": "透明背景，可愛日系風格，粉色系"
     },
     "icon-jinang": {
@@ -99,9 +121,12 @@
       "file": "ART/OUTPUTS/TASK-001/icon-jinang.png",
       "format": "PNG",
       "dimensions": "2048x2048",
-      "status": "ready",
+      "cdn_url": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/RyvtZMsLTpyDpRnT.png",
+      "status": "integrated",
       "version": "1.0",
       "created_at": "2026/03/22",
+      "integrated_at": "2026/03/22",
+      "integration_location": "client/src/pages/Home.tsx - Navbar logo, Fortune card, CTA section",
       "notes": "透明背景，品牌核心錦囊圖示，可愛魔法風格"
     }
   }
