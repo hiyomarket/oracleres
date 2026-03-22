@@ -638,181 +638,9 @@ export default function WarRoom() {
         {/* SEO H2 標題：視覚隱藏但機器可讀 */}
         <h2 className="sr-only">今日天命分析—十神能量、塔羅流日、時辰運勢與命理格言</h2>
         <div className="space-y-6">
-          {/* ═══ 本日天命格言 ═══ */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <div className={`rounded-2xl border ${wuxingTheme.border} ${wuxingTheme.bg} p-6 shadow-lg`}>
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">🌳</span>
-                <h3 className="text-base font-bold text-white/90 tracking-widest">本日天命格言</h3>
-                <span className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border ${wuxingTheme.border} ${wuxingTheme.bg} ${wuxingTheme.text}`}>
-                  {data.date.dayPillar}日 · {data.tenGod.main}當令
-                </span>
-              </div>
-              <p className="text-white text-base md:text-lg leading-relaxed font-medium">{data.heroScript}</p>
-            </div>
-          </motion.div>
+          {/* ═══ V11.3 順序調整完成：特殊事件→決策指南→塔羅→時辰→大運→格言→能量/月相 ═══ */}
 
-          {/* ═══ 十神能量 + 月相 並排 ═══ */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SectionCard title="今日能量指引" icon="☯️">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-white/60 text-sm">今日主要能量</span>
-                  <span className={`font-bold text-lg ${wuxingTheme.text}`}>{data.tenGod.main}</span>
-                </div>
-                <div className="text-white/80 text-sm">{data.tenGod.energy}</div>
-                <ScoreBar score={data.tenGod.score} />
-                <p className="text-white/60 text-xs">{data.tenGod.advice}</p>
-                {data.tenGod.branchGods.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-white/10">
-                    <div className="text-white/40 text-xs mb-2">隐藏的能量</div>
-                    <div className="flex gap-2 flex-wrap">
-                      {data.tenGod.branchGods.map((bg: { stem: string; tenGod: string }, i: number) => (
-                        <span key={i} className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/70">
-                          {bg.stem} → {bg.tenGod}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </SectionCard>
-            <SectionCard title="月相能量" icon={data.moon.emoji}>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-white font-medium">{data.moon.phase}</span>
-                  <span className="text-white/50 text-sm">農曆第{data.moon.lunarDay}日</span>
-                </div>
-                <div className="w-full bg-white/10 rounded-full h-2">
-                  <div className="h-full rounded-full bg-gradient-to-r from-slate-400 to-white" style={{ width: `${data.moon.illumination}%` }} />
-                </div>
-                <p className="text-white/60 text-xs">{data.moon.castInfluence}</p>
-                {data.moon.isFullMoon && (
-                  <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-amber-300 text-xs">
-                    ✨ 滿月加持：今日聖杯機率 +10%
-                  </div>
-                )}
-              </div>
-            </SectionCard>
-          </div>
-
-          {/* ═══ 塔羅流日 ═══ */}
-          {(!isAdmin && !hasFeature("warroom_divination")) ? <FeatureLockedCard feature="warroom_divination" /> : (
-            <SectionCard title="今日塔羅牌指引" icon="🃏">
-              <div className="flex flex-col md:flex-row gap-6 items-start">
-                <div className="shrink-0 mx-auto md:mx-0">
-                  <motion.div
-                    initial={{ rotateY: 90 }}
-                    animate={{ rotateY: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="w-32 h-48 rounded-xl border-2 border-amber-500/40 overflow-hidden shadow-xl shadow-amber-500/20 relative"
-                  >
-                    <img
-                      src={getTarotCardUrl(data.tarot.cardNumber, userGender)}
-                      alt={data.tarot.name}
-                      className="w-full h-full object-cover"
-                    />
-                    {/* 底部名稱遮罩 */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-2">
-                      <div className="text-amber-300 font-bold text-center text-xs">{data.tarot.name}</div>
-                      <div className="text-amber-500/70 text-[10px] text-center">第 {data.tarot.cardNumber} 號</div>
-                    </div>
-                  </motion.div>
-                </div>
-                <div className="flex-1 space-y-3">
-                  <div>
-                    <div className="text-amber-400 font-bold text-xl">{data.tarot.name}</div>
-                    {isOwner && <div className="text-white/50 text-sm mt-1">計算方式：{data.tarot.calculation}</div>}
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    {data.tarot.keywords.map((kw: string, i: number) => (
-                      <span key={i} className="px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">{kw}</span>
-                    ))}
-                  </div>
-                  <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-                    <div className="text-white/40 text-xs mb-2">今日的氣場</div>
-                    <p className="text-white/80 text-sm">{data.tarot.energy}</p>
-                  </div>
-                  <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-4">
-                    <div className="text-amber-400/70 text-xs mb-2">今日建議你</div>
-                    <p className="text-white/80 text-sm">{data.tarot.advice}</p>
-                  </div>
-                </div>
-              </div>
-            </SectionCard>
-          )}
-
-          {/* ═══ 時辰能量 ═══ */}
-          <SectionCard title="今日各時段運勢" icon="⏰">
-            {/* V11.2 決策指南最佳時辰提示橫幅 */}
-            {decisionData && (() => {
-              const bestAdv = decisionData.advices?.find((a: { category: string; bestHour?: string }) => a.category === decisionData.bestCategory);
-              const CATEGORY_LABELS: Record<string, string> = {
-                career: '事業', finance: '財務', relationships: '人際', health: '健康', creativity: '創意', travel: '出行'
-              };
-              return bestAdv?.bestHour ? (
-                <div className="mb-3 rounded-lg bg-purple-500/10 border border-purple-500/30 px-3 py-2 flex items-center gap-2">
-                  <span className="text-purple-300 text-xs">★</span>
-                  <p className="text-purple-200 text-xs">
-                    今日 <span className="text-purple-300 font-semibold">{CATEGORY_LABELS[decisionData.bestCategory] ?? decisionData.bestCategory}</span> 評分最高，最佳行動時辰為 <span className="text-purple-300 font-semibold">{bestAdv.bestHour}</span>
-                  </p>
-                </div>
-              ) : null;
-            })()}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {data.hourEnergy.allHours.map((h: { name: string; branch: string; stem: string; score: number; level: string; label: string; isCurrent: boolean; displayTime: string }, i: number) => {
-                // V11.2 決策指南最佳時辰高亮邏輯
-                const bestAdv = decisionData?.advices?.find((a: { category: string; bestHour?: string }) => a.category === decisionData.bestCategory);
-                const isDecisionBest = bestAdv?.bestHour ? bestAdv.bestHour.includes(h.name.replace('時', '')) : false;
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.03 }}
-                    className={`rounded-lg p-3 border transition-all ${
-                      isDecisionBest
-                        ? 'bg-purple-500/15 border-purple-400/60 shadow-lg shadow-purple-500/10 ring-1 ring-purple-400/30'
-                        : h.isCurrent ? 'bg-amber-500/20 border-amber-500/60 shadow-lg shadow-amber-500/10' : 'bg-white/3 border-white/10'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className={`font-medium text-sm ${
-                        isDecisionBest ? 'text-purple-300' : h.isCurrent ? 'text-amber-300' : 'text-white/70'
-                      }`}>
-                        {h.name}
-                        {h.isCurrent && <span className="text-amber-400 text-xs ml-1">●當前</span>}
-                        {isDecisionBest && <span className="text-purple-300 text-[10px] ml-1">★最佳</span>}
-                      </span>
-                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${h.label === "大吉" ? "bg-amber-500/20 text-amber-400" : h.label === "吉" ? "bg-emerald-500/20 text-emerald-400" : h.label === "平" ? "bg-blue-500/20 text-blue-400" : "bg-red-500/20 text-red-400"}`}>
-                        {h.label}
-                      </span>
-                    </div>
-                    <div className="text-white/40 text-[10px]">{h.displayTime}</div>
-                    <div className="mt-1.5">
-                      <div className="w-full bg-white/10 rounded-full h-1.5">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${h.score}%` }}
-                          transition={{ duration: 0.8, delay: i * 0.04 }}
-                          className={`h-full rounded-full ${
-                            isDecisionBest
-                              ? 'bg-gradient-to-r from-purple-500 to-violet-400'
-                              : h.score >= 80 ? 'bg-gradient-to-r from-amber-500 to-orange-400'
-                              : h.score >= 60 ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
-                              : h.score >= 40 ? 'bg-gradient-to-r from-blue-500 to-cyan-400'
-                              : 'bg-gradient-to-r from-red-600 to-red-500'
-                          }`}
-                        />
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </SectionCard>
-
-          {/* ═══ V11.1 今日特殊事件 + 神喻穿搭 V3.0 ═══ */}
+          {/* ═══ V11.1 今日特殊事件 + 神喻穿搭 V3.0（第三位） ═══ */}
           <SectionCard title="今日特殊事件" icon="✨">
             <div className="mb-4">
               <p className="text-white/50 text-xs mb-3">選擇今日情境，穿搭引擎將針對你的事件進行共振調整</p>
@@ -841,7 +669,6 @@ export default function WarRoom() {
                 ))}
               </div>
             </div>
-            {/* 穿搭建議 V3.0 */}
             {selectedEvent && data && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -901,103 +728,16 @@ export default function WarRoom() {
             )}
           </SectionCard>
 
-          {/* ═══ V11.1 大運共振指數卡片 ═══ */}
-          {daYunData && (
-            <SectionCard title="大運背景共振" icon="🌀">
-              {(() => {
-                const dy = daYunData.currentDaYun;
-                // 大運五行 vs 今日五行共振指數計算
-                const ELEMENT_COMPATIBLE: Record<string, string[]> = {
-                  '木': ['木', '水', '火'],
-                  '火': ['火', '木', '土'],
-                  '土': ['土', '火', '金'],
-                  '金': ['金', '土', '水'],
-                  '水': ['水', '金', '木'],
-                };
-                const todayWuxing = data.tenGod.wuxing;
-                const daYunElement = dy.element;
-                const compatible = ELEMENT_COMPATIBLE[daYunElement]?.includes(todayWuxing);
-                const resonanceScore = compatible ? (
-                  daYunElement === todayWuxing ? 95 :
-                  ELEMENT_COMPATIBLE[daYunElement]?.[1] === todayWuxing ? 80 : 70
-                ) : (
-                  todayWuxing === '水' && daYunElement === '火' ? 30 :
-                  todayWuxing === '火' && daYunElement === '水' ? 30 :
-                  todayWuxing === '金' && daYunElement === '木' ? 30 :
-                  todayWuxing === '木' && daYunElement === '金' ? 30 :
-                  45
-                );
-                const isResonant = resonanceScore >= 70;
-                return (
-                  <div className="space-y-4">
-                    {/* 大運基本資訊 */}
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="text-white/40 text-xs mb-1">當前大運（{dy.startAge}–{dy.endAge}歲）</div>
-                        <div className="text-2xl font-black text-white">{dy.stem}{dy.branch}</div>
-                        <div className="text-amber-400 text-sm font-semibold mt-1">{dy.role} · {dy.element}運</div>
-                        <div className="text-white/50 text-xs mt-1">剩餘 {dy.yearsRemaining} 年</div>
-                      </div>
-                      {/* 共振指數圓圈 */}
-                      <div className="relative w-20 h-20 shrink-0">
-                        <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
-                          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
-                          <circle
-                            cx="40" cy="40" r="32" fill="none"
-                            stroke={isResonant ? '#f59e0b' : '#6b7280'}
-                            strokeWidth="8"
-                            strokeDasharray={`${2 * Math.PI * 32}`}
-                            strokeDashoffset={`${2 * Math.PI * 32 * (1 - resonanceScore / 100)}`}
-                            strokeLinecap="round"
-                            style={{ transition: 'stroke-dashoffset 1.2s ease' }}
-                          />
-                        </svg>
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <span className={`text-xl font-black ${isResonant ? 'text-amber-400' : 'text-slate-400'}`}>{resonanceScore}</span>
-                          <span className="text-[9px] text-white/40">共振</span>
-                        </div>
-                      </div>
-                    </div>
-                    {/* 順風/逆風指標 */}
-                    <div className={`rounded-xl border p-3 ${
-                      isResonant
-                        ? 'border-amber-500/40 bg-amber-500/8'
-                        : 'border-slate-500/30 bg-slate-500/5'
-                    }`}>
-                      <div className={`text-sm font-bold mb-1 ${
-                        isResonant ? 'text-amber-300' : 'text-slate-400'
-                      }`}>
-                        {isResonant ? '⚡ 大運順風日' : '🌧 大運逆風日'}
-                      </div>
-                      <p className={`text-xs ${
-                        isResonant ? 'text-amber-200/70' : 'text-slate-400/70'
-                      }`}>
-                        {isResonant
-                          ? `今日${todayWuxing}能量與大運${daYunElement}運方向一致，行動力加倍，適合推進重要事項。`
-                          : `今日${todayWuxing}能量與大運${daYunElement}運方向相剋，宜守不宜攻，謹慎評估後再行動。`
-                        }
-                      </p>
-                    </div>
-                    {/* 大運主題 */}
-                    <p className="text-white/50 text-xs leading-relaxed">{dy.theme}</p>
-                  </div>
-                );
-              })()}
-            </SectionCard>
-          )}
-
-          {/* ═══ V11.1 六角雷達圖決策支持報告 ═══ */}
+          {/* ═══ 四：今日決策指南 ═══ */}
           {decisionData && (
             <SectionCard title="今日決策指南" icon="📊">
               <div className="space-y-4">
-                {/* 一句話總結 */}
                 <div className="rounded-xl bg-white/5 border border-white/10 p-3">
                   <p className="text-white/80 text-sm">{decisionData.dailySummary}</p>
                   {decisionData.daYunContext && (
                     <p className="text-amber-400/60 text-xs mt-2">{decisionData.daYunContext}</p>
                   )}
                 </div>
-                {/* 六角雷達圖（SVG 手繪） */}
                 {(() => {
                   const advices = decisionData.advices ?? [];
                   const LABELS: Record<string, string> = {
@@ -1019,59 +759,35 @@ export default function WarRoom() {
                   return (
                     <div className="flex flex-col md:flex-row gap-4 items-center">
                       <svg viewBox="0 0 240 240" className="w-48 h-48 shrink-0">
-                        {/* 外框網格 */}
                         {[0.25, 0.5, 0.75, 1].map(ratio => (
-                          <polygon key={ratio} points={gridPoints(maxR * ratio)}
-                            fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                          <polygon key={ratio} points={gridPoints(maxR * ratio)} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
                         ))}
-                        {/* 轅線 */}
                         {advices.map((_, i) => {
                           const angle = (i * 2 * Math.PI / N) - Math.PI / 2;
-                          return (
-                            <line key={i}
-                              x1={cx} y1={cy}
-                              x2={cx + maxR * Math.cos(angle)}
-                              y2={cy + maxR * Math.sin(angle)}
-                              stroke="rgba(255,255,255,0.08)" strokeWidth="1"
-                            />
-                          );
+                          return <line key={i} x1={cx} y1={cy} x2={cx + maxR * Math.cos(angle)} y2={cy + maxR * Math.sin(angle)} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />;
                         })}
-                        {/* 得分多邊形 */}
-                        <polygon points={polyPoints}
-                          fill="rgba(251,191,36,0.15)" stroke="#f59e0b" strokeWidth="1.5" />
-                        {/* 分數點 */}
+                        <polygon points={polyPoints} fill="rgba(251,191,36,0.15)" stroke="#f59e0b" strokeWidth="1.5" />
                         {points.map((p, i) => (
-                          <circle key={i} cx={p.x} cy={p.y} r="3"
-                            fill={advices[i].score >= 8 ? '#f59e0b' : advices[i].score >= 6 ? '#10b981' : '#6b7280'} />
+                          <circle key={i} cx={p.x} cy={p.y} r="3" fill={advices[i].score >= 8 ? '#f59e0b' : advices[i].score >= 6 ? '#10b981' : '#6b7280'} />
                         ))}
-                        {/* 標籤 */}
                         {advices.map((a, i) => {
                           const angle = (i * 2 * Math.PI / N) - Math.PI / 2;
                           const lx = cx + (maxR + 18) * Math.cos(angle);
                           const ly = cy + (maxR + 18) * Math.sin(angle);
-                          return (
-                            <text key={i} x={lx} y={ly}
-                              textAnchor="middle" dominantBaseline="middle"
-                              fontSize="9" fill={a.category === decisionData.bestCategory ? '#fbbf24' : 'rgba(255,255,255,0.5)'}>
-                              {LABELS[a.category]}
-                            </text>
-                          );
+                          return <text key={i} x={lx} y={ly} textAnchor="middle" dominantBaseline="middle" fontSize="9" fill={a.category === decisionData.bestCategory ? '#fbbf24' : 'rgba(255,255,255,0.5)'}>{LABELS[a.category]}</text>;
                         })}
                       </svg>
-                      {/* 分類詳細列表 */}
                       <div className="flex-1 space-y-2 w-full">
                         {advices.sort((a, b) => b.score - a.score).map(a => (
                           <div key={a.category} className={`rounded-lg p-2.5 border ${
-                            a.category === decisionData.bestCategory
-                              ? 'border-amber-500/40 bg-amber-500/8'
-                              : a.category === decisionData.cautionCategory
-                              ? 'border-red-500/30 bg-red-500/5'
-                              : 'border-white/8 bg-white/3'
+                            a.category === decisionData.bestCategory ? 'border-amber-500/40 bg-amber-500/8'
+                            : a.category === decisionData.cautionCategory ? 'border-red-500/30 bg-red-500/5'
+                            : 'border-white/8 bg-white/3'
                           }`}>
                             <div className="flex items-center justify-between mb-1">
                               <span className={`text-xs font-semibold ${
-                                a.category === decisionData.bestCategory ? 'text-amber-300' :
-                                a.category === decisionData.cautionCategory ? 'text-red-400' : 'text-white/60'
+                                a.category === decisionData.bestCategory ? 'text-amber-300'
+                                : a.category === decisionData.cautionCategory ? 'text-red-400' : 'text-white/60'
                               }`}>
                                 {LABELS[a.category]}
                                 {a.category === decisionData.bestCategory && ' ★ 今日最佳'}
@@ -1081,9 +797,7 @@ export default function WarRoom() {
                                 a.score >= 8 ? 'text-amber-400' : a.score >= 6 ? 'text-emerald-400' : 'text-slate-400'
                               }`}>{a.score}/10</span>
                             </div>
-                            {a.bestHour && (
-                              <div className="text-[10px] text-amber-400/70 mb-1">⏰ 最佳時辰：{a.bestHour}</div>
-                            )}
+                            {a.bestHour && <div className="text-[10px] text-amber-400/70 mb-1">⏰ 最佳時辰：{a.bestHour}</div>}
                             <p className="text-white/50 text-[11px] leading-relaxed">{a.action}</p>
                           </div>
                         ))}
@@ -1094,6 +808,165 @@ export default function WarRoom() {
               </div>
             </SectionCard>
           )}
+
+          {/* ═══ 五：今日塔羅牌指引 ═══ */}
+          {(!isAdmin && !hasFeature("warroom_divination")) ? <FeatureLockedCard feature="warroom_divination" /> : (
+            <SectionCard title="今日塔羅牌指引" icon="🃏">
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                <div className="shrink-0 mx-auto md:mx-0">
+                  <motion.div
+                    initial={{ rotateY: 90 }}
+                    animate={{ rotateY: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="w-32 h-48 rounded-xl border-2 border-amber-500/40 overflow-hidden shadow-xl shadow-amber-500/20 relative"
+                  >
+                    <img src={getTarotCardUrl(data.tarot.cardNumber, userGender)} alt={data.tarot.name} className="w-full h-full object-cover" />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-2">
+                      <div className="text-amber-300 font-bold text-center text-xs">{data.tarot.name}</div>
+                      <div className="text-amber-500/70 text-[10px] text-center">第 {data.tarot.cardNumber} 號</div>
+                    </div>
+                  </motion.div>
+                </div>
+                <div className="flex-1 space-y-3">
+                  <div>
+                    <div className="text-amber-400 font-bold text-xl">{data.tarot.name}</div>
+                    {isOwner && <div className="text-white/50 text-sm mt-1">計算方式：{data.tarot.calculation}</div>}
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    {data.tarot.keywords.map((kw: string, i: number) => (
+                      <span key={i} className="px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">{kw}</span>
+                    ))}
+                  </div>
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+                    <div className="text-white/40 text-xs mb-2">今日的氣場</div>
+                    <p className="text-white/80 text-sm">{data.tarot.energy}</p>
+                  </div>
+                  <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-4">
+                    <div className="text-amber-400/70 text-xs mb-2">今日建議你</div>
+                    <p className="text-white/80 text-sm">{data.tarot.advice}</p>
+                  </div>
+                </div>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* ═══ 六：大運背景共振 ═══ */}
+          {daYunData && (
+            <SectionCard title="大運背景共振" icon="🌀">
+              {(() => {
+                const dy = daYunData.currentDaYun;
+                const ELEMENT_COMPATIBLE: Record<string, string[]> = {
+                  '木': ['木', '水', '火'], '火': ['火', '木', '土'],
+                  '土': ['土', '火', '金'], '金': ['金', '土', '水'], '水': ['水', '金', '木'],
+                };
+                const todayWuxing = data.tenGod.wuxing;
+                const daYunElement = dy.element;
+                const compatible = ELEMENT_COMPATIBLE[daYunElement]?.includes(todayWuxing);
+                const resonanceScore = compatible ? (
+                  daYunElement === todayWuxing ? 95 : ELEMENT_COMPATIBLE[daYunElement]?.[1] === todayWuxing ? 80 : 70
+                ) : (
+                  todayWuxing === '水' && daYunElement === '火' ? 30 : todayWuxing === '火' && daYunElement === '水' ? 30 :
+                  todayWuxing === '金' && daYunElement === '木' ? 30 : todayWuxing === '木' && daYunElement === '金' ? 30 : 45
+                );
+                const isResonant = resonanceScore >= 70;
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="text-white/40 text-xs mb-1">當前大運（{dy.startAge}–{dy.endAge}歲）</div>
+                        <div className="text-2xl font-black text-white">{dy.stem}{dy.branch}</div>
+                        <div className="text-amber-400 text-sm font-semibold mt-1">{dy.role} · {dy.element}運</div>
+                        <div className="text-white/50 text-xs mt-1">剩餘 {dy.yearsRemaining} 年</div>
+                      </div>
+                      <div className="relative w-20 h-20 shrink-0">
+                        <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
+                          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+                          <circle cx="40" cy="40" r="32" fill="none" stroke={isResonant ? '#f59e0b' : '#6b7280'} strokeWidth="8"
+                            strokeDasharray={`${2 * Math.PI * 32}`}
+                            strokeDashoffset={`${2 * Math.PI * 32 * (1 - resonanceScore / 100)}`}
+                            strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1.2s ease' }} />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className={`text-xl font-black ${isResonant ? 'text-amber-400' : 'text-slate-400'}`}>{resonanceScore}</span>
+                          <span className="text-[9px] text-white/40">共振</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={`rounded-xl border p-3 ${isResonant ? 'border-amber-500/40 bg-amber-500/8' : 'border-slate-500/30 bg-slate-500/5'}`}>
+                      <div className={`text-sm font-bold mb-1 ${isResonant ? 'text-amber-300' : 'text-slate-400'}`}>
+                        {isResonant ? '⚡ 大運順風日' : '🌧 大運逆風日'}
+                      </div>
+                      <p className={`text-xs ${isResonant ? 'text-amber-200/70' : 'text-slate-400/70'}`}>
+                        {isResonant
+                          ? `今日${todayWuxing}能量與大運${daYunElement}運方向一致，行動力加倍，適合推進重要事項。`
+                          : `今日${todayWuxing}能量與大運${daYunElement}運方向相剋，宜守不宜攻，謹慎評估後再行動。`}
+                      </p>
+                    </div>
+                    <p className="text-white/50 text-xs leading-relaxed">{dy.theme}</p>
+                  </div>
+                );
+              })()}
+            </SectionCard>
+          )}
+
+          {/* ═══ 七：本日天命格言 ═══ */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <div className={`rounded-2xl border ${wuxingTheme.border} ${wuxingTheme.bg} p-6 shadow-lg`}>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">🌳</span>
+                <h3 className="text-base font-bold text-white/90 tracking-widest">本日天命格言</h3>
+                <span className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full border ${wuxingTheme.border} ${wuxingTheme.bg} ${wuxingTheme.text}`}>
+                  {data.date.dayPillar}日 · {data.tenGod.main}當令
+                </span>
+              </div>
+              <p className="text-white text-base md:text-lg leading-relaxed font-medium">{data.heroScript}</p>
+            </div>
+          </motion.div>
+
+          {/* ═══ 八：今日能量指引 + 月相能量 ═══ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <SectionCard title="今日能量指引" icon="☯️">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-white/60 text-sm">今日主要能量</span>
+                  <span className={`font-bold text-lg ${wuxingTheme.text}`}>{data.tenGod.main}</span>
+                </div>
+                <div className="text-white/80 text-sm">{data.tenGod.energy}</div>
+                <ScoreBar score={data.tenGod.score} />
+                <p className="text-white/60 text-xs">{data.tenGod.advice}</p>
+                {data.tenGod.branchGods.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <div className="text-white/40 text-xs mb-2">隐藏的能量</div>
+                    <div className="flex gap-2 flex-wrap">
+                      {data.tenGod.branchGods.map((bg: { stem: string; tenGod: string }, i: number) => (
+                        <span key={i} className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/70">
+                          {bg.stem} → {bg.tenGod}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+            <SectionCard title="月相能量" icon={data.moon.emoji}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-white font-medium">{data.moon.phase}</span>
+                  <span className="text-white/50 text-sm">農曆第{data.moon.lunarDay}日</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div className="h-full rounded-full bg-gradient-to-r from-slate-400 to-white" style={{ width: `${data.moon.illumination}%` }} />
+                </div>
+                <p className="text-white/60 text-xs">{data.moon.castInfluence}</p>
+                {data.moon.isFullMoon && (
+                  <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-amber-300 text-xs">
+                    ✨ 滿月加持：今日聖杯機率 +10%
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+          </div>
+
         </div>
 
 

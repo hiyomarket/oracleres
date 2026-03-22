@@ -82,10 +82,67 @@ const PALACE_FORTUNE: Record<string, { level: "大吉" | "吉" | "平" | "凶" |
 };
 
 // ─── 塔羅流年計算 ──────────────────────────────────────────────
-// 中間個性：10（命運之輪）
-// 流年 = 中間個性(10) + 年份數字相加
-function calcTarotYear(year: number, middleNumber?: number): { number: number; name: string; element: string; theme: string } {
-  const yearSum = String(year).split("").reduce((a, b) => a + parseInt(b), 0);
+// 中間靈魂數 = 月份縮減數 + 日期縮減數
+// 月份：>= 10 才縮減（例：11 → 1+1=2，9 → 9）
+// 日期：> 22 才縮減（例：26 → 2+6=8，15 → 15）
+// 流年 = 中間靈魂數 + 當年數字相加
+// 流年切換點：以生日為準，生日前走上一年流年
+function calcMiddleNumber(birthMonth: number, birthDay: number): number {
+  // 月份縮減：>= 10 才縮減
+  let month = birthMonth;
+  if (month >= 10) {
+    month = String(month).split('').reduce((a, b) => a + parseInt(b), 0);
+  }
+  // 日期縮減：> 22 才縮減
+  let day = birthDay;
+  if (day > 22) {
+    day = String(day).split('').reduce((a, b) => a + parseInt(b), 0);
+  }
+  let middle = month + day;
+  // 中間靈魂數保留到 22（塔羅大阿爾克那最大值）
+  while (middle > 22) {
+    middle = String(middle).split('').reduce((a, b) => a + parseInt(b), 0);
+  }
+  return middle;
+}
+
+/**
+ * 根據當前日期和生日，計算有效流年（生日前走上一年）
+ * @param calendarYear 日曆年份（例如 2026）
+ * @param birthMonth 出生月份（1-12）
+ * @param birthDay 出生日（1-31）
+ * @param todayMonth 今日月份（可選，預設當前月）
+ * @param todayDay 今日日（可選，預設當前日）
+ */
+function getEffectiveTarotYear(
+  calendarYear: number,
+  birthMonth: number,
+  birthDay: number,
+  todayMonth?: number,
+  todayDay?: number
+): number {
+  const now = new Date();
+  const tMonth = todayMonth ?? (now.getMonth() + 1);
+  const tDay = todayDay ?? now.getDate();
+  // 今日是否已過生日（月份大於生日月，或同月且日期 >= 生日日）
+  const birthdayPassed =
+    tMonth > birthMonth ||
+    (tMonth === birthMonth && tDay >= birthDay);
+  // 生日前走上一年流年
+  return birthdayPassed ? calendarYear : calendarYear - 1;
+}
+
+function calcTarotYear(
+  year: number,
+  middleNumber?: number,
+  birthMonth?: number,
+  birthDay?: number
+): { number: number; name: string; element: string; theme: string; effectiveYear: number } {
+  // 計算有效流年（考慮生日切換點）
+  const effectiveYear = (birthMonth && birthDay)
+    ? getEffectiveTarotYear(year, birthMonth, birthDay)
+    : year;
+  const yearSum = String(effectiveYear).split("").reduce((a, b) => a + parseInt(b), 0);
   const baseNumber = middleNumber ?? NUMEROLOGY.middle.number;
   let total = baseNumber + yearSum;
   // 歸約到 1-22（22保留）
@@ -117,7 +174,7 @@ function calcTarotYear(year: number, middleNumber?: number): { number: number; n
     22: { name: "愚者", element: "風", theme: "新開始、冒險、無限可能" },
   };
   const card = TAROT_CARDS[total] ?? { name: "命運之輪", element: "火", theme: "轉機" };
-  return { number: total, ...card };
+  return { number: total, ...card, effectiveYear };
 }
 
 // ─── 流月天干計算 ──────────────────────────────────────────────
@@ -324,13 +381,15 @@ function buildYearTheme(
  */
 export interface UserProfileForYearly {
   middleNumber?: number;
+  birthMonth?: number;   // 出生月份（1-12），用於流年切換點計算
+  birthDay?: number;     // 出生日（1-31），用於流年切換點計算
   favorableElements?: string[];
   unfavorableElements?: string[];
 }
 
 export function getYearlyAnalysis(year: number, userProfile?: UserProfileForYearly): YearAnalysis {
   const { stem, branch } = getYearStemBranch(year);
-  const tarot = calcTarotYear(year, userProfile?.middleNumber);
+  const tarot = calcTarotYear(year, userProfile?.middleNumber, userProfile?.birthMonth, userProfile?.birthDay);
   const trans = FOUR_TRANSFORMATIONS[stem];
 
   // 四化落宮

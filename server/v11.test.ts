@@ -7,6 +7,7 @@ import { describe, it, expect } from 'vitest';
 import { calculateDaYun, formatDaYunSummary } from './lib/daYunEngine';
 import { generateOutfitAdviceV11 } from './lib/outfitStrategy';
 import { generateDailyDecisionReport } from './lib/decisionSupportEngine';
+import { getYearlyAnalysis } from './lib/yearlyAnalysis';
 import type { WeightedElementResult } from './lib/wuxingEngine';
 import type { DaYunResult } from './lib/daYunEngine';
 
@@ -233,5 +234,49 @@ describe('decisionSupportEngine', () => {
     const careerAdvice = report.advices.find(a => a.category === 'career');
     expect(careerAdvice).toBeDefined();
     expect(careerAdvice!.score).toBeGreaterThan(5);
+  });
+});
+
+// ─── 塔羅流年計算驗證測試（V11.3 修正）──────────────────
+// getYearlyAnalysis 已在檔案頂部 import
+
+describe('塔羅流年計算（命理顧問 V11.3 修正）', () => {
+  it('1984/11/26 的中間靈魂數應為 10，2026 年生日未到應走 2025 流年（太陽年）', () => {
+    // 月：11 → 1+1=2，日：26 → 2+6=8，中間靈魂數：2+8=10
+    // 今日是 2026-03-23，生日 11/26 未到，有效流年 = 2025
+    // 2025 → 2+0+2+5=9，9+10=19（太陽年）
+    const result2026 = getYearlyAnalysis(2026, {
+      middleNumber: 10,
+      birthMonth: 11,
+      birthDay: 26,
+    });
+    expect(result2026.tarot.number).toBe(19);
+    expect(result2026.tarot.name).toBe('太陽');
+    expect(result2026.tarot.effectiveYear).toBe(2025);
+  });
+
+  it('2027 年（生日 11/26 未到）應走 2026 流年（審判年）', () => {
+    // 今日是 2026-03-23，生日 11/26 未到，有效流年 = 2026
+    // 2026 → 2+0+2+6=10，10+10=20（審判年）
+    const result2027 = getYearlyAnalysis(2027, {
+      middleNumber: 10,
+      birthMonth: 11,
+      birthDay: 26,
+    });
+    expect(result2027.tarot.number).toBe(20);
+    expect(result2027.tarot.name).toBe('審判');
+    expect(result2027.tarot.effectiveYear).toBe(2026);
+  });
+
+  it('月份 >= 10 才縮減，日期 > 22 才縮減', () => {
+    // 月 9（不縮減）+ 日 15（不縮減，<=22）= 24 → 2+4=6（戀人）
+    // 有效流年 2025（9/15 未到），2025→9，9+6=15（惡魔年）
+    const result = getYearlyAnalysis(2026, {
+      middleNumber: 6,
+      birthMonth: 9,
+      birthDay: 15,
+    });
+    expect(result.tarot.number).toBe(15);
+    expect(result.tarot.name).toBe('惡魔');
   });
 });

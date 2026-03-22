@@ -3193,16 +3193,27 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
         const endYear = input?.endYear ?? 2030;
         // 使用用戶動態命格計算流年流月
         const ep = await getUserProfileForEngine(ctx.user.id);
-        // 從出生日期動態計算中間個性數字（生命靈數）
+        // 從出生月日動態計算中間靈魂數（正確公式：月+日縮減）
         let middleNumber: number | undefined;
-        if (ep.birthDate && !ep.isDefault) {
-          const digits = ep.birthDate.replace(/-/g, '').split('').map(Number);
-          let sum = digits.reduce((a, b) => a + b, 0);
-          while (sum > 22) { sum = String(sum).split('').reduce((a, b) => a + parseInt(b), 0); }
-          middleNumber = sum;
+        let birthMonth: number | undefined;
+        let birthDay: number | undefined;
+        if (ep.birthMonth && ep.birthDay && !ep.isDefault) {
+          birthMonth = ep.birthMonth;
+          birthDay = ep.birthDay;
+          // 月份：>= 10 才縮減
+          let m = birthMonth;
+          if (m >= 10) { m = String(m).split('').reduce((a, b) => a + parseInt(b), 0); }
+          // 日期：> 22 才縮減
+          let d = birthDay;
+          if (d > 22) { d = String(d).split('').reduce((a, b) => a + parseInt(b), 0); }
+          let mid = m + d;
+          while (mid > 22) { mid = String(mid).split('').reduce((a, b) => a + parseInt(b), 0); }
+          middleNumber = mid;
         }
         const userProfileForYearly = {
           middleNumber,
+          birthMonth,
+          birthDay,
           favorableElements: ep.favorableElements,
           unfavorableElements: ep.unfavorableElements,
         };
