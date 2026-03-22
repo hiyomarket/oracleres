@@ -2640,3 +2640,9 @@
 - [x] 加入日夜切換按鈕（Sun/Moon icon）
 - [x] 星星粒子改為原生 Canvas（不依賴外部元件）
 - [x] 修正 glass-card 重複定義問題
+
+## 首頁數據調整與性別設定功能（v1.4）
+- [x] 調整 LandingPage STATS 數據：改用系統特色型數據（22塔羅牌 / 120命格組合 / 5行共振 / 24節氣）
+- [x] 調整 LandingPage TESTIMONIALS：去除誇大說法，改成真實日常感受
+- [x] 確認性別設定功能早已完整實作（DB gender 欄位 + MyProfile.tsx 性別選擇 UI + saveProfile API）
+- [x] WarRoom 塔羅牌圖片依 gender 動態切換（v1.1 已完成）

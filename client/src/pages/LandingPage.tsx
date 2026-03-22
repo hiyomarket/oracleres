@@ -42,16 +42,16 @@ const FEATURE_CARDS = [
 ];
 
 const STATS = [
-  { value: "4,019+", label: "命盤解讀用戶" },
-  { value: "78%", label: "運勢準確率" },
-  { value: "293", label: "天不間斷服務" },
-  { value: "9", label: "位專業命理師" },
+  { value: "22", label: "大阿爾卡納塔羅牌", sub: "每日流日精準對應" },
+  { value: "120", label: "天干地支命格組合", sub: "10天干 × 12地支" },
+  { value: "5行", label: "能量即時共振", sub: "木火土金水全維度" },
+  { value: "24", label: "節氣命盤校準", sub: "順天應時精準指引" },
 ];
 
 const TESTIMONIALS = [
-  { name: "Mia C.", role: "創業者", avatar: "M", element: "火", text: "天命共振幫我找到最佳創業時機，去年按照命盤建議的月份出發，現在公司已經穩定成長了！" },
-  { name: "Jason L.", role: "投資人", avatar: "J", element: "金", text: "財運羅盤的預測準確度讓我驚訝，幾次重要投資決策都參考了天命指引，回報率明顯提升。" },
-  { name: "Sophia W.", role: "設計師", avatar: "S", element: "木", text: "每天早上開啟今日作戰室，感覺整個人的節奏都對了。命格身份證更讓我重新認識自己。" },
+  { name: "Mia C.", role: "創業者", avatar: "M", element: "火", text: "天命共振讓我开始注意流日能量的變化，選對時機做决定就是比較輕鬆。不是魔法，是讓自己更清醒的工具。" },
+  { name: "Jason L.", role: "自雇工作者", avatar: "J", element: "金", text: "天命日曆讓我知道哪幾天適合推進新案子、哪幾天適合休息整理思路。安排工作節奏變得比以前自然多了。" },
+  { name: "Sophia W.", role: "設計師", avatar: "S", element: "木", text: "每天早上看一下今日作戰室，感覺整個人的節奏都對了。命格身份證讓我重新認識自己的天生屬性，很有趣。" },
 ];
 
 /** 星星粒子 Canvas（純 CSS 動畫，不依賴 framer-motion） */
@@ -393,8 +393,9 @@ function StatsSection() {
               transition={{ duration: 0.4, delay: index * 0.1 }}
               className="text-center"
             >
-              <div className="text-4xl font-bold text-gold-gradient font-serif mb-2">{stat.value}</div>
-              <div className="text-slate-400 text-sm">{stat.label}</div>
+              <div className="text-4xl font-bold text-gold-gradient font-serif mb-1">{stat.value}</div>
+              <div className="text-slate-200 text-sm font-medium mb-0.5">{stat.label}</div>
+              {stat.sub && <div className="text-slate-500 text-xs">{stat.sub}</div>}
             </motion.div>
           ))}
         </div>
