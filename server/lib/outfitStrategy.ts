@@ -195,7 +195,7 @@ export const MOON_PHASE_OUTFIT_MODIFIER: Record<string, string> = {
  */
 export interface UserContext {
   /** 今日特殊事件 */
-  event?: 'important_meeting' | 'date' | 'interview' | 'creative_work' | 'negotiation' | 'rest' | null;
+  event?: 'important_meeting' | 'date' | 'interview' | 'creative_work' | 'negotiation' | 'rest' | 'creative_presentation' | 'rest_day' | null;
   /** 今日心情 */
   mood?: 'confident' | 'anxious' | 'creative' | 'tired' | 'focused' | null;
 }
@@ -231,6 +231,8 @@ const EVENT_ELEMENT_BOOST: Record<string, { element: string; reason: string }> =
   creative_work:     { element: '火', reason: '創意工作需要食神之火的靈感與才華輸出' },
   negotiation:       { element: '土', reason: '談判場合需要財星之土的穩健與落地感' },
   rest:              { element: '水', reason: '休息日可順應水的流動，選擇舒適低調的穿搭' },
+  creative_presentation: { element: '火', reason: '創意發表提案需要食傷之火的魅力與才華表達，讓你的創意能量充分展現' },
+  rest_day:          { element: '均衡', reason: '靜養充電日切換均衡守成模式，讓命格自然呼吸，不強制補強的舒適中性色系' },
 };
 
 // 心情對應的穿搭微調
@@ -305,6 +307,8 @@ function getEventLabel(event: string): string {
     creative_work: '創意工作',
     negotiation: '商業談判',
     rest: '休息日',
+    creative_presentation: '創意發表提案',
+    rest_day: '靜養充電日',
   };
   return labels[event] || event;
 }
@@ -345,6 +349,18 @@ export function generateOutfitAdviceV11(
           && baseOutfit.topElement !== '火') {
         topColor = `${baseOutfit.topColor}（建議加入一件暖色系配件提升魅力）`;
         contextNote = `今日有${getEventLabel(userContext.event)}，已在穿搭中加強火元素的表達力。`;
+      }
+      // 創意發表提案：強化食傷火元素
+      if (userContext.event === 'creative_presentation') {
+        topColor = `${baseOutfit.topColor}（建議加入暖色系主色提升創意展現力）`;
+        contextNote = `今日有創意發表提案，食傷之火的暖色系讓你的才華與魅力充分展現。`;
+      }
+      // 靜養充電日：切換均衡守成模式
+      if (userContext.event === 'rest_day') {
+        topColor = '大地色/米白色/淡灰色';
+        bottomColor = '大地色/淡襲色';
+        shoesColor = '小麥色/小白色';
+        contextNote = `今日為靜養充電日，已切換均衡守成模式——不強制補強，讓命格自然呼吸。舒適中性色系是今日最好的選擇。`;
       }
     }
   }

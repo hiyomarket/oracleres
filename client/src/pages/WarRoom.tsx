@@ -284,6 +284,17 @@ export default function WarRoom() {
     : data?.wealthCompass?.lotteryAdvice ?? '';
 
   const [currentTime, setCurrentTime] = useState(new Date());
+  // V11.1 今日特殊事件選擇
+  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
+
+  // V11.1 大運資訊查詢
+  const { data: daYunData } = trpc.v11.getDaYun.useQuery(undefined, { staleTime: 60 * 60 * 1000 });
+
+  // V11.1 決策支持報告查詢
+  const { data: decisionData } = trpc.v11.getDailyDecision.useQuery(
+    { date: selectedDate },
+    { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false }
+  );
   // Tab 已移除，改為垂直排列
 
   // 本週最旺時辰通知
@@ -750,6 +761,263 @@ export default function WarRoom() {
               ))}
             </div>
           </SectionCard>
+
+          {/* ═══ V11.1 今日特殊事件 + 神喻穿搭 V3.0 ═══ */}
+          <SectionCard title="今日特殊事件" icon="✨">
+            <div className="mb-4">
+              <p className="text-white/50 text-xs mb-3">選擇今日情境，穿搭引擎將針對你的事件進行共振調整</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {[
+                  { key: 'important_meeting', label: '重要會議', icon: '💼', color: 'border-slate-400/40 hover:border-slate-300/60' },
+                  { key: 'interview',         label: '面試',     icon: '🎯', color: 'border-blue-400/40 hover:border-blue-300/60' },
+                  { key: 'date',              label: '約會',     icon: '💫', color: 'border-pink-400/40 hover:border-pink-300/60' },
+                  { key: 'negotiation',       label: '商業談判', icon: '🤝', color: 'border-amber-400/40 hover:border-amber-300/60' },
+                  { key: 'creative_presentation', label: '創意發表', icon: '🎨', color: 'border-orange-400/40 hover:border-orange-300/60' },
+                  { key: 'rest_day',          label: '靜養充電', icon: '🌿', color: 'border-emerald-400/40 hover:border-emerald-300/60' },
+                ].map(evt => (
+                  <button
+                    key={evt.key}
+                    onClick={() => setSelectedEvent(selectedEvent === evt.key ? null : evt.key)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${
+                      selectedEvent === evt.key
+                        ? 'bg-amber-500/20 border-amber-400/70 text-amber-300 shadow-lg shadow-amber-500/10'
+                        : `bg-white/5 ${evt.color} text-white/60 hover:text-white/80`
+                    }`}
+                  >
+                    <span className="text-base">{evt.icon}</span>
+                    <span>{evt.label}</span>
+                    {selectedEvent === evt.key && <span className="ml-auto text-amber-400 text-xs">✓</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* 穿搭建議 V3.0 */}
+            {selectedEvent && data && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3"
+              >
+                <div className="text-amber-400 text-xs font-semibold uppercase tracking-widest">情境共振穿搭建議</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {[{
+                    label: '上衣', value: data.outfit?.topColor ?? '—', element: data.outfit?.topElement ?? ''
+                  }, {
+                    label: '下裝', value: data.outfit?.bottomColor ?? '—', element: data.outfit?.bottomElement ?? ''
+                  }, {
+                    label: '鞋子', value: data.outfit?.shoesColor ?? '—', element: data.outfit?.shoesElement ?? ''
+                  }, {
+                    label: '配件', value: data.outfit?.accentColor ?? '—', element: ''
+                  }].map((item, i) => (
+                    <div key={i} className="rounded-lg bg-white/5 border border-white/10 p-2.5">
+                      <div className="text-white/40 text-[10px] mb-1">{item.label}</div>
+                      <div className="text-white text-sm font-medium">{item.value}</div>
+                      {item.element && <div className="text-amber-400/60 text-[10px] mt-0.5">{item.element}</div>}
+                    </div>
+                  ))}
+                </div>
+                {selectedEvent === 'rest_day' && (
+                  <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-3">
+                    <p className="text-emerald-300 text-xs">🌿 靜養充電日已切換「均衡守成」模式——不強制補強，讓命格自然呼吸。今日穿著舒適中性色系，是對自己最好的照顧。</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </SectionCard>
+
+          {/* ═══ V11.1 大運共振指數卡片 ═══ */}
+          {daYunData && (
+            <SectionCard title="大運背景共振" icon="🌀">
+              {(() => {
+                const dy = daYunData.currentDaYun;
+                // 大運五行 vs 今日五行共振指數計算
+                const ELEMENT_COMPATIBLE: Record<string, string[]> = {
+                  '木': ['木', '水', '火'],
+                  '火': ['火', '木', '土'],
+                  '土': ['土', '火', '金'],
+                  '金': ['金', '土', '水'],
+                  '水': ['水', '金', '木'],
+                };
+                const todayWuxing = data.tenGod.wuxing;
+                const daYunElement = dy.element;
+                const compatible = ELEMENT_COMPATIBLE[daYunElement]?.includes(todayWuxing);
+                const resonanceScore = compatible ? (
+                  daYunElement === todayWuxing ? 95 :
+                  ELEMENT_COMPATIBLE[daYunElement]?.[1] === todayWuxing ? 80 : 70
+                ) : (
+                  todayWuxing === '水' && daYunElement === '火' ? 30 :
+                  todayWuxing === '火' && daYunElement === '水' ? 30 :
+                  todayWuxing === '金' && daYunElement === '木' ? 30 :
+                  todayWuxing === '木' && daYunElement === '金' ? 30 :
+                  45
+                );
+                const isResonant = resonanceScore >= 70;
+                return (
+                  <div className="space-y-4">
+                    {/* 大運基本資訊 */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="text-white/40 text-xs mb-1">當前大運（{dy.startAge}–{dy.endAge}歲）</div>
+                        <div className="text-2xl font-black text-white">{dy.stem}{dy.branch}</div>
+                        <div className="text-amber-400 text-sm font-semibold mt-1">{dy.role} · {dy.element}運</div>
+                        <div className="text-white/50 text-xs mt-1">剩餘 {dy.yearsRemaining} 年</div>
+                      </div>
+                      {/* 共振指數圓圈 */}
+                      <div className="relative w-20 h-20 shrink-0">
+                        <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
+                          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+                          <circle
+                            cx="40" cy="40" r="32" fill="none"
+                            stroke={isResonant ? '#f59e0b' : '#6b7280'}
+                            strokeWidth="8"
+                            strokeDasharray={`${2 * Math.PI * 32}`}
+                            strokeDashoffset={`${2 * Math.PI * 32 * (1 - resonanceScore / 100)}`}
+                            strokeLinecap="round"
+                            style={{ transition: 'stroke-dashoffset 1.2s ease' }}
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className={`text-xl font-black ${isResonant ? 'text-amber-400' : 'text-slate-400'}`}>{resonanceScore}</span>
+                          <span className="text-[9px] text-white/40">共振</span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* 順風/逆風指標 */}
+                    <div className={`rounded-xl border p-3 ${
+                      isResonant
+                        ? 'border-amber-500/40 bg-amber-500/8'
+                        : 'border-slate-500/30 bg-slate-500/5'
+                    }`}>
+                      <div className={`text-sm font-bold mb-1 ${
+                        isResonant ? 'text-amber-300' : 'text-slate-400'
+                      }`}>
+                        {isResonant ? '⚡ 大運順風日' : '🌧 大運逆風日'}
+                      </div>
+                      <p className={`text-xs ${
+                        isResonant ? 'text-amber-200/70' : 'text-slate-400/70'
+                      }`}>
+                        {isResonant
+                          ? `今日${todayWuxing}能量與大運${daYunElement}運方向一致，行動力加倍，適合推進重要事項。`
+                          : `今日${todayWuxing}能量與大運${daYunElement}運方向相剋，宜守不宜攻，謹慎評估後再行動。`
+                        }
+                      </p>
+                    </div>
+                    {/* 大運主題 */}
+                    <p className="text-white/50 text-xs leading-relaxed">{dy.theme}</p>
+                  </div>
+                );
+              })()}
+            </SectionCard>
+          )}
+
+          {/* ═══ V11.1 六角雷達圖決策支持報告 ═══ */}
+          {decisionData && (
+            <SectionCard title="今日決策指南" icon="📊">
+              <div className="space-y-4">
+                {/* 一句話總結 */}
+                <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                  <p className="text-white/80 text-sm">{decisionData.dailySummary}</p>
+                  {decisionData.daYunContext && (
+                    <p className="text-amber-400/60 text-xs mt-2">{decisionData.daYunContext}</p>
+                  )}
+                </div>
+                {/* 六角雷達圖（SVG 手繪） */}
+                {(() => {
+                  const advices = decisionData.advices ?? [];
+                  const LABELS: Record<string, string> = {
+                    career: '事業', finance: '財務', relationship: '人際',
+                    health: '健康', creativity: '創意', travel: '出行'
+                  };
+                  const N = advices.length;
+                  const cx = 120, cy = 120, maxR = 90;
+                  const points = advices.map((a, i) => {
+                    const angle = (i * 2 * Math.PI / N) - Math.PI / 2;
+                    const r = (a.score / 10) * maxR;
+                    return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+                  });
+                  const gridPoints = (r: number) => advices.map((_, i) => {
+                    const angle = (i * 2 * Math.PI / N) - Math.PI / 2;
+                    return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+                  }).join(' ');
+                  const polyPoints = points.map(p => `${p.x},${p.y}`).join(' ');
+                  return (
+                    <div className="flex flex-col md:flex-row gap-4 items-center">
+                      <svg viewBox="0 0 240 240" className="w-48 h-48 shrink-0">
+                        {/* 外框網格 */}
+                        {[0.25, 0.5, 0.75, 1].map(ratio => (
+                          <polygon key={ratio} points={gridPoints(maxR * ratio)}
+                            fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                        ))}
+                        {/* 轅線 */}
+                        {advices.map((_, i) => {
+                          const angle = (i * 2 * Math.PI / N) - Math.PI / 2;
+                          return (
+                            <line key={i}
+                              x1={cx} y1={cy}
+                              x2={cx + maxR * Math.cos(angle)}
+                              y2={cy + maxR * Math.sin(angle)}
+                              stroke="rgba(255,255,255,0.08)" strokeWidth="1"
+                            />
+                          );
+                        })}
+                        {/* 得分多邊形 */}
+                        <polygon points={polyPoints}
+                          fill="rgba(251,191,36,0.15)" stroke="#f59e0b" strokeWidth="1.5" />
+                        {/* 分數點 */}
+                        {points.map((p, i) => (
+                          <circle key={i} cx={p.x} cy={p.y} r="3"
+                            fill={advices[i].score >= 8 ? '#f59e0b' : advices[i].score >= 6 ? '#10b981' : '#6b7280'} />
+                        ))}
+                        {/* 標籤 */}
+                        {advices.map((a, i) => {
+                          const angle = (i * 2 * Math.PI / N) - Math.PI / 2;
+                          const lx = cx + (maxR + 18) * Math.cos(angle);
+                          const ly = cy + (maxR + 18) * Math.sin(angle);
+                          return (
+                            <text key={i} x={lx} y={ly}
+                              textAnchor="middle" dominantBaseline="middle"
+                              fontSize="9" fill={a.category === decisionData.bestCategory ? '#fbbf24' : 'rgba(255,255,255,0.5)'}>
+                              {LABELS[a.category]}
+                            </text>
+                          );
+                        })}
+                      </svg>
+                      {/* 分類詳細列表 */}
+                      <div className="flex-1 space-y-2 w-full">
+                        {advices.sort((a, b) => b.score - a.score).map(a => (
+                          <div key={a.category} className={`rounded-lg p-2.5 border ${
+                            a.category === decisionData.bestCategory
+                              ? 'border-amber-500/40 bg-amber-500/8'
+                              : a.category === decisionData.cautionCategory
+                              ? 'border-red-500/30 bg-red-500/5'
+                              : 'border-white/8 bg-white/3'
+                          }`}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className={`text-xs font-semibold ${
+                                a.category === decisionData.bestCategory ? 'text-amber-300' :
+                                a.category === decisionData.cautionCategory ? 'text-red-400' : 'text-white/60'
+                              }`}>
+                                {LABELS[a.category]}
+                                {a.category === decisionData.bestCategory && ' ★ 今日最佳'}
+                                {a.category === decisionData.cautionCategory && ' ⚠ 需謹慎'}
+                              </span>
+                              <span className={`text-sm font-bold ${
+                                a.score >= 8 ? 'text-amber-400' : a.score >= 6 ? 'text-emerald-400' : 'text-slate-400'
+                              }`}>{a.score}/10</span>
+                            </div>
+                            {a.bestHour && (
+                              <div className="text-[10px] text-amber-400/70 mb-1">⏰ 最佳時辰：{a.bestHour}</div>
+                            )}
+                            <p className="text-white/50 text-[11px] leading-relaxed">{a.action}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </SectionCard>
+          )}
         </div>
 
 

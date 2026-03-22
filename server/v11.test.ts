@@ -140,6 +140,22 @@ describe('outfitStrategy V3.0 (generateOutfitAdviceV11)', () => {
     expect(resultFormal.contextNote!.length).toBeGreaterThan(0);
   });
 
+  it('creative_presentation 創意發表場合應有情境說明', () => {
+    const daYun = calculateDaYun(1984);
+    const result = generateOutfitAdviceV11('食神', '食神生財', daYun.currentDaYun.role, daYun.currentDaYun.theme, '上弦月', 'first_quarter', { event: 'creative_presentation' });
+    expect(result.contextNote).toBeDefined();
+    expect(result.contextNote).toContain('創意發表');
+  });
+
+  it('rest_day 靜養充電日應切換均衡守成模式', () => {
+    const daYun = calculateDaYun(1984);
+    const result = generateOutfitAdviceV11('食神', '食神生財', daYun.currentDaYun.role, daYun.currentDaYun.theme, '上弦月', 'first_quarter', { event: 'rest_day' });
+    expect(result.contextNote).toBeDefined();
+    expect(result.contextNote).toContain('靜養充電');
+    // 靜養充電日應切換為中性色系
+    expect(result.topColor).toContain('大地色');
+  });
+
   it('月相影響應反映在結果中', () => {
     const daYun = calculateDaYun(1984);
     const resultFullMoon = generateOutfitAdviceV11('食神', '食神生財', daYun.currentDaYun.role, daYun.currentDaYun.theme, '滿月', 'full');
