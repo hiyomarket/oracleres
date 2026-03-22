@@ -532,17 +532,17 @@ function DestinyPhone({ theme }: { theme: Theme }) {
           <div className="font-bold text-[11px] mt-0.5" style={{ color: theme.phoneAccent }}>命格身份證</div>
         </div>
         <div className="text-center">
-          <div className="font-bold text-base" style={{ color: theme.phoneText }}>蘇祐震</div>
-          <div className="text-[9px] mt-0.5" style={{ color: theme.phoneAccent }}>教皇 · The Hierophant</div>
+          <div className="font-bold text-base" style={{ color: theme.phoneText }}>陳小明</div>
+          <div className="text-[9px] mt-0.5" style={{ color: theme.phoneAccent }}>星界 · The Star</div>
         </div>
         <div className="rounded-lg px-2 py-2" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
           <div className="text-[8px] mb-1.5" style={{ color: theme.phoneSubText }}>生命靈數</div>
           <div className="grid grid-cols-2 gap-1">
             {[
-              { num: "5", label: "主要靈魂數", name: "教皇" },
-              { num: "8", label: "外在個性數", name: "力量" },
-              { num: "10", label: "中間個性數", name: "命運之輪" },
-              { num: "22", label: "靈魂渴望數", name: "愚者" },
+              { num: "7", label: "主要靈魂數", name: "戰車" },
+              { num: "3", label: "外在個性數", name: "女皇帝" },
+              { num: "17", label: "中間個性數", name: "星界" },
+              { num: "11", label: "靈魂渴望數", name: "力量" },
             ].map((item) => (
               <div key={item.num} className="flex items-baseline gap-1">
                 <span className="font-bold text-sm" style={{ color: theme.phoneAccent }}>{item.num}</span>
@@ -553,11 +553,11 @@ function DestinyPhone({ theme }: { theme: Theme }) {
         </div>
         <div className="rounded-lg px-2 py-2" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
           <div className="text-[8px] mb-1" style={{ color: theme.phoneSubText }}>八字命盤</div>
-          <div className="text-[8px]" style={{ color: theme.phoneText }}>年柱：甲子 · 日柱：甲子</div>
-          <div className="text-[8px] mt-0.5" style={{ color: theme.phoneSubText }}>喜用神：火 · 土</div>
+          <div className="text-[8px]" style={{ color: theme.phoneText }}>年柱：庚子 · 日柱：庚子</div>
+          <div className="text-[8px] mt-0.5" style={{ color: theme.phoneSubText }}>喜用神：水 · 木</div>
         </div>
         <div className="text-center py-1" style={{ color: theme.phoneSubText }}>
-          <div className="text-[8px]">教皇 · 傳統 · 智慧</div>
+          <div className="text-[8px]">星界 · 直覺 · 希望</div>
         </div>
       </div>
     </PhoneMockup>

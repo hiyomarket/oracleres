@@ -2703,4 +2703,16 @@
 - [x] 統計數據區：有說服力的數字
 - [x] 底部 CTA 區塊：加入網址引導
 - [x] TypeScript 零錯誤，414 項測試全部通過
-- [ ] 儲存 v1.9 checkpoint
+- [x] 儲存 v1.9 checkpoint
+
+## v2.0 新任務
+
+- [ ] 修正首頁手機框架模擬 UI 中的真實姓名「蘇祐震」→ 改為虛擬角色（如「陳小明」）
+- [ ] 建立 GitHub 倉庫 hiyomarket/oracleres-advisor-agent（Private）
+- [ ] 初始化倉庫目錄結構（/config, /sessions, /docs, README.md）
+- [ ] 撰寫 README.md 說明書
+- [ ] 撰寫 /config/numerology.json 初始配置
+- [ ] 撰寫 /config/tarot_archetypes.json 初始配置
+- [ ] 撰寫 /config/resonance_rules.json 初始配置
+- [ ] 撰寫 /docs/agent-persona.md Agent 人格與規則文件
+- [ ] 提供給用戶可複製的指令文字
