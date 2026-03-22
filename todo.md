@@ -2598,3 +2598,9 @@
 - [x] 開發 DestinyShareCard.tsx 組件（玻璃擬態面板、性別差異化主題、html2canvas 匯出 + Web Share API）
 - [x] 整合分享卡至 ProfilePage.tsx（生成命格身份證分享卡按鈕）
 - [x] 撰寫 vitest 測試（tarotCards.test.ts，379 個全部通過）
+
+## 性別設定 + WarRoom 塔羅圖片 + 協同流程
+- [ ] 後端：確認 gender 欄位支援，updateProfile 可儲存性別
+- [ ] 前端：命格設定頁加入性別選擇欄位（男/女/不指定）
+- [ ] 前端：WarRoom 塔羅牌卡片換用美術素材圖片（依用戶性別動態切換）
+- [ ] 建立 GitHub Multi-Agent 協同流程文件（COLLABORATION-GUIDE 更新）

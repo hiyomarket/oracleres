@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { getTarotCardUrl } from "@/lib/tarotCards";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { SharedNav } from "@/components/SharedNav";
@@ -235,6 +236,9 @@ export default function WarRoom() {
   const { hasFeature, isAdmin } = usePermissions();
   const { data: accountStatus } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
   const isOwner = accountStatus?.isOwner ?? false;
+  // 讀取用戶性別，用於塔羅牌圖片版本切換
+  const { data: profileData } = trpc.account.getProfile.useQuery(undefined, { staleTime: 300000 });
+  const userGender = (profileData?.gender as 'male' | 'female' | null) ?? null;
 
   // WBC 彈窗：每天首次進入顯示，且 WBC 開關為開啟
   const { data: wbcEnabledData } = trpc.marketing.getWbcEnabled.useQuery(undefined, { staleTime: 60000 });
@@ -675,11 +679,18 @@ export default function WarRoom() {
                     initial={{ rotateY: 90 }}
                     animate={{ rotateY: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="w-32 h-48 rounded-xl border-2 border-amber-500/50 bg-gradient-to-b from-amber-950/60 to-slate-900/60 flex flex-col items-center justify-center shadow-xl shadow-amber-500/10"
+                    className="w-32 h-48 rounded-xl border-2 border-amber-500/40 overflow-hidden shadow-xl shadow-amber-500/20 relative"
                   >
-                    <div className="text-4xl mb-2">{data.tarot.element === "火" ? "🔥" : data.tarot.element === "水" ? "💧" : data.tarot.element === "土" ? "🌍" : data.tarot.element === "風" ? "🌪️" : "⭐"}</div>
-                    <div className="text-amber-300 font-bold text-center text-sm px-2">{data.tarot.name}</div>
-                    <div className="text-amber-500/60 text-xs mt-1">第 {data.tarot.cardNumber} 號</div>
+                    <img
+                      src={getTarotCardUrl(data.tarot.cardNumber, userGender)}
+                      alt={data.tarot.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* 底部名稱遮罩 */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-2">
+                      <div className="text-amber-300 font-bold text-center text-xs">{data.tarot.name}</div>
+                      <div className="text-amber-500/70 text-[10px] text-center">第 {data.tarot.cardNumber} 號</div>
+                    </div>
                   </motion.div>
                 </div>
                 <div className="flex-1 space-y-3">
