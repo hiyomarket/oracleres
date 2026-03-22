@@ -2604,3 +2604,14 @@
 - [ ] 前端：命格設定頁加入性別選擇欄位（男/女/不指定）
 - [ ] 前端：WarRoom 塔羅牌卡片換用美術素材圖片（依用戶性別動態切換）
 - [ ] 建立 GitHub Multi-Agent 協同流程文件（COLLABORATION-GUIDE 更新）
+
+## 指令文 v1.1 整合（StarField + FortuneCard + fortune.getToday）
+- [x] 建立 StarField.tsx 星光粒子背景元件
+- [x] 建立 CountUpNumber.tsx 數字滾動動畫元件
+- [x] 建立 FortuneCard.tsx 運勢卡片元件（含三階段開啟動畫）
+- [x] 後端新增 fortune.getToday 路由（輸入生日 → AI 生成今日運勢）
+- [x] 後端新增 artAssets.getCdnUrls 路由（回傳 CDN URL 清單）
+- [x] LandingPage HeroSection 改用 trpc.fortune.getToday + FortuneCard + StarField
+- [x] WarRoom 塔羅牌卡片換用美術素材圖片（依用戶性別動態切換）
+- [x] GitHub 協同流程文件更新（COLLABORATION-GUIDE.md）
+- [x] 撰寫 fortune.test.ts（384 個測試全部通過）

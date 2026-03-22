@@ -10,6 +10,9 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Sparkles, Star, Lock, ArrowRight, LogIn, Loader2, AlertCircle, CheckCircle, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { trpc } from "@/lib/trpc";
+import StarField from "@/components/StarField";
+import FortuneCard from "@/components/FortuneCard";
 
 const CDN = {
   logo: "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/logo_b72df721.png",
@@ -94,28 +97,29 @@ function LandingNav() {
 
 function HeroSection() {
   const [birthInput, setBirthInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<PreviewResult | null>(null);
+  const [fortuneResult, setFortuneResult] = useState<{
+    fortune: {
+      overall: string; overall_score: number; summary: string;
+      love: string; career: string; wealth: string; health: string;
+      lucky_color: string; lucky_number: number; advice: string; element: string;
+    };
+    birthdate: string;
+    lifePath: number;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const fortuneMutation = trpc.fortune.getToday.useMutation({
+    onSuccess: (data) => { setFortuneResult(data); setError(null); },
+    onError: (err) => { setError(err.message || "推算失敗，請稍後再試"); },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!birthInput) return;
-    setIsLoading(true);
+    setFortuneResult(null);
     setError(null);
-    setResult(null);
-    try {
-      const res = await fetch(`/api/preview?birth=${encodeURIComponent(birthInput)}`);
-      const data = await res.json();
-      if (!res.ok) setError(data.message ?? "推算失敗，請稍後再試");
-      else setResult(data as PreviewResult);
-    } catch { setError("網路連線異常，請稍後再試"); }
-    finally { setIsLoading(false); }
+    fortuneMutation.mutate({ birthdate: birthInput });
   };
-
-  const energyInfo = result ? (ENERGY_LEVEL_LABEL[result.todayEnergy.level] ?? ENERGY_LEVEL_LABEL.neutral) : null;
-  const dominantElement = result?.elementBalance.dominant[0]?.element ?? "火";
-  const elementStyle = ELEMENT_COLORS[dominantElement] ?? ELEMENT_COLORS["火"];
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden">
@@ -124,6 +128,7 @@ function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#0d1b2e]/85 via-[#0d1b2e]/50 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0d1b2e]/60 via-transparent to-transparent" />
       </div>
+      <StarField className="opacity-60" />
 
       <motion.div className="absolute right-0 top-1/2 -translate-y-1/2 w-[55vw] max-w-[700px] pointer-events-none hidden md:block"
         initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2, ease: "easeOut" }}>
@@ -151,15 +156,15 @@ function HeroSection() {
             className="bg-slate-900/70 backdrop-blur-md rounded-2xl border border-slate-700/50 p-5 shadow-2xl">
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-4 h-4 text-amber-400" />
-              <span className="text-amber-400 text-sm font-medium">✦ 免費體驗今日運勢</span>
+              <span className="text-amber-400 text-sm font-medium">❖ 免費體驗今日運勢</span>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
               <Input type="date" value={birthInput} onChange={(e) => setBirthInput(e.target.value)}
                 min="1920-01-01" max="2010-12-31"
                 className="flex-1 h-11 bg-slate-800/60 border-slate-600/50 text-white placeholder:text-slate-500 focus:border-amber-500/60 text-base" />
-              <Button type="submit" disabled={!birthInput || isLoading}
+              <Button type="submit" disabled={!birthInput || fortuneMutation.isPending}
                 className="h-11 px-6 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-sm shrink-0 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all">
-                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "開啟錦囊"}
+                {fortuneMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "開啟錦囊"}
               </Button>
             </form>
             {error && <div className="mt-3 flex items-center gap-2 text-red-400 text-sm"><AlertCircle className="w-4 h-4 shrink-0" /><span>{error}</span></div>}
@@ -171,59 +176,19 @@ function HeroSection() {
           </motion.div>
 
           <AnimatePresence>
-            {result && (
+            {fortuneResult && (
               <motion.div initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.5 }} className="mt-4">
-                <div className="rounded-2xl bg-slate-900/90 border border-slate-700/50 backdrop-blur-sm overflow-hidden">
-                  <div className={`px-5 py-4 bg-gradient-to-r ${elementStyle.gradient} bg-opacity-10 border-b border-slate-700/40`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-white/60 text-xs">你的命格</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${elementStyle.bg} ${elementStyle.border} border ${elementStyle.text}`}>{result.dayMaster.element}日主</span>
-                        </div>
-                        <h3 className="text-xl font-bold text-white font-serif">{result.dayMaster.stem}日主 · {result.destinyKeyword}</h3>
-                      </div>
-                      <div className={`w-12 h-12 rounded-xl ${elementStyle.bg} ${elementStyle.border} border flex items-center justify-center`}>
-                        <span className={`text-xl font-bold ${elementStyle.text}`}>{result.dayMaster.element}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="px-5 py-4 border-b border-slate-700/40">
-                    <p className="text-slate-400 text-xs mb-2 uppercase tracking-wider">八字四柱</p>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[{ label: "年柱", value: result.bazi.yearPillar }, { label: "月柱", value: result.bazi.monthPillar }, { label: "日柱", value: result.bazi.dayPillar }, { label: "時柱", value: "??" }].map(({ label, value }) => (
-                        <div key={label} className={`text-center py-2 rounded-lg ${value === "??" ? "bg-slate-800/40 border border-dashed border-slate-600/40" : "bg-slate-800/60 border border-slate-700/40"}`}>
-                          <div className="text-slate-500 text-xs mb-1">{label}</div>
-                          <div className={`text-base font-bold font-serif ${value === "??" ? "text-slate-600" : "text-white"}`}>{value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="px-5 py-4 border-b border-slate-700/40">
-                    <div className="flex items-center gap-3">
-                      <div className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-base ${energyInfo?.color === "text-amber-400" ? "bg-amber-500/10" : energyInfo?.color === "text-emerald-400" ? "bg-emerald-500/10" : energyInfo?.color === "text-red-400" ? "bg-red-500/10" : "bg-blue-500/10"}`}>
-                        {energyInfo?.emoji}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className={`font-bold text-sm ${energyInfo?.color}`}>{energyInfo?.label}</span>
-                          <span className="text-slate-500 text-xs">日柱 {result.todayEnergy.dayPillar}</span>
-                        </div>
-                        <p className="text-slate-300 text-xs leading-relaxed">{result.todayEnergy.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="px-5 py-4 bg-gradient-to-r from-amber-950/30 to-orange-950/20">
-                    <p className="text-amber-300/80 text-xs mb-3 leading-relaxed">{result.teaser}</p>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <a href={getLoginUrl()} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-white font-semibold text-sm transition-all">
-                        <LogIn className="w-4 h-4" />免費加入，解鎖完整命格
-                      </a>
-                      <button onClick={() => { setResult(null); setBirthInput(""); }} className="flex items-center justify-center gap-1 py-2.5 px-4 rounded-xl border border-slate-600/50 text-slate-400 hover:text-slate-300 text-sm transition-colors">
-                        重新輸入
-                      </button>
-                    </div>
+                <div className="rounded-2xl bg-slate-900/90 border border-amber-500/20 backdrop-blur-sm overflow-hidden p-5">
+                  <FortuneCard
+                    fortune={fortuneResult.fortune}
+                    birthdate={fortuneResult.birthdate}
+                    onClose={() => { setFortuneResult(null); setBirthInput(""); }}
+                  />
+                  <div className="mt-4 pt-4 border-t border-slate-700/40">
+                    <a href={getLoginUrl()} className="flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-white font-semibold text-sm transition-all">
+                      <LogIn className="w-4 h-4" />免費加入，解鎖完整命格
+                    </a>
                   </div>
                 </div>
               </motion.div>

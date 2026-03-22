@@ -3332,6 +3332,90 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
         }
       }),
   }),
+
+  // ── 美術素材 CDN URL ──────────────────────────────────────────────────────
+  artAssets: router({
+    getCdnUrls: publicProcedure.query(() => ({
+      "landing-hero-bg":   "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/hChTlYALXKlQYYHK.png",
+      "landing-hero-orb":  "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/xTiPmUdIAkfCoSJN.png",
+      "icon-destiny-card": "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/ZFvnAJUJlzuVEglU.png",
+      "icon-war-room":     "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/BJHWLyfZZKQMjTtB.png",
+      "icon-oracle":       "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/MpBerwmFyOZCscJA.png",
+      "icon-wealth":       "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/LPLnlcokDBVxAsxH.png",
+      "icon-calendar":     "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/GpZgmWnVnWsuRAXp.png",
+      "icon-jinang":       "https://files.manuscdn.com/user_upload_by_module/session_file/310519663104688923/RyvtZMsLTpyDpRnT.png",
+    })),
+  }),
+
+  // ── 首頁公開運勢查詢（輸入生日，回傳今日運勢）──────────────────────────────
+  fortune: router({
+    getToday: publicProcedure
+      .input(z.object({
+        birthdate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "請輸入正確的生日格式 YYYY-MM-DD"),
+      }))
+      .mutation(async ({ input }) => {
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const [year, month, day] = input.birthdate.split('-').map(Number);
+        const lifePathRaw = (year + month + day).toString().split('').reduce((a, b) => a + Number(b), 0);
+        const lifePath = lifePathRaw > 9 ? lifePathRaw.toString().split('').reduce((a, b) => a + Number(b), 0) : lifePathRaw;
+
+        const prompt = `你是一位精通東方命理的天命解讀師。
+今日日期：${todayStr}
+用戶生日：${input.birthdate}
+生命靈數：${lifePath}
+
+請根據以上資訊，用繁體中文生成今日運勢解讀，以 JSON 格式回傳：
+{
+  "overall": "今日整體運勢一句話（10字內）",
+  "overall_score": 整體運勢分數（1-10的整數）,
+  "summary": "今日運勢總結（50字內）",
+  "love": "感情運解讀（30字內）",
+  "career": "事業運解讀（30字內）",
+  "wealth": "財運解讀（30字內）",
+  "health": "健康運解讀（30字內）",
+  "lucky_color": "今日幸運色（2-4字）",
+  "lucky_number": 今日幸運數字（1-9的整數）,
+  "advice": "天命錦囊建議（50字內，具體可執行的建議）",
+  "element": "今日主導五行（金/木/水/火/土其中一個字）"
+}`;
+
+        const response = await invokeLLM({
+          messages: [
+            { role: 'system', content: '你是天命共振系統的命理解讀師，請嚴格按照 JSON 格式回傳，不要有任何額外文字。' },
+            { role: 'user', content: prompt },
+          ],
+          response_format: {
+            type: 'json_schema',
+            json_schema: {
+              name: 'daily_fortune',
+              strict: true,
+              schema: {
+                type: 'object',
+                properties: {
+                  overall:       { type: 'string' },
+                  overall_score: { type: 'integer' },
+                  summary:       { type: 'string' },
+                  love:          { type: 'string' },
+                  career:        { type: 'string' },
+                  wealth:        { type: 'string' },
+                  health:        { type: 'string' },
+                  lucky_color:   { type: 'string' },
+                  lucky_number:  { type: 'integer' },
+                  advice:        { type: 'string' },
+                  element:       { type: 'string' },
+                },
+                required: ['overall','overall_score','summary','love','career','wealth','health','lucky_color','lucky_number','advice','element'],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+
+        const fortune = JSON.parse(response.choices[0].message.content as string);
+        return { success: true, fortune, birthdate: input.birthdate, lifePath };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
 // Re-export for type inference
