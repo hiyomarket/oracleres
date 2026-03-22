@@ -1,13 +1,13 @@
 {
-  "version": "1.4",
+  "version": "1.5",
   "schema": "ART/MANIFEST-SPEC.md",
   "last_updated": "2026/03/23",
   "updated_by": "ART-AGENT",
   "sync_status": {
-    "total_assets": 203,
-    "task004_assets": 150,
+    "total_assets": 209,
+    "task008_assets": 6,
     "last_sync": "2026/03/23",
-    "note": "TASK-004 五行色系服裝素材（女生60張+男生60張+髮型30張）全部完成"
+    "note": "TASK-008 虛相世界玩家角色立繪（男女各3動作狀態）完成，腳底對齊誤差 ≤1px"
   },
   "assets": {
     "landing-hero-bg": {
@@ -3631,6 +3631,144 @@
         "male",
         "right45"
       ]
+    },
+    "task008-player-male-idle": {
+      "task": "TASK-008",
+      "name": "虛相世界玩家角色 - 男生待機",
+      "description": "虛相世界戰鬥系統玩家角色立繪。男生新手裝備（布衣+皮甲），左側45°視角，待機警戒姿勢，手持短劍。腳底站立點 Y=901px。",
+      "file": "ART/OUTPUTS/TASK-008/player_male_idle.png",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "腳底Y=901 | 左側45°視角 | 透明背景 | 戰鬥系統用",
+      "tags": [
+        "player",
+        "male",
+        "idle",
+        "combat",
+        "virtual-world"
+      ],
+      "alignment": {
+        "feet_y": 901,
+        "canvas_size": 1024
+      }
+    },
+    "task008-player-male-attack": {
+      "task": "TASK-008",
+      "name": "虛相世界玩家角色 - 男生攻擊",
+      "description": "虛相世界戰鬥系統玩家角色立繪。男生新手裝備，左側45°視角，揮劍攻擊動態姿勢。腳底站立點 Y=900px。",
+      "file": "ART/OUTPUTS/TASK-008/player_male_attack.png",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "腳底Y=900 | 左側45°視角 | 透明背景 | 戰鬥系統用",
+      "tags": [
+        "player",
+        "male",
+        "attack",
+        "combat",
+        "virtual-world"
+      ],
+      "alignment": {
+        "feet_y": 900,
+        "canvas_size": 1024
+      }
+    },
+    "task008-player-male-hit": {
+      "task": "TASK-008",
+      "name": "虛相世界玩家角色 - 男生受傷",
+      "description": "虛相世界戰鬥系統玩家角色立繪。男生新手裝備，左側45°視角，被攻擊後仰受傷姿勢。腳底站立點 Y=901px。",
+      "file": "ART/OUTPUTS/TASK-008/player_male_hit.png",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "腳底Y=901 | 左側45°視角 | 透明背景 | 戰鬥系統用",
+      "tags": [
+        "player",
+        "male",
+        "hit",
+        "combat",
+        "virtual-world"
+      ],
+      "alignment": {
+        "feet_y": 901,
+        "canvas_size": 1024
+      }
+    },
+    "task008-player-female-idle": {
+      "task": "TASK-008",
+      "name": "虛相世界玩家角色 - 女生待機",
+      "description": "虛相世界戰鬥系統玩家角色立繪。女生新手裝備（布衣+皮甲），左側45°視角，待機警戒姿勢，手持水晶法杖。腳底站立點 Y=901px。",
+      "file": "ART/OUTPUTS/TASK-008/player_female_idle.png",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "腳底Y=901 | 左側45°視角 | 透明背景 | 戰鬥系統用",
+      "tags": [
+        "player",
+        "female",
+        "idle",
+        "combat",
+        "virtual-world"
+      ],
+      "alignment": {
+        "feet_y": 901,
+        "canvas_size": 1024
+      }
+    },
+    "task008-player-female-attack": {
+      "task": "TASK-008",
+      "name": "虛相世界玩家角色 - 女生攻擊",
+      "description": "虛相世界戰鬥系統玩家角色立繪。女生新手裝備，左側45°視角，法杖魔法攻擊動態姿勢，藍色魔法能量爆發。腳底站立點 Y=900px。",
+      "file": "ART/OUTPUTS/TASK-008/player_female_attack.png",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "腳底Y=900 | 左側45°視角 | 透明背景 | 戰鬥系統用",
+      "tags": [
+        "player",
+        "female",
+        "attack",
+        "combat",
+        "virtual-world"
+      ],
+      "alignment": {
+        "feet_y": 900,
+        "canvas_size": 1024
+      }
+    },
+    "task008-player-female-hit": {
+      "task": "TASK-008",
+      "name": "虛相世界玩家角色 - 女生受傷",
+      "description": "虛相世界戰鬥系統玩家角色立繪。女生新手裝備，左側45°視角，被攻擊後仰受傷姿勢，法杖下垂。腳底站立點 Y=900px。",
+      "file": "ART/OUTPUTS/TASK-008/player_female_hit.png",
+      "format": "PNG",
+      "dimensions": "1024x1024",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "腳底Y=900 | 左側45°視角 | 透明背景 | 戰鬥系統用",
+      "tags": [
+        "player",
+        "female",
+        "hit",
+        "combat",
+        "virtual-world"
+      ],
+      "alignment": {
+        "feet_y": 900,
+        "canvas_size": 1024
+      }
     }
   }
 }
