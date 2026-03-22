@@ -1,14 +1,17 @@
 /**
  * LandingPage.tsx - 天命共振 Destiny Oracle
- * 整合排程 Agent 設計稿：全息漸層、glass-card hover 金光、ripple 波紋、居中布局
- * v1.5：修正日夜切換邏輯（darkMode 傳遞至所有 section）、文字配色、替換「原神」名詞
+ * v1.9：MVP 首頁大改版 — 五大功能展示（CSS 手機框架）+ 生活化行銷語法
  */
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Sparkles, Star, Lock, ArrowRight, LogIn, Loader2, AlertCircle, CheckCircle, ChevronDown, Sun, Moon } from "lucide-react";
+import {
+  Sparkles, Star, Lock, ArrowRight, LogIn, Loader2,
+  AlertCircle, CheckCircle, ChevronDown, Sun, Moon,
+  Calendar, Coins, Shuffle, BookOpen, Users
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
@@ -29,10 +32,10 @@ const CDN = {
 function getTheme(dark: boolean) {
   return dark
     ? {
-        // ── 深色模式 ──────────────────────────────────────────
         pageBg: "#0d1b2e",
         sectionBg: "rgba(13,27,46,1)",
         sectionBg2: "rgba(9,21,37,1)",
+        sectionAlt: "rgba(10,20,38,1)",
         navBg: "rgba(13,27,46,0.85)",
         statsBg: "linear-gradient(135deg,rgba(201,162,39,0.08) 0%,rgba(0,206,209,0.05) 100%)",
         statsBorder: "rgba(201,162,39,0.2)",
@@ -52,24 +55,31 @@ function getTheme(dark: boolean) {
         starOpacity: "opacity-60",
         toggleLabel: "夜晚",
         toggleIcon: <Moon className="w-4 h-4" />,
+        phoneBg: "rgba(15,25,50,0.95)",
+        phoneHeader: "rgba(20,35,65,0.9)",
+        phoneCard: "rgba(25,45,80,0.8)",
+        phoneText: "#e2e8f0",
+        phoneSubText: "#94a3b8",
+        phoneAccent: "#C9A227",
+        phoneBorder: "rgba(201,162,39,0.2)",
       }
     : {
-        // ── 淺色模式 ──────────────────────────────────────────
         pageBg: "#f5f0e8",
         sectionBg: "rgba(245,240,232,1)",
         sectionBg2: "rgba(237,231,220,1)",
+        sectionAlt: "rgba(250,245,238,1)",
         navBg: "rgba(245,240,232,0.92)",
         statsBg: "linear-gradient(135deg,rgba(201,162,39,0.12) 0%,rgba(0,150,160,0.07) 100%)",
         statsBorder: "rgba(201,162,39,0.3)",
         heroOverlay: "linear-gradient(rgba(245,240,232,0.2) 0%,rgba(245,240,232,0.05) 40%,rgba(245,240,232,0.75) 100%)",
         text: "text-slate-800",
         textSub: "text-slate-600",
-        textMuted: "text-slate-500",
+        textMuted: "text-slate-600",
         textBody: "text-slate-700",
         cardText: "text-slate-800",
-        cardTextLocked: "text-slate-500",
+        cardTextLocked: "text-slate-600",
         cardDesc: "text-slate-600",
-        cardDescLocked: "text-slate-400",
+        cardDescLocked: "text-slate-500",
         footerBorder: "border-amber-200/60",
         footerText: "text-slate-500",
         footerCopy: "text-slate-400",
@@ -77,6 +87,13 @@ function getTheme(dark: boolean) {
         starOpacity: "opacity-20",
         toggleLabel: "白天",
         toggleIcon: <Sun className="w-4 h-4" />,
+        phoneBg: "rgba(240,235,225,0.95)",
+        phoneHeader: "rgba(230,225,215,0.9)",
+        phoneCard: "rgba(255,252,248,0.9)",
+        phoneText: "#1e293b",
+        phoneSubText: "#64748b",
+        phoneAccent: "#C9A227",
+        phoneBorder: "rgba(201,162,39,0.3)",
       };
 }
 
@@ -88,26 +105,30 @@ const ELEMENT_COLORS: Record<string, { gradient: string; text: string; bg: strin
   水: { gradient: "from-blue-600 to-cyan-500", text: "text-blue-600", bg: "bg-blue-500/10", border: "border-blue-500/30" },
 };
 
-const FEATURE_CARDS = [
-  { img: CDN.iconDestinyCard, title: "命格身份證", subtitle: "解讀你的天命密碼", desc: "根據生辰八字，生成專屬命格身份證，揭示你的天生特質與人生主線。", tag: "會員限定", tagColor: "bg-amber-900/40 text-amber-300", locked: true },
-  { img: CDN.iconWarRoom, title: "今日作戰室", subtitle: "每日策略指引", desc: "結合今日流年流月，提供最佳行動時機與避忌事項，讓你每天都能精準出擊。", tag: "每日更新", tagColor: "bg-emerald-500/20 text-emerald-600", locked: false },
-  { img: CDN.iconOracle, title: "天命問卜", subtitle: "AI 命理詮詢", desc: "以天命 AI 為媒介，針對感情、事業、財運提出問題，獲得深度命理解析。", tag: "會員限定", tagColor: "bg-amber-900/40 text-amber-300", locked: true },
-  { img: CDN.iconWealth, title: "財運羅盤", subtitle: "財富流向預測", desc: "精算流年財星位置，分析最佳投資時機與財富增長方向，掌握天時地利。", tag: "免費體驗", tagColor: "bg-amber-500/20 text-amber-600", locked: false },
-  { img: CDN.iconDestinyCard, title: "天命日曆", subtitle: "吉凶宜忌一覽", desc: "整合農曆節氣、個人命盤，標示每日吉凶宜忌，讓重要決策都能順天應時。", tag: "核心功能", tagColor: "bg-blue-500/20 text-blue-600", locked: false },
-  { img: CDN.iconLottery, title: "數位錦囊", subtitle: "隨身命理秘書", desc: "隨時隨地開啟錦囊，獲取當下最需要的命理指引，如同隨身攜帶命理師。", tag: "核心功能", tagColor: "bg-purple-500/20 text-purple-600", locked: false },
-];
-
 const STATS = [
   { value: "22", label: "大阿爾卡納塔羅牌", sub: "每日流日精準對應" },
-  { value: "120", label: "天干地支命格組合", sub: "10天干 × 12地支" },
+  { value: "120+", label: "天干地支命格組合", sub: "10天干 × 12地支" },
   { value: "5行", label: "能量即時共振", sub: "木火土金水全維度" },
   { value: "24", label: "節氣命盤校準", sub: "順天應時精準指引" },
 ];
 
 const TESTIMONIALS = [
-  { name: "Mia C.", role: "創業者", avatar: "M", element: "火", text: "天命共振讓我開始注意流日能量的變化，選對時機做決定就是比較輕鬆。不是魔法，是讓自己更清醒的工具。" },
-  { name: "Jason L.", role: "自雇工作者", avatar: "J", element: "金", text: "天命日曆讓我知道哪幾天適合推進新案子、哪幾天適合休息整理思路。安排工作節奏變得比以前自然多了。" },
-  { name: "Sophia W.", role: "設計師", avatar: "S", element: "木", text: "每天早上看一下今日作戰室，感覺整個人的節奏都對了。命格身份證讓我重新認識自己的天生特質，很有趣。" },
+  {
+    name: "小雅", role: "上班族", avatar: "雅", element: "火",
+    text: "以前每天都不知道要怎麼開始，現在早上看一下今日作戰室，整個人的節奏就對了。感覺不是迷信，是讓自己更有方向感的工具"
+  },
+  {
+    name: "阿凱", role: "自由接案", avatar: "凱", element: "金",
+    text: "用擲筊問了一個糾結很久的合作案，結果是陰杯。雖然只是參考，但那個當下我突然想清楚了，有些事情心裡其實早就有答案"
+  },
+  {
+    name: "Sophia", role: "設計師", avatar: "S", element: "木",
+    text: "命格身份證讓我重新認識自己，原來我的天生特質是這樣。天命問卜的解析也很細，不是那種模糊的說法，是真的有針對我的情況"
+  },
+  {
+    name: "大偉", role: "創業者", avatar: "偉", element: "土",
+    text: "財運羅盤幫我找到今年最佳的投資時機窗口，結合自己的判斷去行動，感覺比以前瞎猜要踏實多了"
+  },
 ];
 
 /** 星星粒子 Canvas */
@@ -165,7 +186,6 @@ function LandingNav({ theme, onToggle }: { theme: Theme; onToggle: () => void })
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {/* 日夜切換按鈕 — 加入說明文字 */}
           <button
             onClick={onToggle}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-500/30 ${theme.textSub} hover:text-amber-500 hover:border-amber-500/60 transition-all text-xs`}
@@ -215,23 +235,12 @@ function HeroSection({ theme }: { theme: Theme }) {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
-      {/* 背景圖片 */}
       <div className="absolute inset-0">
-        <img
-          src={CDN.heroBg}
-          alt="天命共振背景"
-          className="w-full h-full object-cover transition-opacity duration-1000 opacity-100"
-        />
-        <div
-          className="absolute inset-0"
-          style={{ background: theme.heroOverlay }}
-        />
+        <img src={CDN.heroBg} alt="天命共振背景" className="w-full h-full object-cover" />
+        <div className="absolute inset-0" style={{ background: theme.heroOverlay }} />
       </div>
-
-      {/* 星星 Canvas */}
       <StarCanvas className={`absolute inset-0 w-full h-full pointer-events-none ${theme.starOpacity}`} />
 
-      {/* 主要內容：左文右球 */}
       <div className="relative z-10 container">
         <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
           {/* 左側文字區 */}
@@ -247,14 +256,14 @@ function HeroSection({ theme }: { theme: Theme }) {
               </h1>
             </div>
 
-            <p
-              className={`text-base sm:text-lg ${theme.textBody} max-w-lg mx-auto lg:mx-0 leading-relaxed animate-slide-up`}
-              style={{ animationDelay: "0.2s" }}
-            >
-              融合東方玄學與現代 AI，為你解讀命盤、指引每日運勢。
-              <br className="hidden sm:block" />
-              輸入生日，立即開啟你的數位錦囊。
-            </p>
+            <div className="animate-slide-up" style={{ animationDelay: "0.2s" }}>
+              <p className={`text-base sm:text-lg ${theme.textBody} max-w-lg mx-auto lg:mx-0 leading-relaxed`}>
+                融合東方玄學與現代 AI，為你解讀命盤、指引每日運勢
+              </p>
+              <p className={`text-sm ${theme.textSub} max-w-lg mx-auto lg:mx-0 mt-2`}>
+                輸入生日，免費體驗今日運勢
+              </p>
+            </div>
 
             {/* 輸入卡片 */}
             <div className="glass-card rounded-2xl p-5 max-w-md mx-auto lg:mx-0 animate-slide-up" style={{ animationDelay: "0.3s" }}>
@@ -354,7 +363,6 @@ function HeroSection({ theme }: { theme: Theme }) {
         </div>
       </div>
 
-      {/* 向下滾動提示 */}
       <motion.div
         className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 ${theme.textMuted} text-xs`}
         animate={{ y: [0, 6, 0] }}
@@ -367,7 +375,398 @@ function HeroSection({ theme }: { theme: Theme }) {
   );
 }
 
-function FeaturesSection({ theme }: { theme: Theme }) {
+/** 手機外框模擬 UI 元件 */
+function PhoneMockup({ theme, children }: { theme: Theme; children: React.ReactNode }) {
+  return (
+    <div className="relative mx-auto" style={{ width: 220, height: 440 }}>
+      {/* 手機外框 */}
+      <div
+        className="absolute inset-0 rounded-[2.5rem] border-2 shadow-2xl"
+        style={{
+          borderColor: "rgba(201,162,39,0.4)",
+          background: theme.phoneBg,
+          boxShadow: "0 25px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)",
+        }}
+      />
+      {/* 頂部瀏海 */}
+      <div
+        className="absolute top-3 left-1/2 -translate-x-1/2 w-16 h-4 rounded-full"
+        style={{ background: "rgba(0,0,0,0.6)" }}
+      />
+      {/* 內容區 */}
+      <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden pt-8 pb-4 px-3">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** 今日作戰室手機 UI */
+function WarRoomPhone({ theme }: { theme: Theme }) {
+  return (
+    <PhoneMockup theme={theme}>
+      <div className="h-full flex flex-col gap-1.5 text-[10px]">
+        {/* 頂部標題 */}
+        <div className="rounded-lg px-2 py-1.5" style={{ background: theme.phoneHeader }}>
+          <div className="flex items-center justify-between">
+            <span style={{ color: theme.phoneAccent }} className="font-bold text-[9px] tracking-wider">今日作戰室</span>
+            <span style={{ color: theme.phoneSubText }} className="text-[8px]">3月22日</span>
+          </div>
+          <div className="mt-0.5 text-[8px]" style={{ color: theme.phoneSubText }}>丙午年 辛卯月 乙未日</div>
+        </div>
+        {/* 命運指數 */}
+        <div className="rounded-lg px-2 py-2" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
+          <div className="text-[8px] mb-1" style={{ color: theme.phoneSubText }}>今日命運指數</div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-xl font-bold" style={{ color: theme.phoneAccent }}>7.8</span>
+            <span className="text-[8px]" style={{ color: "#22c55e" }}>大吉</span>
+          </div>
+          <div className="mt-1 h-1 rounded-full bg-slate-700/30 overflow-hidden">
+            <div className="h-full rounded-full" style={{ width: "78%", background: "linear-gradient(90deg, #C9A227, #F5D06A)" }} />
+          </div>
+        </div>
+        {/* 流日塔羅 */}
+        <div className="rounded-lg px-2 py-2" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
+          <div className="text-[8px] mb-1" style={{ color: theme.phoneSubText }}>本日流日能量</div>
+          <div className="font-bold text-sm" style={{ color: theme.phoneAccent }}>星星</div>
+          <div className="text-[8px] mt-0.5" style={{ color: theme.phoneSubText }}>希望 · 靈感 · 療癒</div>
+        </div>
+        {/* 天命符言 */}
+        <div className="rounded-lg px-2 py-2 flex-1" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
+          <div className="text-[8px] mb-1" style={{ color: theme.phoneAccent }}>天命符言</div>
+          <div className="text-[8px] leading-relaxed" style={{ color: theme.phoneText }}>
+            穩紮穩打，守住現有，星星指引方向，希望就在前方
+          </div>
+        </div>
+        {/* 最佳時機 */}
+        <div className="rounded-lg px-2 py-1.5" style={{ background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.3)" }}>
+          <div className="text-[8px]" style={{ color: theme.phoneAccent }}>⚡ 本週最旺時機</div>
+          <div className="text-[8px] mt-0.5" style={{ color: theme.phoneText }}>週一 巳時 09:00-11:00</div>
+        </div>
+      </div>
+    </PhoneMockup>
+  );
+}
+
+/** 天命問卜手機 UI */
+function DivinationPhone({ theme }: { theme: Theme }) {
+  return (
+    <PhoneMockup theme={theme}>
+      <div className="h-full flex flex-col gap-1.5 text-[10px]">
+        <div className="rounded-lg px-2 py-1.5" style={{ background: theme.phoneHeader }}>
+          <div className="flex items-center gap-1">
+            <span style={{ color: theme.phoneAccent }} className="font-bold text-[9px]">💰 財運金錢 問卜</span>
+          </div>
+          <div className="text-[8px] mt-0.5" style={{ color: theme.phoneSubText }}>蘇祐震 的天命問卜</div>
+        </div>
+        <div className="rounded-lg px-2 py-2" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
+          <div className="text-[8px] mb-1" style={{ color: theme.phoneSubText }}>今日命運指數</div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-xl font-bold" style={{ color: "#f97316" }}>35</span>
+            <span className="text-[8px]" style={{ color: "#f97316" }}>小凶</span>
+          </div>
+        </div>
+        <div className="rounded-lg px-2 py-2" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
+          <div className="text-[8px] mb-0.5" style={{ color: theme.phoneSubText }}>本日流日能量</div>
+          <div className="font-bold text-sm" style={{ color: theme.phoneAccent }}>星星</div>
+          <div className="text-[8px]" style={{ color: theme.phoneSubText }}>希望 · 靈感 · 療癒</div>
+        </div>
+        <div className="rounded-lg px-2 py-2 flex-1" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
+          <div className="text-[8px] mb-1" style={{ color: theme.phoneAccent }}>天命符言</div>
+          <div className="text-[8px] leading-relaxed" style={{ color: theme.phoneText }}>
+            穩紮穩打，守住現有，星星指引方向，希望就在前方
+          </div>
+        </div>
+        <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: "linear-gradient(135deg, #C9A227, #F5D06A)" }}>
+          <span className="text-[8px] font-bold" style={{ color: "#1a1a2e" }}>深度解析 →</span>
+        </div>
+      </div>
+    </PhoneMockup>
+  );
+}
+
+/** 擲筊問卜手機 UI */
+function OraclePhone({ theme }: { theme: Theme }) {
+  return (
+    <PhoneMockup theme={theme}>
+      <div className="h-full flex flex-col items-center justify-center gap-3 text-[10px]">
+        <div className="text-[8px] tracking-wider" style={{ color: theme.phoneAccent }}>✦ 天命共振 ✦</div>
+        <div className="text-[8px]" style={{ color: theme.phoneSubText }}>丙午年 辛卯月 乙未日</div>
+        {/* 聖杯圖示 */}
+        <div
+          className="w-20 h-20 rounded-full flex items-center justify-center text-3xl"
+          style={{ background: "radial-gradient(circle, rgba(201,162,39,0.3), rgba(201,162,39,0.05))", border: "2px solid rgba(201,162,39,0.4)" }}
+        >
+          🪙
+        </div>
+        <div className="font-bold text-lg" style={{ color: theme.phoneAccent }}>聖杯</div>
+        <div className="text-[9px]" style={{ color: "#22c55e" }}>神明允許</div>
+        <div
+          className="w-full rounded-lg px-3 py-2 text-center"
+          style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}
+        >
+          <div className="text-[8px] mb-1" style={{ color: theme.phoneAccent }}>神明指引</div>
+          <div className="text-[8px] leading-relaxed" style={{ color: theme.phoneText }}>
+            此事可行，時機已到，放心前進
+          </div>
+        </div>
+        <div
+          className="w-full rounded-lg px-3 py-2 text-center"
+          style={{ background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.3)" }}
+        >
+          <div className="text-[8px]" style={{ color: theme.phoneAccent }}>能量共鳴</div>
+          <div className="text-[8px] mt-0.5" style={{ color: theme.phoneText }}>火行 · 行動 · 突破</div>
+        </div>
+      </div>
+    </PhoneMockup>
+  );
+}
+
+/** 命格身份證手機 UI */
+function DestinyPhone({ theme }: { theme: Theme }) {
+  return (
+    <PhoneMockup theme={theme}>
+      <div className="h-full flex flex-col gap-1.5 text-[10px]">
+        <div className="text-center py-1">
+          <div className="text-[8px] tracking-wider" style={{ color: theme.phoneAccent }}>✦ 天命共振 ✦</div>
+          <div className="font-bold text-[11px] mt-0.5" style={{ color: theme.phoneAccent }}>命格身份證</div>
+        </div>
+        <div className="text-center">
+          <div className="font-bold text-base" style={{ color: theme.phoneText }}>蘇祐震</div>
+          <div className="text-[9px] mt-0.5" style={{ color: theme.phoneAccent }}>教皇 · The Hierophant</div>
+        </div>
+        <div className="rounded-lg px-2 py-2" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
+          <div className="text-[8px] mb-1.5" style={{ color: theme.phoneSubText }}>生命靈數</div>
+          <div className="grid grid-cols-2 gap-1">
+            {[
+              { num: "5", label: "主要靈魂數", name: "教皇" },
+              { num: "8", label: "外在個性數", name: "力量" },
+              { num: "10", label: "中間個性數", name: "命運之輪" },
+              { num: "22", label: "靈魂渴望數", name: "愚者" },
+            ].map((item) => (
+              <div key={item.num} className="flex items-baseline gap-1">
+                <span className="font-bold text-sm" style={{ color: theme.phoneAccent }}>{item.num}</span>
+                <span className="text-[7px]" style={{ color: theme.phoneSubText }}>{item.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg px-2 py-2" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
+          <div className="text-[8px] mb-1" style={{ color: theme.phoneSubText }}>八字命盤</div>
+          <div className="text-[8px]" style={{ color: theme.phoneText }}>年柱：甲子 · 日柱：甲子</div>
+          <div className="text-[8px] mt-0.5" style={{ color: theme.phoneSubText }}>喜用神：火 · 土</div>
+        </div>
+        <div className="text-center py-1" style={{ color: theme.phoneSubText }}>
+          <div className="text-[8px]">教皇 · 傳統 · 智慧</div>
+        </div>
+      </div>
+    </PhoneMockup>
+  );
+}
+
+/** 樂透/財運手機 UI */
+function LotteryPhone({ theme }: { theme: Theme }) {
+  return (
+    <PhoneMockup theme={theme}>
+      <div className="h-full flex flex-col gap-1.5 text-[10px]">
+        <div className="rounded-lg px-2 py-1.5" style={{ background: theme.phoneHeader }}>
+          <div className="font-bold text-[9px]" style={{ color: theme.phoneAccent }}>💰 財運羅盤</div>
+          <div className="text-[8px] mt-0.5" style={{ color: theme.phoneSubText }}>今日幸運數字推算</div>
+        </div>
+        {/* 幸運號碼 */}
+        <div className="rounded-lg px-2 py-3" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
+          <div className="text-[8px] mb-2 text-center" style={{ color: theme.phoneSubText }}>本期命理推薦號碼</div>
+          <div className="flex justify-center gap-1.5 flex-wrap">
+            {[5, 8, 14, 22, 31, 38].map((n) => (
+              <div
+                key={n}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold"
+                style={{ background: "linear-gradient(135deg, #C9A227, #F5D06A)", color: "#1a1a2e" }}
+              >
+                {n}
+              </div>
+            ))}
+          </div>
+          <div className="text-[7px] text-center mt-2" style={{ color: theme.phoneSubText }}>基於生命靈數 5 · 8 · 22 推算</div>
+        </div>
+        {/* 財運方位 */}
+        <div className="rounded-lg px-2 py-2" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
+          <div className="text-[8px] mb-1" style={{ color: theme.phoneAccent }}>今日財運方位</div>
+          <div className="flex gap-2">
+            <div className="text-center flex-1">
+              <div className="text-[8px] font-bold" style={{ color: "#22c55e" }}>東南方</div>
+              <div className="text-[7px]" style={{ color: theme.phoneSubText }}>旺財</div>
+            </div>
+            <div className="text-center flex-1">
+              <div className="text-[8px] font-bold" style={{ color: theme.phoneAccent }}>金色</div>
+              <div className="text-[7px]" style={{ color: theme.phoneSubText }}>幸運色</div>
+            </div>
+          </div>
+        </div>
+        {/* 流年財星 */}
+        <div className="rounded-lg px-2 py-2 flex-1" style={{ background: "rgba(201,162,39,0.08)", border: "1px solid rgba(201,162,39,0.2)" }}>
+          <div className="text-[8px] mb-1" style={{ color: theme.phoneAccent }}>流年財星分析</div>
+          <div className="text-[8px] leading-relaxed" style={{ color: theme.phoneText }}>
+            今年財星入命，適合穩健投資，避免高風險操作
+          </div>
+        </div>
+      </div>
+    </PhoneMockup>
+  );
+}
+
+/** 預約命理手機 UI */
+function AppointmentPhone({ theme }: { theme: Theme }) {
+  return (
+    <PhoneMockup theme={theme}>
+      <div className="h-full flex flex-col gap-1.5 text-[10px]">
+        <div className="rounded-lg px-2 py-1.5" style={{ background: theme.phoneHeader }}>
+          <div className="font-bold text-[9px]" style={{ color: theme.phoneAccent }}>🌸 預約命理諮詢</div>
+          <div className="text-[8px] mt-0.5" style={{ color: theme.phoneSubText }}>一對一深度命盤解析</div>
+        </div>
+        {/* 命理師卡片 */}
+        {[
+          { name: "天命老師", spec: "八字 · 紫微", rating: "4.9", count: "128" },
+          { name: "玄機老師", spec: "塔羅 · 流年", rating: "4.8", count: "96" },
+        ].map((master) => (
+          <div
+            key={master.name}
+            className="rounded-lg px-2 py-2"
+            style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}
+          >
+            <div className="flex items-center gap-2">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0"
+                style={{ background: "linear-gradient(135deg, #C9A227, #F5D06A)", color: "#1a1a2e" }}
+              >
+                命
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-[9px]" style={{ color: theme.phoneText }}>{master.name}</div>
+                <div className="text-[7px]" style={{ color: theme.phoneSubText }}>{master.spec}</div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-[8px]" style={{ color: theme.phoneAccent }}>★ {master.rating}</div>
+                <div className="text-[7px]" style={{ color: theme.phoneSubText }}>{master.count}次</div>
+              </div>
+            </div>
+          </div>
+        ))}
+        {/* 預約時段 */}
+        <div className="rounded-lg px-2 py-2" style={{ background: theme.phoneCard, border: `1px solid ${theme.phoneBorder}` }}>
+          <div className="text-[8px] mb-1.5" style={{ color: theme.phoneSubText }}>可預約時段</div>
+          <div className="flex flex-wrap gap-1">
+            {["今天 14:00", "今天 16:00", "明天 10:00"].map((t) => (
+              <div
+                key={t}
+                className="text-[7px] px-1.5 py-0.5 rounded"
+                style={{ background: "rgba(201,162,39,0.15)", color: theme.phoneAccent, border: "1px solid rgba(201,162,39,0.3)" }}
+              >
+                {t}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div
+          className="rounded-lg px-2 py-2 text-center"
+          style={{ background: "linear-gradient(135deg, #C9A227, #F5D06A)" }}
+        >
+          <span className="text-[8px] font-bold" style={{ color: "#1a1a2e" }}>立即預約 →</span>
+        </div>
+      </div>
+    </PhoneMockup>
+  );
+}
+
+/** 五大功能展示區塊 */
+const FEATURE_SHOWCASES = [
+  {
+    id: "war-room",
+    icon: <Calendar className="w-6 h-6" />,
+    emoji: "⚔️",
+    tag: "每日更新",
+    tagColor: "bg-emerald-500/20 text-emerald-500",
+    title: "今日作戰室",
+    subtitle: "每天早上 3 分鐘，知道今天的能量是順是逆",
+    desc: "結合你的八字命盤與今日流年流月，精準分析今天的能量狀態、最佳行動時機，以及需要避開的事項。",
+    points: ["今日命運指數 + 吉凶判斷", "流日塔羅牌能量解析", "本週最旺時機提醒"],
+    cta: "免費體驗",
+    locked: false,
+    phone: (theme: Theme) => <WarRoomPhone theme={theme} />,
+  },
+  {
+    id: "divination",
+    icon: <BookOpen className="w-6 h-6" />,
+    emoji: "🔮",
+    tag: "AI 命理",
+    tagColor: "bg-purple-500/20 text-purple-400",
+    title: "天命問卜",
+    subtitle: "工作、感情、財運，一次問清楚，不再瞎猜",
+    desc: "選擇你最想了解的面向，AI 命理師結合你的八字命盤與今日能量，給出深度、具體的命理解析。",
+    points: ["六大主題：感情、事業、財運等", "結合個人命盤的深度解析", "天命符言 + 行動建議"],
+    cta: "登入解鎖",
+    locked: true,
+    phone: (theme: Theme) => <DivinationPhone theme={theme} />,
+  },
+  {
+    id: "oracle",
+    icon: <Shuffle className="w-6 h-6" />,
+    emoji: "🪙",
+    tag: "神明指引",
+    tagColor: "bg-amber-500/20 text-amber-500",
+    title: "擲筊問卜",
+    subtitle: "今天該不該做這件事？讓神明給你一個答案",
+    desc: "傳統擲筊儀式的數位化體驗，輸入你的問題，結合今日命理能量，獲得聖杯、陰杯或笑杯的神明回應。",
+    points: ["四種筊果：聖杯、陰杯、笑杯、立筊", "結合今日八字能量的詮釋", "能量共鳴 + 行動指引"],
+    cta: "免費體驗",
+    locked: false,
+    phone: (theme: Theme) => <OraclePhone theme={theme} />,
+  },
+  {
+    id: "destiny",
+    icon: <Star className="w-6 h-6" />,
+    emoji: "✨",
+    tag: "會員限定",
+    tagColor: "bg-amber-900/40 text-amber-300",
+    title: "命格身份證",
+    subtitle: "你的天生特質、人生主線，一張卡片說清楚",
+    desc: "根據生辰八字精算你的生命靈數、塔羅原型、八字命盤，生成專屬命格身份證，揭示你的天命密碼。",
+    points: ["生命靈數四維度解析", "塔羅原型 + 八字命盤", "可分享的命格身份證卡片"],
+    cta: "登入解鎖",
+    locked: true,
+    phone: (theme: Theme) => <DestinyPhone theme={theme} />,
+  },
+  {
+    id: "lottery",
+    icon: <Coins className="w-6 h-6" />,
+    emoji: "💰",
+    tag: "財運分析",
+    tagColor: "bg-yellow-500/20 text-yellow-500",
+    title: "財運羅盤",
+    subtitle: "用命理選號，讓五行幫你挑好運數字",
+    desc: "精算流年財星位置，分析最佳投資時機與財富增長方向，並根據你的生命靈數推算今期幸運號碼。",
+    points: ["流年財星位置分析", "命理幸運號碼推算", "最佳財運時機窗口"],
+    cta: "免費體驗",
+    locked: false,
+    phone: (theme: Theme) => <LotteryPhone theme={theme} />,
+  },
+  {
+    id: "appointment",
+    icon: <Users className="w-6 h-6" />,
+    emoji: "🌸",
+    tag: "即將推出",
+    tagColor: "bg-pink-500/20 text-pink-400",
+    title: "預約命理",
+    subtitle: "想深聊命格？預約一對一命理諮詢",
+    desc: "當 AI 解析還不夠，真人命理師為你深度解盤。預約線上諮詢，針對你的人生課題給出更細膩的指引。",
+    points: ["認證命理師一對一諮詢", "八字、紫微、塔羅多元流派", "線上視訊 + 文字諮詢"],
+    cta: "預約通知",
+    locked: false,
+    phone: (theme: Theme) => <AppointmentPhone theme={theme} />,
+  },
+];
+
+function FeatureShowcaseSection({ theme }: { theme: Theme }) {
   return (
     <section className="py-20 lg:py-28 relative overflow-hidden" style={{ background: theme.sectionBg }}>
       <div className="container">
@@ -376,46 +775,95 @@ function FeaturesSection({ theme }: { theme: Theme }) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-14"
+          className="text-center mb-16"
         >
-          <p className="text-amber-500/70 text-xs tracking-[0.3em] uppercase mb-3">CORE FEATURES</p>
+          <p className="text-amber-500/70 text-xs tracking-[0.3em] uppercase mb-3">FEATURES</p>
           <h2 className={`text-4xl md:text-5xl font-bold mb-4 ${theme.text}`}>
-            六大<span className="text-holographic">天命模組</span>
+            六大<span className="text-holographic">天命功能</span>
           </h2>
-          <p className={`${theme.textSub} text-base max-w-xl mx-auto`}>從命格解讀到每日指引，全方位覆蓋你的命理需求</p>
+          <p className={`${theme.textSub} text-base max-w-xl mx-auto`}>
+            從每日運勢到深度命盤，全方位陪你走過每一個人生關口
+          </p>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {FEATURE_CARDS.map((card, index) => (
-            <motion.div
-              key={card.title}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.08 }}
-              className="glass-card rounded-2xl p-6 group relative overflow-hidden"
-            >
-              {card.locked ? (
-                <div className={`absolute top-4 right-4 flex items-center gap-1 ${theme.textMuted} text-xs`}>
-                  <Lock className="w-3 h-3" /><span>會員限定</span>
-                </div>
-              ) : (
-                <div className={`absolute top-4 right-4 text-xs px-2 py-0.5 rounded-full ${card.tagColor}`}>{card.tag}</div>
-              )}
-              <div className="w-16 h-16 mb-5">
-                <img src={card.img} alt={card.title} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110" />
-              </div>
-              <h3 className={`text-lg font-bold mb-1 ${card.locked ? theme.cardTextLocked : theme.cardText}`}>{card.title}</h3>
-              <p className="text-amber-500/70 text-xs mb-3">{card.subtitle}</p>
-              <p className={`text-sm leading-relaxed ${card.locked ? theme.cardDescLocked : theme.cardDesc}`}>{card.desc}</p>
-              <a
-                href={getLoginUrl()}
-                className={`mt-4 flex items-center gap-1 text-xs transition-colors ${card.locked ? `${theme.textMuted} hover:${theme.textSub}` : "text-amber-500/70 hover:text-amber-500"}`}
+
+        <div className="space-y-24">
+          {FEATURE_SHOWCASES.map((feature, index) => {
+            const isEven = index % 2 === 0;
+            return (
+              <motion.div
+                key={feature.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-80px" }}
+                transition={{ duration: 0.7, delay: 0.1 }}
+                className={`flex flex-col ${isEven ? "lg:flex-row" : "lg:flex-row-reverse"} items-center gap-10 lg:gap-16`}
               >
-                {!card.locked && <CheckCircle className="w-3.5 h-3.5" />}
-                <span>登入後，天命之門將為你開啟</span>
-              </a>
-            </motion.div>
-          ))}
+                {/* 手機模擬 */}
+                <div className="flex-shrink-0 relative">
+                  {/* 光暈背景 */}
+                  <div
+                    className="absolute inset-0 -m-8 rounded-full blur-3xl opacity-20"
+                    style={{ background: "radial-gradient(circle, rgba(201,162,39,0.6), transparent 70%)" }}
+                  />
+                  <div className="relative">
+                    {feature.phone(theme)}
+                  </div>
+                </div>
+
+                {/* 文字說明 */}
+                <div className="flex-1 text-center lg:text-left space-y-5">
+                  {/* 標籤 */}
+                  <div className="flex items-center justify-center lg:justify-start gap-3">
+                    <span className={`text-xs px-3 py-1 rounded-full font-medium ${feature.tagColor}`}>
+                      {feature.tag}
+                    </span>
+                  </div>
+
+                  {/* 標題 */}
+                  <div>
+                    <div className="flex items-center justify-center lg:justify-start gap-2 mb-2">
+                      <span className="text-2xl">{feature.emoji}</span>
+                      <h3 className={`text-3xl font-bold ${theme.text}`}>{feature.title}</h3>
+                    </div>
+                    <p className="text-xl font-medium" style={{ color: "#C9A227" }}>
+                      {feature.subtitle}
+                    </p>
+                  </div>
+
+                  {/* 描述 */}
+                  <p className={`${theme.textBody} leading-relaxed text-base max-w-lg mx-auto lg:mx-0`}>
+                    {feature.desc}
+                  </p>
+
+                  {/* 功能要點 */}
+                  <ul className="space-y-2">
+                    {feature.points.map((point) => (
+                      <li key={point} className="flex items-center justify-center lg:justify-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                        <span className={`text-sm ${theme.textBody}`}>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA */}
+                  <div className="pt-2">
+                    <a
+                      href={getLoginUrl()}
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all"
+                      style={
+                        feature.locked
+                          ? { background: "rgba(201,162,39,0.15)", color: "#C9A227", border: "1px solid rgba(201,162,39,0.4)" }
+                          : { background: "linear-gradient(135deg, #C9A227, #F5D06A)", color: "#1a1a2e" }
+                      }
+                    >
+                      {feature.locked ? <Lock className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                      {feature.cta}
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -456,7 +904,7 @@ function StatsSection({ theme }: { theme: Theme }) {
 
 function TestimonialsSection({ theme }: { theme: Theme }) {
   return (
-    <section className="py-24 relative overflow-hidden" style={{ background: theme.sectionBg }}>
+    <section className="py-24 relative overflow-hidden" style={{ background: theme.sectionAlt }}>
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -467,10 +915,14 @@ function TestimonialsSection({ theme }: { theme: Theme }) {
         >
           <p className="text-amber-500/70 text-xs tracking-[0.3em] uppercase mb-3">TESTIMONIALS</p>
           <h2 className={`text-4xl md:text-5xl font-bold mb-4 ${theme.text}`}>
-            他們的<span className="text-holographic">天命故事</span>
+            他們怎麼說
           </h2>
+          <p className={`${theme.textSub} text-base max-w-lg mx-auto`}>
+            不是神話，是真實的日常體驗
+          </p>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
           {TESTIMONIALS.map((t, index) => {
             const style = ELEMENT_COLORS[t.element] ?? ELEMENT_COLORS["火"];
             return (
@@ -519,8 +971,8 @@ function TestimonialsSection({ theme }: { theme: Theme }) {
             登入後，<span className="text-holographic">天命之門</span>將為你開啟
           </h3>
           <p className={`${theme.textSub} mb-8 max-w-lg mx-auto text-sm leading-relaxed`}>
-            解鎖命格身份證、天命問卜、財運羅盤等完整功能，
-            <br />讓 AI 命理師成為你最貼身的人生顧問。
+            解鎖命格身份證、天命問卜、財運羅盤等完整功能
+            <br />讓 AI 命理師成為你最貼身的人生顧問
           </p>
           <a
             href={getLoginUrl()}
@@ -531,7 +983,7 @@ function TestimonialsSection({ theme }: { theme: Theme }) {
           </a>
           <p className={`mt-4 text-xs ${theme.textMuted}`}>
             <Sparkles className="w-3 h-3 inline mr-1 text-amber-500/60" />
-            免費加入，隨時開始你的天命旅程
+            免費加入，隨時開始你的天命旅程 · oracleres.com
           </p>
         </motion.div>
       </div>
@@ -589,7 +1041,7 @@ export default function LandingPage() {
     >
       <LandingNav theme={theme} onToggle={() => setDarkMode(!darkMode)} />
       <HeroSection theme={theme} />
-      <FeaturesSection theme={theme} />
+      <FeatureShowcaseSection theme={theme} />
       <StatsSection theme={theme} />
       <TestimonialsSection theme={theme} />
       <LandingFooter theme={theme} />
