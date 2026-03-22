@@ -2,10 +2,107 @@
   "version": "2.0",
   "schema": "ART/MANIFEST-SPEC.md",
   "last_updated": "2026/03/22",
-  "updated_by": "Manus System Agent",
+  "updated_by": "Manus Art Agent",
   "sync_status": {
     "last_checked_by_system": null,
     "last_integrated_version": null
   },
-  "assets": {}
+  "assets": {
+    "landing-hero-bg": {
+      "task": "TASK-001",
+      "name": "首頁 Hero 背景圖",
+      "description": "賽博少女風 + 日系輕奢風。深色星空底，流動極光絲帶（玫瑰金、淡紫、電青），散落金色細線月亮、星星、星座點等可愛符號，柔和 Bokeh 光球，整體夢幻、女性、K-pop 質感",
+      "file": "ART/OUTPUTS/TASK-001/landing-hero-bg.png",
+      "format": "PNG",
+      "dimensions": "2752x1536",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/22",
+      "notes": "夜間模式深色背景 #1A1A2A，流動光效取代傳統八卦，目標受眾 18-35 歲女性"
+    },
+    "landing-hero-orb": {
+      "task": "TASK-001",
+      "name": "Hero 區命盤光球",
+      "description": "賽博少女風命盤光球。全息珍珠光球體，玫瑰粉到電青漸層，金色細線月亮、星星、星座、鑽石元素環繞，夢幻極光色彩流動，透明背景",
+      "file": "ART/OUTPUTS/TASK-001/landing-hero-orb.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/22",
+      "notes": "透明背景，全息珍珠光效，可疊加於 Hero 背景圖上使用"
+    },
+    "icon-destiny-card": {
+      "task": "TASK-001",
+      "name": "命格身份證圖示",
+      "description": "圓角卡片形狀，全息漸層填色（粉到青），金色邊框，卡面有月亮、星形、星座線條，右上角閃光點，透明背景",
+      "file": "ART/OUTPUTS/TASK-001/icon-destiny-card.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/22",
+      "notes": "透明背景，日系輕奢線條風格，可縮放至 128x128 使用"
+    },
+    "icon-war-room": {
+      "task": "TASK-001",
+      "name": "今日作戰室圖示",
+      "description": "羅盤玫瑰造型，金色細線八方箭頭，電青中心寶石，四角閃光點，圓形外框，透明背景",
+      "file": "ART/OUTPUTS/TASK-001/icon-war-room.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/22",
+      "notes": "透明背景，金色線條風格，現代幾何感"
+    },
+    "icon-oracle": {
+      "task": "TASK-001",
+      "name": "天命問卜圖示",
+      "description": "全息水晶球，玫瑰粉到電青漸層，金色月亮在球心，金色細線軌道環繞，薄荷綠外圈，閃光點裝飾，透明背景",
+      "file": "ART/OUTPUTS/TASK-001/icon-oracle.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/22",
+      "notes": "透明背景，可愛魔法少女風格"
+    },
+    "icon-wealth": {
+      "task": "TASK-001",
+      "name": "財運羅盤圖示",
+      "description": "金色懷錶造型羅盤，幾何花瓣紋路，月亮羅盤針，金色光暈，閃光點環繞，透明背景",
+      "file": "ART/OUTPUTS/TASK-001/icon-wealth.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/22",
+      "notes": "透明背景，輕奢金色質感，象徵財富與精準"
+    },
+    "icon-calendar": {
+      "task": "TASK-001",
+      "name": "天命日曆圖示",
+      "description": "圓角日曆造型，淡玫瑰粉全息填色，金色邊框，月亮星星標頭，星座弧線裝飾，透明背景",
+      "file": "ART/OUTPUTS/TASK-001/icon-calendar.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/22",
+      "notes": "透明背景，可愛日系風格，粉色系"
+    },
+    "icon-jinang": {
+      "task": "TASK-001",
+      "name": "數位錦囊圖示",
+      "description": "可愛圓形束口袋，粉紫漸層全息填色，金色邊框與蝴蝶結，袋身散落閃光點與星星，內部金色光暈，透明背景",
+      "file": "ART/OUTPUTS/TASK-001/icon-jinang.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/22",
+      "notes": "透明背景，品牌核心錦囊圖示，可愛魔法風格"
+    }
+  }
 }
