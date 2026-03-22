@@ -1,12 +1,13 @@
 {
-  "version": "2.0",
+  "version": "1.4",
   "schema": "ART/MANIFEST-SPEC.md",
-  "last_updated": "2026/03/22",
-  "updated_by": "Manus Art Agent",
+  "last_updated": "2026/03/23",
+  "updated_by": "ART-AGENT",
   "sync_status": {
-    "last_checked_by_system": "2026/03/22",
-    "last_integrated_version": "1.0",
-    "integration_notes": "8 assets integrated into oracle-resonance project via CDN. All assets uploaded via manus-upload-file --webdev."
+    "total_assets": 203,
+    "task004_assets": 150,
+    "last_sync": "2026/03/23",
+    "note": "TASK-004 五行色系服裝素材（女生60張+男生60張+髮型30張）全部完成"
   },
   "assets": {
     "landing-hero-bg": {
@@ -690,6 +691,2946 @@
       "version": "1.0",
       "created_at": "2026/03/22",
       "notes": "請系統 Agent 優先閱讀此文件，再進行塔羅牌素材的前端整合"
+    },
+    "task004-female-front-wood-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 木行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，木行（#2E8B57）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/wood/top-wood-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 上衣 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "top",
+        "front"
+      ]
+    },
+    "task004-female-front-wood-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 木行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，木行（#2E8B57）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/wood/bottom-wood-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 下著 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "bottom",
+        "front"
+      ]
+    },
+    "task004-female-front-wood-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 木行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，木行（#2E8B57）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/wood/shoes-wood-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 鞋子 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "shoes",
+        "front"
+      ]
+    },
+    "task004-female-front-wood-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 木行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，木行（#2E8B57）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/wood/bracelet-wood-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 手串 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "bracelet",
+        "front"
+      ]
+    },
+    "task004-female-front-fire-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 火行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，火行（#DC143C）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/fire/top-fire-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 上衣 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "top",
+        "front"
+      ]
+    },
+    "task004-female-front-fire-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 火行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，火行（#DC143C）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/fire/bottom-fire-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 下著 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "bottom",
+        "front"
+      ]
+    },
+    "task004-female-front-fire-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 火行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，火行（#DC143C）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/fire/shoes-fire-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 鞋子 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "shoes",
+        "front"
+      ]
+    },
+    "task004-female-front-fire-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 火行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，火行（#DC143C）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/fire/bracelet-fire-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 手串 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "bracelet",
+        "front"
+      ]
+    },
+    "task004-female-front-earth-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 土行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，土行（#CD853F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/earth/top-earth-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 上衣 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "top",
+        "front"
+      ]
+    },
+    "task004-female-front-earth-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 土行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，土行（#CD853F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/earth/bottom-earth-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 下著 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "bottom",
+        "front"
+      ]
+    },
+    "task004-female-front-earth-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 土行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，土行（#CD853F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/earth/shoes-earth-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 鞋子 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "shoes",
+        "front"
+      ]
+    },
+    "task004-female-front-earth-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 土行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，土行（#CD853F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/earth/bracelet-earth-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 手串 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "bracelet",
+        "front"
+      ]
+    },
+    "task004-female-front-metal-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 金行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，金行（#C0C0C0）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/metal/top-metal-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 上衣 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "top",
+        "front"
+      ]
+    },
+    "task004-female-front-metal-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 金行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，金行（#C0C0C0）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/metal/bottom-metal-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 下著 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "bottom",
+        "front"
+      ]
+    },
+    "task004-female-front-metal-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 金行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，金行（#C0C0C0）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/metal/shoes-metal-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 鞋子 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "shoes",
+        "front"
+      ]
+    },
+    "task004-female-front-metal-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 金行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，金行（#C0C0C0）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/metal/bracelet-metal-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 手串 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "bracelet",
+        "front"
+      ]
+    },
+    "task004-female-front-water-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 水行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，水行（#1E3A5F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/water/top-water-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 上衣 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "top",
+        "front"
+      ]
+    },
+    "task004-female-front-water-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 水行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，水行（#1E3A5F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/water/bottom-water-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 下著 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "bottom",
+        "front"
+      ]
+    },
+    "task004-female-front-water-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 水行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，水行（#1E3A5F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/water/shoes-water-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 鞋子 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "shoes",
+        "front"
+      ]
+    },
+    "task004-female-front-water-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生正面 水行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版正面視角，水行（#1E3A5F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-front/water/bracelet-water-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 手串 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "bracelet",
+        "front"
+      ]
+    },
+    "task004-female-left45-wood-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 木行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，木行（#2E8B57）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/wood/top-wood-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 上衣 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "top",
+        "left45"
+      ]
+    },
+    "task004-female-left45-wood-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 木行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，木行（#2E8B57）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/wood/bottom-wood-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 下著 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "bottom",
+        "left45"
+      ]
+    },
+    "task004-female-left45-wood-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 木行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，木行（#2E8B57）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/wood/shoes-wood-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 鞋子 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "shoes",
+        "left45"
+      ]
+    },
+    "task004-female-left45-wood-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 木行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，木行（#2E8B57）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/wood/bracelet-wood-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 手串 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "bracelet",
+        "left45"
+      ]
+    },
+    "task004-female-left45-fire-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 火行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，火行（#DC143C）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/fire/top-fire-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 上衣 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "top",
+        "left45"
+      ]
+    },
+    "task004-female-left45-fire-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 火行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，火行（#DC143C）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/fire/bottom-fire-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 下著 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "bottom",
+        "left45"
+      ]
+    },
+    "task004-female-left45-fire-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 火行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，火行（#DC143C）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/fire/shoes-fire-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 鞋子 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "shoes",
+        "left45"
+      ]
+    },
+    "task004-female-left45-fire-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 火行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，火行（#DC143C）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/fire/bracelet-fire-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 手串 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "bracelet",
+        "left45"
+      ]
+    },
+    "task004-female-left45-earth-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 土行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，土行（#CD853F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/earth/top-earth-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 上衣 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "top",
+        "left45"
+      ]
+    },
+    "task004-female-left45-earth-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 土行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，土行（#CD853F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/earth/bottom-earth-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 下著 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "bottom",
+        "left45"
+      ]
+    },
+    "task004-female-left45-earth-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 土行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，土行（#CD853F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/earth/shoes-earth-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 鞋子 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "shoes",
+        "left45"
+      ]
+    },
+    "task004-female-left45-earth-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 土行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，土行（#CD853F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/earth/bracelet-earth-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 手串 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "bracelet",
+        "left45"
+      ]
+    },
+    "task004-female-left45-metal-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 金行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，金行（#C0C0C0）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/metal/top-metal-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 上衣 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "top",
+        "left45"
+      ]
+    },
+    "task004-female-left45-metal-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 金行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，金行（#C0C0C0）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/metal/bottom-metal-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 下著 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "bottom",
+        "left45"
+      ]
+    },
+    "task004-female-left45-metal-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 金行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，金行（#C0C0C0）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/metal/shoes-metal-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 鞋子 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "shoes",
+        "left45"
+      ]
+    },
+    "task004-female-left45-metal-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 金行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，金行（#C0C0C0）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/metal/bracelet-metal-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 手串 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "bracelet",
+        "left45"
+      ]
+    },
+    "task004-female-left45-water-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 水行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，水行（#1E3A5F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/water/top-water-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 上衣 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "top",
+        "left45"
+      ]
+    },
+    "task004-female-left45-water-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 水行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，水行（#1E3A5F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/water/bottom-water-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 下著 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "bottom",
+        "left45"
+      ]
+    },
+    "task004-female-left45-water-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 水行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，水行（#1E3A5F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/water/shoes-water-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 鞋子 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "shoes",
+        "left45"
+      ]
+    },
+    "task004-female-left45-water-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生左側45° 水行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版左側45°視角，水行（#1E3A5F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-left45/water/bracelet-water-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 手串 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "bracelet",
+        "left45"
+      ]
+    },
+    "task004-female-right45-wood-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 木行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，木行（#2E8B57）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/wood/top-wood-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 上衣 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "top",
+        "right45"
+      ]
+    },
+    "task004-female-right45-wood-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 木行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，木行（#2E8B57）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/wood/bottom-wood-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 下著 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "bottom",
+        "right45"
+      ]
+    },
+    "task004-female-right45-wood-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 木行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，木行（#2E8B57）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/wood/shoes-wood-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 鞋子 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "shoes",
+        "right45"
+      ]
+    },
+    "task004-female-right45-wood-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 木行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，木行（#2E8B57）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/wood/bracelet-wood-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 手串 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "wood",
+        "bracelet",
+        "right45"
+      ]
+    },
+    "task004-female-right45-fire-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 火行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，火行（#DC143C）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/fire/top-fire-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 上衣 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "top",
+        "right45"
+      ]
+    },
+    "task004-female-right45-fire-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 火行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，火行（#DC143C）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/fire/bottom-fire-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 下著 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "bottom",
+        "right45"
+      ]
+    },
+    "task004-female-right45-fire-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 火行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，火行（#DC143C）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/fire/shoes-fire-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 鞋子 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "shoes",
+        "right45"
+      ]
+    },
+    "task004-female-right45-fire-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 火行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，火行（#DC143C）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/fire/bracelet-fire-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 手串 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "fire",
+        "bracelet",
+        "right45"
+      ]
+    },
+    "task004-female-right45-earth-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 土行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，土行（#CD853F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/earth/top-earth-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 上衣 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "top",
+        "right45"
+      ]
+    },
+    "task004-female-right45-earth-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 土行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，土行（#CD853F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/earth/bottom-earth-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 下著 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "bottom",
+        "right45"
+      ]
+    },
+    "task004-female-right45-earth-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 土行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，土行（#CD853F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/earth/shoes-earth-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 鞋子 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "shoes",
+        "right45"
+      ]
+    },
+    "task004-female-right45-earth-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 土行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，土行（#CD853F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/earth/bracelet-earth-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 手串 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "earth",
+        "bracelet",
+        "right45"
+      ]
+    },
+    "task004-female-right45-metal-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 金行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，金行（#C0C0C0）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/metal/top-metal-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 上衣 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "top",
+        "right45"
+      ]
+    },
+    "task004-female-right45-metal-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 金行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，金行（#C0C0C0）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/metal/bottom-metal-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 下著 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "bottom",
+        "right45"
+      ]
+    },
+    "task004-female-right45-metal-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 金行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，金行（#C0C0C0）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/metal/shoes-metal-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 鞋子 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "shoes",
+        "right45"
+      ]
+    },
+    "task004-female-right45-metal-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 金行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，金行（#C0C0C0）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/metal/bracelet-metal-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 手串 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "metal",
+        "bracelet",
+        "right45"
+      ]
+    },
+    "task004-female-right45-water-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 水行上衣",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，水行（#1E3A5F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/water/top-water-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 上衣 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "top",
+        "right45"
+      ]
+    },
+    "task004-female-right45-water-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 水行下著",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，水行（#1E3A5F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/water/bottom-water-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 下著 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "bottom",
+        "right45"
+      ]
+    },
+    "task004-female-right45-water-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 水行鞋子",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，水行（#1E3A5F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/water/shoes-water-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 鞋子 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "shoes",
+        "right45"
+      ]
+    },
+    "task004-female-right45-water-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 女生右側45° 水行手串",
+      "description": "五行色系現代日系風格服裝部件。女生版右側45°視角，水行（#1E3A5F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-right45/water/bracelet-water-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 手串 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "female",
+        "water",
+        "bracelet",
+        "right45"
+      ]
+    },
+    "task004-male-front-wood-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 木行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，木行（#2E8B57）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/wood/top-wood-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 上衣 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "top",
+        "front"
+      ]
+    },
+    "task004-male-front-wood-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 木行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，木行（#2E8B57）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/wood/bottom-wood-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 下著 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "bottom",
+        "front"
+      ]
+    },
+    "task004-male-front-wood-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 木行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，木行（#2E8B57）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/wood/shoes-wood-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 鞋子 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "shoes",
+        "front"
+      ]
+    },
+    "task004-male-front-wood-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 木行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，木行（#2E8B57）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/wood/bracelet-wood-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 手串 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "bracelet",
+        "front"
+      ]
+    },
+    "task004-male-front-fire-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 火行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，火行（#DC143C）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/fire/top-fire-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 上衣 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "top",
+        "front"
+      ]
+    },
+    "task004-male-front-fire-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 火行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，火行（#DC143C）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/fire/bottom-fire-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 下著 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "bottom",
+        "front"
+      ]
+    },
+    "task004-male-front-fire-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 火行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，火行（#DC143C）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/fire/shoes-fire-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 鞋子 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "shoes",
+        "front"
+      ]
+    },
+    "task004-male-front-fire-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 火行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，火行（#DC143C）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/fire/bracelet-fire-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 手串 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "bracelet",
+        "front"
+      ]
+    },
+    "task004-male-front-earth-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 土行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，土行（#CD853F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/earth/top-earth-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 上衣 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "top",
+        "front"
+      ]
+    },
+    "task004-male-front-earth-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 土行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，土行（#CD853F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/earth/bottom-earth-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 下著 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "bottom",
+        "front"
+      ]
+    },
+    "task004-male-front-earth-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 土行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，土行（#CD853F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/earth/shoes-earth-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 鞋子 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "shoes",
+        "front"
+      ]
+    },
+    "task004-male-front-earth-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 土行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，土行（#CD853F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/earth/bracelet-earth-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 手串 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "bracelet",
+        "front"
+      ]
+    },
+    "task004-male-front-metal-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 金行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，金行（#C0C0C0）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/metal/top-metal-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 上衣 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "top",
+        "front"
+      ]
+    },
+    "task004-male-front-metal-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 金行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，金行（#C0C0C0）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/metal/bottom-metal-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 下著 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "bottom",
+        "front"
+      ]
+    },
+    "task004-male-front-metal-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 金行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，金行（#C0C0C0）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/metal/shoes-metal-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 鞋子 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "shoes",
+        "front"
+      ]
+    },
+    "task004-male-front-metal-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 金行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，金行（#C0C0C0）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/metal/bracelet-metal-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 手串 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "bracelet",
+        "front"
+      ]
+    },
+    "task004-male-front-water-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 水行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，水行（#1E3A5F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/water/top-water-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 上衣 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "top",
+        "front"
+      ]
+    },
+    "task004-male-front-water-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 水行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，水行（#1E3A5F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/water/bottom-water-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 下著 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "bottom",
+        "front"
+      ]
+    },
+    "task004-male-front-water-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 水行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，水行（#1E3A5F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/water/shoes-water-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 鞋子 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "shoes",
+        "front"
+      ]
+    },
+    "task004-male-front-water-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生正面 水行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版正面視角，水行（#1E3A5F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-front/water/bracelet-water-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 手串 | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "bracelet",
+        "front"
+      ]
+    },
+    "task004-male-left45-wood-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 木行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，木行（#2E8B57）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/wood/top-wood-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 上衣 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "top",
+        "left45"
+      ]
+    },
+    "task004-male-left45-wood-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 木行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，木行（#2E8B57）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/wood/bottom-wood-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 下著 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "bottom",
+        "left45"
+      ]
+    },
+    "task004-male-left45-wood-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 木行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，木行（#2E8B57）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/wood/shoes-wood-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 鞋子 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "shoes",
+        "left45"
+      ]
+    },
+    "task004-male-left45-wood-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 木行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，木行（#2E8B57）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/wood/bracelet-wood-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 手串 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "bracelet",
+        "left45"
+      ]
+    },
+    "task004-male-left45-fire-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 火行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，火行（#DC143C）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/fire/top-fire-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 上衣 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "top",
+        "left45"
+      ]
+    },
+    "task004-male-left45-fire-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 火行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，火行（#DC143C）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/fire/bottom-fire-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 下著 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "bottom",
+        "left45"
+      ]
+    },
+    "task004-male-left45-fire-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 火行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，火行（#DC143C）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/fire/shoes-fire-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 鞋子 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "shoes",
+        "left45"
+      ]
+    },
+    "task004-male-left45-fire-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 火行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，火行（#DC143C）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/fire/bracelet-fire-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 手串 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "bracelet",
+        "left45"
+      ]
+    },
+    "task004-male-left45-earth-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 土行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，土行（#CD853F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/earth/top-earth-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 上衣 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "top",
+        "left45"
+      ]
+    },
+    "task004-male-left45-earth-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 土行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，土行（#CD853F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/earth/bottom-earth-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 下著 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "bottom",
+        "left45"
+      ]
+    },
+    "task004-male-left45-earth-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 土行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，土行（#CD853F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/earth/shoes-earth-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 鞋子 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "shoes",
+        "left45"
+      ]
+    },
+    "task004-male-left45-earth-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 土行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，土行（#CD853F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/earth/bracelet-earth-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 手串 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "bracelet",
+        "left45"
+      ]
+    },
+    "task004-male-left45-metal-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 金行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，金行（#C0C0C0）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/metal/top-metal-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 上衣 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "top",
+        "left45"
+      ]
+    },
+    "task004-male-left45-metal-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 金行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，金行（#C0C0C0）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/metal/bottom-metal-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 下著 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "bottom",
+        "left45"
+      ]
+    },
+    "task004-male-left45-metal-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 金行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，金行（#C0C0C0）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/metal/shoes-metal-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 鞋子 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "shoes",
+        "left45"
+      ]
+    },
+    "task004-male-left45-metal-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 金行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，金行（#C0C0C0）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/metal/bracelet-metal-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 手串 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "bracelet",
+        "left45"
+      ]
+    },
+    "task004-male-left45-water-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 水行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，水行（#1E3A5F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/water/top-water-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 上衣 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "top",
+        "left45"
+      ]
+    },
+    "task004-male-left45-water-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 水行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，水行（#1E3A5F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/water/bottom-water-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 下著 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "bottom",
+        "left45"
+      ]
+    },
+    "task004-male-left45-water-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 水行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，水行（#1E3A5F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/water/shoes-water-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 鞋子 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "shoes",
+        "left45"
+      ]
+    },
+    "task004-male-left45-water-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生左側45° 水行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版左側45°視角，水行（#1E3A5F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-left45/water/bracelet-water-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 手串 | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "bracelet",
+        "left45"
+      ]
+    },
+    "task004-male-right45-wood-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 木行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，木行（#2E8B57）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/wood/top-wood-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 上衣 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "top",
+        "right45"
+      ]
+    },
+    "task004-male-right45-wood-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 木行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，木行（#2E8B57）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/wood/bottom-wood-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 下著 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "bottom",
+        "right45"
+      ]
+    },
+    "task004-male-right45-wood-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 木行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，木行（#2E8B57）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/wood/shoes-wood-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 鞋子 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "shoes",
+        "right45"
+      ]
+    },
+    "task004-male-right45-wood-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 木行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，木行（#2E8B57）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/wood/bracelet-wood-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 木行 | 手串 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "wood",
+        "bracelet",
+        "right45"
+      ]
+    },
+    "task004-male-right45-fire-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 火行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，火行（#DC143C）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/fire/top-fire-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 上衣 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "top",
+        "right45"
+      ]
+    },
+    "task004-male-right45-fire-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 火行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，火行（#DC143C）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/fire/bottom-fire-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 下著 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "bottom",
+        "right45"
+      ]
+    },
+    "task004-male-right45-fire-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 火行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，火行（#DC143C）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/fire/shoes-fire-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 鞋子 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "shoes",
+        "right45"
+      ]
+    },
+    "task004-male-right45-fire-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 火行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，火行（#DC143C）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/fire/bracelet-fire-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 火行 | 手串 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "fire",
+        "bracelet",
+        "right45"
+      ]
+    },
+    "task004-male-right45-earth-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 土行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，土行（#CD853F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/earth/top-earth-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 上衣 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "top",
+        "right45"
+      ]
+    },
+    "task004-male-right45-earth-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 土行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，土行（#CD853F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/earth/bottom-earth-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 下著 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "bottom",
+        "right45"
+      ]
+    },
+    "task004-male-right45-earth-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 土行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，土行（#CD853F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/earth/shoes-earth-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 鞋子 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "shoes",
+        "right45"
+      ]
+    },
+    "task004-male-right45-earth-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 土行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，土行（#CD853F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/earth/bracelet-earth-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 土行 | 手串 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "earth",
+        "bracelet",
+        "right45"
+      ]
+    },
+    "task004-male-right45-metal-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 金行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，金行（#C0C0C0）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/metal/top-metal-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 上衣 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "top",
+        "right45"
+      ]
+    },
+    "task004-male-right45-metal-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 金行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，金行（#C0C0C0）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/metal/bottom-metal-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 下著 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "bottom",
+        "right45"
+      ]
+    },
+    "task004-male-right45-metal-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 金行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，金行（#C0C0C0）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/metal/shoes-metal-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 鞋子 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "shoes",
+        "right45"
+      ]
+    },
+    "task004-male-right45-metal-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 金行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，金行（#C0C0C0）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/metal/bracelet-metal-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 金行 | 手串 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "metal",
+        "bracelet",
+        "right45"
+      ]
+    },
+    "task004-male-right45-water-top": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 水行上衣",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，水行（#1E3A5F）上衣，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/water/top-water-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 上衣 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "top",
+        "right45"
+      ]
+    },
+    "task004-male-right45-water-bottom": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 水行下著",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，水行（#1E3A5F）下著，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/water/bottom-water-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 下著 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "bottom",
+        "right45"
+      ]
+    },
+    "task004-male-right45-water-shoes": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 水行鞋子",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，水行（#1E3A5F）鞋子，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/water/shoes-water-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 鞋子 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "shoes",
+        "right45"
+      ]
+    },
+    "task004-male-right45-water-bracelet": {
+      "task": "TASK-004",
+      "name": "靈相角色服裝 - 男生右側45° 水行手串",
+      "description": "五行色系現代日系風格服裝部件。男生版右側45°視角，水行（#1E3A5F）手串，獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-right45/water/bracelet-water-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "五行色系 | 水行 | 手串 | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "clothing",
+        "male",
+        "water",
+        "bracelet",
+        "right45"
+      ]
+    },
+    "task004-female-hair-hair01-straight-front": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生正面 清純直髮（黑色側分）",
+      "description": "女生版髮型圖層，正面視角，清純直髮（黑色側分），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair01-straight-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 清純直髮（黑色側分） | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "front"
+      ]
+    },
+    "task004-female-hair-hair01-straight-left45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生左側45° 清純直髮（黑色側分）",
+      "description": "女生版髮型圖層，左側45°視角，清純直髮（黑色側分），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair01-straight-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 清純直髮（黑色側分） | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "left45"
+      ]
+    },
+    "task004-female-hair-hair01-straight-right45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生右側45° 清純直髮（黑色側分）",
+      "description": "女生版髮型圖層，右側45°視角，清純直髮（黑色側分），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair01-straight-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 清純直髮（黑色側分） | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "right45"
+      ]
+    },
+    "task004-female-hair-hair02-twintail-front": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生正面 雙馬尾（棕色金蝴蝶結）",
+      "description": "女生版髮型圖層，正面視角，雙馬尾（棕色金蝴蝶結），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair02-twintail-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 雙馬尾（棕色金蝴蝶結） | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "front"
+      ]
+    },
+    "task004-female-hair-hair02-twintail-left45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生左側45° 雙馬尾（棕色金蝴蝶結）",
+      "description": "女生版髮型圖層，左側45°視角，雙馬尾（棕色金蝴蝶結），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair02-twintail-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 雙馬尾（棕色金蝴蝶結） | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "left45"
+      ]
+    },
+    "task004-female-hair-hair02-twintail-right45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生右側45° 雙馬尾（棕色金蝴蝶結）",
+      "description": "女生版髮型圖層，右側45°視角，雙馬尾（棕色金蝴蝶結），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair02-twintail-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 雙馬尾（棕色金蝴蝶結） | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "right45"
+      ]
+    },
+    "task004-female-hair-hair03-curly-front": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生正面 捲髮（栗棕色珍珠髮箍）",
+      "description": "女生版髮型圖層，正面視角，捲髮（栗棕色珍珠髮箍），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair03-curly-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 捲髮（栗棕色珍珠髮箍） | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "front"
+      ]
+    },
+    "task004-female-hair-hair03-curly-left45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生左側45° 捲髮（栗棕色珍珠髮箍）",
+      "description": "女生版髮型圖層，左側45°視角，捲髮（栗棕色珍珠髮箍），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair03-curly-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 捲髮（栗棕色珍珠髮箍） | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "left45"
+      ]
+    },
+    "task004-female-hair-hair03-curly-right45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生右側45° 捲髮（栗棕色珍珠髮箍）",
+      "description": "女生版髮型圖層，右側45°視角，捲髮（栗棕色珍珠髮箍），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair03-curly-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 捲髮（栗棕色珍珠髮箍） | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "right45"
+      ]
+    },
+    "task004-female-hair-hair04-bun-front": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生正面 雙丸子頭（黑色金星夾）",
+      "description": "女生版髮型圖層，正面視角，雙丸子頭（黑色金星夾），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair04-bun-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 雙丸子頭（黑色金星夾） | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "front"
+      ]
+    },
+    "task004-female-hair-hair04-bun-left45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生左側45° 雙丸子頭（黑色金星夾）",
+      "description": "女生版髮型圖層，左側45°視角，雙丸子頭（黑色金星夾），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair04-bun-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 雙丸子頭（黑色金星夾） | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "left45"
+      ]
+    },
+    "task004-female-hair-hair04-bun-right45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生右側45° 雙丸子頭（黑色金星夾）",
+      "description": "女生版髮型圖層，右側45°視角，雙丸子頭（黑色金星夾），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair04-bun-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 雙丸子頭（黑色金星夾） | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "right45"
+      ]
+    },
+    "task004-female-hair-hair05-ponytail-front": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生正面 高馬尾（深紫金月牙髮圈）",
+      "description": "女生版髮型圖層，正面視角，高馬尾（深紫金月牙髮圈），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair05-ponytail-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 高馬尾（深紫金月牙髮圈） | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "front"
+      ]
+    },
+    "task004-female-hair-hair05-ponytail-left45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生左側45° 高馬尾（深紫金月牙髮圈）",
+      "description": "女生版髮型圖層，左側45°視角，高馬尾（深紫金月牙髮圈），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair05-ponytail-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 高馬尾（深紫金月牙髮圈） | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "left45"
+      ]
+    },
+    "task004-female-hair-hair05-ponytail-right45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 女生右側45° 高馬尾（深紫金月牙髮圈）",
+      "description": "女生版髮型圖層，右側45°視角，高馬尾（深紫金月牙髮圈），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/female-hair/hair05-ponytail-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "女生髮型 | 高馬尾（深紫金月牙髮圈） | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "female",
+        "right45"
+      ]
+    },
+    "task004-male-hair-hair01-short-front": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生正面 清爽短髮（黑色金星夾）",
+      "description": "男生版髮型圖層，正面視角，清爽短髮（黑色金星夾），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair01-short-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 清爽短髮（黑色金星夾） | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "front"
+      ]
+    },
+    "task004-male-hair-hair01-short-left45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生左側45° 清爽短髮（黑色金星夾）",
+      "description": "男生版髮型圖層，左側45°視角，清爽短髮（黑色金星夾），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair01-short-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 清爽短髮（黑色金星夾） | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "left45"
+      ]
+    },
+    "task004-male-hair-hair01-short-right45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生右側45° 清爽短髮（黑色金星夾）",
+      "description": "男生版髮型圖層，右側45°視角，清爽短髮（黑色金星夾），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair01-short-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 清爽短髮（黑色金星夾） | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "right45"
+      ]
+    },
+    "task004-male-hair-hair02-center-front": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生正面 中分長髮（深棕金耳環）",
+      "description": "男生版髮型圖層，正面視角，中分長髮（深棕金耳環），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair02-center-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 中分長髮（深棕金耳環） | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "front"
+      ]
+    },
+    "task004-male-hair-hair02-center-left45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生左側45° 中分長髮（深棕金耳環）",
+      "description": "男生版髮型圖層，左側45°視角，中分長髮（深棕金耳環），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair02-center-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 中分長髮（深棕金耳環） | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "left45"
+      ]
+    },
+    "task004-male-hair-hair02-center-right45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生右側45° 中分長髮（深棕金耳環）",
+      "description": "男生版髮型圖層，右側45°視角，中分長髮（深棕金耳環），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair02-center-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 中分長髮（深棕金耳環） | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "right45"
+      ]
+    },
+    "task004-male-hair-hair03-spiky-front": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生正面 龐克刺蝟頭（深藍金色挑染）",
+      "description": "男生版髮型圖層，正面視角，龐克刺蝟頭（深藍金色挑染），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair03-spiky-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 龐克刺蝟頭（深藍金色挑染） | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "front"
+      ]
+    },
+    "task004-male-hair-hair03-spiky-left45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生左側45° 龐克刺蝟頭（深藍金色挑染）",
+      "description": "男生版髮型圖層，左側45°視角，龐克刺蝟頭（深藍金色挑染），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair03-spiky-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 龐克刺蝟頭（深藍金色挑染） | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "left45"
+      ]
+    },
+    "task004-male-hair-hair03-spiky-right45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生右側45° 龐克刺蝟頭（深藍金色挑染）",
+      "description": "男生版髮型圖層，右側45°視角，龐克刺蝟頭（深藍金色挑染），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair03-spiky-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 龐克刺蝟頭（深藍金色挑染） | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "right45"
+      ]
+    },
+    "task004-male-hair-hair04-undercut-front": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生正面 銀白飛機頭（金色光澤挑染）",
+      "description": "男生版髮型圖層，正面視角，銀白飛機頭（金色光澤挑染），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair04-undercut-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 銀白飛機頭（金色光澤挑染） | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "front"
+      ]
+    },
+    "task004-male-hair-hair04-undercut-left45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生左側45° 銀白飛機頭（金色光澤挑染）",
+      "description": "男生版髮型圖層，左側45°視角，銀白飛機頭（金色光澤挑染），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair04-undercut-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 銀白飛機頭（金色光澤挑染） | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "left45"
+      ]
+    },
+    "task004-male-hair-hair04-undercut-right45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生右側45° 銀白飛機頭（金色光澤挑染）",
+      "description": "男生版髮型圖層，右側45°視角，銀白飛機頭（金色光澤挑染），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair04-undercut-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 銀白飛機頭（金色光澤挑染） | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "right45"
+      ]
+    },
+    "task004-male-hair-hair05-longhair-front": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生正面 長髮半束（深藍金月牙髮圈）",
+      "description": "男生版髮型圖層，正面視角，長髮半束（深藍金月牙髮圈），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair05-longhair-front.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 長髮半束（深藍金月牙髮圈） | 正面 | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "front"
+      ]
+    },
+    "task004-male-hair-hair05-longhair-left45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生左側45° 長髮半束（深藍金月牙髮圈）",
+      "description": "男生版髮型圖層，左側45°視角，長髮半束（深藍金月牙髮圈），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair05-longhair-left45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 長髮半束（深藍金月牙髮圈） | 左側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "left45"
+      ]
+    },
+    "task004-male-hair-hair05-longhair-right45": {
+      "task": "TASK-004",
+      "name": "靈相角色髮型 - 男生右側45° 長髮半束（深藍金月牙髮圈）",
+      "description": "男生版髮型圖層，右側45°視角，長髮半束（深藍金月牙髮圈），獨立圖層，透明背景",
+      "file": "ART/OUTPUTS/TASK-004/male-hair/hair05-longhair-right45.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "男生髮型 | 長髮半束（深藍金月牙髮圈） | 右側45° | 透明背景 | 獨立圖層",
+      "tags": [
+        "paper-doll",
+        "hair",
+        "male",
+        "right45"
+      ]
     }
   }
 }
