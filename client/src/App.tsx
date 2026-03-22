@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "@/pages/Home";
+import LandingPage from "@/pages/LandingPage";
 import OracleStats from "@/pages/OracleStats";
 import LotteryOracle from "@/pages/LotteryOracle";
 import OracleCalendar from "@/pages/OracleCalendar";
@@ -55,6 +56,8 @@ import { ThemeInitializer } from "./components/ThemeInitializer";
 function Router() {
   return (
     <Switch>
+      {/* 公開路由：不需登入 */}
+      <Route path={"/"} component={LandingPage} />
       {/* AI 特殊存取路由：不需登入，排除在 AccessGate 之外 */}
       <Route path={"/ai-entry"} component={AiEntry} />
       <Route path={"/ai-view"} component={AiView} />
@@ -63,13 +66,13 @@ function Router() {
       <Route>
         <AccessGate>
           <Switch>
-            <Route path={"/"} component={WarRoom} />
+            <Route path={"/war-room"} component={WarRoom} />
+            <Route path={"/login"} component={WarRoom} />
             <Route path={"/oracle"} component={Home} />
             <Route path={"/stats"} component={OracleStats} />
             <Route path={"/lottery"} component={LotteryOracle} />
             <Route path={"/calendar"} component={OracleCalendar} />
             <Route path={"/weekly"} component={WeeklyReport} />
-            <Route path={"/war-room"} component={WarRoom} />
             <Route path={"/profile"} component={ProfilePage} />
             <Route path={"/my-profile"} component={MyProfile} />
             <Route path={"/admin/dashboard"} component={AdminDashboard} />

@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { handleAiDataRequest } from "../routes/aiData";
+import { handlePreviewRequest } from "../routes/preview";
 import { sendMorningBriefing } from "../lib/morningBriefing";
 import { checkAndNotifyFestival } from "../lib/festivalNotification";
 import { checkExpiringSubscriptions } from "../lib/expiryReminder";
@@ -43,6 +44,8 @@ async function startServer() {
   registerOAuthRoutes(app);
   // AI Data JSON API（Token 驗證，無需登入）
   app.get("/api/ai-data", handleAiDataRequest);
+  // 公開體驗 API（無需 Token，輸入生日回傳精簡命格）
+  app.get("/api/preview", handlePreviewRequest);
   // tRPC API
   app.use(
     "/api/trpc",

@@ -2508,3 +2508,32 @@
 - [x] 修正 businessHub.ts getVisibleNav：ai_full 身分繞過方案權限，全部模塊開放
 - [x] 修正 permissions.ts myFeatures：ai_full 身分回傳全部功能清單
 - [x] TypeScript 無錯誤，353 項測試全部通過
+
+## TASK-001 首頁 MVP 建置（天命共振 Destiny Oracle）
+
+### 後端
+- [x] 新建公開 API 端點 `GET /api/preview?birth=YYYY-MM-DD`（不需 Token）
+- [x] 回傳精簡版命格資料：每日運勢摘要、命格類型名稱、天命問卜示範
+
+### 路由調整
+- [x] 現有首頁（登入頁）移至 `/login`
+- [x] 新首頁 `/` 成為主要入口（公開可見）
+- [x] 已登入用戶進入 `/` 自動跳轉至功能頁
+
+### 新首頁設計
+- [x] Hero 區：品牌標語（天命共振 Destiny Oracle - 數位錦囊）、視覺動效、CTA 按鈕
+- [x] 錦囊體驗區：輸入生日 → 換算命格 → 顯示體驗版演示（每日運勢 + 命格解析 + 天命問卜）
+- [x] 功能卡片區：六大功能預覽（命格身份證、今日作戰室、神諭問卜、財運羅盤、命理日曆、數位錦囊）
+- [x] 社會認證區：用戶見證文字
+- [x] 頁腳（Footer）：品牌資訊、登入連結
+
+### 品牌與 SEO
+- [x] 全站品牌名稱更新：天命共振 Destiny Oracle - 數位錦囊
+- [x] `<title>` 和 `<meta description>` 更新
+- [x] Open Graph 標籤（og:title, og:description）
+- [ ] 結構化資料（Schema.org WebSite）
+
+### 測試與部署
+- [x] vitest 測試更新（15 項全部通過）
+- [ ] checkpoint 儲存
+- [ ] GitHub CURRENT-TASK.md 狀態更新
