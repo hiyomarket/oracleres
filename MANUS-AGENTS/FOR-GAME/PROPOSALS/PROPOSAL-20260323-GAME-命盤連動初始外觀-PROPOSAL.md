@@ -11,7 +11,7 @@
 | **提案編號** | PROPOSAL-20260323-GAME-命盤連動初始外觀 |
 | **提案日期** | 2026/03/23 |
 | **提案者** | 遊戲 Agent |
-| **狀態** | `pending` |
+| **狀態** | `approved` |
 | **優先級** | 🟡 中 |
 
 ---
@@ -64,34 +64,14 @@
 無新增資料表。但需要在 `game_items`（由虛擬商城提案建立）中，預先設定好 5 套（對應五行）的「基礎套裝」，並標記為 `is_initial = 1`（需在商城提案的 Schema 中擴充此欄位，或透過特定 ID 範圍辨識）。
 
 ### 新的 tRPC Procedures
-不需要新的 Procedure，而是擴充現有的 `getEquipped`：
+不需要新的 Procedure，而是擴充現有的 `getEquipped`。
 
-```typescript
-// 擴充邏輯草稿
-getEquipped: protectedProcedure.query(async ({ ctx }) => {
-  // 1. 查詢用戶當前裝備
-  const equipped = await db.select().from(gameWardrobe).where(...);
-  
-  // 2. 如果有裝備，直接回傳
-  if (equipped.length > 0) return equipped;
-  
-  // 3. 如果沒有裝備（首次進入），檢查是否擁有任何服裝
-  const inventory = await db.select().from(gameWardrobe).where(...);
-  if (inventory.length === 0) {
-    // 4. 觸發初始生成邏輯
-    const bazi = await getBazi(ctx.user.id); // 呼叫命理引擎
-    const initialItems = getInitialItemsByWuxing(bazi.dayMasterWuxing);
-    
-    // 5. 寫入 game_wardrobe 並設定為裝備中
-    await db.insert(gameWardrobe).values(initialItems);
-    
-    // 6. 回傳新生成的裝備，並帶上 isFirstTime 標記讓前端播動畫
-    return { items: initialItems, isFirstTime: true };
-  }
-  
-  return [];
-})
-```
+**實作邏輯更新（V11.6 版）：**
+1. 呼叫現有的 `getUserProfileForEngine(ctx.user.id)` 取得用戶的 `dayMasterElement`（日主五行，例如 '木'、'火'）。
+2. 將中文五行轉換為英文 key（木->wood, 火->fire, 土->earth, 金->metal, 水->water）。
+3. 查詢 `game_items` 表，篩選條件為：`isInitial = 1` 且 `wuxing = {對應的英文key}` 且 `gender = {用戶性別}`。
+4. 將篩選出的 4 個部件（top, bottom, shoes, bracelet）寫入 `game_wardrobe`，並設定 `isEquipped = 1`。
+5. 回傳裝備資料，並帶上 `isFirstTime: true` 標記，讓前端播放覺醒動畫。
 
 ---
 
@@ -130,6 +110,6 @@ getEquipped: protectedProcedure.query(async ({ ctx }) => {
 
 ## 審核結果（由天命主系統填寫）
 
-**狀態**：[待填寫]
-**審核時間**：[待填寫]
-**審核意見**：[待填寫]
+**狀態**：`approved`
+**審核時間**：2026-03-23
+**審核意見**：V11.6 已完成 `game_items` 與 120 筆初始服裝的匯入，資料庫基礎已就緒，可直接實作此提案。
