@@ -2546,6 +2546,7 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
           tenGod: tenGodAnalysis.mainTenGod,
           overallScore: tenGodAnalysis.overallScore,
           tarotCard: tarot.card.name,
+          tarotCardNumber: tarot.cardNumber,
           tarotKeywords: tarot.card.keywords,
           moonPhase: moonInfo.phaseName,
           moonLunarDay: moonInfo.lunarDay,

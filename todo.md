@@ -2615,3 +2615,13 @@
 - [x] WarRoom 塔羅牌卡片換用美術素材圖片（依用戶性別動態切換）
 - [x] GitHub 協同流程文件更新（COLLABORATION-GUIDE.md）
 - [x] 撰寫 fortune.test.ts（384 個測試全部通過）
+
+## 分享卡修正與擴充（v1.2）
+- [x] 修正 DestinyShareCard.tsx 左右對稱布局
+- [x] 修正 DestinyShareCard.tsx 塔羅牌改用主要靈魂數（核心個性數）
+- [x] 建立 DivinationShareCard.tsx（天命問卜結果 + 流日塔羅牌）
+- [x] 整合 DivinationShareCard 至 TopicAdvicePanel（問卜結果底部分享按鈕）
+- [x] 建立 OracleShareCard.tsx（擲筊結果分享卡）
+- [x] 整合 OracleShareCard 至 OracleCast 頁面（結果底部分享按鈕）
+- [x] 撰寫 shareCards.test.ts（30 項測試全部通過，總計 414 項）
+- [x] 上傳更新日誌到 GitHub

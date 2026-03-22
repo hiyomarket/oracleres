@@ -102,8 +102,9 @@ export default function DestinyShareCard({
   const [isExporting, setIsExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
 
-  // 主要塔羅牌：使用「中層靈數」作為主要原型（天賦使命）
-  const primaryTarotNum = lifeNums?.middle.num ?? 0;
+  // 主要塔羅牌：使用「主要靈魂數（核心個性）」作為主要原型
+  // primary = 中間個性 + 年度牌 → 最深層的核心命格
+  const primaryTarotNum = lifeNums?.primary.num ?? 0;
   const tarotInfo = getTarotCardInfo(primaryTarotNum);
   const tarotUrl = getTarotCardUrl(primaryTarotNum, gender === 'other' ? null : gender);
   const theme = getTheme(gender);
@@ -253,15 +254,17 @@ export default function DestinyShareCard({
             background: 'radial-gradient(ellipse at 80% 20%, rgba(201,162,39,0.08) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(201,162,39,0.05) 0%, transparent 50%)',
           }} />
 
-          {/* 左側：塔羅牌區（40%） */}
+          {/* 左側：塔羅牌區（40%），高度撐滿與右側對稱 */}
           <div style={{
             width: '40%',
+            height: '600px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '24px 16px 24px 24px',
             position: 'relative',
+            boxSizing: 'border-box',
           }}>
             {/* 塔羅牌圖片 */}
             <div style={{
@@ -306,13 +309,15 @@ export default function DestinyShareCard({
             </div>
           </div>
 
-          {/* 右側：資訊面板（60%） */}
+          {/* 右側：資訊面板（60%），高度撐滿與左側對稱 */}
           <div style={{
             width: '60%',
+            height: '600px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             padding: '28px 28px 28px 16px',
+            boxSizing: 'border-box',
           }}>
             {/* 玻璃擬態面板 */}
             <div style={{
@@ -320,11 +325,12 @@ export default function DestinyShareCard({
               backdropFilter: 'blur(10px)',
               border: `1px solid ${theme.panelBorder}`,
               borderRadius: '16px',
-              padding: '24px',
+              padding: '20px 24px',
               height: '100%',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
+              boxSizing: 'border-box',
             }}>
               {/* 頂部：品牌 + 姓名 */}
               <div>
@@ -374,7 +380,7 @@ export default function DestinyShareCard({
                   letterSpacing: '0.2em',
                   marginBottom: '6px',
                 }}>
-                  命格塔羅原型
+                  命格核心原型
                 </div>
                 <div style={{
                   display: 'flex',

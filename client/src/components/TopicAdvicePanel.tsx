@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { InsufficientCoinsModal, parseInsufficientCoinsError } from "@/components/InsufficientCoinsModal";
+import DivinationShareCard from "@/components/DivinationShareCard";
 
 const TOPICS = [
   { key: "work" as const, icon: "💼", label: "工作", desc: "事業・合作・決策", color: "from-blue-600/30 to-blue-900/20", border: "border-blue-500/50", text: "text-blue-300" },
@@ -36,6 +37,7 @@ interface DivinationContext {
   tenGod: string;
   overallScore: number;
   tarotCard: string;
+  tarotCardNumber?: number;
   tarotKeywords: string[];
   moonPhase: string;
   moonLunarDay: number;
@@ -213,6 +215,12 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
   const [isAsking, setIsAsking] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [reviewItem, setReviewItem] = useState<DivinationResult | null>(null);
+  const [showShareCard, setShowShareCard] = useState(false);
+
+  // 取得用戶性別（用於塔羅牌風格切換）
+  const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 300000 });
+  const userGender = (profile?.gender as 'male' | 'female' | 'other' | null | undefined) ?? null;
+  const displayName = profile?.displayName ?? '命主';
 
   const utils = trpc.useUtils();
 
@@ -544,6 +552,15 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
                   ✕ 清除，重新選擇
                 </button>
                 <div className="flex gap-2">
+                  {/* 分享按鈕 */}
+                  {!reviewItem && (
+                    <button
+                      onClick={() => setShowShareCard(true)}
+                      className="text-[10px] px-2.5 py-1 bg-purple-900/30 border border-purple-500/40 text-purple-300 rounded-full hover:bg-purple-900/50 transition-all flex items-center gap-1"
+                    >
+                      📤 分享結果
+                    </button>
+                  )}
                   {TOPICS.filter(t => t.key !== selectedTopic).slice(0, 2).map(t => (
                     <button
                       key={t.key}
@@ -568,6 +585,28 @@ export function TopicAdvicePanel({ selectedDate }: TopicAdvicePanelProps) {
         )}
       </div>
     </div>
+
+    {/* 問卜結果分享卡 */}
+    {showShareCard && result && (
+      <DivinationShareCard
+        displayName={displayName}
+        gender={userGender}
+        topicName={result.topicName}
+        topicIcon={TOPICS.find(t => result.topicName.includes(t.label))?.icon ?? '🔮'}
+        question={result.question}
+        fortuneIndex={result.structured.fortuneIndex}
+        fortuneLabel={result.structured.fortuneLabel}
+        oracle={result.structured.oracle}
+        coreReading={result.structured.coreReading}
+        tarotCardNumber={result.context.tarotCardNumber ?? 1}
+        tarotCardName={result.context.tarotCard}
+        tarotKeywords={result.context.tarotKeywords}
+        dayPillar={result.context.dayPillar}
+        moonPhase={result.context.moonPhase}
+        dateString={new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' })}
+        onClose={() => setShowShareCard(false)}
+      />
+    )}
 
     {/* 天命幣不足彈窗 */}
     <InsufficientCoinsModal

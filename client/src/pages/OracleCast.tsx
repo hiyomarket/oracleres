@@ -16,6 +16,7 @@ import { ProfileIncompleteBanner } from "@/components/ProfileIncompleteBanner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 import { InsufficientCoinsModal, parseInsufficientCoinsError } from "@/components/InsufficientCoinsModal";
+import OracleShareCard from "@/components/OracleShareCard";
 
 type CastPhase = 'idle' | 'animating' | 'result';
 type CastMode = 'single' | 'triple';
@@ -201,6 +202,7 @@ export default function OracleCast() {
   const [showTimeline, setShowTimeline] = useState(false);
   const [llmInsight, setLlmInsight] = useState<string | null>(null);
   const [showInsight, setShowInsight] = useState(false);
+  const [showOracleShareCard, setShowOracleShareCard] = useState(false);
   // 最近3筆歷史問題（本地持久化）
   const [showTemplates, setShowTemplates] = useState(false);
   const [recentQueries, setRecentQueries] = useState<string[]>(() => {
@@ -363,6 +365,7 @@ export default function OracleCast() {
     setTripleConfirmed(false);
     setLlmInsight(null);
     setShowInsight(false);
+    setShowOracleShareCard(false);
     // 注意：不清空 query，讓使用者可以修改後再問
   }, []);
 
@@ -831,6 +834,16 @@ export default function OracleCast() {
                   onReset={handleReset}
                 />
 
+                {/* 分享結果按鈕 */}
+                <div className="mt-2 flex justify-end">
+                  <button
+                    onClick={() => setShowOracleShareCard(true)}
+                    className="text-[11px] px-3 py-1.5 bg-amber-900/30 border border-amber-600/40 text-amber-300 rounded-full hover:bg-amber-900/50 transition-all flex items-center gap-1"
+                  >
+                    📤 分享擲筊結果
+                  </button>
+                </div>
+
                 {/* LLM 深度解讀 */}
                 <div className="mt-3">
                   {!showInsight ? (
@@ -991,6 +1004,20 @@ export default function OracleCast() {
       current={insufficientCurrent}
       featureName="擲筊深度解讀"
     />
+
+    {/* 擲筊結果分享卡 */}
+    {showOracleShareCard && castResult && (
+      <OracleShareCard
+        displayName={displayName}
+        result={castResult.result}
+        query={query}
+        interpretation={castResult.interpretation}
+        energyResonance={castResult.energyResonance}
+        dateString={castResult.dateInfo.dateString}
+        isTripleConfirmed={castResult.isTripleConfirmed}
+        onClose={() => setShowOracleShareCard(false)}
+      />
+    )}
     </>
   );
 }
