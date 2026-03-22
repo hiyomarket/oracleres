@@ -15,7 +15,7 @@
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { router, protectedProcedure } from "../_core/trpc";
-import { getDb } from "../db";
+import { getDb, getUserProfileForEngine } from "../db";
 import { gameWardrobe, gameDailyAura, gameItems } from "../../drizzle/schema";
 import {
   calculateEnvironmentElements,
@@ -33,7 +33,7 @@ function getTaiwanDateStr(): string {
   return `${y}-${m}-${d}`;
 }
 
-// ─── 五行屬性 → 中文對照 ───────────────────────────────────────
+// // ─── 五行屬性 → 中文對照 ───────────────────────────────
 const WUXING_ZH: Record<string, string> = {
   wood: "木",
   fire: "火",
@@ -41,6 +41,18 @@ const WUXING_ZH: Record<string, string> = {
   metal: "金",
   water: "水",
 };
+
+// ─── 中文五行 → 英文 key ───────────────────────────────
+const WUXING_ZH_TO_EN: Record<string, string> = {
+  "木": "wood",
+  "火": "fire",
+  "土": "earth",
+  "金": "metal",
+  "水": "water",
+};
+
+// ─── 命盤連動初始化層別（TASK-004 種子資料支援的圖層） ─────────────
+const INITIAL_LAYERS = ["top", "bottom", "shoes", "bracelet"] as const;
 
 // ─── 圖層順序（渲染時由下至上疊加） ──────────────────────────────
 export const LAYER_ORDER = [
@@ -189,39 +201,114 @@ const DEFAULT_ITEMS: Array<{
 export const gameAvatarRouter = router({
   /**
    * 取得用戶當前裝備中的所有部件（isEquipped = 1）
-   * 若用戶尚無任何道具，返回預設示範服裝
+   *
+   * 命盤連動初始化邏輯（PROPOSAL-20260323-GAME-命盤連動初始外觀）：
+   *   當 game_wardrobe 完全空白時，讀取用戶日主五行，自動從 game_items
+   *   中選取對應五行的 4 件初始服裝，寫入 game_wardrobe 並裝備。
+   *   回傳 isFirstTime: true 讓前端播放靈相覺醒動畫。
    */
   getEquipped: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("DB unavailable");
 
-    const equipped = await db
+    // 檢查用戶是否已有任何服裝道具（含未裝備的）
+    const allWardrobe = await db
       .select()
       .from(gameWardrobe)
-      .where(
-        and(
-          eq(gameWardrobe.userId, ctx.user.id),
-          eq(gameWardrobe.isEquipped, 1)
-        )
-      );
+      .where(eq(gameWardrobe.userId, ctx.user.id));
 
-    // 若沒有任何裝備，返回預設示範服裝（不寫入 DB）
-    if (equipped.length === 0) {
-      return DEFAULT_ITEMS.map((item, idx) => ({
-        id: -(idx + 1), // 負數 ID 代表預設道具
-        userId: ctx.user.id,
-        itemId: item.itemId,
-        layer: item.layer,
-        imageUrl: item.imageUrl,
-        wuxing: item.wuxing,
-        rarity: item.rarity,
-        isEquipped: 1,
-        acquiredAt: new Date(),
-        isDefault: true,
-      }));
+    // ─── 命盤連動初始化：用戶首次進入靈相空間 ─────────────────
+    if (allWardrobe.length === 0) {
+      // 1. 取得用戶日主五行
+      const profile = await getUserProfileForEngine(ctx.user.id);
+      const dayMasterZh = profile.dayMasterElement; // 中文（木/火/土/金/水）
+      const dayMasterEn = WUXING_ZH_TO_EN[dayMasterZh] ?? "wood";
+
+      // 2. 從 game_items 查詢對應五行的初始部件（front 視角為主）
+      const initialItems = await db
+        .select()
+        .from(gameItems)
+        .where(
+          and(
+            eq(gameItems.isInitial, 1),
+            eq(gameItems.wuxing, dayMasterEn),
+            eq(gameItems.view, "front")
+          )
+        );
+
+      // 3. 從初始道具中選取指定圖層（每層取一件）
+      const selectedItems: typeof initialItems = [];
+      for (const layer of INITIAL_LAYERS) {
+        const match = initialItems.find((i) => i.layer === layer);
+        if (match) selectedItems.push(match);
+      }
+
+      // 4. 寫入 game_wardrobe
+      let isFirstTime = false;
+      if (selectedItems.length > 0) {
+        for (const item of selectedItems) {
+          await db.insert(gameWardrobe).values({
+            userId: ctx.user.id,
+            itemId: item.id,
+            layer: item.layer,
+            imageUrl: item.imageUrl,
+            wuxing: item.wuxing,
+            rarity: item.rarity,
+            isEquipped: 1,
+            acquiredAt: new Date(),
+          });
+        }
+        isFirstTime = true;
+      }
+
+      // 5. 重新查詢已裝備的道具
+      const newEquipped = await db
+        .select()
+        .from(gameWardrobe)
+        .where(
+          and(
+            eq(gameWardrobe.userId, ctx.user.id),
+            eq(gameWardrobe.isEquipped, 1)
+          )
+        );
+
+      // 若 game_items 尚無對應五行的初始道具，回傳預設示範服裝
+      if (newEquipped.length === 0) {
+        return {
+          items: DEFAULT_ITEMS.map((item, idx) => ({
+            id: -(idx + 1),
+            userId: ctx.user.id,
+            itemId: item.itemId,
+            layer: item.layer,
+            imageUrl: item.imageUrl,
+            wuxing: item.wuxing,
+            rarity: item.rarity,
+            isEquipped: 1,
+            acquiredAt: new Date(),
+            isDefault: true,
+          })),
+          isFirstTime: false,
+          dayMasterElement: dayMasterZh,
+          dayMasterElementEn: dayMasterEn,
+        };
+      }
+
+      return {
+        items: newEquipped.map((item) => ({ ...item, isDefault: false })),
+        isFirstTime,
+        dayMasterElement: dayMasterZh,
+        dayMasterElementEn: dayMasterEn,
+      };
     }
 
-    return equipped.map((item) => ({ ...item, isDefault: false }));
+    // ─── 回訪用戶：直接返回裝備中的道具 ──────────────────────
+    const equipped = allWardrobe.filter((i) => i.isEquipped === 1);
+    return {
+      items: equipped.map((item) => ({ ...item, isDefault: false })),
+      isFirstTime: false,
+      dayMasterElement: null,
+      dayMasterElementEn: null,
+    };
   }),
 
   /**

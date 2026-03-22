@@ -7,16 +7,20 @@
  *   頂部 - 今日五行建議橫幅
  *   中央 - 角色展示區（AvatarRenderer）
  *   底部 - 衣櫃面板（依圖層分頁）+ 確認穿搭按鈕
+ *
+ * 命盤連動初始外觀（PROPOSAL-20260323-GAME-命盤連動初始外觀）：
+ *   首次進入時 getEquipped 回傳 isFirstTime: true，
+ *   前端播放「靈相覺醒」全螢幕動畫（五行光芒匯聚 + 提示彈窗）。
  */
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { AvatarRenderer, WUXING_COLORS, LAYER_ORDER, LAYER_LABELS, type AvatarItem } from "@/components/game/AvatarRenderer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, ShoppingBag, Sparkles, Star, RefreshCw } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Sparkles, Star, RefreshCw, X } from "lucide-react";
 
 // ─── 五行顏色點（衣物標籤） ────────────────────────────────────
 const WuxingDot: React.FC<{ wuxing: string }> = ({ wuxing }) => {
@@ -49,6 +53,140 @@ const BLESSING_STYLES: Record<string, string> = {
   normal:  "from-blue-900/60 to-gray-900 border-blue-500",
   good:    "from-purple-900/60 to-gray-900 border-purple-500",
   destiny: "from-yellow-900/60 to-gray-900 border-yellow-500",
+};
+
+// ─── 五行覺醒配色（TASK-004 指定重點配色） ────────────────────
+const WUXING_AWAKENING: Record<string, { color: string; glow: string; label: string; desc: string }> = {
+  wood:  { color: "#2E8B57", glow: "rgba(46,139,87,0.6)",  label: "木",  desc: "靈木之氣，生生不息，您的靈相已與自然之力共鳴。" },
+  fire:  { color: "#DC143C", glow: "rgba(220,20,60,0.6)",  label: "火",  desc: "烈火之魂，光芒萬丈，您的靈相已與天命之火共鳴。" },
+  earth: { color: "#CD853F", glow: "rgba(205,133,63,0.6)", label: "土",  desc: "厚土之德，承載萬物，您的靈相已與大地之力共鳴。" },
+  metal: { color: "#C9A227", glow: "rgba(201,162,39,0.6)", label: "金",  desc: "天命之金，銳利精純，您的靈相已與金氣之力共鳴。" },
+  water: { color: "#00CED1", glow: "rgba(0,206,209,0.6)",  label: "水",  desc: "量子之水，流動無形，您的靈相已與水命之力共鳴。" },
+};
+
+// ─── 靈相覺醒動畫組件 ─────────────────────────────────────────
+const AwakeningOverlay: React.FC<{
+  elementEn: string;
+  elementZh: string;
+  onDismiss: () => void;
+}> = ({ elementEn, elementZh, onDismiss }) => {
+  const cfg = WUXING_AWAKENING[elementEn] ?? WUXING_AWAKENING.wood;
+  const [phase, setPhase] = useState<"gather" | "reveal" | "done">("gather");
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase("reveal"), 1800);
+    const t2 = setTimeout(() => setPhase("done"), 3600);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.92)" }}
+    >
+      {/* 光芒匯聚粒子 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {Array.from({ length: 24 }).map((_, i) => {
+          const angle = (i / 24) * 360;
+          const delay = (i * 0.08).toFixed(2);
+          return (
+            <div
+              key={i}
+              className="absolute w-1 rounded-full"
+              style={{
+                height: `${60 + Math.random() * 80}px`,
+                background: `linear-gradient(to bottom, ${cfg.color}, transparent)`,
+                left: "50%",
+                top: "50%",
+                transformOrigin: "top center",
+                transform: `rotate(${angle}deg) translateX(-50%)`,
+                opacity: phase === "gather" ? 0.7 : phase === "reveal" ? 1 : 0,
+                transition: "opacity 0.8s ease",
+                animationDelay: `${delay}s`,
+              }}
+            />
+          );
+        })}
+        {/* 中心光球 */}
+        <div
+          className="absolute rounded-full"
+          style={{
+            width: phase === "reveal" ? "200px" : "60px",
+            height: phase === "reveal" ? "200px" : "60px",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            background: `radial-gradient(circle, ${cfg.color}cc, ${cfg.glow}, transparent)`,
+            boxShadow: `0 0 60px 20px ${cfg.glow}`,
+            transition: "all 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          }}
+        />
+      </div>
+
+      {/* 文字提示卡片 */}
+      {phase !== "gather" && (
+        <div
+          className="relative z-10 mx-6 rounded-2xl border p-6 text-center max-w-sm"
+          style={{
+            background: "rgba(10,15,26,0.95)",
+            borderColor: cfg.color,
+            boxShadow: `0 0 30px ${cfg.glow}`,
+            animation: "fadeInUp 0.6s ease forwards",
+          }}
+        >
+          {/* 五行符文 */}
+          <div
+            className="text-6xl font-bold mb-3"
+            style={{ color: cfg.color, textShadow: `0 0 20px ${cfg.glow}` }}
+          >
+            {cfg.label}
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">
+            天命共振，靈相覺醒
+          </h2>
+          <p className="text-sm text-gray-300 mb-1">
+            您的本命五行：<span style={{ color: cfg.color }} className="font-bold">{elementZh}（{cfg.label}）</span>
+          </p>
+          <p className="text-xs text-gray-400 leading-relaxed mb-4">
+            {cfg.desc}
+          </p>
+          <p className="text-xs text-amber-300 mb-4">
+            ✦ 已為您自動裝備本命五行專屬基礎套裝
+          </p>
+          <Button
+            size="sm"
+            className="w-full font-semibold"
+            style={{
+              background: `linear-gradient(135deg, ${cfg.color}cc, ${cfg.color}88)`,
+              color: "white",
+              border: `1px solid ${cfg.color}`,
+            }}
+            onClick={onDismiss}
+          >
+            <Sparkles size={14} className="mr-1" />
+            進入靈相空間
+          </Button>
+        </div>
+      )}
+
+      {/* 跳過按鈕 */}
+      {phase === "gather" && (
+        <button
+          className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
+          onClick={onDismiss}
+        >
+          <X size={20} />
+        </button>
+      )}
+
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
 };
 
 // ─── Aura Score 圓形進度 ──────────────────────────────────────
@@ -85,10 +223,24 @@ const AvatarRoom: React.FC = () => {
   const [pendingEquipped, setPendingEquipped] = useState<Record<string, number>>({}); // layer → id
   const [showAuraResult, setShowAuraResult] = useState(false);
   const [auraGlowElement, setAuraGlowElement] = useState<string | null>(null);
+  const [showAwakening, setShowAwakening] = useState(false);
 
   // ─── tRPC 查詢 ─────────────────────────────────────────────
-  const { data: equipped, isLoading: equippedLoading, refetch: refetchEquipped } =
+  const { data: equippedData, isLoading: equippedLoading, refetch: refetchEquipped } =
     trpc.gameAvatar.getEquipped.useQuery();
+
+  // 解構新的回傳格式（含 isFirstTime / dayMasterElement）
+  const equipped = equippedData?.items ?? [];
+  const isFirstTime = equippedData?.isFirstTime ?? false;
+  const dayMasterElementZh = equippedData?.dayMasterElement ?? "";
+  const dayMasterElementEn = equippedData?.dayMasterElementEn ?? "wood";
+
+  // 首次進入時觸發覺醒動畫
+  useEffect(() => {
+    if (isFirstTime) {
+      setShowAwakening(true);
+    }
+  }, [isFirstTime]);
 
   const { data: inventory, isLoading: inventoryLoading } =
     trpc.gameAvatar.getInventory.useQuery();
@@ -110,7 +262,6 @@ const AvatarRoom: React.FC = () => {
     onSuccess: (data) => {
       refetchTodayAura();
       setShowAuraResult(true);
-      // 設定光暈特效
       if (data.todayTopElement) setAuraGlowElement(data.todayTopElement);
     },
     onError: (err: { message: string }) => toast.error("結算失敗", { description: err.message }),
@@ -143,12 +294,12 @@ const AvatarRoom: React.FC = () => {
 
   // ─── 合併顯示用的裝備（pending 優先） ─────────────────────
   const displayEquipped: AvatarItem[] = React.useMemo(() => {
-    if (!equipped) return [];
+    if (!equipped || equipped.length === 0) return [];
     return equipped.map((item) => {
       const pendingId = pendingEquipped[item.layer];
       if (pendingId && inventory?.items) {
         const pendingItem = inventory.items.find((i) => i.id === pendingId);
-        if (pendingItem) return { ...pendingItem, isDefault: false };
+        if (pendingItem) return { ...pendingItem, isDefault: false } as AvatarItem;
       }
       return item as AvatarItem;
     });
@@ -167,6 +318,16 @@ const AvatarRoom: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white flex flex-col">
+
+      {/* ── 靈相覺醒動畫（首次進入） ─────────────────────────── */}
+      {showAwakening && (
+        <AwakeningOverlay
+          elementEn={dayMasterElementEn}
+          elementZh={dayMasterElementZh}
+          onDismiss={() => setShowAwakening(false)}
+        />
+      )}
+
       {/* ── 頂部導覽列 ─────────────────────────────────────── */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <Link href="/">
@@ -234,7 +395,7 @@ const AvatarRoom: React.FC = () => {
                 <AuraScoreRing score={auraResult.score} />
                 <div>
                   <div className="text-sm font-bold text-amber-300">{auraResult.blessing?.label}</div>
-                  {auraResult.blessing?.effects.map((e, i) => (
+                  {auraResult.blessing?.effects.map((e: string, i: number) => (
                     <div key={i} className="text-xs text-gray-300 mt-0.5">• {e}</div>
                   ))}
                 </div>

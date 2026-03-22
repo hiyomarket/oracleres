@@ -2816,3 +2816,17 @@
 - [x] 新增 gameAvatar.getAllInitialItems — 取得所有初始道具並對映三視角 viewImages
 - [x] 撰寫 server/gameItems.test.ts（22 項測試：Seed JSON 格式/五行配色/視角切換/Schema 欄位）
 - [x] 471 項測試全部通過，TypeScript 零錯誤
+
+## V11.7 命盤連動初始外觀（PROPOSAL-20260323-GAME-命盤連動初始外觀）（2026-03-23）
+
+- [x] 修改 getEquipped Procedure：首次進入時呼叫 getUserProfileForEngine 取得日主五行
+- [x] 中文五行 → 英文 key 轉換（木→wood/火→fire/土→earth/金→metal/水→water）
+- [x] 查詢 game_items 中對應五行的初始部件（isInitial=1, view=front）
+- [x] 自動寫入 game_wardrobe 並設定 isEquipped=1（4 件：top/bottom/shoes/bracelet）
+- [x] 回傳 isFirstTime/dayMasterElement/dayMasterElementEn 標記
+- [x] AvatarRoom.tsx 修正 equipped 型別（從 equipped.map 改為 equippedData.items.map）
+- [x] AvatarRoom.tsx 新增 AwakeningOverlay 組件（全螢幕五行光芒匯聚 + 提示彈窗）
+- [x] 覺醒動畫三階段：gather（光芒匯聚）→ reveal（文字卡片）→ done（可關閉）
+- [x] 五行覺醒配色使用 TASK-004 指定重點配色（木#2E8B57/火#DC143C/土#CD853F/金#C9A227/水#00CED1）
+- [x] 撰寫 server/gameAvatarAwakening.test.ts（23 項測試）
+- [x] 494 項測試全部通過，TypeScript 零錯誤
