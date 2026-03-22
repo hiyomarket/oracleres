@@ -1432,3 +1432,39 @@ export const gameDailyAura = mysqlTable("game_daily_aura", {
 });
 export type GameDailyAura = typeof gameDailyAura.$inferSelect;
 export type InsertGameDailyAura = typeof gameDailyAura.$inferInsert;
+
+/**
+ * 遊戲服裝道具商品目錄
+ * 儲存所有可裝備的虛擬服裝部件，包含三視角圖片 URL
+ * is_initial = 1 代表命盤連動初始外觀可選的庫存（TASK-004 種子資料）
+ */
+export const gameItems = mysqlTable("game_items", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 道具名稱 */
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 性別：female / male / unisex */
+  gender: varchar("gender", { length: 10 }).notNull().default("female"),
+  /** 圖層類型：body / hair / top / bottom / shoes / accessory / bracelet / background */
+  layer: varchar("layer", { length: 20 }).notNull(),
+  /** 視角：front / left45 / right45 */
+  view: varchar("view", { length: 10 }).notNull().default("front"),
+  /** 五行屬性（wood / fire / earth / metal / water） */
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  /** 五行顏色 HEX（例如 #2E8B57） */
+  wuxingColor: varchar("wuxingColor", { length: 10 }).notNull().default("#888888"),
+  /** 稀有度：common / rare / epic / legendary */
+  rarity: varchar("rarity", { length: 10 }).notNull().default("common"),
+  /** 貨幣類型：initial / coins / stones */
+  currencyType: varchar("currencyType", { length: 20 }).notNull().default("initial"),
+  /** 價格（0 = 免費初始道具） */
+  price: int("price").notNull().default(0),
+  /** 1 = 初始發放基礎服裝（命盤連動可選），0 = 商城購買道具 */
+  isInitial: tinyint("isInitial").notNull().default(0),
+  /** 1 = 上架販售，0 = 未上架 */
+  isOnSale: tinyint("isOnSale").notNull().default(0),
+  /** PNG 透明圖層 URL（S3 CDN 或 file_path） */
+  imageUrl: text("imageUrl").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameItem = typeof gameItems.$inferSelect;
+export type InsertGameItem = typeof gameItems.$inferInsert;

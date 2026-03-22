@@ -2805,3 +2805,14 @@
 - [x] 路由：App.tsx 新增 /game/avatar 路由
 - [x] 測試：server/gameAvatar.test.ts（11 項測試全部通過）
 - [x] 449 項測試全部通過，TypeScript 零錯誤
+
+## V11.6 TASK-004 美術素材匯入（2026-03-23）
+
+- [x] 建立 game_items 資料表（Drizzle Schema + webdev_execute_sql 直接建立，含 isInitial/view/gender/wuxingColor 欄位）
+- [x] 執行 Seed Script 將 120 筆服裝部件資料寫入 game_items（4 圖層 × 5 五行 × 3 視角 × 2 性別）
+- [x] 更新 AvatarRenderer.tsx 支援多視角動態切換（front/left45/right45）含視角切換按鈕
+- [x] 五行顏色更新為 TASK-004 指定重點配色（木#2E8B57/火#DC143C/土#CD853F/金#C9A227/水#00CED1）
+- [x] 新增 gameAvatar.getItemsByView — 依視角篩選 game_items 服裝道具
+- [x] 新增 gameAvatar.getAllInitialItems — 取得所有初始道具並對映三視角 viewImages
+- [x] 撰寫 server/gameItems.test.ts（22 項測試：Seed JSON 格式/五行配色/視角切換/Schema 欄位）
+- [x] 471 項測試全部通過，TypeScript 零錯誤

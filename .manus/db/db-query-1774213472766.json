@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `game_items` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `name` varchar(100) NOT NULL,\n  `gender` varchar(10) NOT NULL DEFAULT 'female',\n  `layer` varchar(20) NOT NULL,\n  `view` varchar(10) NOT NULL DEFAULT 'front',\n  `wuxing` varchar(10) NOT NULL,\n  `wuxingColor` varchar(10) NOT NULL DEFAULT '#888888',\n  `rarity` varchar(10) NOT NULL DEFAULT 'common',\n  `currencyType` varchar(20) NOT NULL DEFAULT 'initial',\n  `price` int NOT NULL DEFAULT 0,\n  `isInitial` tinyint NOT NULL DEFAULT 0,\n  `isOnSale` tinyint NOT NULL DEFAULT 0,\n  `imageUrl` text NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `game_items_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute CREATE TABLE IF NOT EXISTS `game_items` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `name` varchar(100) NOT NULL,\n  `gender` varchar(10) NOT NULL DEFAULT 'female',\n  `layer` varchar(20) NOT NULL,\n  `view` varchar(10) NOT NULL DEFAULT 'front',\n  `wuxing` varchar(10) NOT NULL,\n  `wuxingColor` varchar(10) NOT NULL DEFAULT '#888888',\n  `rarity` varchar(10) NOT NULL DEFAULT 'common',\n  `currencyType` varchar(20) NOT NULL DEFAULT 'initial',\n  `price` int NOT NULL DEFAULT 0,\n  `isInitial` tinyint NOT NULL DEFAULT 0,\n  `isOnSale` tinyint NOT NULL DEFAULT 0,\n  `imageUrl` text NOT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `game_items_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2314
+}

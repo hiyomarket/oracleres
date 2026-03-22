@@ -16,7 +16,7 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameWardrobe, gameDailyAura } from "../../drizzle/schema";
+import { gameWardrobe, gameDailyAura, gameItems } from "../../drizzle/schema";
 import {
   calculateEnvironmentElements,
   calculateWeightedElements,
@@ -404,6 +404,80 @@ export const gameAvatarRouter = router({
       ...record,
       blessing: BLESSING_DESCRIPTIONS[record.blessingLevel] ?? BLESSING_DESCRIPTIONS.none,
     };
+  }),
+
+  /**
+   * 取得 game_items 中的服裝道具（依視角筛選）
+   * 用於前端衣櫫面板顯示可用服裝
+   */
+  getItemsByView: protectedProcedure
+    .input(
+      z.object({
+        view: z.enum(["front", "left45", "right45"]).default("front"),
+        gender: z.enum(["female", "male", "unisex"]).optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("DB unavailable");
+
+      const conditions = [eq(gameItems.view, input.view)];
+      if (input.gender) {
+        conditions.push(eq(gameItems.gender, input.gender));
+      }
+
+      const items = await db
+        .select()
+        .from(gameItems)
+        .where(and(...conditions));
+
+      // 依圖層分組
+      const grouped: Record<string, typeof items> = {};
+      for (const item of items) {
+        if (!grouped[item.layer]) grouped[item.layer] = [];
+        grouped[item.layer].push(item);
+      }
+
+      return { items, grouped };
+    }),
+
+  /**
+   * 取得 game_items 中所有初始道具（is_initial = 1）
+   * 包含三視角，並將同一部件的三視角圖片對映為 viewImages
+   */
+  getAllInitialItems: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new Error("DB unavailable");
+
+    const items = await db
+      .select()
+      .from(gameItems)
+      .where(eq(gameItems.isInitial, 1));
+
+    // 將三視角圖片對映到同一部件（以 layer+wuxing+gender 為 key）
+    type ItemWithViews = (typeof items)[0] & { viewImages: Record<string, string> };
+    const mergedMap: Record<string, ItemWithViews> = {};
+
+    for (const item of items) {
+      const key = `${item.layer}-${item.wuxing}-${item.gender}`;
+      if (!mergedMap[key]) {
+        mergedMap[key] = { ...item, viewImages: {} };
+      }
+      mergedMap[key].viewImages[item.view] = item.imageUrl;
+      // 以 front 視角的資料為主要代表
+      if (item.view === "front") {
+        mergedMap[key] = { ...item, viewImages: mergedMap[key].viewImages };
+      }
+    }
+
+    const merged = Object.values(mergedMap);
+    const grouped: Record<string, typeof merged> = {};
+    for (const item of merged) {
+      if (!grouped[item.layer]) grouped[item.layer] = [];
+      grouped[item.layer].push(item);
+    }
+
+    return { items: merged, grouped };
   }),
 
   /**

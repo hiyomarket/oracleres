@@ -1,0 +1,190 @@
+{
+  "query": "SELECT layer, view, wuxing, COUNT(*) as count FROM game_items GROUP BY layer, view, wuxing ORDER BY layer, view, wuxing LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT layer, view, wuxing, COUNT(*) as count FROM game_items GROUP BY layer, view, wuxing ORDER BY layer, view, wuxing LIMIT 30;",
+  "rows": [
+    {
+      "layer": "bottom",
+      "view": "front",
+      "wuxing": "earth",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "front",
+      "wuxing": "fire",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "front",
+      "wuxing": "metal",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "front",
+      "wuxing": "water",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "front",
+      "wuxing": "wood",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "left45",
+      "wuxing": "earth",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "left45",
+      "wuxing": "fire",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "left45",
+      "wuxing": "metal",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "left45",
+      "wuxing": "water",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "left45",
+      "wuxing": "wood",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "right45",
+      "wuxing": "earth",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "right45",
+      "wuxing": "fire",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "right45",
+      "wuxing": "metal",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "right45",
+      "wuxing": "water",
+      "count": "2"
+    },
+    {
+      "layer": "bottom",
+      "view": "right45",
+      "wuxing": "wood",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "front",
+      "wuxing": "earth",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "front",
+      "wuxing": "fire",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "front",
+      "wuxing": "metal",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "front",
+      "wuxing": "water",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "front",
+      "wuxing": "wood",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "left45",
+      "wuxing": "earth",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "left45",
+      "wuxing": "fire",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "left45",
+      "wuxing": "metal",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "left45",
+      "wuxing": "water",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "left45",
+      "wuxing": "wood",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "right45",
+      "wuxing": "earth",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "right45",
+      "wuxing": "fire",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "right45",
+      "wuxing": "metal",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "right45",
+      "wuxing": "water",
+      "count": "2"
+    },
+    {
+      "layer": "bracelet",
+      "view": "right45",
+      "wuxing": "wood",
+      "count": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "layer\tview\twuxing\tcount\nbottom\tfront\tearth\t2\nbottom\tfront\tfire\t2\nbottom\tfront\tmetal\t2\nbottom\tfront\twater\t2\nbottom\tfront\twood\t2\nbottom\tleft45\tearth\t2\nbottom\tleft45\tfire\t2\nbottom\tleft45\tmetal\t2\nbottom\tleft45\twater\t2\nbottom\tleft45\twood\t2\nbottom\tright45\tearth\t2\nbottom\tright45\tfire\t2\nbottom\tright45\tmetal\t2\nbottom\tright45\twater\t2\nbottom\tright45\twood\t2\nbracelet\tfront\tearth\t2\nbracelet\tfront\tfire\t2\nbracelet\tfront\tmetal\t2\nbracelet\tfront\twater\t2\nbracelet\tfront\twood\t2\nbracelet\tleft45\tearth\t2\nbracelet\tleft45\tfire\t2\nbracelet\tleft45\tmetal\t2\nbracelet\tleft45\twater\t2\nbracelet\tleft45\twood\t2\nbracelet\tright45\tearth\t2\nbracelet\tright45\tfire\t2\nbracelet\tright45\tmetal\t2\nbracelet\tright45\twater\t2\nbracelet\tright45\twood\t2\n",
+  "stderr": "",
+  "execution_time_ms": 1497
+}
