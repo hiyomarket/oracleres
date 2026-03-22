@@ -2589,3 +2589,12 @@
 - [x] 功能卡片換用美術圖示（取代 emoji）
 - [x] Logo 換用錦囊圖示
 - [x] 整體視覺對齊沙盒網站設計風格（深藍星空背景、金色文字、漸層按鈕）
+
+## TASK-002 命格身份證分享卡（美術 Agent 塔羅牌素材整合）
+- [x] 讀取 GitHub ART/OUTPUTS/TASK-002 的 44 張塔羅牌素材與 INTEGRATION-SPEC.md
+- [x] 上傳 44 張塔羅牌圖片到 CDN（女生版 22 張 + 男生版 22 張）
+- [x] 建立 client/src/lib/tarotCards.ts 映射表（含 getTarotCardUrl / getTarotCardInfo）
+- [x] 安裝 html2canvas 套件
+- [x] 開發 DestinyShareCard.tsx 組件（玻璃擬態面板、性別差異化主題、html2canvas 匯出 + Web Share API）
+- [x] 整合分享卡至 ProfilePage.tsx（生成命格身份證分享卡按鈕）
+- [x] 撰寫 vitest 測試（tarotCards.test.ts，379 個全部通過）

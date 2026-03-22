@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
+import DestinyShareCard from "@/components/DestinyShareCard";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { SharedNav } from "@/components/SharedNav";
 import { usePermissions } from "@/hooks/usePermissions";
 import { FeatureLockedCard } from "@/components/FeatureLockedCard";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { ChevronDown, ChevronUp, TrendingUp, AlertTriangle, Zap, Settings, ExternalLink, Star, Send, Clock, CheckCircle, XCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, TrendingUp, AlertTriangle, Zap, Settings, ExternalLink, Star, Send, Clock, CheckCircle, XCircle, Share2 } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 
@@ -572,6 +573,7 @@ function IncompleteProfilePrompt({ message }: { message: string }) {
 export default function ProfilePage() {
   const { hasFeature, isAdmin } = usePermissions();
   const { user } = useAuth();
+  const [showShareCard, setShowShareCard] = useState(false);
   const { data: accountStatus } = trpc.account.getStatus.useQuery(undefined, { staleTime: 60000 });
   const isOwner = !!(accountStatus?.isOwner);
   const { data: profile, isLoading: profileLoading } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
@@ -708,9 +710,31 @@ export default function ProfilePage() {
     ? (lunarData?.lunarString ?? (birthDateForLunar ? '農曆換算中...' : '未設定'))
     : (storedLunar ?? '未設定');
 
+  // 計算 lifeNums 供分享卡使用
+  const lifeNumsForCard = useMemo(() => {
+    const bd = effectiveProfile?.birthDate;
+    if (!bd) return null;
+    return calcLifeNumbers(bd);
+  }, [effectiveProfile?.birthDate]);
+
   return (
     <div className="min-h-screen oracle-page text-foreground pb-16">
       <SharedNav currentPage="profile" />
+      {/* 命格身份證分享卡 Modal */}
+      {showShareCard && (
+        <DestinyShareCard
+          displayName={displayName}
+          gender={(effectiveProfile as any)?.gender ?? null}
+          birthDate={effectiveProfile?.birthDate}
+          birthLunar={displayLunar !== '未設定' ? displayLunar : null}
+          dayMasterElement={effectiveProfile?.dayMasterElement}
+          lifeNums={lifeNumsForCard}
+          dayPillar={(effectiveProfile as any)?.dayPillar}
+          yearPillar={(effectiveProfile as any)?.yearPillar}
+          favorableElements={effectiveProfile?.favorableElements}
+          onClose={() => setShowShareCard(false)}
+        />
+      )}
       {!isAdmin && !hasFeature("profile") && <FeatureLockedCard feature="profile" />}
       {(isAdmin || hasFeature("profile")) && <>
       {/* ─── 頂部英雄區 ─── */}
@@ -1060,6 +1084,19 @@ export default function ProfilePage() {
             </section>
           );
         })()}
+
+        {/* ─── 命格身份證分享卡入口 ─── */}
+        {effectiveProfile?.birthDate && (
+          <div className="flex justify-center">
+            <button
+              onClick={() => setShowShareCard(true)}
+              className="flex items-center gap-2 bg-gradient-to-r from-amber-600/20 to-purple-600/20 hover:from-amber-600/30 hover:to-purple-600/30 border border-amber-500/40 text-amber-300 rounded-xl px-6 py-3 text-sm font-medium transition-all duration-200 hover:shadow-lg hover:shadow-amber-900/20"
+            >
+              <Share2 className="w-4 h-4" />
+              生成命格身份證分享卡
+            </button>
+          </div>
+        )}
 
         {/* ─── 備注欄位 ─── */}
         {(() => {
