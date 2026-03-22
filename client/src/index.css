@@ -962,7 +962,13 @@
 .glass-card {
   background: var(--glass-card-bg, oklch(0.16 0.04 215 / 0.7));
   backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-card-border, oklch(0.35 0.06 215 / 0.5));
+  border: 1px solid oklch(0.68 0.13 75 / 0.25);
+  transition: border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-card:hover {
+  border-color: rgba(199, 139, 40, 0.65);
+  transform: translateY(-4px);
+  box-shadow: rgba(199, 139, 40, 0.2) 0px 0px 24px, rgba(0, 0, 0, 0.25) 0px 8px 32px, rgba(255, 255, 255, 0.1) 0px 1px inset;
 }
 .oracle-text-gradient {
   background: var(--text-gradient, linear-gradient(135deg, oklch(0.88 0.18 80), oklch(0.72 0.20 45), oklch(0.65 0.22 35)));
@@ -2550,3 +2556,71 @@
 :root[data-theme-mode="light"] .text-red-400 {
   color: oklch(0.40 0.20 22) !important;
 }
+
+
+/* ===== LandingPage 設計系統（對齊排程 Agent 設計稿）===== */
+
+/* Keyframes */
+@keyframes holographic-shift {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}
+@keyframes gold-pulse-anim {
+  0%, 100% {
+    box-shadow: rgba(199, 139, 40, 0.4) 0px 0px 8px, rgba(199, 139, 40, 0.2) 0px 0px 16px;
+  }
+  50% {
+    box-shadow: rgba(199, 139, 40, 0.8) 0px 0px 20px, rgba(199, 139, 40, 0.4) 0px 0px 40px, rgba(199, 139, 40, 0.2) 0px 0px 60px;
+  }
+}
+@keyframes orb-float-anim {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-14px) rotate(2deg); }
+  66% { transform: translateY(-7px) rotate(-1deg); }
+}
+@keyframes ripple-expand {
+  0% { opacity: 0.8; transform: scale(0.5); }
+  100% { opacity: 0; transform: scale(2); }
+}
+@keyframes slide-up {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0px); }
+}
+@keyframes fade-in-anim {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes count-up {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0px); }
+}
+
+/* 自定義類別 */
+.text-gold-gradient {
+  -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, rgb(201, 162, 39), rgb(245, 208, 106), rgb(201, 162, 39)) text;
+  background-clip: text;
+}
+.text-holographic {
+  -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, rgb(201, 162, 39), rgb(232, 216, 240), rgb(0, 206, 209) 60%, rgb(201, 162, 39)) 0px 0px / 200% 200% text;
+  background-clip: text;
+  animation: holographic-shift 4s ease infinite;
+}
+.gold-pulse {
+  animation: gold-pulse-anim 2s ease-in-out infinite;
+}
+.orb-float {
+  animation: orb-float-anim 6s ease-in-out infinite;
+}
+.animate-slide-up {
+  animation: slide-up 0.7s ease-out forwards;
+}
+.animate-fade-in {
+  animation: fade-in-anim 0.5s ease-out forwards;
+}
+.animate-count-up {
+  animation: count-up 0.6s ease-out forwards;
+}
+
+/* glass-card hover 效果已整合到上方主定義 */

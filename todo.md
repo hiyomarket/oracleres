@@ -2625,3 +2625,18 @@
 - [x] 整合 OracleShareCard 至 OracleCast 頁面（結果底部分享按鈕）
 - [x] 撰寫 shareCards.test.ts（30 項測試全部通過，總計 414 項）
 - [x] 上傳更新日誌到 GitHub
+
+## 首頁設計整合（v1.3）
+- [x] 研究排程 Agent 首頁設計（https://destinyweb-svfigzte.manus.space/）
+- [x] 新增 CSS 動畫類別：text-holographic, text-gold-gradient, gold-pulse, orb-float, animate-slide-up, animate-fade-in, ripple-expand
+- [x] 整合 glass-card hover 金光效果（translateY(-4px) + gold glow）
+- [x] Hero 布局改為居中（flex-col lg:flex-row，命盤光球在右側）
+- [x] 主標題「解讀天命」加入 text-holographic 全息動效
+- [x] 導覽列改為 fixed + backdrop-blur-xl + 背景模糊
+- [x] 命盤光球加入 ripple-expand 波紋 + orb-float 漂浮動效
+- [x] CTA 按鈕加入 gold-pulse 動效
+- [x] Stats 數值更新（4,019+ / 78% / 293 / 9）
+- [x] Logo 文字改為 text-gold-gradient
+- [x] 加入日夜切換按鈕（Sun/Moon icon）
+- [x] 星星粒子改為原生 Canvas（不依賴外部元件）
+- [x] 修正 glass-card 重複定義問題
