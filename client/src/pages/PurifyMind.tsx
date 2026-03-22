@@ -2,13 +2,17 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface PurifyMindProps {
   onReady: () => void;
 }
 
 // 竹子組件
-function BambooStalk({ x, delay, height }: { x: number; delay: number; height: number }) {
+function BambooStalk({ x, delay, height, isLight }: { x: number; delay: number; height: number; isLight?: boolean }) {
+  const bambooBase = isLight ? 0.55 : 0.38;
+  const bambooLeaf = isLight ? 0.60 : 0.42;
+  const bambooRing = isLight ? 0.45 : 0.28;
   return (
     <motion.div
       className="absolute bottom-0"
@@ -24,7 +28,7 @@ function BambooStalk({ x, delay, height }: { x: number; delay: number; height: n
             style={{
               bottom: i * 60,
               height: 58,
-              background: `linear-gradient(180deg, oklch(0.38 0.14 ${145 + i * 3}) 0%, oklch(0.32 0.12 ${148 + i * 3}) 100%)`,
+              background: `linear-gradient(180deg, oklch(${bambooBase + 0.02} 0.14 ${145 + i * 3}) 0%, oklch(${bambooBase - 0.04} 0.12 ${148 + i * 3}) 100%)`,
               borderRadius: '2px',
             }}
           />
@@ -34,7 +38,7 @@ function BambooStalk({ x, delay, height }: { x: number; delay: number; height: n
             style={{
               bottom: i * 60 + 56,
               height: 6,
-              background: 'oklch(0.28 0.10 148)',
+              background: `oklch(${bambooRing} 0.10 148)`,
               borderRadius: '3px',
             }}
           />
@@ -43,14 +47,14 @@ function BambooStalk({ x, delay, height }: { x: number; delay: number; height: n
       {/* 竹葉 */}
       <div className="absolute -top-8 -left-8 w-16 h-8 opacity-80"
         style={{
-          background: 'oklch(0.42 0.16 145)',
+          background: `oklch(${bambooLeaf} 0.16 145)`,
           borderRadius: '50% 0 50% 0',
           transform: 'rotate(-30deg)',
         }}
       />
       <div className="absolute -top-6 left-2 w-14 h-7 opacity-70"
         style={{
-          background: 'oklch(0.38 0.14 148)',
+          background: `oklch(${bambooLeaf - 0.04} 0.14 148)`,
           borderRadius: '50% 0 50% 0',
           transform: 'rotate(20deg)',
         }}
@@ -112,6 +116,8 @@ export default function PurifyMind({ onReady }: PurifyMindProps) {
   const [showButton, setShowButton] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const isLight = theme === "light";
   const { data: profile } = trpc.account.getProfile.useQuery(undefined, { staleTime: 60000 });
   const displayName = profile?.displayName ?? user?.name;
   const fourPillars = [profile?.yearPillar, profile?.monthPillar, profile?.dayPillar, profile?.hourPillar].filter(Boolean).join('・');
@@ -132,7 +138,9 @@ export default function PurifyMind({ onReady }: PurifyMindProps) {
         <motion.div
           className="fixed inset-0 overflow-hidden"
           style={{
-            background: 'radial-gradient(ellipse at 30% 20%, oklch(0.18 0.08 165 / 0.9) 0%, oklch(0.10 0.05 225) 50%, oklch(0.07 0.03 220) 100%)',
+            background: isLight
+              ? 'radial-gradient(ellipse at 30% 20%, oklch(0.92 0.05 145 / 0.9) 0%, oklch(0.96 0.03 160) 50%, oklch(0.98 0.01 180) 100%)'
+              : 'radial-gradient(ellipse at 30% 20%, oklch(0.18 0.08 165 / 0.9) 0%, oklch(0.10 0.05 225) 50%, oklch(0.07 0.03 220) 100%)',
           }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -151,14 +159,16 @@ export default function PurifyMind({ onReady }: PurifyMindProps) {
               { x: 88, delay: 0.8, height: 540 },
               { x: 94, delay: 0.4, height: 490 },
             ].map((b, i) => (
-              <BambooStalk key={i} {...b} />
+              <BambooStalk key={i} {...b} isLight={isLight} />
             ))}
           </div>
 
           {/* 水面波紋 */}
           <div className="absolute bottom-0 left-0 right-0 h-32"
             style={{
-              background: 'linear-gradient(180deg, transparent 0%, oklch(0.15 0.06 220 / 0.6) 100%)',
+              background: isLight
+                ? 'linear-gradient(180deg, transparent 0%, oklch(0.85 0.06 165 / 0.4) 100%)'
+                : 'linear-gradient(180deg, transparent 0%, oklch(0.15 0.06 220 / 0.6) 100%)',
             }}
           >
             {[
@@ -194,7 +204,7 @@ export default function PurifyMind({ onReady }: PurifyMindProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.2, delay: 0.3 }}
             >
-              <div className="text-xs tracking-[0.5em] text-amber-400/70 mb-4 uppercase">
+              <div className={`text-xs tracking-[0.5em] mb-4 uppercase ${isLight ? 'text-amber-700/80' : 'text-amber-400/70'}`}>
                 Oracle Resonance
               </div>
               <h1 className="text-5xl md:text-6xl font-black oracle-text-gradient mb-3 tracking-wider">

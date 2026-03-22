@@ -1031,3 +1031,670 @@
     }
   }
 }
+/* ══════════════════════════════════════════════════════════════════
+   淺色主題全面修正（第三輪）
+   原則：淺色背景下所有文字必須是深色；色塊背景改為淺色版本；
+         不能出現螢光色、深色區塊配深色字
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 螢光色文字 → 深色可讀版本 ── */
+/* amber/yellow 系列（最常見的螢光色） */
+:root[data-theme-mode="light"] .text-amber-400,
+:root[data-theme-mode="light"] .text-amber-300 {
+  color: oklch(0.42 0.14 58) !important;
+}
+:root[data-theme-mode="light"] .text-amber-500 {
+  color: oklch(0.40 0.14 58) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-400,
+:root[data-theme-mode="light"] .text-yellow-300 {
+  color: oklch(0.44 0.14 80) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-500 {
+  color: oklch(0.42 0.14 80) !important;
+}
+
+/* green/emerald/teal 系列 */
+:root[data-theme-mode="light"] .text-green-400,
+:root[data-theme-mode="light"] .text-green-300 {
+  color: oklch(0.36 0.14 142) !important;
+}
+:root[data-theme-mode="light"] .text-green-500 {
+  color: oklch(0.34 0.14 142) !important;
+}
+:root[data-theme-mode="light"] .text-teal-400,
+:root[data-theme-mode="light"] .text-teal-300 {
+  color: oklch(0.36 0.12 185) !important;
+}
+:root[data-theme-mode="light"] .text-cyan-400,
+:root[data-theme-mode="light"] .text-cyan-300 {
+  color: oklch(0.36 0.12 210) !important;
+}
+
+/* blue/indigo 系列 */
+:root[data-theme-mode="light"] .text-blue-400,
+:root[data-theme-mode="light"] .text-blue-300 {
+  color: oklch(0.38 0.14 255) !important;
+}
+:root[data-theme-mode="light"] .text-blue-500 {
+  color: oklch(0.36 0.14 255) !important;
+}
+:root[data-theme-mode="light"] .text-indigo-400,
+:root[data-theme-mode="light"] .text-indigo-300 {
+  color: oklch(0.38 0.14 270) !important;
+}
+
+/* purple/violet 系列 */
+:root[data-theme-mode="light"] .text-purple-400,
+:root[data-theme-mode="light"] .text-purple-300 {
+  color: oklch(0.40 0.14 300) !important;
+}
+:root[data-theme-mode="light"] .text-violet-400,
+:root[data-theme-mode="light"] .text-violet-300 {
+  color: oklch(0.40 0.14 290) !important;
+}
+
+/* pink/rose 系列 */
+:root[data-theme-mode="light"] .text-pink-400,
+:root[data-theme-mode="light"] .text-pink-300 {
+  color: oklch(0.42 0.16 350) !important;
+}
+:root[data-theme-mode="light"] .text-rose-400,
+:root[data-theme-mode="light"] .text-rose-300 {
+  color: oklch(0.42 0.16 10) !important;
+}
+
+/* red/orange 系列 */
+:root[data-theme-mode="light"] .text-red-400,
+:root[data-theme-mode="light"] .text-red-300 {
+  color: oklch(0.42 0.18 22) !important;
+}
+:root[data-theme-mode="light"] .text-orange-400,
+:root[data-theme-mode="light"] .text-orange-300 {
+  color: oklch(0.42 0.16 40) !important;
+}
+
+/* white 系列（淺色背景下白色文字完全不可見） */
+:root[data-theme-mode="light"] .text-white {
+  color: var(--foreground) !important;
+}
+:root[data-theme-mode="light"] .text-white\/90,
+:root[data-theme-mode="light"] .text-white\/80,
+:root[data-theme-mode="light"] .text-white\/70 {
+  color: oklch(0.25 0.02 60 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .text-white\/60,
+:root[data-theme-mode="light"] .text-white\/50 {
+  color: oklch(0.30 0.02 60 / 0.70) !important;
+}
+:root[data-theme-mode="light"] .text-white\/40,
+:root[data-theme-mode="light"] .text-white\/30 {
+  color: oklch(0.35 0.02 60 / 0.55) !important;
+}
+
+/* gray/slate 過淺文字 */
+:root[data-theme-mode="light"] .text-gray-400,
+:root[data-theme-mode="light"] .text-gray-300,
+:root[data-theme-mode="light"] .text-gray-200 {
+  color: oklch(0.42 0.02 60) !important;
+}
+:root[data-theme-mode="light"] .text-slate-400,
+:root[data-theme-mode="light"] .text-slate-300,
+:root[data-theme-mode="light"] .text-slate-200 {
+  color: oklch(0.40 0.02 270) !important;
+}
+:root[data-theme-mode="light"] .text-zinc-400,
+:root[data-theme-mode="light"] .text-zinc-300 {
+  color: oklch(0.40 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-neutral-400,
+:root[data-theme-mode="light"] .text-neutral-300 {
+  color: oklch(0.40 0.01 60) !important;
+}
+
+/* ── 深色背景卡片 → 淺色版本 ── */
+/* slate 系列 */
+:root[data-theme-mode="light"] .bg-slate-900,
+:root[data-theme-mode="light"] .bg-slate-950 {
+  background-color: oklch(0.92 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800 {
+  background-color: oklch(0.90 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-700 {
+  background-color: oklch(0.88 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-900\/40,
+:root[data-theme-mode="light"] .bg-slate-900\/50,
+:root[data-theme-mode="light"] .bg-slate-900\/60 {
+  background-color: oklch(0.88 0.01 270 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800\/30,
+:root[data-theme-mode="light"] .bg-slate-800\/40,
+:root[data-theme-mode="light"] .bg-slate-800\/50,
+:root[data-theme-mode="light"] .bg-slate-800\/60 {
+  background-color: oklch(0.88 0.01 270 / 0.30) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-700\/50,
+:root[data-theme-mode="light"] .bg-slate-700\/60 {
+  background-color: oklch(0.86 0.01 270 / 0.35) !important;
+}
+
+/* gray 系列 */
+:root[data-theme-mode="light"] .bg-gray-900,
+:root[data-theme-mode="light"] .bg-gray-950 {
+  background-color: oklch(0.92 0.01 60) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-800 {
+  background-color: oklch(0.90 0.01 60) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-700 {
+  background-color: oklch(0.88 0.01 60) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-800\/30,
+:root[data-theme-mode="light"] .bg-gray-800\/40,
+:root[data-theme-mode="light"] .bg-gray-800\/50 {
+  background-color: oklch(0.88 0.01 60 / 0.30) !important;
+}
+
+/* zinc/neutral/stone 系列 */
+:root[data-theme-mode="light"] .bg-zinc-900,
+:root[data-theme-mode="light"] .bg-zinc-800 {
+  background-color: oklch(0.90 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .bg-neutral-900,
+:root[data-theme-mode="light"] .bg-neutral-800 {
+  background-color: oklch(0.90 0.01 60) !important;
+}
+
+/* ── 深色背景帶透明度（bg-black/XX 系列）── */
+:root[data-theme-mode="light"] .bg-black\/10,
+:root[data-theme-mode="light"] .bg-black\/20 {
+  background-color: oklch(0.85 0.01 270 / 0.12) !important;
+}
+:root[data-theme-mode="light"] .bg-black\/30,
+:root[data-theme-mode="light"] .bg-black\/40,
+:root[data-theme-mode="light"] .bg-black\/50 {
+  background-color: oklch(0.82 0.01 270 / 0.18) !important;
+}
+:root[data-theme-mode="light"] .bg-black\/60,
+:root[data-theme-mode="light"] .bg-black\/70,
+:root[data-theme-mode="light"] .bg-black\/80 {
+  background-color: oklch(0.80 0.01 270 / 0.22) !important;
+}
+
+/* ── bg-white/5 ~ bg-white/20 微弱白色背景 → 淺色版本 ── */
+:root[data-theme-mode="light"] .bg-white\/5 {
+  background-color: oklch(0.88 0.01 60 / 0.35) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/8 {
+  background-color: oklch(0.87 0.01 60 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/10 {
+  background-color: oklch(0.86 0.01 60 / 0.45) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/15 {
+  background-color: oklch(0.85 0.01 60 / 0.50) !important;
+}
+:root[data-theme-mode="light"] .bg-white\/20 {
+  background-color: oklch(0.84 0.01 60 / 0.55) !important;
+}
+
+/* ── border-white 系列 ── */
+:root[data-theme-mode="light"] .border-white\/5,
+:root[data-theme-mode="light"] .border-white\/8,
+:root[data-theme-mode="light"] .border-white\/10 {
+  border-color: oklch(0.60 0.02 60 / 0.25) !important;
+}
+:root[data-theme-mode="light"] .border-white\/15,
+:root[data-theme-mode="light"] .border-white\/20 {
+  border-color: oklch(0.55 0.02 60 / 0.30) !important;
+}
+:root[data-theme-mode="light"] .border-white\/30,
+:root[data-theme-mode="light"] .border-white\/40 {
+  border-color: oklch(0.50 0.02 60 / 0.35) !important;
+}
+
+/* ── 深色 border 系列 ── */
+:root[data-theme-mode="light"] .border-slate-600,
+:root[data-theme-mode="light"] .border-slate-700,
+:root[data-theme-mode="light"] .border-slate-800 {
+  border-color: oklch(0.70 0.02 270 / 0.40) !important;
+}
+:root[data-theme-mode="light"] .border-gray-600,
+:root[data-theme-mode="light"] .border-gray-700,
+:root[data-theme-mode="light"] .border-gray-800 {
+  border-color: oklch(0.70 0.02 60 / 0.40) !important;
+}
+
+/* ── 特定功能頁深色背景 ── */
+/* /oracle 頁面 oracle-bg */
+:root[data-theme-mode="light"] .oracle-bg {
+  background: var(--background) !important;
+}
+/* /profile 頁面靈數卡片 bg-gray-800/50 */
+:root[data-theme-mode="light"] .bg-gray-800\/50 {
+  background-color: oklch(0.90 0.01 60 / 0.30) !important;
+}
+/* /profile 頁面 text-purple-300 */
+:root[data-theme-mode="light"] .text-purple-300 {
+  color: oklch(0.40 0.14 300) !important;
+}
+/* /profile 頁面 text-gray-400 過淺 */
+:root[data-theme-mode="light"] .text-gray-500 {
+  color: oklch(0.38 0.02 60) !important;
+}
+:root[data-theme-mode="light"] .text-slate-500 {
+  color: oklch(0.38 0.02 270) !important;
+}
+
+/* ── /calendar 頁面色塊 ── */
+:root[data-theme-mode="light"] .bg-emerald-900\/20,
+:root[data-theme-mode="light"] .bg-emerald-900\/30 {
+  background-color: oklch(0.88 0.04 162 / 0.20) !important;
+}
+:root[data-theme-mode="light"] .bg-red-900\/20,
+:root[data-theme-mode="light"] .bg-red-900\/30 {
+  background-color: oklch(0.88 0.04 22 / 0.20) !important;
+}
+:root[data-theme-mode="light"] .bg-blue-900\/20,
+:root[data-theme-mode="light"] .bg-blue-900\/30 {
+  background-color: oklch(0.88 0.04 255 / 0.20) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-900\/20,
+:root[data-theme-mode="light"] .bg-amber-900\/30 {
+  background-color: oklch(0.88 0.04 58 / 0.20) !important;
+}
+:root[data-theme-mode="light"] .bg-amber-900\/10 {
+  background-color: oklch(0.90 0.04 58 / 0.12) !important;
+}
+
+/* ── /outfit 頁面時辰格子深色背景 ── */
+:root[data-theme-mode="light"] .bg-amber-500\/30 {
+  background-color: oklch(0.85 0.08 58 / 0.30) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-800\/30 {
+  background-color: oklch(0.88 0.01 270 / 0.20) !important;
+}
+
+/* ── /lottery 頁面 ── */
+:root[data-theme-mode="light"] .text-amber-400\/80 {
+  color: oklch(0.42 0.14 58 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .text-emerald-400\/80 {
+  color: oklch(0.38 0.14 162 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .text-blue-400\/80 {
+  color: oklch(0.38 0.14 255 / 0.85) !important;
+}
+:root[data-theme-mode="light"] .bg-slate-700 {
+  background-color: oklch(0.86 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-slate-200 {
+  color: oklch(0.35 0.02 270) !important;
+}
+
+/* ── 輸入框、表單元素深色背景 ── */
+:root[data-theme-mode="light"] input[class*="bg-slate"],
+:root[data-theme-mode="light"] input[class*="bg-gray"],
+:root[data-theme-mode="light"] input[class*="bg-white/"],
+:root[data-theme-mode="light"] textarea[class*="bg-slate"],
+:root[data-theme-mode="light"] textarea[class*="bg-gray"],
+:root[data-theme-mode="light"] select[class*="bg-slate"],
+:root[data-theme-mode="light"] select[class*="bg-gray"] {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── FeatureLockedCard 深色背景 ── */
+:root[data-theme-mode="light"] .bg-slate-900\/90,
+:root[data-theme-mode="light"] .bg-slate-900\/80 {
+  background-color: oklch(0.90 0.01 270 / 0.85) !important;
+}
+
+/* ── OnboardingModal 深色背景 ── */
+:root[data-theme-mode="light"] .bg-slate-700 {
+  background-color: oklch(0.86 0.01 270) !important;
+}
+
+/* ── 深色 divider/separator ── */
+:root[data-theme-mode="light"] .bg-amber-900\/30 {
+  background-color: oklch(0.75 0.06 58 / 0.25) !important;
+}
+:root[data-theme-mode="light"] .bg-emerald-700\/30 {
+  background-color: oklch(0.55 0.10 162 / 0.25) !important;
+}
+
+/* ── 確保深色文字在淺色背景上可讀 ── */
+:root[data-theme-mode="light"] .text-gray-900,
+:root[data-theme-mode="light"] .text-gray-800,
+:root[data-theme-mode="light"] .text-gray-700 {
+  color: oklch(0.20 0.02 60) !important;
+}
+:root[data-theme-mode="light"] .text-slate-900,
+:root[data-theme-mode="light"] .text-slate-800,
+:root[data-theme-mode="light"] .text-slate-700 {
+  color: oklch(0.20 0.02 270) !important;
+}
+
+/* ── 圖表和進度條的深色背景 ── */
+:root[data-theme-mode="light"] .bg-slate-900.rounded-full,
+:root[data-theme-mode="light"] .h-2.bg-slate-900 {
+  background-color: oklch(0.82 0.01 270) !important;
+}
+:root[data-theme-mode="light"] [class*="bg-gradient-to-r"][class*="from-red-700"] {
+  background: linear-gradient(to right, oklch(0.45 0.18 22), oklch(0.40 0.18 22)) !important;
+}
+
+/* ── 確保 text-foreground 在淺色主題下正確 ── */
+:root[data-theme-mode="light"] .text-foreground {
+  color: var(--foreground) !important;
+}
+:root[data-theme-mode="light"] .text-muted-foreground {
+  color: var(--muted-foreground) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   全面淺色主題修正（第三輪）- 根據用戶截圖回饋逐一修正
+   原則：淺色背景下所有文字必須是深色，所有色塊背景必須是淺色
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── WarRoom：今日能量指引「宜/忌」色塊 ── */
+/* 宜：灰色背景 + 螢光綠文字 → 淺灰背景 + 深綠文字 */
+:root[data-theme-mode="light"] .bg-teal-900\/30,
+:root[data-theme-mode="light"] .bg-teal-900\/40,
+:root[data-theme-mode="light"] .bg-teal-900\/50,
+:root[data-theme-mode="light"] .bg-teal-950\/30,
+:root[data-theme-mode="light"] .bg-teal-950\/40,
+:root[data-theme-mode="light"] .bg-teal-950\/50 {
+  background-color: oklch(0.93 0.04 165) !important;
+}
+:root[data-theme-mode="light"] .text-teal-300,
+:root[data-theme-mode="light"] .text-teal-400 {
+  color: oklch(0.35 0.10 165) !important;
+}
+:root[data-theme-mode="light"] .text-teal-200 {
+  color: oklch(0.30 0.10 165) !important;
+}
+/* 忌：紅色背景 + 螢光紅文字 → 淺紅背景 + 深紅文字 */
+:root[data-theme-mode="light"] .bg-red-900\/30,
+:root[data-theme-mode="light"] .bg-red-900\/40,
+:root[data-theme-mode="light"] .bg-red-900\/50,
+:root[data-theme-mode="light"] .bg-red-950\/30,
+:root[data-theme-mode="light"] .bg-red-950\/40,
+:root[data-theme-mode="light"] .bg-red-950\/50 {
+  background-color: oklch(0.94 0.04 22) !important;
+}
+:root[data-theme-mode="light"] .text-red-300,
+:root[data-theme-mode="light"] .text-red-400 {
+  color: oklch(0.40 0.18 22) !important;
+}
+:root[data-theme-mode="light"] .text-red-200 {
+  color: oklch(0.35 0.18 22) !important;
+}
+
+/* ── 能量指數進度條文字（「能量平吉」按鈕）── */
+:root[data-theme-mode="light"] .bg-teal-900,
+:root[data-theme-mode="light"] .bg-teal-800 {
+  background-color: oklch(0.88 0.06 165) !important;
+}
+:root[data-theme-mode="light"] .text-teal-100,
+:root[data-theme-mode="light"] .text-teal-50 {
+  color: oklch(0.25 0.10 165) !important;
+}
+
+/* ── ProfilePage：大限流年卡片 ── */
+/* 當前年份高亮：cyan 深色背景 → 淺青色 */
+:root[data-theme-mode="light"] .border-cyan-500\/60,
+:root[data-theme-mode="light"] .bg-cyan-900\/10 {
+  background-color: oklch(0.93 0.04 200) !important;
+  border-color: oklch(0.55 0.12 200) !important;
+}
+:root[data-theme-mode="light"] .text-cyan-300,
+:root[data-theme-mode="light"] .text-cyan-400 {
+  color: oklch(0.35 0.12 200) !important;
+}
+:root[data-theme-mode="light"] .text-cyan-200 {
+  color: oklch(0.30 0.12 200) !important;
+}
+/* 一般年份卡片 */
+:root[data-theme-mode="light"] .border-gray-700\/50,
+:root[data-theme-mode="light"] .bg-gray-800\/20 {
+  background-color: oklch(0.96 0.005 270) !important;
+  border-color: oklch(0.75 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-gray-200 {
+  color: oklch(0.25 0.01 270) !important;
+}
+
+/* ── ProfilePage：靈數卡片背景 ── */
+:root[data-theme-mode="light"] .bg-gray-900\/40,
+:root[data-theme-mode="light"] .bg-gray-900\/50 {
+  background-color: oklch(0.95 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .bg-gray-800\/50 {
+  background-color: oklch(0.93 0.008 270) !important;
+}
+:root[data-theme-mode="light"] .border-gray-700\/30 {
+  border-color: oklch(0.78 0.01 270) !important;
+}
+
+/* ── ProfilePage：過淺的輔助文字 ── */
+:root[data-theme-mode="light"] .text-gray-400 {
+  color: oklch(0.42 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-gray-300 {
+  color: oklch(0.32 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-gray-500 {
+  color: oklch(0.50 0.01 270) !important;
+}
+
+/* ── ProfilePage：圖表容器 bg-gray-900 ── */
+:root[data-theme-mode="light"] .bg-gray-900 {
+  background-color: oklch(0.96 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .border-gray-700\/50 {
+  border-color: oklch(0.78 0.01 270) !important;
+}
+
+/* ── OracleCalendar：日曆色塊文字 ── */
+:root[data-theme-mode="light"] .bg-indigo-900\/30,
+:root[data-theme-mode="light"] .bg-indigo-900\/40,
+:root[data-theme-mode="light"] .bg-indigo-950\/30,
+:root[data-theme-mode="light"] .bg-indigo-950\/40 {
+  background-color: oklch(0.93 0.04 270) !important;
+}
+:root[data-theme-mode="light"] .text-indigo-300,
+:root[data-theme-mode="light"] .text-indigo-400 {
+  color: oklch(0.35 0.12 270) !important;
+}
+:root[data-theme-mode="light"] .text-indigo-200 {
+  color: oklch(0.30 0.12 270) !important;
+}
+:root[data-theme-mode="light"] .bg-purple-900\/30,
+:root[data-theme-mode="light"] .bg-purple-900\/40,
+:root[data-theme-mode="light"] .bg-purple-950\/30,
+:root[data-theme-mode="light"] .bg-purple-950\/40 {
+  background-color: oklch(0.93 0.04 300) !important;
+}
+:root[data-theme-mode="light"] .text-purple-300,
+:root[data-theme-mode="light"] .text-purple-400 {
+  color: oklch(0.35 0.12 300) !important;
+}
+:root[data-theme-mode="light"] .text-purple-200 {
+  color: oklch(0.30 0.12 300) !important;
+}
+:root[data-theme-mode="light"] .bg-violet-900\/30,
+:root[data-theme-mode="light"] .bg-violet-900\/40,
+:root[data-theme-mode="light"] .bg-violet-950\/30,
+:root[data-theme-mode="light"] .bg-violet-950\/40 {
+  background-color: oklch(0.93 0.04 295) !important;
+}
+:root[data-theme-mode="light"] .text-violet-300,
+:root[data-theme-mode="light"] .text-violet-400 {
+  color: oklch(0.35 0.12 295) !important;
+}
+
+/* ── OutfitPage：情境模式卡片（選中的深棕色背景）── */
+:root[data-theme-mode="light"] .bg-stone-800,
+:root[data-theme-mode="light"] .bg-stone-900,
+:root[data-theme-mode="light"] .bg-stone-800\/60,
+:root[data-theme-mode="light"] .bg-stone-900\/60 {
+  background-color: oklch(0.90 0.02 60) !important;
+}
+:root[data-theme-mode="light"] .text-stone-300,
+:root[data-theme-mode="light"] .text-stone-400 {
+  color: oklch(0.35 0.03 60) !important;
+}
+:root[data-theme-mode="light"] .text-stone-200 {
+  color: oklch(0.28 0.03 60) !important;
+}
+/* 時辰能量時間軸（空白格子）*/
+:root[data-theme-mode="light"] .bg-slate-800\/30,
+:root[data-theme-mode="light"] .bg-slate-800\/40,
+:root[data-theme-mode="light"] .bg-slate-800\/50,
+:root[data-theme-mode="light"] .bg-slate-800\/60 {
+  background-color: oklch(0.93 0.008 270) !important;
+}
+:root[data-theme-mode="light"] .text-slate-300,
+:root[data-theme-mode="light"] .text-slate-400 {
+  color: oklch(0.40 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-slate-200 {
+  color: oklch(0.30 0.01 270) !important;
+}
+
+/* ── LotteryOracle：色塊和文字 ── */
+:root[data-theme-mode="light"] .bg-yellow-900\/30,
+:root[data-theme-mode="light"] .bg-yellow-900\/40,
+:root[data-theme-mode="light"] .bg-yellow-950\/30,
+:root[data-theme-mode="light"] .bg-yellow-950\/40 {
+  background-color: oklch(0.94 0.06 85) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-300,
+:root[data-theme-mode="light"] .text-yellow-400 {
+  color: oklch(0.42 0.12 85) !important;
+}
+:root[data-theme-mode="light"] .text-yellow-200 {
+  color: oklch(0.35 0.12 85) !important;
+}
+:root[data-theme-mode="light"] .bg-orange-900\/30,
+:root[data-theme-mode="light"] .bg-orange-900\/40,
+:root[data-theme-mode="light"] .bg-orange-950\/30,
+:root[data-theme-mode="light"] .bg-orange-950\/40 {
+  background-color: oklch(0.93 0.05 50) !important;
+}
+:root[data-theme-mode="light"] .text-orange-300,
+:root[data-theme-mode="light"] .text-orange-400 {
+  color: oklch(0.42 0.14 50) !important;
+}
+:root[data-theme-mode="light"] .text-orange-200 {
+  color: oklch(0.35 0.14 50) !important;
+}
+
+/* ── 通用：所有 text-white 在淺色主題下變深色 ── */
+:root[data-theme-mode="light"] .text-white {
+  color: oklch(0.20 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-white\/90,
+:root[data-theme-mode="light"] .text-white\/80 {
+  color: oklch(0.25 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-white\/70,
+:root[data-theme-mode="light"] .text-white\/60 {
+  color: oklch(0.35 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-white\/50,
+:root[data-theme-mode="light"] .text-white\/40 {
+  color: oklch(0.45 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-white\/30,
+:root[data-theme-mode="light"] .text-white\/20 {
+  color: oklch(0.55 0.01 270) !important;
+}
+
+/* ── PurifyMind（/oracle）：淺色主題下的竹林場景 ── */
+:root[data-theme-mode="light"] .oracle-page-light-bg {
+  background: radial-gradient(ellipse at 30% 20%, oklch(0.92 0.04 145 / 0.9) 0%, oklch(0.96 0.02 160) 50%, oklch(0.98 0.01 180) 100%) !important;
+}
+
+/* ── 通用：zinc 深色背景 ── */
+:root[data-theme-mode="light"] .bg-zinc-900,
+:root[data-theme-mode="light"] .bg-zinc-800 {
+  background-color: oklch(0.96 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .bg-zinc-900\/50,
+:root[data-theme-mode="light"] .bg-zinc-900\/60,
+:root[data-theme-mode="light"] .bg-zinc-900\/70 {
+  background-color: oklch(0.94 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .text-zinc-300,
+:root[data-theme-mode="light"] .text-zinc-400 {
+  color: oklch(0.40 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .text-zinc-200 {
+  color: oklch(0.30 0.01 270) !important;
+}
+
+/* ── 通用：neutral 深色背景 ── */
+:root[data-theme-mode="light"] .bg-neutral-900,
+:root[data-theme-mode="light"] .bg-neutral-800 {
+  background-color: oklch(0.96 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .text-neutral-300,
+:root[data-theme-mode="light"] .text-neutral-400 {
+  color: oklch(0.40 0.01 270) !important;
+}
+
+/* ── 通用：border 顏色在淺色主題下 ── */
+:root[data-theme-mode="light"] .border-white\/10,
+:root[data-theme-mode="light"] .border-white\/20,
+:root[data-theme-mode="light"] .border-white\/30 {
+  border-color: oklch(0.80 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .border-gray-700,
+:root[data-theme-mode="light"] .border-gray-600 {
+  border-color: oklch(0.75 0.01 270) !important;
+}
+:root[data-theme-mode="light"] .border-slate-700,
+:root[data-theme-mode="light"] .border-slate-600 {
+  border-color: oklch(0.75 0.01 270) !important;
+}
+
+/* ── 通用：bg-black 和極深色 ── */
+:root[data-theme-mode="light"] .bg-black,
+:root[data-theme-mode="light"] .bg-black\/50,
+:root[data-theme-mode="light"] .bg-black\/60,
+:root[data-theme-mode="light"] .bg-black\/70,
+:root[data-theme-mode="light"] .bg-black\/80 {
+  background-color: oklch(0.95 0.005 270) !important;
+}
+:root[data-theme-mode="light"] .bg-black\/10,
+:root[data-theme-mode="light"] .bg-black\/20,
+:root[data-theme-mode="light"] .bg-black\/30 {
+  background-color: oklch(0.97 0.003 270) !important;
+}
+
+/* ── 輸入框和表單元素 ── */
+:root[data-theme-mode="light"] input.bg-gray-900,
+:root[data-theme-mode="light"] textarea.bg-gray-900,
+:root[data-theme-mode="light"] select.bg-gray-900 {
+  background-color: oklch(0.98 0.003 270) !important;
+  color: oklch(0.20 0.01 270) !important;
+  border-color: oklch(0.75 0.01 270) !important;
+}
+:root[data-theme-mode="light"] input.bg-gray-800,
+:root[data-theme-mode="light"] textarea.bg-gray-800,
+:root[data-theme-mode="light"] select.bg-gray-800 {
+  background-color: oklch(0.97 0.003 270) !important;
+  color: oklch(0.20 0.01 270) !important;
+  border-color: oklch(0.75 0.01 270) !important;
+}
+
+/* ── 確保 placeholder 在淺色主題下可見 ── */
+:root[data-theme-mode="light"] input::placeholder,
+:root[data-theme-mode="light"] textarea::placeholder {
+  color: oklch(0.60 0.01 270) !important;
+}

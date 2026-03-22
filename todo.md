@@ -2581,4 +2581,4 @@
 - [x] 檢查命格解析、財運羅盤、問卜頁面的顏色問題（全部正常）
 - [x] 全面修正 index.css 淺色主題覆蓋規則（新增 WUXING_COLORS、塔羅牌、時辰、月相等覆蓋）
 - [x] 逐頁驗證修正完整性（WarRoom、命格解析、天命問卜、財運羅盤全部正常）
-- [ ] 存儲 checkpoint
+- [x] 存儲 checkpoint（version c93816d0）
