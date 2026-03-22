@@ -2646,3 +2646,25 @@
 - [x] 調整 LandingPage TESTIMONIALS：去除誇大說法，改成真實日常感受
 - [x] 確認性別設定功能早已完整實作（DB gender 欄位 + MyProfile.tsx 性別選擇 UI + saveProfile API）
 - [x] WarRoom 塔羅牌圖片依 gender 動態切換（v1.1 已完成）
+
+## LandingPage 視覺修正（v1.5）
+- [x] 日夜切換按鈕加入說明文字（白天/夜晚 標示），讓用戶知道這個按鈕的用途
+- [x] 修正深色模式文字配色：避免黑色文字在深色背景上消失（所有文字改用 slate/white 系列）
+- [x] 修正淺色模式文字配色：避免亮色文字在淺色背景上消失（所有文字改用深色系列）
+- [x] 替換「原神」名詞為更親和的說法（命主、本命特質、天命之人等）
+
+## 分享卡修正與重新設計（v1.6）
+- [ ] 調查 DestinyShareCard / DivinationShareCard / OracleShareCard 下載/分享功能失效原因
+- [ ] 修正 html2canvas 或 canvas 渲染問題（CDN 圖片跨域、字型載入等）
+- [ ] 重新設計分享卡版面：塔羅牌圖片作為透明背景底圖，文字疊加其上（全版式）
+- [ ] 確認 Web Share API 在手機上正常呼叫系統分享選單
+- [ ] 確認下載功能正常產出 PNG 圖片
+
+## 功能修改 v1.6 - 首頁按鈕名詞優化 + 分享卡 Canvas 重寫
+
+- [x] 首頁主按鈕「開啟元神」→「⭐ 探索今日運勢」
+- [x] 首頁次按鈕「開啟天命」→「🔮 揭開專屬指引」
+- [x] DivinationShareCard 改用 Canvas 2D API 直接繪製（修正 drawWrappedText 參數錯誤）
+- [x] OracleShareCard 改用 Canvas 2D API 直接繪製（全新重寫）
+- [x] TypeScript 零錯誤，414 項測試全部通過
+- [ ] 儲存 v1.6 checkpoint

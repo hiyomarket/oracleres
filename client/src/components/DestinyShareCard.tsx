@@ -1,90 +1,44 @@
 /**
- * 命格身份證分享卡
- * 
- * 設計規格（美術 Agent TASK-002 INTEGRATION-SPEC.md）：
- * - 橫排版 4:3 比例（800×600px）
- * - 左側 40%：塔羅牌插畫（2:3 比例，自帶金色卡框）
- * - 右側 60%：玻璃擬態面板，動態填入用戶命格資訊
- * - 背景：深藍紫漸層 #1A1A2A → #2D1B4E
- * - 主色：天命金 #C9A227
- * - 匯出：html2canvas 渲染成 PNG 下載
- * 
- * 性別差異化：
- * - 女生版：賽博少女風 + 日系輕奢風（暖色系）
- * - 男生版：暗黑武士風 + 國風仙俠風（冷色系）
+ * 命格身份證分享卡（DestinyShareCard v2.0）
+ *
+ * 設計規格：
+ * - 輸出尺寸：1080×1920px（9:16 手機分享比例）
+ * - 塔羅牌作為全版背景底圖（帶半透明深色遮罩）
+ * - 文字疊加在遮罩上方，確保可讀性
+ * - 完全使用 Canvas 2D API，不依賴 html2canvas，繞開 CORS 問題
  */
-
-import { useRef, useState, useCallback } from "react";
-import html2canvas from "html2canvas";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { getTarotCardUrl, getTarotCardInfo } from "@/lib/tarotCards";
-import { Download, Share2, X, Loader2 } from "lucide-react";
+import { Download, Share2, X, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  CARD_W, CARD_H,
+  loadImage, ensureFonts,
+  drawWrappedText, drawRoundRect,
+  downloadCanvas, shareCanvas,
+} from "@/lib/shareCardCanvas";
 
 interface DestinyShareCardProps {
-  // 用戶基本資訊
   displayName: string;
   gender: 'male' | 'female' | 'other' | null | undefined;
   birthDate?: string | null;
   birthLunar?: string | null;
   dayMasterElement?: string | null;
-  // 生命靈數
   lifeNums: {
     outer: { num: number; name: string };
     middle: { num: number; name: string };
     primary: { num: number; name: string };
     soul: { num: number; name: string };
   } | null;
-  // 四柱
   dayPillar?: string | null;
   yearPillar?: string | null;
-  // 喜用神
   favorableElements?: string | null;
-  // 關閉回調
   onClose: () => void;
 }
 
 const ELEMENT_ZH: Record<string, string> = {
   wood: "木", fire: "火", earth: "土", metal: "金", water: "水",
 };
-
-const ELEMENT_ICON: Record<string, string> = {
-  木: "🌳", 火: "🔥", 土: "🌍", 金: "⚪", 水: "💧",
-};
-
-// 根據性別決定視覺主題
-function getTheme(gender: 'male' | 'female' | 'other' | null | undefined) {
-  if (gender === 'male') {
-    return {
-      bgGradient: "linear-gradient(135deg, #0D1117 0%, #1A1A2A 40%, #0F1A2E 100%)",
-      accentColor: "#C9A227",
-      subColor: "#7BA7D4",
-      textColor: "#E8F0F8",
-      panelBg: "rgba(13, 25, 48, 0.7)",
-      panelBorder: "rgba(201, 162, 39, 0.4)",
-      dividerColor: "rgba(201, 162, 39, 0.3)",
-      labelColor: "#7BA7D4",
-      tagBg: "rgba(123, 167, 212, 0.15)",
-      tagBorder: "rgba(123, 167, 212, 0.3)",
-      brandText: "天命共振",
-      styleLabel: "暗黑武士",
-    };
-  }
-  // female / other / null → 女生版（預設）
-  return {
-    bgGradient: "linear-gradient(135deg, #1A1A2A 0%, #2D1B4E 50%, #1A0A2E 100%)",
-    accentColor: "#C9A227",
-    subColor: "#D4A0C8",
-    textColor: "#F0E8F8",
-    panelBg: "rgba(45, 27, 78, 0.6)",
-    panelBorder: "rgba(201, 162, 39, 0.4)",
-    dividerColor: "rgba(201, 162, 39, 0.25)",
-    labelColor: "#D4A0C8",
-    tagBg: "rgba(212, 160, 200, 0.15)",
-    tagBorder: "rgba(212, 160, 200, 0.3)",
-    brandText: "天命共振",
-    styleLabel: "賽博少女",
-  };
-}
 
 export default function DestinyShareCard({
   displayName,
@@ -98,441 +52,323 @@ export default function DestinyShareCard({
   favorableElements,
   onClose,
 }: DestinyShareCardProps) {
-  const cardRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isRendering, setIsRendering] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [exportDone, setExportDone] = useState(false);
+  const [renderError, setRenderError] = useState<string | null>(null);
 
-  // 主要塔羅牌：使用「主要靈魂數（核心個性）」作為主要原型
-  // primary = 中間個性 + 年度牌 → 最深層的核心命格
   const primaryTarotNum = lifeNums?.primary.num ?? 0;
   const tarotInfo = getTarotCardInfo(primaryTarotNum);
   const tarotUrl = getTarotCardUrl(primaryTarotNum, gender === 'other' ? null : gender);
-  const theme = getTheme(gender);
+  const accentColor = gender === 'male' ? '#7BA7D4' : '#D4A0C8';
 
-  // 日主五行
   const dayMasterZh = dayMasterElement ? (ELEMENT_ZH[dayMasterElement] ?? dayMasterElement) : null;
-  const dayMasterIcon = dayMasterZh ? (ELEMENT_ICON[dayMasterZh] ?? "") : "";
-
-  // 喜用神
   const favElements = favorableElements
     ? favorableElements.split(',').map(e => ELEMENT_ZH[e.trim()] ?? e.trim()).filter(Boolean)
     : [];
+  const formattedBirthDate = birthDate ? birthDate.replace(/-/g, ' / ') : null;
 
-  // 格式化生日
-  const formattedBirthDate = birthDate
-    ? birthDate.replace(/-/g, ' / ')
-    : null;
+  const renderCard = useCallback(async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    setIsRendering(true);
+    setRenderError(null);
+    try {
+      await ensureFonts();
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas context unavailable');
+      canvas.width = CARD_W;
+      canvas.height = CARD_H;
+
+      // 1. 深色背景
+      const bgGrad = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
+      if (gender === 'male') {
+        bgGrad.addColorStop(0, '#0D1117');
+        bgGrad.addColorStop(0.4, '#1A1A2A');
+        bgGrad.addColorStop(1, '#0F1A2E');
+      } else {
+        bgGrad.addColorStop(0, '#1A1A2A');
+        bgGrad.addColorStop(0.5, '#2D1B4E');
+        bgGrad.addColorStop(1, '#1A0A2E');
+      }
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+      // 2. 塔羅牌全版背景底圖
+      try {
+        const tarotImg = await loadImage(tarotUrl);
+        const imgRatio = tarotImg.width / tarotImg.height;
+        const canvasRatio = CARD_W / CARD_H;
+        let drawW: number, drawH: number, drawX: number, drawY: number;
+        if (imgRatio > canvasRatio) {
+          drawH = CARD_H;
+          drawW = CARD_H * imgRatio;
+          drawX = (CARD_W - drawW) / 2;
+          drawY = 0;
+        } else {
+          drawW = CARD_W;
+          drawH = CARD_W / imgRatio;
+          drawX = 0;
+          drawY = (CARD_H - drawH) / 2;
+        }
+        ctx.drawImage(tarotImg, drawX, drawY, drawW, drawH);
+      } catch {
+        // 圖片載入失敗，繼續用純色背景
+      }
+
+      // 3. 半透明深色遮罩
+      const maskGrad = ctx.createLinearGradient(0, 0, 0, CARD_H);
+      maskGrad.addColorStop(0, 'rgba(10,8,20,0.82)');
+      maskGrad.addColorStop(0.3, 'rgba(10,8,20,0.55)');
+      maskGrad.addColorStop(0.6, 'rgba(10,8,20,0.62)');
+      maskGrad.addColorStop(1, 'rgba(10,8,20,0.90)');
+      ctx.fillStyle = maskGrad;
+      ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+      const PAD = 80;
+
+      // 4. 頂部品牌
+      ctx.font = '300 36px "Noto Serif TC", serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.textAlign = 'center';
+      ctx.fillText('✦  天命共振  ✦', CARD_W / 2, 120);
+
+      ctx.font = '700 56px "Noto Serif TC", serif';
+      ctx.fillStyle = '#C9A227';
+      ctx.textAlign = 'center';
+      ctx.fillText('命格身份證', CARD_W / 2, 205);
+
+      ctx.strokeStyle = 'rgba(201,162,39,0.4)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(PAD * 2, 235);
+      ctx.lineTo(CARD_W - PAD * 2, 235);
+      ctx.stroke();
+
+      // 5. 用戶名稱 & 塔羅原型
+      ctx.font = '700 76px "Noto Serif TC", serif';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'center';
+      ctx.fillText(displayName, CARD_W / 2, 340);
+
+      ctx.font = '400 38px "Noto Serif TC", serif';
+      ctx.fillStyle = accentColor;
+      ctx.textAlign = 'center';
+      ctx.fillText(`${tarotInfo.nameZh}  ·  ${tarotInfo.nameEn}`, CARD_W / 2, 408);
+
+      // 6. 資訊面板
+      const panelX = PAD;
+      const panelY = 460;
+      const panelW = CARD_W - PAD * 2;
+      const panelH = 940;
+
+      ctx.save();
+      drawRoundRect(ctx, panelX, panelY, panelW, panelH, 32);
+      ctx.fillStyle = gender === 'male'
+        ? 'rgba(13,25,48,0.74)'
+        : 'rgba(45,27,78,0.70)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(201,162,39,0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      const innerX = panelX + 64;
+      const innerW = panelW - 128;
+      let y = panelY + 72;
+
+      // 生命靈數
+      if (lifeNums) {
+        ctx.font = '400 28px "Noto Serif TC", serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.38)';
+        ctx.textAlign = 'left';
+        ctx.fillText('生命靈數', innerX, y);
+        y += 52;
+
+        const numItems = [
+          { label: '主要靈魂數', num: lifeNums.primary.num, name: lifeNums.primary.name },
+          { label: '外在個性數', num: lifeNums.outer.num, name: lifeNums.outer.name },
+          { label: '中間個性數', num: lifeNums.middle.num, name: lifeNums.middle.name },
+          { label: '靈魂渴望數', num: lifeNums.soul.num, name: lifeNums.soul.name },
+        ];
+        const colW = innerW / 2;
+        numItems.forEach((item, i) => {
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          const ix = innerX + col * colW;
+          const iy = y + row * 112;
+          ctx.font = '700 54px "Noto Serif TC", serif';
+          ctx.fillStyle = '#C9A227';
+          ctx.textAlign = 'left';
+          ctx.fillText(String(item.num), ix, iy + 52);
+          ctx.font = '400 24px "Noto Serif TC", serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.42)';
+          ctx.fillText(item.label, ix + 64, iy + 28);
+          ctx.font = '500 28px "Noto Serif TC", serif';
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillText(item.name, ix + 64, iy + 58);
+        });
+        y += 248;
+      }
+
+      // 分隔線
+      ctx.strokeStyle = 'rgba(201,162,39,0.2)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(innerX, y);
+      ctx.lineTo(innerX + innerW, y);
+      ctx.stroke();
+      y += 52;
+
+      // 八字命盤
+      if (dayMasterZh || dayPillar || yearPillar) {
+        ctx.font = '400 28px "Noto Serif TC", serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.38)';
+        ctx.textAlign = 'left';
+        ctx.fillText('八字命盤', innerX, y);
+        y += 52;
+        const pillars: string[] = [];
+        if (yearPillar) pillars.push(`年柱：${yearPillar}`);
+        if (dayPillar) pillars.push(`日柱：${dayPillar}`);
+        if (dayMasterZh) pillars.push(`日主：${dayMasterZh}行`);
+        ctx.font = '500 32px "Noto Serif TC", serif';
+        ctx.fillStyle = '#E8F0F8';
+        ctx.textAlign = 'left';
+        ctx.fillText(pillars.join('  ·  '), innerX, y + 36);
+        y += 90;
+      }
+
+      // 喜用神
+      if (favElements.length > 0) {
+        ctx.font = '400 28px "Noto Serif TC", serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.38)';
+        ctx.textAlign = 'left';
+        ctx.fillText('喜用神', innerX, y);
+        y += 52;
+        ctx.font = '500 36px "Noto Serif TC", serif';
+        ctx.fillStyle = accentColor;
+        ctx.textAlign = 'left';
+        ctx.fillText(favElements.join('  ·  '), innerX, y + 36);
+        y += 82;
+      }
+
+      // 生日
+      if (formattedBirthDate) {
+        ctx.font = '400 28px "Noto Serif TC", serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.38)';
+        ctx.textAlign = 'left';
+        ctx.fillText('出生日期', innerX, y);
+        y += 52;
+        ctx.font = '500 32px "Noto Serif TC", serif';
+        ctx.fillStyle = '#E8F0F8';
+        ctx.textAlign = 'left';
+        ctx.fillText(formattedBirthDate, innerX, y + 36);
+        if (birthLunar) {
+          ctx.font = '400 26px "Noto Serif TC", serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.38)';
+          ctx.fillText(`農曆 ${birthLunar}`, innerX + 380, y + 36);
+        }
+      }
+
+      // 7. 塔羅關鍵字
+      const kwY = panelY + panelH + 62;
+      ctx.font = '400 30px "Noto Serif TC", serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.48)';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${tarotInfo.nameZh} · ${tarotInfo.keyword}`, CARD_W / 2, kwY);
+
+      // 8. 底部品牌
+      ctx.font = '300 26px "Noto Serif TC", serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.22)';
+      ctx.textAlign = 'center';
+      ctx.fillText('ORACLE RESONANCE', CARD_W / 2, CARD_H - 80);
+
+      setIsRendering(false);
+    } catch (err) {
+      console.error('Card render error:', err);
+      setRenderError('卡片渲染失敗，請重試');
+      setIsRendering(false);
+    }
+  }, [displayName, gender, tarotUrl, tarotInfo, accentColor, lifeNums, dayMasterZh, dayPillar, yearPillar, favElements, formattedBirthDate, birthLunar]);
+
+  useEffect(() => { renderCard(); }, [renderCard]);
 
   const handleDownload = useCallback(async () => {
-    if (!cardRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas || isRendering) return;
     setIsExporting(true);
     try {
-      // 等待圖片載入
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const canvas = await html2canvas(cardRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: null,
-        logging: false,
-        width: 800,
-        height: 600,
-      });
-      const link = document.createElement('a');
-      link.download = `天命共振-${displayName}-命格身份證.png`;
-      link.href = canvas.toDataURL('image/png', 1.0);
-      link.click();
+      downloadCanvas(canvas, `天命共振-${displayName}-命格身份證.png`);
       setExportDone(true);
       setTimeout(() => setExportDone(false), 3000);
-    } catch (err) {
-      console.error('Export failed:', err);
     } finally {
       setIsExporting(false);
     }
-  }, [displayName]);
+  }, [displayName, isRendering]);
 
   const handleShare = useCallback(async () => {
-    if (!cardRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas || isRendering) return;
     setIsExporting(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const canvas = await html2canvas(cardRef.current, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: null,
-        logging: false,
-        width: 800,
-        height: 600,
-      });
-      canvas.toBlob(async (blob) => {
-        if (!blob) return;
-        if (navigator.share && navigator.canShare) {
-          const file = new File([blob], `天命共振-${displayName}-命格身份證.png`, { type: 'image/png' });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              title: `${displayName} 的天命命格身份證`,
-              text: `我的塔羅原型是「${tarotInfo.nameZh}」，快來天命共振探索你的命格！`,
-              files: [file],
-            });
-            return;
-          }
-        }
-        // fallback: 下載
-        const link = document.createElement('a');
-        link.download = `天命共振-${displayName}-命格身份證.png`;
-        link.href = URL.createObjectURL(blob);
-        link.click();
-      }, 'image/png', 1.0);
-    } catch (err) {
-      console.error('Share failed:', err);
+      await shareCanvas(
+        canvas,
+        `天命共振-${displayName}-命格身份證.png`,
+        `${displayName} 的天命命格身份證`,
+        `我的塔羅原型是「${tarotInfo.nameZh}」，快來天命共振探索你的命格！`,
+      );
     } finally {
       setIsExporting(false);
     }
-  }, [displayName, tarotInfo.nameZh]);
+  }, [displayName, tarotInfo.nameZh, isRendering]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
-      <div className="w-full max-w-3xl">
-        {/* 操作按鈕列 */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-sm text-gray-400">命格身份證 · 長按或點擊下載分享</div>
+      style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(8px)' }}>
+      <div className="w-full max-w-sm flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-400">命格身份證 · 點擊下載或分享</div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-              disabled={isExporting}
-              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
-            >
+            {renderError && (
+              <Button variant="ghost" size="sm" onClick={renderCard} className="text-amber-400 hover:text-amber-300">
+                <RefreshCw className="w-4 h-4 mr-1" />重試
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={handleShare} disabled={isExporting || isRendering}
+              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10">
               {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
               <span className="ml-1">分享</span>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownload}
-              disabled={isExporting}
-              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
-            >
+            <Button variant="outline" size="sm" onClick={handleDownload} disabled={isExporting || isRendering}
+              className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10">
               {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
               <span className="ml-1">{exportDone ? '已下載！' : '下載'}</span>
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-gray-400 hover:text-white"
-            >
+            <Button variant="ghost" size="sm" onClick={onClose} className="text-gray-400 hover:text-white">
               <X className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        {/* 分享卡主體（800×600，4:3 比例） */}
-        <div
-          ref={cardRef}
-          style={{
-            width: '800px',
-            height: '600px',
-            background: theme.bgGradient,
-            display: 'flex',
-            flexDirection: 'row',
-            position: 'relative',
-            overflow: 'hidden',
-            fontFamily: '"Noto Serif TC", "Noto Sans TC", serif',
-            maxWidth: '100%',
-            transform: 'scale(1)',
-            transformOrigin: 'top left',
-          }}
-          className="destiny-share-card rounded-2xl shadow-2xl"
-        >
-          {/* 背景裝飾：星點 */}
-          <div style={{
-            position: 'absolute', inset: 0, pointerEvents: 'none',
-            background: 'radial-gradient(ellipse at 80% 20%, rgba(201,162,39,0.08) 0%, transparent 60%), radial-gradient(ellipse at 20% 80%, rgba(201,162,39,0.05) 0%, transparent 50%)',
-          }} />
-
-          {/* 左側：塔羅牌區（40%），高度撐滿與右側對稱 */}
-          <div style={{
-            width: '40%',
-            height: '600px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px 16px 24px 24px',
-            position: 'relative',
-            boxSizing: 'border-box',
-          }}>
-            {/* 塔羅牌圖片 */}
-            <div style={{
-              width: '200px',
-              height: '300px',
-              borderRadius: '8px',
-              overflow: 'hidden',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(201,162,39,0.2)',
-              border: `1px solid rgba(201,162,39,0.3)`,
-              flexShrink: 0,
-            }}>
-              <img
-                src={tarotUrl}
-                alt={tarotInfo.nameZh}
-                crossOrigin="anonymous"
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  display: 'block',
-                }}
-              />
+        <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ aspectRatio: '9/16', background: '#0a0814' }}>
+          {isRendering && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/60">
+              <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+              <span className="text-sm text-amber-300">正在生成分享卡...</span>
             </div>
-            {/* 塔羅牌名稱 */}
-            <div style={{ marginTop: '12px', textAlign: 'center' }}>
-              <div style={{
-                color: theme.accentColor,
-                fontSize: '13px',
-                fontWeight: '600',
-                letterSpacing: '0.1em',
-              }}>
-                {tarotInfo.nameZh}
-              </div>
-              <div style={{
-                color: 'rgba(255,255,255,0.4)',
-                fontSize: '10px',
-                marginTop: '2px',
-                letterSpacing: '0.05em',
-              }}>
-                {tarotInfo.nameEn}
-              </div>
+          )}
+          {renderError && !isRendering && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+              <span className="text-sm text-red-400">{renderError}</span>
             </div>
-          </div>
-
-          {/* 右側：資訊面板（60%），高度撐滿與左側對稱 */}
-          <div style={{
-            width: '60%',
-            height: '600px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            padding: '28px 28px 28px 16px',
-            boxSizing: 'border-box',
-          }}>
-            {/* 玻璃擬態面板 */}
-            <div style={{
-              background: theme.panelBg,
-              backdropFilter: 'blur(10px)',
-              border: `1px solid ${theme.panelBorder}`,
-              borderRadius: '16px',
-              padding: '20px 24px',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              boxSizing: 'border-box',
-            }}>
-              {/* 頂部：品牌 + 姓名 */}
-              <div>
-                <div style={{
-                  color: theme.accentColor,
-                  fontSize: '10px',
-                  letterSpacing: '0.3em',
-                  marginBottom: '8px',
-                  opacity: 0.8,
-                }}>
-                  ✦ {theme.brandText} · 命格身份證 ✦
-                </div>
-                <div style={{
-                  color: theme.textColor,
-                  fontSize: '26px',
-                  fontWeight: '700',
-                  letterSpacing: '0.1em',
-                  lineHeight: 1.2,
-                }}>
-                  {displayName}
-                </div>
-                {formattedBirthDate && (
-                  <div style={{
-                    color: 'rgba(255,255,255,0.45)',
-                    fontSize: '11px',
-                    marginTop: '4px',
-                    letterSpacing: '0.05em',
-                  }}>
-                    {formattedBirthDate}
-                    {birthLunar && ` · ${birthLunar}`}
-                  </div>
-                )}
-              </div>
-
-              {/* 分隔線 */}
-              <div style={{
-                height: '1px',
-                background: `linear-gradient(90deg, transparent, ${theme.dividerColor}, transparent)`,
-                margin: '12px 0',
-              }} />
-
-              {/* 中部：塔羅原型 */}
-              <div>
-                <div style={{
-                  color: theme.labelColor,
-                  fontSize: '10px',
-                  letterSpacing: '0.2em',
-                  marginBottom: '6px',
-                }}>
-                  命格核心原型
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'baseline',
-                  gap: '8px',
-                }}>
-                  <span style={{
-                    color: theme.accentColor,
-                    fontSize: '22px',
-                    fontWeight: '700',
-                  }}>
-                    {tarotInfo.nameZh}
-                  </span>
-                  <span style={{
-                    color: 'rgba(255,255,255,0.4)',
-                    fontSize: '11px',
-                  }}>
-                    No.{primaryTarotNum === 22 ? '0' : primaryTarotNum}
-                  </span>
-                </div>
-                <div style={{
-                  color: 'rgba(255,255,255,0.55)',
-                  fontSize: '11px',
-                  marginTop: '3px',
-                }}>
-                  {tarotInfo.keyword}
-                </div>
-              </div>
-
-              {/* 分隔線 */}
-              <div style={{
-                height: '1px',
-                background: `linear-gradient(90deg, transparent, ${theme.dividerColor}, transparent)`,
-                margin: '10px 0',
-              }} />
-
-              {/* 生命靈數 */}
-              {lifeNums && (
-                <div>
-                  <div style={{
-                    color: theme.labelColor,
-                    fontSize: '10px',
-                    letterSpacing: '0.2em',
-                    marginBottom: '8px',
-                  }}>
-                    生命靈數
-                  </div>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '6px',
-                  }}>
-                    {[
-                      { label: '外層', num: lifeNums.outer.num, name: lifeNums.outer.name },
-                      { label: '中層', num: lifeNums.middle.num, name: lifeNums.middle.name },
-                      { label: '主要', num: lifeNums.primary.num, name: lifeNums.primary.name },
-                      { label: '靈魂', num: lifeNums.soul.num, name: lifeNums.soul.name },
-                    ].map(item => (
-                      <div key={item.label} style={{
-                        background: theme.tagBg,
-                        border: `1px solid ${theme.tagBorder}`,
-                        borderRadius: '8px',
-                        padding: '6px 10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                      }}>
-                        <span style={{
-                          color: theme.accentColor,
-                          fontSize: '16px',
-                          fontWeight: '700',
-                          minWidth: '22px',
-                        }}>
-                          {item.num === 22 ? '0' : item.num}
-                        </span>
-                        <div>
-                          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px' }}>{item.label}</div>
-                          <div style={{ color: theme.textColor, fontSize: '11px', fontWeight: '500' }}>{item.name}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 分隔線 */}
-              {(dayMasterZh || favElements.length > 0) && (
-                <div style={{
-                  height: '1px',
-                  background: `linear-gradient(90deg, transparent, ${theme.dividerColor}, transparent)`,
-                  margin: '10px 0',
-                }} />
-              )}
-
-              {/* 底部：日主 + 喜用神 */}
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                {dayMasterZh && (
-                  <div>
-                    <div style={{ color: theme.labelColor, fontSize: '9px', letterSpacing: '0.15em', marginBottom: '3px' }}>日主五行</div>
-                    <div style={{
-                      color: theme.textColor,
-                      fontSize: '13px',
-                      fontWeight: '600',
-                    }}>
-                      {dayMasterIcon} {dayMasterZh}
-                    </div>
-                  </div>
-                )}
-                {favElements.length > 0 && (
-                  <div>
-                    <div style={{ color: theme.labelColor, fontSize: '9px', letterSpacing: '0.15em', marginBottom: '3px' }}>喜用神</div>
-                    <div style={{
-                      color: theme.textColor,
-                      fontSize: '13px',
-                      fontWeight: '600',
-                    }}>
-                      {favElements.map(el => `${ELEMENT_ICON[el] ?? ''}${el}`).join(' · ')}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* 底部品牌標識 */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginTop: '8px',
-              }}>
-                <div style={{
-                  color: 'rgba(255,255,255,0.2)',
-                  fontSize: '9px',
-                  letterSpacing: '0.2em',
-                }}>
-                  oracleres.com
-                </div>
-                <div style={{
-                  color: theme.accentColor,
-                  fontSize: '9px',
-                  opacity: 0.6,
-                }}>
-                  ✦ 天命共振 ✦
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
+          <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
         </div>
 
-        {/* 縮放提示（卡片超出螢幕時） */}
-        <div className="text-center mt-3 text-xs text-gray-500">
-          卡片尺寸 800×600px · 下載後可分享至社群媒體
-        </div>
+        <p className="text-xs text-center text-gray-500">
+          圖片尺寸 1080×1920px，適合 Instagram / LINE / Facebook 分享
+        </p>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 /**
  * LandingPage.tsx - 天命共振 Destiny Oracle
  * 整合排程 Agent 設計稿：全息漸層、glass-card hover 金光、ripple 波紋、居中布局
+ * v1.5：修正日夜切換邏輯（darkMode 傳遞至所有 section）、文字配色、替換「原神」名詞
  */
 import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -24,21 +25,76 @@ const CDN = {
   iconLottery: "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/icon_lottery_38c16ec6.png",
 };
 
+/** 主題配色 token — 深色 / 淺色模式 */
+function getTheme(dark: boolean) {
+  return dark
+    ? {
+        // ── 深色模式 ──────────────────────────────────────────
+        pageBg: "#0d1b2e",
+        sectionBg: "rgba(13,27,46,1)",
+        sectionBg2: "rgba(9,21,37,1)",
+        navBg: "rgba(13,27,46,0.85)",
+        statsBg: "linear-gradient(135deg,rgba(201,162,39,0.08) 0%,rgba(0,206,209,0.05) 100%)",
+        statsBorder: "rgba(201,162,39,0.2)",
+        heroOverlay: "linear-gradient(rgba(13,27,46,0.3) 0%,rgba(13,27,46,0.1) 40%,rgba(13,27,46,0.7) 100%)",
+        text: "text-slate-200",
+        textSub: "text-slate-400",
+        textMuted: "text-slate-500",
+        textBody: "text-slate-300",
+        cardText: "text-slate-200",
+        cardTextLocked: "text-slate-400",
+        cardDesc: "text-slate-400",
+        cardDescLocked: "text-slate-500",
+        footerBorder: "border-slate-800/50",
+        footerText: "text-slate-500",
+        footerCopy: "text-slate-600",
+        resultBg: "bg-slate-900/90 border-amber-500/20",
+        starOpacity: "opacity-60",
+        toggleLabel: "夜晚",
+        toggleIcon: <Moon className="w-4 h-4" />,
+      }
+    : {
+        // ── 淺色模式 ──────────────────────────────────────────
+        pageBg: "#f5f0e8",
+        sectionBg: "rgba(245,240,232,1)",
+        sectionBg2: "rgba(237,231,220,1)",
+        navBg: "rgba(245,240,232,0.92)",
+        statsBg: "linear-gradient(135deg,rgba(201,162,39,0.12) 0%,rgba(0,150,160,0.07) 100%)",
+        statsBorder: "rgba(201,162,39,0.3)",
+        heroOverlay: "linear-gradient(rgba(245,240,232,0.2) 0%,rgba(245,240,232,0.05) 40%,rgba(245,240,232,0.75) 100%)",
+        text: "text-slate-800",
+        textSub: "text-slate-600",
+        textMuted: "text-slate-500",
+        textBody: "text-slate-700",
+        cardText: "text-slate-800",
+        cardTextLocked: "text-slate-500",
+        cardDesc: "text-slate-600",
+        cardDescLocked: "text-slate-400",
+        footerBorder: "border-amber-200/60",
+        footerText: "text-slate-500",
+        footerCopy: "text-slate-400",
+        resultBg: "bg-amber-50/90 border-amber-300/40",
+        starOpacity: "opacity-20",
+        toggleLabel: "白天",
+        toggleIcon: <Sun className="w-4 h-4" />,
+      };
+}
+
 const ELEMENT_COLORS: Record<string, { gradient: string; text: string; bg: string; border: string }> = {
-  木: { gradient: "from-emerald-600 to-green-500", text: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
-  火: { gradient: "from-red-600 to-orange-500", text: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/30" },
-  土: { gradient: "from-amber-600 to-yellow-500", text: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/30" },
-  金: { gradient: "from-slate-400 to-gray-300", text: "text-slate-300", bg: "bg-slate-500/10", border: "border-slate-400/30" },
-  水: { gradient: "from-blue-600 to-cyan-500", text: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/30" },
+  木: { gradient: "from-emerald-600 to-green-500", text: "text-emerald-600", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+  火: { gradient: "from-red-600 to-orange-500", text: "text-orange-500", bg: "bg-orange-500/10", border: "border-orange-500/30" },
+  土: { gradient: "from-amber-600 to-yellow-500", text: "text-amber-600", bg: "bg-amber-500/10", border: "border-amber-500/30" },
+  金: { gradient: "from-slate-400 to-gray-300", text: "text-slate-500", bg: "bg-slate-500/10", border: "border-slate-400/30" },
+  水: { gradient: "from-blue-600 to-cyan-500", text: "text-blue-600", bg: "bg-blue-500/10", border: "border-blue-500/30" },
 };
 
 const FEATURE_CARDS = [
-  { img: CDN.iconDestinyCard, title: "命格身份證", subtitle: "解讀你的天命密碼", desc: "根據生辰八字，生成專屬命格身份證，揭示你的元神屬性與人生主線。", tag: "會員限定", tagColor: "bg-slate-700/60 text-slate-300", locked: true },
-  { img: CDN.iconWarRoom, title: "今日作戰室", subtitle: "每日策略指引", desc: "結合今日流年流月，提供最佳行動時機與避忌事項，讓你每天都能精準出擊。", tag: "每日更新", tagColor: "bg-emerald-500/20 text-emerald-400", locked: false },
+  { img: CDN.iconDestinyCard, title: "命格身份證", subtitle: "解讀你的天命密碼", desc: "根據生辰八字，生成專屬命格身份證，揭示你的天生特質與人生主線。", tag: "會員限定", tagColor: "bg-slate-700/60 text-slate-300", locked: true },
+  { img: CDN.iconWarRoom, title: "今日作戰室", subtitle: "每日策略指引", desc: "結合今日流年流月，提供最佳行動時機與避忌事項，讓你每天都能精準出擊。", tag: "每日更新", tagColor: "bg-emerald-500/20 text-emerald-600", locked: false },
   { img: CDN.iconOracle, title: "天命問卜", subtitle: "AI 命理諮詢", desc: "以天命 AI 為媒介，針對感情、事業、財運提出問題，獲得深度命理解析。", tag: "會員限定", tagColor: "bg-slate-700/60 text-slate-300", locked: true },
-  { img: CDN.iconWealth, title: "財運羅盤", subtitle: "財富流向預測", desc: "精算流年財星位置，分析最佳投資時機與財富增長方向，掌握天時地利。", tag: "免費體驗", tagColor: "bg-amber-500/20 text-amber-400", locked: false },
-  { img: CDN.iconDestinyCard, title: "天命日曆", subtitle: "吉凶宜忌一覽", desc: "整合農曆節氣、個人命盤，標示每日吉凶宜忌，讓重要決策都能順天應時。", tag: "核心功能", tagColor: "bg-blue-500/20 text-blue-400", locked: false },
-  { img: CDN.iconLottery, title: "數位錦囊", subtitle: "隨身命理秘書", desc: "隨時隨地開啟錦囊，獲取當下最需要的命理指引，如同隨身攜帶命理師。", tag: "核心功能", tagColor: "bg-purple-500/20 text-purple-400", locked: false },
+  { img: CDN.iconWealth, title: "財運羅盤", subtitle: "財富流向預測", desc: "精算流年財星位置，分析最佳投資時機與財富增長方向，掌握天時地利。", tag: "免費體驗", tagColor: "bg-amber-500/20 text-amber-600", locked: false },
+  { img: CDN.iconDestinyCard, title: "天命日曆", subtitle: "吉凶宜忌一覽", desc: "整合農曆節氣、個人命盤，標示每日吉凶宜忌，讓重要決策都能順天應時。", tag: "核心功能", tagColor: "bg-blue-500/20 text-blue-600", locked: false },
+  { img: CDN.iconLottery, title: "數位錦囊", subtitle: "隨身命理秘書", desc: "隨時隨地開啟錦囊，獲取當下最需要的命理指引，如同隨身攜帶命理師。", tag: "核心功能", tagColor: "bg-purple-500/20 text-purple-600", locked: false },
 ];
 
 const STATS = [
@@ -49,12 +105,12 @@ const STATS = [
 ];
 
 const TESTIMONIALS = [
-  { name: "Mia C.", role: "創業者", avatar: "M", element: "火", text: "天命共振讓我开始注意流日能量的變化，選對時機做决定就是比較輕鬆。不是魔法，是讓自己更清醒的工具。" },
+  { name: "Mia C.", role: "創業者", avatar: "M", element: "火", text: "天命共振讓我開始注意流日能量的變化，選對時機做決定就是比較輕鬆。不是魔法，是讓自己更清醒的工具。" },
   { name: "Jason L.", role: "自雇工作者", avatar: "J", element: "金", text: "天命日曆讓我知道哪幾天適合推進新案子、哪幾天適合休息整理思路。安排工作節奏變得比以前自然多了。" },
-  { name: "Sophia W.", role: "設計師", avatar: "S", element: "木", text: "每天早上看一下今日作戰室，感覺整個人的節奏都對了。命格身份證讓我重新認識自己的天生屬性，很有趣。" },
+  { name: "Sophia W.", role: "設計師", avatar: "S", element: "木", text: "每天早上看一下今日作戰室，感覺整個人的節奏都對了。命格身份證讓我重新認識自己的天生特質，很有趣。" },
 ];
 
-/** 星星粒子 Canvas（純 CSS 動畫，不依賴 framer-motion） */
+/** 星星粒子 Canvas */
 function StarCanvas({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -62,10 +118,7 @@ function StarCanvas({ className }: { className?: string }) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const resize = () => {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
-    };
+    const resize = () => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; };
     resize();
     window.addEventListener("resize", resize);
     const stars = Array.from({ length: 120 }, () => ({
@@ -95,27 +148,31 @@ function StarCanvas({ className }: { className?: string }) {
   return <canvas ref={canvasRef} className={className} />;
 }
 
-function LandingNav({ darkMode, onToggle }: { darkMode: boolean; onToggle: () => void }) {
+type Theme = ReturnType<typeof getTheme>;
+
+function LandingNav({ theme, onToggle }: { theme: Theme; onToggle: () => void }) {
   return (
     <nav
       className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b border-white/10"
-      style={{ background: "rgba(13, 27, 46, 0.85)" }}
+      style={{ background: theme.navBg }}
     >
       <div className="container flex items-center justify-between h-16">
         <div className="flex items-center gap-3">
           <img src={CDN.logo} alt="天命共振" className="w-9 h-9 object-contain drop-shadow-[0_0_8px_rgba(201,162,39,0.6)]" />
           <div>
             <span className="text-lg font-bold text-gold-gradient">天命共振</span>
-            <span className="hidden sm:block text-xs text-slate-400 tracking-widest">數位錦囊</span>
+            <span className={`hidden sm:block text-xs ${theme.textSub} tracking-widest`}>數位錦囊</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* 日夜切換按鈕 — 加入說明文字 */}
           <button
             onClick={onToggle}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-amber-400 transition-colors"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-amber-500/30 ${theme.textSub} hover:text-amber-500 hover:border-amber-500/60 transition-all text-xs`}
             title="切換日夜模式"
           >
-            {darkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            {theme.toggleIcon}
+            <span className="hidden sm:inline">{theme.toggleLabel}</span>
           </button>
           <a
             href={getLoginUrl()}
@@ -130,7 +187,7 @@ function LandingNav({ darkMode, onToggle }: { darkMode: boolean; onToggle: () =>
   );
 }
 
-function HeroSection() {
+function HeroSection({ theme }: { theme: Theme }) {
   const [birthInput, setBirthInput] = useState("");
   const [fortuneResult, setFortuneResult] = useState<{
     fortune: {
@@ -167,12 +224,12 @@ function HeroSection() {
         />
         <div
           className="absolute inset-0"
-          style={{ background: "linear-gradient(rgba(13,27,46,0.3) 0%, rgba(13,27,46,0.1) 40%, rgba(13,27,46,0.7) 100%)" }}
+          style={{ background: theme.heroOverlay }}
         />
       </div>
 
       {/* 星星 Canvas */}
-      <StarCanvas className="absolute inset-0 w-full h-full pointer-events-none opacity-60" />
+      <StarCanvas className={`absolute inset-0 w-full h-full pointer-events-none ${theme.starOpacity}`} />
 
       {/* 主要內容：左文右球 */}
       <div className="relative z-10 container">
@@ -186,12 +243,12 @@ function HeroSection() {
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
                 <span className="text-holographic">解讀天命</span>
                 <br />
-                <span className="text-foreground">掌握命運</span>
+                <span className={theme.text}>掌握命運</span>
               </h1>
             </div>
 
             <p
-              className="text-base sm:text-lg text-slate-300/80 max-w-lg mx-auto lg:mx-0 leading-relaxed animate-slide-up"
+              className={`text-base sm:text-lg ${theme.textBody} max-w-lg mx-auto lg:mx-0 leading-relaxed animate-slide-up`}
               style={{ animationDelay: "0.2s" }}
             >
               融合東方玄學與現代 AI，為你解讀命盤、指引每日運勢。
@@ -220,7 +277,7 @@ function HeroSection() {
                   className="relative px-5 py-3 rounded-xl font-medium text-sm transition-all disabled:opacity-60 overflow-hidden shrink-0"
                   style={{ background: "linear-gradient(135deg, #C9A227, #F5D06A)", color: "#1a1a2e" }}
                 >
-                  {fortuneMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "開啟錦囊"}
+                  {fortuneMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "⭐ 探索今日運勢"}
                 </Button>
               </form>
               {error && (
@@ -228,9 +285,9 @@ function HeroSection() {
                   <AlertCircle className="w-4 h-4 shrink-0" /><span>{error}</span>
                 </div>
               )}
-              <p className="mt-3 text-xs text-center text-muted-foreground">
+              <p className={`mt-3 text-xs text-center ${theme.textMuted}`}>
                 <a href={getLoginUrl()} className="text-[#C9A227] hover:underline font-medium">
-                  登入後，你的元神將正式覺醒
+                  登入後，天命之門將為你開啟
                 </a>
                 ，解鎖完整命盤功能
               </p>
@@ -245,7 +302,7 @@ function HeroSection() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <div className="rounded-2xl bg-slate-900/90 border border-amber-500/20 backdrop-blur-sm overflow-hidden p-5">
+                  <div className={`rounded-2xl backdrop-blur-sm overflow-hidden p-5 border ${theme.resultBg}`}>
                     <FortuneCard
                       fortune={fortuneResult.fortune}
                       birthdate={fortuneResult.birthdate}
@@ -271,12 +328,10 @@ function HeroSection() {
             className="flex-shrink-0 relative w-72 h-72 sm:w-96 sm:h-96 lg:w-[420px] lg:h-[420px] animate-fade-in"
             style={{ animationDelay: "0.4s" }}
           >
-            {/* 光暈背景 */}
             <div
               className="absolute inset-0 rounded-full blur-3xl opacity-40"
               style={{ background: "radial-gradient(circle, rgba(201,162,39,0.5) 0%, rgba(0,206,209,0.3) 50%, transparent 70%)" }}
             />
-            {/* Ripple 波紋 */}
             <div className="absolute inset-0 flex items-center justify-center">
               {[
                 { size: "60%", delay: "0s", duration: "2.5s" },
@@ -286,15 +341,10 @@ function HeroSection() {
                 <div
                   key={i}
                   className="absolute rounded-full border border-[#C9A227]/20"
-                  style={{
-                    width: ring.size,
-                    height: ring.size,
-                    animation: `ripple-expand ${ring.duration} ease-out ${ring.delay} infinite`,
-                  }}
+                  style={{ width: ring.size, height: ring.size, animation: `ripple-expand ${ring.duration} ease-out ${ring.delay} infinite` }}
                 />
               ))}
             </div>
-            {/* 光球圖片 */}
             <img
               src={CDN.orb}
               alt="命盤光球"
@@ -306,7 +356,7 @@ function HeroSection() {
 
       {/* 向下滾動提示 */}
       <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-slate-400/60 text-xs"
+        className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 ${theme.textMuted} text-xs`}
         animate={{ y: [0, 6, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
       >
@@ -317,9 +367,9 @@ function HeroSection() {
   );
 }
 
-function FeaturesSection() {
+function FeaturesSection({ theme }: { theme: Theme }) {
   return (
-    <section className="py-20 lg:py-28 relative overflow-hidden" style={{ background: "rgba(13,27,46,1)" }}>
+    <section className="py-20 lg:py-28 relative overflow-hidden" style={{ background: theme.sectionBg }}>
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -328,11 +378,11 @@ function FeaturesSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-14"
         >
-          <p className="text-amber-400/70 text-xs tracking-[0.3em] uppercase mb-3">CORE FEATURES</p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          <p className="text-amber-500/70 text-xs tracking-[0.3em] uppercase mb-3">CORE FEATURES</p>
+          <h2 className={`text-4xl md:text-5xl font-bold mb-4 ${theme.text}`}>
             六大<span className="text-holographic">天命模組</span>
           </h2>
-          <p className="text-slate-400 text-base max-w-xl mx-auto">從命格解讀到每日指引，全方位覆蓋你的命理需求</p>
+          <p className={`${theme.textSub} text-base max-w-xl mx-auto`}>從命格解讀到每日指引，全方位覆蓋你的命理需求</p>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {FEATURE_CARDS.map((card, index) => (
@@ -345,7 +395,7 @@ function FeaturesSection() {
               className="glass-card rounded-2xl p-6 group relative overflow-hidden"
             >
               {card.locked ? (
-                <div className="absolute top-4 right-4 flex items-center gap-1 text-slate-500 text-xs">
+                <div className={`absolute top-4 right-4 flex items-center gap-1 ${theme.textMuted} text-xs`}>
                   <Lock className="w-3 h-3" /><span>會員限定</span>
                 </div>
               ) : (
@@ -354,15 +404,15 @@ function FeaturesSection() {
               <div className="w-16 h-16 mb-5">
                 <img src={card.img} alt={card.title} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110" />
               </div>
-              <h3 className={`text-lg font-bold mb-1 ${card.locked ? "text-slate-400" : "text-foreground"}`}>{card.title}</h3>
-              <p className="text-amber-400/70 text-xs mb-3">{card.subtitle}</p>
-              <p className={`text-sm leading-relaxed ${card.locked ? "text-slate-500" : "text-slate-400"}`}>{card.desc}</p>
+              <h3 className={`text-lg font-bold mb-1 ${card.locked ? theme.cardTextLocked : theme.cardText}`}>{card.title}</h3>
+              <p className="text-amber-500/70 text-xs mb-3">{card.subtitle}</p>
+              <p className={`text-sm leading-relaxed ${card.locked ? theme.cardDescLocked : theme.cardDesc}`}>{card.desc}</p>
               <a
                 href={getLoginUrl()}
-                className={`mt-4 flex items-center gap-1 text-xs transition-colors ${card.locked ? "text-slate-500 hover:text-slate-400" : "text-amber-400/70 hover:text-amber-400"}`}
+                className={`mt-4 flex items-center gap-1 text-xs transition-colors ${card.locked ? `${theme.textMuted} hover:${theme.textSub}` : "text-amber-500/70 hover:text-amber-500"}`}
               >
                 {!card.locked && <CheckCircle className="w-3.5 h-3.5" />}
-                <span>登入後，你的元神將正式覺醒</span>
+                <span>登入後，天命之門將為你開啟</span>
               </a>
             </motion.div>
           ))}
@@ -372,14 +422,14 @@ function FeaturesSection() {
   );
 }
 
-function StatsSection() {
+function StatsSection({ theme }: { theme: Theme }) {
   return (
     <section
       className="py-16 relative overflow-hidden"
       style={{
-        background: "linear-gradient(135deg, rgba(201,162,39,0.08) 0%, rgba(0,206,209,0.05) 100%)",
-        borderTop: "1px solid rgba(201,162,39,0.2)",
-        borderBottom: "1px solid rgba(201,162,39,0.2)",
+        background: theme.statsBg,
+        borderTop: `1px solid ${theme.statsBorder}`,
+        borderBottom: `1px solid ${theme.statsBorder}`,
       }}
     >
       <div className="container">
@@ -394,8 +444,8 @@ function StatsSection() {
               className="text-center"
             >
               <div className="text-4xl font-bold text-gold-gradient font-serif mb-1">{stat.value}</div>
-              <div className="text-slate-200 text-sm font-medium mb-0.5">{stat.label}</div>
-              {stat.sub && <div className="text-slate-500 text-xs">{stat.sub}</div>}
+              <div className={`${theme.text} text-sm font-medium mb-0.5`}>{stat.label}</div>
+              {stat.sub && <div className={`${theme.textMuted} text-xs`}>{stat.sub}</div>}
             </motion.div>
           ))}
         </div>
@@ -404,9 +454,9 @@ function StatsSection() {
   );
 }
 
-function TestimonialsSection() {
+function TestimonialsSection({ theme }: { theme: Theme }) {
   return (
-    <section className="py-24 relative overflow-hidden" style={{ background: "rgba(13,27,46,1)" }}>
+    <section className="py-24 relative overflow-hidden" style={{ background: theme.sectionBg }}>
       <div className="container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -415,8 +465,8 @@ function TestimonialsSection() {
           transition={{ duration: 0.6 }}
           className="text-center mb-14"
         >
-          <p className="text-amber-400/70 text-xs tracking-[0.3em] uppercase mb-3">TESTIMONIALS</p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          <p className="text-amber-500/70 text-xs tracking-[0.3em] uppercase mb-3">TESTIMONIALS</p>
+          <h2 className={`text-4xl md:text-5xl font-bold mb-4 ${theme.text}`}>
             他們的<span className="text-holographic">天命故事</span>
           </h2>
         </motion.div>
@@ -437,14 +487,14 @@ function TestimonialsSection() {
                     <span className={`font-bold text-sm ${style.text}`}>{t.avatar}</span>
                   </div>
                   <div>
-                    <div className="text-foreground font-semibold text-sm">{t.name}</div>
-                    <div className="text-slate-500 text-xs">{t.role}</div>
+                    <div className={`${theme.cardText} font-semibold text-sm`}>{t.name}</div>
+                    <div className={`${theme.textMuted} text-xs`}>{t.role}</div>
                   </div>
                   <div className="ml-auto flex gap-0.5">
-                    {[...Array(5)].map((_, i) => <Star key={i} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />)}
+                    {[...Array(5)].map((_, i) => <Star key={i} className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />)}
                   </div>
                 </div>
-                <p className="text-slate-300 text-sm leading-relaxed">「{t.text}」</p>
+                <p className={`${theme.textBody} text-sm leading-relaxed`}>「{t.text}」</p>
               </motion.div>
             );
           })}
@@ -465,38 +515,39 @@ function TestimonialsSection() {
               className="w-24 h-24 object-contain mx-auto opacity-80 orb-float"
             />
           </div>
-          <h3 className="text-3xl md:text-4xl font-bold mb-3">
-            登入後，你的<span className="text-holographic">元神</span>將正式覺醒
+          <h3 className={`text-3xl md:text-4xl font-bold mb-4 ${theme.text}`}>
+            登入後，<span className="text-holographic">天命之門</span>將為你開啟
           </h3>
-          <p className="text-slate-400 mb-8 max-w-lg mx-auto text-sm leading-relaxed">
+          <p className={`${theme.textSub} mb-8 max-w-lg mx-auto text-sm leading-relaxed`}>
             解鎖命格身份證、天命問卜、財運羅盤等完整功能，
             <br />讓 AI 命理師成為你最貼身的人生顧問。
           </p>
           <a
             href={getLoginUrl()}
             className="inline-flex items-center gap-3 px-10 py-4 rounded-2xl font-bold text-base transition-all duration-200 gold-pulse"
-            style={{
-              background: "linear-gradient(135deg, #C9A227, #F5D06A)",
-              color: "#1a1a2e",
-            }}
+            style={{ background: "linear-gradient(135deg, #C9A227, #F5D06A)", color: "#1a1a2e" }}
           >
-            立即覺醒元神 <ArrowRight className="w-5 h-5" />
+            🔮 揭開專屬指引 <ArrowRight className="w-5 h-5" />
           </a>
+          <p className={`mt-4 text-xs ${theme.textMuted}`}>
+            <Sparkles className="w-3 h-3 inline mr-1 text-amber-500/60" />
+            免費加入，隨時開始你的天命旅程
+          </p>
         </motion.div>
       </div>
     </section>
   );
 }
 
-function LandingFooter() {
+function LandingFooter({ theme }: { theme: Theme }) {
   return (
-    <footer className="py-8 border-t border-slate-800/50" style={{ background: "rgba(9,21,37,1)" }}>
+    <footer className={`py-8 border-t ${theme.footerBorder}`} style={{ background: theme.sectionBg2 }}>
       <div className="container flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <img src={CDN.logo} alt="天命共振" className="w-6 h-6 object-contain opacity-70" />
-          <span className="text-slate-500 text-sm">天命共振 Destiny Oracle · 數位命理秘書 · 融合東方玄學與現代科技</span>
+          <span className={`${theme.footerText} text-sm`}>天命共振 Destiny Oracle · 數位命理秘書 · 融合東方玄學與現代科技</span>
         </div>
-        <p className="text-slate-600 text-xs">© 2026 天命共振 · 本系統提供命理參考，不構成任何投資或決策建議</p>
+        <p className={`${theme.footerCopy} text-xs`}>© 2026 天命共振 · 本系統提供命理參考，不構成任何投資或決策建議</p>
       </div>
     </footer>
   );
@@ -506,6 +557,7 @@ export default function LandingPage() {
   const { user, loading } = useAuth();
   const [, navigate] = useLocation();
   const [darkMode, setDarkMode] = useState(true);
+  const theme = getTheme(darkMode);
 
   useEffect(() => {
     if (!loading && user) navigate("/war-room");
@@ -531,13 +583,16 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen text-foreground" style={{ background: "#0d1b2e" }}>
-      <LandingNav darkMode={darkMode} onToggle={() => setDarkMode(!darkMode)} />
-      <HeroSection />
-      <FeaturesSection />
-      <StatsSection />
-      <TestimonialsSection />
-      <LandingFooter />
+    <div
+      className="min-h-screen transition-colors duration-500"
+      style={{ background: theme.pageBg }}
+    >
+      <LandingNav theme={theme} onToggle={() => setDarkMode(!darkMode)} />
+      <HeroSection theme={theme} />
+      <FeaturesSection theme={theme} />
+      <StatsSection theme={theme} />
+      <TestimonialsSection theme={theme} />
+      <LandingFooter theme={theme} />
     </div>
   );
 }
