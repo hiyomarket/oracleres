@@ -5,6 +5,16 @@
 
 ---
 
+## 🆕 新加入的 Agent — 請先讀這裡
+
+如果你是**天命輔助系統**，請先讀：
+`FOR-ASSISTANT/INSTRUCTIONS/20260322-天命輔助系統初始化指令-第一版-INSTRUCTION.md`
+
+如果你是**遊戲 Agent**，請先讀：
+`FOR-GAME/INSTRUCTIONS/20260322-遊戲Agent初始化指令-第一版-INSTRUCTION.md`
+
+---
+
 ## 四個 Agent 的職責分工
 
 | Agent | 資料夾 | 核心職責 | 可以做什麼 | 不能做什麼 |
