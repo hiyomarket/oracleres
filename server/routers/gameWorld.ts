@@ -12,19 +12,21 @@ import { TRPCError } from "@trpc/server";
 import { eq, and, desc } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
 import { MONSTERS } from "../../shared/monsters";
-import { processTick, calcExpToNext, resolveCombat } from "../tickEngine";
+import { processTick, calcExpToNext, resolveCombat, calcCharacterStats } from "../tickEngine";
 import type { WuXing } from "../../shared/types";
 
-// ─── 從命格資料計算角色初始屬性 ───
+// ─── GD-020 補充二：從命格資料計算角色初始屬性（使用統一公式） ───
 function calcStatsFromNatal(natalStats: {
   wood: number; fire: number; earth: number; metal: number; water: number;
-}) {
+}, level: number = 1) {
+  // 使用 tickEngine 的統一公式：HP = 100 + Lv×10 + 木×3.0，以此類推
+  const base = calcCharacterStats(natalStats, level);
   return {
-    maxHp: Math.floor(100 + natalStats.wood * 2),
-    maxMp: Math.floor(50 + natalStats.water * 1.5),
-    attack: Math.floor(10 + natalStats.fire * 0.8),
-    defense: Math.floor(8 + natalStats.earth * 0.6),
-    speed: Math.floor(5 + natalStats.metal * 0.7),
+    maxHp: base.hp,
+    maxMp: base.mp,
+    attack: base.atk,
+    defense: base.def,
+    speed: base.spd,
     // GD-002 生活系屬性（五行比例 → 生活技能，10 + 比例*1.5，最低10最高100）
     gatherPower: Math.min(100, Math.max(10, Math.round(10 + natalStats.wood * 1.5))),
     forgePower: Math.min(100, Math.max(10, Math.round(10 + natalStats.fire * 1.5))),

@@ -29,6 +29,47 @@ function randFloat(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
 
+// ─── GD-020 補充二：命盤五行比例 → 屬性數值統一換算公式 ───
+// 此函數為全系統唯一標準，CharacterProfile、tickEngine、routers 均應使用此公式
+export function calcCharacterStats(natalStats: {
+  wood: number; fire: number; earth: number; metal: number; water: number;
+}, level: number = 1) {
+  const { wood, fire, earth, metal, water } = natalStats;
+  return {
+    hp:   Math.floor(100 + level * 10 + wood  * 3.0),
+    atk:  Math.floor(10  + level * 2  + fire  * 1.5),
+    def:  Math.floor(10  + level * 1.5 + earth * 1.5),
+    spd:  Math.floor(5   + level * 0.5 + metal * 0.8),
+    matk: Math.floor(10  + level * 2   + water * 1.5),
+    mp:   Math.floor(50  + level * 5   + water * 1.5),
+  };
+}
+
+// ─── GD-020 修正一：魔法傷害精神比例（技能屬性 vs 敵方對應抗性） ───
+// 五行技能屬性 → 敵方抗性類型對應（依 GD-005 第十二章）
+// 木→毒/腐蝕抗性, 火→爆炸/範圍抗性, 土→物理抗性, 金→精神抗性, 水→魔法抗性
+// 敵方抗性以其 defense 值的五行比例估算
+function getDefenderResistanceBySkillElement(defender: Monster, skillElement: WuXing): number {
+  // 敵方對應抗性 = 以怪物 defense 為基礎，依技能五行 vs 怪物五行的相性調整
+  // 若技能屬性剋怪物屬性，抗性降低（防禦弱點）；被剋則抗性提高
+  const baseResist = Math.max(10, defender.defense);
+  const skillVsMonster = calcWuxingMultiplier(skillElement, defender.element);
+  // 相剋時怪物抗性低（1.5倍攻擊 → 抗性 ÷1.5），被剋時抗性高（0.7倍 → 抗性 ÷0.7）
+  return Math.max(5, Math.round(baseResist / skillVsMonster));
+}
+
+// 根據精神比例計算係數 A（GD-020 修正一，維持魔力寶貝原始結構）
+function calcSpiritCoeffA(spiritRatio: number): number {
+  if (spiritRatio > 119) return 1.1;
+  if (spiritRatio >= 113) return 1.0;
+  if (spiritRatio >= 105) return 0.9;
+  if (spiritRatio >= 97)  return 0.7;
+  if (spiritRatio >= 89)  return 0.6;
+  if (spiritRatio >= 79)  return 0.4;
+  if (spiritRatio >= 69)  return 0.3;
+  return 0.1;
+}
+
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -105,6 +146,10 @@ export type CombatResult = {
   lootItems: string[];
   monsterName: string;
   elementMultiplier: number;
+  // GD-020 修正一：魔法係數 A 資訊
+  spiritCoeffA: number;
+  skillElement: WuXing;
+  wuxingBoostDesc: string; // 五行加成說明文字
 };
 
 export function resolveCombat(
@@ -116,18 +161,55 @@ export function resolveCombat(
     maxHp: number;
     dominantElement: string;
     level: number;
+    // GD-020 修正一：五行屬性數值（用於魔法係數 A 計算）
+    wuxingWood?: number; wuxingFire?: number; wuxingEarth?: number;
+    wuxingMetal?: number; wuxingWater?: number;
+    skillSlot1?: string | null; // 當前技能槽，用於判斷技能屬性
   },
   monster: Monster
 ): CombatResult {
   const agentElement = agent.dominantElement as WuXing;
   const monsterElement = monster.element;
-
   // 五行加成
   const atkMultiplier = calcWuxingMultiplier(agentElement, monsterElement);
   const defMultiplier = calcWuxingMultiplier(monsterElement, agentElement);
 
-  // 計算基礎傷害
-  const agentBaseDmg = Math.max(1, Math.round(agent.attack * atkMultiplier - monster.defense * 0.5));
+  // GD-020 修正一：技能屬性 = 主屬性（如有技能槽資訊可進一步判斷）
+  // 目前放置遊戲中主要使用普攻，技能屬性預設為角色主屬性
+  const skillElement: WuXing = agentElement;
+  // 施法者對應屬性數值
+  const elementValueMap: Record<WuXing, number> = {
+    wood:  agent.wuxingWood  ?? 20,
+    fire:  agent.wuxingFire  ?? 20,
+    earth: agent.wuxingEarth ?? 20,
+    metal: agent.wuxingMetal ?? 20,
+    water: agent.wuxingWater ?? 20,
+  };
+  const attackerElementValue = elementValueMap[skillElement];
+  // 敵方對應抗性（依 GD-020 公式）
+  const defenderResistance = getDefenderResistanceBySkillElement(monster, skillElement);
+  // 精神比例 = (施法者屬性數值 / 敵方抗性) × 100
+  const spiritRatio = (attackerElementValue / defenderResistance) * 100;
+  const spiritCoeffA = calcSpiritCoeffA(spiritRatio);
+
+  // 五行加成說明文字（GD-020 補充三）
+  const WX_ZH: Record<WuXing, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+  let wuxingBoostDesc = "";
+  if (atkMultiplier >= 1.5) {
+    wuxingBoostDesc = `${WX_ZH[agentElement]}剋${WX_ZH[monsterElement]}，傷害提升 30%`;
+  } else if (atkMultiplier >= 1.2) {
+    wuxingBoostDesc = `${WX_ZH[agentElement]}生${WX_ZH[monsterElement]}，傷害提升 20%`;
+  } else if (atkMultiplier <= 0.7) {
+    wuxingBoostDesc = `${WX_ZH[monsterElement]}剋${WX_ZH[agentElement]}，傷害降低 30%`;
+  }
+  if (spiritCoeffA >= 1.0) {
+    wuxingBoostDesc += (wuxingBoostDesc ? "，" : "") + `${WX_ZH[skillElement]}屬魔法加成強`;
+  } else if (spiritCoeffA <= 0.3) {
+    wuxingBoostDesc += (wuxingBoostDesc ? "，" : "") + `${WX_ZH[skillElement]}屬魔法效果弱`;
+  }
+
+  // 計算基礎傷害（加入魔法係數 A 修正）
+  const agentBaseDmg = Math.max(1, Math.round(agent.attack * atkMultiplier * spiritCoeffA - monster.defense * 0.5));
   const monsterBaseDmg = Math.max(1, Math.round(monster.attack * defMultiplier - agent.defense * 0.5));
 
   // 回合制戰鬥模擬（最多 10 回合）
@@ -188,6 +270,10 @@ export function resolveCombat(
     lootItems,
     monsterName: monster.name,
     elementMultiplier: atkMultiplier,
+    // GD-020 修正一
+    spiritCoeffA,
+    skillElement,
+    wuxingBoostDesc,
   };
 }
 
@@ -415,6 +501,13 @@ async function processCombatEvent(
       maxHp: agent.maxHp,
       dominantElement: agent.dominantElement ?? "wood",
       level: agent.level,
+      // GD-020 修正一：傳入五行屬性數值
+      wuxingWood:  agent.wuxingWood,
+      wuxingFire:  agent.wuxingFire,
+      wuxingEarth: agent.wuxingEarth,
+      wuxingMetal: agent.wuxingMetal,
+      wuxingWater: agent.wuxingWater,
+      skillSlot1:  agent.skillSlot1,
     },
     monster
   );
@@ -456,8 +549,8 @@ async function processCombatEvent(
     updatedAt: Date.now(),
   }).where(eq(gameAgents.id, agent.id));
 
-  // 戰鬥結果訊息（含詳細回合日誌）
-  const resultMsg = result.won
+   // 戰鬥結果訊息（GD-020 補充三：移除係數數字，加入五行說明文字）
+  const baseResultMsg = result.won
     ? formatMessage(pickRandom(EVENT_MESSAGES.combat_win), {
         name: agent.agentName ?? "旅人",
         monster: monster.name,
@@ -469,7 +562,10 @@ async function processCombatEvent(
         monster: monster.name,
         hp: newHp,
       });
-
+  // 若有五行加成說明，附加在訊息後（不顯示係數數字）
+  const resultMsg = result.wuxingBoostDesc
+    ? `${baseResultMsg}（${result.wuxingBoostDesc}）`
+    : baseResultMsg;
   await createEvent(agent.id, "combat", resultMsg, {
     phase: "result",
     monsterId: monster.id,
@@ -479,6 +575,10 @@ async function processCombatEvent(
     goldGained: result.goldGained,
     hpLost: result.hpLost,
     elementMultiplier: result.elementMultiplier,
+    // GD-020 補充三：加入五行說明文字（移除係數數字）
+    wuxingBoostDesc: result.wuxingBoostDesc,
+    spiritCoeffA: result.spiritCoeffA,
+    skillElement: result.skillElement,
     rounds: result.rounds,
     lootItems: result.lootItems,
   }, currentNode.id);
