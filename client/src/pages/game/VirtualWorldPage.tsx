@@ -8,6 +8,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import GameTabLayout from "@/components/GameTabLayout";
+import LeafletMap from "@/components/LeafletMap";
 
 // ─── 五行配色 ─────────────────────────────────────────────────
 const WX_HEX: Record<string, string> = {
@@ -810,7 +811,18 @@ export default function VirtualWorldPage() {
                 <p className="text-slate-600 text-sm animate-pulse">載入地圖中…</p>
               </div>
             ) : (
-              <TaiwanMap nodes={mapNodeList} currentNodeId={currentNodeId} />
+              <div style={{ height: "min(60vh, 480px)", minHeight: 300 }}>
+                <LeafletMap
+                  nodes={mapNodeList as import("../../../../shared/mapNodes").MapNode[]}
+                  currentNodeId={currentNodeId}
+                  onNodeClick={(nodeId) => {
+                    const node = mapNodeList.find(n => n.id === nodeId);
+                    if (node) {
+                      // 可以在這裡觸發移動到該節點的邏輯
+                    }
+                  }}
+                />
+              </div>
             )}
             <FloatingLog
               events={eventLog as Array<{ id: number; eventType: string; message: string; createdAt: string; detail?: Record<string, unknown> | null }> | undefined}
