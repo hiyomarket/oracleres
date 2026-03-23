@@ -743,6 +743,23 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                 📬
               </button>
             )}
+            {/* 天命共振遊戲大廳入口 */}
+            {user && (
+              <button
+                onClick={() => navigate("/game")}
+                className={`
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0
+                  ${location.pathname.startsWith("/game")
+                    ? "border border-amber-500/60 text-amber-300 bg-amber-900/20"
+                    : "border border-amber-700/30 text-amber-500 hover:text-amber-300 hover:border-amber-500/50 hover:bg-amber-900/20"
+                  }
+                `}
+                title="天命共振遊戲大廳"
+              >
+                <span className="text-base leading-none">⚔️</span>
+                <span className="hidden sm:inline">天命共振</span>
+              </button>
+            )}
             {/* 通知鈴鐺 */}
             {user && <NotificationBell />}
             {!user ? (

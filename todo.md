@@ -2837,3 +2837,13 @@
 - [x] 提案三：虛相戰鬥介面 - TASK-008 六張立繪上傳 S3 CDN、CombatPlayer.tsx（absolute bottom-0 對齊）、CombatRoom.tsx（左右橫式佈局）、路由 /game/combat
 - [x] 提案二：每日穿搭任務 - questEngine.ts（generateDailyQuest/checkQuestCompletion）、getDailyQuest procedure、submitDailyAura 整合任務判定與靈石發放
 - [x] 506 項測試全部通過，TypeScript 零錯誤
+
+## V11.9 遊戲大廳入口整合 + 每日任務前端 UI（2026-03-23）
+
+- [x] SharedNav 加入天命共振遊戲大廳入口按鈕（/game 路徑高亮）
+- [x] 建立 GameLobby.tsx（/game 路由）：角色縮圖、貨幣餘額、三入口卡片、今日任務橫幅
+- [x] App.tsx 新增 /game 路由（GameLobby）
+- [x] 建立 DailyQuestCard.tsx：即時進度條、五行配色、提交按鈕（達標才啟用）
+- [x] 建立 QuestCompleteModal.tsx：三階段動畫（burst→reveal→done）、靈石/Aura 獎勵展示
+- [x] AvatarRoom.tsx 整合 DailyQuestCard + QuestCompleteModal + getDailyQuest procedure
+- [x] 522 項測試全部通過，TypeScript 零錯誤

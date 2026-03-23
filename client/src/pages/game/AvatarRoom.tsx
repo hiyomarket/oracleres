@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ArrowLeft, ShoppingBag, Sparkles, Star, RefreshCw, X } from "lucide-react";
+import DailyQuestCard from "@/components/game/DailyQuestCard";
+import QuestCompleteModal from "@/components/game/QuestCompleteModal";
 
 // ─── 五行顏色點（衣物標籤） ────────────────────────────────────
 const WuxingDot: React.FC<{ wuxing: string }> = ({ wuxing }) => {
@@ -224,6 +226,10 @@ const AvatarRoom: React.FC = () => {
   const [showAuraResult, setShowAuraResult] = useState(false);
   const [auraGlowElement, setAuraGlowElement] = useState<string | null>(null);
   const [showAwakening, setShowAwakening] = useState(false);
+  const [showQuestComplete, setShowQuestComplete] = useState(false);
+  const [questCompleteData, setQuestCompleteData] = useState<{
+    wuxing: string; earnedStones: number; auraBonus: number; score: number; blessingLevel: string;
+  } | null>(null);
 
   // ─── tRPC 查詢 ─────────────────────────────────────────────
   const { data: equippedData, isLoading: equippedLoading, refetch: refetchEquipped } =
@@ -258,11 +264,28 @@ const AvatarRoom: React.FC = () => {
     onError: (err: { message: string }) => toast.error("儲存失敗", { description: err.message }),
   });
 
+  // 每日任務查詢
+  const { data: dailyQuestData, refetch: refetchQuest } = trpc.gameAvatar.getDailyQuest.useQuery(undefined, {
+    staleTime: 60000,
+  });
+
   const submitAuraMutation = trpc.gameAvatar.submitDailyAura.useMutation({
     onSuccess: (data) => {
       refetchTodayAura();
+      refetchQuest();
       setShowAuraResult(true);
       if (data.todayTopElement) setAuraGlowElement(data.todayTopElement);
+      // 若任務達標，顯示任務完成彈窗
+      if (data.questCompleted && dailyQuestData) {
+        setQuestCompleteData({
+          wuxing: dailyQuestData.targetWuxing,
+          earnedStones: data.earnedStones ?? dailyQuestData.reward.stones,
+          auraBonus: dailyQuestData.reward.auraBonus,
+          score: data.score,
+          blessingLevel: data.blessingLevel,
+        });
+        setShowQuestComplete(true);
+      }
     },
     onError: (err: { message: string }) => toast.error("結算失敗", { description: err.message }),
   });
@@ -304,6 +327,11 @@ const AvatarRoom: React.FC = () => {
       return item as AvatarItem;
     });
   }, [equipped, pendingEquipped, inventory]);
+
+  // ─── 每日任務的裝備五行列表（即時計算） ──────────────────────
+  const currentEquippedWuxingList = React.useMemo(() => {
+    return displayEquipped.map((item) => item.wuxing).filter(Boolean);
+  }, [displayEquipped]);
 
   // ─── 當前圖層的衣物列表 ────────────────────────────────────
   const currentLayerItems = inventory?.grouped?.[activeLayer] ?? [];
@@ -348,11 +376,35 @@ const AvatarRoom: React.FC = () => {
         </button>
       </div>
 
+      {/* ── 任務完成彈窗 ─────────────────────────────────────── */}
+      {showQuestComplete && questCompleteData && (
+        <QuestCompleteModal
+          wuxing={questCompleteData.wuxing}
+          earnedStones={questCompleteData.earnedStones}
+          auraBonus={questCompleteData.auraBonus}
+          score={questCompleteData.score}
+          blessingLevel={questCompleteData.blessingLevel}
+          onClose={() => setShowQuestComplete(false)}
+        />
+      )}
+
       {/* ── 今日五行建議橫幅 ─────────────────────────────────── */}
       {dailyAdvice && (
         <div className="mx-4 mt-3 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-900/30 to-transparent border border-amber-500/30 flex items-center gap-2">
           <Sparkles size={14} className="text-amber-400 shrink-0" />
           <p className="text-xs text-amber-200">{dailyAdvice.advice}</p>
+        </div>
+      )}
+
+      {/* ── 每日穿搭任務卡片 ─────────────────────────────────── */}
+      {dailyQuestData && (
+        <div className="mx-4 mt-3">
+          <DailyQuestCard
+            quest={dailyQuestData}
+            equippedWuxingList={currentEquippedWuxingList}
+            isSubmitting={submitAuraMutation.isPending}
+            onSubmit={handleSubmitAura}
+          />
         </div>
       )}
 
