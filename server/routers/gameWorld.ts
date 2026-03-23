@@ -362,6 +362,88 @@ export const gameWorldRouter = router({
       .where(eq(agentInventory.agentId, agents[0].id));
   }),
 
+  // ─── 取得節點詳細資訊（怪物/資源/在場冒險者） ───
+  getNodeInfo: publicProcedure
+    .input(z.object({ nodeId: z.string() }))
+    .query(async ({ input }) => {
+      const node = MAP_NODE_MAP.get(input.nodeId);
+      if (!node) throw new Error("節點不存在");
+      const nodeMonsters = MONSTERS.filter(
+        (m) => m.element === node.element &&
+          m.level >= node.monsterLevel[0] &&
+          m.level <= node.monsterLevel[1]
+      ).slice(0, 5);
+      const RESOURCES_BY_ELEMENT: Record<string, Array<{ name: string; rarity: string; icon: string }>> = {
+        wood: [
+          { name: "靈草", rarity: "普通", icon: "🌿" },
+          { name: "竹節精髓", rarity: "稀有", icon: "🎋" },
+          { name: "古木碎片", rarity: "精良", icon: "🪵" },
+        ],
+        fire: [
+          { name: "火靈石", rarity: "普通", icon: "🔥" },
+          { name: "熔岩晶", rarity: "稀有", icon: "🌋" },
+          { name: "赤焰羽", rarity: "精良", icon: "🪶" },
+        ],
+        earth: [
+          { name: "黃土精", rarity: "普通", icon: "🪨" },
+          { name: "大地靈核", rarity: "稀有", icon: "💎" },
+          { name: "山嶽碎晶", rarity: "精良", icon: "⛰️" },
+        ],
+        metal: [
+          { name: "金屬碎片", rarity: "普通", icon: "⚡" },
+          { name: "精鋼礦石", rarity: "稀有", icon: "🔩" },
+          { name: "白金結晶", rarity: "精良", icon: "✨" },
+        ],
+        water: [
+          { name: "水靈珠", rarity: "普通", icon: "💧" },
+          { name: "深海晶石", rarity: "稀有", icon: "🔮" },
+          { name: "冰靈核", rarity: "精良", icon: "❄️" },
+        ],
+      };
+      const resources = RESOURCES_BY_ELEMENT[node.element] ?? [];
+      const questHints = [
+        ...(node.dangerLevel >= 3 ? ["⚠️ 此地有隱藏任務的氣息…"] : []),
+        ...(node.dangerLevel >= 4 ? ["🔮 感應到強力寶物的存在"] : []),
+        ...(node.dangerLevel >= 5 ? ["👑 傳說級 Boss 可能出沒"] : []),
+        ...(node.terrain.includes("古") || node.terrain.includes("遺") ? ["📜 此地藏有古老秘密"] : []),
+      ];
+      const db = await getDb();
+      let adventurers: Array<{ name: string; level: number; hp: number; maxHp: number; element: string; status: string }> = [];
+      if (db) {
+        const agents = await db
+          .select({
+            agentName: gameAgents.agentName,
+            level: gameAgents.level,
+            hp: gameAgents.hp,
+            maxHp: gameAgents.maxHp,
+            dominantElement: gameAgents.dominantElement,
+            status: gameAgents.status,
+          })
+          .from(gameAgents)
+          .where(eq(gameAgents.currentNodeId, input.nodeId))
+          .limit(8);
+        adventurers = agents.map((a) => ({
+          name: a.agentName ?? "旅人",
+          level: a.level,
+          hp: a.hp,
+          maxHp: a.maxHp,
+          element: a.dominantElement,
+          status: a.status,
+        }));
+      }
+      return { node, monsters: nodeMonsters, resources, questHints, adventurers };
+    }),
+  // ─── 取得全服在線統計 ───
+  getOnlineStats: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return { onlineCount: 0, totalAdventurers: 0 };
+    const allAgents = await db.select({ id: gameAgents.id, isActive: gameAgents.isActive, updatedAt: gameAgents.updatedAt }).from(gameAgents);
+    const totalAdventurers = allAgents.length;
+    const fiveMinAgo = Date.now() - 5 * 60 * 1000;
+    const onlineCount = allAgents.filter((a) => a.isActive && (a.updatedAt ?? 0) > fiveMinAgo).length;
+    return { onlineCount, totalAdventurers };
+  }),
+
   // ─── 取得怪物圖鑑（公開） ───
   getMonsterBestiary: publicProcedure
     .input(z.object({
