@@ -53,6 +53,7 @@ const NAV_GROUPS = [
       { href: "/admin/experts", icon: "🔮", label: "專家管理", desc: "審核申請、管理訂單" },
       { href: "/admin/theme", icon: "🎨", label: "主題配色", desc: "全站色系切換" },
       { href: "/admin/access-tokens", icon: "🔑", label: "AI 渠道 Token", desc: "特殊存取權限管理" },
+      { href: "/admin/game", icon: "⚔️", label: "靈相世界 CMS", desc: "怪物/技能/任務/商品管理" },
     ],
   },
 ];

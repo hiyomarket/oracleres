@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, tinyint, bigint, uniqueIndex, decimal } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, tinyint, bigint, uniqueIndex, decimal, float } from "drizzle-orm/mysql-core";
 
 /**
  * 會員方案資料表
@@ -1474,3 +1474,172 @@ export const gameItems = mysqlTable("game_items", {
 });
 export type GameItem = typeof gameItems.$inferSelect;
 export type InsertGameItem = typeof gameItems.$inferInsert;
+
+// ═══════════════════════════════════════════════════════════════
+// 遊戲 CMS 資料表（PROPOSAL-20260323-GAME-內容管理後台CMS）
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 怪物/魔物表
+ * 虛相世界的敵人資料，由 Game CMS 後台管理
+ */
+export const gameMonsters = mysqlTable("game_monsters", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 五行屬性（中文：木/火/土/金/水） */
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  baseHp: int("base_hp").notNull(),
+  baseAttack: int("base_attack").notNull(),
+  baseDefense: int("base_defense").notNull(),
+  baseSpeed: int("base_speed").notNull(),
+  /** 關聯美術 TASK-006 的圖片 URL */
+  imageUrl: text("image_url").notNull(),
+  /** 捕捉機率（0.0-1.0） */
+  catchRate: float("catch_rate").notNull().default(0.1),
+  isActive: tinyint("is_active").default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameMonster = typeof gameMonsters.$inferSelect;
+export type InsertGameMonster = typeof gameMonsters.$inferInsert;
+
+/**
+ * 技能表
+ * 玩家與怪物可使用的技能定義
+ */
+export const gameSkills = mysqlTable("game_skills", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  /** 五行屬性 */
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  mpCost: int("mp_cost").notNull(),
+  /** 傷害倍率（1.0 = 100%） */
+  damageMultiplier: float("damage_multiplier").notNull(),
+  /** 技能類型：attack / heal / buff / debuff */
+  skillType: varchar("skill_type", { length: 20 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameSkill = typeof gameSkills.$inferSelect;
+export type InsertGameSkill = typeof gameSkills.$inferInsert;
+
+/**
+ * 地圖節點表
+ * 大地圖上的 LBS 打卡節點（對應 GD-003）
+ */
+export const gameMapNodes = mysqlTable("game_map_nodes", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  lat: float("lat").notNull(),
+  lng: float("lng").notNull(),
+  /** 節點類型：forest / water / market / temple / mountain */
+  nodeType: varchar("node_type", { length: 50 }).notNull(),
+  /** 五行屬性 */
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  isActive: tinyint("is_active").default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameMapNode = typeof gameMapNodes.$inferSelect;
+export type InsertGameMapNode = typeof gameMapNodes.$inferInsert;
+
+/**
+ * 採集物圖鑑表
+ * 地圖節點上可採集的資源
+ */
+export const gameGatherables = mysqlTable("game_gatherables", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  /** 稀有度：common / rare / epic */
+  rarity: varchar("rarity", { length: 20 }).notNull(),
+  /** 在節點上的生成機率（0.0-1.0） */
+  spawnRate: float("spawn_rate").notNull().default(0.5),
+  imageUrl: text("image_url"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameGatherable = typeof gameGatherables.$inferSelect;
+export type InsertGameGatherable = typeof gameGatherables.$inferInsert;
+
+/**
+ * 隨機任務庫
+ * 地圖上隨機觸發的 NPC 任務文本與獎勵設定
+ */
+export const gameRandomQuests = mysqlTable("game_random_quests", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  /** 觸發此任務需要的流日五行（null = 任何日子均可觸發） */
+  requiredWuxing: varchar("required_wuxing", { length: 10 }),
+  /** 獎勵類型：stones / aura / item */
+  rewardType: varchar("reward_type", { length: 50 }).notNull(),
+  rewardAmount: int("reward_amount").notNull(),
+  isActive: tinyint("is_active").default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameRandomQuest = typeof gameRandomQuests.$inferSelect;
+export type InsertGameRandomQuest = typeof gameRandomQuests.$inferInsert;
+
+/**
+ * 流浪商人商品池
+ * 流浪商人可能販售的稀有物品與靈石價格
+ */
+export const gameMerchantPool = mysqlTable("game_merchant_pool", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 關聯 game_items */
+  itemId: int("item_id").notNull(),
+  priceStones: int("price_stones").notNull(),
+  /** 出現在商人清單的機率（0.0-1.0） */
+  appearanceRate: float("appearance_rate").notNull().default(0.1),
+  isActive: tinyint("is_active").default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameMerchantPool = typeof gameMerchantPool.$inferSelect;
+export type InsertGameMerchantPool = typeof gameMerchantPool.$inferInsert;
+
+// ═══════════════════════════════════════════════════════════════
+// 成就徽章系統（PROPOSAL-20260323-GAME-成就徽章系統）
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 成就定義表
+ * 可透過 Game CMS 後台管理成就內容
+ */
+export const gameAchievements = mysqlTable("game_achievements", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 成就分類：avatar / explore / combat / oracle */
+  category: varchar("category", { length: 50 }).notNull(),
+  title: varchar("title", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  /**
+   * 條件類型：
+   * login_days / buy_items / daily_quest_streak / collect_wuxing_sets /
+   * map_checkin / gather_count / random_quest_count /
+   * combat_win / catch_monster / kill_count / element_counter /
+   * oracle_deep_read / disaster_quest
+   */
+  conditionType: varchar("condition_type", { length: 50 }).notNull(),
+  conditionValue: int("condition_value").notNull(),
+  /** 獎勵類型：stones / coins / title / item / frame */
+  rewardType: varchar("reward_type", { length: 50 }).notNull(),
+  rewardAmount: int("reward_amount").notNull(),
+  /** 徽章圖片 URL（美術 TASK-010 提供） */
+  iconUrl: varchar("icon_url", { length: 500 }).notNull().default(""),
+  isActive: tinyint("is_active").default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type GameAchievement = typeof gameAchievements.$inferSelect;
+export type InsertGameAchievement = typeof gameAchievements.$inferInsert;
+
+/**
+ * 玩家成就紀錄表
+ * 記錄每位用戶已解鎖的成就與裝備狀態
+ */
+export const userAchievements = mysqlTable("user_achievements", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull(),
+  achievementId: int("achievement_id").notNull(),
+  unlockedAt: timestamp("unlocked_at").defaultNow(),
+  /** 1 = 裝備展示在個人檔案（最多 3 枚） */
+  isEquipped: tinyint("is_equipped").default(0),
+});
+export type UserAchievement = typeof userAchievements.$inferSelect;
+export type InsertUserAchievement = typeof userAchievements.$inferInsert;

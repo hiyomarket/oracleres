@@ -35,6 +35,7 @@ import AiView from "./pages/AiView";
 import AiEntry from "./pages/AiEntry";
 import AvatarRoom from "./pages/game/AvatarRoom";
 import GameLobby from "./pages/game/GameLobby";
+import GameCMS from "./pages/admin/GameCMS";
 import Shop from "./pages/game/Shop";
 import CombatRoom from "./pages/game/CombatRoom";
 import ExpertMarket from "./pages/ExpertMarket";
@@ -112,6 +113,7 @@ function Router() {
             <Route path={"/admin/experts"} component={AdminExperts} />
             <Route path={"/admin/theme"} component={AdminTheme} />
             <Route path={"/admin/access-tokens"} component={AdminAccessTokens} />
+            <Route path={"/admin/game"} component={GameCMS} />
             <Route path={"/game"} component={GameLobby} />
             <Route path={"/game/avatar"} component={AvatarRoom} />
             <Route path={"/game/shop"} component={Shop} />

@@ -9,6 +9,13 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { useMemo } from "react";
+
+// ─── TASK-008 立繪 CDN URL ───────────────────────────────────
+const PLAYER_SPRITES: Record<string, string> = {
+  male:   "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/player_male_idle_956e678d.png",
+  female: "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/player_female_idle_00c1da48.png",
+};
 
 const WUXING_HEX: Record<string, string> = {
   wood: "#2E8B57",
@@ -26,6 +33,14 @@ export default function GameLobby() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
 
+  // 取得用戶性別（用於立繪選擇）
+  const { data: userGenderData } = trpc.auth.me.useQuery(undefined, {
+    enabled: !!user,
+    staleTime: 300000,
+  });
+  const userGender = (userGenderData as { gender?: string | null } | null)?.gender ?? "female";
+  const spriteUrl = PLAYER_SPRITES[userGender === "male" ? "male" : "female"];
+
   // 取得天命幣餘額
   const { data: coinsData } = trpc.coins.getBalance.useQuery(undefined, {
     enabled: !!user,
@@ -36,6 +51,7 @@ export default function GameLobby() {
     enabled: !!user,
     staleTime: 30000,
   });
+  // Note: userGenderData above reuses auth.me (same cache key)
   // 取得今日任務狀態
   const { data: questData } = trpc.gameAvatar.getDailyQuest.useQuery(undefined, {
     enabled: !!user,
@@ -145,16 +161,29 @@ export default function GameLobby() {
             borderColor: "rgba(255,255,255,0.08)",
           }}
         >
-          {/* 角色縮圖 */}
+          {/* 角色立繪（TASK-008 真實立繪 + 五行光暈） */}
           <div
-            className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0 border"
+            className="relative w-16 h-20 shrink-0 rounded-xl overflow-hidden border"
             style={{
-              background: `${avatarColor}18`,
+              background: `linear-gradient(180deg, ${avatarColor}15 0%, ${avatarColor}05 100%)`,
               borderColor: `${avatarColor}40`,
-              boxShadow: `0 0 12px ${avatarColor}30`,
+              boxShadow: `0 0 18px ${avatarColor}35, inset 0 0 10px ${avatarColor}10`,
             }}
           >
-            👤
+            {/* 五行光暈底層 */}
+            <div
+              className="absolute inset-0 rounded-xl"
+              style={{
+                background: `radial-gradient(ellipse at 50% 100%, ${avatarColor}25 0%, transparent 70%)`,
+              }}
+            />
+            {/* 真實立繪 */}
+            <img
+              src={spriteUrl}
+              alt="角色立繪"
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 h-full w-auto object-contain"
+              style={{ filter: `drop-shadow(0 0 6px ${avatarColor}60)` }}
+            />
           </div>
           {/* 用戶名 + 五行 */}
           <div className="flex-1 min-w-0">
@@ -257,6 +286,116 @@ export default function GameLobby() {
           ))}
         </div>
       </div>
+
+      {/* ── 成就徽章牆 ───────────────────────────── */}
+      <AchievementWall userId={user?.id} />
+    </div>
+  );
+}
+
+// ── 成就牆子組件 ────────────────────────────────────────────────
+function AchievementWall({ userId }: { userId?: number }) {
+  const { data: achievements, isLoading } = trpc.gameAchievement.getAll.useQuery(undefined, {
+    enabled: !!userId,
+    staleTime: 120000,
+  });
+
+  const WUXING_HEX: Record<string, string> = {
+    wood: "#2E8B57", fire: "#DC143C", earth: "#CD853F", metal: "#C9A227", water: "#00CED1",
+  };
+
+  const categoryLabel: Record<string, string> = {
+    social: "社群", collection: "收藏", combat: "戰鬥", daily: "日常", special: "特殊",
+  };
+
+  const grouped = useMemo(() => {
+    if (!achievements) return {};
+    return achievements.reduce<Record<string, typeof achievements>>((acc, a) => {
+      const cat = a.category ?? "special";
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(a);
+      return acc;
+    }, {});
+  }, [achievements]);
+
+  if (!userId) return null;
+  if (isLoading) return (
+    <div className="max-w-screen-md mx-auto px-4 pb-16">
+      <div className="h-32 rounded-2xl bg-slate-800/40 animate-pulse" />
+    </div>
+  );
+  if (!achievements || achievements.length === 0) return null;
+
+  const unlockedCount = achievements.filter((a) => a.isUnlocked).length;
+
+  return (
+    <div className="max-w-screen-md mx-auto px-4 pb-20">
+      {/* 標題列 */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-bold text-slate-200 tracking-wide">成就徽章</h2>
+        <span className="text-xs text-slate-500">{unlockedCount} / {achievements.length} 已解鎖</span>
+      </div>
+
+      {/* 進度條 */}
+      <div className="w-full h-1.5 bg-slate-800 rounded-full mb-6 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{
+            width: `${achievements.length ? (unlockedCount / achievements.length) * 100 : 0}%`,
+            background: "linear-gradient(90deg, #f59e0b, #ef4444)",
+          }}
+        />
+      </div>
+
+      {/* 分類成就格 */}
+      {Object.entries(grouped).map(([cat, items]) => (
+        <div key={cat} className="mb-6">
+          <p className="text-xs text-slate-500 mb-2 tracking-widest uppercase">
+            {categoryLabel[cat] ?? cat}
+          </p>
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+            {items.map((a) => {
+              const color = WUXING_HEX[a.category ?? ""] ?? "#C9A227";
+              return (
+                <div
+                  key={a.id}
+                  title={`${a.title}\n${a.description}`}
+                  className={`relative flex flex-col items-center gap-1 p-2 rounded-xl border transition-all ${
+                    a.isUnlocked
+                      ? "border-amber-500/40 bg-amber-500/10"
+                      : "border-slate-700/40 bg-slate-800/30 opacity-40 grayscale"
+                  }`}
+                >
+                  {/* 圖示 */}
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
+                    style={{
+                      background: a.isUnlocked
+                        ? `radial-gradient(circle, ${color}33, ${color}11)`
+                        : "#1e293b",
+                      border: a.isUnlocked ? `1.5px solid ${color}66` : "1.5px solid #334155",
+                    }}
+                  >
+                    {a.iconUrl ? (
+                      <img src={a.iconUrl} alt={a.title} className="w-6 h-6 object-contain" />
+                    ) : (
+                      <span>🏅</span>
+                    )}
+                  </div>
+                  {/* 標題 */}
+                  <p className="text-[10px] text-center leading-tight text-slate-400 line-clamp-2">{a.title}</p>
+                  {/* 解鎖時間 */}
+                  {a.isUnlocked && a.unlockedAt && (
+                    <p className="text-[9px] text-amber-400/60">
+                      {new Date(a.unlockedAt).toLocaleDateString("zh-TW", { month: "numeric", day: "numeric" })}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

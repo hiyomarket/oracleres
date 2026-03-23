@@ -21,6 +21,8 @@ import { coinsRouter } from './routers/coins';
 import { accessTokensRouter } from './routers/accessTokens';
 import { gameAvatarRouter } from './routers/gameAvatar';
 import { gameShopRouter } from './routers/gameShop';
+import { gameAdminRouter } from './routers/gameAdmin';
+import { gameAchievementRouter } from './routers/gameAchievement';
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -66,6 +68,8 @@ export const appRouter = router({
   accessTokens: accessTokensRouter,
   gameAvatar: gameAvatarRouter,
   gameShop: gameShopRouter,
+  gameAdmin: gameAdminRouter,
+  gameAchievement: gameAchievementRouter,
   businessHub: businessHubRouter,
   userGroups: userGroupsRouter,
   auth: router({

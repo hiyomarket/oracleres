@@ -2847,3 +2847,35 @@
 - [x] 建立 QuestCompleteModal.tsx：三階段動畫（burst→reveal→done）、靈石/Aura 獎勵展示
 - [x] AvatarRoom.tsx 整合 DailyQuestCard + QuestCompleteModal + getDailyQuest procedure
 - [x] 522 項測試全部通過，TypeScript 零錯誤
+
+## V11.10 三份遊戲提案（2026-03-23）
+
+- [ ] 提案一：GameLobby.tsx 載入 TASK-008 真實立繪（依性別 male/female + idle）
+- [ ] 提案一：保留五行光暈特效，立繪使用 absolute bottom-0 對齊
+- [ ] 提案二：建立 7 張 CMS 資料表（game_monsters/game_skills/game_collectibles/game_random_quests/game_merchant_items/game_announcements/game_configs）
+- [ ] 提案二：建立 /admin/game 後台管理頁面（GameCMS.tsx）
+- [ ] 提案二：建立 gameAdmin tRPC Router（CRUD 操作，adminProcedure 保護）
+- [ ] 提案三：建立 game_achievements + user_achievements 資料表
+- [ ] 提案三：成就觸發邏輯（購買商品/完成每日任務/首次進入靈相空間）
+- [ ] 提案三：GameLobby.tsx 新增成就徽章牆
+- [ ] 撰寫測試並儲存 V11.10 Checkpoint
+
+## TASK-009 商城圖片整合（待執行，排在 V11.10 之後）
+
+- [ ] 讀取 ART/OUTPUTS/TASK-009/ 的 20 張商品展示圖
+- [ ] 上傳 20 張圖片至 S3 CDN
+- [ ] 執行 Seed Script 更新 game_items.imageUrl 欄位
+- [ ] 確認 /game/shop 商城頁面顯示真實圖片
+
+## V11.10 三份遊戲提案（2026-03-23）
+
+- [x] 提案一：GameLobby.tsx 整合 TASK-008 真實立繪（依性別選擇 male/female idle）
+- [x] 提案一：五行光暈特效保留，立繪 absolute bottom-0 對齊
+- [x] 提案二：建立 8 張 CMS 資料表（monsters/skills/map_nodes/collectibles/random_quests/merchant_pool/achievements/user_achievements）
+- [x] 提案二：gameAdmin Router 實作 CRUD procedures（adminProcedure 保護）
+- [x] 提案二：GameCMS.tsx 後台頁面（/admin/game）含 Tab 切換 7 個管理分類
+- [x] 提案二：AdminLayout.tsx 加入靈相世界 CMS 入口
+- [x] 提案三：gameAchievement Router 實作 getAll/getUnlocked/checkProgress
+- [x] 提案三：checkAndUnlockAchievements 工具函數（自動發放靈石/天命幣獎勵）
+- [x] 提案三：GameLobby.tsx 加入 AchievementWall 成就牆（分類格 + 進度條）
+- [x] 537 項測試全部通過，TypeScript 零錯誤
