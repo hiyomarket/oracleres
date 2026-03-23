@@ -1,13 +1,13 @@
 {
-  "version": "1.6",
+  "version": "1.7",
   "schema": "ART/MANIFEST-SPEC.md",
   "last_updated": "2026/03/23",
   "updated_by": "ART-AGENT",
   "sync_status": {
-    "total_assets": 229,
-    "task009_assets": 20,
+    "total_assets": 232,
+    "task010_assets": 3,
     "last_sync": "2026/03/23",
-    "note": "TASK-009 虛擬商城商品展示圖（5五行×4部件）完成，稀有級帶能量發光感"
+    "note": "TASK-010《靈相虛界》Logo 與主視覺概念圖完成，品牌識別正式建立"
   },
   "assets": {
     "landing-hero-bg": {
@@ -4249,6 +4249,71 @@
       "slot": "shoes",
       "rarity": "rare",
       "element_color": "#00CED1"
+    },
+    "task010-logo-classic": {
+      "task": "TASK-010",
+      "name": "《靈相虛界》Logo 方向 A — 古典玄學風",
+      "description": "遊戲品牌 Logo。以「靈相虛界」四字篆刻為主體，外圍八卦圖騰，五行圖騰環繞（木竹、火鳳、土晶、金星、水龍），水墨暈染背景，天命金+朱紅+翡翠配色。",
+      "file": "ART/OUTPUTS/TASK-010/logo_classic.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "透明背景 | 品牌 Logo 用 | 古典玄學風格 | 八卦五行圖騰",
+      "tags": [
+        "logo",
+        "brand",
+        "classic",
+        "xuanxue",
+        "five-elements",
+        "TASK-010"
+      ],
+      "usage": "game-logo",
+      "style": "classic-xuanxue"
+    },
+    "task010-logo-scifi": {
+      "task": "TASK-010",
+      "name": "《靈相虛界》Logo 方向 B — 科幻共振風",
+      "description": "遊戲品牌 Logo。雙維度鏡像設計，「靈相」天命金 #C9A227 / 「虛界」量子青 #00CED1，中央量子雙螺旋連接兩個世界，電路紋路與星軌粒子效果。",
+      "file": "ART/OUTPUTS/TASK-010/logo_scifi.png",
+      "format": "PNG",
+      "dimensions": "2048x2048",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "透明背景 | 品牌 Logo 用 | 科幻共振風格 | 雙維度鏡像",
+      "tags": [
+        "logo",
+        "brand",
+        "scifi",
+        "resonance",
+        "dual-world",
+        "TASK-010"
+      ],
+      "usage": "game-logo",
+      "style": "scifi-resonance"
+    },
+    "task010-key-visual": {
+      "task": "TASK-010",
+      "name": "《靈相虛界》主視覺概念圖 — 一個靈魂，兩種活法",
+      "description": "遊戲主視覺概念圖 1920×1080px。畫面一分為二：左側靈相世界（明亮天界、飄逸高我、五行光芒環繞）/ 右側虛相世界（幽暗數位廢墟、戰鬥執行者）。中央維度裂縫連接兩個世界，底部「一個靈魂，兩種活法」題字。",
+      "file": "ART/OUTPUTS/TASK-010/key_visual.png",
+      "format": "PNG",
+      "dimensions": "2752x1536",
+      "status": "ready",
+      "version": "1.0",
+      "created_at": "2026/03/23",
+      "notes": "橫向構圖 | 主視覺用 | 雙世界對比 | 五行配色融入",
+      "tags": [
+        "key-visual",
+        "concept-art",
+        "brand",
+        "dual-world",
+        "TASK-010"
+      ],
+      "usage": "key-visual",
+      "style": "cinematic-concept-art"
     }
   }
 }
