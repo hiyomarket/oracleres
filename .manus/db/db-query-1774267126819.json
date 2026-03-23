@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, agent_name, current_node_id, target_node_id FROM game_agents LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_name, current_node_id, target_node_id FROM game_agents LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "agent_name": "凜冬月",
+      "current_node_id": "tp-zhongzheng",
+      "target_node_id": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_name\tcurrent_node_id\ttarget_node_id\n1\t凜冬月\ttp-zhongzheng\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1609
+}

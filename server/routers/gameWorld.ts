@@ -71,7 +71,7 @@ export const gameWorldRouter = router({
         isNamed: 0,
         level: 1,
         exp: 0,
-        currentNodeId: "taipei-zhongzheng",
+        currentNodeId: "tp-zhongzheng",
         strategy: "explore",
         status: "idle",
         dominantElement: dominant,
@@ -366,8 +366,17 @@ export const gameWorldRouter = router({
   getNodeInfo: publicProcedure
     .input(z.object({ nodeId: z.string() }))
     .query(async ({ input }) => {
-      const node = MAP_NODE_MAP.get(input.nodeId);
-      if (!node) throw new Error("節點不存在");
+      // 嘗試直接查找，若找不到則嘗試常見格式轉換（舊格式 taipei-* → tp-*）
+      let node = MAP_NODE_MAP.get(input.nodeId);
+      if (!node) {
+        // 嘗試舊格式轉換：taipei-xxx → tp-xxx
+        const converted = input.nodeId.replace(/^taipei-/, "tp-");
+        node = MAP_NODE_MAP.get(converted);
+      }
+      // 仍找不到則使用預設節點（台北中正區）
+      if (!node) {
+        node = MAP_NODE_MAP.get("tp-zhongzheng") ?? MAP_NODES[0];
+      }
       const nodeMonsters = MONSTERS.filter(
         (m) => m.element === node.element &&
           m.level >= node.monsterLevel[0] &&

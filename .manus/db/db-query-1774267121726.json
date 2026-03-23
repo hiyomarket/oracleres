@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE game_agents SET current_node_id = REPLACE(current_node_id, 'taipei-', 'tp-') WHERE current_node_id LIKE 'taipei-%';\nUPDATE game_agents SET target_node_id = REPLACE(target_node_id, 'taipei-', 'tp-') WHERE target_node_id LIKE 'taipei-%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute UPDATE game_agents SET current_node_id = REPLACE(current_node_id, 'taipei-', 'tp-') WHERE current_node_id LIKE 'taipei-%';\nUPDATE game_agents SET target_node_id = REPLACE(target_node_id, 'taipei-', 'tp-') WHERE target_node_id LIKE 'taipei-%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1808
+}
