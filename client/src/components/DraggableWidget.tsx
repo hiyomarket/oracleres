@@ -1,6 +1,7 @@
 /**
- * DraggableWidget — 桌機版可拖拉浮動區塊
- * - 僅在桌機版（lg 以上）啟用拖拉
+ * DraggableWidget — 可拖拉浮動區塊（桌機 + 手機均支援）
+ * - 桌機：滑鼠拖拉（mousedown/mousemove/mouseup）
+ * - 手機：觸控拖拉（touchstart/touchmove/touchend）
  * - 位置以 { x, y } 像素座標儲存（相對於地圖容器）
  * - 拖拉結束後透過 onPositionChange 回報新位置
  */
@@ -14,7 +15,7 @@ interface DraggableWidgetProps {
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
-  /** 是否停用拖拉（手機版傳 true） */
+  /** 是否停用拖拉 */
   disabled?: boolean;
   /** z-index */
   zIndex?: number;
@@ -41,49 +42,73 @@ export function DraggableWidget({
     if (savedPos) setPos(savedPos);
   }, [savedPos?.x, savedPos?.y]);
 
+  // ── 計算邊界內的新位置 ──
+  const clampPos = useCallback((clientX: number, clientY: number) => {
+    const parent = containerRef.current?.parentElement;
+    if (!parent) return null;
+    const rect = parent.getBoundingClientRect();
+    const newX = Math.max(0, Math.min(rect.width - 40, clientX - dragOffset.current.x));
+    const newY = Math.max(0, Math.min(rect.height - 40, clientY - dragOffset.current.y));
+    return { x: newX, y: newY };
+  }, []);
+
+  // ── 滑鼠事件 ──
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     if (disabled) return;
-    // 只允許左鍵拖拉
     if (e.button !== 0) return;
-    // 如果點擊的是 button/input/select，不啟動拖拉
     const target = e.target as HTMLElement;
     if (target.closest("button, input, select, textarea, a")) return;
 
     e.preventDefault();
     dragging.current = true;
-    dragOffset.current = {
-      x: e.clientX - pos.x,
-      y: e.clientY - pos.y,
-    };
+    dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
 
     const onMouseMove = (e: MouseEvent) => {
       if (!dragging.current) return;
-      const parent = containerRef.current?.parentElement;
-      if (!parent) return;
-      const rect = parent.getBoundingClientRect();
-      const newX = Math.max(0, Math.min(rect.width - 20, e.clientX - dragOffset.current.x));
-      const newY = Math.max(0, Math.min(rect.height - 20, e.clientY - dragOffset.current.y));
-      setPos({ x: newX, y: newY });
+      const p = clampPos(e.clientX, e.clientY);
+      if (p) setPos(p);
     };
-
     const onMouseUp = (e: MouseEvent) => {
       if (!dragging.current) return;
       dragging.current = false;
-      const parent = containerRef.current?.parentElement;
-      if (!parent) return;
-      const rect = parent.getBoundingClientRect();
-      const newX = Math.max(0, Math.min(rect.width - 20, e.clientX - dragOffset.current.x));
-      const newY = Math.max(0, Math.min(rect.height - 20, e.clientY - dragOffset.current.y));
-      const finalPos = { x: newX, y: newY };
-      setPos(finalPos);
-      onPositionChange?.(id, finalPos);
+      const p = clampPos(e.clientX, e.clientY);
+      if (p) { setPos(p); onPositionChange?.(id, p); }
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
-  }, [disabled, pos.x, pos.y, id, onPositionChange]);
+  }, [disabled, pos.x, pos.y, id, onPositionChange, clampPos]);
+
+  // ── 觸控事件（手機拖拉）──
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    if (disabled) return;
+    const target = e.target as HTMLElement;
+    if (target.closest("button, input, select, textarea, a")) return;
+
+    const touch = e.touches[0];
+    dragging.current = true;
+    dragOffset.current = { x: touch.clientX - pos.x, y: touch.clientY - pos.y };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!dragging.current) return;
+      e.preventDefault(); // 防止頁面滾動
+      const t = e.touches[0];
+      const p = clampPos(t.clientX, t.clientY);
+      if (p) setPos(p);
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!dragging.current) return;
+      dragging.current = false;
+      const t = e.changedTouches[0];
+      const p = clampPos(t.clientX, t.clientY);
+      if (p) { setPos(p); onPositionChange?.(id, p); }
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+  }, [disabled, pos.x, pos.y, id, onPositionChange, clampPos]);
 
   return (
     <div
@@ -96,14 +121,16 @@ export function DraggableWidget({
         zIndex,
         cursor: disabled ? "default" : "grab",
         userSelect: "none",
+        touchAction: "none",
         ...style,
       }}
       onMouseDown={onMouseDown}
+      onTouchStart={onTouchStart}
     >
-      {/* 拖拉把手提示（桌機版） */}
+      {/* 拖拉把手提示（非停用時顯示） */}
       {!disabled && (
         <div
-          className="absolute -top-1 left-1/2 -translate-x-1/2 flex gap-0.5 opacity-0 hover:opacity-100 transition-opacity pointer-events-none"
+          className="absolute -top-1.5 left-1/2 -translate-x-1/2 flex gap-0.5 opacity-0 hover:opacity-100 transition-opacity pointer-events-none"
           style={{ zIndex: zIndex + 1 }}
         >
           {[0,1,2].map(i => (

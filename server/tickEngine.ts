@@ -136,6 +136,21 @@ export type CombatRound = {
   agentFirst: boolean;
 };
 
+// GD-020 補充四：種族剋制對照表
+// 格式：[A, B] 表示 A 種族剋制 B 種族，傷害 +20%
+export const RACE_COUNTER: [string, string][] = [
+  ["靈獸系", "亡魂系"],  // 靈獸剋制亡魂（活物剋制幽靈）
+  ["亡魂系", "人型系"],  // 亡魂剋制人型（鬼魂讓人型恐懼）
+  ["金屬系", "靈獸系"],  // 金屬剋制靈獸（金屬兵器對靈獸有效）
+  ["人型系", "金屬系"],  // 人型剋制金屬（人类工具對機械有效）
+  ["植物系", "水生系"],  // 植物剋制水生（樹根吸水）
+  ["水生系", "妖化系"],  // 水生剋制妖化（水居制妖）
+  ["妖化系", "植物系"],  // 妖化剋制植物（妖獸吃植物）
+  ["龍種系", "金屬系"],  // 龍種剋制金屬（龍火容金）
+  ["蟲類系", "植物系"],  // 蟲類剋制植物（蟲虫吁食植物）
+  ["天命系", "龍種系"],  // 天命系剋制龍種（天命之力鹽騎龍）
+];
+
 export type CombatResult = {
   won: boolean;
   expGained: number;
@@ -150,6 +165,9 @@ export type CombatResult = {
   spiritCoeffA: number;
   skillElement: WuXing;
   wuxingBoostDesc: string; // 五行加成說明文字
+  raceBoostDesc: string;   // 種族剋制說明文字
+  raceMultiplier: number;  // 種族剋制倍率（1.0 = 無加成，1.2 = +20%）
+  monsterRace?: string;    // 怪物種族（用於前端顯示）
 };
 
 export function resolveCombat(
@@ -165,6 +183,7 @@ export function resolveCombat(
     wuxingWood?: number; wuxingFire?: number; wuxingEarth?: number;
     wuxingMetal?: number; wuxingWater?: number;
     skillSlot1?: string | null; // 當前技能槽，用於判斷技能屬性
+    agentRace?: string;  // GD-020 補充四：旅人種族（用於種族剋制判斷）
   },
   monster: Monster
 ): CombatResult {
@@ -208,8 +227,27 @@ export function resolveCombat(
     wuxingBoostDesc += (wuxingBoostDesc ? "，" : "") + `${WX_ZH[skillElement]}屬魔法效果弱`;
   }
 
-  // 計算基礎傷害（加入魔法係數 A 修正）
-  const agentBaseDmg = Math.max(1, Math.round(agent.attack * atkMultiplier * spiritCoeffA - monster.defense * 0.5));
+  // GD-020 補充四：種族剋制計算
+  // 旅人預設為「人型系」（用户是人類）
+  const agentRaceStr = agent.agentRace ?? "人型系";
+  const monsterRaceStr = monster.race ?? "";
+  let raceMultiplier = 1.0;
+  let raceBoostDesc = "";
+  if (monsterRaceStr) {
+    // 檢查旅人種族是否剋制怪物種族
+    const isAgentCounters = RACE_COUNTER.some(([a, b]) => a === agentRaceStr && b === monsterRaceStr);
+    // 檢查怪物種族是否剋制旅人種族
+    const isMonsterCounters = RACE_COUNTER.some(([a, b]) => a === monsterRaceStr && b === agentRaceStr);
+    if (isAgentCounters) {
+      raceMultiplier = 1.2;
+      raceBoostDesc = `種族剋制！${agentRaceStr}對${monsterRaceStr}傷害+20%`;
+    } else if (isMonsterCounters) {
+      raceMultiplier = 0.85;
+      raceBoostDesc = `種族對抗！${monsterRaceStr}剋制${agentRaceStr}，傷害-15%`;
+    }
+  }
+  // 計算基礎傷害（加入魔法係數 A 修正 + 種族剋制修正）
+  const agentBaseDmg = Math.max(1, Math.round(agent.attack * atkMultiplier * spiritCoeffA * raceMultiplier - monster.defense * 0.5));
   const monsterBaseDmg = Math.max(1, Math.round(monster.attack * defMultiplier - agent.defense * 0.5));
 
   // 回合制戰鬥模擬（最多 10 回合）
@@ -274,6 +312,10 @@ export function resolveCombat(
     spiritCoeffA,
     skillElement,
     wuxingBoostDesc,
+    // GD-020 補充四
+    raceBoostDesc,
+    raceMultiplier,
+    monsterRace: monsterRaceStr || undefined,
   };
 }
 
@@ -508,6 +550,7 @@ async function processCombatEvent(
       wuxingMetal: agent.wuxingMetal,
       wuxingWater: agent.wuxingWater,
       skillSlot1:  agent.skillSlot1,
+      agentRace: "人型系", // 旅人預設為人型系
     },
     monster
   );
@@ -563,8 +606,11 @@ async function processCombatEvent(
         hp: newHp,
       });
   // 若有五行加成說明，附加在訊息後（不顯示係數數字）
-  const resultMsg = result.wuxingBoostDesc
-    ? `${baseResultMsg}（${result.wuxingBoostDesc}）`
+  const boostParts: string[] = [];
+  if (result.wuxingBoostDesc) boostParts.push(result.wuxingBoostDesc);
+  if (result.raceBoostDesc) boostParts.push(result.raceBoostDesc);
+  const resultMsg = boostParts.length > 0
+    ? `${baseResultMsg}（${boostParts.join("，")}）`
     : baseResultMsg;
   await createEvent(agent.id, "combat", resultMsg, {
     phase: "result",
@@ -575,10 +621,14 @@ async function processCombatEvent(
     goldGained: result.goldGained,
     hpLost: result.hpLost,
     elementMultiplier: result.elementMultiplier,
-    // GD-020 補充三：加入五行說明文字（移除係數數字）
+    // GD-020 補允三：加入五行說明文字（移除係數數字）
     wuxingBoostDesc: result.wuxingBoostDesc,
     spiritCoeffA: result.spiritCoeffA,
     skillElement: result.skillElement,
+    // GD-020 補充四：種族剋制資訊
+    raceBoostDesc: result.raceBoostDesc,
+    raceMultiplier: result.raceMultiplier,
+    monsterRace: result.monsterRace,
     rounds: result.rounds,
     lootItems: result.lootItems,
   }, currentNode.id);

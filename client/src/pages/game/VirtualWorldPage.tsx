@@ -701,12 +701,23 @@ function CharacterPanel({
             {/* GD-002 戰鬥系五行屬性 */}
             <div className="rounded-xl border p-2.5 space-y-1.5"
               style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
-              <p className="text-xs font-bold text-slate-500 mb-1.5">⚔️ 戰鬥系屬性</p>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs font-bold text-slate-500">⚔️ 戰鬥系屬性</p>
+                <span className="text-[10px] text-slate-600">上限 255</span>
+              </div>
               {COMBAT_ATTRS.map(a => (
                 <MiniAttrBar key={a.key} icon={a.icon} label={a.label}
                   value={combatValues[a.key] ?? 0}
-                  color={WX_HEX[a.wx] ?? "#888"} max={150} />
+                  color={WX_HEX[a.wx] ?? "#888"} max={255} />
               ))}
+              <div className="mt-1.5 px-2 py-1.5 rounded-lg text-[10px] space-y-0.5"
+                style={{ background: "rgba(255,255,255,0.03)", borderLeft: "2px solid rgba(255,255,255,0.1)", color: "#64748b" }}>
+                <p>🌲 木屬性 × 3.0 → 最大HP</p>
+                <p>🔥 火屬性 × 2.0 → 攻擊力</p>
+                <p>🌍 土屬性 × 2.5 → 防禦力</p>
+                <p>⚔️ 金屬性 × 1.5 → 速度</p>
+                <p>💧 水屬性 × 2.0 → 法力/最大MP</p>
+              </div>
             </div>
 
             {/* 提示：行動策略和靈相干預已移至地圖浮動控件 */}
@@ -734,11 +745,14 @@ function CharacterPanel({
             {/* GD-002 生活系五行屬性 */}
             <div className="rounded-xl border p-2.5 space-y-1.5"
               style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
-              <p className="text-xs font-bold text-slate-500 mb-1.5">🌿 生活系屬性</p>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs font-bold text-slate-500">🌿 生活系屬性</p>
+                <span className="text-[10px] text-slate-600">上限 255</span>
+              </div>
               {LIFE_ATTRS.map(a => (
                 <MiniAttrBar key={a.key} icon={a.icon} label={a.label}
                   value={lifeValues[a.key] ?? 0}
-                  color={WX_HEX[a.wx] ?? "#888"} max={100} />
+                  color={WX_HEX[a.wx] ?? "#888"} max={255} />
               ))}
               {/* 尋寶力特別說明 */}
               <div className="mt-1.5 px-2 py-1.5 rounded-lg text-xs"
@@ -818,6 +832,22 @@ function CharacterPanel({
                           使用
                         </button>
                       )}
+                      {item.itemType === "equipment" && (() => {
+                        const isEquipped = Object.values(equipped).some((e: any) => e?.equipId === item.itemId || e?.id === item.itemId);
+                        return (
+                          <button
+                            onClick={() => equipItemMutation.mutate({ equipId: item.itemId, action: isEquipped ? 'unequip' : 'equip' })}
+                            disabled={equipItemMutation.isPending}
+                            className="shrink-0 px-2 py-1 rounded-lg text-xs font-bold transition-all active:scale-95"
+                            style={{
+                              background: isEquipped ? 'rgba(239,68,68,0.15)' : `${ec}25`,
+                              color: isEquipped ? '#ef4444' : ec,
+                              border: `1px solid ${isEquipped ? 'rgba(239,68,68,0.3)' : `${ec}40`}`,
+                            }}>
+                            {isEquipped ? '卸下' : '裝備'}
+                          </button>
+                        );
+                      })()}
                       </div>
                     );
                   })}
@@ -832,11 +862,7 @@ function CharacterPanel({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <p className="text-xs text-slate-500">裝備欄位（10格）</p>
-                <button onClick={() => setShowEquipShop(true)}
-                  className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all active:scale-95"
-                  style={{ background: `${ec}20`, color: ec, border: `1px solid ${ec}40` }}>
-                  🛒 裝備商店
-                </button>
+                <p className="text-[10px] text-slate-600">在「道具」頁籤選擇裝備</p>
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 {EQUIP_SLOTS.map(({ slot, icon, label, desc }) => {
@@ -870,38 +896,39 @@ function CharacterPanel({
                 })}
               </div>
 
-              {/* 背包道具 */}
-              <div className="rounded-xl border p-2.5"
-                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-bold text-slate-500">🎒 背包道具</p>
-                  <span className="text-xs text-slate-600">{invItems.length} 種</span>
-                </div>
-                {invQuery.isLoading ? (
-                  <p className="text-xs text-slate-600 text-center py-2">載入中…</p>
-                ) : invItems.length === 0 ? (
-                  <div className="text-center py-2">
-                    <p className="text-xs text-slate-600">背包為空</p>
-                    <p className="text-xs text-slate-700 mt-0.5">擊敗怪物後將獲得道具</p>
+              {/* 裝備屬性加成摘要 */}
+              {(() => {
+                const bonuses: { label: string; val: number; color: string }[] = [];
+                Object.values(equipped).forEach((e: any) => {
+                  if (!e?.baseStats) return;
+                  const m = String(e.baseStats).match(/([\+\-]?\d+)/g);
+                  if (m) m.forEach(v => { /* 簡化展示，只展示裝備數量 */ });
+                });
+                const equippedList = Object.entries(equipped).filter(([, v]) => v != null);
+                if (equippedList.length === 0) return (
+                  <div className="px-2.5 py-2 rounded-xl border text-center"
+                    style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+                    <p className="text-xs text-slate-600">尚未裝備任何裝備</p>
+                    <p className="text-[10px] text-slate-700 mt-0.5">至「道具」頁籤選擇裝備並安裝</p>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {invItems.map(item => {
-                      const rc = item.rarity ? QUALITY_COLOR[item.rarity] ?? "#94a3b8" : "#94a3b8";
-                      return (
-                        <div key={item.id} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border"
-                          style={{ background: `${rc}08`, borderColor: `${rc}25` }}>
-                          <span className="text-sm shrink-0">{item.emoji ?? "📦"}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold truncate" style={{ color: rc }}>{item.itemName}</p>
-                            <p className="text-xs text-slate-600">x{item.quantity}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
+                );
+                return (
+                  <div className="rounded-xl border p-2.5 space-y-1.5"
+                    style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+                    <p className="text-xs font-bold text-slate-500">⚔️ 裝備屬性加成</p>
+                    {equippedList.map(([slot, e]: any) => (
+                      <div key={slot} className="flex items-center gap-2">
+                        <span className="text-xs text-slate-600 w-12 shrink-0">{EQUIP_SLOTS.find(s => s.slot === slot)?.label ?? slot}</span>
+                        <span className="text-xs font-bold" style={{ color: e?.quality ? QUALITY_COLOR[e.quality] ?? '#94a3b8' : '#94a3b8' }}>{e?.name ?? ''}</span>
+                        {e?.baseStats && <span className="text-[10px] text-slate-500 ml-auto shrink-0">{e.baseStats}</span>}
+                      </div>
+                    ))}
+                    <div className="pt-1 border-t border-slate-800/60">
+                      <p className="text-[10px] text-slate-600">• 裝備屬性已反映至「戰鬥」頁籤的數値</p>
+                    </div>
                   </div>
-                )}
-               </div>
+                );
+              })()}
             </div>
         )}
 
@@ -987,31 +1014,54 @@ function CharacterPanel({
           </div>
         )}
 
-        {/* ── 技能面板（GD-001）── */}
+        {/* ── 技能面板（GD-001 + 木屬性動態擴充）── */}
         {activePanel === "skill" && (() => {
-          const activeSlots = [
-            agent?.skillSlot1, agent?.skillSlot2, agent?.skillSlot3, agent?.skillSlot4,
-          ];
-          const passiveSlots = [agent?.passiveSlot1, agent?.passiveSlot2];
+          // 木屬性動態擴充技能槽數量
+          const woodVal = agent?.wuxingWood ?? 0;
+          // 主動技能槽：預設4，木屬性門檻擴充（最失8）
+          const activeSlotCount = woodVal >= 200 ? 8 : woodVal >= 150 ? 7 : woodVal >= 100 ? 6 : woodVal >= 60 ? 5 : 4;
+          // 被動技能槽：預設2，木屬性門檻擴充（最失5）
+          const passiveSlotCount = woodVal >= 200 ? 5 : woodVal >= 150 ? 4 : woodVal >= 80 ? 3 : 2;
+          // 隱藏技能槽：預設1，木屬性門檻擴充（最失3）
+          const hiddenSlotCount = woodVal >= 200 ? 3 : woodVal >= 120 ? 2 : 1;
+          const ACTIVE_SLOT_KEYS = ["skillSlot1", "skillSlot2", "skillSlot3", "skillSlot4"] as const;
+          const PASSIVE_SLOT_KEYS = ["passiveSlot1", "passiveSlot2"] as const;
+          const activeSlots = ACTIVE_SLOT_KEYS.map(k => (agent as any)?.[k] as string | undefined);
+          const passiveSlots = PASSIVE_SLOT_KEYS.map(k => (agent as any)?.[k] as string | undefined);
+          // 技能槽門檻說明
+          const nextActiveThreshold = activeSlotCount < 8 ? [4,60,100,150,200].find(t => t > woodVal) : null;
+          const nextPassiveThreshold = passiveSlotCount < 5 ? [2,80,150,200].find(t => t > woodVal) : null;
+          // 技能圖鑑只顯示自己擁有的技能（從背包中的 skill_book）
+          const ownedSkillIds = new Set(invItems.filter(i => i.itemType === "skill_book").map(i => i.itemId));
+          // 也加入已安裝的技能
+          [...activeSlots, ...passiveSlots].forEach(s => { if (s) ownedSkillIds.add(s); });
           return (
             <div className="space-y-2">
-              {/* 主動技能（4槽） */}
+              {/* 木屬性門檻說明 */}
+              <div className="px-2.5 py-1.5 rounded-lg text-[10px]"
+                style={{ background: "rgba(34,197,94,0.06)", borderLeft: "2px solid rgba(34,197,94,0.3)", color: "#64748b" }}>
+                🌲 木屬性 {woodVal} → 主動{activeSlotCount}槽 / 被動{passiveSlotCount}槽 / 隱藏{hiddenSlotCount}槽
+                {nextActiveThreshold && <span className="ml-2 text-green-500/60">（主動槽下一步解鎖：木{nextActiveThreshold}）</span>}
+              </div>
+              {/* 主動技能槽（動態數量） */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-xs text-slate-500">主動技能（4槽）</p>
+                  <p className="text-xs text-slate-500">主動技能（{activeSlotCount}槽）</p>
                   <p className="text-[10px] text-slate-600">點擊槽位可選擇技能</p>
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
-                  {activeSlots.map((slotId, i) => {
+                  {Array.from({ length: activeSlotCount }).map((_, i) => {
+                    const slotId = activeSlots[i];
                     const sk = slotId ? SKILL_DEFS[slotId] : null;
                     const c = sk ? WX_HEX[sk.element] ?? "#888" : "#334155";
-                    const slotKey = (["skillSlot1", "skillSlot2", "skillSlot3", "skillSlot4"] as const)[i];
+                    const slotKey = (ACTIVE_SLOT_KEYS[i] ?? "skillSlot1") as "skillSlot1" | "skillSlot2" | "passiveSlot1";
+                    const isLocked = i >= 4; // 木屬性解鎖的額外槽
                     return (
                       <button key={i}
-                        onClick={() => { setSkillPickerSlot({ type: "active", index: i, slot: (slotKey === "skillSlot3" || slotKey === "skillSlot4") ? "skillSlot2" : slotKey as "skillSlot1" | "skillSlot2" }); setShowSkillPicker(true); }}
+                        onClick={() => { setSkillPickerSlot({ type: "active", index: i, slot: slotKey }); setShowSkillPicker(true); }}
                         className="px-2.5 py-2 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
-                        style={{ background: sk ? `${c}10` : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : "rgba(255,255,255,0.07)" }}>
-                        <p className="text-xs text-slate-600 mb-0.5">主動 {i + 1}</p>
+                        style={{ background: sk ? `${c}10` : isLocked ? "rgba(34,197,94,0.04)" : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : isLocked ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)" }}>
+                        <p className="text-xs mb-0.5" style={{ color: isLocked ? "#22c55e80" : "#64748b" }}>主動 {i + 1}{isLocked ? " 🌲" : ""}</p>
                         {sk ? (
                           <div>
                             <div className="flex items-center gap-1 mb-0.5">
@@ -1026,19 +1076,21 @@ function CharacterPanel({
                   })}
                 </div>
               </div>
-              {/* 被動技能（2槽） */}
+              {/* 被動技能槽（動態數量） */}
               <div>
-                <p className="text-xs text-slate-500 mb-1.5">被動技能（2槽）</p>
+                <p className="text-xs text-slate-500 mb-1.5">被動技能（{passiveSlotCount}槽）</p>
                 <div className="grid grid-cols-2 gap-1.5">
-                  {passiveSlots.map((slotId, i) => {
+                  {Array.from({ length: passiveSlotCount }).map((_, i) => {
+                    const slotId = passiveSlots[i];
                     const sk = slotId ? SKILL_DEFS[slotId] : null;
                     const c = sk ? WX_HEX[sk.element] ?? "#888" : "#334155";
+                    const isLocked = i >= 2;
                     return (
                       <button key={i}
                         onClick={() => { setSkillPickerSlot({ type: "passive", index: i, slot: "passiveSlot1" }); setShowSkillPicker(true); }}
                         className="px-2.5 py-2 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
-                        style={{ background: sk ? `${c}10` : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : "rgba(255,255,255,0.07)" }}>
-                        <p className="text-xs text-slate-600 mb-0.5">被動 {i + 1}</p>
+                        style={{ background: sk ? `${c}10` : isLocked ? "rgba(34,197,94,0.04)" : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : isLocked ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)" }}>
+                        <p className="text-xs mb-0.5" style={{ color: isLocked ? "#22c55e80" : "#64748b" }}>被動 {i + 1}{isLocked ? " 🌲" : ""}</p>
                         {sk ? (
                           <div>
                             <div className="flex items-center gap-1 mb-0.5">
@@ -1049,6 +1101,22 @@ function CharacterPanel({
                           </div>
                         ) : <p className="text-xs text-slate-700 italic">點擊安裝技能</p>}
                       </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {/* 隱藏技能槽 */}
+              <div>
+                <p className="text-xs text-slate-500 mb-1.5">隱藏技能（{hiddenSlotCount}槽）</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {Array.from({ length: hiddenSlotCount }).map((_, i) => {
+                    const isLocked = i >= 1;
+                    return (
+                      <div key={i} className="px-2.5 py-2 rounded-xl border"
+                        style={{ background: isLocked ? "rgba(168,85,247,0.04)" : "rgba(255,255,255,0.02)", borderColor: isLocked ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.07)" }}>
+                        <p className="text-xs mb-0.5" style={{ color: isLocked ? "#a855f780" : "#64748b" }}>隱藏 {i + 1}{isLocked ? " 🌲" : ""}</p>
+                        <p className="text-xs text-slate-700 italic">需機緣觸發</p>
+                      </div>
                     );
                   })}
                 </div>
@@ -1090,13 +1158,26 @@ function CharacterPanel({
               {/* 技能列表 */}
               {skillCatalogQuery.isLoading ? (
                 <p className="text-slate-500 text-center py-8">載入技能圖鑑中…</p>
-              ) : (
+              ) : (() => {
+                // 只顯示玩家擁有的技能（skill_book 道具 + 已安裝的技能）
+                const pickerOwnedIds = new Set(invItems.filter(i => i.itemType === "skill_book").map(i => i.itemId));
+                const agentSlots = [agent?.skillSlot1, agent?.skillSlot2, agent?.skillSlot3, agent?.skillSlot4, agent?.passiveSlot1, agent?.passiveSlot2];
+                agentSlots.forEach(s => { if (s) pickerOwnedIds.add(s); });
+                const filteredSkills = (skillCatalogQuery.data ?? []).filter(sk => {
+                  const typeOk = skillPickerSlot.type === "active"
+                    ? sk.category === "active_combat"
+                    : sk.category === "passive_combat" || sk.category === "life_gather" || sk.category === "craft_forge";
+                  return typeOk && pickerOwnedIds.has(sk.skillId);
+                });
+                if (filteredSkills.length === 0) return (
+                  <div className="text-center py-8">
+                    <p className="text-slate-500">尚未擁有任何技能</p>
+                    <p className="text-xs text-slate-600 mt-1">擊敗怪物或完成任務得到技能書</p>
+                  </div>
+                );
+                return (
                 <div className="grid grid-cols-2 gap-2">
-                  {(skillCatalogQuery.data ?? []).filter(sk =>
-                    skillPickerSlot.type === "active"
-                      ? sk.category === "active_combat"
-                      : sk.category === "passive_combat" || sk.category === "life_gather" || sk.category === "craft_forge"
-                  ).map(sk => {
+                  {filteredSkills.map(sk => {
                     const wc = WX_HEX[sk.wuxing ?? ""] ?? "#64748b";
                     const isInstalling = installSkillMutation.isPending;
                     return (
@@ -1121,7 +1202,8 @@ function CharacterPanel({
                     );
                   })}
                 </div>
-              )}
+                );
+              })()}
             </div>
           </div>
         )}
@@ -1370,13 +1452,48 @@ function EventLogDrawer({
                   {hasCombat && <span className="text-slate-600 text-[10px] shrink-0">{isExp ? "▲" : "▼"}</span>}
                 </div>
                 {isExp && hasCombat && detail && (
-                  <div className="ml-6 pl-2 border-l border-slate-700 text-[10px] text-slate-500 space-y-0.5">
-                    {(detail.rounds as Array<Record<string, unknown>> ?? []).slice(0, 4).map((r, i) => (
-                      <p key={i}>{String(r.attacker ?? "")} → {String(r.defender ?? "")}：{String(r.damage ?? 0)} 傷害{r.critical ? " 💥暴擊" : ""}</p>
-                    ))}
-                    {Boolean(detail.victory)
-                      ? <p className="text-green-500">✓ 勝利！+{String(detail.expGained ?? 0)} EXP・+{String(detail.goldGained ?? 0)} 金幣</p>
-                      : <p className="text-red-500">✗ 敗退</p>}
+                  <div className="ml-6 mt-1 rounded-lg border border-slate-700/60 bg-slate-900/60 p-2 text-[10px] space-y-1.5">
+                    <div className="flex items-center gap-1.5 border-b border-slate-700/40 pb-1">
+                      <span className="text-amber-400 font-bold">⚔️ 戰鬥摘要</span>
+                      {detail.monsterRace != null && (
+                        <span className="px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-300">{`${detail.monsterRace}`}</span>
+                      )}
+                      <span className={`ml-auto font-bold ${detail.won ? 'text-green-400' : 'text-red-400'}`}>
+                        {detail.won ? '✓ 勝利' : '✗ 敗退'}
+                      </span>
+                    </div>
+                    {((detail.rounds as Array<Record<string, unknown>>) ?? []).length > 0 && (
+                      <div className="space-y-0.5">
+                        <p className="text-slate-500">共 {(detail.rounds as unknown[]).length} 回合</p>
+                        {(detail.rounds as Array<Record<string, unknown>>).slice(0, 3).map((r, i) => (
+                          <div key={i} className="flex gap-2">
+                            <span className="text-slate-600 w-8">R{i+1}</span>
+                            <span className="text-orange-400">旅人 -{String(r.monsterAtk ?? 0)}</span>
+                            <span className="text-cyan-400">怪物 -{String(r.agentAtk ?? 0)}</span>
+                          </div>
+                        ))}
+                        {(detail.rounds as unknown[]).length > 3 && (
+                          <p className="text-slate-600">…共 {(detail.rounds as unknown[]).length} 回合</p>
+                        )}
+                      </div>
+                    )}
+{(() => {
+                      const wxDesc = detail.wuxingBoostDesc as string | undefined;
+                      const rcDesc = detail.raceBoostDesc as string | undefined;
+                      return (wxDesc || rcDesc) ? (
+                        <div className="space-y-0.5 border-t border-slate-700/40 pt-1">
+                          {wxDesc && <p className="text-yellow-400/80">★ {wxDesc}</p>}
+                          {rcDesc && <p className="text-purple-400/80">◆ {rcDesc}</p>}
+                        </div>
+                      ) : null;
+                    })()}
+                    <div className="flex flex-wrap gap-2 border-t border-slate-700/40 pt-1">
+                      <span className="text-green-400">+{String(detail.expGained ?? 0)} EXP</span>
+                      <span className="text-yellow-400">+{String(detail.goldGained ?? 0)} 金幣</span>
+                      {(detail.lootItems as string[] ?? []).length > 0 && (
+                        <span className="text-cyan-400">🎁 {(detail.lootItems as string[]).join(", ")}</span>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1404,13 +1521,24 @@ export default function VirtualWorldPage() {
   const mapRef = useRef<LeafletMapHandle>(null);
   const utils = trpc.useUtils();
   // ── Widget 位置記憶（桌機版） ──
-  const [widgetLayout, setWidgetLayout] = useState<Record<string, { x: number; y: number }>>({});
+  // 五大浮動區塊的預設位置（相對於地圖容器，單位 px）
+  const WIDGET_DEFAULTS: Record<string, { x: number; y: number }> = {
+    "city-panel":     { x: 16,  y: 16  },   // 左上：城市資訊
+    "status-bar":     { x: 16,  y: 80  },   // 左上下方：HP/MP/AP/體力
+    "divine-panel":   { x: 16,  y: 160 },   // 左中：靈相干預
+    "strategy-panel": { x: 16,  y: 260 },   // 左中下：行動策略
+    "event-log":      { x: 16,  y: 380 },   // 左下：日誌
+  };
+  const [widgetLayout, setWidgetLayout] = useState<Record<string, { x: number; y: number }>>(WIDGET_DEFAULTS);
   const saveLayoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveWidgetLayout = trpc.gameWorld.saveWidgetLayout.useMutation();
   const { data: savedLayout } = trpc.gameWorld.getWidgetLayout.useQuery(undefined, { enabled: !!user, staleTime: Infinity });
-  // 載入儲存的 widget 位置
+  // 載入儲存的 widget 位置（用儲存的覆蓋預設，未儲存的使用預設）
   useEffect(() => {
-    if (savedLayout) setWidgetLayout(savedLayout as Record<string, { x: number; y: number }>);
+    if (savedLayout) {
+      const merged = { ...WIDGET_DEFAULTS, ...(savedLayout as Record<string, { x: number; y: number }>) };
+      setWidgetLayout(merged);
+    }
   }, [savedLayout]);
   // 拖拉結束後防抖儲存（1.5 秒後才送 API）
   const handleWidgetMove = useCallback((id: string, pos: { x: number; y: number }) => {
@@ -1917,13 +2045,12 @@ export default function VirtualWorldPage() {
               {/* 日誌按鈕：桌機版可拖拉 */}
               <DraggableWidget
                 id="event-log"
-                defaultPos={{ x: 0, y: 0 }}
+                defaultPos={WIDGET_DEFAULTS["event-log"]}
                 savedPos={widgetLayout["event-log"]}
                 onPositionChange={handleWidgetMove}
-                disabled={typeof window !== "undefined" && window.innerWidth < 1024}
+                disabled={false}
                 zIndex={400}
                 className="hidden lg:block"
-                style={{ transform: "scale(1.1)", transformOrigin: "bottom left" }}
               >
                 <button
                   onClick={() => setShowLog(v => !v)}
@@ -1992,13 +2119,12 @@ export default function VirtualWorldPage() {
               {/* ── 城市區塊（桌機版：可拖拉） ── */}
               <DraggableWidget
                 id="city-panel"
-                defaultPos={{ x: 0, y: 0 }}
+                defaultPos={WIDGET_DEFAULTS["city-panel"]}
                 savedPos={widgetLayout["city-panel"]}
                 onPositionChange={handleWidgetMove}
-                disabled={typeof window !== "undefined" && window.innerWidth < 1024}
+                disabled={false}
                 zIndex={400}
                 className="hidden lg:block"
-                style={{ transform: "scale(1.1)", transformOrigin: "top left" }}
               >
                 <button
                   onClick={() => setNodeInfoOpen(v => !v)}
@@ -2068,10 +2194,10 @@ export default function VirtualWorldPage() {
               {/* ── HP/MP/AP/體力 橫排狀態条（桌機版：可拖拉） ── */}
               <DraggableWidget
                 id="status-bar"
-                defaultPos={{ x: 0, y: 0 }}
+                defaultPos={WIDGET_DEFAULTS["status-bar"]}
                 savedPos={widgetLayout["status-bar"]}
                 onPositionChange={handleWidgetMove}
-                disabled={typeof window !== "undefined" && window.innerWidth < 1024}
+                disabled={false}
                 zIndex={400}
                 className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-2xl border"
                 style={{
@@ -2080,8 +2206,6 @@ export default function VirtualWorldPage() {
                   borderColor: "rgba(255,255,255,0.12)",
                   boxShadow: "0 2px 16px rgba(0,0,0,0.5)",
                   whiteSpace: "nowrap",
-                  transform: "scale(1.1)",
-                  transformOrigin: "top left",
                 }}
               >
                 {[
@@ -2203,13 +2327,12 @@ export default function VirtualWorldPage() {
               {/* ── 靈相干預浮動面板（桌機版：可拖拉） ── */}
               <DraggableWidget
                 id="divine-panel"
-                defaultPos={{ x: 0, y: 0 }}
+                defaultPos={WIDGET_DEFAULTS["divine-panel"]}
                 savedPos={widgetLayout["divine-panel"]}
                 onPositionChange={handleWidgetMove}
-                disabled={typeof window !== "undefined" && window.innerWidth < 1024}
+                disabled={false}
                 zIndex={400}
                 className="hidden lg:block"
-                style={{ transform: "scale(1.1)", transformOrigin: "top right" }}
               >
                 <button
                   onClick={() => setShowDivinePanel(v => !v)}
@@ -2266,13 +2389,12 @@ export default function VirtualWorldPage() {
               {/* ── 行動策略浮動面板（桌機版：可拖拉） ── */}
               <DraggableWidget
                 id="strategy-panel"
-                defaultPos={{ x: 0, y: 0 }}
+                defaultPos={WIDGET_DEFAULTS["strategy-panel"]}
                 savedPos={widgetLayout["strategy-panel"]}
                 onPositionChange={handleWidgetMove}
-                disabled={typeof window !== "undefined" && window.innerWidth < 1024}
+                disabled={false}
                 zIndex={400}
                 className="hidden lg:block"
-                style={{ transform: "scale(1.1)", transformOrigin: "bottom right" }}
               >
                 <button
                   onClick={() => setShowStrategyPanel(v => !v)}
