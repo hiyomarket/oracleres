@@ -1770,8 +1770,13 @@ export const agentInventory = mysqlTable("agent_inventory", {
   itemId: varchar("item_id", { length: 100 }).notNull(),
   itemType: mysqlEnum("item_type", ["material", "equipment", "skill_book", "consumable", "pet"]).notNull().default("material"),
   quantity: int("quantity").notNull().default(1),
-  /** 裝備詞條等額外資料 */
+  /** 裝備詞梜等額外資料 */
   itemData: json("item_data"),
+  /** 是否已裝備 */
+  isEquipped: tinyint("is_equipped").notNull().default(0),
+  /** 裝備欄位：weapon/helmet/armor/boots/accessory1/accessory2 */
+  equippedSlot: varchar("equipped_slot", { length: 20 }),
+  obtainedAt: bigint("obtained_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
   acquiredAt: bigint("acquired_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
   updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
@@ -2086,3 +2091,92 @@ export const gameSkillCatalog = mysqlTable("game_skill_catalog", {
 });
 export type GameSkillCatalog = typeof gameSkillCatalog.$inferSelect;
 export type InsertGameSkillCatalog = typeof gameSkillCatalog.$inferInsert;
+
+/**
+ * 裝備模板表（GD-021）：所有裝備的定義資料
+ * 由後台管理，ID 格式：E_W001（木）、E_F001（火）、E_E001（土）、E_M001（金）、E_Wt001（水）
+ */
+export const equipmentTemplates = mysqlTable("equipment_templates", {
+  id: varchar("id", { length: 20 }).primaryKey(),
+  name: varchar("name", { length: 50 }).notNull(),
+  element: mysqlEnum("element", ["wood", "fire", "earth", "metal", "water"]).notNull(),
+  tier: mysqlEnum("tier", ["basic", "mid", "high", "legendary"]).notNull().default("basic"),
+  slot: mysqlEnum("slot", ["weapon", "helmet", "armor", "boots", "accessory"]).notNull(),
+  levelReq: int("level_req").notNull().default(1),
+  /** 基礎屬性加成 */
+  hpBonus: int("hp_bonus").notNull().default(0),
+  atkBonus: int("atk_bonus").notNull().default(0),
+  defBonus: int("def_bonus").notNull().default(0),
+  spdBonus: int("spd_bonus").notNull().default(0),
+  matkBonus: int("matk_bonus").notNull().default(0),
+  mpBonus: int("mp_bonus").notNull().default(0),
+  /** 特殊詞條（JSON，最多 3 個） */
+  affixes: json("affixes"),
+  /** 套裝 ID（如 SET_WOOD_LEGENDARY） */
+  setId: varchar("set_id", { length: 30 }),
+  /** 套裝第幾件（1~5） */
+  setPiece: int("set_piece"),
+  /** 商店售價（NULL 表示不可購買） */
+  shopPrice: int("shop_price"),
+  /** NPC 收購價 */
+  npcSellPrice: int("npc_sell_price").notNull().default(10),
+  isActive: tinyint("is_active").notNull().default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type EquipmentTemplate = typeof equipmentTemplates.$inferSelect;
+export type InsertEquipmentTemplate = typeof equipmentTemplates.$inferInsert;
+
+/**
+ * 怪物掉落表（GD-021）：定義每隻怪物可掉落的裝備及機率
+ * 基礎掉落率已依 GD-015B 下修 50%（初階 7~10%、中階 1.5~2.5%、高階 0.5~1%）
+ */
+export const monsterDropTables = mysqlTable("monster_drop_tables", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 怪物 ID（對應 shared/monsters.ts） */
+  monsterId: varchar("monster_id", { length: 20 }).notNull(),
+  /** 可掉落的裝備 ID */
+  equipmentId: varchar("equipment_id", { length: 20 }).notNull(),
+  /** 基礎掉落率（0.0~1.0） */
+  baseDropRate: int("base_drop_rate").notNull(), // 儲存為千分比，如 80 = 8.0%
+  /** 掉落權重（同 tier 內的相對機率） */
+  weight: int("weight").notNull().default(100),
+  isActive: tinyint("is_active").notNull().default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type MonsterDropTable = typeof monsterDropTables.$inferSelect;
+
+/**
+ * 旅人掉落計數表（GD-021）：低保系統計數器
+ * 低保觸發：連續 15 場無掉落→初階保底；30 場無中階→中階保底；75 場無高階→高階保底
+ */
+export const agentDropCounters = mysqlTable("agent_drop_counters", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: int("agent_id").notNull().unique(),
+  /** 連續未掉落場次（初階低保計數） */
+  noDropStreak: int("no_drop_streak").notNull().default(0),
+  /** 連續未掉落中階以上場次 */
+  noMidStreak: int("no_mid_streak").notNull().default(0),
+  /** 連續未掉落高階以上場次 */
+  noHighStreak: int("no_high_streak").notNull().default(0),
+  /** 總戰鬥場次 */
+  totalBattles: int("total_battles").notNull().default(0),
+  /** 總掉落次數 */
+  totalDrops: int("total_drops").notNull().default(0),
+  lastUpdated: bigint("last_updated", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type AgentDropCounter = typeof agentDropCounters.$inferSelect;
+
+/**
+ * 旅人套裝進度表（GD-021）：追蹤套裝收集進度
+ */
+export const agentSetProgress = mysqlTable("agent_set_progress", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: int("agent_id").notNull(),
+  setId: varchar("set_id", { length: 30 }).notNull(),
+  /** 已收集的套裝件數 */
+  piecesOwned: int("pieces_owned").notNull().default(0),
+  /** 是否已啟動套裝效果 */
+  isActivated: tinyint("is_activated").notNull().default(0),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type AgentSetProgress = typeof agentSetProgress.$inferSelect;

@@ -7,7 +7,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users, equipmentTemplates, agentDropCounters } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { eq, and, desc } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
@@ -234,12 +234,13 @@ export const gameWorldRouter = router({
     const currentNode = MAP_NODE_MAP.get(agent.currentNodeId);
     const targetNode = agent.targetNodeId ? MAP_NODE_MAP.get(agent.targetNodeId) : null;
 
-    // 計算體力值再生
+    // 計算體力値再生（30 分鐘 +30 點）
     const now = Date.now();
     const lastRegen = agent.staminaLastRegen ?? now;
     const elapsed = now - lastRegen;
-    const regenIntervalMs = 20 * 60 * 1000;
-    const pendingRegen = Math.floor(elapsed / regenIntervalMs);
+    const regenIntervalMs = 30 * 60 * 1000; // 30 分鐘
+    const regenCycles = Math.floor(elapsed / regenIntervalMs);
+    const pendingRegen = regenCycles * 30; // 每循環 +30 點
     const currentStamina = Math.min(agent.maxStamina, agent.stamina + pendingRegen);
     const nextRegenMs = regenIntervalMs - (elapsed % regenIntervalMs);
 
@@ -881,7 +882,7 @@ export const gameWorldRouter = router({
   installSkill: protectedProcedure
     .input(z.object({
       skillId: z.string(),
-      slot: z.enum(["skillSlot1", "skillSlot2", "passiveSlot1"]),
+      slot: z.enum(["skillSlot1", "skillSlot2", "skillSlot3", "skillSlot4", "passiveSlot1", "passiveSlot2", "hiddenSlot1"]),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -1216,4 +1217,112 @@ export const gameWorldRouter = router({
       });
       return { success: true, itemName: item.displayName, quantity: item.quantity };
     }),
+
+  // ─── GD-021 P1：取得背包道具列表（包含裝備模板資訊） ───
+  getInventoryWithTemplates: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    const agents = await db.select().from(gameAgents)
+      .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    if (!agents[0]) return { items: [], equippedSlots: {} };
+    const agent = agents[0];
+    // 取得背包道具
+    const items = await db.select().from(agentInventory)
+      .where(eq(agentInventory.agentId, agent.id));
+    // 對裝備類型道具，查詢裝備模板取得屬性資訊
+    const equipItems = items.filter(i => i.itemType === "equipment");
+    const templateIds = Array.from(new Set(equipItems.map(i => i.itemId)));
+    const templates: Record<string, typeof equipmentTemplates.$inferSelect> = {};
+    for (const tid of templateIds) {
+      const [tmpl] = await db.select().from(equipmentTemplates)
+        .where(eq(equipmentTemplates.id, tid)).limit(1);
+      if (tmpl) templates[tid] = tmpl;
+    }
+    // 建立裝備槽位對照
+    const equippedSlots: Record<string, string> = {};
+    for (const item of equipItems) {
+      if (item.isEquipped && item.equippedSlot) {
+        equippedSlots[item.equippedSlot] = item.itemId;
+      }
+    }
+    return {
+      items: items.map(item => ({
+        ...item,
+        template: item.itemType === "equipment" ? (templates[item.itemId] ?? null) : null,
+      })),
+      equippedSlots,
+      agentId: agent.id,
+    };
+  }),
+
+  // ─── GD-021 P1：安裝掉落裝備（安裝到裝備槽） ───
+  equipDroppedItem: protectedProcedure
+    .input(z.object({
+      inventoryId: z.number().int().positive(),
+      slot: z.enum(["weapon", "armor", "helmet", "boots", "accessory1", "accessory2", "ring1", "ring2"]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const agent = agents[0];
+      // 查詢道具
+      const [invItem] = await db.select().from(agentInventory)
+        .where(and(eq(agentInventory.id, input.inventoryId), eq(agentInventory.agentId, agent.id)))
+        .limit(1);
+      if (!invItem) throw new TRPCError({ code: "NOT_FOUND", message: "道具不存在" });
+      if (invItem.itemType !== "equipment") throw new TRPCError({ code: "BAD_REQUEST", message: "此道具不是裝備" });
+      // 卸下同槽位的裝備
+      const [currentEquipped] = await db.select().from(agentInventory)
+        .where(and(
+          eq(agentInventory.agentId, agent.id),
+          eq(agentInventory.isEquipped, 1),
+          eq(agentInventory.equippedSlot, input.slot)
+        )).limit(1);
+      if (currentEquipped) {
+        await db.update(agentInventory).set({ isEquipped: 0, equippedSlot: null, updatedAt: Date.now() })
+          .where(eq(agentInventory.id, currentEquipped.id));
+      }
+      // 安裝新裝備
+      await db.update(agentInventory).set({ isEquipped: 1, equippedSlot: input.slot, updatedAt: Date.now() })
+        .where(eq(agentInventory.id, input.inventoryId));
+      // 查詢裝備模板取得屬性加成
+      const [tmpl] = await db.select().from(equipmentTemplates)
+        .where(eq(equipmentTemplates.id, invItem.itemId)).limit(1);
+      // 重新計算裝備加成後的角色屬性
+      if (tmpl) {
+        const allEquipped = await db.select().from(agentInventory)
+          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.isEquipped, 1)));
+        const equipBonuses = { hp: 0, atk: 0, def: 0, spd: 0, matk: 0, mp: 0 };
+        for (const eq_item of allEquipped) {
+          const [eq_tmpl] = await db.select().from(equipmentTemplates)
+            .where(eq(equipmentTemplates.id, eq_item.itemId)).limit(1);
+          if (eq_tmpl) {
+            equipBonuses.hp   += eq_tmpl.hpBonus   ?? 0;
+            equipBonuses.atk  += eq_tmpl.atkBonus  ?? 0;
+            equipBonuses.def  += eq_tmpl.defBonus  ?? 0;
+            equipBonuses.spd  += eq_tmpl.spdBonus  ?? 0;
+            equipBonuses.matk += eq_tmpl.matkBonus ?? 0;
+            equipBonuses.mp   += eq_tmpl.mpBonus   ?? 0;
+          }
+        }
+        // 裝備加成屬性記錄到 detail（將來可擴展到 gameAgents 裝備加成欄位）
+        console.log("[equipDroppedItem] equip bonuses:", equipBonuses);
+      }
+      return { success: true, slot: input.slot, itemId: invItem.itemId };
+    }),
+
+  // ─── GD-021 P1：取得低保計數器 ───
+  getDropCounters: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    const agents = await db.select().from(gameAgents)
+      .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    if (!agents[0]) return null;
+    const [counter] = await db.select().from(agentDropCounters)
+      .where(eq(agentDropCounters.agentId, agents[0].id)).limit(1);
+    return counter ?? null;
+  }),
 });

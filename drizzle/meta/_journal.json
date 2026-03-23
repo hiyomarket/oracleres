@@ -498,6 +498,13 @@
       "when": 1774290611549,
       "tag": "0070_heavy_wild_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "5",
+      "when": 1774297298760,
+      "tag": "0071_military_celestials",
+      "breakpoints": true
     }
   ]
 }

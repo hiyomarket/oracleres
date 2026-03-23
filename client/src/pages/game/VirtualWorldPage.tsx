@@ -694,8 +694,8 @@ function CharacterPanel({
             <StatBar icon="❤️" label="HP"   value={agentHp}      max={agentMaxHp}      color="#ef4444" />
             <StatBar icon="💧" label="MP"   value={agentMp}      max={agentMaxMp}      color="#38bdf8" />
             <StatBar icon="⚡" label="活躍" value={agentStamina} max={agentMaxStamina} color="#f59e0b" />
-            {staminaInfo && agentStamina < agentMaxStamina && (
-              <p className="text-xs text-slate-600 text-right">下次恢復：{staminaInfo.nextRegenMin} 分鐘後</p>
+              {staminaInfo && agentStamina < agentMaxStamina && (
+              <p className="text-xs text-slate-600 text-right">下次恢復：{staminaInfo.nextRegenMin} 分鐘後（+30）</p>
             )}
 
             {/* GD-002 戰鬥系五行屬性 */}
@@ -2226,8 +2226,8 @@ export default function VirtualWorldPage() {
                 ))}
               </DraggableWidget>
 
-              {/* ── 靈相干預浮動面板（手機版：右上角固定） ── */}
-              <div className="absolute right-2 top-2 z-[400] lg:hidden">
+              {/* ── 靈相干預浮動面板（手機版：右上角固定，不受角色面板影響） ── */}
+              <div className="absolute right-2 top-2 z-[450] lg:hidden">
                 <button
                   onClick={() => setShowDivinePanel(v => !v)}
                   className="flex items-center gap-1 px-2 py-1.5 rounded-xl border text-xs font-bold transition-all hover:scale-105 active:scale-95"
@@ -2281,9 +2281,9 @@ export default function VirtualWorldPage() {
                 })()}
               </div>
 
-              {/* ── 行動策略浮動面板（手機版：右下角固定） ── */}
-              <div className="absolute right-2 z-[400] lg:hidden"
-                style={{ bottom: charPanelOpen ? "16px" : "64px" }}>
+              {/* ── 行動策略浮動面板（手機版：右上角固定，靈相下方） ── */}
+              <div className="absolute right-2 z-[445] lg:hidden"
+                style={{ top: "52px" }}>
                 <button
                   onClick={() => setShowStrategyPanel(v => !v)}
                   className="flex items-center gap-1 px-2 py-1.5 rounded-xl border text-xs font-bold transition-all hover:scale-105 active:scale-95"
@@ -2299,7 +2299,7 @@ export default function VirtualWorldPage() {
                   <span>{showStrategyPanel ? "▲" : "▼"}</span>
                 </button>
                 {showStrategyPanel && (
-                  <div className="absolute right-0 bottom-full mb-1 rounded-xl border overflow-hidden"
+                  <div className="absolute right-0 top-full mt-1 rounded-xl border overflow-hidden"
                     style={{ background: "rgba(6,10,22,0.97)", backdropFilter: "blur(16px)", borderColor: `${ec}30`, width: "180px" }}>
                     <div className="px-3 py-2 border-b"
                       style={{ borderColor: "rgba(255,255,255,0.06)" }}>
@@ -2605,14 +2605,26 @@ export default function VirtualWorldPage() {
                     <span className="text-xs text-slate-500">Lv.{agent?.level ?? 1}</span>
                   </div>
                 </div>
-                {/* 右：幣値 + 展開箭頭（加大尺寸更明顯） */}
-                <div className="flex items-center gap-2.5">
+                {/* 右：HP/MP/AP/體力條 + 展開箭頭 */}
+                <div className="flex items-center gap-2">
+                  {/* HP/MP/AP/體力小型條狀顯示 */}
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-amber-400 font-bold">🪙 {(balanceData?.gameCoins ?? 0).toLocaleString()}</span>
-                    <span className="text-slate-700 text-[10px]">|</span>
-                    <span className="text-[10px] text-sky-400 font-bold">💎 {(balanceData?.gameStones ?? 0).toLocaleString()}</span>
+                    {[
+                      { icon: "♥", val: agent?.hp ?? 0, max: agent?.maxHp ?? 100, color: "#ef4444" },
+                      { icon: "💧", val: agent?.mp ?? 0, max: agent?.maxMp ?? 100, color: "#38bdf8" },
+                      { icon: "⚡", val: agent?.actionPoints ?? 0, max: agent?.maxActionPoints ?? 10, color: "#f59e0b" },
+                      { icon: "🏃", val: staminaInfo?.current ?? agent?.stamina ?? 100, max: staminaInfo?.max ?? agent?.maxStamina ?? 100, color: "#22c55e" },
+                    ].map((bar) => (
+                      <div key={bar.icon} className="flex items-center gap-0.5">
+                        <span className="text-[10px]" style={{ color: bar.color }}>{bar.icon}</span>
+                        <div className="w-10 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${bar.max > 0 ? Math.min(100, (bar.val / bar.max) * 100) : 0}%`, background: bar.color }} />
+                        </div>
+                        <span className="text-[9px] tabular-nums font-bold" style={{ color: bar.color }}>{bar.val}</span>
+                      </div>
+                    ))}
                   </div>
-                  {/* 展開箭頭：加大尺寸、加入動態色彩 */}
+                  {/* 展開箭頭 */}
                   <div className="flex flex-col items-center gap-0.5">
                     <span className="font-bold text-base leading-none" style={{ color: charPanelOpen ? "#64748b" : ec }}>{charPanelOpen ? "▼" : "▲"}</span>
                     {!charPanelOpen && <span className="text-[9px] font-bold" style={{ color: ec, letterSpacing: "0.05em" }}>角色</span>}

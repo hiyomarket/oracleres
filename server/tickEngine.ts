@@ -5,9 +5,9 @@
  */
 
 import { getDb } from "./db";
-import { gameAgents, agentEvents, gameWorld, agentInventory } from "../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates } from "../drizzle/schema";
 import { processHiddenEvents } from "./hiddenEventEngine";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import {
   MAP_NODES,
   MAP_NODE_MAP,
@@ -72,6 +72,150 @@ function calcSpiritCoeffA(spiritRatio: number): number {
 
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ─── GD-021 命格共鳴掉落加成計算 ───
+type WuxingElement = "wood" | "fire" | "earth" | "metal" | "water";
+
+interface DropContext {
+  monsterId: string;
+  monsterElement: WuxingElement;
+  attackerElement: WuxingElement;
+  attackerNatalStats: Record<WuxingElement, number>; // 五行比例 0~100
+  luckyValue: number; // 幸運值 0~1000（對應金屬性高的玩家）
+  hasTaskBonus: boolean;
+}
+
+function calculateFinalDropRate(
+  baseRate: number,
+  equipmentElement: WuxingElement,
+  ctx: DropContext
+): number {
+  // 1. 五行剋制加成（攻擊屬性 vs 怪物屬性）
+  const elementBonus = getWuxingDropBonus(ctx.attackerElement, ctx.monsterElement);
+  // 2. 命格共鳴加成（玩家命格 vs 掉落裝備屬性）
+  const natalRatio = ctx.attackerNatalStats[equipmentElement] ?? 20;
+  const natalBonus = Math.max(0.5, Math.min(1.5, 1 + (natalRatio - 20) * 0.005));
+  // 3. 幸運加成（金屬性越高，幸運值越高）
+  const luckyBonus = 1 + ctx.luckyValue / 1000;
+  // 4. 任務加成
+  const taskBonus = ctx.hasTaskBonus ? 1.2 : 1.0;
+  return baseRate * elementBonus * natalBonus * luckyBonus * taskBonus;
+}
+
+function getWuxingDropBonus(attacker: WuxingElement, defender: WuxingElement): number {
+  const WUXING_OVERCOME: Record<WuxingElement, WuxingElement> = {
+    wood: "earth", fire: "metal", earth: "water", metal: "wood", water: "fire"
+  };
+  const WUXING_GENERATE: Record<WuxingElement, WuxingElement> = {
+    wood: "fire", fire: "earth", earth: "metal", metal: "water", water: "wood"
+  };
+  if (WUXING_OVERCOME[attacker] === defender) return 1.5;
+  if (WUXING_GENERATE[attacker] === defender) return 0.8;
+  return 1.0;
+}
+
+// ─── GD-021 低保系統 ───
+async function checkPityAndGetGuaranteedTier(
+  agentId: number
+): Promise<"basic" | "mid" | "high" | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const [counter] = await db.select().from(agentDropCounters)
+    .where(eq(agentDropCounters.agentId, agentId)).limit(1);
+  if (!counter) return null;
+  if (counter.noHighStreak >= 75) return "high";
+  if (counter.noMidStreak >= 30) return "mid";
+  if (counter.noDropStreak >= 15) return "basic";
+  return null;
+}
+
+async function updateDropCounters(
+  agentId: number,
+  droppedTier: "basic" | "mid" | "high" | "legendary" | null
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  // 確保計數器存在
+  const [existing] = await db.select().from(agentDropCounters)
+    .where(eq(agentDropCounters.agentId, agentId)).limit(1);
+  if (!existing) {
+    await db.insert(agentDropCounters).values({
+      agentId,
+      noDropStreak: droppedTier ? 0 : 1,
+      noMidStreak: droppedTier && ["mid", "high", "legendary"].includes(droppedTier) ? 0 : 1,
+      noHighStreak: droppedTier && ["high", "legendary"].includes(droppedTier) ? 0 : 1,
+      totalBattles: 1,
+      totalDrops: droppedTier ? 1 : 0,
+      lastUpdated: Date.now(),
+    });
+    return;
+  }
+  if (!droppedTier) {
+    await db.update(agentDropCounters).set({
+      noDropStreak: sql`no_drop_streak + 1`,
+      noMidStreak: sql`no_mid_streak + 1`,
+      noHighStreak: sql`no_high_streak + 1`,
+      totalBattles: sql`total_battles + 1`,
+      lastUpdated: Date.now(),
+    }).where(eq(agentDropCounters.agentId, agentId));
+  } else {
+    const updates: Record<string, unknown> = {
+      noDropStreak: 0,
+      totalBattles: sql`total_battles + 1`,
+      totalDrops: sql`total_drops + 1`,
+      lastUpdated: Date.now(),
+    };
+    if (["mid", "high", "legendary"].includes(droppedTier)) updates.noMidStreak = 0;
+    if (["high", "legendary"].includes(droppedTier)) updates.noHighStreak = 0;
+    await db.update(agentDropCounters).set(updates).where(eq(agentDropCounters.agentId, agentId));
+  }
+}
+
+// ─── GD-021 從資料庫掉落表計算裝備掉落 ───
+async function rollEquipmentDrops(
+  agentId: number,
+  monsterId: string,
+  ctx: DropContext
+): Promise<string[]> {
+  const db = await getDb();
+  if (!db) return [];
+  // 查詢怪物的掉落表
+  const dropEntries = await db.select()
+    .from(monsterDropTables)
+    .where(and(eq(monsterDropTables.monsterId, monsterId), eq(monsterDropTables.isActive, 1)));
+  if (dropEntries.length === 0) return [];
+  // 檢查低保
+  const pityTier = await checkPityAndGetGuaranteedTier(agentId);
+  const drops: string[] = [];
+  let droppedTier: "basic" | "mid" | "high" | "legendary" | null = null;
+  for (const entry of dropEntries) {
+    // 查詢裝備模板取得屬性和稀有度
+    const [template] = await db.select().from(equipmentTemplates)
+      .where(eq(equipmentTemplates.id, entry.equipmentId)).limit(1);
+    if (!template) continue;
+    const equipElement = template.element as WuxingElement;
+    const equipTier = template.tier as "basic" | "mid" | "high" | "legendary";
+    // 基礎掉落率（千分比 → 0~1）
+    const baseRate = entry.baseDropRate / 1000;
+    // 低保強制掉落
+    const isPityForced = pityTier && (
+      (pityTier === "basic") ||
+      (pityTier === "mid" && ["mid", "high", "legendary"].includes(equipTier)) ||
+      (pityTier === "high" && ["high", "legendary"].includes(equipTier))
+    );
+    // 計算最終掉落率
+    const finalRate = isPityForced ? 1.0 : calculateFinalDropRate(baseRate, equipElement, ctx);
+    if (Math.random() < finalRate) {
+      drops.push(entry.equipmentId);
+      if (!droppedTier || ["mid", "high", "legendary"].indexOf(equipTier) > ["mid", "high", "legendary"].indexOf(droppedTier)) {
+        droppedTier = equipTier;
+      }
+    }
+  }
+  // 更新低保計數器
+  await updateDropCounters(agentId, droppedTier);
+  return drops;
 }
 
 // ─── 事件訊息模板 ───
@@ -325,14 +469,15 @@ export function calcExpToNext(level: number): number {
   return Math.floor(100 * Math.pow(1.4, level - 1));
 }
 
-// ─── 體力值再生（100 上限，每 20 分鐘 +1） ───
+// ─── 體力値再生（每 30 分鐘 +30 點，上限 maxStamina） ───
 function regenStamina(agent: typeof gameAgents.$inferSelect): number {
   const now = Date.now();
   const lastRegen = agent.staminaLastRegen ?? now;
   const elapsed = now - lastRegen;
-  const regenIntervalMs = 20 * 60 * 1000; // 20 分鐘
-  const regenAmount = Math.floor(elapsed / regenIntervalMs);
-  if (regenAmount <= 0) return agent.stamina;
+  const regenIntervalMs = 30 * 60 * 1000; // 30 分鐘
+  const regenCycles = Math.floor(elapsed / regenIntervalMs);
+  if (regenCycles <= 0) return agent.stamina;
+  const regenAmount = regenCycles * 30; // 每循環 +30 點
   return Math.min(agent.maxStamina, agent.stamina + regenAmount);
 }
 
@@ -633,6 +778,51 @@ async function processCombatEvent(
     lootItems: result.lootItems,
   }, currentNode.id);
 
+  // GD-021：命格共鳴裝備掉落（從資料庫掉落表計算）
+  if (result.won) {
+    const dropCtx: DropContext = {
+      monsterId: monster.id,
+      monsterElement: monster.element as WuxingElement,
+      attackerElement: (agent.dominantElement ?? "wood") as WuxingElement,
+      attackerNatalStats: {
+        wood:  agent.wuxingWood  ?? 20,
+        fire:  agent.wuxingFire  ?? 20,
+        earth: agent.wuxingEarth ?? 20,
+        metal: agent.wuxingMetal ?? 20,
+        water: agent.wuxingWater ?? 20,
+      },
+      luckyValue: Math.min(1000, (agent.wuxingMetal ?? 20) * 10), // 金屬性 × 10 = 幸運值
+      hasTaskBonus: false,
+    };
+    const equipDrops = await rollEquipmentDrops(agent.id, monster.id, dropCtx);
+    for (const equipId of equipDrops) {
+      const lootMsg = `${agent.agentName ?? "旅人"} 從 ${monster.name} 身上獲得了裝備！`;
+      await createEvent(agent.id, "gather", lootMsg, { itemId: equipId, isEquipment: true }, currentNode.id);
+      // 寫入背包（裝備類型）
+      try {
+        const [existingEquip] = await db.select().from(agentInventory)
+          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, equipId)))
+          .limit(1);
+        if (existingEquip) {
+          await db.update(agentInventory).set({
+            quantity: existingEquip.quantity + 1,
+            updatedAt: Date.now(),
+          }).where(eq(agentInventory.id, existingEquip.id));
+        } else {
+          await db.insert(agentInventory).values({
+            agentId: agent.id,
+            itemId: equipId,
+            itemType: "equipment" as const,
+            quantity: 1,
+            acquiredAt: Date.now(),
+            updatedAt: Date.now(),
+          });
+        }
+      } catch (e) {
+        console.error("[Tick] Failed to insert equipment drop:", e);
+      }
+    }
+  }
   // 掉落物事件（同時寫入 agentInventory 表）
   for (const itemId of result.lootItems) {
     const lootMsg = formatMessage(pickRandom(EVENT_MESSAGES.loot), {
