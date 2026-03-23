@@ -1,0 +1,23 @@
+{
+  "query": "SELECT id, agent_name, dominant_element, gather_power, forge_power, carry_weight, refine_power, treasure_hunting, skill_slot_1, skill_slot_2, passive_slot_1 FROM game_agents WHERE id = 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_name, dominant_element, gather_power, forge_power, carry_weight, refine_power, treasure_hunting, skill_slot_1, skill_slot_2, passive_slot_1 FROM game_agents WHERE id = 2;",
+  "rows": [
+    {
+      "id": "2",
+      "agent_name": "御詠漓",
+      "dominant_element": "water",
+      "gather_power": "33",
+      "forge_power": "45",
+      "carry_weight": "39",
+      "refine_power": "22",
+      "treasure_hunting": "63",
+      "skill_slot_1": "water-basic-atk",
+      "skill_slot_2": "water-flow",
+      "passive_slot_1": "water-sense"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_name\tdominant_element\tgather_power\tforge_power\tcarry_weight\trefine_power\ttreasure_hunting\tskill_slot_1\tskill_slot_2\tpassive_slot_1\n2\t御詠漓\twater\t33\t45\t39\t22\t63\twater-basic-atk\twater-flow\twater-sense\n",
+  "stderr": "",
+  "execution_time_ms": 1557
+}

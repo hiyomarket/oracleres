@@ -5,7 +5,7 @@
  */
 
 import { getDb } from "./db";
-import { gameAgents, agentEvents, gameWorld } from "../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import {
   MAP_NODES,
@@ -475,7 +475,7 @@ async function processCombatEvent(
     lootItems: result.lootItems,
   }, currentNode.id);
 
-  // 掉落物事件
+  // 掉落物事件（同時寫入 agentInventory 表）
   for (const itemId of result.lootItems) {
     const lootMsg = formatMessage(pickRandom(EVENT_MESSAGES.loot), {
       name: agent.agentName ?? "旅人",
@@ -484,6 +484,34 @@ async function processCombatEvent(
       monster: monster.name,
     });
     await createEvent(agent.id, "gather", lootMsg, { itemId }, currentNode.id);
+    // 寫入背包（如果已有相同道具則隨數量）
+    try {
+      const existing = await db.select().from(agentInventory)
+        .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, itemId)))
+        .limit(1);
+      if (existing[0]) {
+        await db.update(agentInventory).set({
+          quantity: existing[0].quantity + 1,
+          updatedAt: Date.now(),
+        }).where(eq(agentInventory.id, existing[0].id));
+      } else {
+        // 判斷道具類型
+        const itemType = itemId.startsWith("herb") ? "material" as const
+          : itemId.startsWith("mat") ? "material" as const
+          : itemId.startsWith("food") ? "consumable" as const
+          : "material" as const;
+        await db.insert(agentInventory).values({
+          agentId: agent.id,
+          itemId,
+          itemType,
+          quantity: 1,
+          acquiredAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      }
+    } catch (e) {
+      console.error("[Tick] Failed to update inventory:", e);
+    }
   }
 
   return 1 + result.lootItems.length;
@@ -513,6 +541,32 @@ async function processGatherEvent(
   });
 
   await createEvent(agent.id, "gather", msg, { itemId: item }, currentNode.id);
+  // 寫入背包
+  const db2 = await getDb();
+  if (db2) {
+    try {
+      const existing = await db2.select().from(agentInventory)
+        .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item)))
+        .limit(1);
+      if (existing[0]) {
+        await db2.update(agentInventory).set({
+          quantity: existing[0].quantity + 1,
+          updatedAt: Date.now(),
+        }).where(eq(agentInventory.id, existing[0].id));
+      } else {
+        await db2.insert(agentInventory).values({
+          agentId: agent.id,
+          itemId: item,
+          itemType: "material",
+          quantity: 1,
+          acquiredAt: Date.now(),
+          updatedAt: Date.now(),
+        });
+      }
+    } catch (e) {
+      console.error("[Tick] Failed to update gather inventory:", e);
+    }
+  }
   return 1;
 }
 

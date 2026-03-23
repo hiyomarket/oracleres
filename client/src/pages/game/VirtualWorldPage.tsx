@@ -50,6 +50,24 @@ const QUALITY_ZH: Record<string, string> = {
   legendary: "傳說", epic: "史詩", rare: "稀有", uncommon: "精良", common: "普通",
 };
 
+// GD-001 初始技能定義
+const SKILL_DEFS: Record<string, { name: string; element: string; type: "active" | "passive"; desc: string; icon: string }> = {
+  "wood-basic-atk":  { name: "木行拳", element: "wood",  type: "active",  desc: "木屬基礎攻擊，造成少量永久傷害", icon: "🌿" },
+  "wood-heal":       { name: "春風愈傈", element: "wood",  type: "active",  desc: "治癒 20% 最大 HP，持續 2 回合", icon: "🌼" },
+  "wood-regen":      { name: "根脆之力", element: "wood",  type: "passive", desc: "戰鬥後自動回血 5%", icon: "🌱" },
+  "fire-basic-atk":  { name: "烈焰拳", element: "fire",  type: "active",  desc: "火屬基礎攻擊，有機率燃燒敵人", icon: "🔥" },
+  "fire-burst":      { name: "爆烎衝波", element: "fire",  type: "active",  desc: "範圍火屬傷害，消耗額外 MP", icon: "💥" },
+  "fire-boost":      { name: "火行催化", element: "fire",  type: "passive", desc: "攻擊力 +10%，造成火屬傷害時额外 +5%", icon: "⭐" },
+  "earth-basic-atk": { name: "山岳拳", element: "earth", type: "active",  desc: "土屬基礎攻擊，有機率活動敢對方", icon: "🪨" },
+  "earth-shield":    { name: "大地護盾", element: "earth", type: "active",  desc: "下一回合對對方傷害免疫 30%", icon: "🛡️" },
+  "earth-tough":     { name: "山岳之體", element: "earth", type: "passive", desc: "防穡力 +15%，死亡時有機率以 1 HP 存活", icon: "💪" },
+  "metal-basic-atk": { name: "利金拳", element: "metal", type: "active",  desc: "金屬基礎攻擊，穿透防穡 10%", icon: "⚡" },
+  "metal-pierce":    { name: "穿雲一擊", element: "metal", type: "active",  desc: "忠实命中，造成基礎攻擊 150% 傷害", icon: "🗡️" },
+  "metal-crit":      { name: "銀月洞察", element: "metal", type: "passive", desc: "有 15% 機率觸發暴擊（傷害 x2）", icon: "🎯" },
+  "water-basic-atk": { name: "水流拳", element: "water", type: "active",  desc: "水屬基礎攻擊，有機率降低敵人速度", icon: "💧" },
+  "water-flow":      { name: "流水貊潏", element: "water", type: "active",  desc: "回復 15% 最大 MP，下回合魔法傷害 +20%", icon: "🌊" },
+  "water-sense":     { name: "流水感知", element: "water", type: "passive", desc: "尋寶力 +10，稀有材料出現率 +5%", icon: "🔮" },
+};
 // GD-002 三維五行屬性定義
 const COMBAT_ATTRS = [
   { key: "attack",      icon: "🔥", label: "攻擊力",  wx: "fire",   desc: "物理傷害基礎值" },
@@ -354,6 +372,11 @@ type AgentData = {
   exp?: number; expToNext?: number; attack?: number; defense?: number; speed?: number;
   healPower?: number; magicAttack?: number; hitRate?: number;
   gatherPower?: number; forgePower?: number; carryWeight?: number; refinePower?: number; treasureHunting?: number;
+  // 五行比例欄位
+  wuxingWood?: number; wuxingFire?: number; wuxingEarth?: number; wuxingMetal?: number; wuxingWater?: number;
+  // 技能欄位
+  skillSlot1?: string | null; skillSlot2?: string | null; skillSlot3?: string | null; skillSlot4?: string | null;
+  passiveSlot1?: string | null; passiveSlot2?: string | null;
   skills?: Array<{ name: string; element: string; level: number; description?: string; type?: string }>;
 };
 
@@ -373,6 +396,9 @@ function CharacterPanel({
   mobileMode?: boolean;
 }) {
   const [activePanel, setActivePanel] = useState<PanelId>("combat");
+  // 背包道具查詢（頂層呼叫，遵守 React Hooks 規則）
+  const invQuery = trpc.gameWorld.getInventory.useQuery(undefined, { staleTime: 30000 });
+  const invItems = (invQuery.data ?? []) as Array<{ id: number; itemId: string; itemName: string; quantity: number; rarity?: string; itemType?: string; emoji?: string }>;
   const agentElement = agent?.dominantElement ?? equippedData?.dayMasterElementEn ?? "metal";
   const agentName = agent?.agentName ?? "旅人";
   const agentLevel = agent?.level ?? 1;
@@ -581,168 +607,292 @@ function CharacterPanel({
 
         {/* ── 裝備面板（GD-006）── */}
         {activePanel === "equip" && (
-          <div className="space-y-2">
-            <p className="text-xs text-slate-500">裝備欄位（10格）</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {EQUIP_SLOTS.map(({ slot, icon, label, desc }) => {
-                const item = equipped[slot];
-                const qc = item?.quality ? QUALITY_COLOR[item.quality] ?? "#94a3b8" : null;
-                return (
-                  <div key={slot} className="flex items-center gap-2 px-2.5 py-2 rounded-xl border"
-                    style={{
-                      background: item ? `${qc ?? ec}08` : "rgba(255,255,255,0.02)",
-                      borderColor: item ? `${qc ?? ec}30` : "rgba(255,255,255,0.07)",
-                    }}>
-                    <span className="text-lg shrink-0">{icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-slate-500">{label}</p>
-                      {item ? (
-                        <div>
-                          <p className="text-xs font-bold text-slate-200 leading-tight truncate">{item.name}</p>
-                          {item.quality && qc && (
-                            <span className="text-xs px-1 py-0.5 rounded-full"
-                              style={{ background: `${qc}20`, color: qc }}>
-                              {QUALITY_ZH[item.quality] ?? item.quality}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-slate-700 italic">{desc}</p>
-                      )}
+            <div className="space-y-2">
+              <p className="text-xs text-slate-500">裝備欄位（10格）</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {EQUIP_SLOTS.map(({ slot, icon, label, desc }) => {
+                  const item = equipped[slot];
+                  const qc = item?.quality ? QUALITY_COLOR[item.quality] ?? "#94a3b8" : null;
+                  return (
+                    <div key={slot} className="flex items-center gap-2 px-2.5 py-2 rounded-xl border"
+                      style={{
+                        background: item ? `${qc ?? ec}08` : "rgba(255,255,255,0.02)",
+                        borderColor: item ? `${qc ?? ec}30` : "rgba(255,255,255,0.07)",
+                      }}>
+                      <span className="text-lg shrink-0">{icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-500">{label}</p>
+                        {item ? (
+                          <div>
+                            <p className="text-xs font-bold text-slate-200 leading-tight truncate">{item.name}</p>
+                            {item.quality && qc && (
+                              <span className="text-xs px-1 py-0.5 rounded-full"
+                                style={{ background: `${qc}20`, color: qc }}>
+                                {QUALITY_ZH[item.quality] ?? item.quality}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-slate-700 italic">{desc}</p>
+                        )}
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+
+              {/* 背包道具 */}
+              <div className="rounded-xl border p-2.5"
+                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold text-slate-500">🎒 背包道具</p>
+                  <span className="text-xs text-slate-600">{invItems.length} 種</span>
+                </div>
+                {invQuery.isLoading ? (
+                  <p className="text-xs text-slate-600 text-center py-2">載入中…</p>
+                ) : invItems.length === 0 ? (
+                  <div className="text-center py-2">
+                    <p className="text-xs text-slate-600">背包為空</p>
+                    <p className="text-xs text-slate-700 mt-0.5">擊敗怪物後將獲得道具</p>
                   </div>
-                );
-              })}
+                ) : (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {invItems.map(item => {
+                      const rc = item.rarity ? QUALITY_COLOR[item.rarity] ?? "#94a3b8" : "#94a3b8";
+                      return (
+                        <div key={item.id} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg border"
+                          style={{ background: `${rc}08`, borderColor: `${rc}25` }}>
+                          <span className="text-sm shrink-0">{item.emoji ?? "📦"}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold truncate" style={{ color: rc }}>{item.itemName}</p>
+                            <p className="text-xs text-slate-600">x{item.quantity}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+               </div>
             </div>
-            <div className="px-2.5 py-2 rounded-xl border text-center"
-              style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
-              <p className="text-xs text-slate-600">背包道具系統開發中</p>
-              <p className="text-xs text-slate-700 mt-0.5">擊敗怪物後將自動獲得道具</p>
-            </div>
-          </div>
         )}
-
         {/* ── 技能面板（GD-001）── */}
-        {activePanel === "skill" && (
-          <div className="space-y-2">
-            {/* 主動技能（4槽，由木屬性決定槽數） */}
-            <div>
-              <p className="text-xs text-slate-500 mb-1.5">主動技能（4槽）</p>
-              <div className="grid grid-cols-2 gap-1.5">
-                {[0, 1, 2, 3].map((i) => {
-                  const s = (agent?.skills ?? []).filter(sk => sk.type !== "passive")[i];
-                  const c = s ? WX_HEX[s.element] ?? "#888" : "#334155";
-                  return (
-                    <div key={i} className="px-2.5 py-2 rounded-xl border"
-                      style={{ background: s ? `${c}08` : "rgba(255,255,255,0.02)", borderColor: s ? `${c}25` : "rgba(255,255,255,0.07)" }}>
-                      <p className="text-xs text-slate-600 mb-0.5">主動 {i + 1}</p>
-                      {s ? (
-                        <div>
-                          <p className="text-sm font-bold" style={{ color: c }}>{s.name}</p>
-                          <p className="text-xs text-slate-600">Lv.{s.level}</p>
-                          {s.description && <p className="text-xs text-slate-700 mt-0.5 truncate">{s.description}</p>}
-                        </div>
-                      ) : <p className="text-xs text-slate-700 italic">空槽</p>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 被動技能（2槽） */}
-            <div>
-              <p className="text-xs text-slate-500 mb-1.5">被動技能（2槽）</p>
-              <div className="grid grid-cols-2 gap-1.5">
-                {[0, 1].map((i) => {
-                  const s = (agent?.skills ?? []).filter(sk => sk.type === "passive")[i];
-                  const c = s ? WX_HEX[s.element] ?? "#888" : "#334155";
-                  return (
-                    <div key={i} className="px-2.5 py-2 rounded-xl border"
-                      style={{ background: s ? `${c}08` : "rgba(255,255,255,0.02)", borderColor: s ? `${c}25` : "rgba(255,255,255,0.07)" }}>
-                      <p className="text-xs text-slate-600 mb-0.5">被動 {i + 1}</p>
-                      {s ? (
-                        <div>
-                          <p className="text-sm font-bold" style={{ color: c }}>{s.name}</p>
-                          <p className="text-xs text-slate-600">Lv.{s.level}</p>
-                        </div>
-                      ) : <p className="text-xs text-slate-700 italic">空槽</p>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 隱藏天賦提示 */}
-            <div className="px-2.5 py-2 rounded-xl border"
-              style={{ background: "rgba(245,158,11,0.06)", borderColor: "rgba(245,158,11,0.2)" }}>
-              <p className="text-xs text-amber-400 font-bold mb-0.5">🌟 隱藏天賦</p>
-              <p className="text-xs text-slate-600">尋寶力達 80 後可觸發隱藏天賦覺醒</p>
-            </div>
-
-            {(agent?.skills ?? []).length === 0 && (
-              <div className="text-center py-3">
-                <p className="text-slate-600 text-sm">尚未習得任何技能</p>
-                <p className="text-slate-700 text-xs mt-0.5">在戰鬥中有機率習得技能</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── 命格面板 ── */}
-        {activePanel === "natal" && (
-          <div className="space-y-2.5">
-            {/* 命格格局名稱 */}
-            <div className="px-2.5 py-2 rounded-xl border"
-              style={{ background: `${ec}08`, borderColor: `${ec}28` }}>
-              <p className="text-xs text-slate-500 mb-0.5">命格格局</p>
-              <p className="text-sm font-bold" style={{ color: ec }}>
-                {WX_ZH[agentElement] ?? "金"}命旅人
-              </p>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {agentElement === "wood" ? "木命：採集力強，治癒力高，擅長草藥採集與隊伍輔助" :
-                 agentElement === "fire" ? "火命：攻擊力強，鍛冶力高，擅長戰鬥與武器製造" :
-                 agentElement === "earth" ? "土命：防禦力強，承重力高，擅長防守與資源運輸" :
-                 agentElement === "metal" ? "金命：命中力強，精煉力高，擅長精準打擊與素材提煉" :
-                 "水命：魔攻強，尋寶力高，擅長元素魔法與隱藏探索"}
-              </p>
-            </div>
-
-            {/* 八字命格能力值 */}
-            <div className="rounded-xl border p-2.5 space-y-1.5"
-              style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
-              <p className="text-xs font-bold text-slate-500 mb-1.5">🔮 命格基礎值（來自八字）</p>
-              {natalStats ? (
-                <>
-                  {[
-                    { key: "hp",  icon: "🌿", label: "木 HP",  color: "#22c55e", max: 300 },
-                    { key: "atk", icon: "🔥", label: "火 攻",  color: "#ef4444", max: 60  },
-                    { key: "def", icon: "🪨", label: "土 防",  color: "#f59e0b", max: 50  },
-                    { key: "spd", icon: "⚡", label: "金 速",  color: "#e2e8f0", max: 30  },
-                    { key: "mp",  icon: "💧", label: "水 MP",  color: "#38bdf8", max: 150 },
-                  ].map(({ key, icon, label, color, max }) => {
-                    const val = (natalStats as Record<string, number>)[key] ?? 0;
+        {activePanel === "skill" && (() => {
+          // 從 skillSlot 欄位讀取技能資料
+          const activeSlots = [
+            agent?.skillSlot1, agent?.skillSlot2, agent?.skillSlot3, agent?.skillSlot4,
+          ];
+          const passiveSlots = [agent?.passiveSlot1, agent?.passiveSlot2];
+          const hasAnySkill = activeSlots.some(Boolean) || passiveSlots.some(Boolean);
+          return (
+            <div className="space-y-2">
+              {/* 主動技能（4槽） */}
+              <div>
+                <p className="text-xs text-slate-500 mb-1.5">主動技能（4槽）</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {activeSlots.map((slotId, i) => {
+                    const sk = slotId ? SKILL_DEFS[slotId] : null;
+                    const c = sk ? WX_HEX[sk.element] ?? "#888" : "#334155";
                     return (
-                      <MiniAttrBar key={key} icon={icon} label={label} value={val} color={color} max={max} />
+                      <div key={i} className="px-2.5 py-2 rounded-xl border"
+                        style={{ background: sk ? `${c}10` : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : "rgba(255,255,255,0.07)" }}>
+                        <p className="text-xs text-slate-600 mb-0.5">主動 {i + 1}</p>
+                        {sk ? (
+                          <div>
+                            <div className="flex items-center gap-1 mb-0.5">
+                              <span className="text-sm">{sk.icon}</span>
+                              <p className="text-sm font-bold" style={{ color: c }}>{sk.name}</p>
+                            </div>
+                            <p className="text-xs text-slate-600 leading-tight">{sk.desc}</p>
+                          </div>
+                        ) : <p className="text-xs text-slate-700 italic">空槽</p>}
+                      </div>
                     );
                   })}
-                </>
-              ) : <p className="text-slate-600 text-xs text-center py-2">請先完成八字分析</p>}
-            </div>
+                </div>
+              </div>
 
-            {/* 加成來源說明 */}
-            <div className="px-2.5 py-2 rounded-xl border"
-              style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
-              <p className="text-xs text-slate-500 mb-1.5">加成來源</p>
-              <div className="space-y-1 text-xs text-slate-600">
-                <p>🔮 八字命格 → 基礎能力值（已套用）</p>
-                <p>⚔️ 裝備詞條 → 額外加成（開發中）</p>
-                <p>🎯 技能 Combo → 特殊效果（開發中）</p>
-                <p>🐾 寵物加成 → 屬性提升（開發中）</p>
-                <p>📅 流日加成 → 今日屬性浮動（已套用）</p>
+              {/* 被動技能（2槽） */}
+              <div>
+                <p className="text-xs text-slate-500 mb-1.5">被動技能（2槽）</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {passiveSlots.map((slotId, i) => {
+                    const sk = slotId ? SKILL_DEFS[slotId] : null;
+                    const c = sk ? WX_HEX[sk.element] ?? "#888" : "#334155";
+                    return (
+                      <div key={i} className="px-2.5 py-2 rounded-xl border"
+                        style={{ background: sk ? `${c}10` : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : "rgba(255,255,255,0.07)" }}>
+                        <p className="text-xs text-slate-600 mb-0.5">被動 {i + 1}</p>
+                        {sk ? (
+                          <div>
+                            <div className="flex items-center gap-1 mb-0.5">
+                              <span className="text-sm">{sk.icon}</span>
+                              <p className="text-sm font-bold" style={{ color: c }}>{sk.name}</p>
+                            </div>
+                            <p className="text-xs text-slate-600 leading-tight">{sk.desc}</p>
+                          </div>
+                        ) : <p className="text-xs text-slate-700 italic">空槽</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 隱藏天賦提示 */}
+              <div className="px-2.5 py-2 rounded-xl border"
+                style={{ background: "rgba(245,158,11,0.06)", borderColor: "rgba(245,158,11,0.2)" }}>
+                <p className="text-xs text-amber-400 font-bold mb-0.5">🌟 隱藏天賦</p>
+                <p className="text-xs text-slate-600">尋寶力達 80 後可觸發隱藏天賦覚醒</p>
+              </div>
+
+              {!hasAnySkill && (
+                <div className="text-center py-3">
+                  <p className="text-slate-600 text-sm">尚未習得任何技能</p>
+                  <p className="text-slate-700 text-xs mt-0.5">完成八字分析後將自動解鎖初始技能</p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ── 命格面板 ── */}
+        {activePanel === "natal" && (() => {
+          // 五行比例計算
+          const wxVals = {
+            wood:  agent?.wuxingWood  ?? 0,
+            fire:  agent?.wuxingFire  ?? 0,
+            earth: agent?.wuxingEarth ?? 0,
+            metal: agent?.wuxingMetal ?? 0,
+            water: agent?.wuxingWater ?? 0,
+          };
+          const wxTotal = Object.values(wxVals).reduce((a, b) => a + b, 0) || 1;
+          const wxPct = Object.fromEntries(
+            Object.entries(wxVals).map(([k, v]) => [k, Math.round((v / wxTotal) * 100)])
+          ) as Record<string, number>;
+          // 命格強度：主屬性占比
+          const dominantPct = wxPct[agentElement] ?? 0;
+          // SVG 圓餅圖計算
+          const PIE_R = 36; const PIE_CX = 44; const PIE_CY = 44;
+          const wxOrder = ["wood", "fire", "earth", "metal", "water"] as const;
+          let cumulAngle = -90;
+          const pieSlices = wxOrder.map(k => {
+            const pct = wxPct[k] ?? 0;
+            const angle = (pct / 100) * 360;
+            const startAngle = cumulAngle;
+            cumulAngle += angle;
+            const toRad = (d: number) => (d * Math.PI) / 180;
+            const x1 = PIE_CX + PIE_R * Math.cos(toRad(startAngle));
+            const y1 = PIE_CY + PIE_R * Math.sin(toRad(startAngle));
+            const x2 = PIE_CX + PIE_R * Math.cos(toRad(startAngle + angle));
+            const y2 = PIE_CY + PIE_R * Math.sin(toRad(startAngle + angle));
+            const large = angle > 180 ? 1 : 0;
+            const path = pct >= 100
+              ? `M ${PIE_CX} ${PIE_CY - PIE_R} A ${PIE_R} ${PIE_R} 0 1 1 ${PIE_CX - 0.001} ${PIE_CY - PIE_R} Z`
+              : pct === 0 ? ""
+              : `M ${PIE_CX} ${PIE_CY} L ${x1} ${y1} A ${PIE_R} ${PIE_R} 0 ${large} 1 ${x2} ${y2} Z`;
+            return { key: k, path, color: WX_HEX[k] ?? "#888", pct };
+          });
+          return (
+            <div className="space-y-2.5">
+              {/* 命格格局名稱 + 命格% */}
+              <div className="px-2.5 py-2 rounded-xl border flex items-center gap-3"
+                style={{ background: `${ec}08`, borderColor: `${ec}28` }}>
+                {/* 命格強度圓形指示器 */}
+                <div className="relative shrink-0" style={{ width: 56, height: 56 }}>
+                  <svg width="56" height="56" viewBox="0 0 56 56">
+                    <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+                    <circle cx="28" cy="28" r="22" fill="none"
+                      stroke={ec} strokeWidth="6"
+                      strokeDasharray={`${(dominantPct / 100) * 138.2} 138.2`}
+                      strokeLinecap="round"
+                      transform="rotate(-90 28 28)" />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-xs font-bold" style={{ color: ec }}>{dominantPct}%</span>
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-slate-500 mb-0.5">命格格局</p>
+                  <p className="text-sm font-bold" style={{ color: ec }}>{WX_ZH[agentElement] ?? "金"}命旅人</p>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-tight">
+                    {agentElement === "wood" ? "採集力強，治癒力高" :
+                     agentElement === "fire" ? "攻擊力強，鍛治力高" :
+                     agentElement === "earth" ? "防穡力強，承重力高" :
+                     agentElement === "metal" ? "命中力強，精煉力高" :
+                     "魔攻強，尋寶力高"}
+                  </p>
+                </div>
+              </div>
+
+              {/* 五行圓餅圖 + 比例列表 */}
+              <div className="rounded-xl border p-2.5"
+                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+                <p className="text-xs font-bold text-slate-500 mb-2">☘️ 五行比例（命格根源）</p>
+                <div className="flex items-center gap-3">
+                  {/* 圓餅圖 */}
+                  <svg width="88" height="88" viewBox="0 0 88 88" className="shrink-0">
+                    {pieSlices.map(s => s.path ? (
+                      <path key={s.key} d={s.path} fill={s.color}
+                        opacity={s.key === agentElement ? 1 : 0.6}
+                        stroke="rgba(8,12,25,0.8)" strokeWidth="1.5" />
+                    ) : null)}
+                    <circle cx="44" cy="44" r="18" fill="rgba(8,12,25,0.9)" />
+                    <text x="44" y="47" textAnchor="middle" fontSize="11" fontWeight="bold" fill={ec}>
+                      {WX_ZH[agentElement] ?? "金"}
+                    </text>
+                  </svg>
+                  {/* 列表 */}
+                  <div className="flex-1 space-y-1">
+                    {wxOrder.map(k => (
+                      <div key={k} className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: WX_HEX[k] ?? "#888" }} />
+                        <span className="text-xs text-slate-400 shrink-0" style={{ minWidth: "14px" }}>{WX_ZH[k]}</span>
+                        <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${wxPct[k] ?? 0}%`, background: WX_HEX[k] ?? "#888" }} />
+                        </div>
+                        <span className="text-xs font-bold tabular-nums shrink-0" style={{ color: WX_HEX[k] ?? "#888", minWidth: "28px", textAlign: "right" }}>{wxPct[k] ?? 0}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 八字命格能力値 */}
+              <div className="rounded-xl border p-2.5 space-y-1.5"
+                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+                <p className="text-xs font-bold text-slate-500 mb-1.5">🔮 命格基礎値（來自八字）</p>
+                {natalStats ? (
+                  <>
+                    {[
+                      { key: "hp",  icon: "🌿", label: "木 HP",  color: "#22c55e", max: 300 },
+                      { key: "atk", icon: "🔥", label: "火 攻",  color: "#ef4444", max: 60  },
+                      { key: "def", icon: "🪨", label: "土 防",  color: "#f59e0b", max: 50  },
+                      { key: "spd", icon: "⚡", label: "金 速",  color: "#e2e8f0", max: 30  },
+                      { key: "mp",  icon: "💧", label: "水 MP",  color: "#38bdf8", max: 150 },
+                    ].map(({ key, icon, label, color, max }) => {
+                      const val = (natalStats as Record<string, number>)[key] ?? 0;
+                      return (
+                        <MiniAttrBar key={key} icon={icon} label={label} value={val} color={color} max={max} />
+                      );
+                    })}
+                  </>
+                ) : <p className="text-slate-600 text-xs text-center py-2">請先完成八字分析</p>}
+              </div>
+
+              {/* 加成來源說明 */}
+              <div className="px-2.5 py-2 rounded-xl border"
+                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+                <p className="text-xs text-slate-500 mb-1.5">加成來源</p>
+                <div className="space-y-1 text-xs text-slate-600">
+                  <p>🔮 八字命格 → 基礎能力値（已套用）</p>
+                  <p>⚔️ 裝備詞條 → 額外加成（開發中）</p>
+                  <p>🎯 技能 Combo → 特殊效果（開發中）</p>
+                  <p>🐾 寵物加成 → 屬性提升（開發中）</p>
+                  <p>📅 流日加成 → 今日屬性浮動（已套用）</p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
@@ -1094,8 +1244,9 @@ export default function VirtualWorldPage() {
             <div
               className="relative overflow-hidden"
               style={{
-                height: "50vh",
+                height: charPanelOpen ? "50vh" : "70vh",
                 flex: "none",
+                transition: "height 0.35s cubic-bezier(0.4,0,0.2,1)",
                 // 桌機覆蓋為 flex-1
               }}
               ref={(el) => {
@@ -1105,6 +1256,7 @@ export default function VirtualWorldPage() {
                   if (isDesktop) {
                     el.style.height = "auto";
                     el.style.flex = "1";
+                    el.style.transition = "none";
                   }
                 }
               }}
@@ -1126,7 +1278,7 @@ export default function VirtualWorldPage() {
               {/* 日誌按鈕：右下角圓形大按鈕 */}
               <button
                 onClick={() => setShowLog(v => !v)}
-                className="absolute z-10 flex items-center justify-center border transition-all hover:scale-110 active:scale-95"
+                className="absolute z-[400] flex items-center justify-center border transition-all hover:scale-110 active:scale-95"
                 style={{
                   bottom: "16px",
                   right: "16px",
@@ -1162,7 +1314,7 @@ export default function VirtualWorldPage() {
 
               {/* 手機版方格面板：左上角浮動卡片 */}
               <div
-                className="absolute top-2 left-2 z-10 lg:hidden"
+                className="absolute top-2 left-2 z-[400] lg:hidden"
                 style={{ maxWidth: "calc(100% - 70px)" }}
               >
                 <button
@@ -1325,8 +1477,9 @@ export default function VirtualWorldPage() {
                 borderRadius: "16px 16px 0 0",
                 boxShadow: `0 -4px 24px ${ec}20, 0 -2px 8px rgba(0,0,0,0.6)`,
                 transition: "height 0.35s cubic-bezier(0.4,0,0.2,1)",
-                height: charPanelOpen ? "calc(30vh + 56px)" : "56px",
+                height: charPanelOpen ? "calc(40vh + 56px)" : "56px",
                 overflow: "hidden",
+                touchAction: "none", // 防止意外拖動
               }}
             >
               {/* 把手列（始終可見） */}

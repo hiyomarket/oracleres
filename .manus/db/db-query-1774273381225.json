@@ -1,0 +1,46 @@
+{
+  "query": "SELECT id, agent_name, dominant_element, wuxing_wood, wuxing_fire, wuxing_earth, wuxing_metal, wuxing_water, gather_power, forge_power, carry_weight, refine_power, treasure_hunting, skill_slot_1, skill_slot_2, passive_slot_1 FROM game_agents LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_name, dominant_element, wuxing_wood, wuxing_fire, wuxing_earth, wuxing_metal, wuxing_water, gather_power, forge_power, carry_weight, refine_power, treasure_hunting, skill_slot_1, skill_slot_2, passive_slot_1 FROM game_agents LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "agent_name": "凜冬月",
+      "dominant_element": "wood",
+      "wuxing_wood": "40",
+      "wuxing_fire": "8",
+      "wuxing_earth": "16",
+      "wuxing_metal": "4",
+      "wuxing_water": "32",
+      "gather_power": "70",
+      "forge_power": "22",
+      "carry_weight": "34",
+      "refine_power": "16",
+      "treasure_hunting": "58",
+      "skill_slot_1": "wood-basic-atk",
+      "skill_slot_2": "wood-heal",
+      "passive_slot_1": "wood-regen"
+    },
+    {
+      "id": "2",
+      "agent_name": "御詠漓",
+      "dominant_element": "water",
+      "wuxing_wood": "15",
+      "wuxing_fire": "23",
+      "wuxing_earth": "19",
+      "wuxing_metal": "8",
+      "wuxing_water": "35",
+      "gather_power": "20",
+      "forge_power": "20",
+      "carry_weight": "20",
+      "refine_power": "20",
+      "treasure_hunting": "20",
+      "skill_slot_1": "NULL",
+      "skill_slot_2": "NULL",
+      "passive_slot_1": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_name\tdominant_element\twuxing_wood\twuxing_fire\twuxing_earth\twuxing_metal\twuxing_water\tgather_power\tforge_power\tcarry_weight\trefine_power\ttreasure_hunting\tskill_slot_1\tskill_slot_2\tpassive_slot_1\n1\t凜冬月\twood\t40\t8\t16\t4\t32\t70\t22\t34\t16\t58\twood-basic-atk\twood-heal\twood-regen\n2\t御詠漓\twater\t15\t23\t19\t8\t35\t20\t20\t20\t20\t20\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1560
+}

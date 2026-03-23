@@ -24,7 +24,28 @@ function calcStatsFromNatal(natalStats: {
     attack: Math.floor(10 + natalStats.fire * 0.8),
     defense: Math.floor(8 + natalStats.earth * 0.6),
     speed: Math.floor(5 + natalStats.metal * 0.7),
+    // GD-002 生活系屬性（五行比例 → 生活技能，10 + 比例*1.5，最低10最高100）
+    gatherPower: Math.min(100, Math.max(10, Math.round(10 + natalStats.wood * 1.5))),
+    forgePower: Math.min(100, Math.max(10, Math.round(10 + natalStats.fire * 1.5))),
+    carryWeight: Math.min(100, Math.max(10, Math.round(10 + natalStats.earth * 1.5))),
+    refinePower: Math.min(100, Math.max(10, Math.round(10 + natalStats.metal * 1.5))),
+    treasureHunting: Math.min(100, Math.max(10, Math.round(10 + natalStats.water * 1.5))),
+    // GD-002 戰鬥系額外屬性
+    healPower: Math.min(100, Math.max(10, Math.round(10 + natalStats.wood * 1.2))),
+    magicAttack: Math.min(100, Math.max(10, Math.round(10 + natalStats.water * 1.2))),
+    hitRate: Math.min(100, Math.max(10, Math.round(10 + natalStats.metal * 1.2))),
   };
+}
+// ─── 根據主屬性取得初始技能 ───
+function getInitialSkills(dominant: WuXing): { slot1: string; slot2: string; passive1: string } {
+  const INITIAL_SKILLS: Record<WuXing, { slot1: string; slot2: string; passive1: string }> = {
+    wood: { slot1: "wood-basic-atk", slot2: "wood-heal", passive1: "wood-regen" },
+    fire: { slot1: "fire-basic-atk", slot2: "fire-burst", passive1: "fire-boost" },
+    earth: { slot1: "earth-basic-atk", slot2: "earth-shield", passive1: "earth-tough" },
+    metal: { slot1: "metal-basic-atk", slot2: "metal-pierce", passive1: "metal-crit" },
+    water: { slot1: "water-basic-atk", slot2: "water-flow", passive1: "water-sense" },
+  };
+  return INITIAL_SKILLS[dominant];
 }
 
 // ─── 取得或建立玩家角色 ───
@@ -41,10 +62,36 @@ export const gameWorldRouter = router({
         .limit(1);
 
       if (existing[0]) {
+        const ag = existing[0];
+        // 若生活技能仍是預設值 20 但五行值已正確，自動同步
+        if (ag.gatherPower === 20 && ag.wuxingWood !== 20) {
+          const lifeStats = calcStatsFromNatal({
+            wood: ag.wuxingWood, fire: ag.wuxingFire, earth: ag.wuxingEarth,
+            metal: ag.wuxingMetal, water: ag.wuxingWater,
+          });
+          const initSkills = getInitialSkills(ag.dominantElement as WuXing);
+          await db.update(gameAgents).set({
+            gatherPower: lifeStats.gatherPower,
+            forgePower: lifeStats.forgePower,
+            carryWeight: lifeStats.carryWeight,
+            refinePower: lifeStats.refinePower,
+            treasureHunting: lifeStats.treasureHunting,
+            healPower: lifeStats.healPower,
+            magicAttack: lifeStats.magicAttack,
+            hitRate: lifeStats.hitRate,
+            skillSlot1: ag.skillSlot1 ?? initSkills.slot1,
+            skillSlot2: ag.skillSlot2 ?? initSkills.slot2,
+            passiveSlot1: ag.passiveSlot1 ?? initSkills.passive1,
+            updatedAt: Date.now(),
+          }).where(eq(gameAgents.id, ag.id));
+          const updated = await db.select().from(gameAgents)
+            .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+          return { agent: updated[0], isNew: false, needsNaming: !ag.isNamed };
+        }
         return {
-          agent: existing[0],
+          agent: ag,
           isNew: false,
-          needsNaming: !existing[0].isNamed,
+          needsNaming: !ag.isNamed,
         };
       }
 
@@ -87,6 +134,19 @@ export const gameWorldRouter = router({
         wuxingEarth: natalStats.earth,
         wuxingMetal: natalStats.metal,
         wuxingWater: natalStats.water,
+        // GD-002 生活系屬性（從五行比例計算）
+        gatherPower: stats.gatherPower,
+        forgePower: stats.forgePower,
+        carryWeight: stats.carryWeight,
+        refinePower: stats.refinePower,
+        treasureHunting: stats.treasureHunting,
+        healPower: stats.healPower,
+        magicAttack: stats.magicAttack,
+        hitRate: stats.hitRate,
+        // 初始技能
+        skillSlot1: getInitialSkills(dominant).slot1,
+        skillSlot2: getInitialSkills(dominant).slot2,
+        passiveSlot1: getInitialSkills(dominant).passive1,
         gold: 50,
         stamina: 100,
         maxStamina: 100,
@@ -344,22 +404,57 @@ export const gameWorldRouter = router({
   }),
 
   // ─── 取得背包 ───
-  getInventory: protectedProcedure.query(async ({ ctx }) => {
+   getInventory: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-
     const agents = await db
       .select()
       .from(gameAgents)
       .where(eq(gameAgents.userId, String(ctx.user.id)))
       .limit(1);
-
     if (!agents[0]) return [];
-
-    return db
+    const items = await db
       .select()
       .from(agentInventory)
       .where(eq(agentInventory.agentId, agents[0].id));
+    // 道具名稱映射表（對應 tickEngine 實際產生的道具 ID）
+    const ITEM_NAMES: Record<string, { name: string; rarity: string; emoji: string }> = {
+      // 木系草藥
+      "herb-001":        { name: "青草藥",     rarity: "common",   emoji: "🌿" },
+      "herb-002":        { name: "靈芝草",     rarity: "uncommon", emoji: "🍄" },
+      "herb-fire-001":   { name: "火焰草",     rarity: "uncommon", emoji: "🌺" },
+      "herb-water-001":  { name: "水靈草",     rarity: "uncommon", emoji: "💧" },
+      // 木系材料
+      "mat-wood-001":    { name: "堅木材",     rarity: "common",   emoji: "🪵" },
+      "mat-wood-002":    { name: "靈木精華",   rarity: "uncommon", emoji: "🌳" },
+      // 火系材料
+      "mat-fire-001":    { name: "火焰石",     rarity: "common",   emoji: "🔥" },
+      "mat-fire-002":    { name: "熔岩碎片",   rarity: "uncommon", emoji: "🌋" },
+      // 土系材料
+      "mat-earth-001":   { name: "土元素晶",   rarity: "common",   emoji: "🪨" },
+      "mat-earth-002":   { name: "大地精華",   rarity: "uncommon", emoji: "⛰️" },
+      "food-earth-001":  { name: "山藥",       rarity: "common",   emoji: "🥔" },
+      // 金系材料
+      "mat-metal-001":   { name: "鐵礦石",     rarity: "common",   emoji: "⚙️" },
+      "mat-metal-002":   { name: "銀礦石",     rarity: "uncommon", emoji: "🥈" },
+      "mat-metal-003":   { name: "金礦石",     rarity: "rare",     emoji: "🥇" },
+      // 水系材料
+      "mat-water-001":   { name: "水晶碎片",   rarity: "common",   emoji: "💎" },
+      "mat-water-002":   { name: "深海珍珠",   rarity: "rare",     emoji: "🔮" },
+      // 怪物掉落
+      "material-bone":   { name: "怪物骨骼",   rarity: "common",   emoji: "🦴" },
+      "material-scale":  { name: "怪物鱗片",   rarity: "uncommon", emoji: "🐉" },
+      "material-crystal":{ name: "元素水晶",   rarity: "rare",     emoji: "💠" },
+      "material-core":   { name: "怪物核心",   rarity: "epic",     emoji: "⭐" },
+      "consumable-potion":{ name: "小回血藥",  rarity: "common",   emoji: "🧪" },
+      "consumable-elixir":{ name: "元氣丹",    rarity: "uncommon", emoji: "💊" },
+    };
+    return items.map(item => ({
+      ...item,
+      itemName: ITEM_NAMES[item.itemId]?.name ?? item.itemId,
+      rarity: ITEM_NAMES[item.itemId]?.rarity ?? "common",
+      emoji: ITEM_NAMES[item.itemId]?.emoji ?? "📦",
+    }));
   }),
 
   // ─── 取得節點詳細資訊（怪物/資源/在場冒險者） ───
