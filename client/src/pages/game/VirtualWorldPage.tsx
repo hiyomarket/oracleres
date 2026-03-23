@@ -1106,20 +1106,41 @@ export default function VirtualWorldPage() {
                 setStrategy={setStrategy}
                 ec={ec}
               />
-              {/* 快速入口 */}
-              <div className="px-3 py-3 grid grid-cols-2 gap-2 shrink-0 border-t"
+              {/* 緊湊功能按鈕列（取代重複大按鈕） */}
+              <div className="px-3 py-2 flex items-center gap-2 shrink-0 border-t"
                 style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(8,12,25,0.97)" }}>
-                <button onClick={() => navigate("/game/profile")}
-                  className="flex items-center gap-2 px-3 py-3 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ background: "rgba(155,89,182,0.08)", borderColor: "rgba(155,89,182,0.28)" }}>
-                  <span className="text-xl">👤</span>
-                  <span className="text-sm text-slate-300 font-medium">靈相空間</span>
+                {/* 旅人日誌按鈕 */}
+                <button
+                  onClick={() => setShowLog(v => !v)}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.28)" }}>
+                  <span className="text-base">📜</span>
+                  <span className="text-xs text-amber-300 font-bold">旅人日誌</span>
+                  {(eventLog?.length ?? 0) > 0 && (
+                    <span className="text-xs font-bold px-1 rounded-full" style={{ background: "#ef4444", color: "#fff", fontSize: "10px" }}>
+                      {(eventLog?.length ?? 0) > 99 ? "99+" : eventLog?.length}
+                    </span>
+                  )}
                 </button>
-                <button onClick={() => navigate("/game/shop")}
-                  className="flex items-center gap-2 px-3 py-3 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ background: "rgba(0,206,209,0.08)", borderColor: "rgba(0,206,209,0.28)" }}>
-                  <span className="text-xl">🛒</span>
-                  <span className="text-sm text-slate-300 font-medium">天命商城</span>
+                {/* 地圖傳送按鈕 */}
+                <button
+                  onClick={() => { /* TODO: 開啟地圖傳送面板 */ alert("地圖傳送：即將推出！"); }}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: "rgba(56,189,248,0.08)", borderColor: "rgba(56,189,248,0.28)" }}>
+                  <span className="text-base">🗺️</span>
+                  <span className="text-xs text-sky-300 font-bold">地圖傳送</span>
+                </button>
+                {/* 隱藏商店感應按鈕：平常暗灰，遇到隱藏商店時金色脈衝發光 */}
+                <button
+                  onClick={() => { navigate("/game/shop"); }}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{
+                    background: "rgba(100,100,120,0.06)",
+                    borderColor: "rgba(100,100,120,0.2)",
+                    opacity: 0.5,
+                  }}>
+                  <span className="text-base">🏪</span>
+                  <span className="text-xs text-slate-500 font-bold">商店</span>
                 </button>
               </div>
             </div>
@@ -1181,20 +1202,41 @@ export default function VirtualWorldPage() {
                   ec={ec}
                   mobileMode={true}
                 />
-                {/* 手機版快速入口 */}
-                <div className="px-3 py-3 grid grid-cols-2 gap-2 border-t"
+                {/* 手機版緊湊功能按鈕列 */}
+                <div className="px-3 py-2 flex items-center gap-2 border-t"
                   style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                  <button onClick={() => navigate("/game/profile")}
-                    className="flex items-center gap-2 px-3 py-3 rounded-xl border transition-all active:scale-[0.98]"
-                    style={{ background: "rgba(155,89,182,0.08)", borderColor: "rgba(155,89,182,0.28)" }}>
-                    <span className="text-xl">👤</span>
-                    <span className="text-sm text-slate-300 font-medium">靈相空間</span>
+                  {/* 旅人日誌 */}
+                  <button
+                    onClick={() => { setShowLog(v => !v); setCharPanelOpen(false); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all active:scale-[0.98]"
+                    style={{ background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.28)" }}>
+                    <span className="text-base">📜</span>
+                    <span className="text-xs text-amber-300 font-bold">日誌</span>
+                    {(eventLog?.length ?? 0) > 0 && (
+                      <span className="text-xs font-bold px-1 rounded-full" style={{ background: "#ef4444", color: "#fff", fontSize: "10px" }}>
+                        {(eventLog?.length ?? 0) > 99 ? "99+" : eventLog?.length}
+                      </span>
+                    )}
                   </button>
-                  <button onClick={() => navigate("/game/shop")}
-                    className="flex items-center gap-2 px-3 py-3 rounded-xl border transition-all active:scale-[0.98]"
-                    style={{ background: "rgba(0,206,209,0.08)", borderColor: "rgba(0,206,209,0.28)" }}>
-                    <span className="text-xl">🛒</span>
-                    <span className="text-sm text-slate-300 font-medium">天命商城</span>
+                  {/* 地圖傳送 */}
+                  <button
+                    onClick={() => { alert("地圖傳送：即將推出！"); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all active:scale-[0.98]"
+                    style={{ background: "rgba(56,189,248,0.08)", borderColor: "rgba(56,189,248,0.28)" }}>
+                    <span className="text-base">🗺️</span>
+                    <span className="text-xs text-sky-300 font-bold">傳送</span>
+                  </button>
+                  {/* 隱藏商店感應 */}
+                  <button
+                    onClick={() => { navigate("/game/shop"); }}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all active:scale-[0.98]"
+                    style={{
+                      background: "rgba(100,100,120,0.06)",
+                      borderColor: "rgba(100,100,120,0.2)",
+                      opacity: 0.5,
+                    }}>
+                    <span className="text-base">🏪</span>
+                    <span className="text-xs text-slate-500 font-bold">商店</span>
                   </button>
                 </div>
               </div>
