@@ -489,7 +489,7 @@ type AgentData = {
 
 function CharacterPanel({
   agent, staminaInfo, natalStats, equippedData, balanceData, dailyData,
-  divineHeal, setStrategy, ec, mobileMode = false,
+  divineHeal, divineEye, divineStamina, setStrategy, ec, mobileMode = false,
 }: {
   agent: AgentData | null | undefined;
   staminaInfo: { current?: number; max?: number; nextRegenMin?: number } | null | undefined;
@@ -498,6 +498,8 @@ function CharacterPanel({
   balanceData: { gameCoins?: number; gameStones?: number } | null | undefined;
   dailyData: { dayPillar?: { stem?: string; branch?: string; stemElement?: string } } | null | undefined;
   divineHeal: { mutate: () => void; isPending: boolean };
+  divineEye: { mutate: () => void; isPending: boolean };
+  divineStamina: { mutate: () => void; isPending: boolean };
   setStrategy: { mutate: (a: { strategy: "combat" | "gather" | "rest" | "explore" }) => void; isPending: boolean };
   ec: string;
   mobileMode?: boolean;
@@ -649,17 +651,35 @@ function CharacterPanel({
               </div>
             </div>
 
-            {/* 神蹟干預 */}
+            {/* 靈相干預 */}
             <div className="border-t pt-2" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
               <div className="flex items-center justify-between mb-1.5">
-                <p className="text-xs text-slate-500">神蹟干預</p>
+                <p className="text-xs text-slate-500">靈相干預</p>
                 <span className="text-xs text-cyan-400 font-bold">靈力 {agentAP}/{agentMaxAP}</span>
               </div>
-              <button onClick={() => divineHeal.mutate()} disabled={agentAP < 1 || divineHeal.isPending}
-                className="w-full py-3 rounded-xl text-sm font-bold border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-                style={{ background: "rgba(56,189,248,0.08)", borderColor: "rgba(56,189,248,0.3)", color: "#38bdf8" }}>
-                {divineHeal.isPending ? "⏳ 施法中…" : "💊 神蹟治癒（恢復 50% HP）"}
-              </button>
+              <div className="grid grid-cols-3 gap-1.5">
+                <button onClick={() => divineHeal.mutate()} disabled={agentAP < 1 || divineHeal.isPending}
+                  className="flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                  style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.3)", color: "#ef4444" }}>
+                  <span className="text-lg leading-none">{divineHeal.isPending ? "⏳" : "💊"}</span>
+                  <span className="text-[10px] font-bold">神蹟治癒</span>
+                  <span className="text-[9px] text-slate-600">恢復50%HP</span>
+                </button>
+                <button onClick={() => divineEye.mutate()} disabled={agentAP < 1 || divineEye.isPending}
+                  className="flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                  style={{ background: "rgba(56,189,248,0.08)", borderColor: "rgba(56,189,248,0.3)", color: "#38bdf8" }}>
+                  <span className="text-lg leading-none">{divineEye.isPending ? "⏳" : "👁"}</span>
+                  <span className="text-[10px] font-bold">神眼加持</span>
+                  <span className="text-[9px] text-slate-600">洞察力+15%</span>
+                </button>
+                <button onClick={() => divineStamina.mutate()} disabled={agentAP < 1 || divineStamina.isPending}
+                  className="flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                  style={{ background: "rgba(167,139,250,0.08)", borderColor: "rgba(167,139,250,0.3)", color: "#a78bfa" }}>
+                  <span className="text-lg leading-none">{divineStamina.isPending ? "⏳" : "✨"}</span>
+                  <span className="text-[10px] font-bold">靈癒疲勞</span>
+                  <span className="text-[9px] text-slate-600">體力回50</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1159,9 +1179,11 @@ export default function VirtualWorldPage() {
     { enabled: !!currentNodeId, refetchInterval: 30000 }
   );
 
-  const setStrategy = trpc.gameWorld.setStrategy.useMutation({ onSuccess: () => utils.gameWorld.getAgentStatus.invalidate() });
-  const divineHeal  = trpc.gameWorld.divineHeal.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
-  const triggerTick = trpc.gameWorld.triggerTick.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
+  const setStrategy    = trpc.gameWorld.setStrategy.useMutation({ onSuccess: () => utils.gameWorld.getAgentStatus.invalidate() });
+  const divineHeal     = trpc.gameWorld.divineHeal.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
+  const divineEye      = trpc.gameWorld.divineEye.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
+  const divineStamina  = trpc.gameWorld.divineStamina.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
+  const triggerTick    = trpc.gameWorld.triggerTick.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
   const setTeleport = trpc.gameWorld.setTeleport.useMutation({
     onSuccess: (data) => {
       setShowTeleport(false);
@@ -1398,6 +1420,19 @@ export default function VirtualWorldPage() {
                 </>
               )}
             </button>
+            {/* 返回前台按鈕 */}
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-xl font-bold text-xs border transition-all hover:scale-105 active:scale-95"
+              style={{
+                background: "rgba(148,163,184,0.08)",
+                borderColor: "rgba(148,163,184,0.25)",
+                color: "#94a3b8",
+              }}
+              title="返回前台"
+            >
+              ⌂
+            </button>
           </div>
         </div>
 
@@ -1582,6 +1617,8 @@ export default function VirtualWorldPage() {
                 balanceData={balanceData as { gameCoins?: number; gameStones?: number } | null | undefined}
                 dailyData={dailyData as { dayPillar?: { stem?: string; branch?: string; stemElement?: string } } | null | undefined}
                 divineHeal={divineHeal}
+                divineEye={divineEye}
+                divineStamina={divineStamina}
                 setStrategy={setStrategy}
                 ec={ec}
               />
@@ -1696,6 +1733,8 @@ export default function VirtualWorldPage() {
                     balanceData={balanceData as { gameCoins?: number; gameStones?: number } | null | undefined}
                     dailyData={dailyData as { dayPillar?: { stem?: string; branch?: string; stemElement?: string } } | null | undefined}
                     divineHeal={divineHeal}
+                    divineEye={divineEye}
+                    divineStamina={divineStamina}
                     setStrategy={setStrategy}
                     ec={ec}
                     mobileMode={true}

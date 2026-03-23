@@ -342,8 +342,57 @@ export const gameWorldRouter = router({
 
     return { success: true, healAmount };
   }),
-
-  // ─── 神蹟：傳送（消耗靈力值） ───
+  // ─── 靈相干預：神眼加持（洞察力+15%，10行動內） ───
+  divineEye: protectedProcedure.mutation(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("Database unavailable");
+    const agents = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    const agent = agents[0];
+    if (!agent) throw new Error("角色不存在");
+    if (agent.actionPoints < 1) throw new Error("靈力值不足（需要 1 點）");
+    const now = Date.now();
+    const newTreasure = Math.min(1000, Math.round((agent.treasureHunting ?? 20) * 1.15));
+    await db.update(gameAgents).set({
+      treasureHunting: newTreasure,
+      actionPoints: agent.actionPoints - 1,
+      updatedAt: now,
+    }).where(eq(gameAgents.id, agent.id));
+    await db.insert(agentEvents).values({
+      agentId: agent.id,
+      eventType: "system",
+      message: `👁 神眼加持降臨，${agent.agentName ?? "旅人"} 的洞察力提升至 ${newTreasure}！（消耗 1 靈力值）`,
+      detail: { type: "divine_eye", newTreasure, actionPointsUsed: 1 },
+      nodeId: agent.currentNodeId,
+      createdAt: now,
+    });
+    return { success: true, newTreasure };
+  }),
+  // ─── 靈相干預：靈癒疲勞（體力恢復至50） ───
+  divineStamina: protectedProcedure.mutation(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("Database unavailable");
+    const agents = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    const agent = agents[0];
+    if (!agent) throw new Error("角色不存在");
+    if (agent.actionPoints < 1) throw new Error("靈力值不足（需要 1 點）");
+    const now = Date.now();
+    const newStamina = Math.max(agent.stamina ?? 0, 50);
+    await db.update(gameAgents).set({
+      stamina: newStamina,
+      actionPoints: agent.actionPoints - 1,
+      updatedAt: now,
+    }).where(eq(gameAgents.id, agent.id));
+    await db.insert(agentEvents).values({
+      agentId: agent.id,
+      eventType: "system",
+      message: `✨ 靈癒疲勞，${agent.agentName ?? "旅人"} 的體力恢復至 ${newStamina}！（消耗 1 靈力值）`,
+      detail: { type: "divine_stamina", newStamina, actionPointsUsed: 1 },
+      nodeId: agent.currentNodeId,
+      createdAt: now,
+    });
+    return { success: true, newStamina };
+  }),
+  // ─── 神蹟：傳送（消耗靈力值） ────
   divineTransport: protectedProcedure
     .input(z.object({ targetNodeId: z.string() }))
     .mutation(async ({ ctx, input }) => {

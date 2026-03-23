@@ -2,7 +2,7 @@
  * GameTabLayout.tsx
  * 遊戲模組底部 Tab 導航包裝器
  * 四個 Tab：虛相世界 / 靈相空間 / 天命商城 / 命理加成
- * V13：固定全螢幕 overflow:hidden，徹底鎖定畫面不滑動
+ * V15：修復 iOS safe-area-inset-top（iPhone 瀏海/Dynamic Island 空白問題）
  */
 import { useLocation } from "wouter";
 
@@ -53,6 +53,9 @@ export default function GameTabLayout({ children, activeTab }: GameTabLayoutProp
         background: "radial-gradient(ellipse at 50% 20%, #1E3A5F 0%, #050d14 65%)",
         /* 確保 iOS Safari 不會因為地址欄收縮而改變高度 */
         height: "100dvh",
+        /* ★ iOS safe-area 頂端：處理瀏海/Dynamic Island，避免頂端空白 */
+        paddingTop: "env(safe-area-inset-top, 0px)",
+        boxSizing: "border-box",
       }}
     >
       {/* 主內容區：填滿底部 Tab Bar 上方空間，overflow:hidden 由子頁面自行管理 */}
@@ -76,7 +79,9 @@ export default function GameTabLayout({ children, activeTab }: GameTabLayoutProp
           zIndex: 50,
           display: "flex",
           alignItems: "flex-start",
-          height: `${TAB_BAR_HEIGHT}px`,
+          /* ★ 底部也要處理 safe-area（iPhone Home Bar） */
+          height: `calc(${TAB_BAR_HEIGHT}px + env(safe-area-inset-bottom, 0px))`,
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
           background: "rgba(5, 13, 20, 0.97)",
           backdropFilter: "blur(20px)",
           borderTop: "1px solid rgba(255,255,255,0.08)",
@@ -95,6 +100,7 @@ export default function GameTabLayout({ children, activeTab }: GameTabLayoutProp
                 justifyContent: "center",
                 gap: "2px",
                 padding: "8px 0",
+                height: `${TAB_BAR_HEIGHT}px`,
                 position: "relative",
                 transition: "all 0.15s",
                 WebkitTapHighlightColor: "transparent",
