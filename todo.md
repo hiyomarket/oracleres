@@ -2917,3 +2917,10 @@
 - [x] 完整閱讀 GD-017 虛相世界轉型設計提案
 - [x] 建立 GD-017-TICK-ENGINE-ARCHITECTURE.md（Schema/引擎邏輯/SSE推送/Sprint排程）
 - [x] 537 項測試全部通過，TypeScript 零錯誤
+
+## V11.13 大廳改版 + 底部 Tab 導航（2026-03-23）
+- [x] 建立 GameTabLayout.tsx 底部 Tab 導航包裝器（虛界/靈相/商城 三個 Tab）
+- [x] 建立 VirtualWorldPage.tsx 靈相虛界主畫面（三欄靜態骨架：旅人狀態/冒險日誌/策略台）
+- [x] /game 路由改指向 VirtualWorldPage（原 GameLobby 保留但不再是主入口）
+- [x] AvatarRoom、Shop、CharacterProfile 全部整合 GameTabLayout 底部 Tab
+- [x] VirtualWorldPage 整合 trpc.oracle.dailyEnergy 顯示今日天干地支

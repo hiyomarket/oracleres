@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ShoppingBag, Sparkles, Star, RefreshCw, X } from "lucide-react";
 import DailyQuestCard from "@/components/game/DailyQuestCard";
 import QuestCompleteModal from "@/components/game/QuestCompleteModal";
+import GameTabLayout from "@/components/GameTabLayout";
 
 // ─── 五行顏色點（衣物標籤） ────────────────────────────────────
 const WuxingDot: React.FC<{ wuxing: string }> = ({ wuxing }) => {
@@ -345,7 +346,8 @@ const AvatarRoom: React.FC = () => {
   } : null);
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white flex flex-col">
+    <GameTabLayout activeTab="avatar">
+    <div className="min-h-screen bg-[#0a0f1a] text-white flex flex-col pb-20">
 
       {/* ── 靈相覺醒動畫（首次進入） ─────────────────────────── */}
       {showAwakening && (
@@ -594,6 +596,7 @@ const AvatarRoom: React.FC = () => {
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
+    </GameTabLayout>
   );
 };
 

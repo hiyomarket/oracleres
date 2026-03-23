@@ -8,6 +8,7 @@
 import React, { useState } from "react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
+import GameTabLayout from "@/components/GameTabLayout";
 import ShopItemCard, { type ShopItem } from "@/components/game/ShopItemCard";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -133,6 +134,7 @@ const PurchaseConfirmModal: React.FC<{
 // ─── 主頁面 ───────────────────────────────────────────────────
 const Shop: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"coins" | "stones">("coins");
+  // Note: activeTab above is for coins/stones filter; GameTabLayout uses its own activeTab prop
   const [filterLayer, setFilterLayer] = useState("");
   const [filterWuxing, setFilterWuxing] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -172,7 +174,8 @@ const Shop: React.FC = () => {
     : (shopData?.stonesItems ?? []);
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white flex flex-col">
+    <GameTabLayout activeTab="shop">
+    <div className="min-h-screen bg-[#0a0f1a] text-white flex flex-col pb-20">
 
       {/* 購買確認彈窗 */}
       {confirmItem && (
@@ -324,6 +327,7 @@ const Shop: React.FC = () => {
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
+    </GameTabLayout>
   );
 };
 

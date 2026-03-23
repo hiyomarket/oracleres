@@ -19,6 +19,7 @@ import {
   type WuxingElement,
   type CharacterGender,
 } from "@/lib/gameAssets";
+import GameTabLayout from "@/components/GameTabLayout";
 
 // ── 五行中英文對照 ────────────────────────────────────────────
 const ZH_TO_EN_ELEMENT: Record<string, WuxingElement> = {
@@ -327,6 +328,7 @@ export default function CharacterProfile() {
   const equippedItems = equippedData?.items ?? [];
 
   return (
+    <>
     <div className="fixed inset-0 overflow-hidden select-none" style={{ background: "#0a0a0a" }}>
       {/* ── 五行漸層背景 ── */}
       <div
@@ -497,8 +499,8 @@ export default function CharacterProfile() {
         />
       </div>
 
-      {/* ── 五行切換指示點 ── */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex gap-2">
+      {/* ── 五行切換指示點（留出底部 Tab 空間） ── */}
+      <div className="absolute left-1/2 -translate-x-1/2 z-30 flex gap-2" style={{ bottom: "72px" }}>
         {(Object.keys(WUXING_THEMES) as WuxingElement[]).map((el) => (
           <button
             key={el}
@@ -512,5 +514,10 @@ export default function CharacterProfile() {
         ))}
       </div>
     </div>
+    {/* 底部 Tab Bar（疊加在全螢幕之上） */}
+    <GameTabLayout activeTab="avatar">
+      <></>
+    </GameTabLayout>
+    </>
   );
 }
