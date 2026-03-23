@@ -507,6 +507,9 @@ async function processCombatEvent(
         const itemType = itemId.startsWith("herb") ? "material" as const
           : itemId.startsWith("mat") ? "material" as const
           : itemId.startsWith("food") ? "consumable" as const
+          : itemId.startsWith("consumable") ? "consumable" as const
+          : itemId.startsWith("equip") ? "equipment" as const
+          : itemId.startsWith("skill") ? "skill_book" as const
           : "material" as const;
         await db.insert(agentInventory).values({
           agentId: agent.id,

@@ -1,0 +1,146 @@
+{
+  "query": "DESCRIBE game_inventory_items;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DESCRIBE game_inventory_items;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "item_key",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "item_type",
+      "Type": "enum('consumable','equipment','weapon','material','special')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "consumable",
+      "Extra": ""
+    },
+    {
+      "Field": "sub_type",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "",
+      "Extra": ""
+    },
+    {
+      "Field": "rarity",
+      "Type": "enum('common','rare','epic','legendary')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "common",
+      "Extra": ""
+    },
+    {
+      "Field": "emoji",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "📦",
+      "Extra": ""
+    },
+    {
+      "Field": "stat_bonus",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "use_effect",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equip_slot",
+      "Type": "varchar(30)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "",
+      "Extra": ""
+    },
+    {
+      "Field": "max_stack",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "99",
+      "Extra": ""
+    },
+    {
+      "Field": "is_tradable",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "updated_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nitem_key\tvarchar(100)\tNO\tUNI\tNULL\t\nname\tvarchar(100)\tNO\t\tNULL\t\ndescription\ttext\tYES\t\tNULL\t\nitem_type\tenum('consumable','equipment','weapon','material','special')\tNO\t\tconsumable\t\nsub_type\tvarchar(50)\tYES\t\t\t\nwuxing\tvarchar(10)\tYES\t\t\t\nrarity\tenum('common','rare','epic','legendary')\tNO\t\tcommon\t\nemoji\tvarchar(10)\tNO\t\t📦\t\nstat_bonus\tjson\tYES\t\tNULL\t\nuse_effect\tjson\tYES\t\tNULL\t\nequip_slot\tvarchar(30)\tYES\t\t\t\nmax_stack\tint\tNO\t\t99\t\nis_tradable\ttinyint\tNO\t\t1\t\nis_active\ttinyint\tNO\t\t1\t\ncreated_at\tbigint\tNO\t\tNULL\t\nupdated_at\tbigint\tNO\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 1564
+}

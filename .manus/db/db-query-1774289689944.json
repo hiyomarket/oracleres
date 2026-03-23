@@ -1,0 +1,140 @@
+{
+  "query": "SELECT * FROM agent_inventory LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT * FROM agent_inventory LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "agent_id": "2",
+      "item_id": "mat-metal-002",
+      "item_type": "material",
+      "quantity": "3",
+      "item_data": "NULL",
+      "acquired_at": "1774274393631",
+      "updated_at": "1774278389545"
+    },
+    {
+      "id": "2",
+      "agent_id": "2",
+      "item_id": "mat-metal-003",
+      "item_type": "material",
+      "quantity": "1",
+      "item_data": "NULL",
+      "acquired_at": "1774274993739",
+      "updated_at": "1774274993739"
+    },
+    {
+      "id": "3",
+      "agent_id": "3",
+      "item_id": "mat-metal-001",
+      "item_type": "material",
+      "quantity": "2",
+      "item_data": "NULL",
+      "acquired_at": "1774279122622",
+      "updated_at": "1774279134038"
+    },
+    {
+      "id": "4",
+      "agent_id": "1",
+      "item_id": "mat-earth-002",
+      "item_type": "material",
+      "quantity": "3",
+      "item_data": "NULL",
+      "acquired_at": "1774279378917",
+      "updated_at": "1774280162182"
+    },
+    {
+      "id": "5",
+      "agent_id": "1",
+      "item_id": "mat-earth-001",
+      "item_type": "material",
+      "quantity": "4",
+      "item_data": "NULL",
+      "acquired_at": "1774279421301",
+      "updated_at": "1774280329578"
+    },
+    {
+      "id": "6",
+      "agent_id": "3",
+      "item_id": "mat-earth-001",
+      "item_type": "material",
+      "quantity": "8",
+      "item_data": "NULL",
+      "acquired_at": "1774280329652",
+      "updated_at": "1774289656552"
+    },
+    {
+      "id": "7",
+      "agent_id": "1",
+      "item_id": "food-earth-001",
+      "item_type": "material",
+      "quantity": "1",
+      "item_data": "NULL",
+      "acquired_at": "1774280629522",
+      "updated_at": "1774280629522"
+    },
+    {
+      "id": "8",
+      "agent_id": "3",
+      "item_id": "food-earth-001",
+      "item_type": "material",
+      "quantity": "3",
+      "item_data": "NULL",
+      "acquired_at": "1774280931231",
+      "updated_at": "1774283110906"
+    },
+    {
+      "id": "9",
+      "agent_id": "3",
+      "item_id": "mat-earth-002",
+      "item_type": "material",
+      "quantity": "2",
+      "item_data": "NULL",
+      "acquired_at": "1774283181873",
+      "updated_at": "1774286332275"
+    },
+    {
+      "id": "10",
+      "agent_id": "1",
+      "item_id": "herb-002",
+      "item_type": "material",
+      "quantity": "2",
+      "item_data": "NULL",
+      "acquired_at": "1774283210765",
+      "updated_at": "1774283337618"
+    },
+    {
+      "id": "11",
+      "agent_id": "1",
+      "item_id": "mat-wood-002",
+      "item_type": "material",
+      "quantity": "1",
+      "item_data": "NULL",
+      "acquired_at": "1774283213402",
+      "updated_at": "1774283213402"
+    },
+    {
+      "id": "12",
+      "agent_id": "1",
+      "item_id": "food-001",
+      "item_type": "consumable",
+      "quantity": "1",
+      "item_data": "NULL",
+      "acquired_at": "1774283213439",
+      "updated_at": "1774283213439"
+    },
+    {
+      "id": "13",
+      "agent_id": "1",
+      "item_id": "mat-metal-003",
+      "item_type": "material",
+      "quantity": "3",
+      "item_data": "NULL",
+      "acquired_at": "1774284714846",
+      "updated_at": "1774285014754"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_id\titem_id\titem_type\tquantity\titem_data\tacquired_at\tupdated_at\n1\t2\tmat-metal-002\tmaterial\t3\tNULL\t1774274393631\t1774278389545\n2\t2\tmat-metal-003\tmaterial\t1\tNULL\t1774274993739\t1774274993739\n3\t3\tmat-metal-001\tmaterial\t2\tNULL\t1774279122622\t1774279134038\n4\t1\tmat-earth-002\tmaterial\t3\tNULL\t1774279378917\t1774280162182\n5\t1\tmat-earth-001\tmaterial\t4\tNULL\t1774279421301\t1774280329578\n6\t3\tmat-earth-001\tmaterial\t8\tNULL\t1774280329652\t1774289656552\n7\t1\tfood-earth-001\tmaterial\t1\tNULL\t1774280629522\t1774280629522\n8\t3\tfood-earth-001\tmaterial\t3\tNULL\t1774280931231\t1774283110906\n9\t3\tmat-earth-002\tmaterial\t2\tNULL\t1774283181873\t1774286332275\n10\t1\therb-002\tmaterial\t2\tNULL\t1774283210765\t1774283337618\n11\t1\tmat-wood-002\tmaterial\t1\tNULL\t1774283213402\t1774283213402\n12\t1\tfood-001\tconsumable\t1\tNULL\t1774283213439\t1774283213439\n13\t1\tmat-metal-003\tmaterial\t3\tNULL\t1774284714846\t1774285014754\n",
+  "stderr": "",
+  "execution_time_ms": 1527
+}

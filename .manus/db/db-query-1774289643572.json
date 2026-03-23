@@ -1,0 +1,508 @@
+{
+  "query": "SELECT item_id, name, category, rarity FROM game_item_catalog ORDER BY category, item_id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, category, rarity FROM game_item_catalog ORDER BY category, item_id;",
+  "rows": [
+    {
+      "item_id": "I_E026",
+      "name": "鐵甲藥劑",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_E027",
+      "name": "磐石護盾",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_F026",
+      "name": "初級燒傷藥",
+      "category": "consumable",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_F027",
+      "name": "狂暴藥水",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_F028",
+      "name": "烈焰炸彈",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_F034",
+      "name": "鳳凰之血",
+      "category": "consumable",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_M026",
+      "name": "磨刀石",
+      "category": "consumable",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_M027",
+      "name": "疾風藥劑",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_M032",
+      "name": "煙霧彈",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W026",
+      "name": "初級解毒草",
+      "category": "consumable",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W027",
+      "name": "活力樹汁",
+      "category": "consumable",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W028",
+      "name": "森林精華",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W029",
+      "name": "荊棘護甲藥劑",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W030",
+      "name": "疾風草",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W031",
+      "name": "劇毒塗劑",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W032",
+      "name": "迷幻花粉",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W033",
+      "name": "復甦之風",
+      "category": "consumable",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_W034",
+      "name": "萬能解毒劑",
+      "category": "consumable",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_W035",
+      "name": "生命之水",
+      "category": "consumable",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W076",
+      "name": "小靈泉",
+      "category": "consumable",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W077",
+      "name": "大靈泉",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W079",
+      "name": "淨化之水",
+      "category": "consumable",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W084",
+      "name": "人魚之歌",
+      "category": "consumable",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_E001",
+      "name": "礦石",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_F001",
+      "name": "餘燼",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_M001",
+      "name": "金屬零件",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W001",
+      "name": "靈草",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W002",
+      "name": "堅韌藤蔓",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W003",
+      "name": "苦澀樹皮",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W004",
+      "name": "迷幻蘑菇",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W005",
+      "name": "晨露",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W006",
+      "name": "芳香花瓣",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W007",
+      "name": "帶刺荊棘",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W008",
+      "name": "黏稠樹液",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W009",
+      "name": "翠綠樹葉",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W010",
+      "name": "奇異種子",
+      "category": "material_basic",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W051",
+      "name": "水滴",
+      "category": "material_basic",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_E011",
+      "name": "土晶石",
+      "category": "material_drop",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_F011",
+      "name": "火晶石",
+      "category": "material_drop",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_M011",
+      "name": "金晶石",
+      "category": "material_drop",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W011",
+      "name": "木晶石",
+      "category": "material_drop",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W012",
+      "name": "毒液腺",
+      "category": "material_drop",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W013",
+      "name": "綠色核心",
+      "category": "material_drop",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W014",
+      "name": "迷幻孢子",
+      "category": "material_drop",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W015",
+      "name": "古木心材",
+      "category": "material_drop",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W016",
+      "name": "消化液",
+      "category": "material_drop",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W017",
+      "name": "幻影鐮刀",
+      "category": "material_drop",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W018",
+      "name": "腐敗核心",
+      "category": "material_drop",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W019",
+      "name": "森猿獠牙",
+      "category": "material_drop",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W020",
+      "name": "鐵木熊皮",
+      "category": "material_drop",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_W021",
+      "name": "木靈王核心",
+      "category": "material_drop",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_W022",
+      "name": "蛛后毒囊",
+      "category": "material_drop",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_W023",
+      "name": "翡翠龍鱗",
+      "category": "material_drop",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W024",
+      "name": "世界樹枝",
+      "category": "material_drop",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W025",
+      "name": "花神之淚",
+      "category": "material_drop",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W061",
+      "name": "水晶石",
+      "category": "material_drop",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_E041",
+      "name": "秋分紀念徽章",
+      "category": "quest",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_F041",
+      "name": "夏至紀念徽章",
+      "category": "quest",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_M041",
+      "name": "立秋紀念徽章",
+      "category": "quest",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_W036",
+      "name": "迷路藥童的草藥",
+      "category": "quest",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W037",
+      "name": "破損的木雕",
+      "category": "quest",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W038",
+      "name": "森林守護者印記",
+      "category": "quest",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_W039",
+      "name": "奇異的蟲卵",
+      "category": "quest",
+      "rarity": "rare"
+    },
+    {
+      "item_id": "I_W040",
+      "name": "枯萎的樹枝",
+      "category": "quest",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_W041",
+      "name": "春分紀念徽章",
+      "category": "quest",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_W042",
+      "name": "驚蟄雷木枝",
+      "category": "quest",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_W043",
+      "name": "迷霧精華",
+      "category": "quest",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_W044",
+      "name": "毒沼之心",
+      "category": "quest",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W045",
+      "name": "幸運四葉草",
+      "category": "quest",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W091",
+      "name": "冬至紀念徽章",
+      "category": "quest",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_E046",
+      "name": "脈動之核",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_E050",
+      "name": "天命土靈珠",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_F046",
+      "name": "隕石核心",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_F050",
+      "name": "天命火靈珠",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_M046",
+      "name": "衛星殘骸",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_M050",
+      "name": "天命金靈珠",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W046",
+      "name": "萬古神木之魂",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W047",
+      "name": "逢春露",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W048",
+      "name": "復甦種子",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W049",
+      "name": "女妖之吻",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W050",
+      "name": "天命木靈珠",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W096",
+      "name": "海嘯核心",
+      "category": "treasure",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_W100",
+      "name": "天命水靈珠",
+      "category": "treasure",
+      "rarity": "legendary"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\tcategory\trarity\nI_E026\t鐵甲藥劑\tconsumable\trare\nI_E027\t磐石護盾\tconsumable\trare\nI_F026\t初級燒傷藥\tconsumable\tcommon\nI_F027\t狂暴藥水\tconsumable\trare\nI_F028\t烈焰炸彈\tconsumable\trare\nI_F034\t鳳凰之血\tconsumable\tlegendary\nI_M026\t磨刀石\tconsumable\tcommon\nI_M027\t疾風藥劑\tconsumable\trare\nI_M032\t煙霧彈\tconsumable\trare\nI_W026\t初級解毒草\tconsumable\tcommon\nI_W027\t活力樹汁\tconsumable\tcommon\nI_W028\t森林精華\tconsumable\trare\nI_W029\t荊棘護甲藥劑\tconsumable\trare\nI_W030\t疾風草\tconsumable\trare\nI_W031\t劇毒塗劑\tconsumable\trare\nI_W032\t迷幻花粉\tconsumable\trare\nI_W033\t復甦之風\tconsumable\tepic\nI_W034\t萬能解毒劑\tconsumable\tepic\nI_W035\t生命之水\tconsumable\tlegendary\nI_W076\t小靈泉\tconsumable\tcommon\nI_W077\t大靈泉\tconsumable\trare\nI_W079\t淨化之水\tconsumable\trare\nI_W084\t人魚之歌\tconsumable\tepic\nI_E001\t礦石\tmaterial_basic\tcommon\nI_F001\t餘燼\tmaterial_basic\tcommon\nI_M001\t金屬零件\tmaterial_basic\tcommon\nI_W001\t靈草\tmaterial_basic\tcommon\nI_W002\t堅韌藤蔓\tmaterial_basic\tcommon\nI_W003\t苦澀樹皮\tmaterial_basic\tcommon\nI_W004\t迷幻蘑菇\tmaterial_basic\tcommon\nI_W005\t晨露\tmaterial_basic\tcommon\nI_W006\t芳香花瓣\tmaterial_basic\tcommon\nI_W007\t帶刺荊棘\tmaterial_basic\tcommon\nI_W008\t黏稠樹液\tmaterial_basic\tcommon\nI_W009\t翠綠樹葉\tmaterial_basic\tcommon\nI_W010\t奇異種子\tmaterial_basic\trare\nI_W051\t水滴\tmaterial_basic\tcommon\nI_E011\t土晶石\tmaterial_drop\tcommon\nI_F011\t火晶石\tmaterial_drop\tcommon\nI_M011\t金晶石\tmaterial_drop\tcommon\nI_W011\t木晶石\tmaterial_drop\tcommon\nI_W012\t毒液腺\tmaterial_drop\tcommon\nI_W013\t綠色核心\tmaterial_drop\tcommon\nI_W014\t迷幻孢子\tmaterial_drop\tcommon\nI_W015\t古木心材\tmaterial_drop\trare\nI_W016\t消化液\tmaterial_drop\trare\nI_W017\t幻影鐮刀\tmaterial_drop\trare\nI_W018\t腐敗核心\tmaterial_drop\trare\nI_W019\t森猿獠牙\tmaterial_drop\trare\nI_W020\t鐵木熊皮\tmaterial_drop\tepic\nI_W021\t木靈王核心\tmaterial_drop\tepic\nI_W022\t蛛后毒囊\tmaterial_drop\tepic\nI_W023\t翡翠龍鱗\tmaterial_drop\tlegendary\nI_W024\t世界樹枝\tmaterial_drop\tlegendary\nI_W025\t花神之淚\tmaterial_drop\tlegendary\nI_W061\t水晶石\tmaterial_drop\tcommon\nI_E041\t秋分紀念徽章\tquest\tepic\nI_F041\t夏至紀念徽章\tquest\tepic\nI_M041\t立秋紀念徽章\tquest\tepic\nI_W036\t迷路藥童的草藥\tquest\tcommon\nI_W037\t破損的木雕\tquest\trare\nI_W038\t森林守護者印記\tquest\tepic\nI_W039\t奇異的蟲卵\tquest\trare\nI_W040\t枯萎的樹枝\tquest\tcommon\nI_W041\t春分紀念徽章\tquest\tepic\nI_W042\t驚蟄雷木枝\tquest\tepic\nI_W043\t迷霧精華\tquest\tepic\nI_W044\t毒沼之心\tquest\tlegendary\nI_W045\t幸運四葉草\tquest\tlegendary\nI_W091\t冬至紀念徽章\tquest\tepic\nI_E046\t脈動之核\ttreasure\tlegendary\nI_E050\t天命土靈珠\ttreasure\tlegendary\nI_F046\t隕石核心\ttreasure\tlegendary\nI_F050\t天命火靈珠\ttreasure\tlegendary\nI_M046\t衛星殘骸\ttreasure\tlegendary\nI_M050\t天命金靈珠\ttreasure\tlegendary\nI_W046\t萬古神木之魂\ttreasure\tlegendary\nI_W047\t逢春露\ttreasure\tlegendary\nI_W048\t復甦種子\ttreasure\tlegendary\nI_W049\t女妖之吻\ttreasure\tlegendary\nI_W050\t天命木靈珠\ttreasure\tlegendary\nI_W096\t海嘯核心\ttreasure\tlegendary\nI_W100\t天命水靈珠\ttreasure\tlegendary\n",
+  "stderr": "",
+  "execution_time_ms": 1570
+}

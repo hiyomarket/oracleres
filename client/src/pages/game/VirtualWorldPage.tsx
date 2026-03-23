@@ -750,7 +750,8 @@ function CharacterPanel({
                 if (itemCategory === "all") return true;
                 if (itemCategory === "material") return item.itemType === "material" || (!item.itemType && !item.rarity);
                 if (itemCategory === "consumable") return item.itemType === "consumable" || item.itemType === "potion";
-                if (itemCategory === "equipment") return item.itemType === "equipment" || (item.rarity && item.rarity !== "common");
+                // 裝備分類：只根據 itemType，不用 rarity 判斷（避免鍵造素材被誤分入裝備）
+                if (itemCategory === "equipment") return item.itemType === "equipment" || item.itemType === "skill_book";
                 return true;
               });
               if (filtered.length === 0) return (
@@ -765,7 +766,8 @@ function CharacterPanel({
                     const rc = item.rarity ? QUALITY_COLOR[item.rarity] ?? "#94a3b8" : "#94a3b8";
                     const typeLabel = item.itemType === "material" ? "鍛造素材" :
                       item.itemType === "consumable" || item.itemType === "potion" ? "消耗道具" :
-                      item.itemType === "equipment" ? "裝備" : "道具";
+                      item.itemType === "equipment" ? "裝備" :
+                      item.itemType === "skill_book" ? "技能書" : "道具";
                     return (
                       <div key={item.id} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border"
                         style={{ background: `${rc}08`, borderColor: `${rc}25` }}>
@@ -2111,12 +2113,13 @@ export default function VirtualWorldPage() {
             <div
               className="lg:hidden fixed left-0 right-0 z-30 flex flex-col"
               style={{
-                bottom: "64px", // 底部導覽列 56px + 8px 間距，避免按鈕被遮擋
+                // 底部導覽列高度 56px + 8px 間距 + iOS safe-area
+                bottom: "calc(56px + 8px + env(safe-area-inset-bottom, 0px))",
                 background: "rgba(6,10,22,0.98)",
                 backdropFilter: "blur(20px)",
-                borderTop: `2px solid ${ec}40`,
+                borderTop: `2px solid ${ec}60`,
                 borderRadius: "16px 16px 0 0",
-                boxShadow: `0 -4px 24px ${ec}20, 0 -2px 8px rgba(0,0,0,0.6)`,
+                boxShadow: `0 -6px 32px ${ec}30, 0 -2px 8px rgba(0,0,0,0.6)`,
                 transition: "height 0.35s cubic-bezier(0.4,0,0.2,1)",
                 height: charPanelOpen ? "calc(50vh + 56px)" : "56px",
                 overflow: "hidden",
@@ -2125,14 +2128,26 @@ export default function VirtualWorldPage() {
             >
               {/* 把手列（始終可見） */}
               <div
-                className="flex items-center justify-between px-4 shrink-0 cursor-pointer"
-                style={{ height: "56px", borderBottom: charPanelOpen ? "1px solid rgba(255,255,255,0.06)" : "none" }}
+                className="flex items-center justify-between px-4 shrink-0 cursor-pointer select-none"
+                style={{ height: "56px", borderBottom: charPanelOpen ? "1px solid rgba(255,255,255,0.06)" : "none", position: "relative" }}
                 onClick={() => setCharPanelOpen(v => !v)}
               >
+                {/* 顧導調光小条（不展開時顯示） */}
+                {!charPanelOpen && (
+                  <div style={{
+                    position: "absolute",
+                    top: 0, left: "50%",
+                    transform: "translateX(-50%)",
+                    width: "40px", height: "3px",
+                    borderRadius: "2px",
+                    background: `linear-gradient(90deg, transparent, ${ec}, transparent)`,
+                    animation: "pulse 2s ease-in-out infinite",
+                  }} />
+                )}
                 {/* 左：旅人資訊 */}
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-base border shrink-0"
-                    style={{ background: `radial-gradient(circle,${ec}25,transparent)`, borderColor: `${ec}50` }}>
+                    style={{ background: `radial-gradient(circle,${ec}25,transparent)`, borderColor: `${ec}60`, boxShadow: charPanelOpen ? "none" : `0 0 8px ${ec}40` }}>
                     {equippedData?.userGender === "male" ? "🧙" : "🧙‍♀️"}
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -2141,14 +2156,18 @@ export default function VirtualWorldPage() {
                     <span className="text-xs text-slate-500">Lv.{agent?.level ?? 1}</span>
                   </div>
                 </div>
-                {/* 右：幣値 + HP 條 + 展開箭頭 */}
-                <div className="flex items-center gap-2">
+                {/* 右：幣値 + 展開箭頭（加大尺寸更明顯） */}
+                <div className="flex items-center gap-2.5">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[10px] text-amber-400 font-bold">🪙 {(balanceData?.gameCoins ?? 0).toLocaleString()}</span>
                     <span className="text-slate-700 text-[10px]">|</span>
                     <span className="text-[10px] text-sky-400 font-bold">💎 {(balanceData?.gameStones ?? 0).toLocaleString()}</span>
                   </div>
-                  <span className="text-slate-500 text-sm">{charPanelOpen ? "▼" : "▲"}</span>
+                  {/* 展開箭頭：加大尺寸、加入動態色彩 */}
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="font-bold text-base leading-none" style={{ color: charPanelOpen ? "#64748b" : ec }}>{charPanelOpen ? "▼" : "▲"}</span>
+                    {!charPanelOpen && <span className="text-[9px] font-bold" style={{ color: ec, letterSpacing: "0.05em" }}>角色</span>}
+                  </div>
                 </div>
               </div>
 
