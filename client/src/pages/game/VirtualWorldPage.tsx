@@ -13,6 +13,7 @@ import GameTabLayout from "@/components/GameTabLayout";
 import LeafletMap from "@/components/LeafletMap";
 import type { LeafletMapHandle } from "@/components/LeafletMap";
 import type { MapNode } from "../../../../shared/mapNodes";
+import { DraggableWidget } from "@/components/DraggableWidget";
 
 // ─── 五行配色 ─────────────────────────────────────────────────
 const WX_HEX: Record<string, string> = {
@@ -612,28 +613,56 @@ function CharacterPanel({
 
   return (
     <div className="flex flex-col overflow-hidden flex-1">
-      {/* 旅人頭部：手機版底部抽屜模式下隱藏 */}
+      {/* 旅人頭部：手機版底部抜屉模式下隱藏 */}
       {!mobileMode && (
-        <div className="px-3 py-2.5 flex items-center gap-2.5 shrink-0"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(8,12,25,0.97)" }}>
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl border shrink-0"
-            style={{ background: `radial-gradient(circle,${ec}25,transparent)`, borderColor: `${ec}50`, boxShadow: `0 0 10px ${ec}30` }}>
+        <div className="px-4 py-3 flex items-center gap-3 shrink-0"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "linear-gradient(135deg, rgba(8,12,25,0.99) 0%, rgba(15,20,40,0.99) 100%)" }}>
+          {/* 角色頭像 */}
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl border-2 shrink-0 relative"
+            style={{
+              background: `radial-gradient(circle at 30% 30%, ${ec}30, rgba(6,10,22,0.9))`,
+              borderColor: `${ec}60`,
+              boxShadow: `0 0 20px ${ec}40, inset 0 0 10px ${ec}15`,
+            }}>
             {userGender === "male" ? "🧙" : "🧝"}
+            {/* 等級徽章 */}
+            <span className="absolute -bottom-1 -right-1 text-[11px] font-bold px-1.5 py-0.5 rounded-full border"
+              style={{ background: `${ec}22`, borderColor: `${ec}50`, color: ec }}>Lv.{agentLevel}</span>
           </div>
+          {/* 角色資訊 */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-slate-100 font-bold text-sm">{agentName}</span>
-              <span className="text-xs px-1.5 py-0.5 rounded-full font-bold shrink-0"
-                style={{ background: `${ec}22`, color: ec }}>{WX_ZH[agentElement] ?? "金"}命</span>
-              <span className="text-xs text-slate-500">Lv.{agentLevel}</span>
-              <span className="text-xs px-1.5 py-0.5 rounded-full shrink-0 font-medium" style={{ background: statusBg, color: statusFg }}>{statusLabel}</span>
+            {/* 名稱行 */}
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <span className="text-slate-100 font-bold text-base leading-tight">{agentName}</span>
+              <span className="text-xs px-2 py-0.5 rounded-full font-bold shrink-0 border"
+                style={{ background: `${ec}18`, borderColor: `${ec}45`, color: ec }}>{WX_ZH[agentElement] ?? "金"}命</span>
+              <span className="text-xs px-2 py-0.5 rounded-full shrink-0 font-semibold border"
+                style={{ background: statusBg, borderColor: statusFg + "50", color: statusFg }}>{statusLabel}</span>
             </div>
-            <div className="flex items-center gap-1.5 mt-1">
-              <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: `${agentExpToNext > 0 ? Math.min(100,(agentExp/agentExpToNext)*100) : 0}%`, background: "linear-gradient(90deg,#a78bfa,#7c3aed)" }} />
+            {/* 經驗條 */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <div className="h-full rounded-full transition-all" style={{ width: `${agentExpToNext > 0 ? Math.min(100,(agentExp/agentExpToNext)*100) : 0}%`, background: "linear-gradient(90deg,#a78bfa,#7c3aed)" }} />
               </div>
-              <span className="text-xs text-slate-600 shrink-0">{agentExp}/{agentExpToNext} EXP</span>
+              <span className="text-xs text-slate-500 shrink-0 tabular-nums">{agentExp}/{agentExpToNext}</span>
             </div>
+            {/* 靈力指示 */}
+            <div className="flex items-center gap-1.5 mt-1.5">
+              {Array.from({ length: agentMaxAP }).map((_, i) => (
+                <div key={i} className="w-2 h-2 rounded-full border transition-all"
+                  style={{
+                    background: i < agentAP ? "#a78bfa" : "transparent",
+                    borderColor: i < agentAP ? "#a78bfa" : "rgba(255,255,255,0.15)",
+                    boxShadow: i < agentAP ? "0 0 4px #a78bfa" : "none",
+                  }} />
+              ))}
+              <span className="text-[10px] text-slate-600 ml-1">靈力 {agentAP}/{agentMaxAP}</span>
+            </div>
+          </div>
+          {/* 幣値小卡 */}
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <span className="text-sm font-bold text-amber-400">🪙 {gameCoins.toLocaleString()}</span>
+            <span className="text-sm font-bold text-sky-400">💎 {gameStones.toLocaleString()}</span>
           </div>
         </div>
       )}
@@ -642,14 +671,14 @@ function CharacterPanel({
       <div className="flex shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(8,12,25,0.97)" }}>
         {PANELS.map(p => (
           <button key={p.id} onClick={() => setActivePanel(p.id)}
-            className="flex-1 py-2 flex flex-col items-center gap-0.5 transition-all"
+            className="flex-1 py-2.5 flex flex-col items-center gap-1 transition-all"
             style={{
               background: activePanel === p.id ? `${ec}12` : "transparent",
               color: activePanel === p.id ? ec : "rgba(148,163,184,0.5)",
               borderBottom: activePanel === p.id ? `2px solid ${ec}` : "2px solid transparent",
             }}>
-            <span className="text-base leading-none">{p.icon}</span>
-            <span className="text-[10px]">{p.label}</span>
+            <span className="text-xl leading-none">{p.icon}</span>
+            <span className="text-xs">{p.label}</span>
           </button>
         ))}
       </div>
@@ -1374,6 +1403,23 @@ export default function VirtualWorldPage() {
   const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mapRef = useRef<LeafletMapHandle>(null);
   const utils = trpc.useUtils();
+  // ── Widget 位置記憶（桌機版） ──
+  const [widgetLayout, setWidgetLayout] = useState<Record<string, { x: number; y: number }>>({});
+  const saveLayoutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveWidgetLayout = trpc.gameWorld.saveWidgetLayout.useMutation();
+  const { data: savedLayout } = trpc.gameWorld.getWidgetLayout.useQuery(undefined, { enabled: !!user, staleTime: Infinity });
+  // 載入儲存的 widget 位置
+  useEffect(() => {
+    if (savedLayout) setWidgetLayout(savedLayout as Record<string, { x: number; y: number }>);
+  }, [savedLayout]);
+  // 拖拉結束後防抖儲存（1.5 秒後才送 API）
+  const handleWidgetMove = useCallback((id: string, pos: { x: number; y: number }) => {
+    setWidgetLayout(prev => ({ ...prev, [id]: pos }));
+    if (saveLayoutTimer.current) clearTimeout(saveLayoutTimer.current);
+    saveLayoutTimer.current = setTimeout(() => {
+      setWidgetLayout(curr => { saveWidgetLayout.mutate({ layout: curr }); return curr; });
+    }, 1500);
+  }, [saveWidgetLayout]);
 
   const { data: agentData, isLoading: agentLoading } = trpc.gameWorld.getOrCreateAgent.useQuery(
     undefined, { enabled: !!user, refetchInterval: 30000 });
@@ -1609,7 +1655,8 @@ export default function VirtualWorldPage() {
           {/* 左：流日 + 本命（帶有意義資訊） */}
           <div className="flex items-center gap-1.5 shrink-0">
             {/* 流日標籤 */}
-            <div className="flex flex-col items-center px-2 py-1 rounded-xl border font-bold"
+            <div
+              className="relative flex flex-col items-center px-2 py-1 rounded-xl border font-bold cursor-pointer group"
               style={{
                 background: `${todayColor}12`,
                 borderColor: `${todayColor}40`,
@@ -1618,12 +1665,39 @@ export default function VirtualWorldPage() {
                 textShadow: `0 0 6px ${todayColor}`,
                 fontSize: "10px",
                 lineHeight: "1.2",
-              }}>
+              }}
+              onClick={() => {
+                // 手機版：點擊顯示說明
+                if (window.innerWidth < 1024) {
+                  import("sonner").then(({ toast }) => {
+                    toast.info(`流日天干：${todayStem}${todayBranch}`, {
+                      description: `今日主氣為「${todayElement}」行，${todayElement}旺代表今日所有與${todayElement}行相關的行動和事物都會得到加持。你的本命屬${WX_ZH[agentElement] ?? "金"}，不同流日對你的屬性值會有加成或耠減。`,
+                      duration: 5000,
+                    });
+                  });
+                }
+              }}
+            >
               <span style={{ fontSize: "11px" }}>{todayStem}{todayBranch}</span>
               <span style={{ fontSize: "9px", opacity: 0.8 }}>{todayElement}旺</span>
+              {/* 桌機版 hover tooltip */}
+              <div className="hidden lg:group-hover:block absolute left-0 top-full mt-1 z-[500] pointer-events-none"
+                style={{ minWidth: "220px" }}>
+                <div className="rounded-xl border px-3 py-2.5 text-left"
+                  style={{
+                    background: "rgba(6,10,22,0.97)",
+                    backdropFilter: "blur(16px)",
+                    borderColor: `${todayColor}40`,
+                    boxShadow: `0 4px 20px rgba(0,0,0,0.6)`,
+                  }}>
+                  <p className="text-xs font-bold mb-1" style={{ color: todayColor }}>流日天干：{todayStem}{todayBranch}</p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">今日主氣為「{todayElement}」行，{todayElement}旺代表今日所有與{todayElement}行相關的行動和事物都會得到加持。你的本命屬{WX_ZH[agentElement] ?? "金"}，不同流日對你的屬性值會有加成或耠減。</p>
+                </div>
+              </div>
             </div>
             {/* 本命標籤（含尋寶力等級） */}
-            <div className="flex flex-col items-center px-2 py-1 rounded-xl border font-bold"
+            <div
+              className="relative flex flex-col items-center px-2 py-1 rounded-xl border font-bold cursor-pointer group"
               style={{
                 background: `${ec}12`,
                 borderColor: `${ec}40`,
@@ -1632,9 +1706,35 @@ export default function VirtualWorldPage() {
                 textShadow: `0 0 6px ${ec}`,
                 fontSize: "10px",
                 lineHeight: "1.2",
-              }}>
+              }}
+              onClick={() => {
+                // 手機版：點擊顯示說明
+                if (window.innerWidth < 1024) {
+                  import("sonner").then(({ toast }) => {
+                    toast.info(`本命：${WX_ZH[agentElement] ?? "金"}行`, {
+                      description: `你的命格屬「${WX_ZH[agentElement] ?? "金"}」行，尋寶力為 ${treasureHunting}。尋寶力越高，在尋寶探索中發現稀有資源的機率越大。本命屬性與流日天干相生時，行動效率提升。`,
+                      duration: 5000,
+                    });
+                  });
+                }
+              }}
+            >
               <span style={{ fontSize: "11px" }}>{WX_ZH[agentElement] ?? "金"}命</span>
               <span style={{ fontSize: "9px", opacity: 0.8 }}>尋{treasureHunting}</span>
+              {/* 桌機版 hover tooltip */}
+              <div className="hidden lg:group-hover:block absolute left-0 top-full mt-1 z-[500] pointer-events-none"
+                style={{ minWidth: "220px" }}>
+                <div className="rounded-xl border px-3 py-2.5 text-left"
+                  style={{
+                    background: "rgba(6,10,22,0.97)",
+                    backdropFilter: "blur(16px)",
+                    borderColor: `${ec}40`,
+                    boxShadow: `0 4px 20px rgba(0,0,0,0.6)`,
+                  }}>
+                  <p className="text-xs font-bold mb-1" style={{ color: ec }}>本命：{WX_ZH[agentElement] ?? "金"}行</p>
+                  <p className="text-[11px] text-slate-400 leading-relaxed">你的命格屬「{WX_ZH[agentElement] ?? "金"}」行，尋寶力為 {treasureHunting}。尋寶力越高，在尋寶探索中發現稀有資源的機率越大。本命屬性與流日天干相生時，行動效率提升。</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1734,20 +1834,17 @@ export default function VirtualWorldPage() {
         {/* ── 主內容區（~80%）── */}
         {/* 桌機：flex-row（左地圖+方格面板、右角色面板）
             手機：flex-col（地圖 50vh 固定、角色面板底部抽屜）*/}
-        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative" style={{ minHeight: 0 }}>
-
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative" style={{ minHeight: 0 }}>
           {/* ── 地圖區塊 ── */}
           <div className="flex flex-col lg:flex-1 overflow-hidden" style={{ minHeight: 0, zIndex: 0, position: "relative" }}>
-
             {/* 地圖容器
-                手機：固定 50vh，touch-action:none 防止地圖滑動影響外層
+                手機：全版面（充滿除 Tab Bar 以外的剩餘空間），地圖壓在最底層
                 桌機：flex-1 填滿 */}
             <div
               className="relative overflow-hidden"
               style={{
-                height: charPanelOpen ? "50vh" : "70vh",
+                height: "calc(100dvh - 56px - env(safe-area-inset-bottom, 0px))",
                 flex: "none",
-                transition: "height 0.35s cubic-bezier(0.4,0,0.2,1)",
                 // 桌機覆蓋為 flex-1
               }}
               ref={(el) => {
@@ -1757,7 +1854,6 @@ export default function VirtualWorldPage() {
                   if (isDesktop) {
                     el.style.height = "auto";
                     el.style.flex = "1";
-                    el.style.transition = "none";
                   }
                 }
               }}
@@ -1782,10 +1878,10 @@ export default function VirtualWorldPage() {
                 />
               )}
 
-              {/* 日誌按鈕：左下角圓形按鈕（V14 移至左下角） */}
+              {/* 日誌按鈕：左下角圓形按鈕（手機版） */}
               <button
                 onClick={() => setShowLog(v => !v)}
-                className="absolute z-[400] flex items-center justify-center border transition-all hover:scale-110 active:scale-95"
+                className="absolute z-[400] lg:hidden flex items-center justify-center border transition-all hover:scale-110 active:scale-95"
                 style={{
                   bottom: "64px",
                   left: "16px",
@@ -1818,6 +1914,36 @@ export default function VirtualWorldPage() {
                   </span>
                 )}
               </button>
+              {/* 日誌按鈕：桌機版可拖拉 */}
+              <DraggableWidget
+                id="event-log"
+                defaultPos={{ x: 0, y: 0 }}
+                savedPos={widgetLayout["event-log"]}
+                onPositionChange={handleWidgetMove}
+                disabled={typeof window !== "undefined" && window.innerWidth < 1024}
+                zIndex={400}
+                className="hidden lg:block"
+                style={{ transform: "scale(1.1)", transformOrigin: "bottom left" }}
+              >
+                <button
+                  onClick={() => setShowLog(v => !v)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl border transition-all hover:scale-110 active:scale-95"
+                  style={{
+                    background: showLog ? "rgba(245,158,11,0.2)" : "rgba(6,10,22,0.92)",
+                    backdropFilter: "blur(10px)",
+                    borderColor: showLog ? "rgba(245,158,11,0.8)" : "rgba(245,158,11,0.4)",
+                    boxShadow: "0 0 12px rgba(245,158,11,0.35)",
+                  }}
+                >
+                  <span className="text-xl">📜</span>
+                  <span className="text-sm font-bold text-amber-300">日誌</span>
+                  {(eventLog?.length ?? 0) > 0 && (
+                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#ef4444", color: "#fff" }}>
+                      {(eventLog?.length ?? 0) > 99 ? "99+" : eventLog?.length}
+                    </span>
+                  )}
+                </button>
+              </DraggableWidget>
 
               {/* 手機版方格面板：左上角浮動卡片 */}
               <div
@@ -1863,8 +1989,56 @@ export default function VirtualWorldPage() {
                 )}
               </div>
 
-              {/* ── HP/MP/AP/體力 橫排狀態条（地圖底部中央） ── */}
-              <div className="absolute left-1/2 z-[400] flex items-center gap-1 px-2 py-1.5 rounded-2xl border"
+              {/* ── 城市區塊（桌機版：可拖拉） ── */}
+              <DraggableWidget
+                id="city-panel"
+                defaultPos={{ x: 0, y: 0 }}
+                savedPos={widgetLayout["city-panel"]}
+                onPositionChange={handleWidgetMove}
+                disabled={typeof window !== "undefined" && window.innerWidth < 1024}
+                zIndex={400}
+                className="hidden lg:block"
+                style={{ transform: "scale(1.1)", transformOrigin: "top left" }}
+              >
+                <button
+                  onClick={() => setNodeInfoOpen(v => !v)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-bold transition-all hover:scale-105"
+                  style={{
+                    background: "rgba(6,10,22,0.92)",
+                    backdropFilter: "blur(10px)",
+                    borderColor: `${ec}40`,
+                    color: ec,
+                    boxShadow: `0 0 10px ${ec}25`,
+                  }}
+                >
+                  <span>📍</span>
+                  <span>{nodeInfoData?.node?.name ?? "—"}</span>
+                  <span className="text-slate-500">{nodeInfoOpen ? "▼" : "▲"}</span>
+                </button>
+                {nodeInfoOpen && (
+                  <div
+                    className="mt-1 rounded-xl border overflow-hidden"
+                    style={{
+                      background: "rgba(6,10,22,0.95)",
+                      backdropFilter: "blur(16px)",
+                      borderColor: `${ec}25`,
+                      maxHeight: "50vh",
+                      overflowY: "auto",
+                      width: "280px",
+                    }}
+                  >
+                    <NodeInfoPanel
+                      nodeData={nodeInfoData as NodeInfoData | null | undefined}
+                      isOpen={true}
+                      onToggle={() => setNodeInfoOpen(false)}
+                      ec={ec}
+                      compact={true}
+                    />
+                  </div>
+                )}
+              </DraggableWidget>
+              {/* ── HP/MP/AP/體力 橫排狀態条（手機版：地圖底部中央固定） ── */}
+              <div className="absolute left-1/2 lg:hidden z-[400] flex items-center gap-1 px-2 py-1.5 rounded-2xl border"
                 style={{
                   bottom: "52px",
                   transform: "translateX(-50%)",
@@ -1891,9 +2065,45 @@ export default function VirtualWorldPage() {
                   </div>
                 ))}
               </div>
+              {/* ── HP/MP/AP/體力 橫排狀態条（桌機版：可拖拉） ── */}
+              <DraggableWidget
+                id="status-bar"
+                defaultPos={{ x: 0, y: 0 }}
+                savedPos={widgetLayout["status-bar"]}
+                onPositionChange={handleWidgetMove}
+                disabled={typeof window !== "undefined" && window.innerWidth < 1024}
+                zIndex={400}
+                className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-2xl border"
+                style={{
+                  background: "rgba(6,10,22,0.92)",
+                  backdropFilter: "blur(12px)",
+                  borderColor: "rgba(255,255,255,0.12)",
+                  boxShadow: "0 2px 16px rgba(0,0,0,0.5)",
+                  whiteSpace: "nowrap",
+                  transform: "scale(1.1)",
+                  transformOrigin: "top left",
+                }}
+              >
+                {[
+                  { icon: "♥", label: "HP", val: agent?.hp ?? 0, max: agent?.maxHp ?? 100, color: "#ef4444" },
+                  { icon: "💧", label: "MP", val: agent?.mp ?? 0, max: agent?.maxMp ?? 100, color: "#38bdf8" },
+                  { icon: "⚡", label: "AP", val: agent?.actionPoints ?? 0, max: agent?.maxActionPoints ?? 10, color: "#f59e0b" },
+                  { icon: "🏃", label: "體力", val: staminaInfo?.current ?? agent?.stamina ?? 100, max: staminaInfo?.max ?? agent?.maxStamina ?? 100, color: "#22c55e" },
+                ].map((bar, idx) => (
+                  <div key={bar.label} className="flex items-center gap-1">
+                    {idx > 0 && <span className="text-slate-700 text-xs mx-1">|</span>}
+                    <span className="text-xs shrink-0" style={{ color: bar.color }}>{bar.icon}</span>
+                    <div className="w-12 h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all"
+                        style={{ width: `${bar.max > 0 ? Math.min(100, (bar.val / bar.max) * 100) : 0}%`, background: bar.color }} />
+                    </div>
+                    <span className="text-[11px] font-bold tabular-nums" style={{ color: bar.color }}>{bar.val}</span>
+                  </div>
+                ))}
+              </DraggableWidget>
 
-              {/* ── 靈相干預浮動面板（右上角） ── */}
-              <div className="absolute right-2 top-2 z-[400]">
+              {/* ── 靈相干預浮動面板（手機版：右上角固定） ── */}
+              <div className="absolute right-2 top-2 z-[400] lg:hidden">
                 <button
                   onClick={() => setShowDivinePanel(v => !v)}
                   className="flex items-center gap-1 px-2 py-1.5 rounded-xl border text-xs font-bold transition-all hover:scale-105 active:scale-95"
@@ -1947,8 +2157,8 @@ export default function VirtualWorldPage() {
                 })()}
               </div>
 
-              {/* ── 行動策略浮動面板（右下角） ── */}
-              <div className="absolute right-2 z-[400]"
+              {/* ── 行動策略浮動面板（手機版：右下角固定） ── */}
+              <div className="absolute right-2 z-[400] lg:hidden"
                 style={{ bottom: charPanelOpen ? "16px" : "64px" }}>
                 <button
                   onClick={() => setShowStrategyPanel(v => !v)}
@@ -1990,6 +2200,119 @@ export default function VirtualWorldPage() {
                 )}
               </div>
 
+              {/* ── 靈相干預浮動面板（桌機版：可拖拉） ── */}
+              <DraggableWidget
+                id="divine-panel"
+                defaultPos={{ x: 0, y: 0 }}
+                savedPos={widgetLayout["divine-panel"]}
+                onPositionChange={handleWidgetMove}
+                disabled={typeof window !== "undefined" && window.innerWidth < 1024}
+                zIndex={400}
+                className="hidden lg:block"
+                style={{ transform: "scale(1.1)", transformOrigin: "top right" }}
+              >
+                <button
+                  onClick={() => setShowDivinePanel(v => !v)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-bold transition-all hover:scale-105 active:scale-95"
+                  style={{
+                    background: showDivinePanel ? "rgba(167,139,250,0.2)" : "rgba(6,10,22,0.92)",
+                    backdropFilter: "blur(10px)",
+                    borderColor: showDivinePanel ? "rgba(167,139,250,0.7)" : "rgba(167,139,250,0.4)",
+                    color: "#a78bfa",
+                    boxShadow: "0 0 12px rgba(167,139,250,0.3)",
+                  }}>
+                  <span>✨</span>
+                  <span>靈相</span>
+                  <span>{showDivinePanel ? "▲" : "▼"}</span>
+                </button>
+                {showDivinePanel && (() => {
+                  const todayStr = new Date().toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei" });
+                  const agentAP = agent?.actionPoints ?? 0;
+                  const healUsedToday = agent?.lastDivineHealDate === todayStr;
+                  const eyeUsedToday  = agent?.lastDivineEyeDate  === todayStr;
+                  const staminaUsedToday = agent?.lastDivineStaminaDate === todayStr;
+                  return (
+                    <div className="absolute right-0 top-full mt-1 rounded-xl border overflow-hidden"
+                      style={{ background: "rgba(6,10,22,0.97)", backdropFilter: "blur(16px)", borderColor: "rgba(167,139,250,0.3)", width: "220px" }}>
+                      <div className="px-3 py-2 border-b flex items-center justify-between"
+                        style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                        <span className="text-sm font-bold text-purple-300">靈相干預</span>
+                        <span className="text-xs text-slate-500">靈力 {agentAP}/{agent?.maxActionPoints ?? 10}</span>
+                      </div>
+                      <div className="p-2 space-y-1.5">
+                        {[
+                          { label: "神癒恢復", desc: "恢復50%HP", icon: "💊", color: "#ef4444", used: healUsedToday, fn: () => divineHeal.mutate(), pending: divineHeal.isPending },
+                          { label: "神眼加持", desc: "洞察力+15%", icon: "👁", color: "#38bdf8", used: eyeUsedToday, fn: () => divineEye.mutate(), pending: divineEye.isPending },
+                          { label: "靈癒疲勞", desc: "體力回50", icon: "✨", color: "#a78bfa", used: staminaUsedToday, fn: () => divineStamina.mutate(), pending: divineStamina.isPending },
+                        ].map(item => (
+                          <button key={item.label}
+                            onClick={item.fn}
+                            disabled={agentAP < 1 || item.pending || item.used}
+                            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                            style={{ background: `${item.color}08`, borderColor: `${item.color}${item.used ? "15" : "30"}`, color: item.color }}>
+                            <span className="text-lg">{item.pending ? "⏳" : item.used ? "🔒" : item.icon}</span>
+                            <div className="flex-1 text-left">
+                              <p className="text-sm font-bold">{item.label}</p>
+                              <p className="text-xs" style={{ color: item.used ? "#475569" : "#64748b" }}>{item.used ? "明日再來" : item.desc}</p>
+                            </div>
+                            {!item.used && <span className="text-xs text-slate-600">-1靈</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </DraggableWidget>
+              {/* ── 行動策略浮動面板（桌機版：可拖拉） ── */}
+              <DraggableWidget
+                id="strategy-panel"
+                defaultPos={{ x: 0, y: 0 }}
+                savedPos={widgetLayout["strategy-panel"]}
+                onPositionChange={handleWidgetMove}
+                disabled={typeof window !== "undefined" && window.innerWidth < 1024}
+                zIndex={400}
+                className="hidden lg:block"
+                style={{ transform: "scale(1.1)", transformOrigin: "bottom right" }}
+              >
+                <button
+                  onClick={() => setShowStrategyPanel(v => !v)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-bold transition-all hover:scale-105 active:scale-95"
+                  style={{
+                    background: showStrategyPanel ? `${ec}20` : "rgba(6,10,22,0.92)",
+                    backdropFilter: "blur(10px)",
+                    borderColor: showStrategyPanel ? `${ec}70` : `${ec}40`,
+                    color: ec,
+                    boxShadow: `0 0 12px ${ec}30`,
+                  }}>
+                  <span>⚔️</span>
+                  <span>{STRATEGIES.find(s => s.id === (agent?.strategy ?? "explore"))?.label ?? "探索"}</span>
+                  <span>{showStrategyPanel ? "▲" : "▼"}</span>
+                </button>
+                {showStrategyPanel && (
+                  <div className="absolute right-0 bottom-full mb-1 rounded-xl border overflow-hidden"
+                    style={{ background: "rgba(6,10,22,0.97)", backdropFilter: "blur(16px)", borderColor: `${ec}30`, width: "200px" }}>
+                    <div className="px-3 py-2 border-b"
+                      style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                      <span className="text-sm font-bold" style={{ color: ec }}>行動策略</span>
+                    </div>
+                    <div className="p-2 grid grid-cols-2 gap-2">
+                      {STRATEGIES.map(s => (
+                        <button key={s.id}
+                          onClick={() => { setStrategy.mutate({ strategy: s.id }); setShowStrategyPanel(false); }}
+                          className="flex flex-col items-center gap-1 py-3 rounded-lg text-sm border transition-all hover:scale-105 active:scale-95"
+                          style={{
+                            background: (agent?.strategy ?? "explore") === s.id ? `${ec}18` : "rgba(255,255,255,0.03)",
+                            borderColor: (agent?.strategy ?? "explore") === s.id ? `${ec}55` : "rgba(255,255,255,0.08)",
+                            color: (agent?.strategy ?? "explore") === s.id ? ec : "rgba(148,163,184,0.6)",
+                          }}>
+                          <span className="text-xl leading-none">{s.icon}</span>
+                          <span className="text-xs">{s.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </DraggableWidget>
               {/* 手機版角色面板把手：地圖底部中央 */}
               <button
                 className="absolute lg:hidden z-10 flex items-center justify-center gap-1 border transition-all"
@@ -2051,17 +2374,17 @@ export default function VirtualWorldPage() {
                 ec={ec}
               />
               {/* 桌機版底部功能按鈕列 */}
-              <div className="px-3 py-2 flex items-center gap-2 shrink-0 border-t mb-2"
+              <div className="px-3 py-2.5 flex items-center gap-2 shrink-0 border-t"
                 style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(8,12,25,0.97)" }}>
                 {/* 旅人日誌 */}
                 <button
                   onClick={() => setShowLog(v => !v)}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{ background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.28)" }}>
-                  <span className="text-sm">📜</span>
-                  <span className="text-xs text-amber-300 font-bold">旅人日誌</span>
+                  <span className="text-lg">📜</span>
+                  <span className="text-sm text-amber-300 font-bold">日誌</span>
                   {(eventLog?.length ?? 0) > 0 && (
-                    <span className="text-xs font-bold px-1 rounded-full" style={{ background: "#ef4444", color: "#fff", fontSize: "10px" }}>
+                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#ef4444", color: "#fff", fontSize: "11px" }}>
                       {(eventLog?.length ?? 0) > 99 ? "99+" : eventLog?.length}
                     </span>
                   )}
@@ -2069,39 +2392,31 @@ export default function VirtualWorldPage() {
                 {/* 地圖傳送（桌機版） */}
                 <button
                   onClick={() => setShowTeleport(true)}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{ background: "rgba(56,189,248,0.08)", borderColor: "rgba(56,189,248,0.28)" }}>
-                  <span className="text-sm">🗺️</span>
-                  <span className="text-xs text-sky-300 font-bold">地圖傳送</span>
+                  <span className="text-lg">🗺️</span>
+                  <span className="text-sm text-sky-300 font-bold">傳送</span>
                 </button>
                 {/* 一般商店（桌機版） */}
                 <button
                   onClick={() => navigate("/game/shop")}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{ background: "rgba(34,197,94,0.08)", borderColor: "rgba(34,197,94,0.28)" }}>
-                  <span className="text-sm">🏪</span>
-                  <span className="text-xs text-green-300 font-bold">商店</span>
+                  <span className="text-lg">🏪</span>
+                  <span className="text-sm text-green-300 font-bold">商店</span>
                 </button>
-                {/* 密店（桐機版，V14：所有人都可進入） */}
+                {/* 密店（V14：所有人都可進入） */}
                 <button
                   onClick={() => navigate("/game/shop?hidden=1")}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{
                     background: hiddenShopTier === "high" ? "rgba(245,158,11,0.12)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.10)" : "rgba(96,165,250,0.08)",
                     borderColor: hiddenShopTier === "high" ? "rgba(245,158,11,0.5)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.4)" : "rgba(96,165,250,0.3)",
                     boxShadow: hiddenShopTier === "high" ? "0 0 12px rgba(245,158,11,0.4)" : "none",
                   }}>
-                  <span className="text-sm">🔍</span>
-                  <span className="text-xs font-bold" style={{ color: hiddenShopColor }}>密店</span>
-                  <span className="text-[9px] text-slate-600 hidden xl:inline">{hiddenShopLabel}</span>
+                  <span className="text-lg">🔍</span>
+                  <span className="text-sm font-bold" style={{ color: hiddenShopColor }}>密店</span>
                 </button>
-              </div>
-              {/* 幣値顯示（右下角） */}
-              <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl border"
-                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
-                <span className="text-xs text-amber-400 font-bold">🪙 {(balanceData?.gameCoins ?? 0).toLocaleString()}</span>
-                <span className="text-slate-700 text-xs">|</span>
-                <span className="text-xs text-sky-400 font-bold">💎 {(balanceData?.gameStones ?? 0).toLocaleString()}</span>
               </div>
             </div>
 

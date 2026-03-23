@@ -986,6 +986,29 @@ export const gameWorldRouter = router({
       return { success: true, equipName: equip.name, action: input.action };
     }),
 
+  // ─── Widget 位置記憶 ───
+  saveWidgetLayout: protectedProcedure
+    .input(z.object({
+      layout: z.record(z.string(), z.object({ x: z.number(), y: z.number() })),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameAgents)
+        .set({ widgetLayout: input.layout, updatedAt: Date.now() })
+        .where(eq(gameAgents.userId, String(ctx.user.id)));
+      return { success: true };
+    }),
+  getWidgetLayout: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select({ widgetLayout: gameAgents.widgetLayout })
+        .from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id)))
+        .limit(1);
+      return agents[0]?.widgetLayout ?? null;
+    }),
   // ─── 取得怪物圖鑑（公開） ───
   getMonsterBestiary: publicProcedure
     .input(z.object({

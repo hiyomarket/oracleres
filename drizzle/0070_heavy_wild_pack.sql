@@ -1,0 +1,1 @@
+ALTER TABLE `game_agents` ADD `widget_layout` json;

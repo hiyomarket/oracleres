@@ -1736,6 +1736,8 @@ export const gameAgents = mysqlTable("game_agents", {
   lastDivineEyeDate: varchar("last_divine_eye_date", { length: 10 }),
   /** 靈癒疲勞最後使用日期 */
   lastDivineStaminaDate: varchar("last_divine_stamina_date", { length: 10 }),
+  /** 桌機版浮動 Widget 位置記憶（JSON: { widgetId: { x, y } }） */
+  widgetLayout: json("widget_layout").$type<Record<string, { x: number; y: number }>>(),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
   updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
