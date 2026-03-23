@@ -33,6 +33,9 @@
 2. **技能庫 (`game_skills`)**：設定技能名稱、消耗 MP、傷害倍率、五行屬性、特效說明。
 3. **道具與裝備 (`game_items`)**：擴充現有的商城物品表，加入虛相世界的武器、防具、消耗品（如神行符）。
 4. **地圖節點 (`game_map_nodes`)**：設定 LBS 地圖上的特殊打卡點、對應五行與觸發事件。
+5. **採集物圖鑑 (`game_gatherables`)**：設定地圖上可採集的資源（如火晶石、靈草）及其五行屬性。
+6. **隨機任務庫 (`game_random_quests`)**：設定地圖上隨機觸發的 NPC 任務文本、條件與獎勵。
+7. **流浪商人商品池 (`game_merchant_pool`)**：設定流浪商人可能販售的稀有物品與靈石價格。
 
 ---
 
@@ -94,6 +97,33 @@ export const gameMapNodes = mysqlTable('game_map_nodes', {
   lng: float('lng').notNull(),
   nodeType: varchar('node_type', { length: 50 }).notNull(), // 'forest', 'water', 'market'
   wuxing: varchar('wuxing', { length: 10 }).notNull(),
+});
+
+// 4. 採集物圖鑑表
+export const gameGatherables = mysqlTable('game_gatherables', {
+  id: int('id').primaryKey().autoincrement(),
+  name: varchar('name', { length: 100 }).notNull(),
+  wuxing: varchar('wuxing', { length: 10 }).notNull(),
+  rarity: varchar('rarity', { length: 20 }).notNull(), // 'common', 'rare', 'epic'
+  spawnRate: float('spawn_rate').notNull().default(0.5),
+});
+
+// 5. 隨機任務庫
+export const gameRandomQuests = mysqlTable('game_random_quests', {
+  id: int('id').primaryKey().autoincrement(),
+  title: varchar('title', { length: 100 }).notNull(),
+  description: text('description').notNull(),
+  requiredWuxing: varchar('required_wuxing', { length: 10 }), // 觸發此任務需要的流日五行
+  rewardType: varchar('reward_type', { length: 50 }).notNull(), // 'stones', 'aura', 'item'
+  rewardAmount: int('reward_amount').notNull(),
+});
+
+// 6. 流浪商人商品池
+export const gameMerchantPool = mysqlTable('game_merchant_pool', {
+  id: int('id').primaryKey().autoincrement(),
+  itemId: int('item_id').notNull(), // 關聯 game_items
+  priceStones: int('price_stones').notNull(), // 靈石價格
+  appearanceRate: float('appearance_rate').notNull().default(0.1), // 出現在商人清單的機率
 });
 ```
 
