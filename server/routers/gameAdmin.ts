@@ -21,6 +21,10 @@ import {
   gameVirtualShop,
   gameSpiritShop,
   gameHiddenShopPool,
+  gameMonsterCatalog,
+  gameItemCatalog,
+  gameEquipmentCatalog,
+  gameSkillCatalog,
 } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
@@ -558,4 +562,56 @@ export const gameAdminRouter = router({
     await db.delete(gameHiddenShopPool).where(eq(gameHiddenShopPool.id, input.id));
     return { success: true };
   }),
+
+  // ─── 圖鑑管理（GD-011~016 資料庫）────────────────────────────
+  getMonsterCatalog: adminProcedure
+    .input(z.object({ wuxing: z.string().optional(), search: z.string().optional() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const rows = await db.select().from(gameMonsterCatalog).orderBy(gameMonsterCatalog.monsterId);
+      let result = rows;
+      if (input.wuxing) result = result.filter(r => r.wuxing === input.wuxing);
+      if (input.search) result = result.filter(r => r.name.includes(input.search!));
+      return result;
+    }),
+
+  getItemCatalog: adminProcedure
+    .input(z.object({ wuxing: z.string().optional(), category: z.string().optional(), search: z.string().optional() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const rows = await db.select().from(gameItemCatalog).orderBy(gameItemCatalog.itemId);
+      let result = rows;
+      if (input.wuxing) result = result.filter(r => r.wuxing === input.wuxing);
+      if (input.category) result = result.filter(r => r.category === input.category);
+      if (input.search) result = result.filter(r => r.name.includes(input.search!));
+      return result;
+    }),
+
+  getEquipmentCatalog: adminProcedure
+    .input(z.object({ wuxing: z.string().optional(), slot: z.string().optional(), search: z.string().optional() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const rows = await db.select().from(gameEquipmentCatalog).orderBy(gameEquipmentCatalog.equipId);
+      let result = rows;
+      if (input.wuxing) result = result.filter(r => r.wuxing === input.wuxing);
+      if (input.slot) result = result.filter(r => r.slot === input.slot);
+      if (input.search) result = result.filter(r => r.name.includes(input.search!));
+      return result;
+    }),
+
+  getSkillCatalog: adminProcedure
+    .input(z.object({ wuxing: z.string().optional(), category: z.string().optional(), search: z.string().optional() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const rows = await db.select().from(gameSkillCatalog).orderBy(gameSkillCatalog.skillId);
+      let result = rows;
+      if (input.wuxing) result = result.filter(r => r.wuxing === input.wuxing);
+      if (input.category) result = result.filter(r => r.category === input.category);
+      if (input.search) result = result.filter(r => r.name.includes(input.search!));
+      return result;
+    }),
 });

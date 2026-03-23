@@ -4,6 +4,7 @@
  *      GD-002 三維五行屬性系統、GD-001 技能系統、GD-006 裝備系統
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -565,7 +566,19 @@ function CharacterPanel({
   };
 
   const [showSkillPicker, setShowSkillPicker] = useState(false);
-  const [skillPickerSlot, setSkillPickerSlot] = useState<{ type: "active" | "passive"; index: number } | null>(null);
+  const [skillPickerSlot, setSkillPickerSlot] = useState<{ type: "active" | "passive"; index: number; slot: "skillSlot1" | "skillSlot2" | "passiveSlot1" } | null>(null);
+  const [skillWuxingFilter, setSkillWuxingFilter] = useState("");
+  const skillCatalogQuery = trpc.gameWorld.getSkillCatalogForPlayer.useQuery(
+    skillWuxingFilter ? { wuxing: skillWuxingFilter } : undefined,
+    { enabled: showSkillPicker, staleTime: 60000 }
+  );
+  const installSkillMutation = trpc.gameWorld.installSkill.useMutation({
+    onSuccess: () => {
+      setShowSkillPicker(false);
+      toast.success("技能安裝成功！");
+    },
+    onError: (e) => toast.error("安裝失敗：" + e.message),
+  });
   const [itemCategory, setItemCategory] = useState<"all" | "material" | "consumable" | "equipment">("all");
   const PANELS: { id: PanelId; icon: string; label: string }[] = [
     { id: "combat", icon: "⚔️", label: "戰鬥" },
@@ -841,9 +854,10 @@ function CharacterPanel({
                   {activeSlots.map((slotId, i) => {
                     const sk = slotId ? SKILL_DEFS[slotId] : null;
                     const c = sk ? WX_HEX[sk.element] ?? "#888" : "#334155";
+                    const slotKey = (["skillSlot1", "skillSlot2", "skillSlot3", "skillSlot4"] as const)[i];
                     return (
                       <button key={i}
-                        onClick={() => { setSkillPickerSlot({ type: "active", index: i }); setShowSkillPicker(true); }}
+                        onClick={() => { setSkillPickerSlot({ type: "active", index: i, slot: (slotKey === "skillSlot3" || slotKey === "skillSlot4") ? "skillSlot2" : slotKey as "skillSlot1" | "skillSlot2" }); setShowSkillPicker(true); }}
                         className="px-2.5 py-2 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
                         style={{ background: sk ? `${c}10` : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : "rgba(255,255,255,0.07)" }}>
                         <p className="text-xs text-slate-600 mb-0.5">主動 {i + 1}</p>
@@ -870,7 +884,7 @@ function CharacterPanel({
                     const c = sk ? WX_HEX[sk.element] ?? "#888" : "#334155";
                     return (
                       <button key={i}
-                        onClick={() => { setSkillPickerSlot({ type: "passive", index: i }); setShowSkillPicker(true); }}
+                        onClick={() => { setSkillPickerSlot({ type: "passive", index: i, slot: "passiveSlot1" }); setShowSkillPicker(true); }}
                         className="px-2.5 py-2 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
                         style={{ background: sk ? `${c}10` : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : "rgba(255,255,255,0.07)" }}>
                         <p className="text-xs text-slate-600 mb-0.5">被動 {i + 1}</p>
@@ -892,56 +906,71 @@ function CharacterPanel({
           );
         })()}
 
-        {/* 技能選擇全視窗 */}
+        {/* 技能選擇全視窗（連動真實圖鑑資料庫） */}
         {showSkillPicker && skillPickerSlot && (
           <div className="fixed inset-0 z-[500] flex flex-col"
             style={{ background: "rgba(6,10,22,0.92)", backdropFilter: "blur(20px)" }}
             onClick={() => setShowSkillPicker(false)}>
             <div className="flex-1 overflow-y-auto p-4" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
+              {/* 標題列 */}
+              <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="text-base font-bold text-slate-100">選擇技能</h3>
+                  <h3 className="text-base font-bold text-slate-100">技能圖鑑</h3>
                   <p className="text-xs text-slate-500">
-                    {skillPickerSlot.type === "active" ? `主動槽 ${skillPickerSlot.index + 1}` : `被動槽 ${skillPickerSlot.index + 1}`}
+                    {skillPickerSlot.type === "active" ? `安裝至主動槽 ${skillPickerSlot.index + 1}` : `安裝至被動槽 ${skillPickerSlot.index + 1}`}
                   </p>
                 </div>
                 <button onClick={() => setShowSkillPicker(false)}
                   className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 border"
                   style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.1)" }}>✕</button>
               </div>
-              {/* 按五行分類 */}
-              {(["wood","fire","earth","metal","water"] as const).map(wx => {
-                const wxSkills = Object.entries(SKILL_DEFS).filter(([, sk]) =>
-                  sk.element === wx &&
-                  (skillPickerSlot.type === "active" ? sk.type === "active" : sk.type === "passive")
-                );
-                if (wxSkills.length === 0) return null;
-                const wc = WX_HEX[wx] ?? "#888";
-                return (
-                  <div key={wx} className="mb-4">
-                    <p className="text-xs font-bold mb-2 flex items-center gap-1" style={{ color: wc }}>
-                      {WX_EMOJI[wx]}{WX_ZH[wx]}行技能
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {wxSkills.map(([skillId, sk]) => (
-                        <button key={skillId}
-                          onClick={() => {
-                            // 目前僅顯示選擇，實際安裝需要後端 API
-                            setShowSkillPicker(false);
-                          }}
-                          className="flex items-start gap-2 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
-                          style={{ background: `${wc}10`, borderColor: `${wc}30` }}>
-                          <span className="text-xl shrink-0">{sk.icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold" style={{ color: wc }}>{sk.name}</p>
-                            <p className="text-xs text-slate-500 leading-tight mt-0.5">{sk.desc}</p>
+              {/* 五行篩選 */}
+              <div className="flex gap-1.5 mb-4 flex-wrap">
+                {["","wood","fire","earth","metal","water"].map(wx => (
+                  <button key={wx} onClick={() => setSkillWuxingFilter(wx)}
+                    className="px-3 py-1 rounded-full text-xs font-bold border transition-all"
+                    style={skillWuxingFilter === wx
+                      ? { background: WX_HEX[wx] ?? "#64748b", color: "#fff", borderColor: WX_HEX[wx] ?? "#64748b" }
+                      : { background: "rgba(255,255,255,0.05)", color: "#94a3b8", borderColor: "rgba(255,255,255,0.1)" }}>
+                    {wx ? `${WX_EMOJI[wx]}${WX_ZH[wx]}` : "全部"}
+                  </button>
+                ))}
+              </div>
+              {/* 技能列表 */}
+              {skillCatalogQuery.isLoading ? (
+                <p className="text-slate-500 text-center py-8">載入技能圖鑑中…</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {(skillCatalogQuery.data ?? []).filter(sk =>
+                    skillPickerSlot.type === "active"
+                      ? sk.category === "active_combat"
+                      : sk.category === "passive_combat" || sk.category === "life_gather" || sk.category === "craft_forge"
+                  ).map(sk => {
+                    const wc = WX_HEX[sk.wuxing ?? ""] ?? "#64748b";
+                    const isInstalling = installSkillMutation.isPending;
+                    return (
+                      <button key={sk.skillId}
+                        disabled={isInstalling}
+                        onClick={() => {
+                          if (skillPickerSlot.slot) {
+                            installSkillMutation.mutate({ skillId: sk.skillId, slot: skillPickerSlot.slot });
+                          }
+                        }}
+                        className="flex items-start gap-2 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                        style={{ background: `${wc}10`, borderColor: `${wc}30` }}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1 mb-0.5">
+                            <p className="text-xs font-bold" style={{ color: wc }}>{sk.name}</p>
+                            <span className="text-[9px] px-1 rounded" style={{ background: `${wc}20`, color: wc }}>{sk.tier}</span>
                           </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+                          <p className="text-[10px] text-slate-500 leading-tight">{sk.description}</p>
+                          {sk.mpCost > 0 && <p className="text-[9px] text-blue-400 mt-0.5">MP -{sk.mpCost}</p>}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1244,7 +1273,16 @@ export default function VirtualWorldPage() {
     { enabled: !!currentNodeId, refetchInterval: 30000 }
   );
 
-  const setStrategy    = trpc.gameWorld.setStrategy.useMutation({ onSuccess: () => utils.gameWorld.getAgentStatus.invalidate() });
+  const setStrategy    = trpc.gameWorld.setStrategy.useMutation({
+    onSuccess: (_, vars) => {
+      utils.gameWorld.getAgentStatus.invalidate();
+      const s = STRATEGIES.find(x => x.id === vars.strategy);
+      toast.success(`已切換為${s?.label ?? vars.strategy}模式`, {
+        description: s ? `${s.icon} 旅人將以「${s.label}」策略行動` : undefined,
+        duration: 2500,
+      });
+    },
+  });
   const divineHeal     = trpc.gameWorld.divineHeal.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
   const divineEye      = trpc.gameWorld.divineEye.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
   const divineStamina  = trpc.gameWorld.divineStamina.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });

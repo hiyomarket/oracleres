@@ -462,6 +462,10 @@ export default function GameCMS() {
             <TabsTrigger value="hidden-shop">密店商品池</TabsTrigger>
             <TabsTrigger value="achievements">成就</TabsTrigger>
             <TabsTrigger value="items">紙娃娃商城</TabsTrigger>
+            <TabsTrigger value="catalog-monsters">🐉 怪物圖鑑</TabsTrigger>
+            <TabsTrigger value="catalog-items">🎒 道具圖鑑</TabsTrigger>
+            <TabsTrigger value="catalog-equipment">⚔️ 裝備圖鑑</TabsTrigger>
+            <TabsTrigger value="catalog-skills">✨ 技能圖鑑</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -474,6 +478,10 @@ export default function GameCMS() {
               <TabsContent value="hidden-shop"><HiddenShopTab /></TabsContent>
               <TabsContent value="achievements"><AchievementsTab /></TabsContent>
               <TabsContent value="items"><GameItemsTab /></TabsContent>
+              <TabsContent value="catalog-monsters"><MonsterCatalogTab /></TabsContent>
+              <TabsContent value="catalog-items"><ItemCatalogTab /></TabsContent>
+              <TabsContent value="catalog-equipment"><EquipmentCatalogTab /></TabsContent>
+              <TabsContent value="catalog-skills"><SkillCatalogTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
@@ -921,6 +929,310 @@ function HiddenShopTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// ─── Monster Catalog Tab（怪物圖鑑 GD-011A~E）────────────────────────────────
+const WUXING_FILTER_OPTS = ["", "wood", "fire", "earth", "metal", "water"];
+const WUXING_ZH_MAP: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+const WUXING_EMOJI_MAP: Record<string, string> = { wood: "🌿", fire: "🔥", earth: "🪨", metal: "⚡", water: "💧" };
+
+function MonsterCatalogTab() {
+  const [wuxing, setWuxing] = useState("");
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const { data, isLoading } = trpc.gameAdmin.getMonsterCatalog.useQuery({ wuxing: wuxing || undefined, search: search || undefined });
+  return (
+    <div>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">怪物圖鑑（{data?.length ?? 0} 隻）</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">GD-011A~E 五行怪物圖鑑，共 100 隻。</p>
+      </div>
+      <div className="flex gap-2 mb-4 flex-wrap items-center">
+        <div className="flex gap-1 flex-wrap">
+          {WUXING_FILTER_OPTS.map(w => (
+            <button key={w} onClick={() => setWuxing(w)}
+              className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${wuxing === w ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {w ? `${WUXING_EMOJI_MAP[w]}${WUXING_ZH_MAP[w]}` : "全部"}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 ml-auto">
+          <Input placeholder="搜尋怪物名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-8 text-xs" />
+          <Button size="sm" variant="outline" onClick={() => setSearch(searchInput)}>搜尋</Button>
+          {search && <Button size="sm" variant="ghost" onClick={() => { setSearch(""); setSearchInput(""); }}>清除</Button>}
+        </div>
+      </div>
+      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b text-muted-foreground text-xs">
+                <th className="text-left py-2 px-2">ID</th>
+                <th className="text-left py-2 px-2">名稱</th>
+                <th className="text-left py-2 px-2">五行</th>
+                <th className="text-left py-2 px-2">等級</th>
+                <th className="text-left py-2 px-2">HP</th>
+                <th className="text-left py-2 px-2">攻擊</th>
+                <th className="text-left py-2 px-2">防禦</th>
+                <th className="text-left py-2 px-2">稀有度</th>
+                <th className="text-left py-2 px-2">描述</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data ?? []).map((m: any) => (
+                <tr key={m.id} className="border-b hover:bg-muted/30">
+                  <td className="py-2 px-2 text-muted-foreground text-xs font-mono">{m.monsterId}</td>
+                  <td className="py-2 px-2 font-medium">{m.name}</td>
+                  <td className="py-2 px-2 text-xs">{WUXING_EMOJI_MAP[m.wuxing] ?? ""}{WUXING_ZH_MAP[m.wuxing] ?? m.wuxing}</td>
+                  <td className="py-2 px-2 text-xs">Lv.{m.levelRange}</td>
+                  <td className="py-2 px-2">{m.baseHp}</td>
+                  <td className="py-2 px-2">{m.baseAttack}</td>
+                  <td className="py-2 px-2">{m.baseDefense}</td>
+                  <td className="py-2 px-2 text-xs">{m.rarity}</td>
+                  <td className="py-2 px-2 text-xs text-muted-foreground max-w-xs truncate">{m.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Item Catalog Tab（道具圖鑑 GD-014）──────────────────────────────────────
+const ITEM_CAT_LABELS: Record<string, string> = {
+  material_basic: "基礎素材", material_drop: "怪物掉落", consumable: "消耗品", quest: "任務道具", treasure: "珍寶天命",
+};
+
+function ItemCatalogTab() {
+  const [wuxing, setWuxing] = useState("");
+  const [category, setCategory] = useState("");
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const { data, isLoading } = trpc.gameAdmin.getItemCatalog.useQuery({ wuxing: wuxing || undefined, category: category || undefined, search: search || undefined });
+  return (
+    <div>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">道具圖鑑（{data?.length ?? 0} 種）</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">GD-014 完整道具資料庫，共 83 種。</p>
+      </div>
+      <div className="flex gap-2 mb-4 flex-wrap items-center">
+        <div className="flex gap-1 flex-wrap">
+          {WUXING_FILTER_OPTS.map(w => (
+            <button key={w} onClick={() => setWuxing(w)}
+              className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${wuxing === w ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {w ? `${WUXING_EMOJI_MAP[w]}${WUXING_ZH_MAP[w]}` : "全部"}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {["", ...Object.keys(ITEM_CAT_LABELS)].map(c => (
+            <button key={c} onClick={() => setCategory(c)}
+              className={`px-2 py-1 rounded-full text-xs border transition-all ${category === c ? "bg-secondary text-secondary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {c ? ITEM_CAT_LABELS[c] : "全分類"}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 ml-auto">
+          <Input placeholder="搜尋道具名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-8 text-xs" />
+          <Button size="sm" variant="outline" onClick={() => setSearch(searchInput)}>搜尋</Button>
+          {search && <Button size="sm" variant="ghost" onClick={() => { setSearch(""); setSearchInput(""); }}>清除</Button>}
+        </div>
+      </div>
+      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b text-muted-foreground text-xs">
+                <th className="text-left py-2 px-2">ID</th>
+                <th className="text-left py-2 px-2">名稱</th>
+                <th className="text-left py-2 px-2">五行</th>
+                <th className="text-left py-2 px-2">分類</th>
+                <th className="text-left py-2 px-2">稀有度</th>
+                <th className="text-left py-2 px-2">來源</th>
+                <th className="text-left py-2 px-2">效果</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data ?? []).map((item: any) => (
+                <tr key={item.id} className="border-b hover:bg-muted/30">
+                  <td className="py-2 px-2 text-muted-foreground text-xs font-mono">{item.itemId}</td>
+                  <td className="py-2 px-2 font-medium">{item.name}</td>
+                  <td className="py-2 px-2 text-xs">{WUXING_EMOJI_MAP[item.wuxing] ?? ""}{WUXING_ZH_MAP[item.wuxing] ?? item.wuxing}</td>
+                  <td className="py-2 px-2 text-xs">{ITEM_CAT_LABELS[item.category] ?? item.category}</td>
+                  <td className="py-2 px-2 text-xs">{item.rarity}</td>
+                  <td className="py-2 px-2 text-xs text-muted-foreground max-w-[120px] truncate">{item.source}</td>
+                  <td className="py-2 px-2 text-xs text-muted-foreground max-w-xs truncate">{item.effect}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Equipment Catalog Tab（裝備圖鑑 GD-015）─────────────────────────────────
+const EQUIP_SLOT_LABELS: Record<string, string> = {
+  weapon: "主武器", helmet: "頭盔", armor: "護甲", shoes: "鞋子", accessory: "飾品", offhand: "副手",
+};
+
+function EquipmentCatalogTab() {
+  const [wuxing, setWuxing] = useState("");
+  const [slot, setSlot] = useState("");
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const { data, isLoading } = trpc.gameAdmin.getEquipmentCatalog.useQuery({ wuxing: wuxing || undefined, slot: slot || undefined, search: search || undefined });
+  return (
+    <div>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">裝備圖鑑（{data?.length ?? 0} 種）</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">GD-015 完整裝備資料庫，共 39 種。</p>
+      </div>
+      <div className="flex gap-2 mb-4 flex-wrap items-center">
+        <div className="flex gap-1 flex-wrap">
+          {WUXING_FILTER_OPTS.map(w => (
+            <button key={w} onClick={() => setWuxing(w)}
+              className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${wuxing === w ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {w ? `${WUXING_EMOJI_MAP[w]}${WUXING_ZH_MAP[w]}` : "全部"}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {["", ...Object.keys(EQUIP_SLOT_LABELS)].map(s => (
+            <button key={s} onClick={() => setSlot(s)}
+              className={`px-2 py-1 rounded-full text-xs border transition-all ${slot === s ? "bg-secondary text-secondary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {s ? EQUIP_SLOT_LABELS[s] : "全部位"}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 ml-auto">
+          <Input placeholder="搜尋裝備名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-8 text-xs" />
+          <Button size="sm" variant="outline" onClick={() => setSearch(searchInput)}>搜尋</Button>
+          {search && <Button size="sm" variant="ghost" onClick={() => { setSearch(""); setSearchInput(""); }}>清除</Button>}
+        </div>
+      </div>
+      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b text-muted-foreground text-xs">
+                <th className="text-left py-2 px-2">ID</th>
+                <th className="text-left py-2 px-2">名稱</th>
+                <th className="text-left py-2 px-2">五行</th>
+                <th className="text-left py-2 px-2">部位</th>
+                <th className="text-left py-2 px-2">階級</th>
+                <th className="text-left py-2 px-2">等級需求</th>
+                <th className="text-left py-2 px-2">基礎屬性</th>
+                <th className="text-left py-2 px-2">特殊效果</th>
+                <th className="text-left py-2 px-2">鍛造素材</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data ?? []).map((e: any) => (
+                <tr key={e.id} className="border-b hover:bg-muted/30">
+                  <td className="py-2 px-2 text-muted-foreground text-xs font-mono">{e.equipId}</td>
+                  <td className="py-2 px-2 font-medium">{e.name}</td>
+                  <td className="py-2 px-2 text-xs">{WUXING_EMOJI_MAP[e.wuxing] ?? ""}{WUXING_ZH_MAP[e.wuxing] ?? e.wuxing}</td>
+                  <td className="py-2 px-2 text-xs">{EQUIP_SLOT_LABELS[e.slot] ?? e.slot}</td>
+                  <td className="py-2 px-2 text-xs">{e.tier}</td>
+                  <td className="py-2 px-2 text-xs">Lv.{e.levelRequired}</td>
+                  <td className="py-2 px-2 text-xs text-muted-foreground max-w-[120px] truncate">{e.baseStats}</td>
+                  <td className="py-2 px-2 text-xs text-muted-foreground max-w-[120px] truncate">{e.specialEffect}</td>
+                  <td className="py-2 px-2 text-xs text-muted-foreground max-w-[120px] truncate">{e.craftMaterials}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Skill Catalog Tab（技能圖鑑 GD-016）─────────────────────────────────────
+const SKILL_CAT_LABELS: Record<string, string> = {
+  active_combat: "戰鬥主動", passive_combat: "戰鬥被動", life_gather: "生活採集", craft_forge: "鍛造精煉",
+};
+const SKILL_TYPE_LABELS: Record<string, string> = {
+  attack: "攻擊", heal: "治療", buff: "增益", debuff: "減益", passive: "被動", special: "特殊",
+};
+
+function SkillCatalogTab() {
+  const [wuxing, setWuxing] = useState("");
+  const [category, setCategory] = useState("");
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const { data, isLoading } = trpc.gameAdmin.getSkillCatalog.useQuery({ wuxing: wuxing || undefined, category: category || undefined, search: search || undefined });
+  return (
+    <div>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">技能圖鑑（{data?.length ?? 0} 種）</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">GD-016 完整技能資料庫，共 109 種。</p>
+      </div>
+      <div className="flex gap-2 mb-4 flex-wrap items-center">
+        <div className="flex gap-1 flex-wrap">
+          {WUXING_FILTER_OPTS.map(w => (
+            <button key={w} onClick={() => setWuxing(w)}
+              className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${wuxing === w ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {w ? `${WUXING_EMOJI_MAP[w]}${WUXING_ZH_MAP[w]}` : "全部"}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {["", ...Object.keys(SKILL_CAT_LABELS)].map(c => (
+            <button key={c} onClick={() => setCategory(c)}
+              className={`px-2 py-1 rounded-full text-xs border transition-all ${category === c ? "bg-secondary text-secondary-foreground" : "bg-muted text-muted-foreground"}`}>
+              {c ? SKILL_CAT_LABELS[c] : "全分類"}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-2 ml-auto">
+          <Input placeholder="搜尋技能名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-8 text-xs" />
+          <Button size="sm" variant="outline" onClick={() => setSearch(searchInput)}>搜尋</Button>
+          {search && <Button size="sm" variant="ghost" onClick={() => { setSearch(""); setSearchInput(""); }}>清除</Button>}
+        </div>
+      </div>
+      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b text-muted-foreground text-xs">
+                <th className="text-left py-2 px-2">ID</th>
+                <th className="text-left py-2 px-2">名稱</th>
+                <th className="text-left py-2 px-2">五行</th>
+                <th className="text-left py-2 px-2">類別</th>
+                <th className="text-left py-2 px-2">階級</th>
+                <th className="text-left py-2 px-2">類型</th>
+                <th className="text-left py-2 px-2">MP</th>
+                <th className="text-left py-2 px-2">效果說明</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data ?? []).map((s: any) => (
+                <tr key={s.id} className="border-b hover:bg-muted/30">
+                  <td className="py-2 px-2 text-muted-foreground text-xs font-mono">{s.skillId}</td>
+                  <td className="py-2 px-2 font-medium">{s.name}</td>
+                  <td className="py-2 px-2 text-xs">{WUXING_EMOJI_MAP[s.wuxing] ?? ""}{WUXING_ZH_MAP[s.wuxing] ?? s.wuxing}</td>
+                  <td className="py-2 px-2 text-xs">{SKILL_CAT_LABELS[s.category] ?? s.category}</td>
+                  <td className="py-2 px-2 text-xs">{s.tier}</td>
+                  <td className="py-2 px-2 text-xs">{SKILL_TYPE_LABELS[s.skillType] ?? s.skillType}</td>
+                  <td className="py-2 px-2 text-center">{s.mpCost}</td>
+                  <td className="py-2 px-2 text-xs text-muted-foreground max-w-xs truncate">{s.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

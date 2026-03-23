@@ -3202,3 +3202,16 @@
 - [x] 技能Tab改為全視窗半透明選擇 UI
 - [x] 命格面板移除五行素質後的 HP/攻/防/速/MP 標籤
 - [x] 生活系屬性按五行比例分配（尋寶力直接開啟）
+
+## V18 - 遊戲圖鑑安裝 + 行動策略 Toast
+
+- [x] 從 GitHub GD-011A~E 讀取怪物圖鑑（100 隻）
+- [x] 從 GitHub GD-014 讀取道具資料（83 種）
+- [x] 從 GitHub GD-015 讀取裝備資料（39 種）
+- [x] 從 GitHub GD-016 讀取技能資料（109 種）
+- [x] 建立四個圖鑑資料庫表格（game_monster_catalog / game_item_catalog / game_equipment_catalog / game_skill_catalog）
+- [x] 種子資料寫入資料庫（100 怪物 + 83 道具 + 39 裝備 + 109 技能）
+- [x] 後台 CMS 新增四個圖鑑管理 Tab（含五行篩選、分類篩選、搜尋）
+- [x] 後端新增 getSkillCatalogForPlayer + installSkill API
+- [x] 前端技能全視窗連動真實圖鑑資料，支援安裝到技能槽
+- [x] 行動策略切換後顯示 Toast 提示

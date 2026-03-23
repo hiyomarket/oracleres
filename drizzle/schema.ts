@@ -1963,3 +1963,124 @@ export const gameHiddenShopPool = mysqlTable("game_hidden_shop_pool", {
 });
 export type GameHiddenShopItem = typeof gameHiddenShopPool.$inferSelect;
 export type InsertGameHiddenShopItem = typeof gameHiddenShopPool.$inferInsert;
+
+// ═══════════════════════════════════════════════════════════════
+// 遊戲圖鑑擴充資料表（GD-014/015/016 完整資料庫）
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 怪物圖鑑擴充表（對應 GD-011A~E 五行怪物圖鑑）
+ * 補充 gameMonsters 缺少的欄位
+ */
+export const gameMonsterCatalog = mysqlTable("game_monster_catalog", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 怪物唯一識別碼，如 M_W001 */
+  monsterId: varchar("monster_id", { length: 20 }).notNull().unique(),
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 五行屬性：木/火/土/金/水 */
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  /** 等級範圍，如 "1-5" */
+  levelRange: varchar("level_range", { length: 20 }).notNull().default("1-5"),
+  baseHp: int("base_hp").notNull().default(50),
+  baseAttack: int("base_attack").notNull().default(10),
+  baseDefense: int("base_defense").notNull().default(5),
+  baseSpeed: int("base_speed").notNull().default(10),
+  /** 描述文字 */
+  description: text("description"),
+  /** 掉落道具清單（JSON 陣列，存 itemId 字串） */
+  dropItems: json("drop_items").$type<string[]>().default([]),
+  /** 稀有度：common / rare / elite / boss / legendary */
+  rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
+  /** 圖片 URL（暫時空白，美術完成後填入） */
+  imageUrl: text("image_url").default(""),
+  /** 捕捉機率（0.0-1.0） */
+  catchRate: float("catch_rate").notNull().default(0.1),
+  isActive: tinyint("is_active").default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameMonsterCatalog = typeof gameMonsterCatalog.$inferSelect;
+export type InsertGameMonsterCatalog = typeof gameMonsterCatalog.$inferInsert;
+
+/**
+ * 道具圖鑑表（對應 GD-014 完整道具資料庫，250 種）
+ */
+export const gameItemCatalog = mysqlTable("game_item_catalog", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 道具唯一識別碼，如 I_W001 */
+  itemId: varchar("item_id", { length: 20 }).notNull().unique(),
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 五行屬性：木/火/土/金/水 */
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  /** 分類：material_basic（基礎採集素材）/ material_drop（怪物掉落）/ consumable（消耗品）/ quest（任務道具）/ treasure（珍寶天命） */
+  category: varchar("category", { length: 30 }).notNull().default("material_basic"),
+  /** 獲取途徑或掉落來源 */
+  source: varchar("source", { length: 200 }).default(""),
+  /** 用途或效果說明 */
+  effect: text("effect"),
+  /** 稀有度：common / rare / epic / legendary */
+  rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
+  /** 圖片 URL */
+  imageUrl: text("image_url").default(""),
+  isActive: tinyint("is_active").default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameItemCatalog = typeof gameItemCatalog.$inferSelect;
+export type InsertGameItemCatalog = typeof gameItemCatalog.$inferInsert;
+
+/**
+ * 裝備圖鑑表（對應 GD-015 完整裝備資料庫，150 種）
+ */
+export const gameEquipmentCatalog = mysqlTable("game_equipment_catalog", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 裝備唯一識別碼，如 E_W001 */
+  equipId: varchar("equip_id", { length: 20 }).notNull().unique(),
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 五行屬性：木/火/土/金/水 */
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  /** 部位：weapon / helmet / armor / shoes / accessory / offhand */
+  slot: varchar("slot", { length: 20 }).notNull().default("weapon"),
+  /** 階級：初階/中階/高階/傳說 */
+  tier: varchar("tier", { length: 20 }).notNull().default("初階"),
+  /** 等級需求 */
+  levelRequired: int("level_required").notNull().default(1),
+  /** 基礎屬性說明（文字） */
+  baseStats: varchar("base_stats", { length: 300 }).default(""),
+  /** 特殊效果或傳說被動技能 */
+  specialEffect: text("special_effect"),
+  /** 鍛造核心素材（文字說明） */
+  craftMaterials: varchar("craft_materials", { length: 300 }).default(""),
+  /** 稀有度：common / rare / epic / legendary */
+  rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
+  /** 圖片 URL */
+  imageUrl: text("image_url").default(""),
+  isActive: tinyint("is_active").default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameEquipmentCatalog = typeof gameEquipmentCatalog.$inferSelect;
+export type InsertGameEquipmentCatalog = typeof gameEquipmentCatalog.$inferInsert;
+
+/**
+ * 技能圖鑑表（對應 GD-016 完整技能資料庫，250 種）
+ */
+export const gameSkillCatalog = mysqlTable("game_skill_catalog", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 技能唯一識別碼，如 S_W001 */
+  skillId: varchar("skill_id", { length: 20 }).notNull().unique(),
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 五行屬性：木/火/土/金/水 */
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  /** 類別：active_combat（戰鬥主動）/ passive_combat（戰鬥被動）/ life_gather（生活採集）/ craft_forge（鍛造精煉） */
+  category: varchar("category", { length: 30 }).notNull().default("active_combat"),
+  /** 階級：初階/中階/高階/傳說/天命 */
+  tier: varchar("tier", { length: 20 }).notNull().default("初階"),
+  /** MP 消耗（被動技能為 0） */
+  mpCost: int("mp_cost").notNull().default(0),
+  /** 效果說明 */
+  description: text("description"),
+  /** 技能類型：attack / heal / buff / debuff / passive / special */
+  skillType: varchar("skill_type", { length: 20 }).notNull().default("attack"),
+  isActive: tinyint("is_active").default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameSkillCatalog = typeof gameSkillCatalog.$inferSelect;
+export type InsertGameSkillCatalog = typeof gameSkillCatalog.$inferInsert;

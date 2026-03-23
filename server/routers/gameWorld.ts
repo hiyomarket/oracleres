@@ -7,7 +7,8 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog } from "../../drizzle/schema";
+import { TRPCError } from "@trpc/server";
 import { eq, and, desc } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
 import { MONSTERS } from "../../shared/monsters";
@@ -725,6 +726,37 @@ export const gameWorldRouter = router({
       titleInfo: titleMap.get(at.titleKey) ?? null,
     }));
   }),
+
+  // ─── 取得技能圖鑑（玩家可安裝的技能列表） ───
+  getSkillCatalogForPlayer: protectedProcedure
+    .input(z.object({ wuxing: z.string().optional(), category: z.string().optional() }).optional())
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db.select().from(gameSkillCatalog).orderBy(gameSkillCatalog.skillId);
+      let result = rows;
+      if (input?.wuxing) result = result.filter(r => r.wuxing === input.wuxing);
+      if (input?.category) result = result.filter(r => r.category === input.category);
+      return result;
+    }),
+
+  // ─── 安裝技能到技能欄位 ───
+  installSkill: protectedProcedure
+    .input(z.object({
+      skillId: z.string(),
+      slot: z.enum(["skillSlot1", "skillSlot2", "passiveSlot1"]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      await db.update(gameAgents)
+        .set({ [input.slot]: input.skillId })
+        .where(eq(gameAgents.id, agents[0].id));
+      return { success: true };
+    }),
 
   // ─── 取得怪物圖鑑（公開） ───
   getMonsterBestiary: publicProcedure

@@ -484,6 +484,13 @@
       "when": 1774280561207,
       "tag": "0068_quick_the_watchers",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "5",
+      "when": 1774283246598,
+      "tag": "0069_lovely_moon_knight",
+      "breakpoints": true
     }
   ]
 }
