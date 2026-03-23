@@ -175,6 +175,8 @@ export const users = mysqlTable("users", {
   signinStreak: int("signinStreak").notNull().default(0),
   // 遊戲點餘額（天命娛樂城專用貨幣）
   gameCoins: int("gameCoins").notNull().default(0),
+  // 靈石（遊戲綁定貨幣，每日任務/活動獲得，可在靈石專區消費）
+  gameStones: int("gameStones").notNull().default(0),
   // 折扣券暫存（JSON 陣列，待支付系統接入時使用）
   // 例如 [{ "campaign_id": 1, "discount_percentage": 0.8, "expires_at": "2027-01-01" }]
   availableDiscounts: json("availableDiscounts").$type<Array<{ campaign_id: number; discount_percentage?: number; expires_at: string | null }>>(),
@@ -1428,6 +1430,10 @@ export const gameDailyAura = mysqlTable("game_daily_aura", {
   equippedWuxing: text("equippedWuxing"),
   /** 今日建議五行（來自 wuxingEngine） */
   recommendedWuxing: varchar("recommendedWuxing", { length: 10 }),
+  /** 1 = 今日穿搭任務已完成 */
+  questCompleted: tinyint("questCompleted").notNull().default(0),
+  /** 任務完成獲得的靈石數量 */
+  earnedStones: int("earnedStones").notNull().default(0),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type GameDailyAura = typeof gameDailyAura.$inferSelect;

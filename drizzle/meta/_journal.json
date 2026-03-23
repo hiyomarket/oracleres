@@ -428,6 +428,13 @@
       "when": 1774213460754,
       "tag": "0060_glossy_thunderbolt_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "5",
+      "when": 1774224852933,
+      "tag": "0061_wooden_paper_doll",
+      "breakpoints": true
     }
   ]
 }

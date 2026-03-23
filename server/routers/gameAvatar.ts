@@ -16,7 +16,8 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameWardrobe, gameDailyAura, gameItems } from "../../drizzle/schema";
+import { users, gameWardrobe, gameDailyAura, gameItems } from "../../drizzle/schema";
+import { generateDailyQuest, checkQuestCompletion, QUEST_REWARD } from "../utils/questEngine";
 import {
   calculateEnvironmentElements,
   calculateWeightedElements,
@@ -455,6 +456,34 @@ export const gameAvatarRouter = router({
       createdAt: new Date(),
     });
 
+    // ─── 每日穿搭任務判定 ─────────────────────────────────────
+    const quest = generateDailyQuest(now);
+    const questCompleted = checkQuestCompletion(equippedWuxingList, quest.targetWuxing, quest.minItems);
+    let earnedStones = 0;
+    if (questCompleted) {
+      earnedStones = QUEST_REWARD.stones;
+      const [currentUser] = await db
+        .select({ gameStones: users.gameStones })
+        .from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1);
+      if (currentUser) {
+        await db
+          .update(users)
+          .set({ gameStones: (currentUser.gameStones ?? 0) + earnedStones })
+          .where(eq(users.id, ctx.user.id));
+      }
+      await db
+        .update(gameDailyAura)
+        .set({ questCompleted: 1, earnedStones })
+        .where(
+          and(
+            eq(gameDailyAura.userId, ctx.user.id),
+            eq(gameDailyAura.recordDate, todayStr)
+          )
+        );
+    }
+
     return {
       alreadySubmitted: false,
       score,
@@ -463,6 +492,35 @@ export const gameAvatarRouter = router({
       todayTopElement,
       equippedCount: equippedWuxingList.length,
       recordDate: todayStr,
+      questCompleted,
+      earnedStones,
+      questTargetWuxing: quest.targetWuxing,
+    };
+  }),
+
+  /**
+   * 取得今日穿搭任務
+   * 生成今日挑戰五行，並回傳是否已完成
+   */
+  getDailyQuest: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return null;
+    const todayStr = getTaiwanDateStr();
+    const quest = generateDailyQuest();
+    const [record] = await db
+      .select({ questCompleted: gameDailyAura.questCompleted, earnedStones: gameDailyAura.earnedStones })
+      .from(gameDailyAura)
+      .where(
+        and(
+          eq(gameDailyAura.userId, ctx.user.id),
+          eq(gameDailyAura.recordDate, todayStr)
+        )
+      )
+      .limit(1);
+    return {
+      ...quest,
+      alreadyCompleted: record?.questCompleted === 1,
+      earnedStones: record?.earnedStones ?? 0,
     };
   }),
 

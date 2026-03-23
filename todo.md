@@ -2830,3 +2830,10 @@
 - [x] 五行覺醒配色使用 TASK-004 指定重點配色（木#2E8B57/火#DC143C/土#CD853F/金#C9A227/水#00CED1）
 - [x] 撰寫 server/gameAvatarAwakening.test.ts（23 項測試）
 - [x] 494 項測試全部通過，TypeScript 零錯誤
+
+## V11.8 三份遊戲提案（2026-03-23）
+
+- [x] 提案一：虛擬服裝商城 - users.gameStones 欄位、gameShop Router（getItems/purchaseItem DB Transaction）、Shop.tsx + ShopItemCard.tsx、路由 /game/shop
+- [x] 提案三：虛相戰鬥介面 - TASK-008 六張立繪上傳 S3 CDN、CombatPlayer.tsx（absolute bottom-0 對齊）、CombatRoom.tsx（左右橫式佈局）、路由 /game/combat
+- [x] 提案二：每日穿搭任務 - questEngine.ts（generateDailyQuest/checkQuestCompletion）、getDailyQuest procedure、submitDailyAura 整合任務判定與靈石發放
+- [x] 506 項測試全部通過，TypeScript 零錯誤
