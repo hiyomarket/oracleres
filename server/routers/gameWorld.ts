@@ -319,6 +319,9 @@ export const gameWorldRouter = router({
     const agent = agents[0];
     if (!agent) throw new Error("角色不存在");
     if (agent.actionPoints < 1) throw new Error("靈力值不足（需要 1 點）");
+    // 每日冷卻時間檢查（台灣時間 UTC+8）
+    const todayTW_heal = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+    if (agent.lastDivineHealDate === todayTW_heal) throw new Error("神蹟治癒今日已使用，明日再來！");
 
     const healAmount = Math.floor(agent.maxHp * 0.5);
     const newHp = Math.min(agent.maxHp, agent.hp + healAmount);
@@ -327,6 +330,7 @@ export const gameWorldRouter = router({
     await db.update(gameAgents).set({
       hp: newHp,
       actionPoints: agent.actionPoints - 1,
+      lastDivineHealDate: todayTW_heal,
       status: "idle",
       updatedAt: now,
     }).where(eq(gameAgents.id, agent.id));
@@ -350,11 +354,15 @@ export const gameWorldRouter = router({
     const agent = agents[0];
     if (!agent) throw new Error("角色不存在");
     if (agent.actionPoints < 1) throw new Error("靈力值不足（需要 1 點）");
+    // 每日冷卻時間檢查
+    const todayTW_eye = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+    if (agent.lastDivineEyeDate === todayTW_eye) throw new Error("神眼加持今日已使用，明日再來！");
     const now = Date.now();
     const newTreasure = Math.min(1000, Math.round((agent.treasureHunting ?? 20) * 1.15));
     await db.update(gameAgents).set({
       treasureHunting: newTreasure,
       actionPoints: agent.actionPoints - 1,
+      lastDivineEyeDate: todayTW_eye,
       updatedAt: now,
     }).where(eq(gameAgents.id, agent.id));
     await db.insert(agentEvents).values({
@@ -375,11 +383,15 @@ export const gameWorldRouter = router({
     const agent = agents[0];
     if (!agent) throw new Error("角色不存在");
     if (agent.actionPoints < 1) throw new Error("靈力值不足（需要 1 點）");
+    // 每日冷卻時間檢查
+    const todayTW_stamina = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+    if (agent.lastDivineStaminaDate === todayTW_stamina) throw new Error("靈癒疲勞今日已使用，明日再來！");
     const now = Date.now();
     const newStamina = Math.max(agent.stamina ?? 0, 50);
     await db.update(gameAgents).set({
       stamina: newStamina,
       actionPoints: agent.actionPoints - 1,
+      lastDivineStaminaDate: todayTW_stamina,
       updatedAt: now,
     }).where(eq(gameAgents.id, agent.id));
     await db.insert(agentEvents).values({

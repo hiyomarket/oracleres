@@ -1729,6 +1729,13 @@ export const gameAgents = mysqlTable("game_agents", {
   passiveSlot1: varchar("passive_slot_1", { length: 100 }),
   passiveSlot2: varchar("passive_slot_2", { length: 100 }),
   isActive: tinyint("is_active").notNull().default(1),
+  // ── 靈相干預冷卻時間（每日限用一次，儲存最後使用的台灣日期 YYYY-MM-DD）──
+  /** 神蹟治癒最後使用日期 */
+  lastDivineHealDate: varchar("last_divine_heal_date", { length: 10 }),
+  /** 神眼加持最後使用日期 */
+  lastDivineEyeDate: varchar("last_divine_eye_date", { length: 10 }),
+  /** 靈癒疲勞最後使用日期 */
+  lastDivineStaminaDate: varchar("last_divine_stamina_date", { length: 10 }),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
   updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });

@@ -485,6 +485,10 @@ type AgentData = {
   skillSlot1?: string | null; skillSlot2?: string | null; skillSlot3?: string | null; skillSlot4?: string | null;
   passiveSlot1?: string | null; passiveSlot2?: string | null;
   skills?: Array<{ name: string; element: string; level: number; description?: string; type?: string }>;
+  // 靈相干預冷卻時間
+  lastDivineHealDate?: string | null;
+  lastDivineEyeDate?: string | null;
+  lastDivineStaminaDate?: string | null;
 };
 
 function CharacterPanel({
@@ -537,7 +541,13 @@ function CharacterPanel({
   const statusBg = agentStatus === "combat" ? "rgba(239,68,68,0.12)" : agentStatus === "idle" ? "rgba(34,197,94,0.12)" : "rgba(245,158,11,0.12)";
   const statusFg = agentStatus === "combat" ? "#ef4444" : agentStatus === "idle" ? "#22c55e" : "#f59e0b";
 
-  // GD-002 戰鬥系屬性值
+  // 靈相干預冷卻時間（台灣時間 UTC+8）
+  const todayTW = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+  const healUsedToday = agent?.lastDivineHealDate === todayTW;
+  const eyeUsedToday = agent?.lastDivineEyeDate === todayTW;
+  const staminaUsedToday = agent?.lastDivineStaminaDate === todayTW;
+
+  // GD-002 戰鬥系屬性値
   const combatValues: Record<string, number> = {
     attack: agent?.attack ?? 10,
     defense: agent?.defense ?? 5,
@@ -658,26 +668,32 @@ function CharacterPanel({
                 <span className="text-xs text-cyan-400 font-bold">靈力 {agentAP}/{agentMaxAP}</span>
               </div>
               <div className="grid grid-cols-3 gap-1.5">
-                <button onClick={() => divineHeal.mutate()} disabled={agentAP < 1 || divineHeal.isPending}
-                  className="flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-                  style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.3)", color: "#ef4444" }}>
-                  <span className="text-lg leading-none">{divineHeal.isPending ? "⏳" : "💊"}</span>
-                  <span className="text-[10px] font-bold">神蹟治癒</span>
-                  <span className="text-[9px] text-slate-600">恢復50%HP</span>
+                {/* 神跩治癒 */}
+                <button onClick={() => divineHeal.mutate()} disabled={agentAP < 1 || divineHeal.isPending || healUsedToday}
+                  className="relative flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                  style={{ background: healUsedToday ? "rgba(239,68,68,0.04)" : "rgba(239,68,68,0.08)", borderColor: healUsedToday ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.3)", color: "#ef4444" }}>
+                  {healUsedToday && <span className="absolute top-1 right-1 text-[8px] px-1 py-0.5 rounded font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#ef4444" }}>已用</span>}
+                  <span className="text-lg leading-none">{divineHeal.isPending ? "⏳" : healUsedToday ? "🔒" : "💊"}</span>
+                  <span className="text-[10px] font-bold">神跩治癒</span>
+                  <span className="text-[9px]" style={{ color: healUsedToday ? "#64748b" : "#64748b" }}>{healUsedToday ? "明日再來" : "恢復50%HP"}</span>
                 </button>
-                <button onClick={() => divineEye.mutate()} disabled={agentAP < 1 || divineEye.isPending}
-                  className="flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-                  style={{ background: "rgba(56,189,248,0.08)", borderColor: "rgba(56,189,248,0.3)", color: "#38bdf8" }}>
-                  <span className="text-lg leading-none">{divineEye.isPending ? "⏳" : "👁"}</span>
+                {/* 神眼加持 */}
+                <button onClick={() => divineEye.mutate()} disabled={agentAP < 1 || divineEye.isPending || eyeUsedToday}
+                  className="relative flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                  style={{ background: eyeUsedToday ? "rgba(56,189,248,0.04)" : "rgba(56,189,248,0.08)", borderColor: eyeUsedToday ? "rgba(56,189,248,0.15)" : "rgba(56,189,248,0.3)", color: "#38bdf8" }}>
+                  {eyeUsedToday && <span className="absolute top-1 right-1 text-[8px] px-1 py-0.5 rounded font-bold" style={{ background: "rgba(56,189,248,0.2)", color: "#38bdf8" }}>已用</span>}
+                  <span className="text-lg leading-none">{divineEye.isPending ? "⏳" : eyeUsedToday ? "🔒" : "👁"}</span>
                   <span className="text-[10px] font-bold">神眼加持</span>
-                  <span className="text-[9px] text-slate-600">洞察力+15%</span>
+                  <span className="text-[9px] text-slate-600">{eyeUsedToday ? "明日再來" : "洞察力+15%"}</span>
                 </button>
-                <button onClick={() => divineStamina.mutate()} disabled={agentAP < 1 || divineStamina.isPending}
-                  className="flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-                  style={{ background: "rgba(167,139,250,0.08)", borderColor: "rgba(167,139,250,0.3)", color: "#a78bfa" }}>
-                  <span className="text-lg leading-none">{divineStamina.isPending ? "⏳" : "✨"}</span>
+                {/* 靈癒疲勞 */}
+                <button onClick={() => divineStamina.mutate()} disabled={agentAP < 1 || divineStamina.isPending || staminaUsedToday}
+                  className="relative flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                  style={{ background: staminaUsedToday ? "rgba(167,139,250,0.04)" : "rgba(167,139,250,0.08)", borderColor: staminaUsedToday ? "rgba(167,139,250,0.15)" : "rgba(167,139,250,0.3)", color: "#a78bfa" }}>
+                  {staminaUsedToday && <span className="absolute top-1 right-1 text-[8px] px-1 py-0.5 rounded font-bold" style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa" }}>已用</span>}
+                  <span className="text-lg leading-none">{divineStamina.isPending ? "⏳" : staminaUsedToday ? "🔒" : "✨"}</span>
                   <span className="text-[10px] font-bold">靈癒疲勞</span>
-                  <span className="text-[9px] text-slate-600">體力回50</span>
+                  <span className="text-[9px] text-slate-600">{staminaUsedToday ? "明日再來" : "體力回50"}</span>
                 </button>
               </div>
             </div>
@@ -1685,7 +1701,7 @@ export default function VirtualWorldPage() {
                 borderRadius: "16px 16px 0 0",
                 boxShadow: `0 -4px 24px ${ec}20, 0 -2px 8px rgba(0,0,0,0.6)`,
                 transition: "height 0.35s cubic-bezier(0.4,0,0.2,1)",
-                height: charPanelOpen ? "calc(40vh + 56px)" : "56px",
+                height: charPanelOpen ? "calc(50vh + 56px)" : "56px",
                 overflow: "hidden",
                 touchAction: "none", // 防止意外拖動
               }}
@@ -1722,9 +1738,9 @@ export default function VirtualWorldPage() {
                 </div>
               </div>
 
-              {/* 抽屜內容（展開時顯示，高度 30vh） */}
+              {/* 抽屜內容（展開時顯示，高度 50vh） */}
               {charPanelOpen && (
-                <div className="flex flex-col overflow-hidden" style={{ height: "30vh" }}>
+                <div className="flex flex-col overflow-hidden" style={{ height: "50vh" }}>
                   <CharacterPanel
                     agent={agent}
                     staminaInfo={staminaInfo}
