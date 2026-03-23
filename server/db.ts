@@ -692,6 +692,8 @@ export interface EngineProfile {
   birthDay: number | null;
   /** 是否使用預設命格（用戶未填寫時為 true） */
   isDefault: boolean;
+  /** 性別（male/female/other，未填寫時為 null） */
+  gender: "male" | "female" | "other" | null;
 }
 
 /** 五行中英文對照 */
@@ -724,6 +726,7 @@ const DEFAULT_ENGINE_PROFILE: EngineProfile = {
   birthMonth: 11,
   birthDay: 26,
   isDefault: true,
+  gender: null,
 };
 
 /**
@@ -819,6 +822,8 @@ export async function getUserProfileForEngine(userId: number): Promise<EnginePro
         birthDay = parseInt(parts[2]) || null;
       }
     }
+    // 讀取性別
+    const profileGender = profile.gender as "male" | "female" | "other" | null ?? null;
     return {
       dayMasterStem,
       dayMasterElement,
@@ -831,6 +836,7 @@ export async function getUserProfileForEngine(userId: number): Promise<EnginePro
       birthMonth,
       birthDay,
       isDefault: false,
+      gender: profileGender,
     };
   } catch {
     return { ...DEFAULT_ENGINE_PROFILE };

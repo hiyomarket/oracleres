@@ -218,14 +218,16 @@ export const gameAvatarRouter = router({
       .from(gameWardrobe)
       .where(eq(gameWardrobe.userId, ctx.user.id));
 
-    // ─── 命盤連動初始化：用戶首次進入靈相空間 ─────────────────
+    // ─── 命盤連動初始化：用戶首次進入靈相空間 ─────────────
     if (allWardrobe.length === 0) {
-      // 1. 取得用戶日主五行
+      // 1. 取得用戶日主五行 + 性別
       const profile = await getUserProfileForEngine(ctx.user.id);
       const dayMasterZh = profile.dayMasterElement; // 中文（木/火/土/金/水）
       const dayMasterEn = WUXING_ZH_TO_EN[dayMasterZh] ?? "wood";
+      // 性別：從 userProfiles.gender 讀取，未填寫時預設 female
+      const userGender = profile.gender === "male" ? "male" : "female";
 
-      // 2. 從 game_items 查詢對應五行的初始部件（front 視角為主）
+      // 2. 從 game_items 查詢對應五行 + 性別的初始部件（front 視角為主）
       const initialItems = await db
         .select()
         .from(gameItems)
@@ -233,7 +235,8 @@ export const gameAvatarRouter = router({
           and(
             eq(gameItems.isInitial, 1),
             eq(gameItems.wuxing, dayMasterEn),
-            eq(gameItems.view, "front")
+            eq(gameItems.view, "front"),
+            eq(gameItems.gender, userGender)
           )
         );
 
@@ -273,6 +276,16 @@ export const gameAvatarRouter = router({
           )
         );
 
+      // 五行能力値：木=HP、火=攻擊、土=防御、金=速度、水=MP
+      const nr = profile.natalElementRatio;
+      const natalStats = {
+        hp: Math.round((nr["木"] ?? 0.2) * 500),
+        atk: Math.round((nr["火"] ?? 0.2) * 100),
+        def: Math.round((nr["土"] ?? 0.2) * 100),
+        spd: Math.round((nr["金"] ?? 0.2) * 100),
+        mp: Math.round((nr["水"] ?? 0.2) * 300),
+      };
+
       // 若 game_items 尚無對應五行的初始道具，回傳預設示範服裝
       if (newEquipped.length === 0) {
         return {
@@ -291,6 +304,8 @@ export const gameAvatarRouter = router({
           isFirstTime: false,
           dayMasterElement: dayMasterZh,
           dayMasterElementEn: dayMasterEn,
+          userGender,
+          natalStats,
         };
       }
 
@@ -299,16 +314,31 @@ export const gameAvatarRouter = router({
         isFirstTime,
         dayMasterElement: dayMasterZh,
         dayMasterElementEn: dayMasterEn,
+        userGender,
+        natalStats,
       };
     }
 
-    // ─── 回訪用戶：直接返回裝備中的道具 ──────────────────────
+    // ─── 回訪用戶：直接返回裝備中的道具 + 命格資料 ──────────────
     const equipped = allWardrobe.filter((i) => i.isEquipped === 1);
+    // 回訪用戶也讀取命格資料（五行能力値 + 性別）
+    const revisitProfile = await getUserProfileForEngine(ctx.user.id);
+    const revisitGender = revisitProfile.gender === "male" ? "male" : "female";
+    const revisitNr = revisitProfile.natalElementRatio;
+    const revisitStats = {
+      hp: Math.round((revisitNr["木"] ?? 0.2) * 500),
+      atk: Math.round((revisitNr["火"] ?? 0.2) * 100),
+      def: Math.round((revisitNr["土"] ?? 0.2) * 100),
+      spd: Math.round((revisitNr["金"] ?? 0.2) * 100),
+      mp: Math.round((revisitNr["水"] ?? 0.2) * 300),
+    };
     return {
       items: equipped.map((item) => ({ ...item, isDefault: false })),
       isFirstTime: false,
-      dayMasterElement: null,
-      dayMasterElementEn: null,
+      dayMasterElement: revisitProfile.dayMasterElement,
+      dayMasterElementEn: WUXING_ZH_TO_EN[revisitProfile.dayMasterElement] ?? null,
+      userGender: revisitGender,
+      natalStats: revisitStats,
     };
   }),
 

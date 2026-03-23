@@ -2893,3 +2893,27 @@
 - [x] App.tsx 新增 /game/profile 路由
 - [x] GameLobby.tsx 新增「靈相世界」入口卡片 + 角色縮圖點擊跳轉
 - [x] TypeScript 零錯誤，537 項測試全部通過
+
+## V11.12 三階段藍圖執行（2026-03-23）
+### P0 性別與命格串接
+- [x] EngineProfile 介面加入 gender 欄位
+- [x] getUserProfileForEngine 回傳 userProfiles.gender
+- [x] getEquipped 初始服裝查詢加入 gender 篩選條件
+- [x] getEquipped 回傳值加入 userGender + natalStats（五行能力值：HP/攻擊/防禦/速度/MP）
+- [x] CharacterProfile 使用真實性別素體（male/female 自動對應）
+- [x] CharacterProfile 底部資訊卡加入五行能力值顯示（木=HP、火=攻、土=防、金=速、水=MP）
+### P1 TASK-009 商城圖片整合
+- [x] 從 GitHub 下載 20 張商城圖片（5 五行 × 4 部位）
+- [x] 上傳至 S3 CDN（全部成功，20/20）
+- [x] 插入 20 筆商城道具記錄至 game_items（isInitial=0, isOnSale=1）
+- [x] 每筆記錄帶有真實 S3 CDN imageUrl
+### P2 五行場景背景圖
+- [x] gameAssets.ts WUXING_THEMES 加入 sceneName + sceneSvgElements
+- [x] 木=竹林幽境（竹干+樹葉）、火=燙紅熔岩（熔岩池）、土=大地原野（山丘輪廓）
+- [x] 金=星空銀河（星點+銀河帶）、水=深海汪境（波浪+水泡）
+- [x] CharacterProfile 加入 SVG 場景層渲染（preserveAspectRatio="none"）
+- [x] 頂部標題顯示場景名稱（如：竹林幽境 · Lv.5）
+### GD-017 Tick 引擎架構規劃
+- [x] 完整閱讀 GD-017 虛相世界轉型設計提案
+- [x] 建立 GD-017-TICK-ENGINE-ARCHITECTURE.md（Schema/引擎邏輯/SSE推送/Sprint排程）
+- [x] 537 項測試全部通過，TypeScript 零錯誤

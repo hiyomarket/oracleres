@@ -133,6 +133,14 @@ function CharacterRenderer({ gender, element, equippedItems, glowColor }: Charac
 }
 
 // ── 底部資訊卡片 ──────────────────────────────────────────────
+interface NatalStats {
+  hp: number;
+  atk: number;
+  def: number;
+  spd: number;
+  mp: number;
+}
+
 interface InfoCardProps {
   userName: string;
   level: number;
@@ -144,12 +152,13 @@ interface InfoCardProps {
   element: WuxingElement;
   accentColor: string;
   textColor: string;
+  natalStats: NatalStats;
   onClose: () => void;
 }
 
 function InfoCard({
   userName, level, gameCoins, gameStones, auraScore,
-  unlockedCount, totalAchievements, element, accentColor, textColor, onClose,
+  unlockedCount, totalAchievements, element, accentColor, textColor, natalStats, onClose,
 }: InfoCardProps) {
   const theme = WUXING_THEMES[element];
 
@@ -228,6 +237,38 @@ function InfoCard({
         </div>
       </div>
 
+      {/* 五行能力値（八字命格連動） */}
+      <div className="mb-4">
+        <div className="text-gray-400 text-xs mb-2">命格能力値（八字五行連動）</div>
+        <div className="grid grid-cols-5 gap-1.5">
+          {[
+            { label: "HP", value: natalStats.hp, max: 500, color: "#4ade80", icon: "木" },
+            { label: "攻", value: natalStats.atk, max: 100, color: "#f87171", icon: "火" },
+            { label: "防", value: natalStats.def, max: 100, color: "#fbbf24", icon: "土" },
+            { label: "速", value: natalStats.spd, max: 100, color: "#e5e7eb", icon: "金" },
+            { label: "MP", value: natalStats.mp, max: 300, color: "#60a5fa", icon: "水" },
+          ].map((stat) => (
+            <div key={stat.label} className="flex flex-col items-center gap-1">
+              <div className="text-xs" style={{ color: stat.color }}>{stat.icon}</div>
+              <div
+                className="w-full rounded-full overflow-hidden"
+                style={{ height: "40px", background: "rgba(255,255,255,0.05)", position: "relative" }}
+              >
+                <div
+                  className="absolute bottom-0 left-0 right-0 rounded-full transition-all duration-700"
+                  style={{
+                    height: `${Math.min(100, (stat.value / stat.max) * 100)}%`,
+                    background: `linear-gradient(to top, ${stat.color}, ${stat.color}60)`,
+                  }}
+                />
+              </div>
+              <div className="text-white text-xs font-bold">{stat.label}</div>
+              <div className="text-gray-500" style={{ fontSize: "10px" }}>{stat.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* 成就進度條 */}
       <div>
         <div className="flex justify-between items-center mb-1.5">
@@ -269,8 +310,11 @@ export default function CharacterProfile() {
     }
   }, [equippedData]);
 
-  // 性別（從 userProfiles.gender 讀取，預設 female）
-  const gender: CharacterGender = "female"; // 從 user profile 讀取，預設 female
+  // 性別：從 getEquipped 回傳的 userGender 讀取，未填寫時預設 female
+  const gender: CharacterGender = (equippedData?.userGender === "male" ? "male" : "female") as CharacterGender;
+
+  // 五行能力値（從 getEquipped 回傳的 natalStats）
+  const natalStats = equippedData?.natalStats ?? { hp: 100, atk: 20, def: 20, spd: 20, mp: 60 };
 
   const theme = WUXING_THEMES[activeElement];
   const particles = useParticles(20, theme.particleColor);
@@ -296,6 +340,15 @@ export default function CharacterProfile() {
         style={{
           background: `radial-gradient(ellipse 60% 50% at 50% 70%, ${theme.glowColor}, transparent 70%)`,
         }}
+      />
+
+      {/* ── 五行場景 SVG 元素（竹林/燙紅熔岩/大地/星空/深海） ── */}
+      <svg
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        style={{ zIndex: 2, opacity: 0.7 }}
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        dangerouslySetInnerHTML={{ __html: theme.sceneSvgElements }}
       />
 
       {/* ── 粒子層 ── */}
@@ -335,7 +388,7 @@ export default function CharacterProfile() {
         <div className="text-center">
           <div className="text-white text-sm font-medium opacity-90">靈相世界</div>
           <div className="text-xs opacity-60" style={{ color: theme.textColor }}>
-            {theme.nameZh}靈相 · Lv.{level}
+            {theme.sceneName} · Lv.{level}
           </div>
         </div>
 
@@ -439,6 +492,7 @@ export default function CharacterProfile() {
           element={activeElement}
           accentColor={theme.accentColor}
           textColor={theme.textColor}
+          natalStats={natalStats}
           onClose={() => setShowCard(false)}
         />
       </div>

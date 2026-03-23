@@ -1,0 +1,190 @@
+{
+  "query": "SELECT id, name, wuxing, layer, price, isOnSale, LEFT(imageUrl, 80) as imageUrl_preview FROM game_items WHERE isInitial = 0 ORDER BY wuxing, layer;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, wuxing, layer, price, isOnSale, LEFT(imageUrl, 80) as imageUrl_preview FROM game_items WHERE isInitial = 0 ORDER BY wuxing, layer;",
+  "rows": [
+    {
+      "id": "131",
+      "name": "土靈下裝",
+      "wuxing": "earth",
+      "layer": "bottom",
+      "price": "80",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "129",
+      "name": "土靈髮飾",
+      "wuxing": "earth",
+      "layer": "hair",
+      "price": "50",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "132",
+      "name": "土靈鞋履",
+      "wuxing": "earth",
+      "layer": "shoes",
+      "price": "60",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "130",
+      "name": "土靈上衣",
+      "wuxing": "earth",
+      "layer": "top",
+      "price": "80",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "127",
+      "name": "火靈下裝",
+      "wuxing": "fire",
+      "layer": "bottom",
+      "price": "80",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "125",
+      "name": "火靈髮飾",
+      "wuxing": "fire",
+      "layer": "hair",
+      "price": "50",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "128",
+      "name": "火靈鞋履",
+      "wuxing": "fire",
+      "layer": "shoes",
+      "price": "60",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "126",
+      "name": "火靈上衣",
+      "wuxing": "fire",
+      "layer": "top",
+      "price": "80",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "135",
+      "name": "金靈下裝",
+      "wuxing": "metal",
+      "layer": "bottom",
+      "price": "80",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "133",
+      "name": "金靈髮飾",
+      "wuxing": "metal",
+      "layer": "hair",
+      "price": "50",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "136",
+      "name": "金靈鞋履",
+      "wuxing": "metal",
+      "layer": "shoes",
+      "price": "60",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "134",
+      "name": "金靈上衣",
+      "wuxing": "metal",
+      "layer": "top",
+      "price": "80",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "139",
+      "name": "水靈下裝",
+      "wuxing": "water",
+      "layer": "bottom",
+      "price": "80",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "137",
+      "name": "水靈髮飾",
+      "wuxing": "water",
+      "layer": "hair",
+      "price": "50",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "140",
+      "name": "水靈鞋履",
+      "wuxing": "water",
+      "layer": "shoes",
+      "price": "60",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "138",
+      "name": "水靈上衣",
+      "wuxing": "water",
+      "layer": "top",
+      "price": "80",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "123",
+      "name": "木靈下裝",
+      "wuxing": "wood",
+      "layer": "bottom",
+      "price": "80",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "121",
+      "name": "木靈髮飾",
+      "wuxing": "wood",
+      "layer": "hair",
+      "price": "50",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "124",
+      "name": "木靈鞋履",
+      "wuxing": "wood",
+      "layer": "shoes",
+      "price": "60",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    },
+    {
+      "id": "122",
+      "name": "木靈上衣",
+      "wuxing": "wood",
+      "layer": "top",
+      "price": "80",
+      "isOnSale": "1",
+      "imageUrl_preview": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\twuxing\tlayer\tprice\tisOnSale\timageUrl_preview\n131\t土靈下裝\tearth\tbottom\t80\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n129\t土靈髮飾\tearth\thair\t50\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n132\t土靈鞋履\tearth\tshoes\t60\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n130\t土靈上衣\tearth\ttop\t80\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n127\t火靈下裝\tfire\tbottom\t80\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n125\t火靈髮飾\tfire\thair\t50\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n128\t火靈鞋履\tfire\tshoes\t60\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n126\t火靈上衣\tfire\ttop\t80\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n135\t金靈下裝\tmetal\tbottom\t80\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n133\t金靈髮飾\tmetal\thair\t50\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n136\t金靈鞋履\tmetal\tshoes\t60\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n134\t金靈上衣\tmetal\ttop\t80\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n139\t水靈下裝\twater\tbottom\t80\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n137\t水靈髮飾\twater\thair\t50\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n140\t水靈鞋履\twater\tshoes\t60\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n138\t水靈上衣\twater\ttop\t80\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n123\t木靈下裝\twood\tbottom\t80\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n121\t木靈髮飾\twood\thair\t50\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n124\t木靈鞋履\twood\tshoes\t60\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n122\t木靈上衣\twood\ttop\t80\t1\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/\n",
+  "stderr": "",
+  "execution_time_ms": 1517
+}
