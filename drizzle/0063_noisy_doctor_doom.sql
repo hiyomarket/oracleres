@@ -1,0 +1,83 @@
+CREATE TABLE `agent_events` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`agent_id` int NOT NULL,
+	`event_type` enum('move','combat','gather','rest','rogue','system') NOT NULL DEFAULT 'system',
+	`node_id` varchar(50),
+	`message` text NOT NULL,
+	`detail` json,
+	`created_at` bigint NOT NULL,
+	CONSTRAINT `agent_events_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `agent_inventory` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`agent_id` int NOT NULL,
+	`item_id` varchar(100) NOT NULL,
+	`item_type` enum('material','equipment','skill_book','consumable','pet') NOT NULL DEFAULT 'material',
+	`quantity` int NOT NULL DEFAULT 1,
+	`item_data` json,
+	`acquired_at` bigint NOT NULL,
+	`updated_at` bigint NOT NULL,
+	CONSTRAINT `agent_inventory_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `game_agents` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`user_id` varchar(255) NOT NULL,
+	`agent_name` varchar(50),
+	`is_named` tinyint NOT NULL DEFAULT 0,
+	`level` int NOT NULL DEFAULT 1,
+	`exp` int NOT NULL DEFAULT 0,
+	`current_node_id` varchar(50) NOT NULL DEFAULT 'taipei_main',
+	`target_node_id` varchar(50),
+	`strategy` enum('explore','gather','rest','combat') NOT NULL DEFAULT 'explore',
+	`hp` int NOT NULL DEFAULT 100,
+	`max_hp` int NOT NULL DEFAULT 100,
+	`mp` int NOT NULL DEFAULT 50,
+	`max_mp` int NOT NULL DEFAULT 50,
+	`attack` int NOT NULL DEFAULT 10,
+	`defense` int NOT NULL DEFAULT 5,
+	`speed` int NOT NULL DEFAULT 8,
+	`wuxing_wood` int NOT NULL DEFAULT 20,
+	`wuxing_fire` int NOT NULL DEFAULT 20,
+	`wuxing_earth` int NOT NULL DEFAULT 20,
+	`wuxing_metal` int NOT NULL DEFAULT 20,
+	`wuxing_water` int NOT NULL DEFAULT 20,
+	`gold` int NOT NULL DEFAULT 0,
+	`total_kills` int NOT NULL DEFAULT 0,
+	`total_steps` int NOT NULL DEFAULT 0,
+	`stamina` int NOT NULL DEFAULT 10,
+	`max_stamina` int NOT NULL DEFAULT 10,
+	`stamina_last_regen` bigint,
+	`action_points` int NOT NULL DEFAULT 5,
+	`max_action_points` int NOT NULL DEFAULT 5,
+	`action_points_last_regen` bigint,
+	`equipped_head` varchar(100),
+	`equipped_body` varchar(100),
+	`equipped_hands` varchar(100),
+	`equipped_feet` varchar(100),
+	`equipped_weapon` varchar(100),
+	`equipped_offhand` varchar(100),
+	`equipped_ring_a` varchar(100),
+	`equipped_ring_b` varchar(100),
+	`skill_slot_1` varchar(100),
+	`skill_slot_2` varchar(100),
+	`skill_slot_3` varchar(100),
+	`skill_slot_4` varchar(100),
+	`passive_slot_1` varchar(100),
+	`passive_slot_2` varchar(100),
+	`is_active` tinyint NOT NULL DEFAULT 1,
+	`created_at` bigint NOT NULL,
+	`updated_at` bigint NOT NULL,
+	CONSTRAINT `game_agents_id` PRIMARY KEY(`id`),
+	CONSTRAINT `game_agents_user_id_unique` UNIQUE(`user_id`)
+);
+--> statement-breakpoint
+CREATE TABLE `game_world` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`world_key` varchar(100) NOT NULL,
+	`world_data` json NOT NULL,
+	`updated_at` bigint NOT NULL,
+	CONSTRAINT `game_world_id` PRIMARY KEY(`id`),
+	CONSTRAINT `game_world_world_key_unique` UNIQUE(`world_key`)
+);

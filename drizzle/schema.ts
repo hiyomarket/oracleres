@@ -1643,3 +1643,118 @@ export const userAchievements = mysqlTable("user_achievements", {
 });
 export type UserAchievement = typeof userAchievements.$inferSelect;
 export type InsertUserAchievement = typeof userAchievements.$inferInsert;
+
+// ============================================================
+// 虛相世界系統（V11.14 + GD-018）
+// ============================================================
+
+/**
+ * 旅人主表：每位用戶在虛相世界的旅人角色
+ * 含 GD-018 雙軌體力值、裝備欄（8格）、技能欄（6格）
+ */
+export const gameAgents = mysqlTable("game_agents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: varchar("user_id", { length: 255 }).notNull().unique(),
+  /** 旅人名稱（玩家自訂，非 Manus 帳號名） */
+  agentName: varchar("agent_name", { length: 50 }),
+  /** 是否已完成首次命名 */
+  isNamed: tinyint("is_named").notNull().default(0),
+  level: int("level").notNull().default(1),
+  exp: int("exp").notNull().default(0),
+  currentNodeId: varchar("current_node_id", { length: 50 }).notNull().default("taipei_main"),
+  targetNodeId: varchar("target_node_id", { length: 50 }),
+  strategy: mysqlEnum("strategy", ["explore", "gather", "rest", "combat"]).notNull().default("explore"),
+  /** 當前狀態 */
+  status: mysqlEnum("status", ["idle", "moving", "resting", "combat", "dead"]).notNull().default("idle"),
+  /** 命格主屬性（五行） */
+  dominantElement: mysqlEnum("dominant_element", ["wood", "fire", "earth", "metal", "water"]).notNull().default("wood"),
+  hp: int("hp").notNull().default(100),
+  maxHp: int("max_hp").notNull().default(100),
+  mp: int("mp").notNull().default(50),
+  maxMp: int("max_mp").notNull().default(50),
+  attack: int("attack").notNull().default(10),
+  defense: int("defense").notNull().default(5),
+  speed: int("speed").notNull().default(8),
+  wuxingWood: int("wuxing_wood").notNull().default(20),
+  wuxingFire: int("wuxing_fire").notNull().default(20),
+  wuxingEarth: int("wuxing_earth").notNull().default(20),
+  wuxingMetal: int("wuxing_metal").notNull().default(20),
+  wuxingWater: int("wuxing_water").notNull().default(20),
+  gold: int("gold").notNull().default(0),
+  totalKills: int("total_kills").notNull().default(0),
+  totalSteps: int("total_steps").notNull().default(0),
+  // 雙軌體力值（GD-018）
+  /** 活躍值：上限 100，每 20 分鐘 +1，Tick 引擎自動行動消耗 */
+  stamina: int("stamina").notNull().default(100),
+  maxStamina: int("max_stamina").notNull().default(100),
+  staminaLastRegen: bigint("stamina_last_regen", { mode: "number" }),
+  /** 靈力值：上限 5，每 2 小時 +1，玩家主動干預消耗 */
+  actionPoints: int("action_points").notNull().default(5),
+  maxActionPoints: int("max_action_points").notNull().default(5),
+  actionPointsLastRegen: bigint("action_points_last_regen", { mode: "number" }),
+  // 裝備欄位（8格）
+  equippedHead: varchar("equipped_head", { length: 100 }),
+  equippedBody: varchar("equipped_body", { length: 100 }),
+  equippedHands: varchar("equipped_hands", { length: 100 }),
+  equippedFeet: varchar("equipped_feet", { length: 100 }),
+  equippedWeapon: varchar("equipped_weapon", { length: 100 }),
+  equippedOffhand: varchar("equipped_offhand", { length: 100 }),
+  equippedRingA: varchar("equipped_ring_a", { length: 100 }),
+  equippedRingB: varchar("equipped_ring_b", { length: 100 }),
+  // 技能欄位（6格：4主動+2被動）
+  skillSlot1: varchar("skill_slot_1", { length: 100 }),
+  skillSlot2: varchar("skill_slot_2", { length: 100 }),
+  skillSlot3: varchar("skill_slot_3", { length: 100 }),
+  skillSlot4: varchar("skill_slot_4", { length: 100 }),
+  passiveSlot1: varchar("passive_slot_1", { length: 100 }),
+  passiveSlot2: varchar("passive_slot_2", { length: 100 }),
+  isActive: tinyint("is_active").notNull().default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameAgent = typeof gameAgents.$inferSelect;
+export type InsertGameAgent = typeof gameAgents.$inferInsert;
+
+/**
+ * 事件日誌表：記錄旅人的所有行動事件
+ * 含戰鬥回合日誌、Roguelike 奇遇等
+ */
+export const agentEvents = mysqlTable("agent_events", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: int("agent_id").notNull(),
+  eventType: mysqlEnum("event_type", ["move", "combat", "gather", "rest", "rogue", "system"]).notNull().default("system"),
+  nodeId: varchar("node_id", { length: 50 }),
+  message: text("message").notNull(),
+  /** 詳細資料（戰鬥回合日誌、Roguelike 選項等） */
+  detail: json("detail"),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type AgentEvent = typeof agentEvents.$inferSelect;
+export type InsertAgentEvent = typeof agentEvents.$inferInsert;
+
+/**
+ * 背包表：旅人持有的道具、裝備、技能書等
+ */
+export const agentInventory = mysqlTable("agent_inventory", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: int("agent_id").notNull(),
+  itemId: varchar("item_id", { length: 100 }).notNull(),
+  itemType: mysqlEnum("item_type", ["material", "equipment", "skill_book", "consumable", "pet"]).notNull().default("material"),
+  quantity: int("quantity").notNull().default(1),
+  /** 裝備詞條等額外資料 */
+  itemData: json("item_data"),
+  acquiredAt: bigint("acquired_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type AgentInventoryItem = typeof agentInventory.$inferSelect;
+
+/**
+ * 世界狀態表：全域世界狀態（天氣、事件等）
+ */
+export const gameWorld = mysqlTable("game_world", {
+  id: int("id").autoincrement().primaryKey(),
+  worldKey: varchar("world_key", { length: 100 }).notNull().unique(),
+  worldData: json("world_data").notNull(),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameWorld = typeof gameWorld.$inferSelect;

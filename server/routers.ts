@@ -23,6 +23,9 @@ import { gameAvatarRouter } from './routers/gameAvatar';
 import { gameShopRouter } from './routers/gameShop';
 import { gameAdminRouter } from './routers/gameAdmin';
 import { gameAchievementRouter } from './routers/gameAchievement';
+import { gameWorldRouter } from './routers/gameWorld';
+import { startTickEngine } from './tickEngine';
+
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -70,6 +73,7 @@ export const appRouter = router({
   gameShop: gameShopRouter,
   gameAdmin: gameAdminRouter,
   gameAchievement: gameAchievementRouter,
+  gameWorld: gameWorldRouter,
   businessHub: businessHubRouter,
   userGroups: userGroupsRouter,
   auth: router({
@@ -3528,3 +3532,6 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
 export type AppRouter = typeof appRouter;
 // Re-export for type inference
 export { accountRouter };
+
+// 啟動虛相世界 Tick 引擎
+startTickEngine();

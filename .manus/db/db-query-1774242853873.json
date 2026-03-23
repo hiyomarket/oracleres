@@ -1,0 +1,31 @@
+{
+  "query": "SHOW TABLES LIKE 'game_agents'; SHOW TABLES LIKE 'agent_events'; SHOW TABLES LIKE 'agent_inventory'; SHOW TABLES LIKE 'game_world';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW TABLES LIKE 'game_agents'; SHOW TABLES LIKE 'agent_events'; SHOW TABLES LIKE 'agent_inventory'; SHOW TABLES LIKE 'game_world';",
+  "rows": [
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_agents)": "game_agents"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_agents)": "Tables_in_MLF7bLVZzzxdGTPVXTct3c (agent_events)"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_agents)": "agent_events"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_agents)": "Tables_in_MLF7bLVZzzxdGTPVXTct3c (agent_inventory)"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_agents)": "agent_inventory"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_agents)": "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_world)"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_agents)": "game_world"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_agents)\ngame_agents\nTables_in_MLF7bLVZzzxdGTPVXTct3c (agent_events)\nagent_events\nTables_in_MLF7bLVZzzxdGTPVXTct3c (agent_inventory)\nagent_inventory\nTables_in_MLF7bLVZzzxdGTPVXTct3c (game_world)\ngame_world\n",
+  "stderr": "",
+  "execution_time_ms": 2144
+}

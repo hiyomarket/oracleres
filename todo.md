@@ -2924,3 +2924,49 @@
 - [x] /game 路由改指向 VirtualWorldPage（原 GameLobby 保留但不再是主入口）
 - [x] AvatarRoom、Shop、CharacterProfile 全部整合 GameTabLayout 底部 Tab
 - [x] VirtualWorldPage 整合 trpc.oracle.dailyEnergy 顯示今日天干地支
+
+## GD-018 等級扁平化整合（V11.14）
+
+### 資料庫重建
+- [x] 重建 game_agents 表（添加 status、dominant_element、雙軌體力值欄位）
+- [x] 重建 agent_events 表（對齊新 schema：event_type、node_id、detail）
+- [x] 重建 agent_inventory 表（對齊新 schema：item_type、item_data）
+- [x] 重建 game_world 表（world_key、world_data JSON 格式）
+
+### 後端架構
+- [x] 建立 gameWorld Router（server/routers/gameWorld.ts）
+- [x] 首次命名 API（nameAgent mutation）
+- [x] 角色狀態查詢（getAgentStatus，含體力值再生計算）
+- [x] 事件日誌查詢（getEventLog，支援 eventType 篩選）
+- [x] 策略切換（setStrategy mutation）
+- [x] 神蹟治癒（divineHeal，消耗靈力值）
+- [x] 神蹟傳送（divineTransport，消耗靈力值）
+- [x] 地圖節點列表（getMapNodes）
+- [x] 世界狀態查詢（getWorldStatus）
+- [x] 手動 Tick 觸發（triggerTick，測試用）
+- [x] 背包查詢（getInventory）
+- [x] 怪物圖鑑（getMonsterBestiary）
+- [x] 在 routers.ts 掛載 gameWorldRouter 並啟動 Tick 引擎
+
+### 前端 UI
+- [x] 首次命名對話框（NamingDialog，P0）
+- [x] 台灣地圖 SVG 視覺化（TaiwanMap，顯示當前位置）
+- [x] 戰鬥詳情展開（CombatDetail，顯示回合日誌）
+- [x] VirtualWorldPage 串接真實 Tick 引擎資料
+- [x] 事件日誌 Tab 篩選（全部/戰鬥/奇遇）
+- [x] 雙軌體力值顯示（活躍值 + 靈力值）
+- [x] 裝備欄位 UI 骨架（8 格，待裝備系統完成）
+- [x] GD-018 成長哲學說明區塊
+
+### 測試
+- [x] 建立 gameWorld.test.ts（553 項全部通過）
+- [x] calcExpToNext 等級曲線測試
+- [x] resolveCombat 戰鬥解算測試
+- [x] 命名驗證規則測試
+
+### 待完成（P2）
+- [ ] 裝備系統完整實作（品質/詞條/套裝效果）
+- [ ] 技能欄位 UI（4 主動 + 2 被動）
+- [ ] Roguelike 事件通知（前端彈窗）
+- [ ] 寵物個體值系統
+- [ ] 圖鑑收集系統（怪物/地點/道具）
