@@ -3215,3 +3215,14 @@
 - [x] 後端新增 getSkillCatalogForPlayer + installSkill API
 - [x] 前端技能全視窗連動真實圖鑑資料，支援安裝到技能槽
 - [x] 行動策略切換後顯示 Toast 提示
+
+## V19 - 全面補完系統缺口
+
+- [ ] 後端新增 useItem API（消耗道具補 HP/MP/體力）
+- [ ] 道具 Tab 加入「使用」按鈕，連動 useItem API
+- [ ] 後端新增 purchaseEquipment API（從圖鑑購買裝備）
+- [ ] 裝備 Tab 加入「裝備商店」入口，可從 39 種圖鑑購買
+- [ ] getNodeInfo 改為從 game_monster_catalog 讀取怪物（連動真實圖鑑）
+- [ ] 技能全視窗安裝按鈕真正呼叫 installSkill mutation
+- [ ] 命格面板顯示稱號系統（getTitles API 已存在）
+- [ ] 確認底端功能列幣值正確顯示

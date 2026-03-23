@@ -7,7 +7,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { eq, and, desc } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
@@ -534,11 +534,52 @@ export const gameWorldRouter = router({
       if (!node) {
         node = MAP_NODE_MAP.get("tp-zhongzheng") ?? MAP_NODES[0];
       }
-      const nodeMonsters = MONSTERS.filter(
-        (m) => m.element === node.element &&
-          m.level >= node.monsterLevel[0] &&
-          m.level <= node.monsterLevel[1]
-      ).slice(0, 5);
+      // 優先從資料庫圖鑑讀取怪物，fallback 到靜態資料
+      const WUXING_MAP: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+      const nodeWuxing = WUXING_MAP[node.element] ?? "金";
+      const [minLv, maxLv] = node.monsterLevel;
+      let nodeMonsters: Array<{ id: string; name: string; element: string; level: number; hp: number; attack: number; defense: number; speed: number; expReward: number; goldReward: [number, number]; description?: string; rarity?: string; isBoss: boolean; skills?: string[] }> = [];
+      const dbInstance = await getDb();
+      if (dbInstance) {
+        const catalogMonsters = await dbInstance.select().from(gameMonsterCatalog)
+          .where(eq(gameMonsterCatalog.wuxing, nodeWuxing))
+          .limit(20);
+        // 按等級範圍篩選（levelRange 格式如 "1-5"）
+        const filtered = catalogMonsters.filter(m => {
+          const [lo, hi] = (m.levelRange ?? "1-5").split("-").map(Number);
+          return lo <= maxLv && hi >= minLv;
+        }).slice(0, 5);
+        if (filtered.length > 0) {
+          nodeMonsters = filtered.map(m => {
+            const [lo, hi] = (m.levelRange ?? "1-5").split("-").map(Number);
+            const midLv = Math.round((lo + hi) / 2);
+            return {
+              id: m.monsterId,
+              name: m.name,
+              element: node.element,
+              level: midLv,
+              hp: m.baseHp,
+              attack: m.baseAttack,
+              defense: m.baseDefense,
+              speed: m.baseSpeed,
+              expReward: Math.round(midLv * 8),
+              goldReward: [midLv * 2, midLv * 5] as [number, number],
+              description: m.description ?? undefined,
+              rarity: m.rarity,
+              isBoss: m.rarity === "boss" || m.rarity === "legendary",
+              skills: [],
+            };
+          });
+        }
+      }
+      // Fallback 到靜態資料
+      if (nodeMonsters.length === 0) {
+        nodeMonsters = MONSTERS.filter(
+          (m) => m.element === node.element &&
+            m.level >= node.monsterLevel[0] &&
+            m.level <= node.monsterLevel[1]
+        ).slice(0, 5);
+      }
       // 地形特定資源（讓不同地形有不同稀有資源）
       const TERRAIN_RESOURCES: Record<string, Array<{ name: string; rarity: string; icon: string }>> = {
         "都市廣場": [{ name: "市井靈氣", rarity: "精良", icon: "🏛️" }, { name: "人氣精華", rarity: "普通", icon: "🌺" }],
@@ -756,6 +797,103 @@ export const gameWorldRouter = router({
         .set({ [input.slot]: input.skillId })
         .where(eq(gameAgents.id, agents[0].id));
       return { success: true };
+    }),
+
+  // ─── 使用消耗道具 ───
+  useItem: protectedProcedure
+    .input(z.object({ inventoryId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const agent = agents[0];
+      const [invItem] = await db.select().from(agentInventory)
+        .where(and(eq(agentInventory.id, input.inventoryId), eq(agentInventory.agentId, agent.id))).limit(1);
+      if (!invItem) throw new TRPCError({ code: "NOT_FOUND", message: "道具不存在" });
+      if (invItem.itemType !== "consumable") throw new TRPCError({ code: "BAD_REQUEST", message: "此道具無法使用" });
+      // 查詢圖鑑效果
+      const [catalog] = await db.select().from(gameItemCatalog)
+        .where(eq(gameItemCatalog.itemId, invItem.itemId)).limit(1);
+      const effect = catalog?.effect ?? "";
+      let newHp = agent.hp;
+      let newMp = agent.mp;
+      let newStamina = agent.stamina;
+      // 解析效果字串：hp+50% / hp+100 / mp+50 / stamina+50
+      const hpPctM = effect.match(/hp\+(\d+)%/);
+      const hpFlatM = effect.match(/hp\+(\d+)(?!%)/);
+      const mpFlatM = effect.match(/mp\+(\d+)/);
+      const staminaM = effect.match(/stamina\+(\d+)/);
+      if (hpPctM) newHp = Math.min(agent.maxHp, agent.hp + Math.floor(agent.maxHp * parseInt(hpPctM[1]) / 100));
+      else if (hpFlatM) newHp = Math.min(agent.maxHp, agent.hp + parseInt(hpFlatM[1]));
+      if (mpFlatM) newMp = Math.min(agent.maxMp, agent.mp + parseInt(mpFlatM[1]));
+      if (staminaM) newStamina = Math.min(100, agent.stamina + parseInt(staminaM[1]));
+      // 預設效果（無圖鑑記錄）
+      if (!catalog && invItem.itemId.includes("potion")) newHp = Math.min(agent.maxHp, agent.hp + 50);
+      if (!catalog && invItem.itemId.includes("elixir")) { newHp = Math.min(agent.maxHp, agent.hp + 100); newMp = Math.min(agent.maxMp, agent.mp + 50); }
+      await db.update(gameAgents).set({ hp: newHp, mp: newMp, stamina: newStamina, updatedAt: Date.now() }).where(eq(gameAgents.id, agent.id));
+      if (invItem.quantity > 1) {
+        await db.update(agentInventory).set({ quantity: invItem.quantity - 1, updatedAt: Date.now() }).where(eq(agentInventory.id, invItem.id));
+      } else {
+        await db.delete(agentInventory).where(eq(agentInventory.id, invItem.id));
+      }
+      await db.insert(agentEvents).values({
+        agentId: agent.id, eventType: "system",
+        detail: { itemId: invItem.itemId, itemName: catalog?.name ?? invItem.itemId },
+        message: `使用了「${catalog?.name ?? invItem.itemId}」`,
+        createdAt: Date.now(),
+      });
+      return { success: true, newHp, newMp, newStamina, itemName: catalog?.name ?? invItem.itemId };
+    }),
+
+  // ─── 取得裝備圖鑑 ───
+  getEquipmentCatalog: protectedProcedure
+    .input(z.object({ wuxing: z.string().optional(), slot: z.string().optional(), tier: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const agents = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const agent = agents[0];
+      let rows = await db.select().from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.isActive, 1));
+      if (input?.wuxing) rows = rows.filter(r => r.wuxing === input.wuxing);
+      if (input?.slot) rows = rows.filter(r => r.slot === input.slot);
+      if (input?.tier) rows = rows.filter(r => r.tier === input.tier);
+      const equippedIds = agent ? [
+        agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
+        agent.equippedBody, agent.equippedHands, agent.equippedFeet,
+        agent.equippedRingA, agent.equippedRingB, agent.equippedNecklace, agent.equippedAmulet,
+      ].filter(Boolean) : [];
+      return rows.map(r => ({ ...r, isEquipped: equippedIds.includes(r.equipId) }));
+    }),
+
+  // ─── 裝備/卸下裝備 ───
+  equipItem: protectedProcedure
+    .input(z.object({ equipId: z.string(), action: z.enum(["equip", "unequip"]) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const agent = agents[0];
+      const [equip] = await db.select().from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.equipId, input.equipId)).limit(1);
+      if (!equip) throw new TRPCError({ code: "NOT_FOUND", message: "裝備不存在" });
+      const SLOT_MAP: Record<string, string> = {
+        weapon: "equippedWeapon", offhand: "equippedOffhand",
+        helmet: "equippedHead", armor: "equippedBody",
+        gloves: "equippedHands", shoes: "equippedFeet",
+        ringA: "equippedRingA", ringB: "equippedRingB",
+        necklace: "equippedNecklace", amulet: "equippedAmulet",
+      };
+      const dbField = SLOT_MAP[equip.slot] ?? "equippedWeapon";
+      await db.update(gameAgents).set({ [dbField]: input.action === "equip" ? input.equipId : null, updatedAt: Date.now() }).where(eq(gameAgents.id, agent.id));
+      await db.insert(agentEvents).values({
+        agentId: agent.id, eventType: "system",
+        detail: { equipId: input.equipId, equipName: equip.name, action: input.action },
+        message: input.action === "equip" ? `裝備了「${equip.name}」` : `卸下了「${equip.name}」`,
+        createdAt: Date.now(),
+      });
+      return { success: true, equipName: equip.name, action: input.action };
     }),
 
   // ─── 取得怪物圖鑑（公開） ───

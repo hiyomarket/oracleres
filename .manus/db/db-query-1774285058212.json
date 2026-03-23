@@ -1,0 +1,16 @@
+{
+  "query": "SELECT \n  (SELECT COUNT(*) FROM game_monster_catalog) as monsters,\n  (SELECT COUNT(*) FROM game_item_catalog) as items,\n  (SELECT COUNT(*) FROM game_equipment_catalog) as equipment,\n  (SELECT COUNT(*) FROM game_skill_catalog) as skills;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT \n  (SELECT COUNT(*) FROM game_monster_catalog) as monsters,\n  (SELECT COUNT(*) FROM game_item_catalog) as items,\n  (SELECT COUNT(*) FROM game_equipment_catalog) as equipment,\n  (SELECT COUNT(*) FROM game_skill_catalog) as skills;",
+  "rows": [
+    {
+      "monsters": "100",
+      "items": "83",
+      "equipment": "39",
+      "skills": "109"
+    }
+  ],
+  "messages": [],
+  "stdout": "monsters\titems\tequipment\tskills\n100\t83\t39\t109\n",
+  "stderr": "",
+  "execution_time_ms": 1606
+}
