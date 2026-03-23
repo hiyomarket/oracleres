@@ -97,7 +97,7 @@ const EQUIP_SLOTS = [
   { slot: "amulet",   icon: "🔮", label: "護符",    desc: "特殊效果" },
 ];
 
-type PanelId = "combat" | "life" | "equip" | "skill" | "natal";
+type PanelId = "combat" | "life" | "items" | "equip" | "skill" | "natal";
 
 // ─── NodeInfoData 型別 ─────────────────────────────────────────
 type NodeInfoData = {
@@ -476,7 +476,7 @@ type AgentData = {
   agentName?: string; level?: number; hp?: number; maxHp?: number; mp?: number; maxMp?: number;
   stamina?: number; maxStamina?: number; gold?: number; strategy?: string; status?: string;
   dominantElement?: string; currentNodeId?: string; actionPoints?: number; maxActionPoints?: number;
-  exp?: number; expToNext?: number; attack?: number; defense?: number; speed?: number;
+  exp?: number; expToNext?: number; experience?: number; attack?: number; defense?: number; speed?: number;
   healPower?: number; magicAttack?: number; hitRate?: number;
   gatherPower?: number; forgePower?: number; carryWeight?: number; refinePower?: number; treasureHunting?: number;
   // 五行比例欄位
@@ -564,9 +564,13 @@ function CharacterPanel({
     treasureHunting: agent?.treasureHunting ?? 20,
   };
 
+  const [showSkillPicker, setShowSkillPicker] = useState(false);
+  const [skillPickerSlot, setSkillPickerSlot] = useState<{ type: "active" | "passive"; index: number } | null>(null);
+  const [itemCategory, setItemCategory] = useState<"all" | "material" | "consumable" | "equipment">("all");
   const PANELS: { id: PanelId; icon: string; label: string }[] = [
     { id: "combat", icon: "⚔️", label: "戰鬥" },
     { id: "life",   icon: "🏠", label: "生活" },
+    { id: "items",  icon: "🎒", label: "道具" },
     { id: "equip",  icon: "🛡️", label: "裝備" },
     { id: "skill",  icon: "✨", label: "技能" },
     { id: "natal",  icon: "🔮", label: "命格" },
@@ -642,60 +646,13 @@ function CharacterPanel({
               ))}
             </div>
 
-            {/* 行動策略 */}
-            <div>
-              <p className="text-xs text-slate-500 mb-1.5">行動策略</p>
-              <div className="grid grid-cols-4 gap-1.5">
-                {STRATEGIES.map(s => (
-                  <button key={s.id} onClick={() => setStrategy.mutate({ strategy: s.id })}
-                    className="flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs border transition-all hover:scale-105 active:scale-95"
-                    style={{
-                      background: agentStrategy === s.id ? `${ec}18` : "rgba(255,255,255,0.03)",
-                      borderColor: agentStrategy === s.id ? `${ec}55` : "rgba(255,255,255,0.08)",
-                      color: agentStrategy === s.id ? ec : "rgba(148,163,184,0.6)",
-                    }}>
-                    <span className="text-lg leading-none">{s.icon}</span>
-                    <span className="text-[10px]">{s.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 靈相干預 */}
-            <div className="border-t pt-2" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-              <div className="flex items-center justify-between mb-1.5">
-                <p className="text-xs text-slate-500">靈相干預</p>
-                <span className="text-xs text-cyan-400 font-bold">靈力 {agentAP}/{agentMaxAP}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                {/* 神跩治癒 */}
-                <button onClick={() => divineHeal.mutate()} disabled={agentAP < 1 || divineHeal.isPending || healUsedToday}
-                  className="relative flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-                  style={{ background: healUsedToday ? "rgba(239,68,68,0.04)" : "rgba(239,68,68,0.08)", borderColor: healUsedToday ? "rgba(239,68,68,0.15)" : "rgba(239,68,68,0.3)", color: "#ef4444" }}>
-                  {healUsedToday && <span className="absolute top-1 right-1 text-[8px] px-1 py-0.5 rounded font-bold" style={{ background: "rgba(239,68,68,0.2)", color: "#ef4444" }}>已用</span>}
-                  <span className="text-lg leading-none">{divineHeal.isPending ? "⏳" : healUsedToday ? "🔒" : "💊"}</span>
-                  <span className="text-[10px] font-bold">神跩治癒</span>
-                  <span className="text-[9px]" style={{ color: healUsedToday ? "#64748b" : "#64748b" }}>{healUsedToday ? "明日再來" : "恢復50%HP"}</span>
-                </button>
-                {/* 神眼加持 */}
-                <button onClick={() => divineEye.mutate()} disabled={agentAP < 1 || divineEye.isPending || eyeUsedToday}
-                  className="relative flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-                  style={{ background: eyeUsedToday ? "rgba(56,189,248,0.04)" : "rgba(56,189,248,0.08)", borderColor: eyeUsedToday ? "rgba(56,189,248,0.15)" : "rgba(56,189,248,0.3)", color: "#38bdf8" }}>
-                  {eyeUsedToday && <span className="absolute top-1 right-1 text-[8px] px-1 py-0.5 rounded font-bold" style={{ background: "rgba(56,189,248,0.2)", color: "#38bdf8" }}>已用</span>}
-                  <span className="text-lg leading-none">{divineEye.isPending ? "⏳" : eyeUsedToday ? "🔒" : "👁"}</span>
-                  <span className="text-[10px] font-bold">神眼加持</span>
-                  <span className="text-[9px] text-slate-600">{eyeUsedToday ? "明日再來" : "洞察力+15%"}</span>
-                </button>
-                {/* 靈癒疲勞 */}
-                <button onClick={() => divineStamina.mutate()} disabled={agentAP < 1 || divineStamina.isPending || staminaUsedToday}
-                  className="relative flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-xs border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-                  style={{ background: staminaUsedToday ? "rgba(167,139,250,0.04)" : "rgba(167,139,250,0.08)", borderColor: staminaUsedToday ? "rgba(167,139,250,0.15)" : "rgba(167,139,250,0.3)", color: "#a78bfa" }}>
-                  {staminaUsedToday && <span className="absolute top-1 right-1 text-[8px] px-1 py-0.5 rounded font-bold" style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa" }}>已用</span>}
-                  <span className="text-lg leading-none">{divineStamina.isPending ? "⏳" : staminaUsedToday ? "🔒" : "✨"}</span>
-                  <span className="text-[10px] font-bold">靈癒疲勞</span>
-                  <span className="text-[9px] text-slate-600">{staminaUsedToday ? "明日再來" : "體力回50"}</span>
-                </button>
-              </div>
+            {/* 提示：行動策略和靈相干預已移至地圖浮動控件 */}
+            <div className="px-2.5 py-2 rounded-xl border text-xs text-slate-600"
+              style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+              <p className="text-slate-500 font-bold mb-1">💡 快速操作</p>
+              <p>⚔️ 行動策略 → 地圖右下角浮動面板</p>
+              <p>✨ 靈相干預 → 地圖右上角浮動面板</p>
+              <p>❤️ HP/MP/活躍 → 地圖左側浮動條</p>
             </div>
           </div>
         )}
@@ -703,25 +660,6 @@ function CharacterPanel({
         {/* ── 生活面板 ── */}
         {activePanel === "life" && (
           <div className="space-y-2.5">
-            {/* 資源概覽 */}
-            <div className="grid grid-cols-2 gap-1.5">
-              {[
-                { icon: "🪙", label: "金幣",   value: agentGold.toLocaleString(),   color: "#f59e0b" },
-                { icon: "💎", label: "靈石",   value: gameStones.toLocaleString(),  color: "#38bdf8" },
-                { icon: "🏆", label: "等級",   value: `Lv.${agentLevel}`,           color: ec },
-                { icon: "📊", label: "遊戲幣", value: gameCoins.toLocaleString(),   color: "#a78bfa" },
-              ].map(item => (
-                <div key={item.label} className="px-2.5 py-2 rounded-xl border"
-                  style={{ background: `${item.color}08`, borderColor: `${item.color}22` }}>
-                  <div className="flex items-center gap-1 mb-0.5">
-                    <span className="text-sm">{item.icon}</span>
-                    <span className="text-xs text-slate-500">{item.label}</span>
-                  </div>
-                  <p className="text-sm font-bold" style={{ color: item.color }}>{item.value}</p>
-                </div>
-              ))}
-            </div>
-
             {/* 今日流日加成 */}
             <div className="px-2.5 py-2 rounded-xl border"
               style={{ background: `${todayColor}08`, borderColor: `${todayColor}28` }}>
@@ -745,6 +683,73 @@ function CharacterPanel({
                 💧 尋寶力 {lifeValues.treasureHunting} → {lifeValues.treasureHunting >= 60 ? "可感知隱藏商店" : lifeValues.treasureHunting >= 40 ? "偶爾感知隱藏任務" : "尚未開啟洞察"}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── 道具面板 ── */}
+        {activePanel === "items" && (
+          <div className="space-y-2.5">
+            {/* 分類筛選 */}
+            <div className="flex gap-1.5">
+              {([
+                { id: "all",         label: "全部" },
+                { id: "material",    label: "鍛造素材" },
+                { id: "consumable",  label: "消耗道具" },
+                { id: "equipment",   label: "裝備" },
+              ] as const).map(cat => (
+                <button key={cat.id} onClick={() => setItemCategory(cat.id)}
+                  className="flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                  style={{
+                    background: itemCategory === cat.id ? `${ec}18` : "rgba(255,255,255,0.03)",
+                    borderColor: itemCategory === cat.id ? `${ec}55` : "rgba(255,255,255,0.08)",
+                    color: itemCategory === cat.id ? ec : "rgba(148,163,184,0.5)",
+                  }}>
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+            {/* 道具列表 */}
+            {invQuery.isLoading ? (
+              <p className="text-xs text-slate-600 text-center py-4">載入中…</p>
+            ) : (() => {
+              const filtered = invItems.filter(item => {
+                if (itemCategory === "all") return true;
+                if (itemCategory === "material") return item.itemType === "material" || (!item.itemType && !item.rarity);
+                if (itemCategory === "consumable") return item.itemType === "consumable" || item.itemType === "potion";
+                if (itemCategory === "equipment") return item.itemType === "equipment" || (item.rarity && item.rarity !== "common");
+                return true;
+              });
+              if (filtered.length === 0) return (
+                <div className="text-center py-6">
+                  <p className="text-slate-600 text-sm">此分類為空</p>
+                  <p className="text-slate-700 text-xs mt-1">擊敗怪物後將獲得道具</p>
+                </div>
+              );
+              return (
+                <div className="space-y-1.5">
+                  {filtered.map(item => {
+                    const rc = item.rarity ? QUALITY_COLOR[item.rarity] ?? "#94a3b8" : "#94a3b8";
+                    const typeLabel = item.itemType === "material" ? "鍛造素材" :
+                      item.itemType === "consumable" || item.itemType === "potion" ? "消耗道具" :
+                      item.itemType === "equipment" ? "裝備" : "道具";
+                    return (
+                      <div key={item.id} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border"
+                        style={{ background: `${rc}08`, borderColor: `${rc}25` }}>
+                        <span className="text-xl shrink-0">{item.emoji ?? "📦"}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="text-sm font-bold" style={{ color: rc }}>{item.itemName}</p>
+                            <span className="text-[9px] px-1 py-0.5 rounded" style={{ background: `${rc}20`, color: rc }}>{typeLabel}</span>
+                            {item.rarity && <span className="text-[9px] px-1 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.06)", color: "#64748b" }}>{QUALITY_ZH[item.rarity] ?? item.rarity}</span>}
+                          </div>
+                        </div>
+                        <span className="text-sm font-bold text-slate-400 shrink-0">x{item.quantity}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -820,40 +825,42 @@ function CharacterPanel({
         )}
         {/* ── 技能面板（GD-001）── */}
         {activePanel === "skill" && (() => {
-          // 從 skillSlot 欄位讀取技能資料
           const activeSlots = [
             agent?.skillSlot1, agent?.skillSlot2, agent?.skillSlot3, agent?.skillSlot4,
           ];
           const passiveSlots = [agent?.passiveSlot1, agent?.passiveSlot2];
-          const hasAnySkill = activeSlots.some(Boolean) || passiveSlots.some(Boolean);
           return (
             <div className="space-y-2">
               {/* 主動技能（4槽） */}
               <div>
-                <p className="text-xs text-slate-500 mb-1.5">主動技能（4槽）</p>
+                <div className="flex items-center justify-between mb-1.5">
+                  <p className="text-xs text-slate-500">主動技能（4槽）</p>
+                  <p className="text-[10px] text-slate-600">點擊槽位可選擇技能</p>
+                </div>
                 <div className="grid grid-cols-2 gap-1.5">
                   {activeSlots.map((slotId, i) => {
                     const sk = slotId ? SKILL_DEFS[slotId] : null;
                     const c = sk ? WX_HEX[sk.element] ?? "#888" : "#334155";
                     return (
-                      <div key={i} className="px-2.5 py-2 rounded-xl border"
+                      <button key={i}
+                        onClick={() => { setSkillPickerSlot({ type: "active", index: i }); setShowSkillPicker(true); }}
+                        className="px-2.5 py-2 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
                         style={{ background: sk ? `${c}10` : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : "rgba(255,255,255,0.07)" }}>
                         <p className="text-xs text-slate-600 mb-0.5">主動 {i + 1}</p>
                         {sk ? (
                           <div>
                             <div className="flex items-center gap-1 mb-0.5">
                               <span className="text-sm">{sk.icon}</span>
-                              <p className="text-sm font-bold" style={{ color: c }}>{sk.name}</p>
+                              <p className="text-xs font-bold" style={{ color: c }}>{sk.name}</p>
                             </div>
-                            <p className="text-xs text-slate-600 leading-tight">{sk.desc}</p>
+                            <p className="text-[10px] text-slate-600 leading-tight">{sk.desc}</p>
                           </div>
-                        ) : <p className="text-xs text-slate-700 italic">空槽</p>}
-                      </div>
+                        ) : <p className="text-xs text-slate-700 italic">點擊安裝技能</p>}
+                      </button>
                     );
                   })}
                 </div>
               </div>
-
               {/* 被動技能（2槽） */}
               <div>
                 <p className="text-xs text-slate-500 mb-1.5">被動技能（2槽）</p>
@@ -862,40 +869,82 @@ function CharacterPanel({
                     const sk = slotId ? SKILL_DEFS[slotId] : null;
                     const c = sk ? WX_HEX[sk.element] ?? "#888" : "#334155";
                     return (
-                      <div key={i} className="px-2.5 py-2 rounded-xl border"
+                      <button key={i}
+                        onClick={() => { setSkillPickerSlot({ type: "passive", index: i }); setShowSkillPicker(true); }}
+                        className="px-2.5 py-2 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
                         style={{ background: sk ? `${c}10` : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : "rgba(255,255,255,0.07)" }}>
                         <p className="text-xs text-slate-600 mb-0.5">被動 {i + 1}</p>
                         {sk ? (
                           <div>
                             <div className="flex items-center gap-1 mb-0.5">
                               <span className="text-sm">{sk.icon}</span>
-                              <p className="text-sm font-bold" style={{ color: c }}>{sk.name}</p>
+                              <p className="text-xs font-bold" style={{ color: c }}>{sk.name}</p>
                             </div>
-                            <p className="text-xs text-slate-600 leading-tight">{sk.desc}</p>
+                            <p className="text-[10px] text-slate-600 leading-tight">{sk.desc}</p>
                           </div>
-                        ) : <p className="text-xs text-slate-700 italic">空槽</p>}
-                      </div>
+                        ) : <p className="text-xs text-slate-700 italic">點擊安裝技能</p>}
+                      </button>
                     );
                   })}
                 </div>
               </div>
-
-              {/* 隱藏天賦提示 */}
-              <div className="px-2.5 py-2 rounded-xl border"
-                style={{ background: "rgba(245,158,11,0.06)", borderColor: "rgba(245,158,11,0.2)" }}>
-                <p className="text-xs text-amber-400 font-bold mb-0.5">🌟 隱藏天賦</p>
-                <p className="text-xs text-slate-600">尋寶力達 80 後可觸發隱藏天賦覚醒</p>
-              </div>
-
-              {!hasAnySkill && (
-                <div className="text-center py-3">
-                  <p className="text-slate-600 text-sm">尚未習得任何技能</p>
-                  <p className="text-slate-700 text-xs mt-0.5">完成八字分析後將自動解鎖初始技能</p>
-                </div>
-              )}
             </div>
           );
         })()}
+
+        {/* 技能選擇全視窗 */}
+        {showSkillPicker && skillPickerSlot && (
+          <div className="fixed inset-0 z-[500] flex flex-col"
+            style={{ background: "rgba(6,10,22,0.92)", backdropFilter: "blur(20px)" }}
+            onClick={() => setShowSkillPicker(false)}>
+            <div className="flex-1 overflow-y-auto p-4" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-base font-bold text-slate-100">選擇技能</h3>
+                  <p className="text-xs text-slate-500">
+                    {skillPickerSlot.type === "active" ? `主動槽 ${skillPickerSlot.index + 1}` : `被動槽 ${skillPickerSlot.index + 1}`}
+                  </p>
+                </div>
+                <button onClick={() => setShowSkillPicker(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 border"
+                  style={{ background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.1)" }}>✕</button>
+              </div>
+              {/* 按五行分類 */}
+              {(["wood","fire","earth","metal","water"] as const).map(wx => {
+                const wxSkills = Object.entries(SKILL_DEFS).filter(([, sk]) =>
+                  sk.element === wx &&
+                  (skillPickerSlot.type === "active" ? sk.type === "active" : sk.type === "passive")
+                );
+                if (wxSkills.length === 0) return null;
+                const wc = WX_HEX[wx] ?? "#888";
+                return (
+                  <div key={wx} className="mb-4">
+                    <p className="text-xs font-bold mb-2 flex items-center gap-1" style={{ color: wc }}>
+                      {WX_EMOJI[wx]}{WX_ZH[wx]}行技能
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {wxSkills.map(([skillId, sk]) => (
+                        <button key={skillId}
+                          onClick={() => {
+                            // 目前僅顯示選擇，實際安裝需要後端 API
+                            setShowSkillPicker(false);
+                          }}
+                          className="flex items-start gap-2 p-3 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+                          style={{ background: `${wc}10`, borderColor: `${wc}30` }}>
+                          <span className="text-xl shrink-0">{sk.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold" style={{ color: wc }}>{sk.name}</p>
+                            <p className="text-xs text-slate-500 leading-tight mt-0.5">{sk.desc}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ── 命格面板 ── */}
         {activePanel === "natal" && (() => {
@@ -1230,6 +1279,8 @@ export default function VirtualWorldPage() {
   }, []);
 
   const [showNaming, setShowNaming] = useState(false);
+  const [showStrategyPanel, setShowStrategyPanel] = useState(false);
+  const [showDivinePanel, setShowDivinePanel] = useState(false);
   useEffect(() => {
     if (agentData?.needsNaming) setShowNaming(true);
   }, [agentData?.needsNaming]);
@@ -1356,34 +1407,31 @@ export default function VirtualWorldPage() {
             </div>
           </div>
 
-          {/* 中：在線統計 + 旅人狀態 */}
-          <div className="flex-1 flex items-center justify-center gap-2 min-w-0">
-            <div className="flex items-center gap-1 text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
-              <span className="text-green-400 font-bold">{onlineCount}</span>
-              <span className="text-slate-600 hidden sm:inline">在線</span>
+          {/* 中：角色名稱 + 等級 + 經驗條 */}
+          <div className="flex-1 flex flex-col items-center justify-center min-w-0 px-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-slate-200 truncate" style={{ maxWidth: "80px" }}>
+                {agent?.agentName ?? "旅人"}
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0"
+                style={{ background: `${ec}22`, color: ec }}>Lv.{agent?.level ?? 1}</span>
+              <span className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{ background: agent?.status === "combat" ? "#ef4444" : agent?.status === "moving" ? "#60a5fa" : "#22c55e" }} />
             </div>
-            <div className="text-slate-700 text-xs">|</div>
-            <div className="flex items-center gap-1 text-xs">
-              <span className="text-slate-400 font-bold">{totalAdventurers}</span>
-              <span className="text-slate-600 hidden sm:inline">旅人</span>
-            </div>
-            {/* 旅人當前狀態（手機版顯示） */}
-            {agent?.status && (
-              <>
-                <div className="text-slate-700 text-xs hidden sm:inline">|</div>
-                <div className="hidden sm:flex items-center gap-1 text-xs">
-                  <span className="text-slate-500">{agent.agentName ?? "旅人"}</span>
-                  <span className="px-1.5 py-0.5 rounded-full text-xs font-bold"
-                    style={{
-                      background: agent.status === "combat" ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.1)",
-                      color: agent.status === "combat" ? "#ef4444" : "#22c55e",
-                    }}>
-                    {agent.status === "idle" ? "待機" : agent.status === "moving" ? "移動" : agent.status === "combat" ? "戰鬥" : "休息"}
-                  </span>
+            {/* 經驗條 */}
+            {(() => {
+              const expCur = agent?.exp ?? agent?.experience ?? 0;
+              const expNext = agent?.expToNext ?? (agent?.level ?? 1) * 100;
+              const pct = expNext > 0 ? Math.min(100, (expCur / expNext) * 100) : 0;
+              return (
+                <div className="flex items-center gap-1 w-full max-w-[120px]">
+                  <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: ec }} />
+                  </div>
+                  <span className="text-[9px] text-slate-600 tabular-nums shrink-0">{expCur}/{expNext}</span>
                 </div>
-              </>
-            )}
+              );
+            })()}
           </div>
 
           {/* 右：跟隨冒險者 + Tick 按鈕 */}
@@ -1578,6 +1626,124 @@ export default function VirtualWorldPage() {
                 )}
               </div>
 
+              {/* ── HP/MP/活躍值浮動條（左側中央） ── */}
+              <div className="absolute left-2 z-[400] flex flex-col gap-1.5"
+                style={{ top: "50%", transform: "translateY(-50%)" }}>
+                {[
+                  { icon: "♥", label: "HP", val: agent?.hp ?? 0, max: agent?.maxHp ?? 100, color: "#ef4444" },
+                  { icon: "💧", label: "MP", val: agent?.mp ?? 0, max: agent?.maxMp ?? 100, color: "#38bdf8" },
+                  { icon: "⚡", label: "AP", val: agent?.actionPoints ?? 0, max: agent?.maxActionPoints ?? 10, color: "#f59e0b" },
+                ].map(bar => (
+                  <div key={bar.label} className="flex items-center gap-1 px-1.5 py-1 rounded-lg border"
+                    style={{ background: "rgba(6,10,22,0.88)", backdropFilter: "blur(8px)", borderColor: `${bar.color}30` }}>
+                    <span className="text-[10px] shrink-0" style={{ color: bar.color }}>{bar.icon}</span>
+                    <div className="w-12 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all"
+                        style={{ width: `${bar.max > 0 ? Math.min(100, (bar.val / bar.max) * 100) : 0}%`, background: bar.color }} />
+                    </div>
+                    <span className="text-[9px] font-bold tabular-nums" style={{ color: bar.color }}>{bar.val}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── 靈相干預浮動面板（右上角） ── */}
+              <div className="absolute right-2 top-2 z-[400]">
+                <button
+                  onClick={() => setShowDivinePanel(v => !v)}
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-xl border text-xs font-bold transition-all hover:scale-105 active:scale-95"
+                  style={{
+                    background: showDivinePanel ? "rgba(167,139,250,0.2)" : "rgba(6,10,22,0.92)",
+                    backdropFilter: "blur(10px)",
+                    borderColor: showDivinePanel ? "rgba(167,139,250,0.7)" : "rgba(167,139,250,0.4)",
+                    color: "#a78bfa",
+                    boxShadow: "0 0 10px rgba(167,139,250,0.3)",
+                  }}>
+                  <span>✨</span>
+                  <span>靈相</span>
+                  <span>{showDivinePanel ? "▲" : "▼"}</span>
+                </button>
+                {showDivinePanel && (() => {
+                  const todayStr = new Date().toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei" });
+                  const agentAP = agent?.actionPoints ?? 0;
+                  const healUsedToday = agent?.lastDivineHealDate === todayStr;
+                  const eyeUsedToday  = agent?.lastDivineEyeDate  === todayStr;
+                  const staminaUsedToday = agent?.lastDivineStaminaDate === todayStr;
+                  return (
+                    <div className="absolute right-0 top-full mt-1 rounded-xl border overflow-hidden"
+                      style={{ background: "rgba(6,10,22,0.97)", backdropFilter: "blur(16px)", borderColor: "rgba(167,139,250,0.3)", width: "200px" }}>
+                      <div className="px-3 py-2 border-b flex items-center justify-between"
+                        style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                        <span className="text-xs font-bold text-purple-300">靈相干預</span>
+                        <span className="text-xs text-slate-500">靈力 {agentAP}/{agent?.maxActionPoints ?? 10}</span>
+                      </div>
+                      <div className="p-2 space-y-1.5">
+                        {[
+                          { label: "神癒恢復", desc: "恢復50%HP", icon: "💊", color: "#ef4444", used: healUsedToday, fn: () => divineHeal.mutate(), pending: divineHeal.isPending },
+                          { label: "神眼加持", desc: "洞察力+15%", icon: "👁", color: "#38bdf8", used: eyeUsedToday, fn: () => divineEye.mutate(), pending: divineEye.isPending },
+                          { label: "靈癒疲勞", desc: "體力回50", icon: "✨", color: "#a78bfa", used: staminaUsedToday, fn: () => divineStamina.mutate(), pending: divineStamina.isPending },
+                        ].map(item => (
+                          <button key={item.label}
+                            onClick={item.fn}
+                            disabled={agentAP < 1 || item.pending || item.used}
+                            className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+                            style={{ background: `${item.color}08`, borderColor: `${item.color}${item.used ? "15" : "30"}`, color: item.color }}>
+                            <span className="text-base">{item.pending ? "⏳" : item.used ? "🔒" : item.icon}</span>
+                            <div className="flex-1 text-left">
+                              <p className="text-xs font-bold">{item.label}</p>
+                              <p className="text-[10px]" style={{ color: item.used ? "#475569" : "#64748b" }}>{item.used ? "明日再來" : item.desc}</p>
+                            </div>
+                            {!item.used && <span className="text-[9px] text-slate-600">-1靈</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* ── 行動策略浮動面板（右下角） ── */}
+              <div className="absolute right-2 z-[400]"
+                style={{ bottom: charPanelOpen ? "16px" : "56px" }}>
+                <button
+                  onClick={() => setShowStrategyPanel(v => !v)}
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-xl border text-xs font-bold transition-all hover:scale-105 active:scale-95"
+                  style={{
+                    background: showStrategyPanel ? `${ec}20` : "rgba(6,10,22,0.92)",
+                    backdropFilter: "blur(10px)",
+                    borderColor: showStrategyPanel ? `${ec}70` : `${ec}40`,
+                    color: ec,
+                    boxShadow: `0 0 10px ${ec}30`,
+                  }}>
+                  <span>⚔️</span>
+                  <span>{STRATEGIES.find(s => s.id === (agent?.strategy ?? "explore"))?.label ?? "探索"}</span>
+                  <span>{showStrategyPanel ? "▲" : "▼"}</span>
+                </button>
+                {showStrategyPanel && (
+                  <div className="absolute right-0 bottom-full mb-1 rounded-xl border overflow-hidden"
+                    style={{ background: "rgba(6,10,22,0.97)", backdropFilter: "blur(16px)", borderColor: `${ec}30`, width: "180px" }}>
+                    <div className="px-3 py-2 border-b"
+                      style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                      <span className="text-xs font-bold" style={{ color: ec }}>行動策略</span>
+                    </div>
+                    <div className="p-2 grid grid-cols-2 gap-1.5">
+                      {STRATEGIES.map(s => (
+                        <button key={s.id}
+                          onClick={() => { setStrategy.mutate({ strategy: s.id }); setShowStrategyPanel(false); }}
+                          className="flex flex-col items-center gap-1 py-2.5 rounded-lg text-xs border transition-all hover:scale-105 active:scale-95"
+                          style={{
+                            background: (agent?.strategy ?? "explore") === s.id ? `${ec}18` : "rgba(255,255,255,0.03)",
+                            borderColor: (agent?.strategy ?? "explore") === s.id ? `${ec}55` : "rgba(255,255,255,0.08)",
+                            color: (agent?.strategy ?? "explore") === s.id ? ec : "rgba(148,163,184,0.6)",
+                          }}>
+                          <span className="text-lg leading-none">{s.icon}</span>
+                          <span className="text-[10px]">{s.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* 手機版角色面板把手：地圖底部中央 */}
               <button
                 className="absolute lg:hidden z-10 flex items-center justify-center gap-1 border transition-all"
@@ -1670,7 +1836,7 @@ export default function VirtualWorldPage() {
                   <span className="text-sm">🏪</span>
                   <span className="text-xs text-green-300 font-bold">商店</span>
                 </button>
-                {/* 密店（桌機版，V14：所有人都可進入） */}
+                {/* 密店（桐機版，V14：所有人都可進入） */}
                 <button
                   onClick={() => navigate("/game/shop?hidden=1")}
                   className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -1683,6 +1849,13 @@ export default function VirtualWorldPage() {
                   <span className="text-xs font-bold" style={{ color: hiddenShopColor }}>密店</span>
                   <span className="text-[9px] text-slate-600 hidden xl:inline">{hiddenShopLabel}</span>
                 </button>
+              </div>
+              {/* 幣値顯示（右下角） */}
+              <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl border"
+                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+                <span className="text-xs text-amber-400 font-bold">🪙 {(balanceData?.gameCoins ?? 0).toLocaleString()}</span>
+                <span className="text-slate-700 text-xs">|</span>
+                <span className="text-xs text-sky-400 font-bold">💎 {(balanceData?.gameStones ?? 0).toLocaleString()}</span>
               </div>
             </div>
 
@@ -1724,15 +1897,12 @@ export default function VirtualWorldPage() {
                     <span className="text-xs text-slate-500">Lv.{agent?.level ?? 1}</span>
                   </div>
                 </div>
-                {/* 右：HP 條 + 展開箭頭 */}
+                {/* 右：幣値 + HP 條 + 展開箭頭 */}
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-red-400">♥</span>
-                    <div className="w-14 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-red-500"
-                        style={{ width: `${agent?.maxHp ? Math.min(100,(agent.hp ?? 0)/agent.maxHp*100) : 0}%` }} />
-                    </div>
-                    <span className="text-xs text-slate-500">{agent?.hp ?? 0}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-amber-400 font-bold">🪙 {(balanceData?.gameCoins ?? 0).toLocaleString()}</span>
+                    <span className="text-slate-700 text-[10px]">|</span>
+                    <span className="text-[10px] text-sky-400 font-bold">💎 {(balanceData?.gameStones ?? 0).toLocaleString()}</span>
                   </div>
                   <span className="text-slate-500 text-sm">{charPanelOpen ? "▼" : "▲"}</span>
                 </div>
