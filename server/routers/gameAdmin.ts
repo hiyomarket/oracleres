@@ -17,6 +17,10 @@ import {
   gameAchievements,
   userAchievements,
   gameItems,
+  gameInventoryItems,
+  gameVirtualShop,
+  gameSpiritShop,
+  gameHiddenShopPool,
 } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 
@@ -350,4 +354,208 @@ export const gameAdminRouter = router({
         .from(userAchievements)
         .where(eq(userAchievements.userId, input.userId));
     }),
+
+  // ─── Game Inventory Items（遊戲道具管理） ──────────────────────
+  getInventoryItems: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameInventoryItems).orderBy(gameInventoryItems.id);
+  }),
+  createInventoryItem: adminProcedure
+    .input(z.object({
+      itemKey: z.string().min(1).max(100),
+      name: z.string().min(1).max(100),
+      description: z.string().optional(),
+      itemType: z.enum(["consumable", "equipment", "weapon", "material", "special"]).default("consumable"),
+      subType: z.string().optional().default(""),
+      wuxing: z.string().optional().default(""),
+      rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
+      emoji: z.string().default("📦"),
+      statBonus: z.record(z.string(), z.number()).optional(),
+      useEffect: z.record(z.string(), z.any()).optional(),
+      equipSlot: z.string().optional().default(""),
+      maxStack: z.number().int().default(99),
+      isTradable: z.number().int().min(0).max(1).default(1),
+      isActive: z.number().int().min(0).max(1).default(1),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const now = Date.now();
+      const [result] = await db.insert(gameInventoryItems).values({ ...input, createdAt: now, updatedAt: now });
+      return { id: (result as any).insertId };
+    }),
+  updateInventoryItem: adminProcedure
+    .input(z.object({
+      id: z.number().int(),
+      data: z.object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        itemType: z.enum(["consumable", "equipment", "weapon", "material", "special"]).optional(),
+        subType: z.string().optional(),
+        wuxing: z.string().optional(),
+        rarity: z.enum(["common", "rare", "epic", "legendary"]).optional(),
+        emoji: z.string().optional(),
+        statBonus: z.record(z.string(), z.number()).optional(),
+        useEffect: z.record(z.string(), z.any()).optional(),
+        equipSlot: z.string().optional(),
+        maxStack: z.number().int().optional(),
+        isTradable: z.number().int().optional(),
+        isActive: z.number().int().optional(),
+      }),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameInventoryItems).set({ ...input.data, updatedAt: Date.now() }).where(eq(gameInventoryItems.id, input.id));
+      return { success: true };
+    }),
+  deleteInventoryItem: adminProcedure.input(z.object({ id: z.number().int() })).mutation(async ({ input }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    await db.delete(gameInventoryItems).where(eq(gameInventoryItems.id, input.id));
+    return { success: true };
+  }),
+
+  // ─── Virtual Shop（虛界商店管理） ──────────────────────────────
+  getVirtualShop: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameVirtualShop).orderBy(gameVirtualShop.sortOrder);
+  }),
+  createVirtualShopItem: adminProcedure
+    .input(z.object({
+      itemKey: z.string().min(1),
+      displayName: z.string().min(1),
+      description: z.string().optional(),
+      priceCoins: z.number().int().nonnegative().default(0),
+      quantity: z.number().int().positive().default(1),
+      stock: z.number().int().default(-1),
+      nodeId: z.string().optional().default(""),
+      sortOrder: z.number().int().default(0),
+      isOnSale: z.number().int().min(0).max(1).default(1),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [result] = await db.insert(gameVirtualShop).values({ ...input, createdAt: Date.now() });
+      return { id: (result as any).insertId };
+    }),
+  updateVirtualShopItem: adminProcedure
+    .input(z.object({ id: z.number().int(), data: z.object({
+      displayName: z.string().optional(),
+      description: z.string().optional(),
+      priceCoins: z.number().int().optional(),
+      quantity: z.number().int().optional(),
+      stock: z.number().int().optional(),
+      nodeId: z.string().optional(),
+      sortOrder: z.number().int().optional(),
+      isOnSale: z.number().int().optional(),
+    }) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameVirtualShop).set(input.data).where(eq(gameVirtualShop.id, input.id));
+      return { success: true };
+    }),
+  deleteVirtualShopItem: adminProcedure.input(z.object({ id: z.number().int() })).mutation(async ({ input }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    await db.delete(gameVirtualShop).where(eq(gameVirtualShop.id, input.id));
+    return { success: true };
+  }),
+
+  // ─── Spirit Shop（靈相商店管理） ───────────────────────────────
+  getSpiritShop: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameSpiritShop).orderBy(gameSpiritShop.sortOrder);
+  }),
+  createSpiritShopItem: adminProcedure
+    .input(z.object({
+      itemKey: z.string().min(1),
+      displayName: z.string().min(1),
+      description: z.string().optional(),
+      priceStones: z.number().int().nonnegative().default(0),
+      quantity: z.number().int().positive().default(1),
+      rarity: z.enum(["common", "rare", "epic", "legendary"]).default("rare"),
+      sortOrder: z.number().int().default(0),
+      isOnSale: z.number().int().min(0).max(1).default(1),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [result] = await db.insert(gameSpiritShop).values({ ...input, createdAt: Date.now() });
+      return { id: (result as any).insertId };
+    }),
+  updateSpiritShopItem: adminProcedure
+    .input(z.object({ id: z.number().int(), data: z.object({
+      displayName: z.string().optional(),
+      description: z.string().optional(),
+      priceStones: z.number().int().optional(),
+      quantity: z.number().int().optional(),
+      rarity: z.enum(["common", "rare", "epic", "legendary"]).optional(),
+      sortOrder: z.number().int().optional(),
+      isOnSale: z.number().int().optional(),
+    }) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameSpiritShop).set(input.data).where(eq(gameSpiritShop.id, input.id));
+      return { success: true };
+    }),
+  deleteSpiritShopItem: adminProcedure.input(z.object({ id: z.number().int() })).mutation(async ({ input }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    await db.delete(gameSpiritShop).where(eq(gameSpiritShop.id, input.id));
+    return { success: true };
+  }),
+
+  // ─── Hidden Shop Pool（密店商品池管理） ────────────────────────
+  getHiddenShopPool: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameHiddenShopPool).orderBy(gameHiddenShopPool.id);
+  }),
+  createHiddenShopItem: adminProcedure
+    .input(z.object({
+      itemKey: z.string().min(1),
+      displayName: z.string().min(1),
+      description: z.string().optional(),
+      currencyType: z.enum(["coins", "stones"]).default("coins"),
+      price: z.number().int().nonnegative().default(0),
+      quantity: z.number().int().positive().default(1),
+      weight: z.number().int().positive().default(10),
+      rarity: z.enum(["common", "rare", "epic", "legendary"]).default("rare"),
+      isActive: z.number().int().min(0).max(1).default(1),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [result] = await db.insert(gameHiddenShopPool).values({ ...input, createdAt: Date.now() });
+      return { id: (result as any).insertId };
+    }),
+  updateHiddenShopItem: adminProcedure
+    .input(z.object({ id: z.number().int(), data: z.object({
+      displayName: z.string().optional(),
+      description: z.string().optional(),
+      currencyType: z.enum(["coins", "stones"]).optional(),
+      price: z.number().int().optional(),
+      quantity: z.number().int().optional(),
+      weight: z.number().int().optional(),
+      rarity: z.enum(["common", "rare", "epic", "legendary"]).optional(),
+      isActive: z.number().int().optional(),
+    }) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameHiddenShopPool).set(input.data).where(eq(gameHiddenShopPool.id, input.id));
+      return { success: true };
+    }),
+  deleteHiddenShopItem: adminProcedure.input(z.object({ id: z.number().int() })).mutation(async ({ input }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    await db.delete(gameHiddenShopPool).where(eq(gameHiddenShopPool.id, input.id));
+    return { success: true };
+  }),
 });

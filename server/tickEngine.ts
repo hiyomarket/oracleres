@@ -6,6 +6,7 @@
 
 import { getDb } from "./db";
 import { gameAgents, agentEvents, gameWorld, agentInventory } from "../drizzle/schema";
+import { processHiddenEvents } from "./hiddenEventEngine";
 import { eq, and } from "drizzle-orm";
 import {
   MAP_NODES,
@@ -263,6 +264,13 @@ export async function processTick(): Promise<{ processed: number; events: number
     } catch (err) {
       console.error(`[Tick] Error processing agent ${agent.id}:`, err);
     }
+  }
+
+  // 處理隱藏事件（密店/隱藏NPC/隱藏任務）
+  try {
+    await processHiddenEvents();
+  } catch (err) {
+    console.error("[Tick] hiddenEventEngine error:", err);
   }
 
   return { processed: agents.length, events: totalEvents };

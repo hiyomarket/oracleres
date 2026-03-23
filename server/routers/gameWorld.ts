@@ -7,7 +7,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
 import { MONSTERS } from "../../shared/monsters";
@@ -567,6 +567,102 @@ export const gameWorldRouter = router({
     const fiveMinAgo = Date.now() - 5 * 60 * 1000;
     const onlineCount = allAgents.filter((a) => a.isActive && (a.updatedAt ?? 0) > fiveMinAgo).length;
     return { onlineCount, totalAdventurers };
+  }),
+
+  // ─── 地圖傳送：設定目標節點（消耗 1 靈力值） ───
+  setTeleport: protectedProcedure
+    .input(z.object({ targetNodeId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+
+      const targetNode = MAP_NODE_MAP.get(input.targetNodeId);
+      if (!targetNode) throw new Error("目標節點不存在");
+
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const agent = agents[0];
+      if (!agent) throw new Error("角色不存在");
+      if (agent.status === "dead") throw new Error("旅人已倒下，無法傳送");
+      if (agent.actionPoints < 1) throw new Error("靈力值不足（傳送需要 1 點靈力值）");
+      if (agent.currentNodeId === input.targetNodeId) throw new Error("已在目標節點");
+
+      const now = Date.now();
+      await db.update(gameAgents).set({
+        targetNodeId: input.targetNodeId,
+        status: "moving",
+        actionPoints: agent.actionPoints - 1,
+        updatedAt: now,
+      }).where(eq(gameAgents.id, agent.id));
+
+      await db.insert(agentEvents).values({
+        agentId: agent.id,
+        eventType: "move",
+        message: `🗺️ ${agent.agentName ?? "旅人"} 啟程前往 ${targetNode.name}！（消耗 1 靈力值）`,
+        detail: { type: "teleport", targetNodeId: input.targetNodeId, targetNodeName: targetNode.name },
+        nodeId: agent.currentNodeId,
+        createdAt: now,
+      });
+
+      return { success: true, targetNode };
+    }),
+
+  // ─── 取得當前節點的隱藏事件（依洞察力機率感知） ───
+  getHiddenEvents: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return [];
+
+    const agents = await db.select().from(gameAgents)
+      .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    const agent = agents[0];
+    if (!agent) return [];
+
+    const now = Date.now();
+    // 查詢當前節點的有效隱藏事件
+    const events = await db.select().from(gameHiddenEvents)
+      .where(eq(gameHiddenEvents.nodeId, agent.currentNodeId));
+
+    const validEvents = events.filter(e => e.expiresAt > now && e.remainingTicks > 0);
+
+    // 依洞察力計算感知機率（treasureHunting 1-100 → 1%-100%）
+    const perception = agent.treasureHunting ?? 20;
+    const perceived: typeof validEvents = [];
+    for (const evt of validEvents) {
+      // 感知機率：(treasureHunting / perceptionThreshold) * 100%，上限100%
+      const chance = Math.min(100, (perception / evt.perceptionThreshold) * 100);
+      if (Math.random() * 100 < chance) {
+        perceived.push(evt);
+        // 標記已被發現
+        if (!evt.isDiscovered) {
+          await db.update(gameHiddenEvents).set({ isDiscovered: 1 })
+            .where(eq(gameHiddenEvents.id, evt.id));
+        }
+      }
+    }
+    return perceived;
+  }),
+
+  // ─── 取得玩家稱號列表 ───
+  getTitles: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return [];
+
+    const agents = await db.select().from(gameAgents)
+      .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    if (!agents[0]) return [];
+
+    const agentId = agents[0].id;
+    const myTitles = await db.select().from(agentTitles)
+      .where(eq(agentTitles.agentId, agentId));
+
+    // 取得稱號詳細資料
+    const allTitles = await db.select().from(gameTitles);
+    const titleMap = new Map(allTitles.map(t => [t.titleKey, t]));
+
+    return myTitles.map(at => ({
+      ...at,
+      titleInfo: titleMap.get(at.titleKey) ?? null,
+    }));
   }),
 
   // ─── 取得怪物圖鑑（公開） ───

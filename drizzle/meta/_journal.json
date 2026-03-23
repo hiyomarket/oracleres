@@ -463,6 +463,20 @@
       "when": 1774268384457,
       "tag": "0065_bouncy_spacker_dave",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "5",
+      "when": 1774275447021,
+      "tag": "0066_mushy_molten_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "5",
+      "when": 1774276509857,
+      "tag": "0067_slippery_the_order",
+      "breakpoints": true
     }
   ]
 }

@@ -1778,3 +1778,181 @@ export const gameWorld = mysqlTable("game_world", {
   updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
 export type GameWorld = typeof gameWorld.$inferSelect;
+
+/**
+ * 隱藏事件表：密店/隱藏NPC/隱藏任務的隨機生成記錄
+ * 每個事件有效期 5 個 Tick，過期後重新隨機
+ */
+export const gameHiddenEvents = mysqlTable("game_hidden_events", {
+  id: int("id").autoincrement().primaryKey(),
+  nodeId: varchar("node_id", { length: 50 }).notNull(),
+  eventType: mysqlEnum("event_type", ["hidden_shop", "hidden_npc", "hidden_quest"]).notNull(),
+  /** 事件資料（商品清單/NPC對話/任務內容） */
+  eventData: json("event_data").notNull(),
+  /** 感知門檻（1-100，洞察力需超過此值才有機率感知） */
+  perceptionThreshold: int("perception_threshold").notNull().default(30),
+  /** 剩餘有效 Tick 數 */
+  remainingTicks: int("remaining_ticks").notNull().default(5),
+  /** 是否已被發現（任意玩家） */
+  isDiscovered: tinyint("is_discovered").notNull().default(0),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  expiresAt: bigint("expires_at", { mode: "number" }).notNull().$defaultFn(() => Date.now() + 5 * 20 * 60 * 1000),
+});
+export type GameHiddenEvent = typeof gameHiddenEvents.$inferSelect;
+export type InsertGameHiddenEvent = typeof gameHiddenEvents.$inferInsert;
+
+/**
+ * 稱號表：玩家可獲得的稱號（命格/成就/特殊事件）
+ */
+export const gameTitles = mysqlTable("game_titles", {
+  id: int("id").autoincrement().primaryKey(),
+  titleKey: varchar("title_key", { length: 100 }).notNull().unique(),
+  titleName: varchar("title_name", { length: 50 }).notNull(),
+  titleDesc: text("title_desc"),
+  titleType: mysqlEnum("title_type", ["natal", "achievement", "event", "special"]).notNull().default("natal"),
+  /** 稱號顏色（hex） */
+  color: varchar("color", { length: 20 }).default("#f59e0b"),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameTitle = typeof gameTitles.$inferSelect;
+
+/**
+ * 玩家稱號表：玩家已獲得的稱號
+ */
+export const agentTitles = mysqlTable("agent_titles", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: int("agent_id").notNull(),
+  titleKey: varchar("title_key", { length: 100 }).notNull(),
+  isEquipped: tinyint("is_equipped").notNull().default(0),
+  acquiredAt: bigint("acquired_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type AgentTitle = typeof agentTitles.$inferSelect;
+
+// ═══════════════════════════════════════════════════════════════
+// V14 新增資料表
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 遊戲道具定義表（消耗品/裝備/武器）
+ * 由後台 CMS 管理，與 agentInventory 關聯
+ */
+export const gameInventoryItems = mysqlTable("game_inventory_items", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 道具唯一 key（如 herb-001, sword-fire-001） */
+  itemKey: varchar("item_key", { length: 100 }).notNull().unique(),
+  /** 道具名稱 */
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 道具描述 */
+  description: text("description"),
+  /** 道具類型：consumable / equipment / weapon / material / special */
+  itemType: mysqlEnum("item_type", ["consumable", "equipment", "weapon", "material", "special"]).notNull().default("consumable"),
+  /** 子分類：heal_hp / heal_mp / buff / debuff / armor / ring / necklace / sword / staff / bow / ore / herb */
+  subType: varchar("sub_type", { length: 50 }).default(""),
+  /** 五行屬性（wood/fire/earth/metal/water） */
+  wuxing: varchar("wuxing", { length: 10 }).default(""),
+  /** 稀有度：common / rare / epic / legendary */
+  rarity: mysqlEnum("rarity", ["common", "rare", "epic", "legendary"]).notNull().default("common"),
+  /** 圖示 emoji */
+  emoji: varchar("emoji", { length: 10 }).notNull().default("📦"),
+  /** 數值加成（JSON）：{ hp: 50, mp: 20, atk: 5, def: 3, spd: 2 } */
+  statBonus: json("stat_bonus"),
+  /** 使用效果（JSON）：{ effect: "heal_hp", value: 100 } */
+  useEffect: json("use_effect"),
+  /** 裝備部位（equipment/weapon 用）：head/body/hand/foot/ring/necklace/weapon/offhand/belt/accessory */
+  equipSlot: varchar("equip_slot", { length: 30 }).default(""),
+  /** 最大堆疊數量 */
+  maxStack: int("max_stack").notNull().default(99),
+  /** 是否可交易 */
+  isTradable: tinyint("is_tradable").notNull().default(1),
+  /** 是否啟用 */
+  isActive: tinyint("is_active").notNull().default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameInventoryItem = typeof gameInventoryItems.$inferSelect;
+export type InsertGameInventoryItem = typeof gameInventoryItems.$inferInsert;
+
+/**
+ * 虛界商店商品表（遊戲幣購買）
+ * 玩家在虛相世界各節點的商店購買道具
+ */
+export const gameVirtualShop = mysqlTable("game_virtual_shop", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 關聯 game_inventory_items.item_key */
+  itemKey: varchar("item_key", { length: 100 }).notNull(),
+  /** 商品名稱（可覆蓋道具名稱） */
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  /** 描述 */
+  description: text("description"),
+  /** 價格（遊戲幣） */
+  priceCoins: int("price_coins").notNull().default(0),
+  /** 每次購買數量 */
+  quantity: int("quantity").notNull().default(1),
+  /** 庫存（-1 = 無限） */
+  stock: int("stock").notNull().default(-1),
+  /** 節點限定（空 = 全節點可購買） */
+  nodeId: varchar("node_id", { length: 50 }).default(""),
+  /** 排序 */
+  sortOrder: int("sort_order").notNull().default(0),
+  /** 是否上架 */
+  isOnSale: tinyint("is_on_sale").notNull().default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameVirtualShopItem = typeof gameVirtualShop.$inferSelect;
+export type InsertGameVirtualShopItem = typeof gameVirtualShop.$inferInsert;
+
+/**
+ * 靈相商店商品表（靈石購買）
+ * 用於虛相世界的靈石專區（與靈相空間的紙娃娃商店分開）
+ */
+export const gameSpiritShop = mysqlTable("game_spirit_shop", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 關聯 game_inventory_items.item_key（特殊道具） */
+  itemKey: varchar("item_key", { length: 100 }).notNull(),
+  /** 商品名稱 */
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  /** 描述 */
+  description: text("description"),
+  /** 價格（靈石） */
+  priceStones: int("price_stones").notNull().default(0),
+  /** 每次購買數量 */
+  quantity: int("quantity").notNull().default(1),
+  /** 稀有度（影響顯示樣式） */
+  rarity: mysqlEnum("rarity", ["common", "rare", "epic", "legendary"]).notNull().default("rare"),
+  /** 排序 */
+  sortOrder: int("sort_order").notNull().default(0),
+  /** 是否上架 */
+  isOnSale: tinyint("is_on_sale").notNull().default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameSpiritShopItem = typeof gameSpiritShop.$inferSelect;
+export type InsertGameSpiritShopItem = typeof gameSpiritShop.$inferInsert;
+
+/**
+ * 密店商品池（隨機密店商品）
+ * 密店隨機出現時，從此池中抽取商品
+ */
+export const gameHiddenShopPool = mysqlTable("game_hidden_shop_pool", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 關聯 game_inventory_items.item_key */
+  itemKey: varchar("item_key", { length: 100 }).notNull(),
+  /** 商品名稱 */
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  /** 描述 */
+  description: text("description"),
+  /** 貨幣類型：coins / stones */
+  currencyType: mysqlEnum("currency_type", ["coins", "stones"]).notNull().default("coins"),
+  /** 價格 */
+  price: int("price").notNull().default(0),
+  /** 每次購買數量 */
+  quantity: int("quantity").notNull().default(1),
+  /** 出現機率權重（越高越常出現） */
+  weight: int("weight").notNull().default(10),
+  /** 稀有度 */
+  rarity: mysqlEnum("rarity", ["common", "rare", "epic", "legendary"]).notNull().default("rare"),
+  /** 是否啟用 */
+  isActive: tinyint("is_active").notNull().default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameHiddenShopItem = typeof gameHiddenShopPool.$inferSelect;
+export type InsertGameHiddenShopItem = typeof gameHiddenShopPool.$inferInsert;

@@ -1,8 +1,7 @@
 /**
  * VirtualWorldPage.tsx — 靈相虛界主畫面
- * V12：精確 RWD 佈局（頂端10%+地圖50%+角色面板30%+底端10%）
+ * V14：地圖傳送系統、密店隨機邏輯、命格稱號、日誌左下角、UI全面重構
  *      GD-002 三維五行屬性系統、GD-001 技能系統、GD-006 裝備系統
- *      尋寶力/洞察力、隱藏商店感知、置頂區有意義資訊
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useLocation } from "wouter";
@@ -189,6 +188,114 @@ function NamingDialog({ onNamed }: { onNamed: () => void }) {
           style={{ background: "linear-gradient(135deg,#f59e0b,#ef4444)" }}>
           {mut.isPending ? "⏳ 命格生成中…" : "✨ 確認命名"}
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// 地圖傳送彈窗（V14）
+// ─────────────────────────────────────────────────────────────
+function TeleportModal({
+  nodes, currentNodeId, onClose, onTeleport, isPending, agentAP,
+}: {
+  nodes: MapNode[];
+  currentNodeId: string;
+  onClose: () => void;
+  onTeleport: (nodeId: string) => void;
+  isPending: boolean;
+  agentAP: number;
+}) {
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<string | null>(null);
+  const filtered = nodes.filter(n =>
+    n.id !== currentNodeId &&
+    (search === "" || n.name.includes(search) || (n.county ?? "").includes(search))
+  );
+  const currentNode = nodes.find(n => n.id === currentNodeId);
+  return (
+    <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(16px)" }}
+      onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl flex flex-col overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #0a1628 0%, #0f1f35 100%)",
+          border: "1px solid rgba(56,189,248,0.3)",
+          boxShadow: "0 0 60px rgba(56,189,248,0.2), 0 20px 40px rgba(0,0,0,0.6)",
+          maxHeight: "80vh",
+        }}
+        onClick={e => e.stopPropagation()}>
+        {/* 標題列 */}
+        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "rgba(56,189,248,0.2)" }}>
+          <div>
+            <h2 className="text-lg font-bold text-sky-300">🗺️ 地圖傳送</h2>
+            <p className="text-xs text-slate-500 mt-0.5">目前：{currentNode?.name ?? currentNodeId} · 靈力 {agentAP} 點</p>
+          </div>
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl px-2">✕</button>
+        </div>
+        {/* 搜尋 */}
+        <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="搜尋地名或縣市…"
+            className="w-full px-3 py-2 rounded-xl text-sm text-slate-200 outline-none"
+            style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(56,189,248,0.2)" }}
+          />
+        </div>
+        {/* 節點列表 */}
+        <div className="overflow-y-auto flex-1 px-3 py-2 space-y-1">
+          {filtered.length === 0 ? (
+            <p className="text-center text-slate-600 text-sm py-6">找不到符合的地點</p>
+          ) : filtered.map(node => {
+            const isSelected = selected === node.id;
+            const elColor = WX_HEX[node.element ?? "metal"] ?? "#e2e8f0";
+            return (
+              <button key={node.id}
+                onClick={() => setSelected(isSelected ? null : node.id)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all"
+                style={{
+                  background: isSelected ? `${elColor}18` : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${isSelected ? elColor + "50" : "rgba(255,255,255,0.06)"}`,
+                }}>
+                <span className="text-lg shrink-0">{WX_EMOJI[node.element ?? "metal"] ?? "📍"}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-bold text-slate-200">{node.name}</span>
+                    {node.county && <span className="text-xs text-slate-600">{node.county}</span>}
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: `${elColor}18`, color: elColor }}>
+                      {WX_ZH[node.element ?? "metal"] ?? "金"}域
+                    </span>
+                    {node.dangerLevel && (
+                      <span className="text-xs text-slate-600">危險 Lv.{node.dangerLevel}</span>
+                    )}
+                  </div>
+                </div>
+                {isSelected && (
+                  <span className="text-sky-400 text-sm shrink-0">✓</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {/* 確認按鈕 */}
+        <div className="px-4 py-3 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          <button
+            onClick={() => selected && onTeleport(selected)}
+            disabled={!selected || isPending || agentAP < 1}
+            className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: selected && agentAP >= 1 ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(100,100,120,0.2)",
+              color: selected && agentAP >= 1 ? "#000" : "#475569",
+            }}>
+            {isPending ? "⏳ 傳送中…" : selected ? `🗺️ 傳送至 ${nodes.find(n => n.id === selected)?.name ?? selected}（消耗 1 靈力）` : "請選擇目標地點"}
+          </button>
+          {agentAP < 1 && (
+            <p className="text-center text-red-400 text-xs mt-2">靈力不足，無法傳送（需要 1 靈力）</p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -856,26 +963,55 @@ function CharacterPanel({
                 </div>
               </div>
 
-              {/* 八字命格能力値 */}
+              {/* 命格基礎値（五行素質） */}
               <div className="rounded-xl border p-2.5 space-y-1.5"
                 style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
-                <p className="text-xs font-bold text-slate-500 mb-1.5">🔮 命格基礎値（來自八字）</p>
-                {natalStats ? (
-                  <>
-                    {[
-                      { key: "hp",  icon: "🌿", label: "木 HP",  color: "#22c55e", max: 300 },
-                      { key: "atk", icon: "🔥", label: "火 攻",  color: "#ef4444", max: 60  },
-                      { key: "def", icon: "🪨", label: "土 防",  color: "#f59e0b", max: 50  },
-                      { key: "spd", icon: "⚡", label: "金 速",  color: "#e2e8f0", max: 30  },
-                      { key: "mp",  icon: "💧", label: "水 MP",  color: "#38bdf8", max: 150 },
-                    ].map(({ key, icon, label, color, max }) => {
-                      const val = (natalStats as Record<string, number>)[key] ?? 0;
-                      return (
-                        <MiniAttrBar key={key} icon={icon} label={label} value={val} color={color} max={max} />
-                      );
-                    })}
-                  </>
-                ) : <p className="text-slate-600 text-xs text-center py-2">請先完成八字分析</p>}
+                <p className="text-xs font-bold text-slate-500 mb-1.5">🔮 命格基礎値（五行素質）</p>
+                <p className="text-xs text-slate-600 mb-2">各屬性上限 1000，預設總合 100</p>
+                {[
+                  { key: "wuxingWood",  icon: "🌿", label: "木",  color: "#22c55e" },
+                  { key: "wuxingFire",  icon: "🔥", label: "火",  color: "#ef4444" },
+                  { key: "wuxingEarth", icon: "🪨", label: "土",  color: "#f59e0b" },
+                  { key: "wuxingMetal", icon: "⚡",    label: "金",  color: "#e2e8f0" },
+                  { key: "wuxingWater", icon: "💧", label: "水",  color: "#38bdf8" },
+                ].map(({ key, icon, label, color }) => {
+                  const val = (agent as Record<string, number> | null | undefined)?.[key] ?? 0;
+                  return (
+                    <MiniAttrBar key={key} icon={icon} label={label} value={val} color={color} max={1000} />
+                  );
+                })}
+              </div>
+
+              {/* 稱號系統 */}
+              <div className="rounded-xl border p-2.5"
+                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+                <p className="text-xs font-bold text-slate-500 mb-2">🏅 稱號</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {/* 命格稱號（主屬性決定） */}
+                  <span className="px-2.5 py-1 rounded-full text-xs font-bold"
+                    style={{ background: `${ec}18`, color: ec, border: `1px solid ${ec}40` }}>
+                    {agentElement === "wood" ? "🌿 木行先天" :
+                     agentElement === "fire" ? "🔥 火行先天" :
+                     agentElement === "earth" ? "🪨 土行先天" :
+                     agentElement === "metal" ? "⚡ 金行先天" : "💧 水行先天"}
+                  </span>
+                  {/* 等級稱號 */}
+                  {agentLevel >= 5 && (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold"
+                      style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}>
+                      ⭐ 天命旅人
+                    </span>
+                  )}
+                  {agentLevel >= 10 && (
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold"
+                      style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}>
+                      🔮 命格深造
+                    </span>
+                  )}
+                  <span className="px-2.5 py-1 rounded-full text-xs text-slate-600 border border-slate-800">
+                    更多稱號開發中…
+                  </span>
+                </div>
               </div>
 
               {/* 加成來源說明 */}
@@ -898,17 +1034,17 @@ function CharacterPanel({
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 事件日誌抽屜
+// ─── 事件日誌抽屜
 // ─────────────────────────────────────────────────────────────
 function EventLogDrawer({
-  events, logTab, setLogTab, isOpen, onClose,
+  events, logTab, setLogTab, isOpen, onClose, anchorBottom,
 }: {
   events: Array<{ id: number; eventType: string; message: string; createdAt: string; detail?: Record<string, unknown> | null }> | undefined;
   logTab: "all" | "combat" | "rogue";
   setLogTab: (t: "all" | "combat" | "rogue") => void;
   isOpen: boolean;
   onClose: () => void;
+  anchorBottom?: number; // px from bottom
 }) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -918,20 +1054,25 @@ function EventLogDrawer({
 
   if (!isOpen) return null;
 
+  // 只顯示最新 20 條
+  const displayEvents = events ? [...events].slice(-20) : [];
+
   return (
-    <div className="fixed inset-0 z-40 flex items-end" onClick={onClose}>
-      <div className="w-full rounded-t-2xl flex flex-col"
-        style={{ background: "rgba(6,10,22,0.98)", backdropFilter: "blur(16px)", border: "1px solid rgba(255,255,255,0.08)", maxHeight: "70vh" }}
-        onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
-          <div className="flex items-center gap-2">
-            <span className="text-base">📜</span>
-            <span className="text-sm font-bold text-slate-200">冒險日誌</span>
+    <div className="fixed z-50 left-2 flex flex-col"
+      style={{ bottom: `${anchorBottom ?? 72}px`, width: "min(340px, calc(100vw - 16px))" }}
+      onClick={e => e.stopPropagation()}>
+      <div className="rounded-2xl flex flex-col border"
+        style={{ background: "rgba(6,10,22,0.98)", backdropFilter: "blur(16px)", borderColor: "rgba(245,158,11,0.3)", maxHeight: "50vh" }}>
+        <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">📜</span>
+            <span className="text-xs font-bold text-amber-300">冒險日誌</span>
+            <span className="text-xs text-slate-600">（最新20條）</span>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
             {(["all", "combat", "rogue"] as const).map(tab => (
               <button key={tab} onClick={() => setLogTab(tab)}
-                className="px-2 py-1 rounded-full text-xs border transition-all"
+                className="px-1.5 py-0.5 rounded-full text-xs border transition-all"
                 style={{
                   background: logTab === tab ? "rgba(245,158,11,0.15)" : "transparent",
                   borderColor: logTab === tab ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.1)",
@@ -940,32 +1081,31 @@ function EventLogDrawer({
                 {tab === "all" ? "全部" : tab === "combat" ? "戰鬥" : "奇遇"}
               </button>
             ))}
-            <button onClick={onClose} className="text-slate-600 hover:text-slate-400 text-lg px-1">✕</button>
+            <button onClick={onClose} className="text-slate-600 hover:text-slate-400 text-base px-1">✕</button>
           </div>
         </div>
-        <div ref={listRef} className="overflow-y-auto px-4 py-3 space-y-1.5 font-mono flex-1">
-          {(!events || events.length === 0) ? (
-            <div className="text-center py-8">
-              <p className="text-slate-600 text-sm">等待旅人的第一個事件…</p>
-              <p className="text-slate-700 text-xs mt-1">Tick 引擎每 5 分鐘自動觸發</p>
+        <div ref={listRef} className="overflow-y-auto px-3 py-2 space-y-1 font-mono flex-1">
+          {displayEvents.length === 0 ? (
+            <div className="text-center py-4">
+              <p className="text-slate-600 text-xs">等待旅人的第一個事件…</p>
             </div>
-          ) : [...events].reverse().map(ev => {
+          ) : [...displayEvents].reverse().map(ev => {
             const detail = ev.detail;
             const hasCombat = Boolean(detail && detail.phase === "result" && detail.rounds);
             const isExp = expandedId === ev.id;
             return (
-              <div key={ev.id} className="flex flex-col gap-0.5 text-sm leading-relaxed">
-                <div className="flex gap-2 cursor-pointer py-0.5"
+              <div key={ev.id} className="flex flex-col gap-0.5 text-xs leading-relaxed">
+                <div className="flex gap-1.5 cursor-pointer py-0.5"
                   onClick={() => hasCombat && setExpandedId(isExp ? null : ev.id)}>
-                  <span className="text-slate-700 shrink-0 tabular-nums text-xs pt-0.5">
+                  <span className="text-slate-700 shrink-0 tabular-nums text-[10px] pt-0.5">
                     {new Date(ev.createdAt).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
                   </span>
-                  <span className="shrink-0 text-sm">{EV_ICON[ev.eventType] ?? "•"}</span>
+                  <span className="shrink-0">{EV_ICON[ev.eventType] ?? "•"}</span>
                   <span className="flex-1" style={{ color: EV_COLOR[ev.eventType] ?? "rgba(148,163,184,0.85)" }}>{ev.message}</span>
-                  {hasCombat && <span className="text-slate-600 text-xs shrink-0">{isExp ? "▲" : "▼"}</span>}
+                  {hasCombat && <span className="text-slate-600 text-[10px] shrink-0">{isExp ? "▲" : "▼"}</span>}
                 </div>
                 {isExp && hasCombat && detail && (
-                  <div className="ml-8 pl-2 border-l border-slate-700 text-xs text-slate-500 space-y-0.5">
+                  <div className="ml-6 pl-2 border-l border-slate-700 text-[10px] text-slate-500 space-y-0.5">
                     {(detail.rounds as Array<Record<string, unknown>> ?? []).slice(0, 4).map((r, i) => (
                       <p key={i}>{String(r.attacker ?? "")} → {String(r.defender ?? "")}：{String(r.damage ?? 0)} 傷害{r.critical ? " 💥暴擊" : ""}</p>
                     ))}
@@ -991,6 +1131,7 @@ export default function VirtualWorldPage() {
   const { user } = useAuth();
   const [logTab, setLogTab] = useState<"all" | "combat" | "rogue">("all");
   const [showLog, setShowLog] = useState(false);
+  const [showTeleport, setShowTeleport] = useState(false);
   const [nodeInfoOpen, setNodeInfoOpen] = useState(true);
   const [tickRunning, setTickRunning] = useState(false);
   const [charPanelOpen, setCharPanelOpen] = useState(false); // 手機版底部抽屜：預設收合（地圖優先）
@@ -1021,6 +1162,18 @@ export default function VirtualWorldPage() {
   const setStrategy = trpc.gameWorld.setStrategy.useMutation({ onSuccess: () => utils.gameWorld.getAgentStatus.invalidate() });
   const divineHeal  = trpc.gameWorld.divineHeal.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
   const triggerTick = trpc.gameWorld.triggerTick.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
+  const setTeleport = trpc.gameWorld.setTeleport.useMutation({
+    onSuccess: (data) => {
+      setShowTeleport(false);
+      if (data.success) {
+        utils.gameWorld.getOrCreateAgent.invalidate();
+        utils.gameWorld.getAgentStatus.invalidate();
+        refetchLog();
+        // 地圖飛至目標節點
+        if (data.targetNode?.id) mapRef.current?.highlightNode(data.targetNode.id);
+      }
+    },
+  });
 
   const handleTickToggle = useCallback(() => {
     if (tickRunning) {
@@ -1057,8 +1210,13 @@ export default function VirtualWorldPage() {
   const totalAdventurers = onlineStats?.totalAdventurers ?? 0;
 
   // 尋寶力計算（用於隱藏商店感知）
+  // V14：所有人都有機率感知密店，尋寶力只影響機率高低
   const treasureHunting = agent?.treasureHunting ?? 20;
-  const hasHiddenShopSense = treasureHunting >= 60;
+  // 尋寶力 >= 60：高機率感知；20-59：低機率；< 20：極低機率
+  // 密店按鈕對所有人開放，只是顯示不同的機率提示
+  const hiddenShopTier = treasureHunting >= 80 ? "high" : treasureHunting >= 50 ? "mid" : treasureHunting >= 30 ? "low" : "minimal";
+  const hiddenShopLabel = hiddenShopTier === "high" ? "密店感知強" : hiddenShopTier === "mid" ? "偶有感知" : hiddenShopTier === "low" ? "微弱感知" : "感知微弱";
+  const hiddenShopColor = hiddenShopTier === "high" ? "#f59e0b" : hiddenShopTier === "mid" ? "#a78bfa" : hiddenShopTier === "low" ? "#60a5fa" : "#475569";
 
   if (!user) {
     return (
@@ -1095,7 +1253,20 @@ export default function VirtualWorldPage() {
         setLogTab={setLogTab}
         isOpen={showLog}
         onClose={() => setShowLog(false)}
+        anchorBottom={64}
       />
+
+      {/* 地圖傳送彈窗 */}
+      {showTeleport && (
+        <TeleportModal
+          nodes={mapNodeList}
+          currentNodeId={currentNodeId}
+          onClose={() => setShowTeleport(false)}
+          onTeleport={(nodeId) => setTeleport.mutate({ targetNodeId: nodeId })}
+          isPending={setTeleport.isPending}
+          agentAP={agent?.actionPoints ?? 0}
+        />
+      )}
 
       {/* ══════════════════════════════════════════════════════
           固定視窗主佈局：頂端~10% + 中間~80% + 底端由 GameTabLayout 提供
@@ -1275,21 +1446,21 @@ export default function VirtualWorldPage() {
                 />
               )}
 
-              {/* 日誌按鈕：右下角圓形大按鈕 */}
+              {/* 日誌按鈕：左下角圓形按鈕（V14 移至左下角） */}
               <button
                 onClick={() => setShowLog(v => !v)}
                 className="absolute z-[400] flex items-center justify-center border transition-all hover:scale-110 active:scale-95"
                 style={{
                   bottom: "16px",
-                  right: "16px",
-                  width: "48px",
-                  height: "48px",
+                  left: "16px",
+                  width: "44px",
+                  height: "44px",
                   borderRadius: "50%",
-                  background: "rgba(6,10,22,0.92)",
+                  background: showLog ? "rgba(245,158,11,0.2)" : "rgba(6,10,22,0.92)",
                   backdropFilter: "blur(10px)",
-                  borderColor: "rgba(245,158,11,0.5)",
-                  boxShadow: "0 0 14px rgba(245,158,11,0.4), 0 4px 12px rgba(0,0,0,0.5)",
-                  fontSize: "20px",
+                  borderColor: showLog ? "rgba(245,158,11,0.8)" : "rgba(245,158,11,0.4)",
+                  boxShadow: "0 0 12px rgba(245,158,11,0.35), 0 4px 10px rgba(0,0,0,0.5)",
+                  fontSize: "18px",
                 }}
               >
                 📜
@@ -1297,17 +1468,17 @@ export default function VirtualWorldPage() {
                   <span
                     className="absolute font-bold"
                     style={{
-                      top: "-4px", right: "-4px",
-                      minWidth: "18px", height: "18px",
-                      borderRadius: "9px",
+                      top: "-3px", right: "-3px",
+                      minWidth: "16px", height: "16px",
+                      borderRadius: "8px",
                       background: "#ef4444", color: "#fff",
-                      fontSize: "10px",
+                      fontSize: "9px",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      padding: "0 3px",
+                      padding: "0 2px",
                       border: "2px solid rgba(6,10,22,0.9)",
                     }}
                   >
-                    {(eventLog?.length ?? 0) > 99 ? "99+" : eventLog?.length}
+                    {(eventLog?.length ?? 0) > 20 ? "20+" : eventLog?.length}
                   </span>
                 )}
               </button>
@@ -1430,15 +1601,15 @@ export default function VirtualWorldPage() {
                     </span>
                   )}
                 </button>
-                {/* 地圖傳送 */}
+                {/* 地圖傳送（桌機版） */}
                 <button
-                  onClick={() => alert("地圖傳送：即將推出！")}
+                  onClick={() => setShowTeleport(true)}
                   className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{ background: "rgba(56,189,248,0.08)", borderColor: "rgba(56,189,248,0.28)" }}>
                   <span className="text-sm">🗺️</span>
                   <span className="text-xs text-sky-300 font-bold">地圖傳送</span>
                 </button>
-                {/* 一般商店 */}
+                {/* 一般商店（桌機版） */}
                 <button
                   onClick={() => navigate("/game/shop")}
                   className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -1446,18 +1617,18 @@ export default function VirtualWorldPage() {
                   <span className="text-sm">🏪</span>
                   <span className="text-xs text-green-300 font-bold">商店</span>
                 </button>
-                {/* 隱藏商店（尋寶力感應） */}
+                {/* 密店（桌機版，V14：所有人都可進入） */}
                 <button
-                  onClick={() => hasHiddenShopSense ? navigate("/game/shop?hidden=1") : alert(`尋寶力需達 60 才能感知隱藏商店（目前：${treasureHunting}）`)}
+                  onClick={() => navigate("/game/shop?hidden=1")}
                   className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{
-                    background: hasHiddenShopSense ? "rgba(245,158,11,0.12)" : "rgba(100,100,120,0.06)",
-                    borderColor: hasHiddenShopSense ? "rgba(245,158,11,0.5)" : "rgba(100,100,120,0.2)",
-                    boxShadow: hasHiddenShopSense ? "0 0 12px rgba(245,158,11,0.4)" : "none",
-                    animation: hasHiddenShopSense ? "pulse 1.5s infinite" : "none",
+                    background: hiddenShopTier === "high" ? "rgba(245,158,11,0.12)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.10)" : "rgba(96,165,250,0.08)",
+                    borderColor: hiddenShopTier === "high" ? "rgba(245,158,11,0.5)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.4)" : "rgba(96,165,250,0.3)",
+                    boxShadow: hiddenShopTier === "high" ? "0 0 12px rgba(245,158,11,0.4)" : "none",
                   }}>
                   <span className="text-sm">🔍</span>
-                  <span className="text-xs font-bold" style={{ color: hasHiddenShopSense ? "#f59e0b" : "#475569" }}>密店</span>
+                  <span className="text-xs font-bold" style={{ color: hiddenShopColor }}>密店</span>
+                  <span className="text-[9px] text-slate-600 hidden xl:inline">{hiddenShopLabel}</span>
                 </button>
               </div>
             </div>
@@ -1470,7 +1641,7 @@ export default function VirtualWorldPage() {
             <div
               className="lg:hidden fixed left-0 right-0 z-30 flex flex-col"
               style={{
-                bottom: "64px", // 底部導覽列 56px + 8px 間距
+                bottom: "56px", // 底部導覽列 56px（緊貼，無多餘間距）
                 background: "rgba(6,10,22,0.98)",
                 backdropFilter: "blur(20px)",
                 borderTop: `2px solid ${ec}40`,
@@ -1547,7 +1718,7 @@ export default function VirtualWorldPage() {
                     </button>
                     {/* 地圖傳送 */}
                     <button
-                      onClick={() => alert("地圖傳送：即將推出！")}
+                      onClick={() => { setShowTeleport(true); setCharPanelOpen(false); }}
                       className="flex-1 flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl border transition-all active:scale-[0.98]"
                       style={{ background: "rgba(56,189,248,0.08)", borderColor: "rgba(56,189,248,0.28)" }}>
                       <span className="text-sm">🗺️</span>
@@ -1561,18 +1732,17 @@ export default function VirtualWorldPage() {
                       <span className="text-sm">🏪</span>
                       <span className="text-xs text-green-300 font-bold">商店</span>
                     </button>
-                    {/* 隱藏商店感應 */}
+                    {/* 密店（V14：所有人都可進入，尋寶力影響機率） */}
                     <button
-                      onClick={() => hasHiddenShopSense ? navigate("/game/shop?hidden=1") : alert(`尋寶力需達 60（目前：${treasureHunting}）`)}
+                      onClick={() => navigate("/game/shop?hidden=1")}
                       className="flex-1 flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl border transition-all active:scale-[0.98]"
                       style={{
-                        background: hasHiddenShopSense ? "rgba(245,158,11,0.12)" : "rgba(100,100,120,0.06)",
-                        borderColor: hasHiddenShopSense ? "rgba(245,158,11,0.5)" : "rgba(100,100,120,0.2)",
-                        boxShadow: hasHiddenShopSense ? "0 0 10px rgba(245,158,11,0.4)" : "none",
-                        animation: hasHiddenShopSense ? "pulse 1.5s infinite" : "none",
+                        background: hiddenShopTier === "high" ? "rgba(245,158,11,0.12)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.10)" : "rgba(96,165,250,0.08)",
+                        borderColor: hiddenShopTier === "high" ? "rgba(245,158,11,0.5)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.4)" : "rgba(96,165,250,0.3)",
+                        boxShadow: hiddenShopTier === "high" ? "0 0 10px rgba(245,158,11,0.4)" : "none",
                       }}>
                       <span className="text-sm">🔍</span>
-                      <span className="text-xs font-bold" style={{ color: hasHiddenShopSense ? "#f59e0b" : "#475569" }}>密店</span>
+                      <span className="text-xs font-bold" style={{ color: hiddenShopColor }}>密店</span>
                     </button>
                   </div>
                 </div>

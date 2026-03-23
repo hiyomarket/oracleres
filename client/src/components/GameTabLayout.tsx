@@ -21,7 +21,7 @@ const GAME_TABS: GameTab[] = [
   { id: "blessing", path: "/game/blessings", icon: "📿", label: "命理加成", comingSoon: true },
 ];
 
-/** 底部 Tab Bar 高度（含 safe-area） */
+/** 底部 Tab Bar 高度（不含 safe-area，safe-area 由 CSS 處理） */
 export const TAB_BAR_HEIGHT = 56;
 
 interface GameTabLayoutProps {
@@ -75,12 +75,11 @@ export default function GameTabLayout({ children, activeTab }: GameTabLayoutProp
           bottom: 0, left: 0, right: 0,
           zIndex: 50,
           display: "flex",
-          alignItems: "stretch",
+          alignItems: "flex-start",
           height: `${TAB_BAR_HEIGHT}px`,
           background: "rgba(5, 13, 20, 0.97)",
           backdropFilter: "blur(20px)",
           borderTop: "1px solid rgba(255,255,255,0.08)",
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
         {GAME_TABS.map((tab) => {

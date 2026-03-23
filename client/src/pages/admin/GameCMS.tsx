@@ -456,20 +456,471 @@ export default function GameCMS() {
           <TabsList className="mb-6 flex-wrap h-auto gap-1">
             <TabsTrigger value="monsters">怪物</TabsTrigger>
             <TabsTrigger value="skills">技能</TabsTrigger>
+            <TabsTrigger value="inv-items">遊戲道具</TabsTrigger>
+            <TabsTrigger value="virtual-shop">虛界商店</TabsTrigger>
+            <TabsTrigger value="spirit-shop">靈相商店</TabsTrigger>
+            <TabsTrigger value="hidden-shop">密店商品池</TabsTrigger>
             <TabsTrigger value="achievements">成就</TabsTrigger>
-            <TabsTrigger value="items">商城道具</TabsTrigger>
+            <TabsTrigger value="items">紙娃娃商城</TabsTrigger>
           </TabsList>
 
           <Card>
             <CardContent className="pt-6">
               <TabsContent value="monsters"><MonstersTab /></TabsContent>
               <TabsContent value="skills"><SkillsTab /></TabsContent>
+              <TabsContent value="inv-items"><InventoryItemsTab /></TabsContent>
+              <TabsContent value="virtual-shop"><VirtualShopTab /></TabsContent>
+              <TabsContent value="spirit-shop"><SpiritShopTab /></TabsContent>
+              <TabsContent value="hidden-shop"><HiddenShopTab /></TabsContent>
               <TabsContent value="achievements"><AchievementsTab /></TabsContent>
               <TabsContent value="items"><GameItemsTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
       </div>
+    </div>
+  );
+}
+
+// ─── Inventory Items Tab ───────────────────────────────────────────────────────
+function InventoryItemsTab() {
+  const utils = trpc.useUtils();
+  const { data: items = [], isLoading } = trpc.gameAdmin.getInventoryItems.useQuery();
+  const createMutation = trpc.gameAdmin.createInventoryItem.useMutation({
+    onSuccess: () => { utils.gameAdmin.getInventoryItems.invalidate(); toast.success("道具已新增"); setOpen(false); setForm(defaultForm); },
+    onError: (e) => toast.error(e.message),
+  });
+  const deleteMutation = trpc.gameAdmin.deleteInventoryItem.useMutation({
+    onSuccess: () => { utils.gameAdmin.getInventoryItems.invalidate(); toast.success("已刪除"); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const [open, setOpen] = useState(false);
+  const defaultForm = { itemKey: "", name: "", description: "", itemType: "consumable" as "consumable" | "equipment" | "weapon" | "material" | "special", subType: "", wuxing: "", rarity: "common" as "common" | "rare" | "epic" | "legendary", emoji: "📦", equipSlot: "", maxStack: 99, isTradable: 1 as number, isActive: 1 as number };
+  const [form, setForm] = useState(defaultForm);
+
+  const RARITY_COLORS: Record<string, string> = { common: "#888", rare: "#3B82F6", epic: "#8B5CF6", legendary: "#F59E0B" };
+  const RARITY_ZH: Record<string, string> = { common: "普通", rare: "稀有", epic: "史詩", legendary: "傳說" };
+  const TYPE_ZH: Record<string, string> = { consumable: "消耗品", equipment: "裝備", weapon: "武器", material: "材料", special: "特殊" };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold">遊戲道具管理（{items.length} 筆）</h2>
+        <Button onClick={() => setOpen(true)} size="sm">+ 新增道具</Button>
+      </div>
+      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b text-muted-foreground">
+                <th className="text-left py-2 px-2">ID</th>
+                <th className="text-left py-2 px-2">圖示</th>
+                <th className="text-left py-2 px-2">名稱</th>
+                <th className="text-left py-2 px-2">Key</th>
+                <th className="text-left py-2 px-2">類型</th>
+                <th className="text-left py-2 px-2">五行</th>
+                <th className="text-left py-2 px-2">稀有度</th>
+                <th className="text-left py-2 px-2">狀態</th>
+                <th className="text-left py-2 px-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item: any) => (
+                <tr key={item.id} className="border-b hover:bg-muted/30">
+                  <td className="py-2 px-2 text-muted-foreground">{item.id}</td>
+                  <td className="py-2 px-2 text-xl">{item.emoji}</td>
+                  <td className="py-2 px-2 font-medium">{item.name}</td>
+                  <td className="py-2 px-2 text-xs text-muted-foreground font-mono">{item.itemKey}</td>
+                  <td className="py-2 px-2 text-xs">{TYPE_ZH[item.itemType] ?? item.itemType}</td>
+                  <td className="py-2 px-2">{item.wuxing ? <WuxingBadge wuxing={item.wuxing} /> : "-"}</td>
+                  <td className="py-2 px-2">
+                    <Badge style={{ backgroundColor: RARITY_COLORS[item.rarity] ?? "#888", color: "#fff" }} className="text-xs">
+                      {RARITY_ZH[item.rarity] ?? item.rarity}
+                    </Badge>
+                  </td>
+                  <td className="py-2 px-2">
+                    <Badge variant={item.isActive ? "default" : "outline"}>{item.isActive ? "啟用" : "停用"}</Badge>
+                  </td>
+                  <td className="py-2 px-2">
+                    <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate({ id: item.id })}>刪除</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>新增遊戲道具</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Input placeholder="道具 Key（如 herb-001）" value={form.itemKey} onChange={e => setForm(f => ({ ...f, itemKey: e.target.value }))} />
+              <Input placeholder="道具名稱" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+            </div>
+            <Textarea placeholder="道具描述" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
+            <div className="grid grid-cols-3 gap-2">
+              <Select value={form.itemType} onValueChange={(v) => setForm(f => ({ ...f, itemType: v as any }))}>
+                <SelectTrigger><SelectValue placeholder="類型" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="consumable">消耗品</SelectItem>
+                  <SelectItem value="equipment">裝備</SelectItem>
+                  <SelectItem value="weapon">武器</SelectItem>
+                  <SelectItem value="material">材料</SelectItem>
+                  <SelectItem value="special">特殊</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={form.rarity} onValueChange={(v) => setForm(f => ({ ...f, rarity: v as any }))}>
+                <SelectTrigger><SelectValue placeholder="稀有度" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="common">普通</SelectItem>
+                  <SelectItem value="rare">稀有</SelectItem>
+                  <SelectItem value="epic">史詩</SelectItem>
+                  <SelectItem value="legendary">傳說</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={form.wuxing} onValueChange={(v) => setForm(f => ({ ...f, wuxing: v }))}>
+                <SelectTrigger><SelectValue placeholder="五行（可選）" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">無</SelectItem>
+                  {WUXING_OPTIONS.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <Input placeholder="圖示 Emoji" value={form.emoji} onChange={e => setForm(f => ({ ...f, emoji: e.target.value }))} />
+              <Input placeholder="裝備槽（如 weapon）" value={form.equipSlot} onChange={e => setForm(f => ({ ...f, equipSlot: e.target.value }))} />
+              <Input type="number" placeholder="最大堆疊" value={form.maxStack} onChange={e => setForm(f => ({ ...f, maxStack: +e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>取消</Button>
+            <Button onClick={() => createMutation.mutate(form)} disabled={createMutation.isPending}>儲存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ─── Virtual Shop Tab ──────────────────────────────────────────────────────────
+function VirtualShopTab() {
+  const utils = trpc.useUtils();
+  const { data: shopItems = [], isLoading } = trpc.gameAdmin.getVirtualShop.useQuery();
+  const createMutation = trpc.gameAdmin.createVirtualShopItem.useMutation({
+    onSuccess: () => { utils.gameAdmin.getVirtualShop.invalidate(); toast.success("商品已新增"); setOpen(false); setForm(defaultForm); },
+    onError: (e) => toast.error(e.message),
+  });
+  const deleteMutation = trpc.gameAdmin.deleteVirtualShopItem.useMutation({
+    onSuccess: () => { utils.gameAdmin.getVirtualShop.invalidate(); toast.success("已刪除"); },
+    onError: (e) => toast.error(e.message),
+  });
+  const updateMutation = trpc.gameAdmin.updateVirtualShopItem.useMutation({
+    onSuccess: () => { utils.gameAdmin.getVirtualShop.invalidate(); toast.success("已更新"); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const [open, setOpen] = useState(false);
+  const defaultForm = { itemKey: "", displayName: "", description: "", priceCoins: 100, quantity: 1, stock: -1, nodeId: "", sortOrder: 0, isOnSale: 1 as number };
+  const [form, setForm] = useState(defaultForm);
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-lg font-semibold">虛界商店管理（{shopItems.length} 筆）</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">玩家使用「遊戲幣」購買，可綁定特定節點或全圖可用（nodeId 留空）</p>
+        </div>
+        <Button onClick={() => setOpen(true)} size="sm">+ 新增商品</Button>
+      </div>
+      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b text-muted-foreground">
+                <th className="text-left py-2 px-2">ID</th>
+                <th className="text-left py-2 px-2">名稱</th>
+                <th className="text-left py-2 px-2">Key</th>
+                <th className="text-left py-2 px-2">遊戲幣</th>
+                <th className="text-left py-2 px-2">數量</th>
+                <th className="text-left py-2 px-2">庫存</th>
+                <th className="text-left py-2 px-2">節點</th>
+                <th className="text-left py-2 px-2">狀態</th>
+                <th className="text-left py-2 px-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shopItems.map((item: any) => (
+                <tr key={item.id} className="border-b hover:bg-muted/30">
+                  <td className="py-2 px-2 text-muted-foreground">{item.id}</td>
+                  <td className="py-2 px-2 font-medium">{item.displayName}</td>
+                  <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{item.itemKey}</td>
+                  <td className="py-2 px-2 text-yellow-500 font-bold">{item.priceCoins} 幣</td>
+                  <td className="py-2 px-2">{item.quantity}</td>
+                  <td className="py-2 px-2">{item.stock === -1 ? "∞" : item.stock}</td>
+                  <td className="py-2 px-2 text-xs">{item.nodeId || "全圖"}</td>
+                  <td className="py-2 px-2">
+                    <Badge variant={item.isOnSale ? "default" : "outline"}>{item.isOnSale ? "上架" : "下架"}</Badge>
+                  </td>
+                  <td className="py-2 px-2 flex gap-1">
+                    <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: item.id, data: { isOnSale: item.isOnSale ? 0 : 1 } })}>
+                      {item.isOnSale ? "下架" : "上架"}
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate({ id: item.id })}>刪</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>新增虛界商店商品</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Input placeholder="道具 Key（對應遊戲道具）" value={form.itemKey} onChange={e => setForm(f => ({ ...f, itemKey: e.target.value }))} />
+              <Input placeholder="顯示名稱" value={form.displayName} onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))} />
+            </div>
+            <Textarea placeholder="商品描述" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
+            <div className="grid grid-cols-3 gap-2">
+              <Input type="number" placeholder="遊戲幣價格" value={form.priceCoins} onChange={e => setForm(f => ({ ...f, priceCoins: +e.target.value }))} />
+              <Input type="number" placeholder="購買數量" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} />
+              <Input type="number" placeholder="庫存（-1=無限）" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: +e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Input placeholder="綁定節點 ID（留空=全圖）" value={form.nodeId} onChange={e => setForm(f => ({ ...f, nodeId: e.target.value }))} />
+              <Input type="number" placeholder="排序順序" value={form.sortOrder} onChange={e => setForm(f => ({ ...f, sortOrder: +e.target.value }))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>取消</Button>
+            <Button onClick={() => createMutation.mutate(form)} disabled={createMutation.isPending}>儲存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ─── Spirit Shop Tab ───────────────────────────────────────────────────────────
+function SpiritShopTab() {
+  const utils = trpc.useUtils();
+  const { data: shopItems = [], isLoading } = trpc.gameAdmin.getSpiritShop.useQuery();
+  const createMutation = trpc.gameAdmin.createSpiritShopItem.useMutation({
+    onSuccess: () => { utils.gameAdmin.getSpiritShop.invalidate(); toast.success("商品已新增"); setOpen(false); setForm(defaultForm); },
+    onError: (e) => toast.error(e.message),
+  });
+  const deleteMutation = trpc.gameAdmin.deleteSpiritShopItem.useMutation({
+    onSuccess: () => { utils.gameAdmin.getSpiritShop.invalidate(); toast.success("已刪除"); },
+    onError: (e) => toast.error(e.message),
+  });
+  const updateMutation = trpc.gameAdmin.updateSpiritShopItem.useMutation({
+    onSuccess: () => { utils.gameAdmin.getSpiritShop.invalidate(); toast.success("已更新"); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const [open, setOpen] = useState(false);
+  const defaultForm = { itemKey: "", displayName: "", description: "", priceStones: 50, quantity: 1, rarity: "rare" as "common" | "rare" | "epic" | "legendary", sortOrder: 0, isOnSale: 1 as number };
+  const [form, setForm] = useState(defaultForm);
+  const RARITY_COLORS: Record<string, string> = { common: "#888", rare: "#3B82F6", epic: "#8B5CF6", legendary: "#F59E0B" };
+  const RARITY_ZH: Record<string, string> = { common: "普通", rare: "稀有", epic: "史詩", legendary: "傳說" };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-lg font-semibold">靈相商店管理（{shopItems.length} 筆）</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">玩家使用「靈石」購買，用於虛相世界的特殊道具（非紙娃娃）</p>
+        </div>
+        <Button onClick={() => setOpen(true)} size="sm">+ 新增商品</Button>
+      </div>
+      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b text-muted-foreground">
+                <th className="text-left py-2 px-2">ID</th>
+                <th className="text-left py-2 px-2">名稱</th>
+                <th className="text-left py-2 px-2">Key</th>
+                <th className="text-left py-2 px-2">靈石</th>
+                <th className="text-left py-2 px-2">稀有度</th>
+                <th className="text-left py-2 px-2">狀態</th>
+                <th className="text-left py-2 px-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shopItems.map((item: any) => (
+                <tr key={item.id} className="border-b hover:bg-muted/30">
+                  <td className="py-2 px-2 text-muted-foreground">{item.id}</td>
+                  <td className="py-2 px-2 font-medium">{item.displayName}</td>
+                  <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{item.itemKey}</td>
+                  <td className="py-2 px-2 text-purple-400 font-bold">💎 {item.priceStones}</td>
+                  <td className="py-2 px-2">
+                    <Badge style={{ backgroundColor: RARITY_COLORS[item.rarity] ?? "#888", color: "#fff" }} className="text-xs">
+                      {RARITY_ZH[item.rarity] ?? item.rarity}
+                    </Badge>
+                  </td>
+                  <td className="py-2 px-2">
+                    <Badge variant={item.isOnSale ? "default" : "outline"}>{item.isOnSale ? "上架" : "下架"}</Badge>
+                  </td>
+                  <td className="py-2 px-2 flex gap-1">
+                    <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: item.id, data: { isOnSale: item.isOnSale ? 0 : 1 } })}>
+                      {item.isOnSale ? "下架" : "上架"}
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate({ id: item.id })}>刪</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>新增靈相商店商品</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Input placeholder="道具 Key" value={form.itemKey} onChange={e => setForm(f => ({ ...f, itemKey: e.target.value }))} />
+              <Input placeholder="顯示名稱" value={form.displayName} onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))} />
+            </div>
+            <Textarea placeholder="商品描述" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
+            <div className="grid grid-cols-3 gap-2">
+              <Input type="number" placeholder="靈石價格" value={form.priceStones} onChange={e => setForm(f => ({ ...f, priceStones: +e.target.value }))} />
+              <Input type="number" placeholder="購買數量" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} />
+              <Select value={form.rarity} onValueChange={(v) => setForm(f => ({ ...f, rarity: v as any }))}>
+                <SelectTrigger><SelectValue placeholder="稀有度" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="common">普通</SelectItem>
+                  <SelectItem value="rare">稀有</SelectItem>
+                  <SelectItem value="epic">史詩</SelectItem>
+                  <SelectItem value="legendary">傳說</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>取消</Button>
+            <Button onClick={() => createMutation.mutate(form)} disabled={createMutation.isPending}>儲存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ─── Hidden Shop Pool Tab ──────────────────────────────────────────────────────
+function HiddenShopTab() {
+  const utils = trpc.useUtils();
+  const { data: poolItems = [], isLoading } = trpc.gameAdmin.getHiddenShopPool.useQuery();
+  const createMutation = trpc.gameAdmin.createHiddenShopItem.useMutation({
+    onSuccess: () => { utils.gameAdmin.getHiddenShopPool.invalidate(); toast.success("密店商品已新增"); setOpen(false); setForm(defaultForm); },
+    onError: (e) => toast.error(e.message),
+  });
+  const deleteMutation = trpc.gameAdmin.deleteHiddenShopItem.useMutation({
+    onSuccess: () => { utils.gameAdmin.getHiddenShopPool.invalidate(); toast.success("已刪除"); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const [open, setOpen] = useState(false);
+  const defaultForm = { itemKey: "", displayName: "", description: "", currencyType: "coins" as "coins" | "stones", price: 200, quantity: 1, weight: 10, rarity: "rare" as "common" | "rare" | "epic" | "legendary", isActive: 1 as number };
+  const [form, setForm] = useState(defaultForm);
+  const RARITY_COLORS: Record<string, string> = { common: "#888", rare: "#3B82F6", epic: "#8B5CF6", legendary: "#F59E0B" };
+  const RARITY_ZH: Record<string, string> = { common: "普通", rare: "稀有", epic: "史詩", legendary: "傳說" };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-lg font-semibold">密店商品池（{poolItems.length} 筆）</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">密店商品隨機出現，玩家需洞察力才能發現。「權重」越高，出現機率越大。</p>
+        </div>
+        <Button onClick={() => setOpen(true)} size="sm">+ 新增商品</Button>
+      </div>
+      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b text-muted-foreground">
+                <th className="text-left py-2 px-2">ID</th>
+                <th className="text-left py-2 px-2">名稱</th>
+                <th className="text-left py-2 px-2">貨幣</th>
+                <th className="text-left py-2 px-2">價格</th>
+                <th className="text-left py-2 px-2">稀有度</th>
+                <th className="text-left py-2 px-2">權重</th>
+                <th className="text-left py-2 px-2">狀態</th>
+                <th className="text-left py-2 px-2">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {poolItems.map((item: any) => (
+                <tr key={item.id} className="border-b hover:bg-muted/30">
+                  <td className="py-2 px-2 text-muted-foreground">{item.id}</td>
+                  <td className="py-2 px-2 font-medium">{item.displayName}</td>
+                  <td className="py-2 px-2 text-xs">{item.currencyType === "coins" ? "🪙 遊戲幣" : "💎 靈石"}</td>
+                  <td className="py-2 px-2 font-bold">{item.price}</td>
+                  <td className="py-2 px-2">
+                    <Badge style={{ backgroundColor: RARITY_COLORS[item.rarity] ?? "#888", color: "#fff" }} className="text-xs">
+                      {RARITY_ZH[item.rarity] ?? item.rarity}
+                    </Badge>
+                  </td>
+                  <td className="py-2 px-2">{item.weight}</td>
+                  <td className="py-2 px-2">
+                    <Badge variant={item.isActive ? "default" : "outline"}>{item.isActive ? "啟用" : "停用"}</Badge>
+                  </td>
+                  <td className="py-2 px-2">
+                    <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate({ id: item.id })}>刪除</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>新增密店商品</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Input placeholder="道具 Key" value={form.itemKey} onChange={e => setForm(f => ({ ...f, itemKey: e.target.value }))} />
+              <Input placeholder="顯示名稱" value={form.displayName} onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))} />
+            </div>
+            <Textarea placeholder="商品描述" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
+            <div className="grid grid-cols-2 gap-2">
+              <Select value={form.currencyType} onValueChange={(v) => setForm(f => ({ ...f, currencyType: v as any }))}>
+                <SelectTrigger><SelectValue placeholder="貨幣類型" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="coins">🪙 遊戲幣</SelectItem>
+                  <SelectItem value="stones">💎 靈石</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input type="number" placeholder="價格" value={form.price} onChange={e => setForm(f => ({ ...f, price: +e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <Input type="number" placeholder="購買數量" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} />
+              <Input type="number" placeholder="出現權重（越高越常見）" value={form.weight} onChange={e => setForm(f => ({ ...f, weight: +e.target.value }))} />
+              <Select value={form.rarity} onValueChange={(v) => setForm(f => ({ ...f, rarity: v as any }))}>
+                <SelectTrigger><SelectValue placeholder="稀有度" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="common">普通</SelectItem>
+                  <SelectItem value="rare">稀有</SelectItem>
+                  <SelectItem value="epic">史詩</SelectItem>
+                  <SelectItem value="legendary">傳說</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>取消</Button>
+            <Button onClick={() => createMutation.mutate(form)} disabled={createMutation.isPending}>儲存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
