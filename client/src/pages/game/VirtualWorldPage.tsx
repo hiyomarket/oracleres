@@ -1420,17 +1420,34 @@ export default function VirtualWorldPage() {
     },
   });
 
+  // 修復 6：自動執行直到體力歸零，體力不足時自動切換為休息策略
+  const autoExecRef = useRef(false); // 是否正在自動執行
+
   const handleTickToggle = useCallback(() => {
     if (tickRunning) {
       if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
       tickIntervalRef.current = null;
       setTickRunning(false);
+      autoExecRef.current = false;
     } else {
+      autoExecRef.current = true;
       triggerTick.mutate();
-      tickIntervalRef.current = setInterval(() => { triggerTick.mutate(); }, 5 * 60 * 1000);
+      tickIntervalRef.current = setInterval(() => {
+        // 每次 Tick 前檢查體力（直接從 statusData 取得，避免引用對象變更問題）
+        const curStaminaInfo = statusData?.staminaInfo as { current?: number } | undefined;
+        const curStamina = curStaminaInfo?.current ?? agent?.stamina ?? 100;
+        const curStrategy = agent?.strategy ?? "explore";
+        if (curStamina <= 0 && curStrategy !== "rest") {
+          // 體力歸零，自動切換休息
+          setStrategy.mutate({ strategy: "rest" });
+          toast.info("😴 體力不足，自動切換為「休息」模式", { duration: 3000 });
+        } else {
+          triggerTick.mutate();
+        }
+      }, 5 * 60 * 1000);
       setTickRunning(true);
     }
-  }, [tickRunning, triggerTick]);
+  }, [tickRunning, triggerTick, statusData, agent?.stamina, agent?.strategy, setStrategy]);
 
   useEffect(() => {
     return () => { if (tickIntervalRef.current) clearInterval(tickIntervalRef.current); };
@@ -1439,6 +1456,8 @@ export default function VirtualWorldPage() {
   const [showNaming, setShowNaming] = useState(false);
   const [showStrategyPanel, setShowStrategyPanel] = useState(false);
   const [showDivinePanel, setShowDivinePanel] = useState(false);
+  const [showQuickTeleport, setShowQuickTeleport] = useState(false);
+  const [selectedTeleportNode, setSelectedTeleportNode] = useState<string | null>(null);
   useEffect(() => {
     if (agentData?.needsNaming) setShowNaming(true);
   }, [agentData?.needsNaming]);
@@ -1514,6 +1533,58 @@ export default function VirtualWorldPage() {
           agentAP={agent?.actionPoints ?? 0}
         />
       )}
+
+      {/* 快捷傳送彈窗（點擊地圖節點觸發） */}
+      {showQuickTeleport && selectedTeleportNode && (() => {
+        const targetNode = mapNodeList.find(n => n.id === selectedTeleportNode);
+        const elColor = WX_HEX[targetNode?.element ?? "metal"] ?? "#e2e8f0";
+        return (
+          <div className="fixed inset-0 z-[500] flex items-end justify-center pb-24 px-4"
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}
+            onClick={() => setShowQuickTeleport(false)}>
+            <div className="w-full max-w-sm rounded-2xl p-4 flex flex-col gap-3"
+              style={{
+                background: "linear-gradient(135deg, #0a1628 0%, #0f1f35 100%)",
+                border: `1px solid ${elColor}40`,
+                boxShadow: `0 0 40px ${elColor}20, 0 20px 40px rgba(0,0,0,0.6)`,
+              }}
+              onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{WX_EMOJI[targetNode?.element ?? "metal"] ?? "📍"}</span>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-slate-200">{targetNode?.name ?? selectedTeleportNode}</h3>
+                  <p className="text-xs text-slate-500">{targetNode?.county ?? ""} · 危險 Lv.{targetNode?.dangerLevel ?? 1}</p>
+                </div>
+                <button onClick={() => setShowQuickTeleport(false)} className="text-slate-500 hover:text-slate-300 text-lg px-1">✕</button>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setTeleport.mutate({ targetNodeId: selectedTeleportNode });
+                    setShowQuickTeleport(false);
+                  }}
+                  disabled={setTeleport.isPending || (agent?.actionPoints ?? 0) < 1}
+                  className="flex-1 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                  style={{
+                    background: (agent?.actionPoints ?? 0) >= 1 ? `linear-gradient(135deg,${elColor},${elColor}cc)` : "rgba(100,100,120,0.2)",
+                    color: (agent?.actionPoints ?? 0) >= 1 ? "#000" : "#475569",
+                  }}>
+                  {setTeleport.isPending ? "⏳ 傳送中…" : "🗺️ 前往此地（1靈力）"}
+                </button>
+                <button
+                  onClick={() => { setShowTeleport(true); setShowQuickTeleport(false); }}
+                  className="px-3 py-3 rounded-xl border text-xs text-slate-400 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.1)" }}>
+                  全圖
+                </button>
+              </div>
+              {(agent?.actionPoints ?? 0) < 1 && (
+                <p className="text-center text-red-400 text-xs">靈力不足，無法傳送（需要 1 靈力）</p>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ══════════════════════════════════════════════════════
           固定視窗主佈局：頂端~10% + 中間~80% + 底端由 GameTabLayout 提供
@@ -1664,7 +1735,7 @@ export default function VirtualWorldPage() {
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative" style={{ minHeight: 0 }}>
 
           {/* ── 地圖區塊 ── */}
-          <div className="flex flex-col lg:flex-1 overflow-hidden" style={{ minHeight: 0 }}>
+          <div className="flex flex-col lg:flex-1 overflow-hidden" style={{ minHeight: 0, zIndex: 0, position: "relative" }}>
 
             {/* 地圖容器
                 手機：固定 50vh，touch-action:none 防止地圖滑動影響外層
@@ -1695,11 +1766,17 @@ export default function VirtualWorldPage() {
                   <p className="text-slate-600 text-sm animate-pulse">載入地圖中…</p>
                 </div>
               ) : (
-                <LeafletMap
+<LeafletMap
                   ref={mapRef}
                   nodes={mapNodeList}
                   currentNodeId={currentNodeId}
-                  onNodeClick={(_nodeId) => {}}
+                  onNodeClick={(nodeId) => {
+                    // 點擊地圖節點：如果不是當前位置，顯示「前往此地」快捷傳送
+                    if (nodeId !== currentNodeId) {
+                      setSelectedTeleportNode(nodeId);
+                      setShowQuickTeleport(true);
+                    }
+                  }}
                 />
               )}
 
@@ -1708,7 +1785,7 @@ export default function VirtualWorldPage() {
                 onClick={() => setShowLog(v => !v)}
                 className="absolute z-[400] flex items-center justify-center border transition-all hover:scale-110 active:scale-95"
                 style={{
-                  bottom: "16px",
+                  bottom: "64px",
                   left: "16px",
                   width: "44px",
                   height: "44px",
@@ -1784,18 +1861,27 @@ export default function VirtualWorldPage() {
                 )}
               </div>
 
-              {/* ── HP/MP/活躍值浮動條（左側中央） ── */}
-              <div className="absolute left-2 z-[400] flex flex-col gap-1.5"
-                style={{ top: "50%", transform: "translateY(-50%)" }}>
+              {/* ── HP/MP/AP/體力 橫排狀態条（地圖底部中央） ── */}
+              <div className="absolute left-1/2 z-[400] flex items-center gap-1 px-2 py-1.5 rounded-2xl border"
+                style={{
+                  bottom: "52px",
+                  transform: "translateX(-50%)",
+                  background: "rgba(6,10,22,0.92)",
+                  backdropFilter: "blur(12px)",
+                  borderColor: "rgba(255,255,255,0.10)",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.5)",
+                  whiteSpace: "nowrap",
+                }}>
                 {[
                   { icon: "♥", label: "HP", val: agent?.hp ?? 0, max: agent?.maxHp ?? 100, color: "#ef4444" },
                   { icon: "💧", label: "MP", val: agent?.mp ?? 0, max: agent?.maxMp ?? 100, color: "#38bdf8" },
                   { icon: "⚡", label: "AP", val: agent?.actionPoints ?? 0, max: agent?.maxActionPoints ?? 10, color: "#f59e0b" },
-                ].map(bar => (
-                  <div key={bar.label} className="flex items-center gap-1 px-1.5 py-1 rounded-lg border"
-                    style={{ background: "rgba(6,10,22,0.88)", backdropFilter: "blur(8px)", borderColor: `${bar.color}30` }}>
+                  { icon: "🏃", label: "體力", val: staminaInfo?.current ?? agent?.stamina ?? 100, max: staminaInfo?.max ?? agent?.maxStamina ?? 100, color: "#22c55e" },
+                ].map((bar, idx) => (
+                  <div key={bar.label} className="flex items-center gap-0.5">
+                    {idx > 0 && <span className="text-slate-700 text-[10px] mx-0.5">|</span>}
                     <span className="text-[10px] shrink-0" style={{ color: bar.color }}>{bar.icon}</span>
-                    <div className="w-12 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="w-8 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                       <div className="h-full rounded-full transition-all"
                         style={{ width: `${bar.max > 0 ? Math.min(100, (bar.val / bar.max) * 100) : 0}%`, background: bar.color }} />
                     </div>
@@ -1861,7 +1947,7 @@ export default function VirtualWorldPage() {
 
               {/* ── 行動策略浮動面板（右下角） ── */}
               <div className="absolute right-2 z-[400]"
-                style={{ bottom: charPanelOpen ? "16px" : "56px" }}>
+                style={{ bottom: charPanelOpen ? "16px" : "64px" }}>
                 <button
                   onClick={() => setShowStrategyPanel(v => !v)}
                   className="flex items-center gap-1 px-2 py-1.5 rounded-xl border text-xs font-bold transition-all hover:scale-105 active:scale-95"
@@ -1906,7 +1992,7 @@ export default function VirtualWorldPage() {
               <button
                 className="absolute lg:hidden z-10 flex items-center justify-center gap-1 border transition-all"
                 style={{
-                  bottom: "12px",
+                  bottom: "64px",
                   left: "50%",
                   transform: "translateX(-50%)",
                   height: "28px",
@@ -2025,7 +2111,7 @@ export default function VirtualWorldPage() {
             <div
               className="lg:hidden fixed left-0 right-0 z-30 flex flex-col"
               style={{
-                bottom: "56px", // 底部導覽列 56px（緊貼，無多餘間距）
+                bottom: "64px", // 底部導覽列 56px + 8px 間距，避免按鈕被遮擋
                 background: "rgba(6,10,22,0.98)",
                 backdropFilter: "blur(20px)",
                 borderTop: `2px solid ${ec}40`,

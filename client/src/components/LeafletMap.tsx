@@ -366,6 +366,7 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
         const marker = L.marker(coords, { icon: svgIcon });
 
         // Popup 內容
+        const isCurNode = node.id === currentNodeId;
         const popupHtml = `
           <div style="
             background:#0f1923;
@@ -389,10 +390,25 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
               <span style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);border-radius:4px;padding:2px 6px;font-size:10px;">危險 Lv.${node.dangerLevel}</span>
             </div>
             ${node.landmarks.length > 0 ? `
-              <div style="font-size:10px;color:#64748b;border-top:1px solid rgba(255,255,255,0.07);padding-top:6px;">
+              <div style="font-size:10px;color:#64748b;border-top:1px solid rgba(255,255,255,0.07);padding-top:6px;margin-bottom:8px;">
                 📍 ${node.landmarks.slice(0, 3).join(" · ")}
               </div>
             ` : ""}
+            ${!isCurNode ? `
+              <button
+                data-node-id="${node.id}"
+                class="oracle-teleport-btn"
+                style="
+                  width:100%;padding:7px 0;border-radius:8px;
+                  background:linear-gradient(135deg,${color},${color}cc);
+                  color:#000;font-weight:700;font-size:12px;
+                  border:none;cursor:pointer;font-family:'Noto Serif TC',serif;
+                ">
+                🗺️ 前往此地
+              </button>
+            ` : `
+              <div style="text-align:center;font-size:11px;color:${color};padding:4px 0;">★ 當前所在地</div>
+            `}
           </div>
         `;
 
@@ -401,8 +417,26 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
           className: "oracle-popup",
         });
 
+        // 監聽 popup 內的「前往此地」按鈕點擊
+        marker.on("popupopen", () => {
+          const popupEl = marker.getPopup()?.getElement();
+          if (!popupEl) return;
+          const btn = popupEl.querySelector(".oracle-teleport-btn") as HTMLButtonElement | null;
+          if (btn) {
+            btn.onclick = (e) => {
+              e.stopPropagation();
+              const nodeId = btn.getAttribute("data-node-id");
+              if (nodeId) {
+                marker.closePopup();
+                onNodeClick?.(nodeId);
+              }
+            };
+          }
+        });
+
         marker.on("click", () => {
-          onNodeClick?.(node.id);
+          // 點擊 marker 時開啟 popup，不直接觸發傳送
+          // 傳送由 popup 內的按鈕觸發
         });
 
         marker.addTo(map);
