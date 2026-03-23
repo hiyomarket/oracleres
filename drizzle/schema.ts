@@ -1692,7 +1692,25 @@ export const gameAgents = mysqlTable("game_agents", {
   actionPoints: int("action_points").notNull().default(5),
   maxActionPoints: int("max_action_points").notNull().default(5),
   actionPointsLastRegen: bigint("action_points_last_regen", { mode: "number" }),
-  // 裝備欄位（8格）
+  // ── GD-002 生活系五行屬性 ──
+  /** 採集力（木）：植物/草藥類掉落率加成 */
+  gatherPower: int("gather_power").notNull().default(20),
+  /** 鍛冶力（火）：製造武器/裝備的成功率與品質 */
+  forgePower: int("forge_power").notNull().default(20),
+  /** 承重力（土）：背包格子數量、可攜帶道具總重 */
+  carryWeight: int("carry_weight").notNull().default(20),
+  /** 精煉力（金）：提升素材品質等級的機率 */
+  refinePower: int("refine_power").notNull().default(20),
+  /** 尋寶力（水）：地圖可視範圍、稀有素材/寵物出現率、隱藏商店感知 */
+  treasureHunting: int("treasure_hunting").notNull().default(20),
+  // ── GD-002 戰鬥系五行屬性 ──
+  /** 治癒力（木）：戰鬥中自我回血量 */
+  healPower: int("heal_power").notNull().default(20),
+  /** 魔法攻擊（水）：元素傷害基礎值、狀態異常觸發率 */
+  magicAttack: int("magic_attack").notNull().default(20),
+  /** 命中力（金）：攻擊命中率、穿透敵方防禦比例 */
+  hitRate: int("hit_rate").notNull().default(20),
+  // ── 裝備欄位（GD-006 八部位 + 護符）──
   equippedHead: varchar("equipped_head", { length: 100 }),
   equippedBody: varchar("equipped_body", { length: 100 }),
   equippedHands: varchar("equipped_hands", { length: 100 }),
@@ -1701,6 +1719,8 @@ export const gameAgents = mysqlTable("game_agents", {
   equippedOffhand: varchar("equipped_offhand", { length: 100 }),
   equippedRingA: varchar("equipped_ring_a", { length: 100 }),
   equippedRingB: varchar("equipped_ring_b", { length: 100 }),
+  equippedNecklace: varchar("equipped_necklace", { length: 100 }),
+  equippedAmulet: varchar("equipped_amulet", { length: 100 }),
   // 技能欄位（6格：4主動+2被動）
   skillSlot1: varchar("skill_slot_1", { length: 100 }),
   skillSlot2: varchar("skill_slot_2", { length: 100 }),

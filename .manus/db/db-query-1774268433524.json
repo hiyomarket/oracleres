@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE game_agents \n  ADD COLUMN IF NOT EXISTS gather_power INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS forge_power INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS carry_weight INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS refine_power INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS treasure_hunting INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS heal_power INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS magic_attack INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS hit_rate INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS equipped_necklace VARCHAR(100),\n  ADD COLUMN IF NOT EXISTS equipped_amulet VARCHAR(100);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nALTER TABLE game_agents \n  ADD COLUMN IF NOT EXISTS gather_power INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS forge_power INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS carry_weight INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS refine_power INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS treasure_hunting INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS heal_power INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS magic_attack INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS hit_rate INT NOT NULL DEFAULT 20,\n  ADD COLUMN IF NOT EXISTS equipped_necklace VARCHAR(100),\n  ADD COLUMN IF NOT EXISTS equipped_amulet VARCHAR(100);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3531
+}
