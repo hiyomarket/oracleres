@@ -373,15 +373,28 @@ export const gameWorldRouter = router({
           m.level >= node.monsterLevel[0] &&
           m.level <= node.monsterLevel[1]
       ).slice(0, 5);
+      // 地形特定資源（讓不同地形有不同稀有資源）
+      const TERRAIN_RESOURCES: Record<string, Array<{ name: string; rarity: string; icon: string }>> = {
+        "都市廣場": [{ name: "市井靈氣", rarity: "精良", icon: "🏛️" }, { name: "人氣精華", rarity: "普通", icon: "🌺" }],
+        "都市商業區": [{ name: "商氣靈石", rarity: "精良", icon: "💰" }, { name: "財靈結晶", rarity: "稀有", icon: "💎" }],
+        "山區": [{ name: "靈山露水", rarity: "精良", icon: "💧" }, { name: "山靈芬芳", rarity: "稀有", icon: "🌻" }],
+        "海岸": [{ name: "海靈沙粒", rarity: "普通", icon: "🟡" }, { name: "海晶精體", rarity: "稀有", icon: "🔮" }],
+        "古蹟": [{ name: "古靈碎片", rarity: "精良", icon: "🏺" }, { name: "封印結晶", rarity: "稀有", icon: "🔮" }],
+        "溫泉": [{ name: "溫泉靈氣", rarity: "精良", icon: "♨️" }, { name: "溫泉水晶", rarity: "稀有", icon: "💧" }],
+        "港口": [{ name: "海靈魚鱗", rarity: "普通", icon: "🐟" }, { name: "港口靈石", rarity: "精良", icon: "⚓" }],
+        "國家公園": [{ name: "靈林葉片", rarity: "精良", icon: "🍃" }, { name: "原始靈核", rarity: "稀有", icon: "🌏" }],
+        "科學園區": [{ name: "技術靈氣", rarity: "精良", icon: "🔬" }, { name: "靈數結晶", rarity: "稀有", icon: "💻" }],
+        "離峳": [{ name: "靈峳露水", rarity: "精良", icon: "🏖️" }, { name: "靈峳結晶", rarity: "稀有", icon: "🐚" }],
+      };
       const RESOURCES_BY_ELEMENT: Record<string, Array<{ name: string; rarity: string; icon: string }>> = {
         wood: [
           { name: "靈草", rarity: "普通", icon: "🌿" },
-          { name: "竹節精髓", rarity: "稀有", icon: "🎋" },
+          { name: "竹節精體", rarity: "稀有", icon: "🎋" },
           { name: "古木碎片", rarity: "精良", icon: "🪵" },
         ],
         fire: [
           { name: "火靈石", rarity: "普通", icon: "🔥" },
-          { name: "熔岩晶", rarity: "稀有", icon: "🌋" },
+          { name: "燔岩晶", rarity: "稀有", icon: "🌋" },
           { name: "赤焰羽", rarity: "精良", icon: "🪶" },
         ],
         earth: [
@@ -391,7 +404,7 @@ export const gameWorldRouter = router({
         ],
         metal: [
           { name: "金屬碎片", rarity: "普通", icon: "⚡" },
-          { name: "精鋼礦石", rarity: "稀有", icon: "🔩" },
+          { name: "精龋礦石", rarity: "稀有", icon: "🔩" },
           { name: "白金結晶", rarity: "精良", icon: "✨" },
         ],
         water: [
@@ -400,12 +413,20 @@ export const gameWorldRouter = router({
           { name: "冰靈核", rarity: "精良", icon: "❄️" },
         ],
       };
-      const resources = RESOURCES_BY_ELEMENT[node.element] ?? [];
+      // 合併基礎資源 + 地形特定資源
+      const baseResources = RESOURCES_BY_ELEMENT[node.element] ?? [];
+      const terrainResources = TERRAIN_RESOURCES[node.terrain] ?? [];
+      const resources = [...baseResources.slice(0, 3), ...terrainResources.slice(0, 2)];
+      // 更豐富的隱藏任務提示
       const questHints = [
         ...(node.dangerLevel >= 3 ? ["⚠️ 此地有隱藏任務的氣息…"] : []),
         ...(node.dangerLevel >= 4 ? ["🔮 感應到強力寶物的存在"] : []),
-        ...(node.dangerLevel >= 5 ? ["👑 傳說級 Boss 可能出沒"] : []),
-        ...(node.terrain.includes("古") || node.terrain.includes("遺") ? ["📜 此地藏有古老秘密"] : []),
+        ...(node.dangerLevel >= 5 ? ["👑 傳說級 Boss 可能出氒"] : []),
+        ...(node.terrain.includes("古") || node.terrain.includes("遗") ? ["📜 此地藏有古老秘密"] : []),
+        ...(node.terrain.includes("溫泉") ? ["♨️ 溫泉靈氣能快速回復活躍"] : []),
+        ...(node.terrain.includes("港口") || node.terrain.includes("海岸") ? ["⚓ 港口商人有特殊委托"] : []),
+        ...(node.terrain.includes("科學") ? ["🔬 科學園區有神秘實驗任務"] : []),
+        ...(node.terrain.includes("離峳") ? ["🏖️ 靈峳上有遠古靈居的躕跡"] : []),
       ];
       const db = await getDb();
       let adventurers: Array<{ name: string; level: number; hp: number; maxHp: number; element: string; status: string }> = [];

@@ -3,7 +3,7 @@
  * 基於 Leaflet.js + CartoDB Dark Matter 暗色底圖的台灣遊戲地圖
  * 所有節點使用真實經緯度，點擊節點自動 flyTo 放大
  */
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from "react";
 import type { MapNode } from "../../../shared/mapNodes";
 
 // 節點 ID → 真實經緯度對應表
@@ -264,13 +264,18 @@ const TERRAIN_ICON: Record<string, string> = {
   "工業區": "🏭", "科學園區": "🔬", "離島": "🏝️",
 };
 
+export interface LeafletMapHandle {
+  flyToNode: (nodeId: string) => void;
+  highlightNode: (nodeId: string) => void;
+}
+
 interface LeafletMapProps {
   nodes: MapNode[];
   currentNodeId: string;
   onNodeClick?: (nodeId: string) => void;
 }
 
-export default function LeafletMap({ nodes, currentNodeId, onNodeClick }: LeafletMapProps) {
+const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function LeafletMap({ nodes, currentNodeId, onNodeClick }, ref) {
   const mapRef = useRef<ReturnType<typeof import("leaflet")["map"]> | null>(null);
   const markersRef = useRef<Map<string, ReturnType<typeof import("leaflet")["marker"]>>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -476,6 +481,50 @@ export default function LeafletMap({ nodes, currentNodeId, onNodeClick }: Leafle
     }
   }, []);
 
+  // highlightNode：讓指定節點閃爍紫光（跟隨冒險者用）
+  const highlightNode = useCallback((nodeId: string) => {
+    flyToNode(nodeId);
+    import("leaflet").then((leaflet) => {
+      const L = leaflet.default ?? leaflet;
+      const marker = markersRef.current.get(nodeId);
+      if (!marker) return;
+      const node = nodes.find(n => n.id === nodeId);
+      if (!node) return;
+      const pulseIcon = L.divIcon({
+        className: "",
+        html: `
+          <div style="position:relative;width:40px;height:40px;">
+            <div style="position:absolute;inset:-14px;border-radius:50%;border:2px solid #a855f7;animation:pulse 0.7s ease-in-out infinite;opacity:0.9;"></div>
+            <div style="position:absolute;inset:-7px;border-radius:50%;border:2px solid #a855f7;animation:pulse 0.7s ease-in-out 0.15s infinite;opacity:0.7;"></div>
+            <div style="width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#a855f7,#7c3aed);border:3px solid #fff;box-shadow:0 0 24px 8px rgba(168,85,247,0.95);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;">★</div>
+          </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+      });
+      marker.setIcon(pulseIcon);
+      setTimeout(() => {
+        const isCurrent = nodeId === currentNodeId;
+        const color = (WX_COLOR as Record<string,string>)[node.element] ?? "#888";
+        const normalIcon = L.divIcon({
+          className: "",
+          html: `
+            <div style="position:relative;width:${isCurrent ? 28 : 18}px;height:${isCurrent ? 28 : 18}px;">
+              ${isCurrent ? `<div style="position:absolute;inset:-8px;border-radius:50%;border:2px solid ${color};animation:pulse 1.5s ease-in-out infinite;opacity:0.5;"></div>` : ""}
+              <div style="width:100%;height:100%;border-radius:50%;background:${isCurrent ? color : color + "99"};border:${isCurrent ? "2.5px solid #fff" : "1.5px solid " + color + "cc"};box-shadow:0 0 ${isCurrent ? "12px 4px" : "6px 2px"} ${color}88;display:flex;align-items:center;justify-content:center;font-size:${isCurrent ? "11px" : "8px"};cursor:pointer;">${isCurrent ? "★" : ""}</div>
+            </div>
+          `,
+          iconSize: [isCurrent ? 28 : 18, isCurrent ? 28 : 18],
+          iconAnchor: [isCurrent ? 14 : 9, isCurrent ? 14 : 9],
+        });
+        marker.setIcon(normalIcon);
+      }, 3500);
+    });
+  }, [flyToNode, nodes, currentNodeId]);
+
+  // 暴露 flyToNode 和 highlightNode 給父元件
+  useImperativeHandle(ref, () => ({ flyToNode, highlightNode }), [flyToNode, highlightNode]);
+
   // 暴露 flyToNode 給父元件（透過 ref 或 callback）
   useEffect(() => {
     // 當 onNodeClick 觸發時自動 flyTo
@@ -534,4 +583,6 @@ export default function LeafletMap({ nodes, currentNodeId, onNodeClick }: Leafle
       />
     </>
   );
-}
+});
+
+export default LeafletMap;
