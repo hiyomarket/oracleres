@@ -7,7 +7,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { eq, and, desc } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
@@ -817,12 +817,13 @@ export const gameWorldRouter = router({
 
     const validEvents = events.filter(e => e.expiresAt > now && e.remainingTicks > 0);
 
-    // 依洞察力計算感知機率（treasureHunting 1-100 → 1%-100%）
+    // 依洞察力計算感知機率
+    // 核心原則：所有人都有機會（最低 5%），高洞察力機率更高（最高 95%）
+    // 公式：min(95, max(5, (perception / threshold) * 100))
     const perception = agent.treasureHunting ?? 20;
     const perceived: typeof validEvents = [];
     for (const evt of validEvents) {
-      // 感知機率：(treasureHunting / perceptionThreshold) * 100%，上限100%
-      const chance = Math.min(100, (perception / evt.perceptionThreshold) * 100);
+      const chance = Math.min(95, Math.max(5, (perception / evt.perceptionThreshold) * 100));
       if (Math.random() * 100 < chance) {
         perceived.push(evt);
         // 標記已被發現
@@ -832,7 +833,10 @@ export const gameWorldRouter = router({
         }
       }
     }
-    return perceived;
+    // 回傳感知結果 + 洞察力等級資訊
+    const perceptionLevel = perception >= 80 ? "strong" : perception >= 50 ? "mid" : perception >= 30 ? "low" : "weak";
+    const perceptionLabel = perception >= 80 ? "感知強烈" : perception >= 50 ? "偶有感知" : perception >= 30 ? "微弱感知" : "極弱感知";
+    return { events: perceived, perceptionLevel, perceptionLabel, perception };
   }),
 
   // ─── 取得玩家稱號列表 ───
@@ -1019,5 +1023,195 @@ export const gameWorldRouter = router({
         return MONSTERS.filter((m) => m.element === input.element);
       }
       return MONSTERS;
+    }),
+
+  // ─── 取得虛相世界商店商品（金幣區 + 靈石區） ───
+  getGameShopItems: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      // 取得角色資料（金幣）
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const agent = agents[0];
+      // 取得用戶靈石
+      const userRows = await db.select({ gameStones: users.gameStones })
+        .from(users).where(eq(users.id, ctx.user.id)).limit(1);
+      const gameStones = userRows[0]?.gameStones ?? 0;
+      // 取得金幣商店商品
+      const coinItems = await db.select().from(gameVirtualShop)
+        .where(eq(gameVirtualShop.isOnSale, 1))
+        .orderBy(gameVirtualShop.sortOrder);
+      // 取得靈石商店商品
+      const stoneItems = await db.select().from(gameSpiritShop)
+        .where(eq(gameSpiritShop.isOnSale, 1))
+        .orderBy(gameSpiritShop.sortOrder);
+      return {
+        gold: agent?.gold ?? 0,
+        gameStones,
+        coinItems,
+        stoneItems,
+      };
+    }),
+
+  // ─── 購買虛相世界商店商品 ───
+  buyGameShopItem: protectedProcedure
+    .input(z.object({
+      shopType: z.enum(["coin", "stone"]),
+      itemId: z.number().int().positive(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const agent = agents[0];
+
+      if (input.shopType === "coin") {
+        // 金幣商店
+        const [item] = await db.select().from(gameVirtualShop)
+          .where(and(eq(gameVirtualShop.id, input.itemId), eq(gameVirtualShop.isOnSale, 1))).limit(1);
+        if (!item) throw new TRPCError({ code: "NOT_FOUND", message: "商品不存在" });
+        if (agent.gold < item.priceCoins) throw new TRPCError({ code: "BAD_REQUEST", message: "金幣不足" });
+        // 扣除金幣
+        await db.update(gameAgents).set({ gold: agent.gold - item.priceCoins, updatedAt: Date.now() })
+          .where(eq(gameAgents.id, agent.id));
+        // 加入背包
+        const existing = await db.select().from(agentInventory)
+          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
+        if (existing[0]) {
+          await db.update(agentInventory).set({ quantity: existing[0].quantity + item.quantity, updatedAt: Date.now() })
+            .where(eq(agentInventory.id, existing[0].id));
+        } else {
+          await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: "consumable", quantity: item.quantity, acquiredAt: Date.now(), updatedAt: Date.now() });
+        }
+        await db.insert(agentEvents).values({
+          agentId: agent.id, eventType: "system",
+          message: `🛒 購買了「${item.displayName}」x${item.quantity}（花費 ${item.priceCoins} 金幣）`,
+          detail: { type: "shop_buy", itemId: item.itemKey, qty: item.quantity, cost: item.priceCoins, currency: "gold" },
+          createdAt: Date.now(),
+        });
+        return { success: true, itemName: item.displayName, quantity: item.quantity, currency: "gold", cost: item.priceCoins };
+      } else {
+        // 靈石商店
+        const [item] = await db.select().from(gameSpiritShop)
+          .where(and(eq(gameSpiritShop.id, input.itemId), eq(gameSpiritShop.isOnSale, 1))).limit(1);
+        if (!item) throw new TRPCError({ code: "NOT_FOUND", message: "商品不存在" });
+        const userRows = await db.select({ gameStones: users.gameStones, id: users.id })
+          .from(users).where(eq(users.id, ctx.user.id)).limit(1);
+        if (!userRows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "用戶不存在" });
+        if (userRows[0].gameStones < item.priceStones) throw new TRPCError({ code: "BAD_REQUEST", message: "靈石不足" });
+        // 扣除靈石
+        await db.update(users).set({ gameStones: userRows[0].gameStones - item.priceStones })
+          .where(eq(users.id, ctx.user.id));
+        // 加入背包
+        const existing = await db.select().from(agentInventory)
+          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
+        if (existing[0]) {
+          await db.update(agentInventory).set({ quantity: existing[0].quantity + item.quantity, updatedAt: Date.now() })
+            .where(eq(agentInventory.id, existing[0].id));
+        } else {
+          await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: "consumable", quantity: item.quantity, acquiredAt: Date.now(), updatedAt: Date.now() });
+        }
+        await db.insert(agentEvents).values({
+          agentId: agent.id, eventType: "system",
+          message: `💎 購買了「${item.displayName}」x${item.quantity}（花費 ${item.priceStones} 靈石）`,
+          detail: { type: "shop_buy", itemId: item.itemKey, qty: item.quantity, cost: item.priceStones, currency: "stones" },
+          createdAt: Date.now(),
+        });
+        return { success: true, itemName: item.displayName, quantity: item.quantity, currency: "stones", cost: item.priceStones };
+      }
+    }),
+
+  // ─── 取得密店商品（需感知檢定） ───
+  getHiddenShopItems: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const agent = agents[0];
+      // 感知檢定：最低 5%，尋寶力每點 +0.5%，上限 80%
+      const baseChance = 0.05;
+      const bonusChance = Math.min(0.75, (agent.treasureHunting / 100) * 0.75);
+      const totalChance = baseChance + bonusChance;
+      const roll = Math.random();
+      if (roll > totalChance) {
+        return { found: false, items: [], gold: agent.gold };
+      }
+      // 從密店池隨機抽取 3-5 件商品（依權重）
+      const pool = await db.select().from(gameHiddenShopPool)
+        .where(eq(gameHiddenShopPool.isActive, 1));
+      if (pool.length === 0) return { found: true, items: [], gold: agent.gold };
+      // 加權隨機抽取
+      const totalWeight = pool.reduce((s, i) => s + i.weight, 0);
+      const count = Math.min(pool.length, 3 + Math.floor(Math.random() * 3));
+      const selected: typeof pool = [];
+      const remaining = [...pool];
+      for (let i = 0; i < count && remaining.length > 0; i++) {
+        let rnd = Math.random() * remaining.reduce((s, x) => s + x.weight, 0);
+        for (let j = 0; j < remaining.length; j++) {
+          rnd -= remaining[j].weight;
+          if (rnd <= 0) {
+            selected.push(remaining[j]);
+            remaining.splice(j, 1);
+            break;
+          }
+        }
+      }
+      const userRows = await db.select({ gameStones: users.gameStones })
+        .from(users).where(eq(users.id, ctx.user.id)).limit(1);
+      return {
+        found: true,
+        items: selected,
+        gold: agent.gold,
+        gameStones: userRows[0]?.gameStones ?? 0,
+        totalWeight,
+      };
+    }),
+
+  // ─── 購買密店商品 ───
+  buyHiddenShopItem: protectedProcedure
+    .input(z.object({ itemId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const agent = agents[0];
+      const [item] = await db.select().from(gameHiddenShopPool)
+        .where(and(eq(gameHiddenShopPool.id, input.itemId), eq(gameHiddenShopPool.isActive, 1))).limit(1);
+      if (!item) throw new TRPCError({ code: "NOT_FOUND", message: "密店商品不存在" });
+      if (item.currencyType === "coins") {
+        if (agent.gold < item.price) throw new TRPCError({ code: "BAD_REQUEST", message: "金幣不足" });
+        await db.update(gameAgents).set({ gold: agent.gold - item.price, updatedAt: Date.now() })
+          .where(eq(gameAgents.id, agent.id));
+      } else {
+        const userRows = await db.select({ gameStones: users.gameStones })
+          .from(users).where(eq(users.id, ctx.user.id)).limit(1);
+        if (!userRows[0] || userRows[0].gameStones < item.price)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "靈石不足" });
+        await db.update(users).set({ gameStones: userRows[0].gameStones - item.price })
+          .where(eq(users.id, ctx.user.id));
+      }
+      const existing = await db.select().from(agentInventory)
+        .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
+      if (existing[0]) {
+        await db.update(agentInventory).set({ quantity: existing[0].quantity + item.quantity, updatedAt: Date.now() })
+          .where(eq(agentInventory.id, existing[0].id));
+      } else {
+        await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: "consumable", quantity: item.quantity, acquiredAt: Date.now(), updatedAt: Date.now() });
+      }
+      const currencyLabel = item.currencyType === "coins" ? "金幣" : "靈石";
+      await db.insert(agentEvents).values({
+        agentId: agent.id, eventType: "system",
+        message: `🔮 密店購買了「${item.displayName}」x${item.quantity}（花費 ${item.price} ${currencyLabel}）`,
+        detail: { type: "hidden_shop_buy", itemId: item.itemKey, qty: item.quantity, cost: item.price, currency: item.currencyType },
+        createdAt: Date.now(),
+      });
+      return { success: true, itemName: item.displayName, quantity: item.quantity };
     }),
 });

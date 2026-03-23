@@ -38,6 +38,7 @@ import GameLobby from "./pages/game/GameLobby";
 import VirtualWorldPage from "./pages/game/VirtualWorldPage";
 import GameCMS from "./pages/admin/GameCMS";
 import Shop from "./pages/game/Shop";
+import GameShop from "./pages/game/GameShop";
 import CombatRoom from "./pages/game/CombatRoom";
 import CharacterProfile from "./pages/game/CharacterProfile";
 import ExpertMarket from "./pages/ExpertMarket";
@@ -119,6 +120,7 @@ function Router() {
             <Route path={"/game"} component={VirtualWorldPage} />
             <Route path={"/game/avatar"} component={AvatarRoom} />
             <Route path={"/game/shop"} component={Shop} />
+            <Route path={"/game/gameshop"} component={GameShop} />
             <Route path={"/game/combat"} component={CombatRoom} />
             <Route path={"/game/profile"} component={CharacterProfile} />
             <Route path={"/404"} component={NotFound} />

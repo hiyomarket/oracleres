@@ -677,8 +677,8 @@ function CharacterPanel({
               color: activePanel === p.id ? ec : "rgba(148,163,184,0.5)",
               borderBottom: activePanel === p.id ? `2px solid ${ec}` : "2px solid transparent",
             }}>
-            <span className="text-xl leading-none">{p.icon}</span>
-            <span className="text-xs">{p.label}</span>
+            <span className="text-[26px] leading-none">{p.icon}</span>
+            <span className="text-[11px] font-medium">{p.label}</span>
           </button>
         ))}
       </div>
@@ -743,7 +743,7 @@ function CharacterPanel({
               {/* 尋寶力特別說明 */}
               <div className="mt-1.5 px-2 py-1.5 rounded-lg text-xs"
                 style={{ background: "rgba(56,189,248,0.06)", borderLeft: "2px solid rgba(56,189,248,0.4)", color: "#94a3b8" }}>
-                💧 尋寶力 {lifeValues.treasureHunting} → {lifeValues.treasureHunting >= 60 ? "可感知隱藏商店" : lifeValues.treasureHunting >= 40 ? "偶爾感知隱藏任務" : "尚未開啟洞察"}
+💧 尋寶力 {lifeValues.treasureHunting} → {lifeValues.treasureHunting >= 80 ? "密店感知強（最高80%機率）" : lifeValues.treasureHunting >= 50 ? "偶有感知（約40%機率）" : lifeValues.treasureHunting >= 30 ? "微弱感知（約20%機率）" : "最低機率（5%）—仿然有機會發現密店、隱藏NPC、隱藏任務"}
               </div>
             </div>
           </div>
@@ -2397,17 +2397,17 @@ export default function VirtualWorldPage() {
                   <span className="text-lg">🗺️</span>
                   <span className="text-sm text-sky-300 font-bold">傳送</span>
                 </button>
-                {/* 一般商店（桌機版） */}
+                {/* 虛相世界商店（桂機版）—導向 GameShop */}
                 <button
-                  onClick={() => navigate("/game/shop")}
+                  onClick={() => navigate("/game/gameshop")}
                   className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{ background: "rgba(34,197,94,0.08)", borderColor: "rgba(34,197,94,0.28)" }}>
                   <span className="text-lg">🏪</span>
                   <span className="text-sm text-green-300 font-bold">商店</span>
                 </button>
-                {/* 密店（V14：所有人都可進入） */}
+                {/* 密店（導向 GameShop 密店Tab） */}
                 <button
-                  onClick={() => navigate("/game/shop?hidden=1")}
+                  onClick={() => navigate("/game/gameshop?tab=hidden")}
                   className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
                   style={{
                     background: hiddenShopTier === "high" ? "rgba(245,158,11,0.12)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.10)" : "rgba(96,165,250,0.08)",
@@ -2416,6 +2416,18 @@ export default function VirtualWorldPage() {
                   }}>
                   <span className="text-lg">🔍</span>
                   <span className="text-sm font-bold" style={{ color: hiddenShopColor }}>密店</span>
+                </button>
+                {/* Widget 重置按鈕 */}
+                <button
+                  onClick={() => {
+                    setWidgetLayout({});
+                    saveWidgetLayout.mutate({ layout: {} });
+                    toast.success("浮動元件位置已重置");
+                  }}
+                  title="重置浮動元件位置"
+                  className="flex items-center justify-center px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: "rgba(100,116,139,0.08)", borderColor: "rgba(100,116,139,0.28)", minWidth: "36px" }}>
+                  <span className="text-base">🔄</span>
                 </button>
               </div>
             </div>
@@ -2527,17 +2539,17 @@ export default function VirtualWorldPage() {
                       <span className="text-sm">🗺️</span>
                       <span className="text-xs text-sky-300 font-bold">傳送</span>
                     </button>
-                    {/* 一般商店 */}
+                    {/* 虛相世界商店（手機版）—導向 GameShop */}
                     <button
-                      onClick={() => navigate("/game/shop")}
+                      onClick={() => navigate("/game/gameshop")}
                       className="flex-1 flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl border transition-all active:scale-[0.98]"
                       style={{ background: "rgba(34,197,94,0.08)", borderColor: "rgba(34,197,94,0.28)" }}>
                       <span className="text-sm">🏪</span>
                       <span className="text-xs text-green-300 font-bold">商店</span>
                     </button>
-                    {/* 密店（V14：所有人都可進入，尋寶力影響機率） */}
+                    {/* 密店（導向 GameShop 密店Tab） */}
                     <button
-                      onClick={() => navigate("/game/shop?hidden=1")}
+                      onClick={() => navigate("/game/gameshop?tab=hidden")}
                       className="flex-1 flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl border transition-all active:scale-[0.98]"
                       style={{
                         background: hiddenShopTier === "high" ? "rgba(245,158,11,0.12)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.10)" : "rgba(96,165,250,0.08)",
