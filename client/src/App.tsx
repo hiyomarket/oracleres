@@ -38,6 +38,7 @@ import GameLobby from "./pages/game/GameLobby";
 import GameCMS from "./pages/admin/GameCMS";
 import Shop from "./pages/game/Shop";
 import CombatRoom from "./pages/game/CombatRoom";
+import CharacterProfile from "./pages/game/CharacterProfile";
 import ExpertMarket from "./pages/ExpertMarket";
 import ExpertDetail from "./pages/ExpertDetail";
 import ExpertDashboard from "./pages/expert/ExpertDashboard";
@@ -118,6 +119,7 @@ function Router() {
             <Route path={"/game/avatar"} component={AvatarRoom} />
             <Route path={"/game/shop"} component={Shop} />
             <Route path={"/game/combat"} component={CombatRoom} />
+            <Route path={"/game/profile"} component={CharacterProfile} />
             <Route path={"/404"} component={NotFound} />
             {/* Final fallback route */}
             <Route component={NotFound} />

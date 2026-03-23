@@ -98,6 +98,16 @@ export default function GameLobby() {
 
   const lobbyCards = [
     {
+      id: "profile",
+      path: "/game/profile",
+      icon: "✨",
+      title: "靈相世界",
+      desc: "角色檔案・五行形象・全螢幕展示",
+      color: "#9b59b6",
+      badge: null,
+      tag: "NEW",
+    },
+    {
       id: "avatar",
       path: "/game/avatar",
       icon: "🌟",
@@ -161,9 +171,10 @@ export default function GameLobby() {
             borderColor: "rgba(255,255,255,0.08)",
           }}
         >
-          {/* 角色立繪（TASK-008 真實立繪 + 五行光暈） */}
+          {/* 角色立繪（TASK-008 真實立繪 + 五行光暈）→ 點擊進入角色檔案頁 */}
           <div
-            className="relative w-16 h-20 shrink-0 rounded-xl overflow-hidden border"
+            className="relative w-16 h-20 shrink-0 rounded-xl overflow-hidden border cursor-pointer"
+            onClick={() => navigate("/game/profile")}
             style={{
               background: `linear-gradient(180deg, ${avatarColor}15 0%, ${avatarColor}05 100%)`,
               borderColor: `${avatarColor}40`,

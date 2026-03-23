@@ -2879,3 +2879,17 @@
 - [x] 提案三：checkAndUnlockAchievements 工具函數（自動發放靈石/天命幣獎勵）
 - [x] 提案三：GameLobby.tsx 加入 AchievementWall 成就牆（分類格 + 進度條）
 - [x] 537 項測試全部通過，TypeScript 零錯誤
+
+## V11.11 主角色檔案頁（2026-03-23）
+- [x] 上傳 TASK-003 素體基底（body-base-female/male）至 S3 CDN
+- [x] 上傳 TASK-004 五行服裝（40 張 female-front + male-front）至 S3 CDN
+- [x] 建立 gameAssets.ts CDN URL 常數映射（BODY_BASE_URLS / WUXING_THEMES / getClothingUrls）
+- [x] 建立 CharacterProfile.tsx（/game/profile）Pikmin Bloom 全螢幕風格
+- [x] 五行主題動態背景（漸層 + 光暈 + 粒子系統）
+- [x] 角色渲染（素體 + 五行服裝 PNG 疊加）
+- [x] 底部滑動資訊卡（等級 / 天命幣 / 靈石 / Aura Score 圓形指示 / 成就進度條）
+- [x] 浮動 UI 按鈕（返回 / 設定 / 換裝 / 商城 / 戰鬥）
+- [x] 五行切換指示點（手動切換主題）
+- [x] App.tsx 新增 /game/profile 路由
+- [x] GameLobby.tsx 新增「靈相世界」入口卡片 + 角色縮圖點擊跳轉
+- [x] TypeScript 零錯誤，537 項測試全部通過
