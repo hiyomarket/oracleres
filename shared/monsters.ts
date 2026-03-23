@@ -1,4 +1,4 @@
-import type { WuXing } from "./mapNodes";
+import type { WuXing } from "./types";
 
 export type Monster = {
   id: string;

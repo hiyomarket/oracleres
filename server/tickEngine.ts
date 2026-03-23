@@ -9,11 +9,11 @@ import { gameAgents, agentEvents, gameWorld } from "../drizzle/schema";
 import { eq, and } from "drizzle-orm";
 import {
   MAP_NODES,
-  NODE_MAP,
+  MAP_NODE_MAP,
   calcWuxingMultiplier,
-  type WuXing,
   type MapNode,
 } from "../shared/mapNodes";
+import type { WuXing } from "../shared/types";
 import {
   getMonstersForNode,
   type Monster,
@@ -282,7 +282,7 @@ async function processAgentTick(
 
   // 移動中：檢查是否抵達
   if (agent.status === "moving" && agent.targetNodeId) {
-    const destNode = NODE_MAP[agent.targetNodeId];
+    const destNode = MAP_NODE_MAP.get(agent.targetNodeId);
     if (destNode) {
       await db.update(gameAgents).set({
         currentNodeId: agent.targetNodeId,
@@ -316,7 +316,7 @@ async function processAgentTick(
     }).where(eq(gameAgents.id, agent.id));
     const msg = formatMessage(pickRandom(EVENT_MESSAGES.rest), {
       name: agent.agentName ?? "旅人",
-      node: NODE_MAP[agent.currentNodeId]?.name ?? "此地",
+      node: MAP_NODE_MAP.get(agent.currentNodeId)?.name ?? "此地",
       hp: hpRestore,
       mp: mpRestore,
     });
@@ -331,7 +331,7 @@ async function processAgentTick(
   }
 
   // 根據策略決定行動
-  const currentNode: MapNode | undefined = NODE_MAP[agent.currentNodeId];
+  const currentNode: MapNode | undefined = MAP_NODE_MAP.get(agent.currentNodeId);
   if (!currentNode) return 0;
 
   // 消耗體力值
@@ -528,7 +528,7 @@ async function processMoveEvent(
   if (currentNode.connections.length === 0) return 0;
 
   const destId = pickRandom(currentNode.connections);
-  const destNode = NODE_MAP[destId];
+  const destNode = MAP_NODE_MAP.get(destId);
   if (!destNode) return 0;
 
   await db.update(gameAgents).set({

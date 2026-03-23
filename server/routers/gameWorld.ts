@@ -9,10 +9,10 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
 import { gameAgents, agentEvents, gameWorld, agentInventory } from "../../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { MAP_NODES, NODE_MAP } from "../../shared/mapNodes";
+import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
 import { MONSTERS } from "../../shared/monsters";
 import { processTick, calcExpToNext, resolveCombat } from "../tickEngine";
-import type { WuXing } from "../../shared/mapNodes";
+import type { WuXing } from "../../shared/types";
 
 // ─── 從命格資料計算角色初始屬性 ───
 function calcStatsFromNatal(natalStats: {
@@ -168,8 +168,8 @@ export const gameWorldRouter = router({
     if (!agents[0]) return null;
 
     const agent = agents[0];
-    const currentNode = NODE_MAP[agent.currentNodeId];
-    const targetNode = agent.targetNodeId ? NODE_MAP[agent.targetNodeId] : null;
+    const currentNode = MAP_NODE_MAP.get(agent.currentNodeId);
+    const targetNode = agent.targetNodeId ? MAP_NODE_MAP.get(agent.targetNodeId) : null;
 
     // 計算體力值再生
     const now = Date.now();
@@ -290,7 +290,7 @@ export const gameWorldRouter = router({
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
 
-      const targetNode = NODE_MAP[input.targetNodeId];
+      const targetNode = MAP_NODE_MAP.get(input.targetNodeId);
       if (!targetNode) throw new Error("目標節點不存在");
 
       const agents = await db
