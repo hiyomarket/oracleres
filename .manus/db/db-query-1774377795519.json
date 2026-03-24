@@ -1,0 +1,9 @@
+{
+  "query": "\nCREATE TABLE IF NOT EXISTS game_monster_skill_catalog (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  monster_skill_id VARCHAR(20) NOT NULL UNIQUE,\n  name VARCHAR(100) NOT NULL,\n  wuxing VARCHAR(10) NOT NULL,\n  skill_type VARCHAR(20) NOT NULL DEFAULT 'attack',\n  rarity VARCHAR(20) NOT NULL DEFAULT 'common',\n  power_percent INT NOT NULL DEFAULT 100,\n  mp_cost INT NOT NULL DEFAULT 0,\n  cooldown INT NOT NULL DEFAULT 0,\n  accuracy_mod INT NOT NULL DEFAULT 100,\n  additional_effect JSON DEFAULT NULL,\n  ai_condition JSON DEFAULT NULL,\n  description TEXT DEFAULT NULL,\n  is_active TINYINT DEFAULT 1,\n  created_at BIGINT NOT NULL\n);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nCREATE TABLE IF NOT EXISTS game_monster_skill_catalog (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  monster_skill_id VARCHAR(20) NOT NULL UNIQUE,\n  name VARCHAR(100) NOT NULL,\n  wuxing VARCHAR(10) NOT NULL,\n  skill_type VARCHAR(20) NOT NULL DEFAULT 'attack',\n  rarity VARCHAR(20) NOT NULL DEFAULT 'common',\n  power_percent INT NOT NULL DEFAULT 100,\n  mp_cost INT NOT NULL DEFAULT 0,\n  cooldown INT NOT NULL DEFAULT 0,\n  accuracy_mod INT NOT NULL DEFAULT 100,\n  additional_effect JSON DEFAULT NULL,\n  ai_condition JSON DEFAULT NULL,\n  description TEXT DEFAULT NULL,\n  is_active TINYINT DEFAULT 1,\n  created_at BIGINT NOT NULL\n);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1691
+}

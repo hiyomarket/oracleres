@@ -985,7 +985,7 @@ async function processCombatEvent(
   // 取得玩家已裝備技能資訊（用於詳細戰鬥計算）
   let equippedSkillsForCombat: Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number }> = [];
   try {
-    const { agentSkills, skillTemplates } = await import("../drizzle/schema");
+    const { agentSkills, gameSkillCatalog } = await import("../drizzle/schema");
     const { eq } = await import("drizzle-orm");
     const installedSkills = await db
       .select({ id: agentSkills.skillId, installedSlot: agentSkills.installedSlot })
@@ -995,12 +995,12 @@ async function processCombatEvent(
     if (installedIds.length > 0) {
       const { inArray } = await import("drizzle-orm");
       const skillData = await db.select({
-        id: skillTemplates.id,
-        name: skillTemplates.name,
-        skillType: skillTemplates.category,
-        damageMultiplier: skillTemplates.effectValue,
-        mpCost: skillTemplates.mpCost,
-      }).from(skillTemplates).where(inArray(skillTemplates.id, installedIds));
+        id: gameSkillCatalog.skillId,
+        name: gameSkillCatalog.name,
+        skillType: gameSkillCatalog.category,
+        damageMultiplier: gameSkillCatalog.powerPercent,
+        mpCost: gameSkillCatalog.mpCost,
+      }).from(gameSkillCatalog).where(inArray(gameSkillCatalog.skillId, installedIds));
       equippedSkillsForCombat = skillData.map(s => ({
         id: s.id,
         name: s.name,

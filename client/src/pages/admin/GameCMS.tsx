@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { MonsterCatalogV2Tab, ItemCatalogV2Tab, EquipCatalogV2Tab, SkillCatalogV2Tab, AchievementCatalogTab, MonsterSkillCatalogTab } from "@/components/admin/CatalogTabs";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -473,10 +474,12 @@ export default function GameCMS() {
             <TabsTrigger value="hidden-shop">密店商品池</TabsTrigger>
             <TabsTrigger value="achievements">成就</TabsTrigger>
             <TabsTrigger value="items">紙娃娃商城</TabsTrigger>
-            <TabsTrigger value="catalog-monsters">🐉 怪物圖鑑</TabsTrigger>
+            <TabsTrigger value="catalog-monsters">🐉 魔物建製</TabsTrigger>
             <TabsTrigger value="catalog-items">🎒 道具圖鑑</TabsTrigger>
             <TabsTrigger value="catalog-equipment">⚔️ 裝備圖鑑</TabsTrigger>
             <TabsTrigger value="catalog-skills">✨ 技能圖鑑</TabsTrigger>
+            <TabsTrigger value="catalog-achievements">🏆 成就系統</TabsTrigger>
+            <TabsTrigger value="catalog-monster-skills">🐲 魔物技能</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -489,10 +492,12 @@ export default function GameCMS() {
               <TabsContent value="hidden-shop"><HiddenShopTab /></TabsContent>
               <TabsContent value="achievements"><AchievementsTab /></TabsContent>
               <TabsContent value="items"><GameItemsTab /></TabsContent>
-              <TabsContent value="catalog-monsters"><MonsterCatalogTab /></TabsContent>
-              <TabsContent value="catalog-items"><ItemCatalogTab /></TabsContent>
-              <TabsContent value="catalog-equipment"><EquipmentCatalogTab /></TabsContent>
-              <TabsContent value="catalog-skills"><SkillCatalogTab /></TabsContent>
+              <TabsContent value="catalog-monsters"><MonsterCatalogV2Tab /></TabsContent>
+              <TabsContent value="catalog-items"><ItemCatalogV2Tab /></TabsContent>
+              <TabsContent value="catalog-equipment"><EquipCatalogV2Tab /></TabsContent>
+              <TabsContent value="catalog-skills"><SkillCatalogV2Tab /></TabsContent>
+              <TabsContent value="catalog-achievements"><AchievementCatalogTab /></TabsContent>
+              <TabsContent value="catalog-monster-skills"><MonsterSkillCatalogTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>

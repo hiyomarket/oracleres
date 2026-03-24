@@ -575,6 +575,20 @@
       "when": 1774370141915,
       "tag": "0081_glossy_speed_demon",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "5",
+      "when": 1774377692238,
+      "tag": "0082_aspiring_iceman",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "5",
+      "when": 1774379806475,
+      "tag": "0083_perpetual_xorn",
+      "breakpoints": true
     }
   ]
 }

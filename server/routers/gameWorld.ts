@@ -908,6 +908,18 @@ export const gameWorldRouter = router({
           nodeMonsters = filtered.map(m => {
             const [lo, hi] = (m.levelRange ?? "1-5").split("-").map(Number);
             const midLv = Math.round((lo + hi) / 2);
+            // 從圖鑑讀取掉落物（最多 5 個）
+            const dropItems: Array<{ itemId: string; chance: number }> = [];
+            if (m.dropItem1) dropItems.push({ itemId: m.dropItem1, chance: (m.dropRate1 ?? 10) / 100 });
+            if (m.dropItem2) dropItems.push({ itemId: m.dropItem2, chance: (m.dropRate2 ?? 10) / 100 });
+            if (m.dropItem3) dropItems.push({ itemId: m.dropItem3, chance: (m.dropRate3 ?? 5) / 100 });
+            if (m.dropItem4) dropItems.push({ itemId: m.dropItem4, chance: (m.dropRate4 ?? 3) / 100 });
+            if (m.dropItem5) dropItems.push({ itemId: m.dropItem5, chance: (m.dropRate5 ?? 1) / 100 });
+            // 從圖鑑讀取技能名稱
+            const skills: string[] = [];
+            if (m.skillId1) skills.push(m.skillId1);
+            if (m.skillId2) skills.push(m.skillId2);
+            if (m.skillId3) skills.push(m.skillId3);
             return {
               id: m.monsterId,
               name: m.name,
@@ -919,10 +931,12 @@ export const gameWorldRouter = router({
               speed: m.baseSpeed,
               expReward: Math.round(midLv * 8),
               goldReward: [midLv * 2, midLv * 5] as [number, number],
+              dropItems,
               description: m.description ?? undefined,
               rarity: m.rarity,
               isBoss: m.rarity === "boss" || m.rarity === "legendary",
-              skills: [],
+              skills,
+              race: (m.race as any) ?? undefined,
             };
           });
         }

@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE game_item_catalog\n  ADD COLUMN IF NOT EXISTS stack_limit INT NOT NULL DEFAULT 99,\n  ADD COLUMN IF NOT EXISTS shop_price INT NOT NULL DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS in_normal_shop TINYINT DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS in_spirit_shop TINYINT DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS in_secret_shop TINYINT DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS is_monster_drop TINYINT DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS drop_monster_id VARCHAR(20) DEFAULT NULL,\n  ADD COLUMN IF NOT EXISTS drop_rate FLOAT NOT NULL DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS gather_locations JSON DEFAULT NULL,\n  ADD COLUMN IF NOT EXISTS use_effect JSON DEFAULT NULL;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nALTER TABLE game_item_catalog\n  ADD COLUMN IF NOT EXISTS stack_limit INT NOT NULL DEFAULT 99,\n  ADD COLUMN IF NOT EXISTS shop_price INT NOT NULL DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS in_normal_shop TINYINT DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS in_spirit_shop TINYINT DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS in_secret_shop TINYINT DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS is_monster_drop TINYINT DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS drop_monster_id VARCHAR(20) DEFAULT NULL,\n  ADD COLUMN IF NOT EXISTS drop_rate FLOAT NOT NULL DEFAULT 0,\n  ADD COLUMN IF NOT EXISTS gather_locations JSON DEFAULT NULL,\n  ADD COLUMN IF NOT EXISTS use_effect JSON DEFAULT NULL;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3086
+}

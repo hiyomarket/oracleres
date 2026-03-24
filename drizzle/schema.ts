@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, tinyint, bigint, uniqueIndex, decimal, float } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, tinyint, bigint, uniqueIndex, decimal, float, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * 會員方案資料表
@@ -1605,23 +1605,35 @@ export type InsertGameMerchantPool = typeof gameMerchantPool.$inferInsert;
  */
 export const gameAchievements = mysqlTable("game_achievements", {
   id: int("id").autoincrement().primaryKey(),
-  /** 成就分類：avatar / explore / combat / oracle */
+  /** 成就唯一編碼，如 ACH_001 */
+  achId: varchar("ach_id", { length: 20 }).notNull().default(""),
+  /** 成就分類：avatar / explore / combat / oracle / social / collection */
   category: varchar("category", { length: 50 }).notNull(),
   title: varchar("title", { length: 100 }).notNull(),
   description: text("description").notNull(),
+  /** 稀有度：common / rare / epic / legendary */
+  rarity: varchar("ach_rarity", { length: 20 }).notNull().default("common"),
   /**
    * 條件類型：
    * login_days / buy_items / daily_quest_streak / collect_wuxing_sets /
    * map_checkin / gather_count / random_quest_count /
    * combat_win / catch_monster / kill_count / element_counter /
-   * oracle_deep_read / disaster_quest
+   * oracle_deep_read / disaster_quest / pvp_win / auction_trade / craft_count
    */
   conditionType: varchar("condition_type", { length: 50 }).notNull(),
   conditionValue: int("condition_value").notNull(),
-  /** 獎勵類型：stones / coins / title / item / frame */
+  /** 條件參數（JSON：更複雜的條件定義，如 {monsterId, element, minLevel}） */
+  conditionParams: json("condition_params").$type<Record<string, any>>().default({}),
+  /** 獎勵類型：stones / coins / title / item / frame / skill */
   rewardType: varchar("reward_type", { length: 50 }).notNull(),
   rewardAmount: int("reward_amount").notNull(),
-  /** 徽章圖片 URL（美術 TASK-010 提供） */
+  /** 獎勵內容（JSON：更複雜的獎勵定義，如 [{type, itemId, amount}]） */
+  rewardContent: json("reward_content").$type<Array<{type: string; itemId?: string; amount: number}>>().default([]),
+  /** 稱號（解鎖後可使用的稱號文字） */
+  titleReward: varchar("title_reward", { length: 50 }).default(""),
+  /** 光效代碼（解鎖後的特殊光效） */
+  glowEffect: varchar("glow_effect", { length: 50 }).default(""),
+  /** 徽章圖片 URL */
   iconUrl: varchar("icon_url", { length: 500 }).notNull().default(""),
   isActive: tinyint("is_active").default(1),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -1994,17 +2006,60 @@ export const gameMonsterCatalog = mysqlTable("game_monster_catalog", {
   wuxing: varchar("wuxing", { length: 10 }).notNull(),
   /** 等級範圍，如 "1-5" */
   levelRange: varchar("level_range", { length: 20 }).notNull().default("1-5"),
+  /** 稀有度：common / rare / elite / boss / legendary */
+  rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
+  // ===== 基礎能力值 =====
   baseHp: int("base_hp").notNull().default(50),
   baseAttack: int("base_attack").notNull().default(10),
   baseDefense: int("base_defense").notNull().default(5),
   baseSpeed: int("base_speed").notNull().default(10),
+  /** 命中力 */
+  baseAccuracy: int("base_accuracy").notNull().default(80),
+  /** 魔法攻擊 */
+  baseMagicAttack: int("base_magic_attack").notNull().default(8),
+  // ===== 五行抗性 (%) =====
+  resistWood: int("resist_wood").notNull().default(0),
+  resistFire: int("resist_fire").notNull().default(0),
+  resistEarth: int("resist_earth").notNull().default(0),
+  resistMetal: int("resist_metal").notNull().default(0),
+  resistWater: int("resist_water").notNull().default(0),
+  /** 被剋制加成% */
+  counterBonus: int("counter_bonus").notNull().default(50),
+  // ===== 技能（最多 3 個，從魔物技能圖鑑選取） =====
+  skillId1: varchar("skill_id_1", { length: 20 }).default(""),
+  skillId2: varchar("skill_id_2", { length: 20 }).default(""),
+  skillId3: varchar("skill_id_3", { length: 20 }).default(""),
+  /** 種族（靈獸系/亡魂系/金屬系/人型系/植物系/水生系/妖化系/龍種系/蟲類系/天命系） */
+  race: varchar("race", { length: 20 }).default(""),
+  /** AI 等級：1=隨機 2=弱點優先 3=策略型 4=BOSS級 */
+  aiLevel: int("ai_level").notNull().default(1),
+  /** 成長率（每升 1 級的屬性倍率，如 1.05） */
+  growthRate: float("growth_rate").notNull().default(1.0),
+  // ===== 掉落系統（最多 5 個掉落欄位） =====
+  dropItem1: varchar("drop_item_1", { length: 20 }).default(""),
+  dropRate1: float("drop_rate_1").notNull().default(0),
+  dropItem2: varchar("drop_item_2", { length: 20 }).default(""),
+  dropRate2: float("drop_rate_2").notNull().default(0),
+  dropItem3: varchar("drop_item_3", { length: 20 }).default(""),
+  dropRate3: float("drop_rate_3").notNull().default(0),
+  dropItem4: varchar("drop_item_4", { length: 20 }).default(""),
+  dropRate4: float("drop_rate_4").notNull().default(0),
+  dropItem5: varchar("drop_item_5", { length: 20 }).default(""),
+  dropRate5: float("drop_rate_5").notNull().default(0),
+  /** 掉落金幣範圍（JSON: {min, max}） */
+  dropGold: json("drop_gold").$type<{min: number; max: number}>().default({min: 5, max: 15}),
+  /** 傳說掉落（極低機率的特殊道具） */
+  legendaryDrop: varchar("legendary_drop", { length: 20 }).default(""),
+  legendaryDropRate: float("legendary_drop_rate").notNull().default(0),
+  /** 天命線索（觸發隱藏任務的文字） */
+  destinyClue: text("destiny_clue"),
+  /** 出沒節點 ID 列表（JSON 陣列） */
+  spawnNodes: json("spawn_nodes").$type<string[]>().default([]),
   /** 描述文字 */
   description: text("description"),
-  /** 掉落道具清單（JSON 陣列，存 itemId 字串） */
+  /** 舊版掉落道具清單（保留相容） */
   dropItems: json("drop_items").$type<string[]>().default([]),
-  /** 稀有度：common / rare / elite / boss / legendary */
-  rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
-  /** 圖片 URL（暫時空白，美術完成後填入） */
+  /** 圖片 URL */
   imageUrl: text("image_url").default(""),
   /** 捕捉機率（0.0-1.0） */
   catchRate: float("catch_rate").notNull().default(0.1),
@@ -2024,14 +2079,38 @@ export const gameItemCatalog = mysqlTable("game_item_catalog", {
   name: varchar("name", { length: 100 }).notNull(),
   /** 五行屬性：木/火/土/金/水 */
   wuxing: varchar("wuxing", { length: 10 }).notNull(),
-  /** 分類：material_basic（基礎採集素材）/ material_drop（怪物掉落）/ consumable（消耗品）/ quest（任務道具）/ treasure（珍寶天命） */
+  /** 分類：material_basic / material_drop / consumable / quest / treasure / skillbook / equipment_material */
   category: varchar("category", { length: 30 }).notNull().default("material_basic"),
-  /** 獲取途徑或掉落來源 */
-  source: varchar("source", { length: 200 }).default(""),
-  /** 用途或效果說明 */
-  effect: text("effect"),
   /** 稀有度：common / rare / epic / legendary */
   rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
+  /** 叠加上限（背包中同一道具最多疊幾個） */
+  stackLimit: int("stack_limit").notNull().default(99),
+  // ===== 商店系統 =====
+  /** 商店售價（金幣） */
+  shopPrice: int("shop_price").notNull().default(0),
+  /** 是否在一般商店上架 */
+  inNormalShop: tinyint("in_normal_shop").default(0),
+  /** 是否在靈相商店上架 */
+  inSpiritShop: tinyint("in_spirit_shop").default(0),
+  /** 是否在密店上架 */
+  inSecretShop: tinyint("in_secret_shop").default(0),
+  // ===== 掉落系統 =====
+  /** 是否可從怪物掉落 */
+  isMonsterDrop: tinyint("is_monster_drop").default(0),
+  /** 掉落怪物 ID（從魔物圖鑑選取） */
+  dropMonsterId: varchar("drop_monster_id", { length: 20 }).default(""),
+  /** 掉落機率 % */
+  dropRate: float("drop_rate").notNull().default(0),
+  // ===== 採集系統 =====
+  /** 採集地點（JSON：[{nodeId, nodeName, rate}]） */
+  gatherLocations: json("gather_locations").$type<Array<{nodeId: string; nodeName: string; rate: number}>>().default([]),
+  // ===== 使用效果 =====
+  /** 使用效果（JSON：{type, value, duration, description}） */
+  useEffect: json("use_effect").$type<{type: string; value: number; duration?: number; description: string} | null>().default(null),
+  /** 獲取途徑或掉落來源（文字說明） */
+  source: varchar("source", { length: 200 }).default(""),
+  /** 用途或效果說明（文字） */
+  effect: text("effect"),
   /** 圖片 URL */
   imageUrl: text("image_url").default(""),
   isActive: tinyint("is_active").default(1),
@@ -2054,13 +2133,35 @@ export const gameEquipmentCatalog = mysqlTable("game_equipment_catalog", {
   slot: varchar("slot", { length: 20 }).notNull().default("weapon"),
   /** 階級：初階/中階/高階/傳說 */
   tier: varchar("tier", { length: 20 }).notNull().default("初階"),
+  /** 品質：white / green / blue / purple / orange / red */
+  quality: varchar("quality", { length: 20 }).notNull().default("white"),
   /** 等級需求 */
   levelRequired: int("level_required").notNull().default(1),
+  // ===== 數值加成 =====
+  hpBonus: int("hp_bonus").notNull().default(0),
+  attackBonus: int("attack_bonus").notNull().default(0),
+  defenseBonus: int("defense_bonus").notNull().default(0),
+  speedBonus: int("speed_bonus").notNull().default(0),
+  /** 五行抗性加成（JSON：{wood, fire, earth, metal, water}） */
+  resistBonus: json("resist_bonus").$type<{wood: number; fire: number; earth: number; metal: number; water: number}>().default({wood:0, fire:0, earth:0, metal:0, water:0}),
+  // ===== 詞條系統（最多 5 個詞條） =====
+  /** 詞條 1~5（JSON：{name, type, value, description}） */
+  affix1: json("affix_1").$type<{name: string; type: string; value: number; description: string} | null>().default(null),
+  affix2: json("affix_2").$type<{name: string; type: string; value: number; description: string} | null>().default(null),
+  affix3: json("affix_3").$type<{name: string; type: string; value: number; description: string} | null>().default(null),
+  affix4: json("affix_4").$type<{name: string; type: string; value: number; description: string} | null>().default(null),
+  affix5: json("affix_5").$type<{name: string; type: string; value: number; description: string} | null>().default(null),
+  // ===== 製作系統 =====
+  /** 製作材料（JSON：[{itemId, name, quantity}]） */
+  craftMaterialsList: json("craft_materials_list").$type<Array<{itemId: string; name: string; quantity: number}>>().default([]),
+  /** 套裝 ID（屬於哪個套裝組，null 表示無套裝） */
+  setId: varchar("set_id", { length: 20 }).default(""),
+  // ===== 舊欄位保留相容 =====
   /** 基礎屬性說明（文字） */
   baseStats: varchar("base_stats", { length: 300 }).default(""),
   /** 特殊效果或傳說被動技能 */
   specialEffect: text("special_effect"),
-  /** 鍛造核心素材（文字說明） */
+  /** 鍛造核心素材（文字說明，舊欄位） */
   craftMaterials: varchar("craft_materials", { length: 300 }).default(""),
   /** 稀有度：common / rare / epic / legendary */
   rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
@@ -2082,12 +2183,28 @@ export const gameSkillCatalog = mysqlTable("game_skill_catalog", {
   name: varchar("name", { length: 100 }).notNull(),
   /** 五行屬性：木/火/土/金/水 */
   wuxing: varchar("wuxing", { length: 10 }).notNull(),
-  /** 類別：active_combat（戰鬥主動）/ passive_combat（戰鬥被動）/ life_gather（生活採集）/ craft_forge（鍛造精煉） */
+  /** 類別：active_combat / passive_combat / life_gather / craft_forge */
   category: varchar("category", { length: 30 }).notNull().default("active_combat"),
+  /** 稀有度：common / rare / epic / legendary */
+  rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
   /** 階級：初階/中階/高階/傳說/天命 */
   tier: varchar("tier", { length: 20 }).notNull().default("初階"),
   /** MP 消耗（被動技能為 0） */
   mpCost: int("mp_cost").notNull().default(0),
+  /** 冷卻回合數 */
+  cooldown: int("cooldown").notNull().default(0),
+  /** 威力 %（基礎攻擊的倍率，如 150 = 150%） */
+  powerPercent: int("power_percent").notNull().default(100),
+  /** 習得等級 */
+  learnLevel: int("learn_level").notNull().default(1),
+  /** 獲取類型：shop / drop / quest / craft / hidden */
+  acquireType: varchar("acquire_type", { length: 20 }).notNull().default("shop"),
+  /** 商店售價（金幣，0 表示不在商店販售） */
+  shopPrice: int("shop_price").notNull().default(0),
+  /** 掉落怪物 ID（從魔物圖鑑選取） */
+  dropMonsterId: varchar("drop_monster_id", { length: 20 }).default(""),
+  /** 隱藏觸發條件（文字說明） */
+  hiddenTrigger: text("hidden_trigger"),
   /** 效果說明 */
   description: text("description"),
   /** 技能類型：attack / heal / buff / debuff / passive / special */
@@ -2676,3 +2793,40 @@ export const auctionListings = mysqlTable("auction_listings", {
 });
 export type AuctionListing = typeof auctionListings.$inferSelect;
 export type InsertAuctionListing = typeof auctionListings.$inferInsert;
+
+
+/**
+ * 魔物技能圖鑑表（M3D 新增）
+ * 定義魔物專屬技能，與玩家技能分開管理
+ * ID 格式：SK_M001, SK_M002, ...
+ */
+export const gameMonsterSkillCatalog = mysqlTable("game_monster_skill_catalog", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 魔物技能唯一識別碼，如 SK_M001 */
+  monsterSkillId: varchar("monster_skill_id", { length: 20 }).notNull().unique(),
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 五行屬性：木/火/土/金/水 */
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  /** 技能類型：attack / heal / buff / debuff / special / passive */
+  skillType: varchar("skill_type", { length: 20 }).notNull().default("attack"),
+  /** 稀有度：common / rare / epic / legendary */
+  rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
+  /** 威力 %（基礎攻擊的倍率，如 150 = 150%） */
+  powerPercent: int("power_percent").notNull().default(100),
+  /** MP 消耗 */
+  mpCost: int("mp_cost").notNull().default(0),
+  /** 冷卻回合數 */
+  cooldown: int("cooldown").notNull().default(0),
+  /** 命中率修正 %（100 = 必中） */
+  accuracyMod: int("accuracy_mod").notNull().default(100),
+  /** 附加效果（JSON：{type, chance, duration, value}） */
+  additionalEffect: json("additional_effect").$type<{type: string; chance: number; duration?: number; value?: number} | null>().default(null),
+  /** AI 使用條件（JSON：{hpBelow, targetElement, priority}） */
+  aiCondition: json("ai_condition").$type<{hpBelow?: number; targetElement?: string; priority?: number} | null>().default(null),
+  /** 效果說明 */
+  description: text("description"),
+  isActive: tinyint("is_active").default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameMonsterSkillCatalog = typeof gameMonsterSkillCatalog.$inferSelect;
+export type InsertGameMonsterSkillCatalog = typeof gameMonsterSkillCatalog.$inferInsert;

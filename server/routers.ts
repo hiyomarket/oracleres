@@ -22,6 +22,7 @@ import { accessTokensRouter } from './routers/accessTokens';
 import { gameAvatarRouter } from './routers/gameAvatar';
 import { gameShopRouter } from './routers/gameShop';
 import { gameAdminRouter } from './routers/gameAdmin';
+import { gameCatalogAdminRouter } from './routers/gameCatalogAdmin';
 import { gameAchievementRouter } from './routers/gameAchievement';
 import { gameWorldRouter } from './routers/gameWorld';
 import { gameSkillSystemRouter } from './routers/gameSkillSystem';
@@ -75,6 +76,7 @@ export const appRouter = router({
   gameAvatar: gameAvatarRouter,
   gameShop: gameShopRouter,
   gameAdmin: gameAdminRouter,
+  gameCatalog: gameCatalogAdminRouter,
   gameAchievement: gameAchievementRouter,
   gameWorld: gameWorldRouter,
   auction: auctionRouter,

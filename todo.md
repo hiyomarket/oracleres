@@ -3950,3 +3950,35 @@
 - [x] 背包道具卡片點擊觸發詳細說明彈窗（CharacterPanel 內整合）
 - [x] 拍賣行道具卡片加入 ℹ 按鈕，點擊彈出詳細說明
 - [x] 重做過場動畫：純黑幕淡入 → 全黑停留 → 純白閃爍 → 黑幕淡出（乾淨俐落，1.5 秒）
+
+## M3D 升級改版 — 六大圖鑑後台建製
+### 階段 A：Schema 擴充
+- [x] game_monster_skill_catalog 全新建立（魔物技能圖鑑）
+- [x] game_monster_catalog 新增欄位（抗性、技能、掉落5欄、AI、成長率、種族等）
+- [x] game_item_catalog 新增欄位（商店分配、掉落怪物、採集地點 JSON、使用效果JSON）
+- [x] game_equipment_catalog 新增欄位（品質、加成、詞條JSON、製作材料JSON、套裝ID）
+- [x] game_skill_catalog 新增欄位（冷卻、威力%、習得等級、獲取類型、掉落怪物）
+- [x] game_achievements 新增欄位（編碼、稀有度、條JSON、獎勵JSON、稱號、光效）
+- [x] 執行 SQL ALTER TABLE 推送所有欄位變更到資料庫
+
+### 階段 B：後端 API
+- [x] 魔物技能圖鑑 CRUD API（含自動編碼 SK_M###）
+- [x] 道具圖鑑 CRUD API（含自動編碼 I_{W/F/E/M/Wt}###）
+- [x] 魔物圖鑑 CRUD API（含自動編碼 M_{W/F/E/M/Wt}###、連動選取）
+- [x] 裝備圖鑑 CRUD API（含自動編碼 E_{W/F/E/M/Wt}###）
+- [x] 技能圖鑑 CRUD API（含自動編碼 S_{Wd/Fr/Er/Mt/Wt}###）
+- [x] 成就系統 CRUD API（含自動編碼 ACH_###）
+
+### 階段 C：後台 UI
+- [x] 魔物技能圖鑑管理 Tab（列表+搜尋+新增/編輯）
+- [x] 道具圖鑑管理 Tab（列表+搜尋+新增/編輯+連動怪物下拉）
+- [x] 魔物建製管理 Tab（含技能連動下拉+掉落物連動下拉）
+- [x] 裝備圖鑑管理 Tab（含製作材料連動下拉）
+- [x] 技能圖鑑管理 Tab（含掉落怪物連動下拉）
+- [x] 成就系統管理 Tab（含條件/獎勵 JSON 編輯）
+- [x] GameCMS 整合六大圖鑑 Tab（替換舊版只讀列表）
+
+### 階段 D：前台連動
+- [x] 戰鬥系統怪物生成改讀圖鑑新欄位（抗性/技能/掉落物/種族）
+- [x] tickEngine 技能查詢修正（skillTemplates → gameSkillCatalog）
+- [x] 掉落系統連動（從圖鑑 dropItem1~5 + dropRate1~5 讀取）
