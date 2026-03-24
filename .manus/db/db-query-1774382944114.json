@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE game_monster_catalog SET wuxing = CASE \n  WHEN wuxing = 'wood' THEN '木'\n  WHEN wuxing = 'fire' THEN '火'\n  WHEN wuxing = 'earth' THEN '土'\n  WHEN wuxing = 'metal' THEN '金'\n  WHEN wuxing = 'water' THEN '水'\n  ELSE wuxing\nEND WHERE wuxing IN ('wood', 'fire', 'earth', 'metal', 'water');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute UPDATE game_monster_catalog SET wuxing = CASE \n  WHEN wuxing = 'wood' THEN '木'\n  WHEN wuxing = 'fire' THEN '火'\n  WHEN wuxing = 'earth' THEN '土'\n  WHEN wuxing = 'metal' THEN '金'\n  WHEN wuxing = 'water' THEN '水'\n  ELSE wuxing\nEND WHERE wuxing IN ('wood', 'fire', 'earth', 'metal', 'water');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1579
+}

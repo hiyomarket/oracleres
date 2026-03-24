@@ -1,0 +1,168 @@
+INSERT INTO game_monster_catalog 
+(monster_id, name, wuxing, level_range, rarity, 
+ base_hp, base_attack, base_defense, base_speed, base_accuracy, base_magic_attack,
+ resist_wood, resist_fire, resist_earth, resist_metal, resist_water, counter_bonus,
+ skill_id_1, skill_id_2, skill_id_3, race, ai_level, growth_rate,
+ drop_item_1, drop_rate_1, drop_gold, created_at)
+VALUES (
+  'M_Wt018', '暴鯨', 'water', 
+  '11-25', 'elite',
+  550, 45, 30, 18, 
+  35, 25,
+  15, 28, 15, 
+  12, 50, 20,
+  '', '', '',
+  '', 2, 1.05,
+  'I_Wt018', 18.0, '{"min": 495, "max": 792}',
+  1774380241919
+) ON DUPLICATE KEY UPDATE 
+  name=VALUES(name), base_hp=VALUES(base_hp), base_attack=VALUES(base_attack),
+  base_defense=VALUES(base_defense), base_speed=VALUES(base_speed),
+  base_accuracy=VALUES(base_accuracy), base_magic_attack=VALUES(base_magic_attack),
+  resist_wood=VALUES(resist_wood), resist_fire=VALUES(resist_fire),
+  resist_earth=VALUES(resist_earth), resist_metal=VALUES(resist_metal),
+  resist_water=VALUES(resist_water), counter_bonus=VALUES(counter_bonus),
+  skill_id_1=VALUES(skill_id_1), skill_id_2=VALUES(skill_id_2), skill_id_3=VALUES(skill_id_3),
+  ai_level=VALUES(ai_level), growth_rate=VALUES(growth_rate),
+  drop_item_1=VALUES(drop_item_1), drop_rate_1=VALUES(drop_rate_1),
+  drop_gold=VALUES(drop_gold);
+INSERT INTO game_monster_catalog 
+(monster_id, name, wuxing, level_range, rarity, 
+ base_hp, base_attack, base_defense, base_speed, base_accuracy, base_magic_attack,
+ resist_wood, resist_fire, resist_earth, resist_metal, resist_water, counter_bonus,
+ skill_id_1, skill_id_2, skill_id_3, race, ai_level, growth_rate,
+ drop_item_1, drop_rate_1, drop_gold, created_at)
+VALUES (
+  'M_Wt019', '水龍', 'water', 
+  '11-25', 'elite',
+  420, 50, 20, 38, 
+  42, 40,
+  12, 32, 12, 
+  12, 48, 20,
+  '', '', '',
+  '', 2, 1.1,
+  'I_Wt019', 12.0, '{"min": 585, "max": 935}',
+  1774380241919
+) ON DUPLICATE KEY UPDATE 
+  name=VALUES(name), base_hp=VALUES(base_hp), base_attack=VALUES(base_attack),
+  base_defense=VALUES(base_defense), base_speed=VALUES(base_speed),
+  base_accuracy=VALUES(base_accuracy), base_magic_attack=VALUES(base_magic_attack),
+  resist_wood=VALUES(resist_wood), resist_fire=VALUES(resist_fire),
+  resist_earth=VALUES(resist_earth), resist_metal=VALUES(resist_metal),
+  resist_water=VALUES(resist_water), counter_bonus=VALUES(counter_bonus),
+  skill_id_1=VALUES(skill_id_1), skill_id_2=VALUES(skill_id_2), skill_id_3=VALUES(skill_id_3),
+  ai_level=VALUES(ai_level), growth_rate=VALUES(growth_rate),
+  drop_item_1=VALUES(drop_item_1), drop_rate_1=VALUES(drop_rate_1),
+  drop_gold=VALUES(drop_gold);
+INSERT INTO game_monster_catalog 
+(monster_id, name, wuxing, level_range, rarity, 
+ base_hp, base_attack, base_defense, base_speed, base_accuracy, base_magic_attack,
+ resist_wood, resist_fire, resist_earth, resist_metal, resist_water, counter_bonus,
+ skill_id_1, skill_id_2, skill_id_3, race, ai_level, growth_rate,
+ drop_item_1, drop_rate_1, drop_gold, created_at)
+VALUES (
+  'M_Wt020', '遠古海神', 'water', 
+  '26-50', 'boss',
+  5000, 150, 90, 28, 
+  100, 160,
+  20, 35, 20, 
+  15, 65, 20,
+  '', '', '',
+  '', 3, 1.15,
+  'I_Wt020', 30.0, '{"min": 10000, "max": 18000}',
+  1774380241919
+) ON DUPLICATE KEY UPDATE 
+  name=VALUES(name), base_hp=VALUES(base_hp), base_attack=VALUES(base_attack),
+  base_defense=VALUES(base_defense), base_speed=VALUES(base_speed),
+  base_accuracy=VALUES(base_accuracy), base_magic_attack=VALUES(base_magic_attack),
+  resist_wood=VALUES(resist_wood), resist_fire=VALUES(resist_fire),
+  resist_earth=VALUES(resist_earth), resist_metal=VALUES(resist_metal),
+  resist_water=VALUES(resist_water), counter_bonus=VALUES(counter_bonus),
+  skill_id_1=VALUES(skill_id_1), skill_id_2=VALUES(skill_id_2), skill_id_3=VALUES(skill_id_3),
+  ai_level=VALUES(ai_level), growth_rate=VALUES(growth_rate),
+  drop_item_1=VALUES(drop_item_1), drop_rate_1=VALUES(drop_rate_1),
+  drop_gold=VALUES(drop_gold);
+INSERT INTO game_monster_catalog 
+(monster_id, name, wuxing, level_range, rarity, 
+ base_hp, base_attack, base_defense, base_speed, base_accuracy, base_magic_attack,
+ resist_wood, resist_fire, resist_earth, resist_metal, resist_water, counter_bonus,
+ skill_id_1, skill_id_2, skill_id_3, race, ai_level, growth_rate,
+ drop_item_1, drop_rate_1, drop_gold, created_at)
+VALUES (
+  'M_Wt021', '冰龍', 'water', 
+  '26-50', 'boss',
+  7500, 240, 130, 35, 
+  140, 200,
+  22, 45, 20, 
+  18, 72, 20,
+  '', '', '',
+  '', 3, 1.2,
+  'I_Wt021', 30.0, '{"min": 25000, "max": 45000}',
+  1774380241919
+) ON DUPLICATE KEY UPDATE 
+  name=VALUES(name), base_hp=VALUES(base_hp), base_attack=VALUES(base_attack),
+  base_defense=VALUES(base_defense), base_speed=VALUES(base_speed),
+  base_accuracy=VALUES(base_accuracy), base_magic_attack=VALUES(base_magic_attack),
+  resist_wood=VALUES(resist_wood), resist_fire=VALUES(resist_fire),
+  resist_earth=VALUES(resist_earth), resist_metal=VALUES(resist_metal),
+  resist_water=VALUES(resist_water), counter_bonus=VALUES(counter_bonus),
+  skill_id_1=VALUES(skill_id_1), skill_id_2=VALUES(skill_id_2), skill_id_3=VALUES(skill_id_3),
+  ai_level=VALUES(ai_level), growth_rate=VALUES(growth_rate),
+  drop_item_1=VALUES(drop_item_1), drop_rate_1=VALUES(drop_rate_1),
+  drop_gold=VALUES(drop_gold);
+INSERT INTO game_monster_catalog 
+(monster_id, name, wuxing, level_range, rarity, 
+ base_hp, base_attack, base_defense, base_speed, base_accuracy, base_magic_attack,
+ resist_wood, resist_fire, resist_earth, resist_metal, resist_water, counter_bonus,
+ skill_id_1, skill_id_2, skill_id_3, race, ai_level, growth_rate,
+ drop_item_1, drop_rate_1, drop_gold, created_at)
+VALUES (
+  'M_Wt022', '深淵領主', 'water', 
+  '26-50', 'boss',
+  10000, 280, 150, 25, 
+  160, 240,
+  25, 40, 25, 
+  20, 75, 20,
+  '', '', '',
+  '', 3, 1.2,
+  'I_Wt022', 30.0, '{"min": 35000, "max": 60000}',
+  1774380241919
+) ON DUPLICATE KEY UPDATE 
+  name=VALUES(name), base_hp=VALUES(base_hp), base_attack=VALUES(base_attack),
+  base_defense=VALUES(base_defense), base_speed=VALUES(base_speed),
+  base_accuracy=VALUES(base_accuracy), base_magic_attack=VALUES(base_magic_attack),
+  resist_wood=VALUES(resist_wood), resist_fire=VALUES(resist_fire),
+  resist_earth=VALUES(resist_earth), resist_metal=VALUES(resist_metal),
+  resist_water=VALUES(resist_water), counter_bonus=VALUES(counter_bonus),
+  skill_id_1=VALUES(skill_id_1), skill_id_2=VALUES(skill_id_2), skill_id_3=VALUES(skill_id_3),
+  ai_level=VALUES(ai_level), growth_rate=VALUES(growth_rate),
+  drop_item_1=VALUES(drop_item_1), drop_rate_1=VALUES(drop_rate_1),
+  drop_gold=VALUES(drop_gold);
+INSERT INTO game_monster_catalog 
+(monster_id, name, wuxing, level_range, rarity, 
+ base_hp, base_attack, base_defense, base_speed, base_accuracy, base_magic_attack,
+ resist_wood, resist_fire, resist_earth, resist_metal, resist_water, counter_bonus,
+ skill_id_1, skill_id_2, skill_id_3, race, ai_level, growth_rate,
+ drop_item_1, drop_rate_1, drop_gold, created_at)
+VALUES (
+  'M_Wt023', '世界Boss・深淵海神', 'water', 
+  '51-60', 'legendary',
+  90000, 600, 400, 35, 
+  300, 520,
+  35, 50, 35, 
+  30, 85, 20,
+  '', '', '',
+  '', 5, 1.2,
+  'I_Wt023', 100.0, '{"min": 200000, "max": 300000}',
+  1774380241919
+) ON DUPLICATE KEY UPDATE 
+  name=VALUES(name), base_hp=VALUES(base_hp), base_attack=VALUES(base_attack),
+  base_defense=VALUES(base_defense), base_speed=VALUES(base_speed),
+  base_accuracy=VALUES(base_accuracy), base_magic_attack=VALUES(base_magic_attack),
+  resist_wood=VALUES(resist_wood), resist_fire=VALUES(resist_fire),
+  resist_earth=VALUES(resist_earth), resist_metal=VALUES(resist_metal),
+  resist_water=VALUES(resist_water), counter_bonus=VALUES(counter_bonus),
+  skill_id_1=VALUES(skill_id_1), skill_id_2=VALUES(skill_id_2), skill_id_3=VALUES(skill_id_3),
+  ai_level=VALUES(ai_level), growth_rate=VALUES(growth_rate),
+  drop_item_1=VALUES(drop_item_1), drop_rate_1=VALUES(drop_rate_1),
+  drop_gold=VALUES(drop_gold);

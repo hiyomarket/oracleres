@@ -3982,3 +3982,10 @@
 - [x] 戰鬥系統怪物生成改讀圖鑑新欄位（抗性/技能/掉落物/種族）
 - [x] tickEngine 技能查詢修正（skillTemplates → gameSkillCatalog）
 - [x] 掉落系統連動（從圖鑑 dropItem1~5 + dropRate1~5 讀取）
+
+## M3D 升級改版 — 資料匯入 + 搜尋篩選 + 匯出功能
+- [ ] 讀取 GD-011A~E 怪物圖鑑 Markdown，解析怪物資料
+- [ ] 建立批量匯入腳本，將怪物資料寫入 game_monster_catalog
+- [x] 後台圖鑑搜尋強化：加入五行/稀有度/等級範圍篩選器（六大圖鑑全部加入 FilterPill + 下拉式篩選）
+- [x] 圖鑑資料匯出功能：CSV/JSON 匯出按鈕（六大圖鑑全部加入 ExportButtons + 後端 export 端點）
+- [x] 修復五行格式不一致問題（資料庫中英文 element 名稱統一為中文）

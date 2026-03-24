@@ -16,7 +16,7 @@ import {
   gameAchievements,
   gameMonsterSkillCatalog,
 } from "../../drizzle/schema";
-import { sql, like, or, eq, desc, asc } from "drizzle-orm";
+import { sql, like, or, eq, desc, asc, and, gte, lte } from "drizzle-orm";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
@@ -240,6 +240,9 @@ export const gameCatalogAdminRouter = router({
     .input(z.object({
       search: z.string().optional(),
       wuxing: z.string().optional(),
+      rarity: z.string().optional(),
+      levelMin: z.number().int().optional(),
+      levelMax: z.number().int().optional(),
       page: z.number().int().positive().default(1),
       pageSize: z.number().int().positive().default(50),
     }).optional())
@@ -247,14 +250,20 @@ export const gameCatalogAdminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const p = input ?? { page: 1, pageSize: 50 };
-      let q = db.select().from(gameMonsterCatalog).$dynamic();
       const conditions: any[] = [];
       if (p.search) conditions.push(like(gameMonsterCatalog.name, `%${p.search}%`));
       if (p.wuxing) conditions.push(eq(gameMonsterCatalog.wuxing, p.wuxing));
-      if (conditions.length === 1) q = q.where(conditions[0]);
-      else if (conditions.length > 1) q = q.where(sql`${conditions[0]} AND ${conditions[1]}`);
-      const total = await db.select({ count: sql<number>`count(*)` }).from(gameMonsterCatalog);
-      const rows = await q.orderBy(asc(gameMonsterCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
+      if (p.rarity) conditions.push(eq(gameMonsterCatalog.rarity, p.rarity));
+      // levelRange is stored as "1-5", parse min from it for filtering
+      if (p.levelMin !== undefined) {
+        conditions.push(sql`CAST(SUBSTRING_INDEX(${gameMonsterCatalog.levelRange}, '-', 1) AS UNSIGNED) >= ${p.levelMin}`);
+      }
+      if (p.levelMax !== undefined) {
+        conditions.push(sql`CAST(SUBSTRING_INDEX(${gameMonsterCatalog.levelRange}, '-', -1) AS UNSIGNED) <= ${p.levelMax}`);
+      }
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const total = await db.select({ count: sql<number>`count(*)` }).from(gameMonsterCatalog).where(whereClause);
+      const rows = await db.select().from(gameMonsterCatalog).where(whereClause).orderBy(asc(gameMonsterCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
       return { items: rows, total: total[0]?.count ?? 0, page: p.page, pageSize: p.pageSize };
     }),
 
@@ -297,6 +306,7 @@ export const gameCatalogAdminRouter = router({
       search: z.string().optional(),
       wuxing: z.string().optional(),
       category: z.string().optional(),
+      rarity: z.string().optional(),
       page: z.number().int().positive().default(1),
       pageSize: z.number().int().positive().default(50),
     }).optional())
@@ -304,8 +314,14 @@ export const gameCatalogAdminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const p = input ?? { page: 1, pageSize: 50 };
-      const rows = await db.select().from(gameItemCatalog).orderBy(asc(gameItemCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
-      const total = await db.select({ count: sql<number>`count(*)` }).from(gameItemCatalog);
+      const conditions: any[] = [];
+      if (p.search) conditions.push(like(gameItemCatalog.name, `%${p.search}%`));
+      if (p.wuxing) conditions.push(eq(gameItemCatalog.wuxing, p.wuxing));
+      if (p.category) conditions.push(eq(gameItemCatalog.category, p.category));
+      if (p.rarity) conditions.push(eq(gameItemCatalog.rarity, p.rarity));
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const total = await db.select({ count: sql<number>`count(*)` }).from(gameItemCatalog).where(whereClause);
+      const rows = await db.select().from(gameItemCatalog).where(whereClause).orderBy(asc(gameItemCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
       return { items: rows, total: total[0]?.count ?? 0, page: p.page, pageSize: p.pageSize };
     }),
 
@@ -348,6 +364,8 @@ export const gameCatalogAdminRouter = router({
       search: z.string().optional(),
       wuxing: z.string().optional(),
       slot: z.string().optional(),
+      quality: z.string().optional(),
+      rarity: z.string().optional(),
       page: z.number().int().positive().default(1),
       pageSize: z.number().int().positive().default(50),
     }).optional())
@@ -355,8 +373,15 @@ export const gameCatalogAdminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const p = input ?? { page: 1, pageSize: 50 };
-      const rows = await db.select().from(gameEquipmentCatalog).orderBy(asc(gameEquipmentCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
-      const total = await db.select({ count: sql<number>`count(*)` }).from(gameEquipmentCatalog);
+      const conditions: any[] = [];
+      if (p.search) conditions.push(like(gameEquipmentCatalog.name, `%${p.search}%`));
+      if (p.wuxing) conditions.push(eq(gameEquipmentCatalog.wuxing, p.wuxing));
+      if (p.slot) conditions.push(eq(gameEquipmentCatalog.slot, p.slot));
+      if (p.quality) conditions.push(eq(gameEquipmentCatalog.quality, p.quality));
+      if (p.rarity) conditions.push(eq(gameEquipmentCatalog.rarity, p.rarity));
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const total = await db.select({ count: sql<number>`count(*)` }).from(gameEquipmentCatalog).where(whereClause);
+      const rows = await db.select().from(gameEquipmentCatalog).where(whereClause).orderBy(asc(gameEquipmentCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
       return { items: rows, total: total[0]?.count ?? 0, page: p.page, pageSize: p.pageSize };
     }),
 
@@ -404,6 +429,8 @@ export const gameCatalogAdminRouter = router({
       search: z.string().optional(),
       wuxing: z.string().optional(),
       category: z.string().optional(),
+      rarity: z.string().optional(),
+      skillType: z.string().optional(),
       page: z.number().int().positive().default(1),
       pageSize: z.number().int().positive().default(50),
     }).optional())
@@ -411,8 +438,15 @@ export const gameCatalogAdminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const p = input ?? { page: 1, pageSize: 50 };
-      const rows = await db.select().from(gameSkillCatalog).orderBy(asc(gameSkillCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
-      const total = await db.select({ count: sql<number>`count(*)` }).from(gameSkillCatalog);
+      const conditions: any[] = [];
+      if (p.search) conditions.push(like(gameSkillCatalog.name, `%${p.search}%`));
+      if (p.wuxing) conditions.push(eq(gameSkillCatalog.wuxing, p.wuxing));
+      if (p.category) conditions.push(eq(gameSkillCatalog.category, p.category));
+      if (p.rarity) conditions.push(eq(gameSkillCatalog.rarity, p.rarity));
+      if (p.skillType) conditions.push(eq(gameSkillCatalog.skillType, p.skillType));
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const total = await db.select({ count: sql<number>`count(*)` }).from(gameSkillCatalog).where(whereClause);
+      const rows = await db.select().from(gameSkillCatalog).where(whereClause).orderBy(asc(gameSkillCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
       return { items: rows, total: total[0]?.count ?? 0, page: p.page, pageSize: p.pageSize };
     }),
 
@@ -452,6 +486,7 @@ export const gameCatalogAdminRouter = router({
     .input(z.object({
       search: z.string().optional(),
       category: z.string().optional(),
+      rarity: z.string().optional(),
       page: z.number().int().positive().default(1),
       pageSize: z.number().int().positive().default(50),
     }).optional())
@@ -459,8 +494,13 @@ export const gameCatalogAdminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const p = input ?? { page: 1, pageSize: 50 };
-      const rows = await db.select().from(gameAchievements).orderBy(asc(gameAchievements.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
-      const total = await db.select({ count: sql<number>`count(*)` }).from(gameAchievements);
+      const conditions: any[] = [];
+      if (p.search) conditions.push(like(gameAchievements.title, `%${p.search}%`));
+      if (p.category) conditions.push(eq(gameAchievements.category, p.category));
+      if (p.rarity) conditions.push(eq(gameAchievements.rarity, p.rarity));
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const total = await db.select({ count: sql<number>`count(*)` }).from(gameAchievements).where(whereClause);
+      const rows = await db.select().from(gameAchievements).where(whereClause).orderBy(asc(gameAchievements.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
       return { items: rows, total: total[0]?.count ?? 0, page: p.page, pageSize: p.pageSize };
     }),
 
@@ -502,6 +542,8 @@ export const gameCatalogAdminRouter = router({
     .input(z.object({
       search: z.string().optional(),
       wuxing: z.string().optional(),
+      rarity: z.string().optional(),
+      skillType: z.string().optional(),
       page: z.number().int().positive().default(1),
       pageSize: z.number().int().positive().default(50),
     }).optional())
@@ -509,8 +551,14 @@ export const gameCatalogAdminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const p = input ?? { page: 1, pageSize: 50 };
-      const rows = await db.select().from(gameMonsterSkillCatalog).orderBy(asc(gameMonsterSkillCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
-      const total = await db.select({ count: sql<number>`count(*)` }).from(gameMonsterSkillCatalog);
+      const conditions: any[] = [];
+      if (p.search) conditions.push(like(gameMonsterSkillCatalog.name, `%${p.search}%`));
+      if (p.wuxing) conditions.push(eq(gameMonsterSkillCatalog.wuxing, p.wuxing));
+      if (p.rarity) conditions.push(eq(gameMonsterSkillCatalog.rarity, p.rarity));
+      if (p.skillType) conditions.push(eq(gameMonsterSkillCatalog.skillType, p.skillType));
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const total = await db.select({ count: sql<number>`count(*)` }).from(gameMonsterSkillCatalog).where(whereClause);
+      const rows = await db.select().from(gameMonsterSkillCatalog).where(whereClause).orderBy(asc(gameMonsterSkillCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
       return { items: rows, total: total[0]?.count ?? 0, page: p.page, pageSize: p.pageSize };
     }),
 
@@ -608,5 +656,39 @@ export const gameCatalogAdminRouter = router({
       wuxing: gameEquipmentCatalog.wuxing,
       slot: gameEquipmentCatalog.slot,
     }).from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.isActive, 1)).orderBy(asc(gameEquipmentCatalog.name));
+  }),
+
+  // ════════════════════════════════════════════════════════════════
+  // 匯出端點（CSV/JSON）
+  // ════════════════════════════════════════════════════════════════
+  exportMonsterCatalog: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameMonsterCatalog).orderBy(asc(gameMonsterCatalog.id));
+  }),
+  exportItemCatalog: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameItemCatalog).orderBy(asc(gameItemCatalog.id));
+  }),
+  exportEquipCatalog: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameEquipmentCatalog).orderBy(asc(gameEquipmentCatalog.id));
+  }),
+  exportSkillCatalog: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameSkillCatalog).orderBy(asc(gameSkillCatalog.id));
+  }),
+  exportAchievementCatalog: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameAchievements).orderBy(asc(gameAchievements.id));
+  }),
+  exportMonsterSkillCatalog: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameMonsterSkillCatalog).orderBy(asc(gameMonsterSkillCatalog.id));
   }),
 });

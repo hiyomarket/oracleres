@@ -1,14 +1,15 @@
 /**
- * 六大圖鑑管理 Tab 組件
+ * 六大圖鑑管理 Tab 組件（含進階篩選 + CSV/JSON 匯出）
  * MonsterCatalogV2Tab / ItemCatalogV2Tab / EquipCatalogV2Tab / SkillCatalogV2Tab / AchievementCatalogTab / MonsterSkillCatalogTab
  */
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import CatalogFormDialog, { type FieldDef } from "./CatalogFormDialog";
 
+// ===== 共用常數 =====
 const WUXING_OPTS = [
   { value: "木", label: "🌿 木" },
   { value: "火", label: "🔥 火" },
@@ -25,34 +26,102 @@ const RARITY_OPTS = [
 ];
 
 const WUXING_FILTER = [{ value: "", label: "全部" }, ...WUXING_OPTS];
+const RARITY_FILTER = [{ value: "", label: "全部稀有度" }, ...RARITY_OPTS];
+
+// ===== 共用匯出工具 =====
+function exportToCSV(data: any[], filename: string) {
+  if (!data || data.length === 0) { toast.error("沒有資料可匯出"); return; }
+  const headers = Object.keys(data[0]);
+  const csvRows = [
+    headers.join(","),
+    ...data.map(row => headers.map(h => {
+      const val = row[h];
+      if (val === null || val === undefined) return "";
+      if (typeof val === "object") return `"${JSON.stringify(val).replace(/"/g, '""')}"`;
+      const str = String(val);
+      if (str.includes(",") || str.includes('"') || str.includes("\n")) return `"${str.replace(/"/g, '""')}"`;
+      return str;
+    }).join(","))
+  ];
+  const blob = new Blob(["\uFEFF" + csvRows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `${filename}.csv`; a.click();
+  URL.revokeObjectURL(url);
+  toast.success(`已匯出 ${data.length} 筆 CSV`);
+}
+
+function exportToJSON(data: any[], filename: string) {
+  if (!data || data.length === 0) { toast.error("沒有資料可匯出"); return; }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `${filename}.json`; a.click();
+  URL.revokeObjectURL(url);
+  toast.success(`已匯出 ${data.length} 筆 JSON`);
+}
+
+// ===== 共用篩選器 UI 組件 =====
+function FilterPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick}
+      className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
+      {label}
+    </button>
+  );
+}
+
+function FilterBar({ children }: { children: React.ReactNode }) {
+  return <div className="flex gap-2 mb-4 flex-wrap items-center">{children}</div>;
+}
+
+function ExportButtons({ onCSV, onJSON }: { onCSV: () => void; onJSON: () => void }) {
+  return (
+    <div className="flex gap-1">
+      <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={onCSV}>CSV</Button>
+      <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={onJSON}>JSON</Button>
+    </div>
+  );
+}
 
 // ════════════════════════════════════════════════════════════════
 // 1. 魔物圖鑑 V2
 // ════════════════════════════════════════════════════════════════
 export function MonsterCatalogV2Tab() {
-  // using sonner toast directly
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [wuxing, setWuxing] = useState("");
+  const [rarity, setRarity] = useState("");
+  const [levelMin, setLevelMin] = useState("");
+  const [levelMax, setLevelMax] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
 
-  const { data, isLoading, refetch } = trpc.gameCatalog.getMonsterCatalog.useQuery({
-    search: search || undefined, wuxing: wuxing || undefined, page: 1, pageSize: 200,
-  });
+  const queryInput = useMemo(() => ({
+    search: search || undefined,
+    wuxing: wuxing || undefined,
+    rarity: rarity || undefined,
+    levelMin: levelMin ? parseInt(levelMin) : undefined,
+    levelMax: levelMax ? parseInt(levelMax) : undefined,
+    page: 1, pageSize: 200,
+  }), [search, wuxing, rarity, levelMin, levelMax]);
+
+  const { data, isLoading, refetch } = trpc.gameCatalog.getMonsterCatalog.useQuery(queryInput);
   const { data: monsterSkills } = trpc.gameCatalog.getAllMonsterSkills.useQuery();
   const { data: allItems } = trpc.gameCatalog.getAllItems.useQuery();
+  const { data: exportData } = trpc.gameCatalog.exportMonsterCatalog.useQuery(undefined, { enabled: false });
+  const exportQuery = trpc.gameCatalog.exportMonsterCatalog.useQuery(undefined, { enabled: false });
 
   const createMut = trpc.gameCatalog.createMonsterCatalog.useMutation({
-    onSuccess: (r) => { toast.success(`✅ 建立成功 (${r.monsterId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: (r) => { toast.success(`建立成功 (${r.monsterId})`); setFormOpen(false); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const updateMut = trpc.gameCatalog.updateMonsterCatalog.useMutation({
-    onSuccess: () => { toast.success("✅ 更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const deleteMut = trpc.gameCatalog.deleteMonsterCatalog.useMutation({
-    onSuccess: () => { toast.success("🗑️ 已刪除"); refetch(); },
+    onSuccess: () => { toast.success("已刪除"); refetch(); },
   });
 
   const skillOpts = (monsterSkills ?? []).map((s: any) => ({ value: s.monsterSkillId, label: `${s.monsterSkillId} ${s.name}（${s.wuxing}）` }));
@@ -101,17 +170,19 @@ export function MonsterCatalogV2Tab() {
   ];
 
   const handleSubmit = (data: any) => {
-    // Clean linkedSelect "__none__" values
-    for (const k of Object.keys(data)) {
-      if (data[k] === "__none__") data[k] = "";
-    }
+    for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
     if (data.isActive !== undefined) data.isActive = Number(data.isActive);
-    if (editItem) {
-      updateMut.mutate({ id: editItem.id, data });
-    } else {
-      createMut.mutate(data);
-    }
+    if (editItem) updateMut.mutate({ id: editItem.id, data });
+    else createMut.mutate(data);
   };
+
+  const handleExport = useCallback(async (format: "csv" | "json") => {
+    const result = await exportQuery.refetch();
+    if (result.data) {
+      if (format === "csv") exportToCSV(result.data, "monster_catalog");
+      else exportToJSON(result.data, "monster_catalog");
+    }
+  }, [exportQuery]);
 
   const items = data?.items ?? [];
 
@@ -122,24 +193,38 @@ export function MonsterCatalogV2Tab() {
           <h2 className="text-lg font-semibold">🐉 魔物圖鑑（{data?.total ?? 0}）</h2>
           <p className="text-xs text-muted-foreground">新增時自動生成 ID（如 M_W001）</p>
         </div>
-        <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增魔物</Button>
+        <div className="flex gap-2 items-center">
+          <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增魔物</Button>
+        </div>
       </div>
-      <div className="flex gap-2 mb-4 flex-wrap items-center">
+      {/* 篩選列 */}
+      <FilterBar>
         <div className="flex gap-1 flex-wrap">
           {WUXING_FILTER.map(w => (
-            <button key={w.value} onClick={() => setWuxing(w.value)}
-              className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${wuxing === w.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {w.label}
-            </button>
+            <FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => setWuxing(w.value)} />
           ))}
         </div>
+        <div className="flex gap-1 flex-wrap">
+          {RARITY_FILTER.map(r => (
+            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
+          ))}
+        </div>
+      </FilterBar>
+      <FilterBar>
+        <span className="text-xs text-muted-foreground">等級：</span>
+        <Input type="number" placeholder="最低" value={levelMin} onChange={e => setLevelMin(e.target.value)} className="w-20 h-7 text-xs" />
+        <span className="text-xs text-muted-foreground">~</span>
+        <Input type="number" placeholder="最高" value={levelMax} onChange={e => setLevelMax(e.target.value)} className="w-20 h-7 text-xs" />
         <div className="flex gap-2 ml-auto">
           <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-8 text-xs" />
-          <Button size="sm" variant="outline" onClick={() => setSearch(searchInput)}>搜尋</Button>
-          {search && <Button size="sm" variant="ghost" onClick={() => { setSearch(""); setSearchInput(""); }}>清除</Button>}
+            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
+          {(search || wuxing || rarity || levelMin || levelMax) && (
+            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setLevelMin(""); setLevelMax(""); }}>清除全部</Button>
+          )}
         </div>
-      </div>
+      </FilterBar>
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
@@ -201,30 +286,39 @@ const ITEM_CAT_OPTS = [
   { value: "skillbook", label: "技能書" },
   { value: "equipment_material", label: "裝備材料" },
 ];
+const ITEM_CAT_FILTER = [{ value: "", label: "全部分類" }, ...ITEM_CAT_OPTS];
 
 export function ItemCatalogV2Tab() {
-  // using sonner toast directly
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [wuxing, setWuxing] = useState("");
+  const [rarity, setRarity] = useState("");
+  const [category, setCategory] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
 
-  const { data, isLoading, refetch } = trpc.gameCatalog.getItemCatalog.useQuery({
-    search: search || undefined, wuxing: wuxing || undefined, page: 1, pageSize: 200,
-  });
+  const queryInput = useMemo(() => ({
+    search: search || undefined,
+    wuxing: wuxing || undefined,
+    rarity: rarity || undefined,
+    category: category || undefined,
+    page: 1, pageSize: 200,
+  }), [search, wuxing, rarity, category]);
+
+  const { data, isLoading, refetch } = trpc.gameCatalog.getItemCatalog.useQuery(queryInput);
   const { data: allMonsters } = trpc.gameCatalog.getAllMonsters.useQuery();
+  const exportQuery = trpc.gameCatalog.exportItemCatalog.useQuery(undefined, { enabled: false });
 
   const createMut = trpc.gameCatalog.createItemCatalog.useMutation({
-    onSuccess: (r) => { toast.success(`✅ 建立成功 (${r.itemId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: (r) => { toast.success(`建立成功 (${r.itemId})`); setFormOpen(false); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const updateMut = trpc.gameCatalog.updateItemCatalog.useMutation({
-    onSuccess: () => { toast.success("✅ 更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const deleteMut = trpc.gameCatalog.deleteItemCatalog.useMutation({
-    onSuccess: () => { toast.success("🗑️ 已刪除"); refetch(); },
+    onSuccess: () => { toast.success("已刪除"); refetch(); },
   });
 
   const monsterOpts = (allMonsters ?? []).map((m: any) => ({ value: m.monsterId, label: `${m.monsterId} ${m.name}（${m.wuxing}）` }));
@@ -257,6 +351,14 @@ export function ItemCatalogV2Tab() {
     else createMut.mutate(data);
   };
 
+  const handleExport = useCallback(async (format: "csv" | "json") => {
+    const result = await exportQuery.refetch();
+    if (result.data) {
+      if (format === "csv") exportToCSV(result.data, "item_catalog");
+      else exportToJSON(result.data, "item_catalog");
+    }
+  }, [exportQuery]);
+
   const items = data?.items ?? [];
 
   return (
@@ -266,23 +368,37 @@ export function ItemCatalogV2Tab() {
           <h2 className="text-lg font-semibold">🎒 道具圖鑑（{data?.total ?? 0}）</h2>
           <p className="text-xs text-muted-foreground">自動生成 ID（如 I_W001）</p>
         </div>
-        <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增道具</Button>
+        <div className="flex gap-2 items-center">
+          <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增道具</Button>
+        </div>
       </div>
-      <div className="flex gap-2 mb-4 flex-wrap items-center">
+      <FilterBar>
         <div className="flex gap-1 flex-wrap">
           {WUXING_FILTER.map(w => (
-            <button key={w.value} onClick={() => setWuxing(w.value)}
-              className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${wuxing === w.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-              {w.label}
-            </button>
+            <FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => setWuxing(w.value)} />
           ))}
         </div>
+        <div className="flex gap-1 flex-wrap">
+          {RARITY_FILTER.map(r => (
+            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
+          ))}
+        </div>
+      </FilterBar>
+      <FilterBar>
+        <select value={category} onChange={e => setCategory(e.target.value)}
+          className="h-7 text-xs rounded border bg-background px-2">
+          {ITEM_CAT_FILTER.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
         <div className="flex gap-2 ml-auto">
           <Input placeholder="搜尋…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-8 text-xs" />
-          <Button size="sm" variant="outline" onClick={() => setSearch(searchInput)}>搜尋</Button>
+            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
+          {(search || wuxing || rarity || category) && (
+            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setCategory(""); }}>清除全部</Button>
+          )}
         </div>
-      </div>
+      </FilterBar>
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
@@ -331,32 +447,47 @@ const SLOT_OPTS = [
   { value: "armor", label: "護甲" }, { value: "shoes", label: "鞋子" },
   { value: "accessory", label: "飾品" }, { value: "offhand", label: "副手" },
 ];
+const SLOT_FILTER = [{ value: "", label: "全部部位" }, ...SLOT_OPTS];
 const QUALITY_OPTS = [
   { value: "white", label: "⬜ 白" }, { value: "green", label: "🟩 綠" },
   { value: "blue", label: "🟦 藍" }, { value: "purple", label: "🟪 紫" },
   { value: "orange", label: "🟧 橙" }, { value: "red", label: "🟥 紅" },
 ];
+const QUALITY_FILTER = [{ value: "", label: "全部品質" }, ...QUALITY_OPTS];
 
 export function EquipCatalogV2Tab() {
-  // using sonner toast directly
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [wuxing, setWuxing] = useState("");
+  const [rarity, setRarity] = useState("");
+  const [slot, setSlot] = useState("");
+  const [quality, setQuality] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
 
-  const { data, isLoading, refetch } = trpc.gameCatalog.getEquipCatalog.useQuery({ page: 1, pageSize: 200 });
+  const queryInput = useMemo(() => ({
+    search: search || undefined,
+    wuxing: wuxing || undefined,
+    rarity: rarity || undefined,
+    slot: slot || undefined,
+    quality: quality || undefined,
+    page: 1, pageSize: 200,
+  }), [search, wuxing, rarity, slot, quality]);
+
+  const { data, isLoading, refetch } = trpc.gameCatalog.getEquipCatalog.useQuery(queryInput);
   const { data: allItems } = trpc.gameCatalog.getAllItems.useQuery();
+  const exportQuery = trpc.gameCatalog.exportEquipCatalog.useQuery(undefined, { enabled: false });
 
   const createMut = trpc.gameCatalog.createEquipCatalog.useMutation({
-    onSuccess: (r) => { toast.success(`✅ 建立成功 (${r.equipId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: (r) => { toast.success(`建立成功 (${r.equipId})`); setFormOpen(false); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const updateMut = trpc.gameCatalog.updateEquipCatalog.useMutation({
-    onSuccess: () => { toast.success("✅ 更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const deleteMut = trpc.gameCatalog.deleteEquipCatalog.useMutation({
-    onSuccess: () => { toast.success("🗑️ 已刪除"); refetch(); },
+    onSuccess: () => { toast.success("已刪除"); refetch(); },
   });
 
   const fields: FieldDef[] = [
@@ -391,6 +522,14 @@ export function EquipCatalogV2Tab() {
     else createMut.mutate(data);
   };
 
+  const handleExport = useCallback(async (format: "csv" | "json") => {
+    const result = await exportQuery.refetch();
+    if (result.data) {
+      if (format === "csv") exportToCSV(result.data, "equip_catalog");
+      else exportToJSON(result.data, "equip_catalog");
+    }
+  }, [exportQuery]);
+
   const items = data?.items ?? [];
 
   return (
@@ -400,8 +539,41 @@ export function EquipCatalogV2Tab() {
           <h2 className="text-lg font-semibold">⚔️ 裝備圖鑑（{data?.total ?? 0}）</h2>
           <p className="text-xs text-muted-foreground">自動生成 ID（如 E_W001）</p>
         </div>
-        <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增裝備</Button>
+        <div className="flex gap-2 items-center">
+          <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增裝備</Button>
+        </div>
       </div>
+      <FilterBar>
+        <div className="flex gap-1 flex-wrap">
+          {WUXING_FILTER.map(w => (
+            <FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => setWuxing(w.value)} />
+          ))}
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {RARITY_FILTER.map(r => (
+            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
+          ))}
+        </div>
+      </FilterBar>
+      <FilterBar>
+        <select value={slot} onChange={e => setSlot(e.target.value)}
+          className="h-7 text-xs rounded border bg-background px-2">
+          {SLOT_FILTER.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
+        <select value={quality} onChange={e => setQuality(e.target.value)}
+          className="h-7 text-xs rounded border bg-background px-2">
+          {QUALITY_FILTER.map(q => <option key={q.value} value={q.value}>{q.label}</option>)}
+        </select>
+        <div className="flex gap-2 ml-auto">
+          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
+          {(search || wuxing || rarity || slot || quality) && (
+            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setSlot(""); setQuality(""); }}>清除全部</Button>
+          )}
+        </div>
+      </FilterBar>
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
@@ -451,11 +623,13 @@ const SKILL_CAT_OPTS = [
   { value: "active_combat", label: "主動戰鬥" }, { value: "passive_combat", label: "被動戰鬥" },
   { value: "life_gather", label: "生活採集" }, { value: "craft_forge", label: "製作鍛造" },
 ];
+const SKILL_CAT_FILTER = [{ value: "", label: "全部分類" }, ...SKILL_CAT_OPTS];
 const SKILL_TYPE_OPTS = [
   { value: "attack", label: "攻擊" }, { value: "heal", label: "治療" },
   { value: "buff", label: "增益" }, { value: "debuff", label: "減益" },
   { value: "passive", label: "被動" }, { value: "special", label: "特殊" },
 ];
+const SKILL_TYPE_FILTER = [{ value: "", label: "全部類型" }, ...SKILL_TYPE_OPTS];
 const ACQUIRE_TYPE_OPTS = [
   { value: "shop", label: "商店" }, { value: "drop", label: "掉落" },
   { value: "quest", label: "任務" }, { value: "craft", label: "製作" },
@@ -463,25 +637,38 @@ const ACQUIRE_TYPE_OPTS = [
 ];
 
 export function SkillCatalogV2Tab() {
-  // using sonner toast directly
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [wuxing, setWuxing] = useState("");
+  const [rarity, setRarity] = useState("");
+  const [category, setCategory] = useState("");
+  const [skillType, setSkillType] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
 
-  const { data, isLoading, refetch } = trpc.gameCatalog.getSkillCatalog.useQuery({ page: 1, pageSize: 200 });
+  const queryInput = useMemo(() => ({
+    search: search || undefined,
+    wuxing: wuxing || undefined,
+    rarity: rarity || undefined,
+    category: category || undefined,
+    skillType: skillType || undefined,
+    page: 1, pageSize: 200,
+  }), [search, wuxing, rarity, category, skillType]);
+
+  const { data, isLoading, refetch } = trpc.gameCatalog.getSkillCatalog.useQuery(queryInput);
   const { data: allMonsters } = trpc.gameCatalog.getAllMonsters.useQuery();
+  const exportQuery = trpc.gameCatalog.exportSkillCatalog.useQuery(undefined, { enabled: false });
 
   const createMut = trpc.gameCatalog.createSkillCatalog.useMutation({
-    onSuccess: (r) => { toast.success(`✅ 建立成功 (${r.skillId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: (r) => { toast.success(`建立成功 (${r.skillId})`); setFormOpen(false); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const updateMut = trpc.gameCatalog.updateSkillCatalog.useMutation({
-    onSuccess: () => { toast.success("✅ 更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const deleteMut = trpc.gameCatalog.deleteSkillCatalog.useMutation({
-    onSuccess: () => { toast.success("🗑️ 已刪除"); refetch(); },
+    onSuccess: () => { toast.success("已刪除"); refetch(); },
   });
 
   const monsterOpts = (allMonsters ?? []).map((m: any) => ({ value: m.monsterId, label: `${m.monsterId} ${m.name}` }));
@@ -512,6 +699,14 @@ export function SkillCatalogV2Tab() {
     else createMut.mutate(data);
   };
 
+  const handleExport = useCallback(async (format: "csv" | "json") => {
+    const result = await exportQuery.refetch();
+    if (result.data) {
+      if (format === "csv") exportToCSV(result.data, "skill_catalog");
+      else exportToJSON(result.data, "skill_catalog");
+    }
+  }, [exportQuery]);
+
   const items = data?.items ?? [];
 
   return (
@@ -521,8 +716,41 @@ export function SkillCatalogV2Tab() {
           <h2 className="text-lg font-semibold">✨ 技能圖鑑（{data?.total ?? 0}）</h2>
           <p className="text-xs text-muted-foreground">自動生成 ID（如 S_W001）</p>
         </div>
-        <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增技能</Button>
+        <div className="flex gap-2 items-center">
+          <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增技能</Button>
+        </div>
       </div>
+      <FilterBar>
+        <div className="flex gap-1 flex-wrap">
+          {WUXING_FILTER.map(w => (
+            <FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => setWuxing(w.value)} />
+          ))}
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {RARITY_FILTER.map(r => (
+            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
+          ))}
+        </div>
+      </FilterBar>
+      <FilterBar>
+        <select value={category} onChange={e => setCategory(e.target.value)}
+          className="h-7 text-xs rounded border bg-background px-2">
+          {SKILL_CAT_FILTER.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
+        <select value={skillType} onChange={e => setSkillType(e.target.value)}
+          className="h-7 text-xs rounded border bg-background px-2">
+          {SKILL_TYPE_FILTER.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+        </select>
+        <div className="flex gap-2 ml-auto">
+          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
+          {(search || wuxing || rarity || category || skillType) && (
+            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setCategory(""); setSkillType(""); }}>清除全部</Button>
+          )}
+        </div>
+      </FilterBar>
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
@@ -571,6 +799,7 @@ const ACH_CAT_OPTS = [
   { value: "combat", label: "戰鬥" }, { value: "oracle", label: "天命" },
   { value: "social", label: "社交" }, { value: "collection", label: "收集" },
 ];
+const ACH_CAT_FILTER = [{ value: "", label: "全部分類" }, ...ACH_CAT_OPTS];
 const REWARD_TYPE_OPTS = [
   { value: "stones", label: "靈石" }, { value: "coins", label: "金幣" },
   { value: "title", label: "稱號" }, { value: "item", label: "道具" },
@@ -578,22 +807,33 @@ const REWARD_TYPE_OPTS = [
 ];
 
 export function AchievementCatalogTab() {
-  // using sonner toast directly
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [category, setCategory] = useState("");
+  const [rarity, setRarity] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
 
-  const { data, isLoading, refetch } = trpc.gameCatalog.getAchievementCatalog.useQuery({ page: 1, pageSize: 200 });
+  const queryInput = useMemo(() => ({
+    search: search || undefined,
+    category: category || undefined,
+    rarity: rarity || undefined,
+    page: 1, pageSize: 200,
+  }), [search, category, rarity]);
+
+  const { data, isLoading, refetch } = trpc.gameCatalog.getAchievementCatalog.useQuery(queryInput);
+  const exportQuery = trpc.gameCatalog.exportAchievementCatalog.useQuery(undefined, { enabled: false });
 
   const createMut = trpc.gameCatalog.createAchievement.useMutation({
-    onSuccess: (r) => { toast.success(`✅ 建立成功 (${r.achId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: (r) => { toast.success(`建立成功 (${r.achId})`); setFormOpen(false); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const updateMut = trpc.gameCatalog.updateAchievementCatalog.useMutation({
-    onSuccess: () => { toast.success("✅ 更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const deleteMut = trpc.gameCatalog.deleteAchievementCatalog.useMutation({
-    onSuccess: () => { toast.success("🗑️ 已刪除"); refetch(); },
+    onSuccess: () => { toast.success("已刪除"); refetch(); },
   });
 
   const fields: FieldDef[] = [
@@ -619,6 +859,14 @@ export function AchievementCatalogTab() {
     else createMut.mutate(data);
   };
 
+  const handleExport = useCallback(async (format: "csv" | "json") => {
+    const result = await exportQuery.refetch();
+    if (result.data) {
+      if (format === "csv") exportToCSV(result.data, "achievement_catalog");
+      else exportToJSON(result.data, "achievement_catalog");
+    }
+  }, [exportQuery]);
+
   const items = data?.items ?? [];
 
   return (
@@ -628,8 +876,30 @@ export function AchievementCatalogTab() {
           <h2 className="text-lg font-semibold">🏆 成就系統（{data?.total ?? 0}）</h2>
           <p className="text-xs text-muted-foreground">自動生成 ID（如 ACH_001）</p>
         </div>
-        <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增成就</Button>
+        <div className="flex gap-2 items-center">
+          <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增成就</Button>
+        </div>
       </div>
+      <FilterBar>
+        <select value={category} onChange={e => setCategory(e.target.value)}
+          className="h-7 text-xs rounded border bg-background px-2">
+          {ACH_CAT_FILTER.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
+        <div className="flex gap-1 flex-wrap">
+          {RARITY_FILTER.map(r => (
+            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
+          ))}
+        </div>
+        <div className="flex gap-2 ml-auto">
+          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
+          {(search || category || rarity) && (
+            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setCategory(""); setRarity(""); }}>清除全部</Button>
+          )}
+        </div>
+      </FilterBar>
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
@@ -676,24 +946,38 @@ const MS_TYPE_OPTS = [
   { value: "buff", label: "增益" }, { value: "debuff", label: "減益" },
   { value: "special", label: "特殊" }, { value: "passive", label: "被動" },
 ];
+const MS_TYPE_FILTER = [{ value: "", label: "全部類型" }, ...MS_TYPE_OPTS];
 
 export function MonsterSkillCatalogTab() {
-  // using sonner toast directly
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [wuxing, setWuxing] = useState("");
+  const [rarity, setRarity] = useState("");
+  const [skillType, setSkillType] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
 
-  const { data, isLoading, refetch } = trpc.gameCatalog.getMonsterSkillCatalog.useQuery({ page: 1, pageSize: 200 });
+  const queryInput = useMemo(() => ({
+    search: search || undefined,
+    wuxing: wuxing || undefined,
+    rarity: rarity || undefined,
+    skillType: skillType || undefined,
+    page: 1, pageSize: 200,
+  }), [search, wuxing, rarity, skillType]);
+
+  const { data, isLoading, refetch } = trpc.gameCatalog.getMonsterSkillCatalog.useQuery(queryInput);
+  const exportQuery = trpc.gameCatalog.exportMonsterSkillCatalog.useQuery(undefined, { enabled: false });
 
   const createMut = trpc.gameCatalog.createMonsterSkill.useMutation({
-    onSuccess: (r) => { toast.success(`✅ 建立成功 (${r.monsterSkillId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: (r) => { toast.success(`建立成功 (${r.monsterSkillId})`); setFormOpen(false); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const updateMut = trpc.gameCatalog.updateMonsterSkill.useMutation({
-    onSuccess: () => { toast.success("✅ 更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`❌ ${e.message}`),
+    onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
   const deleteMut = trpc.gameCatalog.deleteMonsterSkill.useMutation({
-    onSuccess: () => { toast.success("🗑️ 已刪除"); refetch(); },
+    onSuccess: () => { toast.success("已刪除"); refetch(); },
   });
 
   const fields: FieldDef[] = [
@@ -717,6 +1001,14 @@ export function MonsterSkillCatalogTab() {
     else createMut.mutate(data);
   };
 
+  const handleExport = useCallback(async (format: "csv" | "json") => {
+    const result = await exportQuery.refetch();
+    if (result.data) {
+      if (format === "csv") exportToCSV(result.data, "monster_skill_catalog");
+      else exportToJSON(result.data, "monster_skill_catalog");
+    }
+  }, [exportQuery]);
+
   const items = data?.items ?? [];
 
   return (
@@ -726,8 +1018,37 @@ export function MonsterSkillCatalogTab() {
           <h2 className="text-lg font-semibold">🐲 魔物技能圖鑑（{data?.total ?? 0}）</h2>
           <p className="text-xs text-muted-foreground">自動生成 ID（如 SK_M001）</p>
         </div>
-        <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增魔物技能</Button>
+        <div className="flex gap-2 items-center">
+          <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增魔物技能</Button>
+        </div>
       </div>
+      <FilterBar>
+        <div className="flex gap-1 flex-wrap">
+          {WUXING_FILTER.map(w => (
+            <FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => setWuxing(w.value)} />
+          ))}
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {RARITY_FILTER.map(r => (
+            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
+          ))}
+        </div>
+      </FilterBar>
+      <FilterBar>
+        <select value={skillType} onChange={e => setSkillType(e.target.value)}
+          className="h-7 text-xs rounded border bg-background px-2">
+          {MS_TYPE_FILTER.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+        </select>
+        <div className="flex gap-2 ml-auto">
+          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
+          {(search || wuxing || rarity || skillType) && (
+            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setSkillType(""); }}>清除全部</Button>
+          )}
+        </div>
+      </FilterBar>
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">

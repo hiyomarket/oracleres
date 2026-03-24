@@ -1,0 +1,50 @@
+{
+  "query": "SELECT COUNT(*) as total, wuxing, COUNT(*) as cnt FROM game_monster_catalog GROUP BY wuxing",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total, wuxing, COUNT(*) as cnt FROM game_monster_catalog GROUP BY wuxing",
+  "rows": [
+    {
+      "total": "20",
+      "wuxing": "土",
+      "cnt": "20"
+    },
+    {
+      "total": "20",
+      "wuxing": "木",
+      "cnt": "20"
+    },
+    {
+      "total": "20",
+      "wuxing": "水",
+      "cnt": "20"
+    },
+    {
+      "total": "20",
+      "wuxing": "金",
+      "cnt": "20"
+    },
+    {
+      "total": "1",
+      "wuxing": "earth",
+      "cnt": "1"
+    },
+    {
+      "total": "10",
+      "wuxing": "water",
+      "cnt": "10"
+    },
+    {
+      "total": "4",
+      "wuxing": "fire",
+      "cnt": "4"
+    },
+    {
+      "total": "20",
+      "wuxing": "火",
+      "cnt": "20"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\twuxing\tcnt\n20\t土\t20\n20\t木\t20\n20\t水\t20\n20\t金\t20\n1\tearth\t1\n10\twater\t10\n4\tfire\t4\n20\t火\t20\n",
+  "stderr": "",
+  "execution_time_ms": 1510
+}
