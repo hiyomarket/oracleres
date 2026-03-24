@@ -181,6 +181,19 @@ export function broadcastToAll(msg: WsMessage) {
 }
 
 /**
+ * 向所有連線（含未認證）廣播訊息（用於聊天等公開訊息）
+ */
+export function broadcastToAllIncludingAnon(msg: WsMessage) {
+  const allClients: ConnectedClient[] = [
+    ...Array.from(clients.values()),
+    ...Array.from(anonClients.values()),
+  ];
+  for (const client of allClients) {
+    sendToClient(client, msg);
+  }
+}
+
+/**
  * 取得目前在線人數
  */
 export function getOnlineCount(): number {

@@ -7,11 +7,11 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements, agentSkills } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { eq, and, desc, gt, sql, count, asc } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
-import { broadcastToAll, sendToAgent } from "../wsServer";
+import { broadcastToAll, broadcastToAllIncludingAnon, sendToAgent } from "../wsServer";
 import { updatePvpStats } from "../achievementEngine";
 import { broadcastPvpWin, broadcastWeeklyChampion } from "../liveFeedBroadcast";
 import { MONSTERS } from "../../shared/monsters";
@@ -298,25 +298,32 @@ export const gameWorldRouter = router({
   // ─── 切換策略 ───
   setStrategy: protectedProcedure
     .input(z.object({
-      strategy: z.enum(["explore", "gather", "rest", "combat"]),
+      strategy: z.enum(["explore", "gather", "rest", "combat", "infuse"]),
       movementMode: z.enum(["roaming", "stationary"]).optional(),
     }))
-    .mutation(async ({ ctx, input }) => {
+       .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
-
       const updateData: Record<string, unknown> = { strategy: input.strategy, updatedAt: Date.now() };
       if (input.movementMode) updateData.movementMode = input.movementMode;
-
+      // 切換到 rest 時，記錄前一個策略以便回滿後自動切回
+      if (input.strategy === "rest") {
+        const [agent] = await db.select({ strategy: gameAgents.strategy })
+          .from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+        if (agent && agent.strategy !== "rest") {
+          updateData.previousStrategy = agent.strategy;
+        }
+      } else {
+        // 主動切換非 rest 策略時，清除 previousStrategy
+        updateData.previousStrategy = null;
+      }
       await db
         .update(gameAgents)
         .set(updateData)
         .where(eq(gameAgents.userId, String(ctx.user.id)));
-
       return { success: true };
     }),
-
-  // ─── 神蹟：治癒（消耗靈力值） ───
+  // ─── 神跡：治癒（消耗靈力値） ────
   divineHeal: protectedProcedure.mutation(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
@@ -1029,9 +1036,31 @@ export const gameWorldRouter = router({
       const agents = await db.select().from(gameAgents)
         .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
       if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const agent = agents[0];
+
+      // 驗證玩家是否擁有該技能（初始技能免驗證）
+      const isInitialSkill = [
+        agent.skillSlot1, agent.skillSlot2, agent.passiveSlot1,
+        agent.skillSlot3, agent.skillSlot4, agent.passiveSlot2,
+      ].includes(input.skillId);
+
+      if (!isInitialSkill) {
+        // 檢查 agent_skills 表
+        const owned = await db.select().from(agentSkills)
+          .where(and(eq(agentSkills.agentId, agent.id), eq(agentSkills.skillId, input.skillId)))
+          .limit(1);
+        if (!owned[0]) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "尚未習得此技能，請先使用技能書學習" });
+        }
+        // 同步裝備槽位記錄
+        await db.update(agentSkills)
+          .set({ installedSlot: input.slot })
+          .where(and(eq(agentSkills.agentId, agent.id), eq(agentSkills.skillId, input.skillId)));
+      }
+
       await db.update(gameAgents)
         .set({ [input.slot]: input.skillId })
-        .where(eq(gameAgents.id, agents[0].id));
+        .where(eq(gameAgents.id, agent.id));
       return { success: true };
     }),
 
@@ -1609,9 +1638,9 @@ export const gameWorldRouter = router({
         msgType: "normal",
         createdAt: now,
       });
-      // 透過 WebSocket 即時廣播給所有連線玩家
+      // 透過 WebSocket 即時廣播給所有連線玩家（含未認證客戶端）
       try {
-        broadcastToAll({
+        broadcastToAllIncludingAnon({
           type: "chat_message",
           payload: {
             id: (inserted as { insertId?: number })?.insertId ?? now,

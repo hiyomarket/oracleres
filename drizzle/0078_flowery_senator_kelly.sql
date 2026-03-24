@@ -1,0 +1,1 @@
+ALTER TABLE `game_agents` ADD `previous_strategy` enum('explore','gather','rest','combat','infuse');
