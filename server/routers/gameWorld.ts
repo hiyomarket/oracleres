@@ -15,7 +15,8 @@ import { broadcastToAll, broadcastToAllIncludingAnon, sendToAgent } from "../wsS
 import { updatePvpStats } from "../achievementEngine";
 import { broadcastPvpWin, broadcastWeeklyChampion } from "../liveFeedBroadcast";
 import { MONSTERS } from "../../shared/monsters";
-import { processTick, calcExpToNext, resolveCombat, calcCharacterStats } from "../tickEngine";
+import { processTick, processAgentTick, regenStamina, calcExpToNext, resolveCombat, calcCharacterStats } from "../tickEngine";
+import { storagePut } from "../storage";
 import type { WuXing } from "../../shared/types";
 
 // ─── GD-020 補充二：從命格資料計算角色初始屬性（使用統一公式） ───
@@ -608,23 +609,92 @@ export const gameWorldRouter = router({
     return history;
   }),
 
-  // ─── 手動觸發 Tick（測試用） ───
+  // ─── 手動觸發 Tick（前端「啟動探索」按鈕觸發） ───
+  // 只處理當前登入玩家的角色行動，不影響其他玩家
   triggerTick: protectedProcedure.mutation(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
-    // 取得當前登入玩家的 agentId
-    const agents = await db.select({ id: gameAgents.id })
+
+    // 取得當前登入玩家的完整角色資料
+    const agentRows = await db.select()
       .from(gameAgents)
       .where(eq(gameAgents.userId, String(ctx.user.id)))
       .limit(1);
-    const myAgentId = agents[0]?.id;
-    const result = await processTick();
-    // 只回傳當前玩家的戰鬥資訊（依 agentId 過濾）
-    const myLastCombat = myAgentId
-      ? result.lastCombats?.find(c => c.agentId === myAgentId)
-      : undefined;
-    return { ...result, lastCombat: myLastCombat };
+    if (!agentRows[0]) return { processed: 0, events: 0, levelUps: [], legendaryDrops: [], lastCombat: undefined };
+
+    const agent = agentRows[0];
+
+    // 體力再生計算
+    const newStamina = regenStamina(agent);
+    if (newStamina !== agent.stamina) {
+      await db.update(gameAgents).set({
+        stamina: newStamina,
+        staminaLastRegen: Date.now(),
+      }).where(eq(gameAgents.id, agent.id));
+    }
+
+    // 體力不足，跳過行動
+    if (newStamina < 5) {
+      return { processed: 0, events: 0, levelUps: [], legendaryDrops: [], lastCombat: undefined };
+    }
+
+    // 取得世界狀態（當日五行元素）
+    const worlds = await db.select().from(gameWorld).limit(1);
+    const world = worlds[0];
+    const worldData = (world?.worldData as Record<string, unknown>) ?? {};
+    const currentTick = ((worldData.currentTick as number) ?? 0);
+    const dailyElement = (worldData.dailyElement as import("../../shared/types").WuXing) ?? "wood";
+
+    // 執行當前玩家的角色行動
+    const agentResult = await processAgentTick({ ...agent, stamina: newStamina }, currentTick, dailyElement);
+
+    return {
+      processed: 1,
+      events: agentResult.events,
+      levelUps: agentResult.levelUps,
+      legendaryDrops: agentResult.legendaryDrops,
+      lastCombat: agentResult.lastCombat,
+    };
   }),
+
+  // ─── 玩家頭像上傳（地圖標記顯示） ───
+  uploadAgentAvatar: protectedProcedure
+    .input(z.object({
+      /** Base64 編碼的圖片資料（前端先壓縮到 200x200 JPEG） */
+      imageBase64: z.string(),
+      /** MIME 類型（image/jpeg 或 image/png） */
+      mimeType: z.string().default("image/jpeg"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database unavailable");
+
+      const agents = await db.select({ id: gameAgents.id })
+        .from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id)))
+        .limit(1);
+      if (!agents[0]) throw new Error("角色不存在");
+
+      // 解碼 Base64
+      const base64Data = input.imageBase64.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+
+      // 限制大小：最大 500KB
+      if (buffer.length > 500 * 1024) {
+        throw new Error("圖片檔案過大，請壓縮後再上傳");
+      }
+
+      const ext = input.mimeType === "image/png" ? "png" : "jpg";
+      const fileKey = `agent-avatars/${agents[0].id}-${Date.now()}.${ext}`;
+      const { url } = await storagePut(fileKey, buffer, input.mimeType);
+
+      // 更新資料庫
+      await db.update(gameAgents)
+        .set({ avatarUrl: url, updatedAt: Date.now() })
+        .where(eq(gameAgents.id, agents[0].id));
+
+      return { url };
+    }),
 
   // ─── 取得背包 ───
    getInventory: protectedProcedure.query(async ({ ctx }) => {

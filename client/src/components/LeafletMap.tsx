@@ -275,9 +275,11 @@ interface LeafletMapProps {
   onNodeClick?: (nodeId: string) => void;
   /** 隱藏節點 ID 列表（體力足夠的玩家可看到發光） */
   hiddenNodeIds?: string[];
+  /** 玩家自訂頭像 URL（地圖標記顯示） */
+  agentAvatarUrl?: string;
 }
 
-const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function LeafletMap({ nodes, currentNodeId, onNodeClick, hiddenNodeIds = [] }, ref) {
+const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function LeafletMap({ nodes, currentNodeId, onNodeClick, hiddenNodeIds = [], agentAvatarUrl }, ref) {
   const mapRef = useRef<ReturnType<typeof import("leaflet")["map"]> | null>(null);
   const markersRef = useRef<Map<string, ReturnType<typeof import("leaflet")["marker"]>>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -331,10 +333,17 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
         const terrainIcon = TERRAIN_ICON[node.terrain] ?? "📍";
 
         // 自訂 SVG 圖示
+        // 玩家標記大小：現在位置放大2倍（56px）
+        const currentSize = 56;
+        const hiddenSize = 22;
+        const normalSize = 18;
+        const markerSize = isCurrent ? currentSize : isHidden ? hiddenSize : normalSize;
+        const markerAnchor = markerSize / 2;
+
         const svgIcon = L.divIcon({
           className: "",
           html: `
-            <div style="position:relative;width:${isCurrent ? 28 : isHidden ? 22 : 18}px;height:${isCurrent ? 28 : isHidden ? 22 : 18}px;">
+            <div style="position:relative;width:${markerSize}px;height:${markerSize}px;">
               ${isCurrent ? `
                 <div style="
                   position:absolute;inset:-8px;
@@ -364,20 +373,33 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
                   animation:pulse 1.5s ease-in-out infinite;
                 "></div>
               ` : ""}
-              <div style="
-                width:100%;height:100%;
-                border-radius:50%;
-                background:${isCurrent ? color : isHidden ? "rgba(255,215,0,0.85)" : color + "99"};
-                border:${isCurrent ? "2.5px solid #fff" : isHidden ? "2px solid gold" : "1.5px solid " + color + "cc"};
-                box-shadow:0 0 ${isCurrent ? "12px 4px" : isHidden ? "16px 6px rgba(255,215,0,0.8)" : "6px 2px"} ${isCurrent ? color + "88" : isHidden ? "rgba(255,215,0,0.6)" : color + "88"};
-                display:flex;align-items:center;justify-content:center;
-                font-size:${isCurrent ? "11px" : isHidden ? "10px" : "8px"};
-                cursor:pointer;
-              ">${isCurrent ? "★" : isHidden ? "✨" : ""}</div>
+              ${isCurrent && agentAvatarUrl ? `
+                <div style="
+                  width:100%;height:100%;
+                  border-radius:50%;
+                  overflow:hidden;
+                  border:3px solid ${color};
+                  box-shadow:0 0 16px 6px ${color}88;
+                  cursor:pointer;
+                ">
+                  <img src="${agentAvatarUrl}" style="width:100%;height:100%;object-fit:cover;" />
+                </div>
+              ` : `
+                <div style="
+                  width:100%;height:100%;
+                  border-radius:50%;
+                  background:${isCurrent ? color : isHidden ? "rgba(255,215,0,0.85)" : color + "99"};
+                  border:${isCurrent ? "2.5px solid #fff" : isHidden ? "2px solid gold" : "1.5px solid " + color + "cc"};
+                  box-shadow:0 0 ${isCurrent ? "12px 4px" : isHidden ? "16px 6px rgba(255,215,0,0.8)" : "6px 2px"} ${isCurrent ? color + "88" : isHidden ? "rgba(255,215,0,0.6)" : color + "88"};
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:${isCurrent ? "18px" : isHidden ? "10px" : "8px"};
+                  cursor:pointer;
+                ">${isCurrent ? "★" : isHidden ? "✨" : ""}</div>
+              `}
             </div>
           `,
-          iconSize: [isCurrent ? 28 : isHidden ? 22 : 18, isCurrent ? 28 : isHidden ? 22 : 18],
-          iconAnchor: [isCurrent ? 14 : isHidden ? 11 : 9, isCurrent ? 14 : isHidden ? 11 : 9],
+          iconSize: [markerSize, markerSize],
+          iconAnchor: [markerAnchor, markerAnchor],
         });
 
         const marker = L.marker(coords, { icon: svgIcon });
@@ -479,15 +501,17 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 當 currentNodeId 改變時，飛到新位置並更新 Marker 樣式
+  // 當 currentNodeId 或 agentAvatarUrl 改變時，飛到新位置並更新 Marker 樣式
   const prevNodeId = useRef(currentNodeId);
   useEffect(() => {
-    if (!mapRef.current || prevNodeId.current === currentNodeId) return;
-    prevNodeId.current = currentNodeId;
-
-    const coords = NODE_COORDS[currentNodeId];
-    if (coords) {
-      mapRef.current.flyTo(coords, 14, { duration: 1.2 });
+    if (!mapRef.current) return;
+    const nodeChanged = prevNodeId.current !== currentNodeId;
+    if (nodeChanged) {
+      prevNodeId.current = currentNodeId;
+      const coords = NODE_COORDS[currentNodeId];
+      if (coords) {
+        mapRef.current.flyTo(coords, 14, { duration: 1.2 });
+      }
     }
 
     // 重新渲染所有 marker（更新當前節點的樣式）
@@ -499,10 +523,15 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
         const isCurrent = nodeId === currentNodeId;
         const isHiddenNode = hiddenNodeIds.includes(nodeId);
         const color = WX_COLOR[node.element] ?? "#888";
+        const curSize = 56;
+        const hidSize = 22;
+        const norSize = 18;
+        const mSize = isCurrent ? curSize : isHiddenNode ? hidSize : norSize;
+        const mAnchor = mSize / 2;
         const svgIcon = L.divIcon({
           className: "",
           html: `
-            <div style="position:relative;width:${isCurrent ? 28 : isHiddenNode ? 22 : 18}px;height:${isCurrent ? 28 : isHiddenNode ? 22 : 18}px;">
+            <div style="position:relative;width:${mSize}px;height:${mSize}px;">
               ${isCurrent ? `
                 <div style="position:absolute;inset:-8px;border-radius:50%;border:2px solid ${color};animation:pulse 1.5s ease-in-out infinite;opacity:0.5;"></div>
                 <div style="position:absolute;inset:-4px;border-radius:50%;border:1.5px solid ${color};opacity:0.7;"></div>
@@ -511,23 +540,29 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
                 <div style="position:absolute;inset:-10px;border-radius:50%;background:radial-gradient(circle, rgba(255,215,0,0.35) 0%, transparent 70%);animation:pulse 2s ease-in-out infinite;"></div>
                 <div style="position:absolute;inset:-5px;border-radius:50%;border:1.5px solid rgba(255,215,0,0.7);animation:pulse 1.5s ease-in-out infinite;"></div>
               ` : ""}
-              <div style="
-                width:100%;height:100%;border-radius:50%;
-                background:${isCurrent ? color : isHiddenNode ? "rgba(255,215,0,0.85)" : color + "99"};
-                border:${isCurrent ? "2.5px solid #fff" : isHiddenNode ? "2px solid gold" : "1.5px solid " + color + "cc"};
-                box-shadow:0 0 ${isCurrent ? "12px 4px" : isHiddenNode ? "16px 6px rgba(255,215,0,0.8)" : "6px 2px"} ${isCurrent ? color + "88" : isHiddenNode ? "rgba(255,215,0,0.6)" : color + "88"};
-                display:flex;align-items:center;justify-content:center;
-                font-size:${isCurrent ? "11px" : isHiddenNode ? "10px" : "8px"};cursor:pointer;
-              ">${isCurrent ? "★" : isHiddenNode ? "✨" : ""}</div>
+              ${isCurrent && agentAvatarUrl ? `
+                <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;border:3px solid ${color};box-shadow:0 0 16px 6px ${color}88;cursor:pointer;">
+                  <img src="${agentAvatarUrl}" style="width:100%;height:100%;object-fit:cover;" />
+                </div>
+              ` : `
+                <div style="
+                  width:100%;height:100%;border-radius:50%;
+                  background:${isCurrent ? color : isHiddenNode ? "rgba(255,215,0,0.85)" : color + "99"};
+                  border:${isCurrent ? "2.5px solid #fff" : isHiddenNode ? "2px solid gold" : "1.5px solid " + color + "cc"};
+                  box-shadow:0 0 ${isCurrent ? "12px 4px" : isHiddenNode ? "16px 6px rgba(255,215,0,0.8)" : "6px 2px"} ${isCurrent ? color + "88" : isHiddenNode ? "rgba(255,215,0,0.6)" : color + "88"};
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:${isCurrent ? "18px" : isHiddenNode ? "10px" : "8px"};cursor:pointer;
+                ">${isCurrent ? "★" : isHiddenNode ? "✨" : ""}</div>
+              `}
             </div>
           `,
-          iconSize: [isCurrent ? 28 : isHiddenNode ? 22 : 18, isCurrent ? 28 : isHiddenNode ? 22 : 18],
-          iconAnchor: [isCurrent ? 14 : isHiddenNode ? 11 : 9, isCurrent ? 14 : isHiddenNode ? 11 : 9],
+          iconSize: [mSize, mSize],
+          iconAnchor: [mAnchor, mAnchor],
         });
         marker.setIcon(svgIcon);
       });
     });
-  }, [currentNodeId, nodes]);
+  }, [currentNodeId, nodes, agentAvatarUrl]);
 
   // 點擊節點時飛到該位置
   const flyToNode = useCallback((nodeId: string) => {

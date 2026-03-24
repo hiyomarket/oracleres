@@ -612,7 +612,7 @@ export function calcExpToNext(level: number): number {
 }
 
 // ─── 體力値再生（每 30 分鐘 +30 點，上限 maxStamina） ───
-function regenStamina(agent: typeof gameAgents.$inferSelect): number {
+export function regenStamina(agent: typeof gameAgents.$inferSelect): number {
   const now = Date.now();
   const lastRegen = agent.staminaLastRegen ?? now;
   const elapsed = now - lastRegen;
@@ -639,6 +639,8 @@ export interface CombatResultItem {
   agentMaxHp: number;
   monsterMaxHp: number;
   combatKey?: number;
+  /** 戰鬥掉落道具列表 */
+  lootItems?: string[];
 }
 
 // ─── 主 Tick 處理函數 ───
@@ -681,44 +683,10 @@ export async function processTick(): Promise<TickResult> {
     updatedAt: Date.now(),
   }).where(eq(gameWorld.id, world.id));
 
-  // 取得所有活躍角色
-  const agents = await db
-    .select()
-    .from(gameAgents)
-    .where(and(eq(gameAgents.isActive, 1)));
-
-  let totalEvents = 0;
-  const allLevelUps: TickResult["levelUps"] = [];
-  const allLegendaryDrops: TickResult["legendaryDrops"] = [];
-  const allCombatResults: NonNullable<TickResult["lastCombats"]> = [];
-
-  for (const agent of agents) {
-    try {
-      // 體力值再生
-      const newStamina = regenStamina(agent);
-      if (newStamina !== agent.stamina) {
-        await db.update(gameAgents).set({
-          stamina: newStamina,
-          staminaLastRegen: Date.now(),
-        }).where(eq(gameAgents.id, agent.id));
-      }
-
-      // 體力值不足時跳過行動
-      if (newStamina <= 0) continue;
-
-      const agentResult = await processAgentTick({ ...agent, stamina: newStamina }, currentTick, dailyElement);
-      totalEvents += agentResult.events;
-      if (agentResult.levelUps.length > 0) allLevelUps.push(...agentResult.levelUps);
-      if (agentResult.legendaryDrops.length > 0) allLegendaryDrops.push(...agentResult.legendaryDrops);
-      // 收集所有玩家的戰鬥資訊（用於前端戰鬥視窗，依 agentId 過濾）
-      if (agentResult.lastCombat) allCombatResults.push(agentResult.lastCombat);
-    } catch (err) {
-      console.error(`[Tick] Error processing agent ${agent.id}:`, err);
-    }
-  }
+  // ─── 後端自動 Tick 只處理全地圖事件（不處理個人角色行動）───
+  // 個人角色行動由前端「啟動探索」按鈕觸發 triggerTick 來執行
 
   // 處理隱藏事件（密店/隱藏NPC/隱藏任務）
-  // (lastCombatResult 已在上方迴圈中收集)
   try {
     await processHiddenEvents();
   } catch (err) {
@@ -728,57 +696,11 @@ export async function processTick(): Promise<TickResult> {
   // 確保成就種子資料存在
   try { await seedAchievements(); } catch { }
 
-  // 對每個玩家觸發成就檢查
-  for (const agent of agents) {
-    try {
-      const myLevelUp = allLevelUps.find(lu => lu.agentId === agent.id);
-      const myLegendary = allLegendaryDrops.filter(ld => ld.agentId === agent.id);
-      await checkAchievements(agent.id, {
-        level: myLevelUp ? myLevelUp.newLevel : agent.level,
-        legendary_drops: myLegendary.length > 0 ? (agent.level) : 0, // 用第一次觸發檢查
-        ap: agent.actionPoints ?? 0,
-      });
-    } catch { }
-  }
-
-  // WS 廣播 Tick 事件（升級/傳說掉落）
-  if (allLevelUps.length > 0 || allLegendaryDrops.length > 0) {
-    try {
-      broadcastToAll({
-        type: "tick_event",
-        payload: { levelUps: allLevelUps, legendaryDrops: allLegendaryDrops },
-      });
-    } catch { }
-  }
-  // live_feed 廣播：升級事件
-  for (const lu of allLevelUps) {
-    try {
-      broadcastLevelUp({
-        agentId: lu.agentId,
-        agentName: lu.agentName,
-        agentElement: lu.agentElement ?? "wood",
-        newLevel: lu.newLevel,
-      });
-    } catch { }
-  }
-  // live_feed 廣播：傳說掉落
-  for (const ld of allLegendaryDrops) {
-    try {
-      broadcastLegendaryDrop({
-        agentId: ld.agentId,
-        agentName: ld.agentName,
-        agentElement: ld.agentElement ?? "wood",
-        agentLevel: ld.agentLevel ?? 1,
-        itemName: ld.itemName ?? ld.equipId,
-      });
-    } catch { }
-  }
-
-  return { processed: agents.length, events: totalEvents, levelUps: allLevelUps, legendaryDrops: allLegendaryDrops, lastCombats: allCombatResults };
+  return { processed: 0, events: 0, levelUps: [], legendaryDrops: [], lastCombats: [] };
 }
 
 // ─── 單一角色 Tick 處理 ───
-async function processAgentTick(
+export async function processAgentTick(
   agent: typeof gameAgents.$inferSelect,
   tick: number,
   dailyElement: WuXing
@@ -1337,6 +1259,7 @@ async function processCombatEvent(
       rounds: result.rounds,
       agentMaxHp: agent.maxHp,
       monsterMaxHp: monster.hp,
+      lootItems: result.lootItems, // 戰鬥掉落道具列表
       combatKey: Date.now(), // 唯一識別碼，防止前端 data 物件引用變化導致無限 setInterval
     },
   };

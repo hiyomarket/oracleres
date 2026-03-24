@@ -1,13 +1,16 @@
 /**
  * CombatWindow.tsx
  * 戰鬥彈出視窗：顯示詳細的回合制戰鬥過程
- * 在戰鬥事件觸發時彈出，顯示每回合的技能使用、閃避、格擋、暴擊等資訊
  *
- * Bug 修復：
- * 1. 使用 combatKey（戰鬥唯一識別碼）防止 data 物件引用變化導致 setInterval 無限疊加
- * 2. 修正「旅人」寫死名稱問題：使用 data.agentName
+ * V40 新功能：
+ * 1. 戰鬥結算卡片（EXP/金幣/掉落道具）
+ * 2. 光效動畫（物攻金色/魔法紫色/技能五行色，被攻擊紅色晃動）
+ * 3. 開關設定（localStorage 持久化）
+ * 4. 動畫時間 ×2（每回合 1200ms）
+ * 5. 戰鬥中鎖定（必須完成才能關閉）
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { getItemInfo, RARITY_COLORS, RARITY_BG } from "../../../shared/itemNames";
 
 export type CombatRoundData = {
   round: number;
@@ -44,21 +47,57 @@ export type CombatWindowData = {
   monsterMaxHp: number;
   /** 戰鬥唯一識別碼（時間戳），用於防止 data 物件引用變化導致無限 setInterval */
   combatKey?: number;
+  /** 戰鬥掉落道具列表 */
+  lootItems?: string[];
 };
 
 interface CombatWindowProps {
   data: CombatWindowData | null;
   onClose: () => void;
+  /** 戰鬥視窗是否啟用（由設定控制） */
+  enabled?: boolean;
 }
 
-export function CombatWindow({ data, onClose }: CombatWindowProps) {
+// ─── 五行技能顏色對應 ───
+const WUXING_GLOW: Record<string, string> = {
+  wood:   "rgba(34,197,94,0.7)",
+  fire:   "rgba(239,68,68,0.7)",
+  earth:  "rgba(234,179,8,0.7)",
+  metal:  "rgba(209,213,219,0.7)",
+  water:  "rgba(59,130,246,0.7)",
+};
+
+/** 根據技能類型取得光效顏色 */
+function getAttackGlow(skillType?: string): string {
+  if (!skillType) return "rgba(251,191,36,0.7)"; // 物攻：金色
+  if (skillType === "magic") return "rgba(168,85,247,0.7)"; // 魔法：紫色
+  if (skillType === "heal") return "rgba(34,197,94,0.7)"; // 治癒：綠色
+  if (WUXING_GLOW[skillType]) return WUXING_GLOW[skillType]; // 五行技能
+  return "rgba(251,191,36,0.7)"; // 預設：金色
+}
+
+export function CombatWindow({ data, onClose, enabled = true }: CombatWindowProps) {
   const [visibleRounds, setVisibleRounds] = useState<CombatRoundData[]>([]);
   const [showResult, setShowResult] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [currentGlow, setCurrentGlow] = useState<string | null>(null);
+  const [isShaking, setIsShaking] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // 用 combatKey 追蹤是否是新的一場戰鬥（防止 data 物件引用變化導致無限重啟）
   const lastCombatKeyRef = useRef<number | string | null>(null);
+
+  // 每回合間隔：1200ms（原 600ms × 2）
+  const ROUND_INTERVAL_MS = 1200;
+
+  const triggerGlow = useCallback((color: string) => {
+    setCurrentGlow(color);
+    setTimeout(() => setCurrentGlow(null), 600);
+  }, []);
+
+  const triggerShake = useCallback(() => {
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 500);
+  }, []);
 
   useEffect(() => {
     if (!data) {
@@ -69,44 +108,47 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
       return;
     }
 
-    // 用 combatKey 或 agentName+monsterName+rounds.length 組合作為唯一識別碼
     const currentKey = data.combatKey ?? `${data.agentName}-${data.monsterName}-${data.rounds.length}-${data.expGained}`;
-
-    // 如果是同一場戰鬥，不重新啟動動畫（防止無限 setInterval）
     if (lastCombatKeyRef.current === currentKey) return;
     lastCombatKeyRef.current = currentKey;
 
-    // 清除上一個計時器
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
 
-    // 重置狀態
     setVisibleRounds([]);
     setShowResult(false);
     setIsAnimating(true);
 
-    // 逐回合顯示（每 600ms 顯示一回合）
     let idx = 0;
     timerRef.current = setInterval(() => {
       if (idx < data.rounds.length) {
-        setVisibleRounds(prev => [...prev, data.rounds[idx]]);
+        const round = data.rounds[idx];
+        setVisibleRounds(prev => [...prev, round]);
+
+        // 光效：玩家攻擊
+        if (round.agentAtk > 0 && !round.monsterDodged) {
+          triggerGlow(getAttackGlow(round.agentSkillType));
+        }
+        // 晃動：玩家被攻擊
+        if (round.monsterAtk > 0 && !round.agentDodged && !round.agentBlocked) {
+          setTimeout(() => triggerShake(), 300);
+        }
+
         idx++;
-        // 自動滾動到底部
         setTimeout(() => {
           if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
           }
         }, 50);
       } else {
-        // 所有回合顯示完畢，顯示結果
         if (timerRef.current) clearInterval(timerRef.current);
         timerRef.current = null;
         setIsAnimating(false);
         setTimeout(() => setShowResult(true), 300);
       }
-    }, 600);
+    }, ROUND_INTERVAL_MS);
 
     return () => {
       if (timerRef.current) {
@@ -114,9 +156,10 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
         timerRef.current = null;
       }
     };
-  }, [data]);
+  }, [data, triggerGlow, triggerShake]);
 
   if (!data) return null;
+  if (!enabled) return null;
 
   const agentHpPercent = data.rounds.length > 0
     ? Math.max(0, Math.min(100, (data.rounds[data.rounds.length - 1].agentHpAfter / data.agentMaxHp) * 100))
@@ -125,14 +168,46 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
     ? Math.max(0, Math.min(100, (data.rounds[data.rounds.length - 1].monsterHpAfter / data.monsterMaxHp) * 100))
     : 100;
 
-  // 顯示名稱：使用 data.agentName（來自後端的實際角色名稱），不寫死「旅人」
   const displayAgentName = data.agentName || "旅人";
 
+  // 戰鬥中鎖定：動畫進行時不允許關閉
+  const handleClose = () => {
+    if (isAnimating) return; // 戰鬥中鎖定
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="relative w-full max-w-sm mx-4 rounded-2xl overflow-hidden shadow-2xl"
-        style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)", border: "1px solid rgba(99,102,241,0.4)" }}>
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+    >
+      {/* 底部光效 */}
+      {currentGlow && (
+        <div
+          className="fixed bottom-0 left-0 right-0 pointer-events-none z-[201]"
+          style={{
+            height: "120px",
+            background: `radial-gradient(ellipse at bottom, ${currentGlow} 0%, transparent 70%)`,
+            animation: "combatGlow 0.6s ease-out forwards",
+          }}
+        />
+      )}
+
+      <div
+        className={`relative w-full max-w-sm mx-4 rounded-2xl overflow-hidden shadow-2xl transition-transform ${isShaking ? "animate-combatShake" : ""}`}
+        style={{
+          background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)",
+          border: isShaking ? "1px solid rgba(239,68,68,0.6)" : "1px solid rgba(99,102,241,0.4)",
+          boxShadow: isShaking ? "0 0 20px rgba(239,68,68,0.4)" : undefined,
+        }}
+      >
+        {/* 被攻擊紅色閃光 */}
+        {isShaking && (
+          <div
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{ background: "rgba(239,68,68,0.15)", animation: "combatRedFlash 0.5s ease-out forwards" }}
+          />
+        )}
 
         {/* 標題列 */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-indigo-900/50"
@@ -146,8 +221,14 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
               )}
             </div>
           </div>
-          <button onClick={onClose}
-            className="text-slate-400 hover:text-white text-lg leading-none transition-colors">✕</button>
+          <button
+            onClick={handleClose}
+            disabled={isAnimating}
+            className={`text-lg leading-none transition-colors ${isAnimating ? "text-slate-600 cursor-not-allowed" : "text-slate-400 hover:text-white"}`}
+            title={isAnimating ? "戰鬥進行中，請等待結束" : "關閉"}
+          >
+            {isAnimating ? "⏳" : "✕"}
+          </button>
         </div>
 
         {/* HP 條 */}
@@ -171,7 +252,7 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
         </div>
 
         {/* 回合記錄 */}
-        <div ref={scrollRef} className="overflow-y-auto max-h-64 px-3 py-2 space-y-1.5">
+        <div ref={scrollRef} className="overflow-y-auto max-h-56 px-3 py-2 space-y-1.5">
           {visibleRounds.map((r, i) => (
             <RoundCard key={i} round={r} agentName={displayAgentName} monsterName={data.monsterName} index={i} />
           ))}
@@ -183,34 +264,96 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
           )}
         </div>
 
-        {/* 結果 */}
+        {/* 戰鬥結算卡片 */}
         {showResult && (
-          <div className={`px-4 py-3 border-t border-indigo-900/50 ${data.won ? 'bg-green-900/20' : 'bg-red-900/20'}`}>
+          <div className={`px-4 py-3 border-t border-indigo-900/50 ${data.won ? "bg-green-900/20" : "bg-red-900/20"}`}>
+            {/* 勝負標題 */}
             <div className="flex items-center justify-between mb-2">
-              <span className={`text-lg font-bold ${data.won ? 'text-green-400' : 'text-red-400'}`}>
-                {data.won ? '🎉 戰鬥勝利！' : '💀 戰鬥失敗'}
+              <span className={`text-base font-bold ${data.won ? "text-green-400" : "text-red-400"}`}>
+                {data.won ? "🎉 戰鬥勝利！" : "💀 戰鬥失敗"}
               </span>
-              {data.won && (
-                <div className="flex gap-3 text-xs">
-                  <span className="text-amber-300">+{data.expGained} EXP</span>
-                  <span className="text-yellow-400">+{data.goldGained} 金</span>
-                </div>
-              )}
             </div>
+
+            {/* 結算數值 */}
+            {data.won && (
+              <div className="grid grid-cols-2 gap-2 mb-2">
+                <div className="rounded-lg px-3 py-2 text-center"
+                  style={{ background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)" }}>
+                  <p className="text-[10px] text-amber-400/70 mb-0.5">經驗值</p>
+                  <p className="text-amber-300 font-bold text-sm">+{data.expGained} EXP</p>
+                </div>
+                <div className="rounded-lg px-3 py-2 text-center"
+                  style={{ background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.3)" }}>
+                  <p className="text-[10px] text-yellow-400/70 mb-0.5">金幣</p>
+                  <p className="text-yellow-300 font-bold text-sm">+{data.goldGained} 金</p>
+                </div>
+              </div>
+            )}
+
+            {/* 掉落道具 */}
+            {data.won && data.lootItems && data.lootItems.length > 0 && (
+              <div className="mb-2">
+                <p className="text-[10px] text-slate-400 mb-1">📦 掉落道具</p>
+                <div className="flex flex-wrap gap-1">
+                  {data.lootItems.map((itemId, i) => {
+                    const info = getItemInfo(itemId);
+                    return (
+                      <div key={i}
+                        className={`flex items-center gap-1 rounded px-2 py-1 text-[11px] ${RARITY_BG[info.rarity]} ${RARITY_COLORS[info.rarity]}`}
+                        style={{ border: `1px solid currentColor`, opacity: 0.9 }}>
+                        <span>{info.emoji}</span>
+                        <span>{info.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 五行/種族加成說明 */}
             {(data.wuxingBoostDesc || data.raceBoostDesc) && (
               <div className="space-y-0.5 mb-2">
                 {data.wuxingBoostDesc && <p className="text-yellow-400/80 text-[10px]">★ {data.wuxingBoostDesc}</p>}
                 {data.raceBoostDesc && <p className="text-purple-400/80 text-[10px]">◆ {data.raceBoostDesc}</p>}
               </div>
             )}
-            <button onClick={onClose}
+
+            <button
+              onClick={handleClose}
               className="w-full py-2 rounded-lg text-sm font-medium transition-colors"
-              style={{ background: data.won ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)", color: data.won ? "#86efac" : "#fca5a5", border: `1px solid ${data.won ? "rgba(34,197,94,0.4)" : "rgba(239,68,68,0.4)"}` }}>
-              {data.won ? '繼續冒險' : '撤退休息'}
+              style={{
+                background: data.won ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)",
+                color: data.won ? "#86efac" : "#fca5a5",
+                border: `1px solid ${data.won ? "rgba(34,197,94,0.4)" : "rgba(239,68,68,0.4)"}`,
+              }}>
+              {data.won ? "繼續冒險" : "撤退休息"}
             </button>
           </div>
         )}
       </div>
+
+      {/* 全域動畫 CSS */}
+      <style>{`
+        @keyframes combatGlow {
+          0%   { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes combatRedFlash {
+          0%   { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes combatShake {
+          0%   { transform: translateX(0); }
+          20%  { transform: translateX(-6px); }
+          40%  { transform: translateX(6px); }
+          60%  { transform: translateX(-4px); }
+          80%  { transform: translateX(4px); }
+          100% { transform: translateX(0); }
+        }
+        .animate-combatShake {
+          animation: combatShake 0.5s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
@@ -219,6 +362,9 @@ function RoundCard({ round, agentName, monsterName, index }: { round: CombatRoun
   const isHeal = round.agentSkillType === "heal";
   const isCrit = round.isCritical;
   const monsterCrit = round.monsterIsCritical;
+
+  // 技能顏色
+  const skillGlowColor = getAttackGlow(round.agentSkillType);
 
   return (
     <div className="rounded-lg p-2 text-[11px] space-y-1 animate-fadeIn"
@@ -244,7 +390,7 @@ function RoundCard({ round, agentName, monsterName, index }: { round: CombatRoun
             ) : round.monsterBlocked ? (
               <span className="text-blue-400">{round.agentSkillName ?? "普攻"} 造成 {round.agentAtk} 傷害（被格擋）</span>
             ) : (
-              <span className={isCrit ? "text-yellow-300 font-bold" : "text-cyan-300"}>
+              <span className={isCrit ? "font-bold" : ""} style={{ color: isCrit ? "#fde047" : skillGlowColor }}>
                 {round.agentSkillName ?? "普攻"} 造成 {round.agentAtk} 傷害{isCrit ? "！" : ""}
               </span>
             )}
@@ -272,4 +418,20 @@ function RoundCard({ round, agentName, monsterName, index }: { round: CombatRoun
       </div>
     </div>
   );
+}
+
+// ─── 戰鬥視窗設定 Hook ───
+export function useCombatWindowSettings() {
+  const STORAGE_KEY = "combatWindowEnabled";
+  const [enabled, setEnabledState] = useState(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored === null ? true : stored === "true";
+  });
+
+  const setEnabled = (val: boolean) => {
+    localStorage.setItem(STORAGE_KEY, String(val));
+    setEnabledState(val);
+  };
+
+  return { enabled, setEnabled };
 }

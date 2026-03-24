@@ -1741,6 +1741,8 @@ export const gameAgents = mysqlTable("game_agents", {
   /** 靈癒疲勞最後使用日期 */
   lastDivineStaminaDate: varchar("last_divine_stamina_date", { length: 10 }),
   /** 桌機版浮動 Widget 位置記憶（JSON: { widgetId: { x, y } }） */
+  /** 玩家自訂頭像（S3 URL） */
+  avatarUrl: varchar("avatar_url", { length: 500 }),
   widgetLayout: json("widget_layout").$type<Record<string, { x: number; y: number }>>(),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
   updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),

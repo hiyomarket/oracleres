@@ -17,7 +17,7 @@ import { calcMoveCost } from "../../../../shared/mapNodes";
 import { DraggableWidget } from "@/components/DraggableWidget";
 import { safePlay, playLevelUpSound, playLegendarySound, playTickSound, isSoundEnabled, setSoundEnabled } from "@/hooks/useGameSound";
 import { useGameWebSocket } from "@/hooks/useGameWebSocket";
-import { CombatWindow } from "@/components/CombatWindow";
+import { CombatWindow, useCombatWindowSettings } from "@/components/CombatWindow";
 import type { CombatWindowData } from "@/components/CombatWindow";
 import { GlobalChat } from "@/components/GlobalChat";
 
@@ -537,6 +537,8 @@ type AgentData = {
   lastDivineStaminaDate?: string | null;
   // 行動模式
   movementMode?: string | null;
+  // 玩家自訂頭像
+  avatarUrl?: string | null;
 };
 
 function CharacterPanel({
@@ -665,6 +667,7 @@ function CharacterPanel({
     },
     onError: (e) => toast.error("學習失敗：" + e.message),
   });
+  const uploadAvatarMutation = trpc.gameWorld.uploadAgentAvatar.useMutation();
   const PANELS: { id: PanelId; icon: string; label: string }[] = [
     { id: "combat", icon: "⚔️", label: "戰鬥" },
     { id: "life",   icon: "🏠", label: "生活" },
@@ -680,14 +683,57 @@ function CharacterPanel({
       {!mobileMode && (
         <div className="px-4 py-3 flex items-center gap-3 shrink-0"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "linear-gradient(135deg, rgba(8,12,25,0.99) 0%, rgba(15,20,40,0.99) 100%)" }}>
-          {/* 角色頭像 */}
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl border-2 shrink-0 relative"
+          {/* 角色頭像（點擊可上傳自訂圖片） */}
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl border-2 shrink-0 relative overflow-hidden cursor-pointer group"
             style={{
               background: `radial-gradient(circle at 30% 30%, ${ec}30, rgba(6,10,22,0.9))`,
               borderColor: `${ec}60`,
               boxShadow: `0 0 20px ${ec}40, inset 0 0 10px ${ec}15`,
-            }}>
-            {userGender === "male" ? "🧙" : "🧝"}
+            }}
+            title="點擊更換頭像"
+            onClick={() => {
+              const input = document.createElement("input");
+              input.type = "file";
+              input.accept = "image/*";
+              input.onchange = async (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (!file) return;
+                // 在瀏覽器中壓縮圖片到 200x200 JPEG
+                const canvas = document.createElement("canvas");
+                canvas.width = 200; canvas.height = 200;
+                const ctx2d = canvas.getContext("2d")!;
+                const img = new Image();
+                img.onload = async () => {
+                  // 裁切為正方形居中
+                  const size = Math.min(img.width, img.height);
+                  const sx = (img.width - size) / 2;
+                  const sy = (img.height - size) / 2;
+                  ctx2d.drawImage(img, sx, sy, size, size, 0, 0, 200, 200);
+                  const base64 = canvas.toDataURL("image/jpeg", 0.8);
+                  try {
+                    const result = await uploadAvatarMutation.mutateAsync({ imageBase64: base64, mimeType: "image/jpeg" });
+                    toast.success("頭像已更新！地圖標記將顯示您的照片");
+                    cpUtils.gameWorld.getOrCreateAgent.invalidate();
+                    void result;
+                  } catch (err: unknown) {
+                    toast.error("上傳失敗：" + (err instanceof Error ? err.message : "未知錯誤"));
+                  }
+                };
+                img.src = URL.createObjectURL(file);
+              };
+              input.click();
+            }}
+          >
+            {agent?.avatarUrl ? (
+              <img src={agent.avatarUrl} alt="頭像" className="w-full h-full object-cover" />
+            ) : (
+              userGender === "male" ? "🧙" : "🧙‍♀️"
+            )}
+            {/* Hover 提示 */}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs">
+              📷
+            </div>
             {/* 等級徽章 */}
             <span className="absolute -bottom-1 -right-1 text-[11px] font-bold px-1.5 py-0.5 rounded-full border"
               style={{ background: `${ec}22`, borderColor: `${ec}50`, color: ec }}>Lv.{agentLevel}</span>
@@ -1839,6 +1885,10 @@ export default function VirtualWorldPage() {
   const [legendaryEffect, setLegendaryEffect] = useState<{ agentName: string; equipId: string; tier: string } | null>(null);
   // 戰鬥視窗
   const [combatWindowData, setCombatWindowData] = useState<CombatWindowData | null>(null);
+  // 戰鬥視窗開關設定
+  const { enabled: combatWindowEnabled, setEnabled: setCombatWindowEnabled } = useCombatWindowSettings();
+  // 戰鬥中鎖定：戰鬥視窗開啟且動畫進行中時，不允許執行下一個 Tick
+  const [combatLocked, setCombatLocked] = useState(false);
   // Tick 進度條
   const [tickProgress, setTickProgress] = useState(0); // 0-100
   const tickProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1990,17 +2040,12 @@ export default function VirtualWorldPage() {
         safePlay(playLegendarySound);
       }
 
-      // 展示 Tick 結果 Toast
-      if (result.events > 0 && !myLevelUp && !myLegendary) {
-        toast.success(`✨ 旅人行動完成`, {
-          description: `處理了 ${result.events} 個事件`,
-          duration: 2000,
-        });
-      }
+      // 旅人行動完成 Toast 已關閉（訊息縺縺且無意義）
       // 戰鬥視窗：只要有 lastCombat 資料就顯示戰鬥視窗
       // Bug 7 fix: 移除 agentId 比對（agent?.id 可能為 undefined 導致永遠不觸發）
-      if (result.lastCombat) {
+      if (result.lastCombat && combatWindowEnabled) {
         setCombatWindowData(result.lastCombat as CombatWindowData);
+        setCombatLocked(true); // 戰鬥視窗開啟，鎖定 Tick
       }
       // 偵測休息完成後自動切回策略
       const prevStrategy = prevAgentRef.current?.strategy;
@@ -2066,13 +2111,16 @@ export default function VirtualWorldPage() {
               duration: 5000,
             });
           }
+        } else if (combatLocked) {
+          // 戰鬥視窗開啟且動畫進行中，對戰鬥結束前不執行下一個 Tick
+          // (do nothing - wait for combat to finish)
         } else {
           triggerTick.mutate();
         }
       }, 5 * 1000); // 每 5 秒執行一次 Tick
       setTickRunning(true);
     }
-  }, [tickRunning, triggerTick, statusData, agent?.stamina, agent?.strategy, setStrategy]);
+  }, [tickRunning, triggerTick, statusData, agent?.stamina, agent?.strategy, setStrategy, combatLocked]);
 
   useEffect(() => {
     return () => { if (tickIntervalRef.current) clearInterval(tickIntervalRef.current); };
@@ -2318,7 +2366,10 @@ export default function VirtualWorldPage() {
       {combatWindowData && (
         <CombatWindow
           data={combatWindowData}
-          onClose={() => setCombatWindowData(null)}
+          onClose={() => {
+            setCombatWindowData(null);
+            setCombatLocked(false); // 戰鬥結束，解除 Tick 鎖定
+          }}
         />
       )}
 
@@ -2648,6 +2699,19 @@ export default function VirtualWorldPage() {
             >
               {soundOn ? "🔊" : "🔇"}
             </button>
+            {/* 戰鬥視窗開關按鈕 */}
+            <button
+              onClick={() => setCombatWindowEnabled(!combatWindowEnabled)}
+              className="flex items-center justify-center w-8 h-8 rounded-xl border transition-all hover:scale-105 active:scale-95"
+              style={{
+                background: combatWindowEnabled ? "rgba(168,85,247,0.1)" : "rgba(148,163,184,0.08)",
+                borderColor: combatWindowEnabled ? "rgba(168,85,247,0.3)" : "rgba(148,163,184,0.2)",
+                color: combatWindowEnabled ? "#a855f7" : "#64748b",
+              }}
+              title={combatWindowEnabled ? "戰鬥動畫開啟（點擊關閉）" : "戰鬥動畫關閉（點擊開啟）"}
+            >
+              {combatWindowEnabled ? "⚔️" : "🛡️"}
+            </button>
             {/* 返回前台按鈕 */}
             <button
               onClick={() => navigate("/")}
@@ -2702,6 +2766,7 @@ export default function VirtualWorldPage() {
                   nodes={mapNodeList}
                   currentNodeId={currentNodeId}
                   hiddenNodeIds={hiddenNodeIds}
+                  agentAvatarUrl={agent?.avatarUrl ?? undefined}
                   onNodeClick={(nodeId) => {
                     // 點擊密店發光節點：如果是當前位置且有密店，顯示密店彈窗
                     if (nodeId === currentNodeId && hiddenNodeIds.includes(nodeId)) {

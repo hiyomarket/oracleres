@@ -1,0 +1,1 @@
+ALTER TABLE `game_agents` ADD `avatar_url` varchar(500);

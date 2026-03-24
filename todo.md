@@ -3790,3 +3790,28 @@
 - [x] 確認 triggerTick 依 agentId 過濾戰鬥結果，只回傳當前玩家的戰鬥資訊
 - [x] 確認前端 CombatWindow 使用 data.agentName 顯示正確角色名稱
 - [x] TypeScript 零錯誤，620 項測試全部通過
+
+## V40 遊戲體驗全面強化
+
+### Bug 修復
+- [x] 關閉「旅人行動完成」 Toast 提醒（太慢且無意義）
+- [x] 修復自動扣體力 Bug：後端自動 Tick 不再處理個人角色行動，只處理全地圖事件
+
+### 戰鬥結算卡片
+- [x] CombatWindow 戰鬥結束後顯示結算卡片（EXP/金幣/掉落道具清單）
+- [x] 結算卡片有動畫效果（滑入、數字跳動）
+
+### 玩家頭像上傳
+- [x] 後端：uploadAgentAvatar tRPC mutation（接收 base64，壓縮後存 S3，更新 gameAgents.avatarUrl）
+- [x] schema.ts gameAgents 加入 avatarUrl 欄位
+- [x] 前端：地圖玩家標記改用頭像圖片（放大2倍，預設顯示五行顏色圓點）
+- [x] 前端：角色面板頭像點擊可更換（點擊選圖 → 壓縮 → 上傳）
+
+### 戰鬥光效動畫
+- [x] CombatWindow 我方攻擊時底部發光（物攻金色、魔法攻擊紫色、技能依五行屬性發對應顏色）
+- [x] CombatWindow 被攻擊時畫面搓動 + 紅色閃光效果
+
+### 戰鬥視窗開關與鎖定
+- [x] 設定面板加入「戰鬥視窗」開關按鈕（localStorage 持久化）
+- [x] 戰鬥動畫時間延長 2 倍（每回合間隔 1200ms）
+- [x] 戰鬥視窗開啟時鎖定 Tick（必須完成戰鬥才能執行下一個事件）
