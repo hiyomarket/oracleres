@@ -943,6 +943,11 @@ export const gameAdminRouter = router({
       rogueChance: z.number().min(0).max(0.5).optional(),
       gameEnabled: z.boolean().optional(),
       maintenanceMsg: z.string().max(200).optional(),
+      // 注靈配置
+      infuseMinGain: z.number().min(0.01).max(5).optional(),
+      infuseMaxGain: z.number().min(0.01).max(10).optional(),
+      infuseFailRate: z.number().min(0).max(0.99).optional(),
+      infuseMaxWuxing: z.number().min(10).max(9999).optional(),
     }))
     .mutation(({ input, ctx }) => {
       const { tickIntervalMs, ...rest } = input;

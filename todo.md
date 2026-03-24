@@ -3692,3 +3692,42 @@
 
 ### GD022 - GitHub 回覆文件
 - [x] 在 MANUS-AGENTS/FOR-SYSTEM/REPLIES/ 新增回覆文件
+
+## V35 全面升級
+### 問題修復
+- [x] 聊天室 GlobalChat broadcastToAll 修復（包含 anonClients，讓未認證客戶端也能收到聊天訊息）
+- [x] 管理員後台快捷列整合到遊戲介面底端（僅 admin role 可見）
+- [x] CharacterProfile 技能槽位加入裝備/卸下邏輯（連接 installSkill API + 驗證玩家是否擁有技能書）
+- [x] 升級時更新 maxHp（+15/級）和 maxMp（+8/級）並補滿當前值
+### 新功能：注靈行動
+- [x] schema.ts gameAgents.strategy enum 加入 "infuse"
+- [x] gameEngineConfig.ts 加入注靈配置（minGain/maxGain/failRate/maxWuxing）
+- [x] tickEngine 加入 processInfuseEvent（節點五行截取邏輯，20% 失敗率）
+- [x] 後台 AdminGameTheater 加入注靈參數調整 UI（後台可調整截取值範圍和失敗率）
+- [x] 前端 VirtualWorldPage 加入「注靈」行動按鈕（第五個策略按鈕）
+- [x] 前端顯示注靈結果（截取值 + 失敗提示）
+### 新功能：休息指令優化
+- [x] gameAgents 加入 previousStrategy 欄位
+- [x] setStrategy 後端：切換到 rest 時記錄 previousStrategy
+- [x] tickEngine 休息完後自動切回 previousStrategy（而非固定切到 explore）
+- [x] 前端顯示「已回滿，自動切回前一行動」Toast 通知
+### 新功能：詳細戰鬥系統
+- [x] 擴充 CombatRound 類型（技能名稱/閃避/格擋/暴擊/治癒等詳細欄位）
+- [x] resolveCombat 大改版（技能觸發/閃避/格擋/暴擊/治癒技能邏輯）
+- [x] TickResult 加入 lastCombat 欄位（用於前端戰鬥視窗）
+- [x] 前端 CombatWindow.tsx（即時戰鬥視窗彈窗，逐回合動畫顯示）
+- [x] CombatWindow 顯示回合記錄（技能名稱/閃避/格擋/傷害數字/HP 條）
+- [x] 戰鬥結束後顯示結果（勝利/失敗/EXP/金幣），關閉後結果顯示在事件欄
+### 四行技能種子資料（待後台手動新增）
+- [ ] 火屬性 10 筆種子技能（S_Fr001~S_Fr010）
+- [ ] 土屬性 10 筆種子技能（S_Et001~S_Et010）
+- [ ] 金屬性 10 筆種子技能（S_Mt001~S_Mt010）
+- [ ] 水屬性 10 筆種子技能（S_Wt001~S_Wt010）
+### 技能書掉落整合（待實作）
+- [ ] tickEngine 戰鬥掉落加入技能書機率（依怪物等級和元素屬性）
+- [ ] 掉落技能書寫入 skill_books 表
+- [ ] 前端背包顯示技能書道具
+### 隱藏商店前端 UI（待實作）
+- [ ] VirtualWorldPage 地圖節點加入神秘商人發光效果
+- [ ] 點擊發光節點彈出限時商店介面（倒數計時 + 稀有物品）
+- [ ] 隱藏商店 API（getHiddenShopInstance/buyHiddenShopItem）

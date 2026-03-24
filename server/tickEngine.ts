@@ -11,7 +11,7 @@ import { broadcastLevelUp, broadcastLegendaryDrop, broadcastAchievementUnlock } 
 import { calcSkillCombo, updateHiddenSkillTracker } from "./skillComboEngine";
 import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates } from "../drizzle/schema";
 import { processHiddenEvents } from "./hiddenEventEngine";
-import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs } from "./gameEngineConfig";
+import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs, getInfuseConfig } from "./gameEngineConfig";
 import { eq, and, sql } from "drizzle-orm";
 import {
   MAP_NODES,
@@ -279,11 +279,23 @@ function formatMessage(template: string, vars: Record<string, string | number>):
 // ─── 戰鬥結算（詳細回合制） ───
 export type CombatRound = {
   round: number;
-  agentAtk: number;
-  monsterAtk: number;
-  agentHpAfter: number;
-  monsterHpAfter: number;
-  agentFirst: boolean;
+  agentAtk: number;       // 玩家對怪物造成的實際傷害
+  monsterAtk: number;     // 怪物對玩家造成的實際傷害
+  agentHpAfter: number;   // 玩家回合後剩餘 HP
+  monsterHpAfter: number; // 怪物回合後剩餘 HP
+  agentFirst: boolean;    // 玩家是否先手
+  // 詳細戰鬥資訊
+  agentSkillName?: string;    // 玩家使用的技能名稱
+  monsterSkillName?: string;  // 怪物使用的技能名稱
+  agentDodged?: boolean;      // 玩家是否閃避了怪物攻擊
+  monsterDodged?: boolean;    // 怪物是否閃避了玩家攻擊
+  agentBlocked?: boolean;     // 玩家是否格擋（傷害減半）
+  monsterBlocked?: boolean;   // 怪物是否格擋
+  agentHealAmount?: number;   // 玩家本回合治癒量（治癒技能）
+  agentSkillType?: string;    // 玩家技能類型：attack/heal/buff
+  isCritical?: boolean;       // 玩家是否暴擊
+  monsterIsCritical?: boolean;// 怪物是否暴擊
+  description?: string;       // 回合文字描述
 };
 
 // GD-020 補充四：種族剋制對照表
@@ -333,7 +345,10 @@ export function resolveCombat(
     wuxingWood?: number; wuxingFire?: number; wuxingEarth?: number;
     wuxingMetal?: number; wuxingWater?: number;
     skillSlot1?: string | null; // 當前技能槽，用於判斷技能屬性
-    agentRace?: string;  // GD-020 補充四：旅人種族（用於種族剋制判斷）
+    agentRace?: string;  // GD-020 補充四：旅人種族（用於種族居制判斷）
+    // 技能資訊（用於詳細戰鬥計算）
+    equippedSkills?: Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number }>;
+    currentMp?: number;
   },
   monster: Monster
 ): CombatResult {
@@ -403,36 +418,157 @@ export function resolveCombat(
   // 回合制戰鬥模擬（最多 10 回合）
   let agentHp = agent.hp;
   let monsterHp = monster.hp;
+  let agentMp = agent.currentMp ?? 50;
   const rounds: CombatRound[] = [];
   const agentFirst = agent.speed >= monster.speed;
+  let totalMpUsed = 0;
+  let totalHealAmount = 0;
+
+  // 技能池（可用技能）
+  const equippedSkills = agent.equippedSkills ?? [];
+  // 技能冷卻記錄（skillId -> 剩餘冷卻回合數）
+  const skillCooldowns: Record<string, number> = {};
 
   while (agentHp > 0 && monsterHp > 0 && rounds.length < 10) {
     const roundNum = rounds.length + 1;
-    const agentAtk = Math.round(agentBaseDmg * randFloat(0.8, 1.2));
-    const monsterAtk = Math.round(monsterBaseDmg * randFloat(0.8, 1.2));
+    const roundData: CombatRound = { round: roundNum, agentAtk: 0, monsterAtk: 0, agentHpAfter: agentHp, monsterHpAfter: monsterHp, agentFirst };
 
-    if (agentFirst) {
-      monsterHp = Math.max(0, monsterHp - agentAtk);
-      if (monsterHp <= 0) {
-        rounds.push({ round: roundNum, agentAtk, monsterAtk: 0, agentHpAfter: agentHp, monsterHpAfter: 0, agentFirst });
-        break;
-      }
-      agentHp = Math.max(0, agentHp - monsterAtk);
-    } else {
-      agentHp = Math.max(0, agentHp - monsterAtk);
-      if (agentHp <= 0) {
-        rounds.push({ round: roundNum, agentAtk: 0, monsterAtk, agentHpAfter: 0, monsterHpAfter: monsterHp, agentFirst });
-        break;
-      }
-      monsterHp = Math.max(0, monsterHp - agentAtk);
+    // 冷卻倒數
+    for (const sk of equippedSkills) {
+      if (skillCooldowns[sk.id] && skillCooldowns[sk.id] > 0) skillCooldowns[sk.id]--;
     }
 
-    rounds.push({ round: roundNum, agentAtk, monsterAtk, agentHpAfter: agentHp, monsterHpAfter: monsterHp, agentFirst });
+    // 玩家選擇技能：優先使用治癒技能（HP < 40%），其次使用攻擊技能
+    let chosenSkill: typeof equippedSkills[0] | null = null;
+    const isLowHp = agentHp < agent.maxHp * 0.4;
+    // 尋找可用的治癒技能
+    if (isLowHp) {
+      chosenSkill = equippedSkills.find(sk =>
+        sk.skillType === "heal" && agentMp >= sk.mpCost && !(skillCooldowns[sk.id] > 0)
+      ) ?? null;
+    }
+    // 如果沒有治癒技能，選擇攻擊技能
+    if (!chosenSkill) {
+      chosenSkill = equippedSkills.find(sk =>
+        sk.skillType === "attack" && agentMp >= sk.mpCost && !(skillCooldowns[sk.id] > 0)
+      ) ?? null;
+    }
+    // 沒有可用技能則普攻
+    const usingSkill = chosenSkill !== null;
+    const skillMultiplier = usingSkill ? (chosenSkill!.damageMultiplier ?? 1.0) : 1.0;
+    const skillType = usingSkill ? chosenSkill!.skillType : "attack";
+    const skillName = usingSkill ? chosenSkill!.name : "普通攻擊";
+    const mpCost = usingSkill ? chosenSkill!.mpCost : randInt(1, 3);
+
+    if (usingSkill && chosenSkill) {
+      agentMp = Math.max(0, agentMp - mpCost);
+      totalMpUsed += mpCost;
+      skillCooldowns[chosenSkill.id] = 2; // 冷卻 2 回合
+    } else {
+      agentMp = Math.max(0, agentMp - mpCost);
+      totalMpUsed += mpCost;
+    }
+
+    // 治癒技能處理
+    if (skillType === "heal") {
+      const healAmount = Math.round(agent.maxHp * 0.2 * skillMultiplier);
+      agentHp = Math.min(agent.maxHp, agentHp + healAmount);
+      totalHealAmount += healAmount;
+      roundData.agentHealAmount = healAmount;
+      roundData.agentSkillType = "heal";
+      roundData.agentSkillName = skillName;
+      roundData.agentAtk = 0;
+      // 治癒回合不攻擊怪物
+      const monsterSkillIdx = Math.floor(Math.random() * Math.max(1, monster.skills.length));
+      const monsterSkillName = monster.skills[monsterSkillIdx] ?? "普通攻擊";
+      const monsterAtk = Math.round(monsterBaseDmg * randFloat(0.8, 1.2));
+      const agentDodged = Math.random() < Math.min(0.3, agent.speed / (agent.speed + monster.speed + 10));
+      const agentBlocked = !agentDodged && Math.random() < 0.15;
+      const monsterIsCritical = !agentDodged && !agentBlocked && Math.random() < 0.1;
+      const actualMonsterAtk = agentDodged ? 0 : agentBlocked ? Math.round(monsterAtk * 0.5) : monsterIsCritical ? Math.round(monsterAtk * 1.5) : monsterAtk;
+      agentHp = Math.max(0, agentHp - actualMonsterAtk);
+      roundData.monsterAtk = actualMonsterAtk;
+      roundData.monsterSkillName = monsterSkillName;
+      roundData.agentDodged = agentDodged;
+      roundData.agentBlocked = agentBlocked;
+      roundData.monsterIsCritical = monsterIsCritical;
+      roundData.agentHpAfter = agentHp;
+      roundData.monsterHpAfter = monsterHp;
+      const healDesc = `${skillName}治癒了 ${healAmount} HP`;
+      const defDesc = agentDodged ? `閃避了${monsterSkillName}` : agentBlocked ? `格擋了${monsterSkillName}（傷害減半）` : monsterIsCritical ? `被${monsterSkillName}暴擊！受到 ${actualMonsterAtk} 傷害` : `受到${monsterSkillName}攻擊，受到 ${actualMonsterAtk} 傷害`;
+      roundData.description = `第${roundNum}回合：${healDesc}。${monster.name}${defDesc}`;
+      rounds.push(roundData);
+      if (agentHp <= 0) break;
+      continue;
+    }
+
+    // 攻擊回合
+    const rawAgentAtk = Math.round(agentBaseDmg * skillMultiplier * randFloat(0.8, 1.2));
+    const isCritical = Math.random() < 0.1; // 10% 暴擊機率
+    const monsterDodged = Math.random() < Math.min(0.2, monster.speed / (monster.speed + agent.speed + 15));
+    const monsterBlocked = !monsterDodged && Math.random() < 0.1;
+    const agentAtk = monsterDodged ? 0 : monsterBlocked ? Math.round(rawAgentAtk * 0.5) : isCritical ? Math.round(rawAgentAtk * 1.8) : rawAgentAtk;
+
+    const monsterSkillIdx = Math.floor(Math.random() * Math.max(1, monster.skills.length));
+    const monsterSkillName = monster.skills[monsterSkillIdx] ?? "普通攻擊";
+    const rawMonsterAtk = Math.round(monsterBaseDmg * randFloat(0.8, 1.2));
+    const agentDodged = Math.random() < Math.min(0.3, agent.speed / (agent.speed + monster.speed + 10));
+    const agentBlocked = !agentDodged && Math.random() < 0.15;
+    const monsterIsCritical = !agentDodged && !agentBlocked && Math.random() < 0.1;
+    const monsterAtk = agentDodged ? 0 : agentBlocked ? Math.round(rawMonsterAtk * 0.5) : monsterIsCritical ? Math.round(rawMonsterAtk * 1.5) : rawMonsterAtk;
+
+    roundData.agentSkillName = skillName;
+    roundData.agentSkillType = skillType;
+    roundData.isCritical = isCritical;
+    roundData.monsterSkillName = monsterSkillName;
+    roundData.agentDodged = agentDodged;
+    roundData.agentBlocked = agentBlocked;
+    roundData.monsterDodged = monsterDodged;
+    roundData.monsterBlocked = monsterBlocked;
+    roundData.monsterIsCritical = monsterIsCritical;
+
+    if (agentFirst) {
+      roundData.agentAtk = agentAtk;
+      monsterHp = Math.max(0, monsterHp - agentAtk);
+      roundData.monsterHpAfter = monsterHp;
+      if (monsterHp <= 0) {
+        roundData.monsterAtk = 0;
+        roundData.agentHpAfter = agentHp;
+        const atkDesc = monsterDodged ? `${monster.name}閃避了${skillName}` : monsterBlocked ? `${monster.name}格擋了${skillName}（傷害減半）` : isCritical ? `${skillName}暴擊！造成 ${agentAtk} 傷害` : `${skillName}造成 ${agentAtk} 傷害`;
+        roundData.description = `第${roundNum}回合：${atkDesc}，${monster.name}倒下！`;
+        rounds.push(roundData);
+        break;
+      }
+      roundData.monsterAtk = monsterAtk;
+      agentHp = Math.max(0, agentHp - monsterAtk);
+      roundData.agentHpAfter = agentHp;
+    } else {
+      roundData.monsterAtk = monsterAtk;
+      agentHp = Math.max(0, agentHp - monsterAtk);
+      roundData.agentHpAfter = agentHp;
+      if (agentHp <= 0) {
+        roundData.agentAtk = 0;
+        roundData.monsterHpAfter = monsterHp;
+        const defDesc = agentDodged ? `閃避了${monsterSkillName}` : agentBlocked ? `格擋了${monsterSkillName}（傷害減半）` : monsterIsCritical ? `被${monsterSkillName}暴擊！受到 ${monsterAtk} 傷害` : `受到${monsterSkillName}攻擊，受到 ${monsterAtk} 傷害`;
+        roundData.description = `第${roundNum}回合：${defDesc}，旅人倒下！`;
+        rounds.push(roundData);
+        break;
+      }
+      roundData.agentAtk = agentAtk;
+      monsterHp = Math.max(0, monsterHp - agentAtk);
+      roundData.monsterHpAfter = monsterHp;
+    }
+
+    // 回合描述
+    const atkDesc = monsterDodged ? `${monster.name}閃避了${skillName}` : monsterBlocked ? `${monster.name}格擋了${skillName}（傷害減半）` : isCritical ? `${skillName}暴擊！造成 ${agentAtk} 傷害` : `${skillName}造成 ${agentAtk} 傷害`;
+    const defDesc = agentDodged ? `閃避了${monsterSkillName}` : agentBlocked ? `格擋了${monsterSkillName}（傷害減半）` : monsterIsCritical ? `被${monsterSkillName}暴擊！受到 ${monsterAtk} 傷害` : `受到${monsterSkillName}攻擊，受到 ${monsterAtk} 傷害`;
+    roundData.description = `第${roundNum}回合：${atkDesc}。${monster.name}${defDesc}`;
+    rounds.push(roundData);
   }
 
   const won = monsterHp <= 0;
   const hpLost = Math.min(agent.hp, agent.hp - agentHp);
-  const mpUsed = randInt(2, 8);
+  const mpUsed = totalMpUsed;
 
   // 計算獎勵
   const expGained = won ? monster.expReward : Math.floor(monster.expReward * 0.1);
@@ -493,8 +629,24 @@ export interface TickResult {
   events: number;
   /** 本次 Tick 中發生升級的角色資訊 */
   levelUps: Array<{ agentId: number; agentName: string; newLevel: number; agentElement?: string }>;  // agentElement for live_feed
-  /** 本次 Tick 中掉落的傳說/高級裝備 */
+  /** 本次 Tick 中摩落的傳說/高級裝備 */
   legendaryDrops: Array<{ agentId: number; agentName: string; equipId: string; tier: string; agentElement?: string; agentLevel?: number; itemName?: string }>;  // extra fields for live_feed
+  /** 本次 Tick 中最新的戰鬥資訊（用於前端戰鬥視窗） */
+  lastCombat?: {
+    agentId: number;
+    agentName: string;
+    monsterName: string;
+    monsterRace?: string;
+    won: boolean;
+    expGained: number;
+    goldGained: number;
+    hpLost: number;
+    wuxingBoostDesc?: string;
+    raceBoostDesc?: string;
+    rounds: CombatRound[];
+    agentMaxHp: number;
+    monsterMaxHp: number;
+  };
 }
 
 export async function processTick(): Promise<TickResult> {
@@ -534,6 +686,7 @@ export async function processTick(): Promise<TickResult> {
   let totalEvents = 0;
   const allLevelUps: TickResult["levelUps"] = [];
   const allLegendaryDrops: TickResult["legendaryDrops"] = [];
+  let lastCombatResult: TickResult["lastCombat"] | undefined;
 
   for (const agent of agents) {
     try {
@@ -553,12 +706,15 @@ export async function processTick(): Promise<TickResult> {
       totalEvents += agentResult.events;
       if (agentResult.levelUps.length > 0) allLevelUps.push(...agentResult.levelUps);
       if (agentResult.legendaryDrops.length > 0) allLegendaryDrops.push(...agentResult.legendaryDrops);
+      // 收集最新戰鬥資訊（用於前端戰鬥視窗）
+      if (agentResult.lastCombat) lastCombatResult = agentResult.lastCombat;
     } catch (err) {
       console.error(`[Tick] Error processing agent ${agent.id}:`, err);
     }
   }
 
   // 處理隱藏事件（密店/隱藏NPC/隱藏任務）
+  // (lastCombatResult 已在上方迴圈中收集)
   try {
     await processHiddenEvents();
   } catch (err) {
@@ -614,7 +770,7 @@ export async function processTick(): Promise<TickResult> {
     } catch { }
   }
 
-  return { processed: agents.length, events: totalEvents, levelUps: allLevelUps, legendaryDrops: allLegendaryDrops };
+  return { processed: agents.length, events: totalEvents, levelUps: allLevelUps, legendaryDrops: allLegendaryDrops, lastCombat: lastCombatResult };
 }
 
 // ─── 單一角色 Tick 處理 ───
@@ -622,7 +778,7 @@ async function processAgentTick(
   agent: typeof gameAgents.$inferSelect,
   tick: number,
   dailyElement: WuXing
-): Promise<{ events: number; levelUps: TickResult["levelUps"]; legendaryDrops: TickResult["legendaryDrops"] }> {
+): Promise<{ events: number; levelUps: TickResult["levelUps"]; legendaryDrops: TickResult["legendaryDrops"]; lastCombat?: TickResult["lastCombat"] }> {
   const EMPTY = { events: 0, levelUps: [] as TickResult["levelUps"], legendaryDrops: [] as TickResult["legendaryDrops"] };
   const db = await getDb();
   if (!db) return EMPTY;
@@ -666,14 +822,15 @@ async function processAgentTick(
     let nextStatus: "idle" | "moving" | "resting" | "combat" | "dead" = "idle";
 
     if (isFullyHealed) {
-      if (agent.strategy === "rest") {
-        // 玩家選擇休息策略：補滿後自動切換到探索 + 漫遊
+      // 回滿後切回 previousStrategy，如果沒有記錄則預設探索
+      const prev = agent.previousStrategy ?? "explore";
+      if (prev !== "rest") {
+        nextStrategy = prev;
+      } else {
         nextStrategy = "explore";
-        nextMovementMode = "roaming";
-      } else if (agent.strategy === "combat") {
-        // 戰鬥策略：補滿後回到戰鬥狀態
-        nextStatus = "idle";
       }
+      nextMovementMode = "roaming";
+      nextStatus = "idle";
     } else {
       nextStatus = "resting"; // 還沒補滿，繼續休息
     }
@@ -684,6 +841,8 @@ async function processAgentTick(
       status: nextStatus,
       strategy: nextStrategy,
       movementMode: nextMovementMode,
+      // 回滿後清除 previousStrategy
+      previousStrategy: isFullyHealed ? null : agent.previousStrategy,
       updatedAt: Date.now(),
     }).where(eq(gameAgents.id, agent.id));
 
@@ -729,6 +888,7 @@ async function processAgentTick(
   let eventsCreated = 0;
   const tickLevelUps: TickResult["levelUps"] = [];
   const tickLegendaryDrops: TickResult["legendaryDrops"] = [];
+  let tickLastCombat: TickResult["lastCombat"] | undefined;
 
   // 從全域引擎配置取得動態機率
   const chances = getEventChances();
@@ -756,11 +916,12 @@ async function processAgentTick(
       eventsCreated += combatResult.events;
       tickLevelUps.push(...combatResult.levelUps);
       tickLegendaryDrops.push(...combatResult.legendaryDrops);
+      if (combatResult.lastCombat) tickLastCombat = combatResult.lastCombat;
     }
   }
   // ─── 探索策略 ───
-  // 探索策略：打怪40% + 採集 40% + 移動 20%（漫遊時）
-  //             打怪50% + 採集 50%（定點時）
+  // 探索策略：打怪40% + 採集40% + 移動20%（漫遊時）
+  //             打怪50% + 採集50%（定點時）
   else if (strategy === "explore") {
     if (movementMode === "roaming") {
       if (roll < combatThreshold) {
@@ -768,6 +929,7 @@ async function processAgentTick(
         eventsCreated += combatResult.events;
         tickLevelUps.push(...combatResult.levelUps);
         tickLegendaryDrops.push(...combatResult.legendaryDrops);
+        if (combatResult.lastCombat) tickLastCombat = combatResult.lastCombat;
       } else if (roll < gatherThreshold) {
         eventsCreated += await processGatherEvent(agent, currentNode, tick);
       } else {
@@ -775,12 +937,13 @@ async function processAgentTick(
         eventsCreated += await processMoveEvent(agent, currentNode, tick);
       }
     } else {
-      // 定點探索：打怪50% + 採集 50%
+      // 定點探索：打怪50% + 採集50%
       if (roll < 0.5) {
         const combatResult = await processCombatEvent(agent, currentNode, tick, dailyElement);
         eventsCreated += combatResult.events;
         tickLevelUps.push(...combatResult.levelUps);
         tickLegendaryDrops.push(...combatResult.legendaryDrops);
+        if (combatResult.lastCombat) tickLastCombat = combatResult.lastCombat;
       } else {
         eventsCreated += await processGatherEvent(agent, currentNode, tick);
       }
@@ -800,6 +963,7 @@ async function processAgentTick(
         eventsCreated += combatResult.events;
         tickLevelUps.push(...combatResult.levelUps);
         tickLegendaryDrops.push(...combatResult.legendaryDrops);
+        if (combatResult.lastCombat) tickLastCombat = combatResult.lastCombat;
       } else {
         // 5% 機率主動休息回復
         await db.update(gameAgents).set({ status: "resting", updatedAt: Date.now() }).where(eq(gameAgents.id, agent.id));
@@ -813,16 +977,43 @@ async function processAgentTick(
         eventsCreated += combatResult.events;
         tickLevelUps.push(...combatResult.levelUps);
         tickLegendaryDrops.push(...combatResult.legendaryDrops);
+        if (combatResult.lastCombat) tickLastCombat = combatResult.lastCombat;
       }
     }
   }
   // ─── 休息策略 ───
-  // 玩家選擇休息：直接進入休息狀態，補滿後自動切換到探索+漫遊
+   // 玩家選擇休息：直接進入休息狀態，補滿後自動切換到探索+漫遊
   else if (strategy === "rest") {
     await db.update(gameAgents).set({ status: "resting", updatedAt: Date.now() }).where(eq(gameAgents.id, agent.id));
   }
-
-  return { events: eventsCreated, levelUps: tickLevelUps, legendaryDrops: tickLegendaryDrops };
+  // ─── 注靈策略 ───
+  // 注靈：依當前節點屬性，截取五行能量，20%機率失敗
+  else if (strategy === "infuse") {
+    const infuseCfg = getInfuseConfig();
+    const nodeElement = currentNode.element as WuXing; // 節點屬性
+    const failed = Math.random() < infuseCfg.failRate;
+    if (failed) {
+      const WX_ZH_LOCAL: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+      const failMsg = `【注靈失敗】${agent.agentName ?? "旅人"}嘗試在「${currentNode.name}」截取${WX_ZH_LOCAL[nodeElement]}五行之力，但天地靈氣流通不畅，本次注靈未能成功。`;
+      await createEvent(agent.id, "rest", failMsg, { type: "infuse_fail", element: nodeElement }, currentNode.id);
+      eventsCreated++;
+    } else {
+      const WX_ZH_LOCAL: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+      const gain = parseFloat((infuseCfg.minGain + Math.random() * (infuseCfg.maxGain - infuseCfg.minGain)).toFixed(2));
+      const wuxingKey = `wuxing${nodeElement.charAt(0).toUpperCase() + nodeElement.slice(1)}` as
+        "wuxingWood" | "wuxingFire" | "wuxingEarth" | "wuxingMetal" | "wuxingWater";
+      const currentVal = agent[wuxingKey] as number;
+      const newVal = Math.min(infuseCfg.maxWuxing, parseFloat((currentVal + gain).toFixed(2)));
+      await db.update(gameAgents).set({
+        [wuxingKey]: newVal,
+        updatedAt: Date.now(),
+      }).where(eq(gameAgents.id, agent.id));
+      const successMsg = `【注靈成功】${agent.agentName ?? "旅人"}在「${currentNode.name}」感懟天地${WX_ZH_LOCAL[nodeElement]}氣，成功截取 ${gain.toFixed(2)} 點${WX_ZH_LOCAL[nodeElement]}五行之力！（${WX_ZH_LOCAL[nodeElement]}：${currentVal.toFixed(1)} → ${newVal.toFixed(1)}）`;
+      await createEvent(agent.id, "rest", successMsg, { type: "infuse_success", element: nodeElement, gain, newVal }, currentNode.id);
+      eventsCreated++;
+    }
+  }
+  return { events: eventsCreated, levelUps: tickLevelUps, legendaryDrops: tickLegendaryDrops, lastCombat: tickLastCombat };
 }
 
 // ─── 戰鬥事件 ───
@@ -831,7 +1022,7 @@ async function processCombatEvent(
   currentNode: MapNode,
   tick: number,
   dailyElement: WuXing
-): Promise<{ events: number; levelUps: TickResult["levelUps"]; legendaryDrops: TickResult["legendaryDrops"] }> {
+): Promise<{ events: number; levelUps: TickResult["levelUps"]; legendaryDrops: TickResult["legendaryDrops"]; lastCombat?: TickResult["lastCombat"] }> {
   const EMPTY = { events: 0, levelUps: [] as TickResult["levelUps"], legendaryDrops: [] as TickResult["legendaryDrops"] };
   const db = await getDb();
   if (!db) return EMPTY;
@@ -856,6 +1047,38 @@ async function processCombatEvent(
     agent.skillSlot1 ?? null
   );
 
+  // 取得玩家已裝備技能資訊（用於詳細戰鬥計算）
+  let equippedSkillsForCombat: Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number }> = [];
+  try {
+    const { agentSkills, skillTemplates } = await import("../drizzle/schema");
+    const { eq } = await import("drizzle-orm");
+    const installedSkills = await db
+      .select({ id: agentSkills.skillId, installedSlot: agentSkills.installedSlot })
+      .from(agentSkills)
+      .where(eq(agentSkills.agentId, agent.id));
+    const installedIds = installedSkills.filter(s => s.installedSlot).map(s => s.id);
+    if (installedIds.length > 0) {
+      const { inArray } = await import("drizzle-orm");
+      const skillData = await db.select({
+        id: skillTemplates.id,
+        name: skillTemplates.name,
+        skillType: skillTemplates.category,
+        damageMultiplier: skillTemplates.effectValue,
+        mpCost: skillTemplates.mpCost,
+      }).from(skillTemplates).where(inArray(skillTemplates.id, installedIds));
+      equippedSkillsForCombat = skillData.map(s => ({
+        id: s.id,
+        name: s.name,
+        skillType: s.skillType === "active" ? "attack" : s.skillType,
+        damageMultiplier: s.damageMultiplier ?? 1.0,
+        mpCost: s.mpCost ?? 0,
+      }));
+    }
+  } catch {
+    // 如果取得技能失敗，使用普攻
+    equippedSkillsForCombat = [];
+  }
+
   // 結算戰鬥
   const result = resolveCombat(
     {
@@ -866,7 +1089,7 @@ async function processCombatEvent(
       maxHp: agent.maxHp,
       dominantElement: agent.dominantElement ?? "wood",
       level: agent.level,
-      // GD-020 修正一：傳入五行屬性數值
+      // GD-020 修正一：傳入五行屬性數値
       wuxingWood:  agent.wuxingWood,
       wuxingFire:  agent.wuxingFire,
       wuxingEarth: agent.wuxingEarth,
@@ -874,6 +1097,8 @@ async function processCombatEvent(
       wuxingWater: agent.wuxingWater,
       skillSlot1:  agent.skillSlot1,
       agentRace: "人型系", // 旅人預設為人型系
+      equippedSkills: equippedSkillsForCombat,
+      currentMp: agent.mp,
     },
     monster
   );
@@ -903,6 +1128,29 @@ async function processCombatEvent(
     combatLevelUps.push({ agentId: agent.id, agentName: agent.agentName ?? "旅人", newLevel, agentElement: agent.dominantElement ?? "wood" });
   }
 
+  // 升級後重新計算基礎屬性（maxHp/maxMp/attack/defense/speed）
+  const newStats = calcCharacterStats({
+    wood: agent.wuxingWood,
+    fire: agent.wuxingFire,
+    earth: agent.wuxingEarth,
+    metal: agent.wuxingMetal,
+    water: agent.wuxingWater,
+  }, newLevel);
+  const newMaxHp = newStats.hp;
+  const newMaxMp = newStats.mp;
+  // 升級後 HP/MP 按比例恢復（保持目前比例）
+  const hpRatio = agent.maxHp > 0 ? newHp / agent.maxHp : 1;
+  const mpRatio = agent.maxMp > 0 ? newMp / agent.maxMp : 1;
+  if (combatLevelUps.length > 0) {
+    // 升級後 HP/MP 全滿
+    newHp = newMaxHp;
+    newMp = newMaxMp;
+  } else {
+    // 未升級，保持原比例
+    newHp = Math.min(newMaxHp, Math.max(1, Math.round(newMaxHp * hpRatio)));
+    newMp = Math.min(newMaxMp, Math.max(0, Math.round(newMaxMp * mpRatio)));
+  }
+
   if (newHp <= 1) {
     newStatus = "resting";
   }
@@ -910,6 +1158,11 @@ async function processCombatEvent(
   await db.update(gameAgents).set({
     hp: newHp,
     mp: newMp,
+    maxHp: newMaxHp,
+    maxMp: newMaxMp,
+    attack: newStats.atk,
+    defense: newStats.def,
+    speed: newStats.spd,
     exp: newExp,
     level: newLevel,
     gold: newGold,
@@ -1061,7 +1314,27 @@ async function processCombatEvent(
     await updateHiddenSkillTracker(agent.id, killTrackerId, 1).catch(() => {});
   }
 
-  return { events: 1 + result.lootItems.length, levelUps: combatLevelUps, legendaryDrops: combatLegendaryDrops };
+  return {
+    events: 1 + result.lootItems.length,
+    levelUps: combatLevelUps,
+    legendaryDrops: combatLegendaryDrops,
+    // 戰鬥資訊（用於前端戰鬥視窗）
+    lastCombat: {
+      agentId: agent.id,
+      agentName: agent.agentName ?? "旅人",
+      monsterName: monster.name,
+      monsterRace: monster.race,
+      won: result.won,
+      expGained: result.expGained,
+      goldGained: result.goldGained,
+      hpLost: result.hpLost,
+      wuxingBoostDesc: result.wuxingBoostDesc,
+      raceBoostDesc: result.raceBoostDesc,
+      rounds: result.rounds,
+      agentMaxHp: agent.maxHp,
+      monsterMaxHp: monster.hp,
+    },
+  };
 }
 
 // ─── 採集事件 ───

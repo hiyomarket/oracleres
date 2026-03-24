@@ -27,6 +27,15 @@ export interface GameEngineConfig {
   lastUpdatedAt: number;
   /** 最後修改者 */
   lastUpdatedBy: string;
+  // ─── 注靈指令配置 ───
+  /** 注靈成功最小截取值（預設 0.1） */
+  infuseMinGain: number;
+  /** 注靈成功最大截取值（預設 0.5） */
+  infuseMaxGain: number;
+  /** 注靈失敗機率（0~1，預設 0.2 = 20%） */
+  infuseFailRate: number;
+  /** 注靈五行值上限（預設 100） */
+  infuseMaxWuxing: number;
 }
 
 // ─── 預設值 ───
@@ -42,6 +51,11 @@ const DEFAULT_CONFIG: GameEngineConfig = {
   maintenanceMsg: "系統維護中，請稍後再試",
   lastUpdatedAt: Date.now(),
   lastUpdatedBy: "system",
+  // 注靈預設值
+  infuseMinGain: 0.1,
+  infuseMaxGain: 0.5,
+  infuseFailRate: 0.2,
+  infuseMaxWuxing: 100,
 };
 
 // ─── 單例記憶體狀態 ───
@@ -98,5 +112,15 @@ export function getMultipliers(): { exp: number; gold: number; drop: number } {
     exp: _config.expMultiplier,
     gold: _config.goldMultiplier,
     drop: _config.dropMultiplier,
+  };
+}
+
+/** 取得注靈配置 */
+export function getInfuseConfig(): { minGain: number; maxGain: number; failRate: number; maxWuxing: number } {
+  return {
+    minGain: _config.infuseMinGain,
+    maxGain: _config.infuseMaxGain,
+    failRate: _config.infuseFailRate,
+    maxWuxing: _config.infuseMaxWuxing,
   };
 }

@@ -1,0 +1,1 @@
+ALTER TABLE `game_agents` MODIFY COLUMN `strategy` enum('explore','gather','rest','combat','infuse') NOT NULL DEFAULT 'explore';
