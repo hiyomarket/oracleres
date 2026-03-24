@@ -1,0 +1,98 @@
+{
+  "query": "DESCRIBE game_skill_catalog;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DESCRIBE game_skill_catalog;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "skill_id",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "category",
+      "Type": "varchar(30)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "active_combat",
+      "Extra": ""
+    },
+    {
+      "Field": "tier",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "初階",
+      "Extra": ""
+    },
+    {
+      "Field": "mp_cost",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "skill_type",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "attack",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nskill_id\tvarchar(20)\tNO\tUNI\tNULL\t\nname\tvarchar(100)\tNO\t\tNULL\t\nwuxing\tvarchar(10)\tNO\t\tNULL\t\ncategory\tvarchar(30)\tNO\t\tactive_combat\t\ntier\tvarchar(20)\tNO\t\t初階\t\nmp_cost\tint\tNO\t\t0\t\ndescription\ttext\tYES\t\tNULL\t\nskill_type\tvarchar(20)\tNO\t\tattack\t\nis_active\ttinyint\tYES\t\t1\t\ncreated_at\tbigint\tNO\t\t0\t\n",
+  "stderr": "",
+  "execution_time_ms": 1536
+}

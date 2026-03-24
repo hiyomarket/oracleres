@@ -1,0 +1,35 @@
+{
+  "query": "SELECT id, agent_name, user_id FROM game_agents LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_name, user_id FROM game_agents LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "agent_name": "凜冬月",
+      "user_id": "1"
+    },
+    {
+      "id": "2",
+      "agent_name": "御詠漓",
+      "user_id": "540175"
+    },
+    {
+      "id": "3",
+      "agent_name": "NULL",
+      "user_id": "9426044"
+    },
+    {
+      "id": "4",
+      "agent_name": "阿成",
+      "user_id": "690067"
+    },
+    {
+      "id": "5",
+      "agent_name": "齊藤優作",
+      "user_id": "4140001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_name\tuser_id\n1\t凜冬月\t1\n2\t御詠漓\t540175\n3\tNULL\t9426044\n4\t阿成\t690067\n5\t齊藤優作\t4140001\n",
+  "stderr": "",
+  "execution_time_ms": 1646
+}

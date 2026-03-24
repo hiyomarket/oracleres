@@ -13,7 +13,20 @@ import {
   gameAgents,
   agentInventory,
   gameInventoryItems,
+  gameConfig,
 } from "../../drizzle/schema";
+
+/** 讀取拍賣行手續費率，預設 0.05（5%） */
+async function getAuctionFeeRate(): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0.05;
+  const [cfg] = await db.select({ configValue: gameConfig.configValue })
+    .from(gameConfig)
+    .where(eq(gameConfig.configKey, "auction_fee_rate"))
+    .limit(1);
+  const rate = parseFloat(cfg?.configValue ?? "0.05");
+  return isNaN(rate) ? 0.05 : Math.min(Math.max(rate, 0), 1);
+}
 
 const MAX_LISTINGS_PER_PLAYER = 3;
 
@@ -236,21 +249,27 @@ export const auctionRouter = router({
 
       const now = Date.now();
 
+      // 計算手續費（從 game_config 讀取 auction_fee_rate）
+      const feeRate = await getAuctionFeeRate();
+      const feeAmount = Math.floor(listing.price * feeRate);
+      const sellerReceives = listing.price - feeAmount;
+
       // 扣除買家金幣
       await db.update(gameAgents)
         .set({ gold: (buyer.gold ?? 0) - listing.price })
         .where(eq(gameAgents.id, buyer.id));
 
-      // 增加賣家金幣
+      // 增加賣家金幣（扣除手續費後）
       const [seller] = await db.select({ id: gameAgents.id, gold: gameAgents.gold })
         .from(gameAgents)
         .where(eq(gameAgents.id, listing.sellerAgentId))
         .limit(1);
       if (seller) {
         await db.update(gameAgents)
-          .set({ gold: (seller.gold ?? 0) + listing.price })
+          .set({ gold: (seller.gold ?? 0) + sellerReceives })
           .where(eq(gameAgents.id, seller.id));
       }
+      // 手續費 feeAmount 入系統金庫（不分配給任何玩家，直接消耗）
 
       // 道具加入買家背包
       const [existing] = await db.select().from(agentInventory)
@@ -291,6 +310,9 @@ export const auctionRouter = router({
         success: true,
         itemName: listing.itemName,
         price: listing.price,
+        feeAmount,
+        sellerReceives,
+        feeRate,
         sellerName: listing.sellerName,
       };
     }),

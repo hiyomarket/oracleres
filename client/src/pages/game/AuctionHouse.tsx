@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ItemDetailModal from "@/components/ItemDetailModal";
 
 // ─── 稀有度顏色 ───
 const RARITY_COLORS: Record<string, { text: string; border: string; bg: string }> = {
@@ -159,6 +160,8 @@ export default function AuctionHouse() {
   const [listPrice, setListPrice] = useState("");
   const [buyingId, setBuyingId] = useState<number | null>(null);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const [detailItemId, setDetailItemId] = useState<string | null>(null);
+  const [detailItemMeta, setDetailItemMeta] = useState<{ name?: string; rarity?: string } | null>(null);
 
   const utils = trpc.useUtils();
 
@@ -178,7 +181,8 @@ export default function AuctionHouse() {
   // ─── Mutations ───
   const buyMutation = trpc.auction.buyListing.useMutation({
     onSuccess: (data) => {
-      toast.success(`✨ 購買成功！獲得「${data.itemName}」，花費 ${data.price} 金幣`);
+      const feeInfo = data.feeAmount > 0 ? `（賣家實得 ${data.sellerReceives.toLocaleString()} 金幣，手續費 ${data.feeAmount.toLocaleString()}）` : "";
+      toast.success(`✨ 購買成功！獲得「${data.itemName}」，花費 ${data.price.toLocaleString()} 金幣${feeInfo}`);
       setBuyingId(null);
       utils.auction.getListings.invalidate();
       utils.auction.getMyListings.invalidate();
@@ -344,16 +348,25 @@ export default function AuctionHouse() {
             ) : (
               <div className="flex flex-col gap-2">
                 {listings.map(l => (
-                  <ListingCard
-                    key={l.id}
-                    listing={l}
-                    isOwn={false}
-                    myGold={myGold}
-                    onBuy={handleBuy}
-                    onCancel={handleCancel}
-                    isBuying={buyingId === l.id}
-                    isCancelling={false}
-                  />
+                  <div key={l.id} className="relative">
+                    {/* 點擊道具名稱區域彈出詳細說明 */}
+                    <div
+                      className="absolute top-2 left-2 z-10 cursor-pointer"
+                      onClick={() => { setDetailItemId(l.itemId); setDetailItemMeta({ name: l.itemName, rarity: l.itemRarity }); }}
+                      title="點擊查看道具詳細"
+                    >
+                      <span className="text-[9px] px-1 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.08)", color: "#64748b" }}>ℹ</span>
+                    </div>
+                    <ListingCard
+                      listing={l}
+                      isOwn={false}
+                      myGold={myGold}
+                      onBuy={handleBuy}
+                      onCancel={handleCancel}
+                      isBuying={buyingId === l.id}
+                      isCancelling={false}
+                    />
+                  </div>
                 ))}
               </div>
             )}
@@ -441,6 +454,14 @@ export default function AuctionHouse() {
         </Tabs>
       </div>
 
+      {/* 道具詳細說明彈窗 */}
+      <ItemDetailModal
+        itemId={detailItemId}
+        itemName={detailItemMeta?.name}
+        rarity={detailItemMeta?.rarity}
+        onClose={() => { setDetailItemId(null); setDetailItemMeta(null); }}
+      />
+
       {/* 上架道具 Dialog */}
       <Dialog open={showListDialog} onOpenChange={setShowListDialog}>
         <DialogContent style={{ background: "#0d1426", border: "1px solid rgba(245,158,11,0.3)", color: "#e2e8f0" }}>
@@ -511,6 +532,12 @@ export default function AuctionHouse() {
                       style={{ background: "rgba(0,0,0,0.4)", borderColor: "rgba(245,158,11,0.3)", color: "#e2e8f0" }}
                     />
                   </div>
+                  {listPrice && !isNaN(parseInt(listPrice)) && parseInt(listPrice) > 0 && (
+                    <div className="mt-1.5 text-xs" style={{ color: "#94a3b8" }}>
+                      手續費 5%：<span style={{ color: "#ef4444" }}>-{Math.floor(parseInt(listPrice) * 0.05).toLocaleString()}</span> 金幣 ·
+                      實得：<span style={{ color: "#22c55e" }}>{(parseInt(listPrice) - Math.floor(parseInt(listPrice) * 0.05)).toLocaleString()}</span> 金幣
+                    </div>
+                  )}
                 </div>
               </>
             )}

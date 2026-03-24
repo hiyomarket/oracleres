@@ -1,0 +1,114 @@
+{
+  "query": "DESCRIBE game_config;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DESCRIBE game_config;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "config_key",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "config_value",
+      "Type": "text",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "value_type",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "number",
+      "Extra": ""
+    },
+    {
+      "Field": "label",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "category",
+      "Type": "varchar(50)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "system",
+      "Extra": ""
+    },
+    {
+      "Field": "min_value",
+      "Type": "float",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "max_value",
+      "Type": "float",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "updated_by",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "updated_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nconfig_key\tvarchar(100)\tNO\tUNI\tNULL\t\nconfig_value\ttext\tNO\t\tNULL\t\nvalue_type\tvarchar(20)\tNO\t\tnumber\t\nlabel\tvarchar(100)\tNO\t\tNULL\t\ndescription\ttext\tYES\t\tNULL\t\ncategory\tvarchar(50)\tNO\t\tsystem\t\nmin_value\tfloat\tYES\t\tNULL\t\nmax_value\tfloat\tYES\t\tNULL\t\nis_active\ttinyint\tNO\t\t1\t\nupdated_by\tvarchar(255)\tYES\t\tNULL\t\nupdated_at\tbigint\tNO\t\tNULL\t\ncreated_at\tbigint\tNO\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 1531
+}

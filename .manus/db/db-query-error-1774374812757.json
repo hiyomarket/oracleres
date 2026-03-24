@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO game_config (config_key, config_value, description, updated_at) VALUES ('auction_fee_rate', '0.05', '拍賣行手續費率（0.05 = 5%），成交時從賣家收益中扣除，入系統金庫', UNIX_TIMESTAMP() * 1000);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute INSERT INTO game_config (config_key, config_value, description, updated_at) VALUES ('auction_fee_rate', '0.05', '拍賣行手續費率（0.05 = 5%），成交時從賣家收益中扣除，入系統金庫', UNIX_TIMESTAMP() * 1000);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1364 (HY000) at line 1: Field 'label' doesn't have a default value"
+  ]
+}

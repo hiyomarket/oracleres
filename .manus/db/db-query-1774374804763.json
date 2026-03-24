@@ -1,0 +1,15 @@
+{
+  "query": "SELECT config_key, config_value, description FROM game_config WHERE config_key LIKE '%auction%' OR config_key LIKE '%fee%' OR config_key LIKE '%shop%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT config_key, config_value, description FROM game_config WHERE config_key LIKE '%auction%' OR config_key LIKE '%fee%' OR config_key LIKE '%shop%' LIMIT 10;",
+  "rows": [
+    {
+      "config_key": "hidden_shop_base_rate",
+      "config_value": "0.05",
+      "description": "洞察力為 0 時的密店發現基礎機率"
+    }
+  ],
+  "messages": [],
+  "stdout": "config_key\tconfig_value\tdescription\nhidden_shop_base_rate\t0.05\t洞察力為 0 時的密店發現基礎機率\n",
+  "stderr": "",
+  "execution_time_ms": 1653
+}

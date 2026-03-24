@@ -48,13 +48,13 @@ interface SkillCardProps {
     element: string;
     category: string;
     rarity: string;
-    tier: number;
+    tier: number | string;
     effectDesc: string;
     effectValue: number;
     mpCost: number;
     cooldown: number;
-    acquireMethod: string;
-    comboTags: string | null;
+    acquireMethod?: string;
+    comboTags?: string | null;
     fogged: boolean;
     displayName: string;
     displayDesc: string;
@@ -381,7 +381,7 @@ export default function SkillCatalogPage() {
                   <div>
                     <p className="text-gray-400 text-xs mb-1">Combo 標籤</p>
                     <div className="flex flex-wrap gap-1">
-                      {selectedSkillData.comboTags.split(",").map(tag => (
+                      {(selectedSkillData.comboTags as string).split(",").map(tag => (
                         <Badge key={tag} variant="outline" className="text-xs text-purple-300 border-purple-700">
                           #{tag.trim()}
                         </Badge>

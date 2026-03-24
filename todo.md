@@ -3938,3 +3938,15 @@
 - [x] 建立 GameTransition 組件（黑幕→符文光芒→淡入）
 - [x] 點擊靈虛入口時觸發過場動畫，動畫結束後導向 /game
 - [x] 過場效果：黑底→金色/紫色符文光抈紼放→白光閃爍→畫面淡入
+
+## V48 技能Bug修復 + 拍賣行強化 + 道具詳細說明 + 過場重做
+- [x] 診斷技能學習後技能欄未顯示的 Bug（gameSkillSystem.ts JOIN skillTemplates，但資料在 gameSkillCatalog）
+- [x] 修復技能學習邏輯：gameSkillSystem.ts 全面改用 gameSkillCatalog，getAgentSkills/getEquippedSkills/useSkillBook 統一使用正確表
+- [x] 拍賣行上架：前端已正確讀取玩家背包道具（trpc.gameWorld.getInventory）
+- [x] 後台 game_config 加入 auction_fee_rate（0.05 = 5%）
+- [x] 拍賣行後端 buyListing：讀取 auction_fee_rate，成交扣手續費入系統金庫
+- [x] 拍賣行前端：上架 Dialog 顯示手續費說明，購買時顯示手續費金額
+- [x] 道具詳細說明彈窗組件（ItemDetailModal）：含五行屬性/效果數值/使用說明/來源
+- [x] 背包道具卡片點擊觸發詳細說明彈窗（CharacterPanel 內整合）
+- [x] 拍賣行道具卡片加入 ℹ 按鈕，點擊彈出詳細說明
+- [x] 重做過場動畫：純黑幕淡入 → 全黑停留 → 純白閃爍 → 黑幕淡出（乾淨俐落，1.5 秒）

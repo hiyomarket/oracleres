@@ -1,0 +1,80 @@
+{
+  "query": "SELECT skill_id, name, wuxing, category, tier FROM game_skill_catalog WHERE wuxing = '土' ORDER BY skill_id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, wuxing, category, tier FROM game_skill_catalog WHERE wuxing = '土' ORDER BY skill_id LIMIT 10;",
+  "rows": [
+    {
+      "skill_id": "S_E001",
+      "name": "岩石投擲",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_E002",
+      "name": "大地護盾",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_E003",
+      "name": "地震術",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_E004",
+      "name": "磐石防禦",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_E005",
+      "name": "大地崩裂",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_E006",
+      "name": "天命·大地之怒",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_E007",
+      "name": "土之親和",
+      "wuxing": "土",
+      "category": "passive_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_E008",
+      "name": "鐵壁防禦",
+      "wuxing": "土",
+      "category": "passive_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_E009",
+      "name": "天命·土靈庇護",
+      "wuxing": "土",
+      "category": "passive_combat",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_E010",
+      "name": "尋土訣",
+      "wuxing": "土",
+      "category": "life_gather",
+      "tier": "初階"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\twuxing\tcategory\ttier\nS_E001\t岩石投擲\t土\tactive_combat\t初階\nS_E002\t大地護盾\t土\tactive_combat\t初階\nS_E003\t地震術\t土\tactive_combat\t中階\nS_E004\t磐石防禦\t土\tactive_combat\t中階\nS_E005\t大地崩裂\t土\tactive_combat\t高階\nS_E006\t天命·大地之怒\t土\tactive_combat\t天命\nS_E007\t土之親和\t土\tpassive_combat\t初階\nS_E008\t鐵壁防禦\t土\tpassive_combat\t中階\nS_E009\t天命·土靈庇護\t土\tpassive_combat\t天命\nS_E010\t尋土訣\t土\tlife_gather\t初階\n",
+  "stderr": "",
+  "execution_time_ms": 1560
+}

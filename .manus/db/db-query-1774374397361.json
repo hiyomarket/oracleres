@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, name, element, category FROM skill_templates ORDER BY element, id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, element, category FROM skill_templates ORDER BY element, id;",
+  "rows": [
+    {
+      "id": "S_Wd001",
+      "name": "木靈之擊",
+      "element": "wood",
+      "category": "active"
+    },
+    {
+      "id": "S_Wd002",
+      "name": "藤蔓纏繞",
+      "element": "wood",
+      "category": "active"
+    },
+    {
+      "id": "S_Wd003",
+      "name": "自然回復",
+      "element": "wood",
+      "category": "passive"
+    },
+    {
+      "id": "S_Wd004",
+      "name": "木盾護身",
+      "element": "wood",
+      "category": "passive"
+    },
+    {
+      "id": "S_Wd005",
+      "name": "森林之怒",
+      "element": "wood",
+      "category": "active"
+    },
+    {
+      "id": "S_Wd006",
+      "name": "採集加速",
+      "element": "wood",
+      "category": "life"
+    },
+    {
+      "id": "S_Wd007",
+      "name": "木工精通",
+      "element": "wood",
+      "category": "forge"
+    },
+    {
+      "id": "S_Wd008",
+      "name": "古木之魂",
+      "element": "wood",
+      "category": "active"
+    },
+    {
+      "id": "S_Wd009",
+      "name": "生命之源",
+      "element": "wood",
+      "category": "passive"
+    },
+    {
+      "id": "S_Wd010",
+      "name": "萬木共鳴",
+      "element": "wood",
+      "category": "active"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\telement\tcategory\nS_Wd001\t木靈之擊\twood\tactive\nS_Wd002\t藤蔓纏繞\twood\tactive\nS_Wd003\t自然回復\twood\tpassive\nS_Wd004\t木盾護身\twood\tpassive\nS_Wd005\t森林之怒\twood\tactive\nS_Wd006\t採集加速\twood\tlife\nS_Wd007\t木工精通\twood\tforge\nS_Wd008\t古木之魂\twood\tactive\nS_Wd009\t生命之源\twood\tpassive\nS_Wd010\t萬木共鳴\twood\tactive\n",
+  "stderr": "",
+  "execution_time_ms": 1566
+}

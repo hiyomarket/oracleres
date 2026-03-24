@@ -1,0 +1,49 @@
+{
+  "query": "SHOW TABLES LIKE 'game_skill%'; SELECT * FROM game_skill_catalog LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW TABLES LIKE 'game_skill%'; SELECT * FROM game_skill_catalog LIMIT 10;",
+  "rows": [
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "game_skill_catalog"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "game_skills"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "id\tskill_id\tname\twuxing\tcategory\ttier\tmp_cost\tdescription\tskill_type\tis_active\tcreated_at"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "1\tS_W001\t藤蔓束縛\t木\tactive_combat\t初階\t10\t召喚藤蔓纏繞單體敵方，使其無法行動 1 回合。\tdebuff\t1\t1774283685173"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "2\tS_W002\t孢子噴射\t木\tactive_combat\t初階\t8\t噴出孢子粉末，使敵方單體有 30% 機率混亂。\tdebuff\t1\t1774283685173"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "3\tS_W003\t自然之箭\t木\tactive_combat\t初階\t12\t發射由自然之力凝聚的箭矢，造成 120% 木屬性傷害。\tattack\t1\t1774283685173"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "4\tS_W004\t毒霧術\t木\tactive_combat\t初階\t15\t釋放毒霧，對全體敵方施加中毒狀態，每回合損失 5% HP。\tdebuff\t1\t1774283685173"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "5\tS_W005\t森林衝刺\t木\tactive_combat\t中階\t20\t借助森林之力衝向敵方，對單體造成 150% 傷害並有 20% 機率擊退。\tattack\t1\t1774283685173"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "6\tS_W006\t生命汲取\t木\tactive_combat\t中階\t25\t吸取敵方生命力，造成 120% 傷害並恢復等量 HP。\tattack\t1\t1774283685173"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "7\tS_W007\t荊棘護甲\t木\tactive_combat\t中階\t22\t為自身附加荊棘護甲，反彈 30% 受到的物理傷害，持續 3 回合。\tbuff\t1\t1774283685173"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "8\tS_W008\t古木打擊\t木\tactive_combat\t中階\t30\t召喚古木之力重擊敵方，造成 180% 傷害並有 25% 機率暈眩。\tattack\t1\t1774283685173"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "9\tS_W009\t自然恢復\t木\tactive_combat\t高階\t40\t借助自然之力恢復全體友方 25% 最大 HP，並解除中毒狀態。\theal\t1\t1774283685173"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)": "10\tS_W010\t世界樹庇護\t木\tactive_combat\t高階\t50\t召喚世界樹的庇護，全體友方獲得 30% 減傷效果，持續 3 回合。\tbuff\t1\t1774283685173"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_MLF7bLVZzzxdGTPVXTct3c (game_skill%)\ngame_skill_catalog\ngame_skills\nid\tskill_id\tname\twuxing\tcategory\ttier\tmp_cost\tdescription\tskill_type\tis_active\tcreated_at\n1\tS_W001\t藤蔓束縛\t木\tactive_combat\t初階\t10\t召喚藤蔓纏繞單體敵方，使其無法行動 1 回合。\tdebuff\t1\t1774283685173\n2\tS_W002\t孢子噴射\t木\tactive_combat\t初階\t8\t噴出孢子粉末，使敵方單體有 30% 機率混亂。\tdebuff\t1\t1774283685173\n3\tS_W003\t自然之箭\t木\tactive_combat\t初階\t12\t發射由自然之力凝聚的箭矢，造成 120% 木屬性傷害。\tattack\t1\t1774283685173\n4\tS_W004\t毒霧術\t木\tactive_combat\t初階\t15\t釋放毒霧，對全體敵方施加中毒狀態，每回合損失 5% HP。\tdebuff\t1\t1774283685173\n5\tS_W005\t森林衝刺\t木\tactive_combat\t中階\t20\t借助森林之力衝向敵方，對單體造成 150% 傷害並有 20% 機率擊退。\tattack\t1\t1774283685173\n6\tS_W006\t生命汲取\t木\tactive_combat\t中階\t25\t吸取敵方生命力，造成 120% 傷害並恢復等量 HP。\tattack\t1\t1774283685173\n7\tS_W007\t荊棘護甲\t木\tactive_combat\t中階\t22\t為自身附加荊棘護甲，反彈 30% 受到的物理傷害，持續 3 回合。\tbuff\t1\t1774283685173\n8\tS_W008\t古木打擊\t木\tactive_combat\t中階\t30\t召喚古木之力重擊敵方，造成 180% 傷害並有 25% 機率暈眩。\tattack\t1\t1774283685173\n9\tS_W009\t自然恢復\t木\tactive_combat\t高階\t40\t借助自然之力恢復全體友方 25% 最大 HP，並解除中毒狀態。\theal\t1\t1774283685173\n10\tS_W010\t世界樹庇護\t木\tactive_combat\t高階\t50\t召喚世界樹的庇護，全體友方獲得 30% 減傷效果，持續 3 回合。\tbuff\t1\t1774283685173\n",
+  "stderr": "",
+  "execution_time_ms": 1755
+}

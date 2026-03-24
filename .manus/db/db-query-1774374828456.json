@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO game_config (config_key, config_value, value_type, label, description, category, min_value, max_value, is_active, updated_at, created_at) VALUES ('auction_fee_rate', '0.05', 'number', '拍賣行手續費率', '成交時從賣家收益中扣除的手續費比例（0.05 = 5%），扣除金額入系統金庫', 'economy', 0.0, 0.5, 1, UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute INSERT INTO game_config (config_key, config_value, value_type, label, description, category, min_value, max_value, is_active, updated_at, created_at) VALUES ('auction_fee_rate', '0.05', 'number', '拍賣行手續費率', '成交時從賣家收益中扣除的手續費比例（0.05 = 5%），扣除金額入系統金庫', 'economy', 0.0, 0.5, 1, UNIX_TIMESTAMP() * 1000, UNIX_TIMESTAMP() * 1000);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1553
+}

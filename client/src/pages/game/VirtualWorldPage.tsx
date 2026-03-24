@@ -20,6 +20,7 @@ import { useGameWebSocket } from "@/hooks/useGameWebSocket";
 import { CombatWindow, useCombatWindowSettings } from "@/components/CombatWindow";
 import type { CombatWindowData } from "@/components/CombatWindow";
 import { GlobalChat } from "@/components/GlobalChat";
+import ItemDetailModal from "@/components/ItemDetailModal";
 
 /// ─── 經驗升級公式（和後端 tickEngine.ts 相同） ───
 function calcExpToNextFn(level: number): number {
@@ -639,6 +640,8 @@ function CharacterPanel({
     onError: (e) => toast.error("安裝失敗：" + e.message),
   });
   const [itemCategory, setItemCategory] = useState<"all" | "material" | "consumable" | "equipment" | "skill_book">("all");
+  const [detailItemId, setDetailItemId] = useState<string | null>(null);
+  const [detailItemMeta, setDetailItemMeta] = useState<{ name?: string; emoji?: string; rarity?: string } | null>(null);
   const [showEquipShop, setShowEquipShop] = useState(false);
   const [equipShopWuxing, setEquipShopWuxing] = useState("");
   const [equipShopSlot, setEquipShopSlot] = useState("");
@@ -679,6 +682,7 @@ function CharacterPanel({
   ];
 
   return (
+    <>
     <div className="flex flex-col overflow-hidden flex-1">
       {/* 旅人頭部：手機版底部抜屉模式下隱藏 */}
       {!mobileMode && (
@@ -924,8 +928,9 @@ function CharacterPanel({
                       item.itemType === "equipment" ? "裝備" :
                       item.itemType === "skill_book" ? "技能書" : "道具";
                     return (
-                      <div key={item.id} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border"
-                        style={{ background: `${rc}08`, borderColor: `${rc}25` }}>
+                      <div key={item.id} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border cursor-pointer active:scale-[0.98] transition-transform"
+                        style={{ background: `${rc}08`, borderColor: `${rc}25` }}
+                        onClick={() => { setDetailItemId(item.itemId); setDetailItemMeta({ name: item.itemName, emoji: item.emoji, rarity: item.rarity }); }}>
                         <span className="text-xl shrink-0">{item.emoji ?? "📦"}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
@@ -1556,6 +1561,15 @@ function CharacterPanel({
       }
       </div>
     </div>
+    {/* 道具詳細說明彈窗 */}
+    <ItemDetailModal
+      itemId={detailItemId}
+      itemName={detailItemMeta?.name}
+      emoji={detailItemMeta?.emoji}
+      rarity={detailItemMeta?.rarity}
+      onClose={() => { setDetailItemId(null); setDetailItemMeta(null); }}
+    />
+    </>
   );
 }
 
