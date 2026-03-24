@@ -509,6 +509,8 @@ type AgentData = {
   lastDivineHealDate?: string | null;
   lastDivineEyeDate?: string | null;
   lastDivineStaminaDate?: string | null;
+  // 行動模式
+  movementMode?: string | null;
 };
 
 function CharacterPanel({
@@ -1783,6 +1785,13 @@ export default function VirtualWorldPage() {
   const activeBroadcasts = (broadcastData ?? []).filter(
     (b: { id: number }) => !dismissedBroadcasts.has(b.id)
   );
+
+  // 世界狀態輪詢（隱藏節點發光）
+  const { data: worldState } = trpc.gameWorld.getWorldState.useQuery(undefined, {
+    refetchInterval: 30000,
+    staleTime: 25000,
+  });
+  const hiddenNodeIds = (worldState?.activeHiddenNodes ?? []) as string[];
   useEffect(() => {
     if (agentData?.needsNaming) setShowNaming(true);
   }, [agentData?.needsNaming]);
@@ -2282,6 +2291,7 @@ export default function VirtualWorldPage() {
                   ref={mapRef}
                   nodes={mapNodeList}
                   currentNodeId={currentNodeId}
+                  hiddenNodeIds={hiddenNodeIds}
                   onNodeClick={(nodeId) => {
                     // 點擊地圖節點：如果不是當前位置，顯示「前往此地」快捷傳送
                     if (nodeId !== currentNodeId) {
@@ -2606,6 +2616,22 @@ export default function VirtualWorldPage() {
                         </button>
                       ))}
                     </div>
+                    {/* 漫遊/定點切換 */}
+                    <div className="px-2 pb-2">
+                      <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+                        {(["roaming", "stationary"] as const).map(mode => (
+                          <button key={mode}
+                            onClick={() => setStrategy.mutate({ strategy: (agent?.strategy ?? "explore") as "explore" | "gather" | "rest" | "combat", movementMode: mode })}
+                            className="flex-1 py-1.5 text-[10px] font-bold transition-all"
+                            style={{
+                              background: (agent?.movementMode ?? "roaming") === mode ? `${ec}25` : "transparent",
+                              color: (agent?.movementMode ?? "roaming") === mode ? ec : "rgba(148,163,184,0.5)",
+                            }}>
+                            {mode === "roaming" ? "🚶 漫遊" : "📌 定點"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2717,6 +2743,23 @@ export default function VirtualWorldPage() {
                           <span className="text-xs">{s.label}</span>
                         </button>
                       ))}
+                    </div>
+                    {/* 漫遊/定點切換 */}
+                    <div className="px-2 pb-2">
+                      <p className="text-[10px] text-slate-500 mb-1 px-1">行動模式</p>
+                      <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+                        {(["roaming", "stationary"] as const).map(mode => (
+                          <button key={mode}
+                            onClick={() => setStrategy.mutate({ strategy: (agent?.strategy ?? "explore") as "explore" | "gather" | "rest" | "combat", movementMode: mode })}
+                            className="flex-1 py-2 text-xs font-bold transition-all"
+                            style={{
+                              background: (agent?.movementMode ?? "roaming") === mode ? `${ec}25` : "transparent",
+                              color: (agent?.movementMode ?? "roaming") === mode ? ec : "rgba(148,163,184,0.5)",
+                            }}>
+                            {mode === "roaming" ? "🚶 漫遊" : "📌 定點"}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}

@@ -10,6 +10,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { useMemo, useState } from "react";
+import { GlobalChat } from "@/components/GlobalChat";
 
 // ─── TASK-008 立繪 CDN URL ───────────────────────────────────
 const PLAYER_SPRITES: Record<string, string> = {
@@ -298,10 +299,15 @@ export default function GameLobby() {
         </div>
       </div>
 
-      {/* ── 玩家排行榜 ─────────────────────────────────────────── */}
+      {/* ── 全服聊天室 ───────────────────────────────────────────────────────── */}
+      <div className="max-w-screen-md mx-auto px-4 mb-6">
+        <GlobalChat />
+      </div>
+
+      {/* ── 玩家排行榜 ───────────────────────────────────────────────────────── */}
       <LeaderboardSection />
 
-      {/* ── 成就徽章牆 ──────────────────────────────────────────── */}
+      {/* ── 成就徽章牆 ──────────────────────────────────────────────────────── */}
       <AchievementWall userId={user?.id} />
     </div>
   );
@@ -427,6 +433,18 @@ const STATUS_LABEL: Record<string, string> = {
 
 function LeaderboardSection() {
   const [tab, setTab] = useState<"level" | "combat">("level");
+  const { user } = useAuth();
+  const utils = trpc.useUtils();
+  const challengePvp = trpc.gameWorld.challengePvp.useMutation({
+    onSuccess: (res) => {
+      const msg = res.result === "challenger_win" ? `⚔️挑戰勝利！出手了 ${res.goldReward} 金幣` : res.result === "defender_win" ? `🛡️挑戰失敗，對手 ${res.defenderName} 很強！` : `🤝平局，勢均力敵！`;
+      import("sonner").then(({ toast }) => toast.success(msg));
+      utils.gameWorld.getLeaderboard.invalidate();
+    },
+    onError: (err: { message: string }) => {
+      import("sonner").then(({ toast }) => toast.error(err.message));
+    },
+  });
   const { data, isLoading } = trpc.gameWorld.getLeaderboard.useQuery(undefined, {
     staleTime: 60000,
     refetchInterval: 120000,
@@ -499,6 +517,17 @@ function LeaderboardSection() {
                     <span className="text-sm font-bold shrink-0" style={{ color }}>
                       Lv.{r.level}
                     </span>
+                    {/* PvP 挑戰按鈕 */}
+                    {user && r.agentId && (
+                      <button
+                        onClick={() => challengePvp.mutate({ defenderAgentId: r.agentId! })}
+                        disabled={challengePvp.isPending}
+                        className="text-[10px] px-2 py-0.5 rounded border transition-colors shrink-0 hover:opacity-80"
+                        style={{ borderColor: `${color}40`, color, background: `${color}10` }}
+                      >
+                        ⚔️挑戰
+                      </button>
+                    )}
                   </div>
                 );
               })

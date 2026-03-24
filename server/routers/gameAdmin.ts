@@ -31,14 +31,24 @@ import {
   users,
   equipmentTemplates,
   gameBroadcast,
+  worldEvents,
 } from "../../drizzle/schema";
-import { sql, like, or, eq, desc } from "drizzle-orm";
+import { sql, like, or, eq, desc, lt } from "drizzle-orm";
 import {
   getEngineConfig,
   updateEngineConfig,
   resetEngineConfig,
 } from "../gameEngineConfig";
 import { restartTickEngine } from "../tickEngine";
+import {
+  processWorldTick,
+  getWorldEventConfig,
+  updateWorldEventConfig,
+  getWorldState,
+  isWorldTickRunning,
+  startWorldTickEngine,
+  stopWorldTickEngine,
+} from "../worldTickEngine";
 
 // Admin guard middleware
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -992,5 +1002,76 @@ export const gameAdminRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       await db.update(gameBroadcast).set({ isActive: 0 }).where(eq(gameBroadcast.id, input.id));
       return { success: true };
+    }),
+
+  // ─── 世界事件管理 API ───
+
+  /** 取得世界事件歷史 */
+  getWorldEvents: adminProcedure
+    .input(z.object({ limit: z.number().int().min(1).max(100).default(50) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const events = await db.select().from(worldEvents)
+        .orderBy(desc(worldEvents.createdAt))
+        .limit(input.limit);
+      return events;
+    }),
+
+  /** 取得世界事件配置（機率設定） */
+  getWorldEventConfig: adminProcedure
+    .query(() => {
+      return getWorldEventConfig();
+    }),
+
+  /** 更新世界事件配置 */
+  updateWorldEventConfig: adminProcedure
+    .input(z.object({
+      weatherChange:  z.object({ enabled: z.boolean(), probability: z.number().min(0).max(100) }).optional(),
+      globalBlessing: z.object({ enabled: z.boolean(), probability: z.number().min(0).max(100) }).optional(),
+      hiddenNpc:      z.object({ enabled: z.boolean(), probability: z.number().min(0).max(100) }).optional(),
+      hiddenQuest:    z.object({ enabled: z.boolean(), probability: z.number().min(0).max(100) }).optional(),
+      elementalSurge: z.object({ enabled: z.boolean(), probability: z.number().min(0).max(100) }).optional(),
+      meteorShower:   z.object({ enabled: z.boolean(), probability: z.number().min(0).max(100) }).optional(),
+      divineArrival:  z.object({ enabled: z.boolean(), probability: z.number().min(0).max(100) }).optional(),
+    }))
+    .mutation(({ input }) => {
+      updateWorldEventConfig(input);
+      return { success: true, config: getWorldEventConfig() };
+    }),
+
+  /** 手動觸發世界 Tick */
+  triggerWorldTick: adminProcedure
+    .mutation(async ({ ctx }) => {
+      const result = await processWorldTick(String(ctx.user.id));
+      return result;
+    }),
+
+  /** 取得世界狀態（當前天氣/祝福/隱藏節點等） */
+  getWorldState: adminProcedure
+    .query(() => {
+      return getWorldState();
+    }),
+
+  /** 世界 Tick 引擎狀態和控制 */
+  getWorldTickStatus: adminProcedure
+    .query(() => {
+      return {
+        isRunning: isWorldTickRunning(),
+        worldState: getWorldState(),
+        config: getWorldEventConfig(),
+      };
+    }),
+
+  /** 啟動/停止世界 Tick 引擎 */
+  toggleWorldTickEngine: adminProcedure
+    .input(z.object({ running: z.boolean() }))
+    .mutation(({ input }) => {
+      if (input.running) {
+        startWorldTickEngine();
+      } else {
+        stopWorldTickEngine();
+      }
+      return { success: true, isRunning: isWorldTickRunning() };
     }),
 });

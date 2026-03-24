@@ -915,7 +915,239 @@ function EngineControlTab() {
   );
 }
 
-// ─── 主頁面 ─────────────────────────────────────────────────────────────────────────────
+// ──// ─── 世界事件 Tab ────────────────────────────────────────────────────────────────────────────────────
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  weather_change:   "🌤️ 天氣變化",
+  global_blessing:  "✨ 全服祝福",
+  hidden_npc:       "👤 隱藏 NPC",
+  hidden_quest:     "📜 隱藏任務",
+  elemental_surge:  "⚡ 天災/祥瑞",
+  meteor_shower:    "🌠 流星雨",
+  divine_arrival:   "🌟 神明降臨",
+  ap_regen:         "🔵 靈力回復",
+  manual:           "🔧 手動觸發",
+};
+
+function WorldEventTab() {
+  const { data: worldStatus, refetch: refetchStatus } = trpc.gameAdmin.getWorldTickStatus.useQuery();
+  const { data: worldEvents, refetch: refetchEvents } = trpc.gameAdmin.getWorldEvents.useQuery({ limit: 30 });
+  const [editingConfig, setEditingConfig] = useState<Record<string, { enabled: boolean; probability: number }>>({});
+  const [hasConfigChanges, setHasConfigChanges] = useState(false);
+
+  const triggerWorldTick = trpc.gameAdmin.triggerWorldTick.useMutation({
+    onSuccess: (result) => {
+      toast.success(`✅ 世界 Tick 執行完成！${result.apRegen} 位旅人獲得 +1 AP，世界事件：${result.worldEventType ?? "無"} `);
+      refetchStatus();
+      refetchEvents();
+    },
+    onError: (err) => toast.error(`❌ 世界 Tick 失敗：${err.message}`),
+  });
+
+  const toggleEngine = trpc.gameAdmin.toggleWorldTickEngine.useMutation({
+    onSuccess: (r) => {
+      toast.success(r.isRunning ? "✅ 世界 Tick 引擎已啟動" : "⏸️ 世界 Tick 引擎已停止");
+      refetchStatus();
+    },
+  });
+
+  const updateConfig = trpc.gameAdmin.updateWorldEventConfig.useMutation({
+    onSuccess: () => {
+      toast.success("✅ 世界事件機率已更新");
+      setHasConfigChanges(false);
+      refetchStatus();
+    },
+  });
+
+  // 初始化編輯配置
+  const cfg = worldStatus?.config;
+  const editCfg = Object.keys(editingConfig).length > 0 ? editingConfig : (cfg ? {
+    weatherChange:   { enabled: cfg.weatherChange.enabled,   probability: cfg.weatherChange.probability },
+    globalBlessing:  { enabled: cfg.globalBlessing.enabled,  probability: cfg.globalBlessing.probability },
+    hiddenNpc:       { enabled: cfg.hiddenNpc.enabled,       probability: cfg.hiddenNpc.probability },
+    hiddenQuest:     { enabled: cfg.hiddenQuest.enabled,     probability: cfg.hiddenQuest.probability },
+    elementalSurge:  { enabled: cfg.elementalSurge.enabled,  probability: cfg.elementalSurge.probability },
+    meteorShower:    { enabled: cfg.meteorShower.enabled,    probability: cfg.meteorShower.probability },
+    divineArrival:   { enabled: cfg.divineArrival.enabled,   probability: cfg.divineArrival.probability },
+  } : {});
+
+  function handleProbChange(key: string, val: number) {
+    setEditingConfig(prev => ({ ...prev, [key]: { ...(editCfg[key] ?? { enabled: true, probability: 0 }), probability: val } }));
+    setHasConfigChanges(true);
+  }
+  function handleToggle(key: string, val: boolean) {
+    setEditingConfig(prev => ({ ...prev, [key]: { ...(editCfg[key] ?? { enabled: true, probability: 0 }), enabled: val } }));
+    setHasConfigChanges(true);
+  }
+
+  const ws = worldStatus?.worldState;
+  const totalProb = Object.values(editCfg).reduce((sum, v) => sum + (v.enabled ? v.probability : 0), 0);
+
+  const EVENT_CONFIG_LABELS: Record<string, string> = {
+    weatherChange:   "🌤️ 天氣變化",
+    globalBlessing:  "✨ 全服祝福",
+    hiddenNpc:       "👤 隱藏 NPC",
+    hiddenQuest:     "📜 隱藏任務",
+    elementalSurge:  "⚡ 天災/祥瑞",
+    meteorShower:    "🌠 流星雨",
+    divineArrival:   "🌟 神明降臨",
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* 世界狀態卡片 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>🌍 當前世界狀態</span>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => toggleEngine.mutate({ running: !worldStatus?.isRunning })}
+                disabled={toggleEngine.isPending}
+              >
+                {worldStatus?.isRunning ? "⏸️ 停止世界 Tick" : "▶️ 啟動世界 Tick"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => triggerWorldTick.mutate()}
+                disabled={triggerWorldTick.isPending}
+              >
+                {triggerWorldTick.isPending ? "執行中…" : "⚡ 手動觸發世界 Tick"}
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-muted/40 rounded-lg p-3">
+              <div className="text-xs text-muted-foreground">引擎狀態</div>
+              <div className={`font-bold mt-1 ${worldStatus?.isRunning ? "text-green-500" : "text-red-500"}`}>
+                {worldStatus?.isRunning ? "✅ 運行中" : "⏹️ 已停止"}
+              </div>
+            </div>
+            <div className="bg-muted/40 rounded-lg p-3">
+              <div className="text-xs text-muted-foreground">當前天氣</div>
+              <div className="font-bold mt-1">
+                {ws?.currentWeather === "wood" && "🌿 木"}
+                {ws?.currentWeather === "fire" && "🔥 火"}
+                {ws?.currentWeather === "earth" && "🏔️ 土"}
+                {ws?.currentWeather === "metal" && "✨ 金"}
+                {ws?.currentWeather === "water" && "💧 水"}
+              </div>
+            </div>
+            <div className="bg-muted/40 rounded-lg p-3">
+              <div className="text-xs text-muted-foreground">全服祝福</div>
+              <div className="font-bold mt-1 text-sm">
+                {ws?.activeBlessing
+                  ? `✨ ${ws.activeBlessing.type === "exp" ? "經驗" : ws.activeBlessing.type === "gold" ? "金幣" : "摀落"} x${ws.activeBlessing.multiplier / 100}`
+                  : "— 無"}
+              </div>
+            </div>
+            <div className="bg-muted/40 rounded-lg p-3">
+              <div className="text-xs text-muted-foreground">隱藏節點</div>
+              <div className="font-bold mt-1 text-sm">
+                {ws?.activeHiddenNodes?.length ? `${ws.activeHiddenNodes.length} 個活躍` : "— 無"}
+              </div>
+            </div>
+          </div>
+          {ws?.elementalSurge && (
+            <div className="mt-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-sm">
+              ⚡ 五行祥瑞：{ws.elementalSurge.element} {ws.elementalSurge.type === "boost" ? "大旺" : "衰弱"}
+            </div>
+          )}
+          {ws?.meteorActive && (
+            <div className="mt-3 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg text-sm">
+              🌠 流星雨活躍！所有旅人下次行動必觸奇遇
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 事件機率調整 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>🎲 隨機事件機率調整</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-muted-foreground mb-4">
+            每次世界 Tick 會從下方事件池隨機選擇一個事件觸發。總機率建議不超過 100％。
+            目前總機率：<span className={`font-bold ${totalProb > 100 ? "text-red-500" : "text-green-500"}`}>{totalProb}%</span>
+          </p>
+          <div className="space-y-3">
+            {Object.entries(EVENT_CONFIG_LABELS).map(([key, label]) => {
+              const val = editCfg[key] ?? { enabled: true, probability: 0 };
+              return (
+                <div key={key} className="flex items-center gap-3">
+                  <Switch
+                    checked={val.enabled}
+                    onCheckedChange={(v) => handleToggle(key, v)}
+                  />
+                  <span className="w-32 text-sm">{label}</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={50}
+                    value={val.probability}
+                    onChange={(e) => handleProbChange(key, Number(e.target.value))}
+                    disabled={!val.enabled}
+                    className="flex-1 accent-primary"
+                  />
+                  <span className="w-12 text-right text-sm font-mono">{val.probability}%</span>
+                </div>
+              );
+            })}
+          </div>
+          {hasConfigChanges && (
+            <Button
+              className="mt-4 w-full"
+              onClick={() => updateConfig.mutate(editCfg as Parameters<typeof updateConfig.mutate>[0])}
+              disabled={updateConfig.isPending}
+            >
+              {updateConfig.isPending ? "儲存中…" : "💾 儲存機率設定"}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 世界事件歷史 */}
+      <Card>
+        <CardHeader>
+          <CardTitle>📜 世界事件歷史</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {!worldEvents || worldEvents.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-8">尚無世界事件記錄</p>
+            ) : (
+              worldEvents.map((ev) => (
+                <div key={ev.id} className="flex gap-3 p-3 bg-muted/30 rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {EVENT_TYPE_LABELS[ev.eventType] ?? ev.eventType}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(ev.createdAt).toLocaleString("zh-TW")}
+                      </span>
+                      {ev.triggeredBy && (
+                        <Badge variant="secondary" className="text-xs">手動</Badge>
+                      )}
+                    </div>
+                    <div className="font-medium text-sm mt-1">{ev.title}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{ev.description}</div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ─── 主頁面 ────────────────────────────────────────────────────────────────────────────────────
 export default function AdminGameTheater() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -931,6 +1163,7 @@ export default function AdminGameTheater() {
           <TabsTrigger value="tick">⚡ Tick 引擎</TabsTrigger>
           <TabsTrigger value="broadcast">📢 全服廣播</TabsTrigger>
           <TabsTrigger value="engine">🌟 引擎調控</TabsTrigger>
+          <TabsTrigger value="world">🌍 世界事件</TabsTrigger>
         </TabsList>
 
         <TabsContent value="agents"><AgentManagementTab /></TabsContent>
@@ -938,6 +1171,7 @@ export default function AdminGameTheater() {
         <TabsContent value="tick"><TickEngineTab /></TabsContent>
         <TabsContent value="broadcast"><BroadcastTab /></TabsContent>
         <TabsContent value="engine"><EngineControlTab /></TabsContent>
+        <TabsContent value="world"><WorldEventTab /></TabsContent>
       </Tabs>
     </div>
   );

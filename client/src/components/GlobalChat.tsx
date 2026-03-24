@@ -1,0 +1,189 @@
+/**
+ * GlobalChat.tsx — 全服聊天室組件
+ * 輪詢架構，每 5 秒自動更新
+ */
+import { useState, useRef, useEffect } from "react";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Send, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { toast } from "sonner";
+
+// 五行顏色映射
+const ELEMENT_COLORS: Record<string, string> = {
+  wood: "text-green-400",
+  fire: "text-red-400",
+  earth: "text-yellow-500",
+  metal: "text-gray-300",
+  water: "text-blue-400",
+};
+
+const ELEMENT_BADGE: Record<string, string> = {
+  wood: "bg-green-900/60 text-green-300 border-green-700",
+  fire: "bg-red-900/60 text-red-300 border-red-700",
+  earth: "bg-yellow-900/60 text-yellow-300 border-yellow-700",
+  metal: "bg-gray-700/60 text-gray-200 border-gray-500",
+  water: "bg-blue-900/60 text-blue-300 border-blue-700",
+};
+
+const ELEMENT_LABELS: Record<string, string> = {
+  wood: "木", fire: "火", earth: "土", metal: "金", water: "水",
+};
+
+function formatTime(ts: number) {
+  return new Date(ts).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
+}
+
+interface GlobalChatProps {
+  collapsed?: boolean;
+}
+
+export function GlobalChat({ collapsed: initCollapsed = false }: GlobalChatProps) {
+  const { user } = useAuth();
+  const [collapsed, setCollapsed] = useState(initCollapsed);
+  const [input, setInput] = useState("");
+  const [lastSeenTs, setLastSeenTs] = useState<number>(Date.now() - 5 * 60 * 1000); // 最近5分鐘
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const utils = trpc.useUtils();
+
+  // 取得聊天訊息（輪詢）
+  const { data: messages = [] } = trpc.gameWorld.getChatMessages.useQuery(
+    { since: undefined },
+    {
+      refetchInterval: 5000,
+      staleTime: 3000,
+    }
+  );
+
+  // 自動滾到底部
+  useEffect(() => {
+    if (!collapsed && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, collapsed]);
+
+  // 發送訊息
+  const sendMsg = trpc.gameWorld.sendChatMessage.useMutation({
+    onSuccess: () => {
+      setInput("");
+      utils.gameWorld.getChatMessages.invalidate();
+    },
+    onError: (err) => {
+      toast.error(err.message || "發送失敗");
+    },
+  });
+
+  const handleSend = () => {
+    const content = input.trim();
+    if (!content) return;
+    if (content.length > 100) {
+      toast.error("訊息最多 100 字");
+      return;
+    }
+    sendMsg.mutate({ content });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  return (
+    <div className="flex flex-col bg-black/40 border border-white/10 rounded-xl overflow-hidden backdrop-blur-sm">
+      {/* 標題列 */}
+      <button
+        className="flex items-center justify-between px-4 py-2.5 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        <div className="flex items-center gap-2">
+          <MessageCircle className="w-4 h-4 text-amber-400" />
+          <span className="text-sm font-medium text-amber-300">全服聊天室</span>
+          <span className="text-xs text-white/40">{messages.length} 則</span>
+        </div>
+        {collapsed ? (
+          <ChevronDown className="w-4 h-4 text-white/40" />
+        ) : (
+          <ChevronUp className="w-4 h-4 text-white/40" />
+        )}
+      </button>
+
+      {/* 聊天內容 */}
+      {!collapsed && (
+        <>
+          <div
+            ref={scrollRef}
+            className="h-48 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10"
+          >
+            {messages.length === 0 ? (
+              <p className="text-center text-white/30 text-xs py-8">尚無訊息，成為第一個發言的旅人！</p>
+            ) : (
+              messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex items-start gap-2 text-xs ${
+                    msg.msgType === "system" || msg.msgType === "world_event"
+                      ? "bg-amber-900/20 border border-amber-700/30 rounded px-2 py-1"
+                      : ""
+                  }`}
+                >
+                  {msg.msgType === "normal" ? (
+                    <>
+                      <span className="text-white/30 shrink-0 mt-0.5">{formatTime(msg.createdAt)}</span>
+                      <span
+                        className={`shrink-0 font-medium ${ELEMENT_COLORS[msg.agentElement] ?? "text-white"}`}
+                      >
+                        {msg.agentName}
+                      </span>
+                      <span
+                        className={`shrink-0 text-[10px] px-1 py-0.5 rounded border ${ELEMENT_BADGE[msg.agentElement] ?? ""}`}
+                      >
+                        Lv.{msg.agentLevel} {ELEMENT_LABELS[msg.agentElement] ?? ""}
+                      </span>
+                      <span className="text-white/80 break-all">{msg.content}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-amber-400">🌐</span>
+                      <span className="text-amber-300 break-all">{msg.content}</span>
+                    </>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* 輸入列 */}
+          <div className="flex gap-2 px-3 py-2 border-t border-white/10">
+            {user ? (
+              <>
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="輸入訊息（最多100字）..."
+                  maxLength={100}
+                  className="flex-1 h-8 text-xs bg-white/5 border-white/20 text-white placeholder:text-white/30 focus:border-amber-500/50"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleSend}
+                  disabled={!input.trim() || sendMsg.isPending}
+                  className="h-8 w-8 p-0 bg-amber-600 hover:bg-amber-500 text-white shrink-0"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </Button>
+              </>
+            ) : (
+              <p className="text-xs text-white/30 py-1">請先登入才能發言</p>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

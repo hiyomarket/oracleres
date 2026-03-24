@@ -7,7 +7,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users, equipmentTemplates, agentDropCounters, gameBroadcast } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { eq, and, desc, gt, sql, count } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
@@ -296,14 +296,18 @@ export const gameWorldRouter = router({
   setStrategy: protectedProcedure
     .input(z.object({
       strategy: z.enum(["explore", "gather", "rest", "combat"]),
+      movementMode: z.enum(["roaming", "stationary"]).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
 
+      const updateData: Record<string, unknown> = { strategy: input.strategy, updatedAt: Date.now() };
+      if (input.movementMode) updateData.movementMode = input.movementMode;
+
       await db
         .update(gameAgents)
-        .set({ strategy: input.strategy, updatedAt: Date.now() })
+        .set(updateData)
         .where(eq(gameAgents.userId, String(ctx.user.id)));
 
       return { success: true };
@@ -455,11 +459,108 @@ export const gameWorldRouter = router({
   }),
 
   // ─── 取得全服世界狀態 ───
-  getWorldStatus: publicProcedure.query(async () => {
+  // ─── PvP 挑戰 ───
+  challengePvp: protectedProcedure
+    .input(z.object({ defenderAgentId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // 取得挑戰者角色
+      const challengerRows = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const challenger = challengerRows[0];
+      if (!challenger) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      if (!challenger.isNamed) throw new TRPCError({ code: "BAD_REQUEST", message: "請先命名角色" });
+
+      // 取得被挑戰者角色
+      const defenderRows = await db.select().from(gameAgents)
+        .where(eq(gameAgents.id, input.defenderAgentId)).limit(1);
+      const defender = defenderRows[0];
+      if (!defender) throw new TRPCError({ code: "NOT_FOUND", message: "對手角色不存在" });
+      if (challenger.id === defender.id) throw new TRPCError({ code: "BAD_REQUEST", message: "不能挑戰自己" });
+
+      // 簡易戰鬥計算：依據攻防速度計算輸贏
+      const cAtk = challenger.attack + Math.floor(challenger.level * 2);
+      const cDef = challenger.defense;
+      const cHp = challenger.maxHp;
+      const cSpd = challenger.speed;
+
+      const dAtk = defender.attack + Math.floor(defender.level * 2);
+      const dDef = defender.defense;
+      const dHp = defender.maxHp;
+      const dSpd = defender.speed;
+
+      // 模擬 5 回合戰鬥
+      let cHpCur = cHp, dHpCur = dHp;
+      const battleLog: string[] = [];
+      for (let round = 1; round <= 5; round++) {
+        // 挑戰者攻擊
+        const cDmg = Math.max(1, cAtk - Math.floor(dDef * 0.5) + Math.floor(Math.random() * 5));
+        dHpCur -= cDmg;
+        battleLog.push(`第${round}回合：${challenger.agentName ?? "旅人"} 攻擊 ${cDmg} 點`);
+        if (dHpCur <= 0) { battleLog.push(`${defender.agentName ?? "旅人"} 戰敗！`); break; }
+
+        // 被挑戰者攻擊（速度高者先攻）
+        if (dSpd >= cSpd) {
+          const dDmg = Math.max(1, dAtk - Math.floor(cDef * 0.5) + Math.floor(Math.random() * 5));
+          cHpCur -= dDmg;
+          battleLog.push(`${defender.agentName ?? "旅人"} 反擊 ${dDmg} 點`);
+          if (cHpCur <= 0) { battleLog.push(`${challenger.agentName ?? "旅人"} 戰敗！`); break; }
+        }
+      }
+
+      // 判定輸贏
+      let result: "challenger_win" | "defender_win" | "draw";
+      if (cHpCur > dHpCur) result = "challenger_win";
+      else if (dHpCur > cHpCur) result = "defender_win";
+      else result = "draw";
+
+      // 勝者經驗奖勵
+      const goldReward = result === "challenger_win" ? Math.floor(50 + defender.level * 10) : 10;
+      if (result === "challenger_win") {
+        await db.update(gameAgents)
+          .set({ gold: challenger.gold + goldReward, exp: challenger.exp + Math.floor(defender.level * 5), updatedAt: Date.now() })
+          .where(eq(gameAgents.id, challenger.id));
+      }
+
+      // 儲存戰鬥記錄
+      await db.insert(pvpChallenges).values({
+        challengerAgentId: challenger.id,
+        challengerName: challenger.agentName ?? "旅人",
+        defenderAgentId: defender.id,
+        defenderName: defender.agentName ?? "旅人",
+        result,
+        battleLog,
+        goldReward,
+        createdAt: Date.now(),
+      });
+
+      return {
+        result,
+        battleLog,
+        goldReward,
+        challengerName: challenger.agentName ?? "旅人",
+        defenderName: defender.agentName ?? "旅人",
+      };
+    }),
+
+  // ─── 取得 PvP 戰鬥歷史 ───
+  getPvpHistory: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
-    if (!db) return null;
-    const worlds = await db.select().from(gameWorld).limit(1);
-    return worlds[0] ?? null;
+    if (!db) return [];
+
+    const agentRows = await db.select({ id: gameAgents.id })
+      .from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    if (!agentRows[0]) return [];
+    const agentId = agentRows[0].id;
+
+    const history = await db.select().from(pvpChallenges)
+      .where(sql`${pvpChallenges.challengerAgentId} = ${agentId} OR ${pvpChallenges.defenderAgentId} = ${agentId}`)
+      .orderBy(desc(pvpChallenges.createdAt))
+      .limit(20);
+
+    return history;
   }),
 
   // ─── 手動觸發 Tick（測試用） ───
@@ -1334,6 +1435,7 @@ export const gameWorldRouter = router({
     // 等級排行：前 20 名（依等級降序，同等級依 exp 降序）
     const levelRankRaw = await db
       .select({
+        id: gameAgents.id,
         agentName: gameAgents.agentName,
         level: gameAgents.level,
         exp: gameAgents.exp,
@@ -1383,6 +1485,7 @@ export const gameWorldRouter = router({
 
     return {
       levelRank: levelRankRaw.map(r => ({
+        agentId: r.id,
         agentName: r.agentName ?? "旅人",
         level: r.level,
         exp: r.exp,
@@ -1407,4 +1510,66 @@ export const gameWorldRouter = router({
     // 過濾已過期的
     return rows.filter(r => !r.expiresAt || r.expiresAt > now);
   }),
+
+  // ─── 世界狀態（前端輪詢，用於顯示隱藏節點發光） ───
+  getWorldState: publicProcedure.query(() => {
+    // 從 worldTickEngine 的記憶體狀態取得
+    const { getWorldState } = require("../worldTickEngine");
+    return getWorldState() as {
+      currentWeather: string;
+      activeBlessing: { type: string; multiplier: number } | null;
+      activeHiddenNodes: string[];
+      elementalSurge: { element: string; type: string } | null;
+      meteorActive: boolean;
+      lastTickAt: number;
+    };
+  }),
+
+  // ─── 全服聊天室 ───
+  getChatMessages: publicProcedure
+    .input(z.object({ since: z.number().optional() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db.select().from(chatMessages)
+        .where(input.since ? gt(chatMessages.createdAt, input.since) : undefined)
+        .orderBy(desc(chatMessages.createdAt))
+        .limit(50);
+      return rows.reverse(); // 最舊在上、最新在下
+    }),
+
+  sendChatMessage: protectedProcedure
+    .input(z.object({ content: z.string().min(1).max(100) }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      // 取得玩家角色
+      const agentRows = await db.select({
+        id: gameAgents.id,
+        agentName: gameAgents.agentName,
+        dominantElement: gameAgents.dominantElement,
+        level: gameAgents.level,
+        isNamed: gameAgents.isNamed,
+      }).from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agentRows[0] || !agentRows[0].isNamed) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "需要先命名角色才能發言" });
+      }
+      const agent = agentRows[0];
+      // 防刷送：同一玩家 10 秒內最多發送 3 条
+      const recentCount = await db.select({ c: count(chatMessages.id) }).from(chatMessages)
+        .where(and(eq(chatMessages.agentId, agent.id), gt(chatMessages.createdAt, Date.now() - 10000)));
+      if ((recentCount[0]?.c ?? 0) >= 3) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "發言太頻繁，請稍候再試" });
+      }
+      await db.insert(chatMessages).values({
+        agentId: agent.id,
+        agentName: agent.agentName ?? "旅人",
+        agentElement: agent.dominantElement ?? "wood",
+        agentLevel: agent.level,
+        content: input.content.trim(),
+        msgType: "normal",
+        createdAt: Date.now(),
+      });
+      return { ok: true };
+    }),
 });

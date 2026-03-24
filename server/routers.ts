@@ -25,6 +25,7 @@ import { gameAdminRouter } from './routers/gameAdmin';
 import { gameAchievementRouter } from './routers/gameAchievement';
 import { gameWorldRouter } from './routers/gameWorld';
 import { startTickEngine } from './tickEngine';
+import { startWorldTickEngine } from './worldTickEngine';
 
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
@@ -3535,3 +3536,5 @@ export { accountRouter };
 
 // 啟動虛相世界 Tick 引擎
 startTickEngine();
+// 啟動世界 Tick 引擎（每 30 分鐘）
+startWorldTickEngine();

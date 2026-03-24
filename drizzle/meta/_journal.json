@@ -519,6 +519,13 @@
       "when": 1774311935439,
       "tag": "0073_cool_sasquatch",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "5",
+      "when": 1774321314512,
+      "tag": "0074_sleepy_master_chief",
+      "breakpoints": true
     }
   ]
 }

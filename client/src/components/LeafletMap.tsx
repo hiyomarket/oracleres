@@ -273,9 +273,11 @@ interface LeafletMapProps {
   nodes: MapNode[];
   currentNodeId: string;
   onNodeClick?: (nodeId: string) => void;
+  /** 隱藏節點 ID 列表（體力足夠的玩家可看到發光） */
+  hiddenNodeIds?: string[];
 }
 
-const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function LeafletMap({ nodes, currentNodeId, onNodeClick }, ref) {
+const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function LeafletMap({ nodes, currentNodeId, onNodeClick, hiddenNodeIds = [] }, ref) {
   const mapRef = useRef<ReturnType<typeof import("leaflet")["map"]> | null>(null);
   const markersRef = useRef<Map<string, ReturnType<typeof import("leaflet")["marker"]>>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -324,6 +326,7 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
         if (!coords) return;
 
         const isCurrent = node.id === currentNodeId;
+        const isHidden = hiddenNodeIds.includes(node.id);
         const color = WX_COLOR[node.element] ?? "#888";
         const terrainIcon = TERRAIN_ICON[node.terrain] ?? "📍";
 
@@ -331,7 +334,7 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
         const svgIcon = L.divIcon({
           className: "",
           html: `
-            <div style="position:relative;width:${isCurrent ? 28 : 18}px;height:${isCurrent ? 28 : 18}px;">
+            <div style="position:relative;width:${isCurrent ? 28 : isHidden ? 22 : 18}px;height:${isCurrent ? 28 : isHidden ? 22 : 18}px;">
               ${isCurrent ? `
                 <div style="
                   position:absolute;inset:-8px;
@@ -347,20 +350,34 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
                   opacity:0.7;
                 "></div>
               ` : ""}
+              ${isHidden && !isCurrent ? `
+                <div style="
+                  position:absolute;inset:-10px;
+                  border-radius:50%;
+                  background:radial-gradient(circle, rgba(255,215,0,0.35) 0%, transparent 70%);
+                  animation:pulse 2s ease-in-out infinite;
+                "></div>
+                <div style="
+                  position:absolute;inset:-5px;
+                  border-radius:50%;
+                  border:1.5px solid rgba(255,215,0,0.7);
+                  animation:pulse 1.5s ease-in-out infinite;
+                "></div>
+              ` : ""}
               <div style="
                 width:100%;height:100%;
                 border-radius:50%;
-                background:${isCurrent ? color : color + "99"};
-                border:${isCurrent ? "2.5px solid #fff" : "1.5px solid " + color + "cc"};
-                box-shadow:0 0 ${isCurrent ? "12px 4px" : "6px 2px"} ${color}88;
+                background:${isCurrent ? color : isHidden ? "rgba(255,215,0,0.85)" : color + "99"};
+                border:${isCurrent ? "2.5px solid #fff" : isHidden ? "2px solid gold" : "1.5px solid " + color + "cc"};
+                box-shadow:0 0 ${isCurrent ? "12px 4px" : isHidden ? "16px 6px rgba(255,215,0,0.8)" : "6px 2px"} ${isCurrent ? color + "88" : isHidden ? "rgba(255,215,0,0.6)" : color + "88"};
                 display:flex;align-items:center;justify-content:center;
-                font-size:${isCurrent ? "11px" : "8px"};
+                font-size:${isCurrent ? "11px" : isHidden ? "10px" : "8px"};
                 cursor:pointer;
-              ">${isCurrent ? "★" : ""}</div>
+              ">${isCurrent ? "★" : isHidden ? "✨" : ""}</div>
             </div>
           `,
-          iconSize: [isCurrent ? 28 : 18, isCurrent ? 28 : 18],
-          iconAnchor: [isCurrent ? 14 : 9, isCurrent ? 14 : 9],
+          iconSize: [isCurrent ? 28 : isHidden ? 22 : 18, isCurrent ? 28 : isHidden ? 22 : 18],
+          iconAnchor: [isCurrent ? 14 : isHidden ? 11 : 9, isCurrent ? 14 : isHidden ? 11 : 9],
         });
 
         const marker = L.marker(coords, { icon: svgIcon });
@@ -480,27 +497,32 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
         const node = nodes.find(n => n.id === nodeId);
         if (!node) return;
         const isCurrent = nodeId === currentNodeId;
+        const isHiddenNode = hiddenNodeIds.includes(nodeId);
         const color = WX_COLOR[node.element] ?? "#888";
         const svgIcon = L.divIcon({
           className: "",
           html: `
-            <div style="position:relative;width:${isCurrent ? 28 : 18}px;height:${isCurrent ? 28 : 18}px;">
+            <div style="position:relative;width:${isCurrent ? 28 : isHiddenNode ? 22 : 18}px;height:${isCurrent ? 28 : isHiddenNode ? 22 : 18}px;">
               ${isCurrent ? `
                 <div style="position:absolute;inset:-8px;border-radius:50%;border:2px solid ${color};animation:pulse 1.5s ease-in-out infinite;opacity:0.5;"></div>
                 <div style="position:absolute;inset:-4px;border-radius:50%;border:1.5px solid ${color};opacity:0.7;"></div>
               ` : ""}
+              ${isHiddenNode && !isCurrent ? `
+                <div style="position:absolute;inset:-10px;border-radius:50%;background:radial-gradient(circle, rgba(255,215,0,0.35) 0%, transparent 70%);animation:pulse 2s ease-in-out infinite;"></div>
+                <div style="position:absolute;inset:-5px;border-radius:50%;border:1.5px solid rgba(255,215,0,0.7);animation:pulse 1.5s ease-in-out infinite;"></div>
+              ` : ""}
               <div style="
                 width:100%;height:100%;border-radius:50%;
-                background:${isCurrent ? color : color + "99"};
-                border:${isCurrent ? "2.5px solid #fff" : "1.5px solid " + color + "cc"};
-                box-shadow:0 0 ${isCurrent ? "12px 4px" : "6px 2px"} ${color}88;
+                background:${isCurrent ? color : isHiddenNode ? "rgba(255,215,0,0.85)" : color + "99"};
+                border:${isCurrent ? "2.5px solid #fff" : isHiddenNode ? "2px solid gold" : "1.5px solid " + color + "cc"};
+                box-shadow:0 0 ${isCurrent ? "12px 4px" : isHiddenNode ? "16px 6px rgba(255,215,0,0.8)" : "6px 2px"} ${isCurrent ? color + "88" : isHiddenNode ? "rgba(255,215,0,0.6)" : color + "88"};
                 display:flex;align-items:center;justify-content:center;
-                font-size:${isCurrent ? "11px" : "8px"};cursor:pointer;
-              ">${isCurrent ? "★" : ""}</div>
+                font-size:${isCurrent ? "11px" : isHiddenNode ? "10px" : "8px"};cursor:pointer;
+              ">${isCurrent ? "★" : isHiddenNode ? "✨" : ""}</div>
             </div>
           `,
-          iconSize: [isCurrent ? 28 : 18, isCurrent ? 28 : 18],
-          iconAnchor: [isCurrent ? 14 : 9, isCurrent ? 14 : 9],
+          iconSize: [isCurrent ? 28 : isHiddenNode ? 22 : 18, isCurrent ? 28 : isHiddenNode ? 22 : 18],
+          iconAnchor: [isCurrent ? 14 : isHiddenNode ? 11 : 9, isCurrent ? 14 : isHiddenNode ? 11 : 9],
         });
         marker.setIcon(svgIcon);
       });

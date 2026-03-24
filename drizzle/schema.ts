@@ -1664,6 +1664,8 @@ export const gameAgents = mysqlTable("game_agents", {
   currentNodeId: varchar("current_node_id", { length: 50 }).notNull().default("taipei_main"),
   targetNodeId: varchar("target_node_id", { length: 50 }),
   strategy: mysqlEnum("strategy", ["explore", "gather", "rest", "combat"]).notNull().default("explore"),
+  /** 移動模式：roaming 漫遊（隨機移動探索世界）/ stationary 定點（固定在當前節點行動） */
+  movementMode: mysqlEnum("movement_mode", ["roaming", "stationary"]).notNull().default("roaming"),
   /** 當前狀態 */
   status: mysqlEnum("status", ["idle", "moving", "resting", "combat", "dead"]).notNull().default("idle"),
   /** 命格主屬性（五行） */
@@ -2267,3 +2269,109 @@ export const gameBroadcast = mysqlTable("game_broadcast", {
 });
 export type GameBroadcast = typeof gameBroadcast.$inferSelect;
 export type InsertGameBroadcast = typeof gameBroadcast.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 世界事件表：記錄每次世界 Tick 觸發的全域事件
+// ─────────────────────────────────────────────
+export const worldEvents = mysqlTable("world_events", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 事件類型 */
+  eventType: mysqlEnum("event_type", [
+    "weather_change",   // 天氣/五行變化
+    "global_blessing",  // 全服祝福
+    "hidden_npc",       // 隱藏 NPC 出現
+    "hidden_quest",     // 隱藏任務刷新
+    "elemental_surge",  // 天災/祥瑞（五行節點強化/弱化）
+    "meteor_shower",    // 流星雨（全服必觸奇遇）
+    "divine_arrival",   // 神明降臨（隨機玩家獲祝福）
+    "ap_regen",         // 固定靈力回復
+    "manual",           // 管理員手動觸發
+  ]).notNull(),
+  /** 事件標題 */
+  title: varchar("title", { length: 100 }).notNull(),
+  /** 事件描述 */
+  description: text("description").notNull(),
+  /** 事件影響的節點 ID（若有） */
+  affectedNodeId: varchar("affected_node_id", { length: 50 }),
+  /** 事件影響的五行 */
+  affectedElement: varchar("affected_element", { length: 10 }),
+  /** 事件持續到（timestamp，null 表示立即結束） */
+  expiresAt: bigint("expires_at", { mode: "number" }),
+  /** 是否為流星雨（全服下次 Tick 必觸奇遇） */
+  meteorActive: tinyint("meteor_active").notNull().default(0),
+  /** 全服祝福類型（exp/gold/drop） */
+  blessingType: varchar("blessing_type", { length: 20 }),
+  /** 全服祝福倍率 */
+  blessingMultiplier: int("blessing_multiplier").notNull().default(150),
+  /** 觸發者（管理員 userId，自動觸發為 null） */
+  triggeredBy: varchar("triggered_by", { length: 255 }),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type WorldEvent = typeof worldEvents.$inferSelect;
+export type InsertWorldEvent = typeof worldEvents.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 全服聊天室訊息表
+// ─────────────────────────────────────────────
+export const chatMessages = mysqlTable("chat_messages", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 發送者 agentId */
+  agentId: int("agent_id").notNull(),
+  /** 發送者名稱（快取，避免 JOIN） */
+  agentName: varchar("agent_name", { length: 50 }).notNull(),
+  /** 發送者五行（顯示顏色用） */
+  agentElement: varchar("agent_element", { length: 10 }).notNull().default("wood"),
+  /** 發送者等級 */
+  agentLevel: int("agent_level").notNull().default(1),
+  /** 訊息內容（最多100字） */
+  content: varchar("content", { length: 100 }).notNull(),
+  /** 訊息類型（一般/系統/世界事件） */
+  msgType: mysqlEnum("msg_type", ["normal", "system", "world_event"]).notNull().default("normal"),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 週冠軍成就表
+// ─────────────────────────────────────────────
+export const weeklyChampions = mysqlTable("weekly_champions", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 週次（格式：YYYY-WW） */
+  weekKey: varchar("week_key", { length: 10 }).notNull(),
+  /** 冠軍類型 */
+  championType: mysqlEnum("champion_type", ["level", "combat"]).notNull(),
+  /** 獲獎 agentId */
+  agentId: int("agent_id").notNull(),
+  /** 獲獎旅人名稱 */
+  agentName: varchar("agent_name", { length: 50 }).notNull(),
+  /** 獲獎數值（等級數 or 戰鬥場次） */
+  score: int("score").notNull().default(0),
+  /** 是否已頒發徽章 */
+  badgeGranted: tinyint("badge_granted").notNull().default(0),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type WeeklyChampion = typeof weeklyChampions.$inferSelect;
+
+// ─────────────────────────────────────────────
+// PvP 挑戰記錄表
+// ─────────────────────────────────────────────
+export const pvpChallenges = mysqlTable("pvp_challenges", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 挑戰者 agentId */
+  challengerAgentId: int("challenger_agent_id").notNull(),
+  /** 挑戰者名稱 */
+  challengerName: varchar("challenger_name", { length: 50 }).notNull(),
+  /** 被挑戰者 agentId */
+  defenderAgentId: int("defender_agent_id").notNull(),
+  /** 被挑戰者名稱 */
+  defenderName: varchar("defender_name", { length: 50 }).notNull(),
+  /** 結果（challenger_win / defender_win / draw） */
+  result: mysqlEnum("result", ["challenger_win", "defender_win", "draw"]).notNull(),
+  /** 戰鬥詳情 JSON */
+  battleLog: json("battle_log"),
+  /** 挑戰者獲得的金幣獎勵 */
+  goldReward: int("gold_reward").notNull().default(0),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type PvpChallenge = typeof pvpChallenges.$inferSelect;

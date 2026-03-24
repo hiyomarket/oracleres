@@ -598,41 +598,76 @@ async function processAgentTick(
     }
   }
 
-  // 休息狀態
+  // 休息狀態：回復 HP/MP
   if (agent.status === "resting") {
     const hpRestore = Math.floor(agent.maxHp * 0.15);
     const mpRestore = Math.floor(agent.maxMp * 0.15);
     const newHp = Math.min(agent.maxHp, agent.hp + hpRestore);
     const newMp = Math.min(agent.maxMp, agent.mp + mpRestore);
+    const isFullyHealed = newHp >= agent.maxHp * 0.95;
+
+    // HP 補滿後的狀態轉換邏輯
+    let nextStrategy = agent.strategy;
+    let nextMovementMode = agent.movementMode ?? "roaming";
+    let nextStatus: "idle" | "moving" | "resting" | "combat" | "dead" = "idle";
+
+    if (isFullyHealed) {
+      if (agent.strategy === "rest") {
+        // 玩家選擇休息策略：補滿後自動切換到探索 + 漫遊
+        nextStrategy = "explore";
+        nextMovementMode = "roaming";
+      } else if (agent.strategy === "combat") {
+        // 戰鬥策略：補滿後回到戰鬥狀態
+        nextStatus = "idle";
+      }
+    } else {
+      nextStatus = "resting"; // 還沒補滿，繼續休息
+    }
+
     await db.update(gameAgents).set({
       hp: newHp,
       mp: newMp,
-      status: "idle",
+      status: nextStatus,
+      strategy: nextStrategy,
+      movementMode: nextMovementMode,
       updatedAt: Date.now(),
     }).where(eq(gameAgents.id, agent.id));
+
     const msg = formatMessage(pickRandom(EVENT_MESSAGES.rest), {
       name: agent.agentName ?? "旅人",
       node: MAP_NODE_MAP.get(agent.currentNodeId)?.name ?? "此地",
       hp: hpRestore,
       mp: mpRestore,
     });
-    await createEvent(agent.id, "rest", msg, {}, agent.currentNodeId);
+    await createEvent(agent.id, "rest", msg, { fullyHealed: isFullyHealed }, agent.currentNodeId);
     return { events: 1, levelUps: [], legendaryDrops: [] };
   }
 
-  // HP 過低：強制休息
+  // HP 過低：強制休息（<20% maxHp）
   if (agent.hp < agent.maxHp * 0.2) {
-    await db.update(gameAgents).set({ status: "resting" }).where(eq(gameAgents.id, agent.id));
-    return EMPTY;
+    await db.update(gameAgents).set({
+      status: "resting",
+      updatedAt: Date.now(),
+    }).where(eq(gameAgents.id, agent.id));
+    const warnMsg = `「${agent.agentName ?? "旅人"}」身身受重傷，被迫休息回復體力…`;
+    await createEvent(agent.id, "rest", warnMsg, { forced: true }, agent.currentNodeId);
+    return { events: 1, levelUps: [], legendaryDrops: [] };
   }
 
   // 根據策略決定行動
   const currentNode: MapNode | undefined = MAP_NODE_MAP.get(agent.currentNodeId);
   if (!currentNode) return EMPTY;
 
-  // 消耗體力値
+  // 體力檢查：每次行動消耗 5 點體力
+  const STAMINA_COST = 5;
+  if (agent.stamina < STAMINA_COST) {
+    // 體力不足，跳過行動（等待自然回復）
+    return EMPTY;
+  }
+
+  // 消耗 5 點體力
   await db.update(gameAgents).set({
-    stamina: Math.max(0, agent.stamina - 1),
+    stamina: Math.max(0, agent.stamina - STAMINA_COST),
     staminaLastRegen: agent.staminaLastRegen ?? Date.now(),
   }).where(eq(gameAgents.id, agent.id));
 
@@ -643,6 +678,8 @@ async function processAgentTick(
 
   // 從全域引擎配置取得動態機率
   const chances = getEventChances();
+  const strategy = agent.strategy;
+  const movementMode = agent.movementMode ?? "roaming";
 
   // Roguelike 奇遇（動態機率）
   if (roll < chances.rogue) {
@@ -650,34 +687,85 @@ async function processAgentTick(
     return { events: eventsCreated, levelUps: tickLevelUps, legendaryDrops: tickLegendaryDrops };
   }
 
-  const strategy = agent.strategy;
   const combatThreshold = chances.rogue + chances.combat;
   const gatherThreshold = combatThreshold + chances.gather;
 
-  if (strategy === "explore" || strategy === "combat") {
-    if (roll < combatThreshold) {
-      const combatResult = await processCombatEvent(agent, currentNode, tick, dailyElement);
-      eventsCreated += combatResult.events;
-      tickLevelUps.push(...combatResult.levelUps);
-      tickLegendaryDrops.push(...combatResult.legendaryDrops);
-    } else if (roll < gatherThreshold) {
-      eventsCreated += await processGatherEvent(agent, currentNode, tick);
-    } else if (strategy === "explore") {
-      eventsCreated += await processMoveEvent(agent, currentNode, tick);
-    }
-  } else if (strategy === "gather") {
-    if (roll < 0.6) {
-      eventsCreated += await processGatherEvent(agent, currentNode, tick);
-    } else if (roll < 0.75) {
+  // ─── 戰鬥策略 ───
+  // 戰鬥策略：全力打怪，HP歸零強制休息，補滿後回归戰鬥
+  if (strategy === "combat") {
+    if (movementMode === "roaming" && roll > 0.7) {
+      // 漫遊戰鬥：30% 機率移動到相鄰節點尋战
       eventsCreated += await processMoveEvent(agent, currentNode, tick);
     } else {
+      // 定點戰鬥 or 漫遊戰鬥的戰鬥回合
       const combatResult = await processCombatEvent(agent, currentNode, tick, dailyElement);
       eventsCreated += combatResult.events;
       tickLevelUps.push(...combatResult.levelUps);
       tickLegendaryDrops.push(...combatResult.legendaryDrops);
     }
-  } else if (strategy === "rest") {
-    await db.update(gameAgents).set({ status: "resting" }).where(eq(gameAgents.id, agent.id));
+  }
+  // ─── 探索策略 ───
+  // 探索策略：打怪40% + 採集 40% + 移動 20%（漫遊時）
+  //             打怪50% + 採集 50%（定點時）
+  else if (strategy === "explore") {
+    if (movementMode === "roaming") {
+      if (roll < combatThreshold) {
+        const combatResult = await processCombatEvent(agent, currentNode, tick, dailyElement);
+        eventsCreated += combatResult.events;
+        tickLevelUps.push(...combatResult.levelUps);
+        tickLegendaryDrops.push(...combatResult.legendaryDrops);
+      } else if (roll < gatherThreshold) {
+        eventsCreated += await processGatherEvent(agent, currentNode, tick);
+      } else {
+        // 漫遊探索：移動到相鄰節點
+        eventsCreated += await processMoveEvent(agent, currentNode, tick);
+      }
+    } else {
+      // 定點探索：打怪50% + 採集 50%
+      if (roll < 0.5) {
+        const combatResult = await processCombatEvent(agent, currentNode, tick, dailyElement);
+        eventsCreated += combatResult.events;
+        tickLevelUps.push(...combatResult.levelUps);
+        tickLegendaryDrops.push(...combatResult.legendaryDrops);
+      } else {
+        eventsCreated += await processGatherEvent(agent, currentNode, tick);
+      }
+    }
+  }
+  // ─── 採集策略 ───
+  // 採集策略：採集 60% + 移動 15% + 打怪 20% + 休息 5%（漫遊）
+  //             採集 80% + 打怪 20%（定點）
+  else if (strategy === "gather") {
+    if (movementMode === "roaming") {
+      if (roll < 0.6) {
+        eventsCreated += await processGatherEvent(agent, currentNode, tick);
+      } else if (roll < 0.75) {
+        eventsCreated += await processMoveEvent(agent, currentNode, tick);
+      } else if (roll < 0.95) {
+        const combatResult = await processCombatEvent(agent, currentNode, tick, dailyElement);
+        eventsCreated += combatResult.events;
+        tickLevelUps.push(...combatResult.levelUps);
+        tickLegendaryDrops.push(...combatResult.legendaryDrops);
+      } else {
+        // 5% 機率主動休息回復
+        await db.update(gameAgents).set({ status: "resting", updatedAt: Date.now() }).where(eq(gameAgents.id, agent.id));
+      }
+    } else {
+      // 定點採集：採集 80% + 打怪 20%
+      if (roll < 0.8) {
+        eventsCreated += await processGatherEvent(agent, currentNode, tick);
+      } else {
+        const combatResult = await processCombatEvent(agent, currentNode, tick, dailyElement);
+        eventsCreated += combatResult.events;
+        tickLevelUps.push(...combatResult.levelUps);
+        tickLegendaryDrops.push(...combatResult.legendaryDrops);
+      }
+    }
+  }
+  // ─── 休息策略 ───
+  // 玩家選擇休息：直接進入休息狀態，補滿後自動切換到探索+漫遊
+  else if (strategy === "rest") {
+    await db.update(gameAgents).set({ status: "resting", updatedAt: Date.now() }).where(eq(gameAgents.id, agent.id));
   }
 
   return { events: eventsCreated, levelUps: tickLevelUps, legendaryDrops: tickLegendaryDrops };
