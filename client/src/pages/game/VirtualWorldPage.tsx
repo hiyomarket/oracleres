@@ -1705,14 +1705,13 @@ function HiddenShopModal({ onClose, agentGold, agentStones }: { onClose: () => v
 // ─── 事件日誌抒屉
 // ─────────────────────────────────────────────────────────────
 function EventLogDrawer({
-  events, logTab, setLogTab, isOpen, onClose, anchorBottom,
+  events, logTab, setLogTab, isOpen, onClose,
 }: {
   events: Array<{ id: number; eventType: string; message: string; createdAt: string; detail?: Record<string, unknown> | null }> | undefined;
   logTab: "all" | "combat" | "rogue";
   setLogTab: (t: "all" | "combat" | "rogue") => void;
   isOpen: boolean;
   onClose: () => void;
-  anchorBottom?: number; // px from bottom
 }) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [todayOnly, setTodayOnly] = useState(false);
@@ -1741,11 +1740,14 @@ function EventLogDrawer({
   }
 
   return (
-    <div className="fixed z-50 left-2 flex flex-col"
-      style={{ bottom: `${anchorBottom ?? 72}px`, width: "min(340px, calc(100vw - 16px))" }}
+    <div className="fixed z-[500] inset-0 flex items-center justify-center px-4"
+      style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+      onClick={onClose}>
+    <div className="flex flex-col"
+      style={{ width: "min(400px, calc(100vw - 32px))", maxHeight: "70vh" }}
       onClick={e => e.stopPropagation()}>
       <div className="rounded-2xl flex flex-col border"
-        style={{ background: "rgba(6,10,22,0.98)", backdropFilter: "blur(16px)", borderColor: "rgba(245,158,11,0.3)", maxHeight: "50vh" }}>
+        style={{ background: "rgba(6,10,22,0.98)", backdropFilter: "blur(16px)", borderColor: "rgba(245,158,11,0.3)", maxHeight: "70vh", overflow: "hidden" }}>
         <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
           <div className="flex items-center gap-1.5">
             <span className="text-sm">📜</span>
@@ -1916,10 +1918,11 @@ function EventLogDrawer({
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────
 // 主頁面
 // ─────────────────────────────────────────────────────────────
 export default function VirtualWorldPage() {
@@ -2392,7 +2395,12 @@ export default function VirtualWorldPage() {
   };
 
   return (
-    <GameTabLayout activeTab="world">
+    <GameTabLayout
+      activeTab="world"
+      onLogClick={() => setShowLog(v => !v)}
+      onTeleportClick={() => setShowTeleport(true)}
+      logCount={eventLog?.length ?? 0}
+    >
       {/* Tick 進度條 */}
       {tickProgress > 0 && (
         <div className="fixed top-0 left-0 right-0 z-[999] h-[3px] overflow-hidden">
@@ -2561,7 +2569,6 @@ export default function VirtualWorldPage() {
         setLogTab={setLogTab}
         isOpen={showLog}
         onClose={() => setShowLog(false)}
-        anchorBottom={64}
       />
 
       {/* 地圖傳送彈窗 */}
@@ -2938,42 +2945,7 @@ export default function VirtualWorldPage() {
                 </div>
               )}
 
-              {/* 日誌按鈕：左下角圓形按鈕（手機版） */}
-              <button
-                onClick={() => setShowLog(v => !v)}
-                className="absolute z-[400] lg:hidden flex items-center justify-center border transition-all hover:scale-110 active:scale-95"
-                style={{
-                  bottom: "64px",
-                  left: "16px",
-                  width: "44px",
-                  height: "44px",
-                  borderRadius: "50%",
-                  background: showLog ? "rgba(245,158,11,0.2)" : "rgba(6,10,22,0.92)",
-                  backdropFilter: "blur(10px)",
-                  borderColor: showLog ? "rgba(245,158,11,0.8)" : "rgba(245,158,11,0.4)",
-                  boxShadow: "0 0 12px rgba(245,158,11,0.35), 0 4px 10px rgba(0,0,0,0.5)",
-                  fontSize: "18px",
-                }}
-              >
-                📜
-                {(eventLog?.length ?? 0) > 0 && (
-                  <span
-                    className="absolute font-bold"
-                    style={{
-                      top: "-3px", right: "-3px",
-                      minWidth: "16px", height: "16px",
-                      borderRadius: "8px",
-                      background: "#ef4444", color: "#fff",
-                      fontSize: "9px",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      padding: "0 2px",
-                      border: "2px solid rgba(6,10,22,0.9)",
-                    }}
-                  >
-                    {(eventLog?.length ?? 0) > 20 ? "20+" : eventLog?.length}
-                  </span>
-                )}
-              </button>
+              {/* V46: 手機版浮動日誌按鈕已移至 GameTabLayout 底部 Tab Bar */}
               {/* 日誌按鈕：桌機版可拖拉 */}
               <DraggableWidget
                 id="event-log"
@@ -3462,71 +3434,7 @@ export default function VirtualWorldPage() {
                 setStrategy={setStrategy}
                 ec={ec}
               />
-              {/* 桌機版底部功能按鈕列 */}
-              <div className="px-3 py-2.5 flex items-center gap-2 shrink-0 border-t"
-                style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(8,12,25,0.97)" }}>
-                {/* 旅人日誌 */}
-                <button
-                  onClick={() => setShowLog(v => !v)}
-                  className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.28)" }}>
-                  <span className="text-lg">📜</span>
-                  <span className="text-sm text-amber-300 font-bold">日誌</span>
-                  {(eventLog?.length ?? 0) > 0 && (
-                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#ef4444", color: "#fff", fontSize: "11px" }}>
-                      {(eventLog?.length ?? 0) > 99 ? "99+" : eventLog?.length}
-                    </span>
-                  )}
-                </button>
-                {/* 地圖傳送（桌機版） */}
-                <button
-                  onClick={() => setShowTeleport(true)}
-                  className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ background: "rgba(56,189,248,0.08)", borderColor: "rgba(56,189,248,0.28)" }}>
-                  <span className="text-lg">🗺️</span>
-                  <span className="text-sm text-sky-300 font-bold">傳送</span>
-                </button>
-                {/* 虛相世界商店（桂機版）—導向 GameShop */}
-                <button
-                  onClick={() => navigate("/game/gameshop")}
-                  className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ background: "rgba(34,197,94,0.08)", borderColor: "rgba(34,197,94,0.28)" }}>
-                  <span className="text-lg">🏪</span>
-                  <span className="text-sm text-green-300 font-bold">商店</span>
-                </button>
-                {/* 密店（導向 GameShop 密店Tab） */}
-                <button
-                  onClick={() => navigate("/game/gameshop?tab=hidden")}
-                  className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{
-                    background: hiddenShopTier === "high" ? "rgba(245,158,11,0.12)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.10)" : "rgba(96,165,250,0.08)",
-                    borderColor: hiddenShopTier === "high" ? "rgba(245,158,11,0.5)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.4)" : "rgba(96,165,250,0.3)",
-                    boxShadow: hiddenShopTier === "high" ? "0 0 12px rgba(245,158,11,0.4)" : "none",
-                  }}>
-                  <span className="text-lg">🔍</span>
-                  <span className="text-sm font-bold" style={{ color: hiddenShopColor }}>密店</span>
-                </button>
-                {/* 拍賣行 */}
-                <button
-                  onClick={() => navigate("/game/auction")}
-                  className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ background: "rgba(251,191,36,0.08)", borderColor: "rgba(251,191,36,0.28)" }}>
-                  <span className="text-lg">🏛️</span>
-                  <span className="text-sm text-amber-300 font-bold">拍賣行</span>
-                </button>
-                {/* Widget 重置按鈕 */}
-                <button
-                  onClick={() => {
-                    setWidgetLayout({});
-                    saveWidgetLayout.mutate({ layout: {} });
-                    toast.success("浮動元件位置已重置");
-                  }}
-                  title="重置浮動元件位置"
-                  className="flex items-center justify-center px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  style={{ background: "rgba(100,116,139,0.08)", borderColor: "rgba(100,116,139,0.28)", minWidth: "36px" }}>
-                  <span className="text-base">🔄</span>
-                </button>
-              </div>
+              {/* V46: 底部功能列已移至 GameTabLayout 底部 Tab Bar */}
             </div>
 
             {/* 手機版底部抽屜
@@ -3624,60 +3532,7 @@ export default function VirtualWorldPage() {
                     ec={ec}
                     mobileMode={true}
                   />
-                  {/* 手機版功能按鈕列 */}
-                  <div className="px-3 py-2 flex items-center gap-1.5 border-t shrink-0"
-                    style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(8,12,25,0.97)" }}>
-                    {/* 旅人日誌 */}
-                    <button
-                      onClick={() => { setShowLog(v => !v); setCharPanelOpen(false); }}
-                      className="flex-1 flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl border transition-all active:scale-[0.98]"
-                      style={{ background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.28)" }}>
-                      <span className="text-sm">📜</span>
-                      <span className="text-xs text-amber-300 font-bold">日誌</span>
-                      {(eventLog?.length ?? 0) > 0 && (
-                        <span className="text-xs font-bold px-1 rounded-full" style={{ background: "#ef4444", color: "#fff", fontSize: "10px" }}>
-                          {(eventLog?.length ?? 0) > 99 ? "99+" : eventLog?.length}
-                        </span>
-                      )}
-                    </button>
-                    {/* 地圖傳送 */}
-                    <button
-                      onClick={() => { setShowTeleport(true); setCharPanelOpen(false); }}
-                      className="flex-1 flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl border transition-all active:scale-[0.98]"
-                      style={{ background: "rgba(56,189,248,0.08)", borderColor: "rgba(56,189,248,0.28)" }}>
-                      <span className="text-sm">🗺️</span>
-                      <span className="text-xs text-sky-300 font-bold">傳送</span>
-                    </button>
-                    {/* 虛相世界商店（手機版）—導向 GameShop */}
-                    <button
-                      onClick={() => navigate("/game/gameshop")}
-                      className="flex-1 flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl border transition-all active:scale-[0.98]"
-                      style={{ background: "rgba(34,197,94,0.08)", borderColor: "rgba(34,197,94,0.28)" }}>
-                      <span className="text-sm">🏪</span>
-                      <span className="text-xs text-green-300 font-bold">商店</span>
-                    </button>
-                    {/* 密店（導向 GameShop 密店Tab） */}
-                    <button
-                      onClick={() => navigate("/game/gameshop?tab=hidden")}
-                      className="flex-1 flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl border transition-all active:scale-[0.98]"
-                      style={{
-                        background: hiddenShopTier === "high" ? "rgba(245,158,11,0.12)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.10)" : "rgba(96,165,250,0.08)",
-                        borderColor: hiddenShopTier === "high" ? "rgba(245,158,11,0.5)" : hiddenShopTier === "mid" ? "rgba(167,139,250,0.4)" : "rgba(96,165,250,0.3)",
-                        boxShadow: hiddenShopTier === "high" ? "0 0 10px rgba(245,158,11,0.4)" : "none",
-                      }}>
-                      <span className="text-sm">🔍</span>
-                      <span className="text-xs font-bold" style={{ color: hiddenShopColor }}>密店</span>
-                    </button>
-                    {/* 拍賣行 */}
-                    <button
-                      onClick={() => navigate("/game/auction")}
-                      className="flex-1 flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl border transition-all active:scale-[0.98]"
-                      style={{ background: "rgba(251,191,36,0.08)", borderColor: "rgba(251,191,36,0.28)" }}>
-                      <span className="text-sm">🏛️</span>
-                      <span className="text-xs text-amber-300 font-bold">拍賣行</span>
-                    </button>
-                  </div>
-                  {/* Bug 3+9 fix: 管理員按鈕已整合到 GameTabLayout 底部 Tab Bar（僅 admin 可見） */}
+                  {/* V46: 手機版功能列已移至 GameTabLayout 底部 Tab Bar */}
                 </div>
               )}
             </div>

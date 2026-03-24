@@ -3890,3 +3890,13 @@
 - [x] 在線玩家地圖顯示：後端回傳靠近玩家的最多 50 位在線玩家，地圖上顯示小頭像
 - [ ] 拍賣行後端：schema（auction_listings）+ API（上架/下架/購買），每人最多 3 件
 - [ ] 拍賣行前端：全服拍賣列表、上架道具彈窗、購買流程、我的上架管理
+
+## V46 UI 整理 - 移除重複按鈕、整合底部導覽列
+- [x] 移除角色面板底部功能按鈕列（桌機版：日誌/傳送/商店/密店/拍賣行/重置浮動鈕）
+- [x] 移除角色面板底部功能按鈕列（手機版：日誌/傳送/商店/密店/拍賣行）
+- [x] 移除左下角手機版浮動日誌按鈕
+- [x] GameTabLayout 底部 Tab Bar 加入日誌/傳送按鈕（透過 onLogClick/onTeleportClick callback）
+- [x] GameTabLayout 移除所有 comingSoon 項目（靈相空間/命理加成/寵物系統/鍛造屋）
+- [x] GameTabLayout 啟用拍賣行（移除 comingSoon 標記）
+- [x] 日誌面板（EventLogDrawer）改為固定置中顯示（全螢幕 overlay + 置中彈窗）
+- [x] TypeScript 零錯誤
