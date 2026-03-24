@@ -623,6 +623,24 @@ function regenStamina(agent: typeof gameAgents.$inferSelect): number {
   return Math.min(agent.maxStamina, agent.stamina + regenAmount);
 }
 
+// ─── 戰鬥結果類型（共用） ───
+export interface CombatResultItem {
+  agentId: number;
+  agentName: string;
+  monsterName: string;
+  monsterRace?: string;
+  won: boolean;
+  expGained: number;
+  goldGained: number;
+  hpLost: number;
+  wuxingBoostDesc?: string;
+  raceBoostDesc?: string;
+  rounds: CombatRound[];
+  agentMaxHp: number;
+  monsterMaxHp: number;
+  combatKey?: number;
+}
+
 // ─── 主 Tick 處理函數 ───
 export interface TickResult {
   processed: number;
@@ -631,23 +649,8 @@ export interface TickResult {
   levelUps: Array<{ agentId: number; agentName: string; newLevel: number; agentElement?: string }>;  // agentElement for live_feed
   /** 本次 Tick 中摩落的傳說/高級裝備 */
   legendaryDrops: Array<{ agentId: number; agentName: string; equipId: string; tier: string; agentElement?: string; agentLevel?: number; itemName?: string }>;  // extra fields for live_feed
-  /** 本次 Tick 中最新的戰鬥資訊（用於前端戰鬥視窗） */
-  lastCombat?: {
-    agentId: number;
-    agentName: string;
-    monsterName: string;
-    monsterRace?: string;
-    won: boolean;
-    expGained: number;
-    goldGained: number;
-    hpLost: number;
-    wuxingBoostDesc?: string;
-    raceBoostDesc?: string;
-    rounds: CombatRound[];
-    agentMaxHp: number;
-    monsterMaxHp: number;
-    combatKey?: number; // 唯一識別碼，防止前端 data 物件引用變化導致無限 setInterval
-  };
+  /** 本次 Tick 中所有玩家的戰鬥資訊（前端依 agentId 過濾） */
+  lastCombats?: CombatResultItem[];
 }
 
 export async function processTick(): Promise<TickResult> {
@@ -687,7 +690,7 @@ export async function processTick(): Promise<TickResult> {
   let totalEvents = 0;
   const allLevelUps: TickResult["levelUps"] = [];
   const allLegendaryDrops: TickResult["legendaryDrops"] = [];
-  let lastCombatResult: TickResult["lastCombat"] | undefined;
+  const allCombatResults: NonNullable<TickResult["lastCombats"]> = [];
 
   for (const agent of agents) {
     try {
@@ -707,8 +710,8 @@ export async function processTick(): Promise<TickResult> {
       totalEvents += agentResult.events;
       if (agentResult.levelUps.length > 0) allLevelUps.push(...agentResult.levelUps);
       if (agentResult.legendaryDrops.length > 0) allLegendaryDrops.push(...agentResult.legendaryDrops);
-      // 收集最新戰鬥資訊（用於前端戰鬥視窗）
-      if (agentResult.lastCombat) lastCombatResult = agentResult.lastCombat;
+      // 收集所有玩家的戰鬥資訊（用於前端戰鬥視窗，依 agentId 過濾）
+      if (agentResult.lastCombat) allCombatResults.push(agentResult.lastCombat);
     } catch (err) {
       console.error(`[Tick] Error processing agent ${agent.id}:`, err);
     }
@@ -771,7 +774,7 @@ export async function processTick(): Promise<TickResult> {
     } catch { }
   }
 
-  return { processed: agents.length, events: totalEvents, levelUps: allLevelUps, legendaryDrops: allLegendaryDrops, lastCombat: lastCombatResult };
+  return { processed: agents.length, events: totalEvents, levelUps: allLevelUps, legendaryDrops: allLegendaryDrops, lastCombats: allCombatResults };
 }
 
 // ─── 單一角色 Tick 處理 ───
@@ -779,7 +782,7 @@ async function processAgentTick(
   agent: typeof gameAgents.$inferSelect,
   tick: number,
   dailyElement: WuXing
-): Promise<{ events: number; levelUps: TickResult["levelUps"]; legendaryDrops: TickResult["legendaryDrops"]; lastCombat?: TickResult["lastCombat"] }> {
+): Promise<{ events: number; levelUps: TickResult["levelUps"]; legendaryDrops: TickResult["legendaryDrops"]; lastCombat?: CombatResultItem }> {
   const EMPTY = { events: 0, levelUps: [] as TickResult["levelUps"], legendaryDrops: [] as TickResult["legendaryDrops"] };
   const db = await getDb();
   if (!db) return EMPTY;
@@ -889,7 +892,7 @@ async function processAgentTick(
   let eventsCreated = 0;
   const tickLevelUps: TickResult["levelUps"] = [];
   const tickLegendaryDrops: TickResult["legendaryDrops"] = [];
-  let tickLastCombat: TickResult["lastCombat"] | undefined;
+  let tickLastCombat: CombatResultItem | undefined;
 
   // 從全域引擎配置取得動態機率
   const chances = getEventChances();
@@ -1023,7 +1026,7 @@ async function processCombatEvent(
   currentNode: MapNode,
   tick: number,
   dailyElement: WuXing
-): Promise<{ events: number; levelUps: TickResult["levelUps"]; legendaryDrops: TickResult["legendaryDrops"]; lastCombat?: TickResult["lastCombat"] }> {
+): Promise<{ events: number; levelUps: TickResult["levelUps"]; legendaryDrops: TickResult["legendaryDrops"]; lastCombat?: CombatResultItem }> {
   const EMPTY = { events: 0, levelUps: [] as TickResult["levelUps"], legendaryDrops: [] as TickResult["legendaryDrops"] };
   const db = await getDb();
   if (!db) return EMPTY;

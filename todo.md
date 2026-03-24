@@ -3782,3 +3782,11 @@
 - [x] 靈相干預功能失效（日期格式不匹配已修復，加入 onError toast 和 invalidate）
 - [x] 背包技能書分類缺失（加入「技能書」獨立分類按鈕）
 - [x] 奇遇獎勵後台管理系統（後台新增 game_rogue_events 表 + CRUD procedures + AdminGameTheater 奇遇事件 Tab + tickEngine 從 DB 讀取奇遇）
+
+## V39 戰鬥畫面深度修復
+
+- [x] 修復 tickEngine.ts TypeScript 型別錯誤（TickResult["lastCombat"] 不存在，改為 CombatResultItem）
+- [x] 確認 processTick 正確收集 lastCombats 陣列（allCombatResults）
+- [x] 確認 triggerTick 依 agentId 過濾戰鬥結果，只回傳當前玩家的戰鬥資訊
+- [x] 確認前端 CombatWindow 使用 data.agentName 顯示正確角色名稱
+- [x] TypeScript 零錯誤，620 項測試全部通過

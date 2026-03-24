@@ -609,9 +609,21 @@ export const gameWorldRouter = router({
   }),
 
   // ─── 手動觸發 Tick（測試用） ───
-  triggerTick: protectedProcedure.mutation(async () => {
+  triggerTick: protectedProcedure.mutation(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new Error("Database unavailable");
+    // 取得當前登入玩家的 agentId
+    const agents = await db.select({ id: gameAgents.id })
+      .from(gameAgents)
+      .where(eq(gameAgents.userId, String(ctx.user.id)))
+      .limit(1);
+    const myAgentId = agents[0]?.id;
     const result = await processTick();
-    return result;
+    // 只回傳當前玩家的戰鬥資訊（依 agentId 過濾）
+    const myLastCombat = myAgentId
+      ? result.lastCombats?.find(c => c.agentId === myAgentId)
+      : undefined;
+    return { ...result, lastCombat: myLastCombat };
   }),
 
   // ─── 取得背包 ───
