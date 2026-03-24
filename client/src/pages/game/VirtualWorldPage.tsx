@@ -1396,13 +1396,14 @@ function EventLogDrawer({
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (isOpen && listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+    // 最新在上，每次更新自動滾到頂部
+    if (isOpen && listRef.current) listRef.current.scrollTop = 0;
   }, [isOpen, events]);
 
   if (!isOpen) return null;
 
-  // 只顯示最新 20 條
-  const displayEvents = events ? [...events].slice(-20) : [];
+  // 後端已按 desc(createdAt) 排序（最新在前），直接取前 20 條
+  const displayEvents = events ? events.slice(0, 20) : [];
 
   return (
     <div className="fixed z-50 left-2 flex flex-col"
@@ -1436,7 +1437,7 @@ function EventLogDrawer({
             <div className="text-center py-4">
               <p className="text-slate-600 text-xs">等待旅人的第一個事件…</p>
             </div>
-          ) : [...displayEvents].reverse().map(ev => {
+          ) : displayEvents.map(ev => {
             const detail = ev.detail;
             const hasCombat = Boolean(detail && detail.phase === "result" && detail.rounds);
             const isExp = expandedId === ev.id;
@@ -1555,7 +1556,7 @@ export default function VirtualWorldPage() {
     undefined, { enabled: !!user && !agentData?.needsNaming, refetchInterval: 30000 });
   const { data: eventLog, refetch: refetchLog } = trpc.gameWorld.getEventLog.useQuery(
     { limit: 60, eventType: logTab === "all" ? undefined : logTab === "combat" ? "combat" : "rogue" },
-    { enabled: !!user && !agentData?.needsNaming, refetchInterval: 30000 });
+    { enabled: !!user && !agentData?.needsNaming, refetchInterval: 8000 });
   const { data: mapNodes } = trpc.gameWorld.getMapNodes.useQuery(undefined, { staleTime: Infinity });
   const { data: equippedData } = trpc.gameAvatar.getEquipped.useQuery(undefined, { enabled: !!user, staleTime: 60000 });
   const { data: balanceData } = trpc.gameShop.getBalance.useQuery(undefined, { enabled: !!user, staleTime: 30000 });
@@ -1620,7 +1621,7 @@ export default function VirtualWorldPage() {
         } else {
           triggerTick.mutate();
         }
-      }, 5 * 60 * 1000);
+      }, 5 * 1000); // 每 5 秒執行一次 Tick
       setTickRunning(true);
     }
   }, [tickRunning, triggerTick, statusData, agent?.stamina, agent?.strategy, setStrategy]);

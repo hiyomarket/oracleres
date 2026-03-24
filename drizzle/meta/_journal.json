@@ -505,6 +505,13 @@
       "when": 1774297298760,
       "tag": "0071_military_celestials",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "5",
+      "when": 1774311608354,
+      "tag": "0072_unusual_gateway",
+      "breakpoints": true
     }
   ]
 }

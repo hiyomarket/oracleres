@@ -447,9 +447,14 @@ export default function GameCMS() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-screen-xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">靈相世界 · 遊戲內容管理</h1>
-          <p className="text-muted-foreground text-sm mt-1">管理怪物、技能、成就等遊戲內容資料，變更即時生效。</p>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">靈相世界 · 遊戲內容管理</h1>
+            <p className="text-muted-foreground text-sm mt-1">管理怪物、技能、成就等遊戲內容資料，變更即時生效。</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => navigate("/admin/game-theater")} className="shrink-0">
+            🎭 遊戲劇院
+          </Button>
         </div>
 
         <Tabs defaultValue="monsters">

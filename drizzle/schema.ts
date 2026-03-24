@@ -2180,3 +2180,69 @@ export const agentSetProgress = mysqlTable("agent_set_progress", {
   updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
 export type AgentSetProgress = typeof agentSetProgress.$inferSelect;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 遊戲劇院（Game Theater）管理系統
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * 全域遊戲參數表（gameConfig）
+ * 管理員可在後台即時調整所有遊戲參數，無需重新部署
+ */
+export const gameConfig = mysqlTable("game_config", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 參數鍵值（唯一識別） */
+  configKey: varchar("config_key", { length: 100 }).notNull().unique(),
+  /** 參數值（JSON 格式，支援數字/布林/字串） */
+  configValue: text("config_value").notNull(),
+  /** 參數類型：number / boolean / string */
+  valueType: varchar("value_type", { length: 20 }).notNull().default("number"),
+  /** 顯示名稱 */
+  label: varchar("label", { length: 100 }).notNull(),
+  /** 說明文字 */
+  description: text("description"),
+  /** 分類群組：combat / economy / exploration / system / event */
+  category: varchar("category", { length: 50 }).notNull().default("system"),
+  /** 最小值（數字類型用） */
+  minValue: float("min_value"),
+  /** 最大值（數字類型用） */
+  maxValue: float("max_value"),
+  /** 是否啟用 */
+  isActive: tinyint("is_active").notNull().default(1),
+  updatedBy: varchar("updated_by", { length: 255 }),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameConfig = typeof gameConfig.$inferSelect;
+export type InsertGameConfig = typeof gameConfig.$inferInsert;
+
+/**
+ * 管理員角色控制表（adminGameControl）
+ * 為特定角色設定永久滿值開關或特殊狀態
+ */
+export const adminGameControl = mysqlTable("admin_game_control", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: int("agent_id").notNull().unique(),
+  /** 體力永遠滿（stamina 永遠 = maxStamina） */
+  infiniteStamina: tinyint("infinite_stamina").notNull().default(0),
+  /** 靈力永遠滿（actionPoints 永遠 = maxActionPoints） */
+  infiniteAP: tinyint("infinite_ap").notNull().default(0),
+  /** HP 永遠滿（hp 永遠 = maxHp） */
+  infiniteHP: tinyint("infinite_hp").notNull().default(0),
+  /** MP 永遠滿（mp 永遠 = maxMp） */
+  infiniteMP: tinyint("infinite_mp").notNull().default(0),
+  /** 遊戲幣永遠滿（gold 永遠 = 99999） */
+  infiniteGold: tinyint("infinite_gold").notNull().default(0),
+  /** 是否封禁（封禁後無法進入遊戲） */
+  isBanned: tinyint("is_banned").notNull().default(0),
+  /** 封禁原因 */
+  banReason: text("ban_reason"),
+  /** 管理員備註 */
+  adminNote: text("admin_note"),
+  /** 最後操作管理員 */
+  lastModifiedBy: varchar("last_modified_by", { length: 255 }),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type AdminGameControl = typeof adminGameControl.$inferSelect;
+export type InsertAdminGameControl = typeof adminGameControl.$inferInsert;

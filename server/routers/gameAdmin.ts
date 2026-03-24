@@ -25,8 +25,13 @@ import {
   gameItemCatalog,
   gameEquipmentCatalog,
   gameSkillCatalog,
+  gameConfig,
+  adminGameControl,
+  gameAgents,
+  users,
+  equipmentTemplates,
 } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { sql, like, or, eq } from "drizzle-orm";
 
 // Admin guard middleware
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -613,5 +618,289 @@ export const gameAdminRouter = router({
       if (input.category) result = result.filter(r => r.category === input.category);
       if (input.search) result = result.filter(r => r.name.includes(input.search!));
       return result;
+    }),
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 遊戲劇院（Game Theater）— 角色帳號管理
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /** 搜尋角色（by 名稱或 userId） */
+  searchAgents: adminProcedure
+    .input(z.object({ keyword: z.string().min(1) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select({
+        id: gameAgents.id,
+        userId: gameAgents.userId,
+        agentName: gameAgents.agentName,
+        level: gameAgents.level,
+        exp: gameAgents.exp,
+        dominantElement: gameAgents.dominantElement,
+        hp: gameAgents.hp,
+        maxHp: gameAgents.maxHp,
+        mp: gameAgents.mp,
+        maxMp: gameAgents.maxMp,
+        stamina: gameAgents.stamina,
+        maxStamina: gameAgents.maxStamina,
+        actionPoints: gameAgents.actionPoints,
+        maxActionPoints: gameAgents.maxActionPoints,
+        gold: gameAgents.gold,
+        wuxingWood: gameAgents.wuxingWood,
+        wuxingFire: gameAgents.wuxingFire,
+        wuxingEarth: gameAgents.wuxingEarth,
+        wuxingMetal: gameAgents.wuxingMetal,
+        wuxingWater: gameAgents.wuxingWater,
+        currentNodeId: gameAgents.currentNodeId,
+        isActive: gameAgents.isActive,
+        createdAt: gameAgents.createdAt,
+      }).from(gameAgents)
+        .where(
+          or(
+            like(gameAgents.agentName, `%${input.keyword}%`),
+            like(gameAgents.userId, `%${input.keyword}%`)
+          )
+        )
+        .limit(20);
+
+      // 查詢對應 users 表的 pointsBalance、gameCoins、gameStones
+      const results = await Promise.all(agents.map(async (agent) => {
+        const userRows = await db.select({
+          pointsBalance: users.pointsBalance,
+          gameCoins: users.gameCoins,
+          gameStones: users.gameStones,
+        }).from(users).where(eq(users.openId, agent.userId)).limit(1);
+        const control = await db.select().from(adminGameControl).where(eq(adminGameControl.agentId, agent.id)).limit(1);
+        return {
+          ...agent,
+          pointsBalance: userRows[0]?.pointsBalance ?? 0,
+          gameCoins: userRows[0]?.gameCoins ?? 0,
+          gameStones: userRows[0]?.gameStones ?? 0,
+          control: control[0] ?? null,
+        };
+      }));
+      return results;
+    }),
+
+  /** 調整角色數值（遊戲幣/靈石/積分/體力/AP/HP/MP/等級/五行） */
+  adjustAgentValues: adminProcedure
+    .input(z.object({
+      agentId: z.number().int(),
+      userId: z.string(),
+      // 可選調整項目
+      gold: z.number().int().optional(),
+      hp: z.number().int().min(0).max(9999).optional(),
+      mp: z.number().int().min(0).max(9999).optional(),
+      stamina: z.number().int().min(0).max(255).optional(),
+      actionPoints: z.number().int().min(0).max(10).optional(),
+      level: z.number().int().min(1).max(999).optional(),
+      exp: z.number().int().min(0).optional(),
+      wuxingWood: z.number().int().min(0).max(255).optional(),
+      wuxingFire: z.number().int().min(0).max(255).optional(),
+      wuxingEarth: z.number().int().min(0).max(255).optional(),
+      wuxingMetal: z.number().int().min(0).max(255).optional(),
+      wuxingWater: z.number().int().min(0).max(255).optional(),
+      currentNodeId: z.string().optional(),
+      // users 表的點數
+      pointsBalance: z.number().int().optional(),
+      gameCoins: z.number().int().optional(),
+      gameStones: z.number().int().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const agentUpdate: Record<string, number | string> = {};
+      if (input.gold !== undefined) agentUpdate.gold = input.gold;
+      if (input.hp !== undefined) agentUpdate.hp = input.hp;
+      if (input.mp !== undefined) agentUpdate.mp = input.mp;
+      if (input.stamina !== undefined) agentUpdate.stamina = input.stamina;
+      if (input.actionPoints !== undefined) agentUpdate.actionPoints = input.actionPoints;
+      if (input.level !== undefined) agentUpdate.level = input.level;
+      if (input.exp !== undefined) agentUpdate.exp = input.exp;
+      if (input.wuxingWood !== undefined) agentUpdate.wuxingWood = input.wuxingWood;
+      if (input.wuxingFire !== undefined) agentUpdate.wuxingFire = input.wuxingFire;
+      if (input.wuxingEarth !== undefined) agentUpdate.wuxingEarth = input.wuxingEarth;
+      if (input.wuxingMetal !== undefined) agentUpdate.wuxingMetal = input.wuxingMetal;
+      if (input.wuxingWater !== undefined) agentUpdate.wuxingWater = input.wuxingWater;
+      if (input.currentNodeId !== undefined) agentUpdate.currentNodeId = input.currentNodeId;
+
+      if (Object.keys(agentUpdate).length > 0) {
+        await db.update(gameAgents).set({ ...agentUpdate, updatedAt: Date.now() }).where(eq(gameAgents.id, input.agentId));
+      }
+
+      const userUpdate: Record<string, number> = {};
+      if (input.pointsBalance !== undefined) userUpdate.pointsBalance = input.pointsBalance;
+      if (input.gameCoins !== undefined) userUpdate.gameCoins = input.gameCoins;
+      if (input.gameStones !== undefined) userUpdate.gameStones = input.gameStones;
+      if (Object.keys(userUpdate).length > 0) {
+        await db.update(users).set(userUpdate).where(eq(users.openId, input.userId));
+      }
+
+      return { success: true };
+    }),
+
+  /** 設定角色永久滿值開關 */
+  setAgentControl: adminProcedure
+    .input(z.object({
+      agentId: z.number().int(),
+      infiniteStamina: z.boolean().optional(),
+      infiniteAP: z.boolean().optional(),
+      infiniteHP: z.boolean().optional(),
+      infiniteMP: z.boolean().optional(),
+      infiniteGold: z.boolean().optional(),
+      isBanned: z.boolean().optional(),
+      banReason: z.string().optional(),
+      adminNote: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const now = Date.now();
+      const existing = await db.select().from(adminGameControl).where(eq(adminGameControl.agentId, input.agentId)).limit(1);
+
+      const controlData = {
+        infiniteStamina: input.infiniteStamina !== undefined ? (input.infiniteStamina ? 1 : 0) : undefined,
+        infiniteAP: input.infiniteAP !== undefined ? (input.infiniteAP ? 1 : 0) : undefined,
+        infiniteHP: input.infiniteHP !== undefined ? (input.infiniteHP ? 1 : 0) : undefined,
+        infiniteMP: input.infiniteMP !== undefined ? (input.infiniteMP ? 1 : 0) : undefined,
+        infiniteGold: input.infiniteGold !== undefined ? (input.infiniteGold ? 1 : 0) : undefined,
+        isBanned: input.isBanned !== undefined ? (input.isBanned ? 1 : 0) : undefined,
+        banReason: input.banReason,
+        adminNote: input.adminNote,
+          lastModifiedBy: String(ctx.user.id),
+        updatedAt: now,
+      };
+
+      // 過濾掉 undefined
+      const cleanData = Object.fromEntries(Object.entries(controlData).filter(([, v]) => v !== undefined));
+
+      if (existing.length > 0) {
+        await db.update(adminGameControl).set(cleanData).where(eq(adminGameControl.agentId, input.agentId));
+      } else {
+        await db.insert(adminGameControl).values({
+          agentId: input.agentId,
+          infiniteStamina: (input.infiniteStamina ? 1 : 0),
+          infiniteAP: (input.infiniteAP ? 1 : 0),
+          infiniteHP: (input.infiniteHP ? 1 : 0),
+          infiniteMP: (input.infiniteMP ? 1 : 0),
+          infiniteGold: (input.infiniteGold ? 1 : 0),
+          isBanned: (input.isBanned ? 1 : 0),
+          banReason: input.banReason ?? null,
+          adminNote: input.adminNote ?? null,
+          lastModifiedBy: String(ctx.user.id),
+          updatedAt: now,
+          createdAt: now,
+        });
+      }
+      return { success: true };
+    }),
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 遊戲劇院（Game Theater）— 全域參數管理
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /** 取得所有全域遊戲參數 */
+  getGameConfigs: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameConfig).orderBy(gameConfig.category, gameConfig.configKey);
+  }),
+
+  /** 更新單一全域遊戲參數 */
+  updateGameConfig: adminProcedure
+    .input(z.object({
+      configKey: z.string(),
+      configValue: z.string(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameConfig)
+        .set({ configValue: input.configValue, updatedBy: String(ctx.user.id), updatedAt: Date.now() })
+        .where(eq(gameConfig.configKey, input.configKey));
+      return { success: true };
+    }),
+
+  /** 批量更新全域遊戲參數 */
+  batchUpdateGameConfigs: adminProcedure
+    .input(z.array(z.object({
+      configKey: z.string(),
+      configValue: z.string(),
+    })))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await Promise.all(input.map(item =>
+        db.update(gameConfig)
+          .set({ configValue: item.configValue, updatedBy: String(ctx.user.id), updatedAt: Date.now() })
+          .where(eq(gameConfig.configKey, item.configKey))
+      ));
+      return { success: true, updated: input.length };
+    }),
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 裝備模板管理（GD-021 後續建議）
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /** 取得所有裝備模板 */
+  getEquipmentTemplates: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(equipmentTemplates).orderBy(equipmentTemplates.element, equipmentTemplates.tier);
+  }),
+
+  /** 新增裝備模板 */
+  createEquipmentTemplate: adminProcedure
+    .input(z.object({
+      id: z.string().min(1).max(20),
+      name: z.string().min(1).max(50),
+      element: z.enum(["wood", "fire", "earth", "metal", "water"]),
+      slot: z.enum(["weapon", "helmet", "armor", "boots", "accessory"]),
+      tier: z.enum(["basic", "mid", "high", "legendary"]),
+      levelReq: z.number().int().default(1),
+      hpBonus: z.number().int().default(0),
+      atkBonus: z.number().int().default(0),
+      defBonus: z.number().int().default(0),
+      spdBonus: z.number().int().default(0),
+      matkBonus: z.number().int().default(0),
+      mpBonus: z.number().int().default(0),
+      setId: z.string().optional(),
+      shopPrice: z.number().int().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.insert(equipmentTemplates).values({
+        ...input,
+        setId: input.setId ?? null,
+        shopPrice: input.shopPrice ?? null,
+        isActive: 1,
+        createdAt: Date.now(),
+      });
+      return { success: true };
+    }),
+
+  /** 更新裝備模板 */
+  updateEquipmentTemplate: adminProcedure
+    .input(z.object({
+      id: z.string().min(1).max(20),
+      name: z.string().optional(),
+      hpBonus: z.number().int().optional(),
+      atkBonus: z.number().int().optional(),
+      defBonus: z.number().int().optional(),
+      spdBonus: z.number().int().optional(),
+      matkBonus: z.number().int().optional(),
+      mpBonus: z.number().int().optional(),
+      isActive: z.number().int().min(0).max(1).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const { id, ...rest } = input;
+      const cleanData = Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined));
+      await db.update(equipmentTemplates).set(cleanData).where(eq(equipmentTemplates.id, id));
+      return { success: true };
     }),
 });
