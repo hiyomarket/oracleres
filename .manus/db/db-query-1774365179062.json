@@ -1,0 +1,9 @@
+{
+  "query": "INSERT IGNORE INTO game_config (config_key, config_value, value_type, label, description, category, min_value, max_value, is_active, updated_at, created_at) VALUES\n('move_stamina_cost', '2', 'number', '移動體力消耗', '玩家手動移動（傳送）到其他節點所消耗的體力點數', 'exploration', 1, 20, 1, UNIX_TIMESTAMP()*1000, UNIX_TIMESTAMP()*1000),\n('sell_discount_rate', '0.3', 'number', '販售折扣率', '玩家販售道具時獲得的金幣比例（0.3 = 原價 30%）', 'economy', 0.1, 0.9, 1, UNIX_TIMESTAMP()*1000, UNIX_TIMESTAMP()*1000);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute INSERT IGNORE INTO game_config (config_key, config_value, value_type, label, description, category, min_value, max_value, is_active, updated_at, created_at) VALUES\n('move_stamina_cost', '2', 'number', '移動體力消耗', '玩家手動移動（傳送）到其他節點所消耗的體力點數', 'exploration', 1, 20, 1, UNIX_TIMESTAMP()*1000, UNIX_TIMESTAMP()*1000),\n('sell_discount_rate', '0.3', 'number', '販售折扣率', '玩家販售道具時獲得的金幣比例（0.3 = 原價 30%）', 'economy', 0.1, 0.9, 1, UNIX_TIMESTAMP()*1000, UNIX_TIMESTAMP()*1000);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1602
+}

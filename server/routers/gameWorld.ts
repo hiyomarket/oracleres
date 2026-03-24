@@ -7,7 +7,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, hiddenShopInstances, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements, agentSkills } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, hiddenShopInstances, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements, agentSkills, gameConfig } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { eq, and, desc, gt, sql, count, asc } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
@@ -238,13 +238,27 @@ export const gameWorldRouter = router({
     const currentNode = MAP_NODE_MAP.get(agent.currentNodeId);
     const targetNode = agent.targetNodeId ? MAP_NODE_MAP.get(agent.targetNodeId) : null;
 
-    // 計算體力値再生（30 分鐘 +30 點）
+    // 從 game_config 讀取體力恢復參數（動態設定）
+    const configRows = await db.select({ configKey: gameConfig.configKey, configValue: gameConfig.configValue })
+      .from(gameConfig)
+      .where(and(
+        eq(gameConfig.isActive, 1),
+        sql`${gameConfig.configKey} IN ('stamina_regen_minutes','stamina_regen_amount','stamina_per_tick','move_stamina_cost','sell_discount_rate')`
+      ));
+    const cfgMap: Record<string, number> = {};
+    for (const row of configRows) {
+      cfgMap[row.configKey] = parseFloat(row.configValue) || 0;
+    }
+    const regenMinutes = cfgMap['stamina_regen_minutes'] ?? 30;
+    const regenAmount  = cfgMap['stamina_regen_amount']  ?? 30;
+
+    // 計算體力值再生
     const now = Date.now();
     const lastRegen = agent.staminaLastRegen ?? now;
     const elapsed = now - lastRegen;
-    const regenIntervalMs = 30 * 60 * 1000; // 30 分鐘
+    const regenIntervalMs = regenMinutes * 60 * 1000;
     const regenCycles = Math.floor(elapsed / regenIntervalMs);
-    const pendingRegen = regenCycles * 30; // 每循環 +30 點
+    const pendingRegen = regenCycles * regenAmount;
     const currentStamina = Math.min(agent.maxStamina, agent.stamina + pendingRegen);
     const nextRegenMs = regenIntervalMs - (elapsed % regenIntervalMs);
 
@@ -260,6 +274,11 @@ export const gameWorldRouter = router({
         max: agent.maxStamina,
         nextRegenMs,
         nextRegenMin: Math.ceil(nextRegenMs / 60000),
+        regenAmount,
+        regenMinutes,
+        staminaPerTick: cfgMap['stamina_per_tick'] ?? 5,
+        moveStaminaCost: cfgMap['move_stamina_cost'] ?? 2,
+        sellDiscountRate: cfgMap['sell_discount_rate'] ?? 0.3,
       },
     };
   }),
@@ -624,8 +643,23 @@ export const gameWorldRouter = router({
 
     const agent = agentRows[0];
 
-    // 體力再生計算
-    const newStamina = regenStamina(agent);
+    // 從 game_config 讀取 stamina_per_tick（動態設定）
+    const cfgTickRows = await db.select({ configKey: gameConfig.configKey, configValue: gameConfig.configValue })
+      .from(gameConfig)
+      .where(and(
+        eq(gameConfig.isActive, 1),
+        sql`${gameConfig.configKey} IN ('stamina_per_tick','stamina_regen_minutes','stamina_regen_amount')`
+      ));
+    const cfgTickMap: Record<string, number> = {};
+    for (const row of cfgTickRows) {
+      cfgTickMap[row.configKey] = parseFloat(row.configValue) || 0;
+    }
+    const staminaPerTick = cfgTickMap['stamina_per_tick'] ?? 5;
+    const regenMinutesTick = cfgTickMap['stamina_regen_minutes'] ?? 30;
+    const regenAmountTick  = cfgTickMap['stamina_regen_amount']  ?? 30;
+
+    // 體力再生計算（使用動態參數）
+    const newStamina = regenStamina(agent, regenMinutesTick, regenAmountTick);
     if (newStamina !== agent.stamina) {
       await db.update(gameAgents).set({
         stamina: newStamina,
@@ -634,7 +668,7 @@ export const gameWorldRouter = router({
     }
 
     // 體力不足，跳過行動
-    if (newStamina < 5) {
+    if (newStamina < staminaPerTick) {
       return { processed: 0, events: 0, levelUps: [], legendaryDrops: [], lastCombat: undefined };
     }
 
@@ -645,8 +679,8 @@ export const gameWorldRouter = router({
     const currentTick = ((worldData.currentTick as number) ?? 0);
     const dailyElement = (worldData.dailyElement as import("../../shared/types").WuXing) ?? "wood";
 
-    // 執行當前玩家的角色行動
-    const agentResult = await processAgentTick({ ...agent, stamina: newStamina }, currentTick, dailyElement);
+    // 執行當前玩家的角色行動（傳入動態 stamina_per_tick）
+    const agentResult = await processAgentTick({ ...agent, stamina: newStamina }, currentTick, dailyElement, staminaPerTick);
 
     return {
       processed: 1,
@@ -1007,28 +1041,35 @@ export const gameWorldRouter = router({
         .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
       const agent = agents[0];
       if (!agent) throw new Error("角色不存在");
-      if (agent.status === "dead") throw new Error("旅人已倒下，無法傳送");
-      if (agent.actionPoints < 1) throw new Error("靈力值不足（傳送需要 1 點靈力值）");
+      if (agent.status === "dead") throw new Error("旅人已倒下，無法移動");
       if (agent.currentNodeId === input.targetNodeId) throw new Error("已在目標節點");
+
+      // 從 game_config 讀取移動體力消耗（動態設定）
+      const moveCfgRows = await db.select({ configKey: gameConfig.configKey, configValue: gameConfig.configValue })
+        .from(gameConfig)
+        .where(and(eq(gameConfig.isActive, 1), eq(gameConfig.configKey, 'move_stamina_cost')));
+      const moveStaminaCost = moveCfgRows[0] ? (parseFloat(moveCfgRows[0].configValue) || 2) : 2;
+
+      if (agent.stamina < moveStaminaCost) throw new Error(`體力不足（移動需要 ${moveStaminaCost} 點體力）`);
 
       const now = Date.now();
       await db.update(gameAgents).set({
         targetNodeId: input.targetNodeId,
         status: "moving",
-        actionPoints: agent.actionPoints - 1,
+        stamina: Math.max(0, agent.stamina - moveStaminaCost),
         updatedAt: now,
       }).where(eq(gameAgents.id, agent.id));
 
       await db.insert(agentEvents).values({
         agentId: agent.id,
         eventType: "move",
-        message: `🗺️ ${agent.agentName ?? "旅人"} 啟程前往 ${targetNode.name}！（消耗 1 靈力值）`,
+        message: `🗺️ ${agent.agentName ?? "旅人"} 啟程前往 ${targetNode.name}！（消耗 ${moveStaminaCost} 點體力）`,
         detail: { type: "teleport", targetNodeId: input.targetNodeId, targetNodeName: targetNode.name },
         nodeId: agent.currentNodeId,
         createdAt: now,
       });
 
-      return { success: true, targetNode };
+      return { success: true, targetNode, moveStaminaCost };
     }),
 
   // ─── 取得當前節點的隱藏事件（依洞察力機率感知） ───
@@ -1971,11 +2012,18 @@ export const gameWorldRouter = router({
       if (invItem.isEquipped) throw new TRPCError({ code: "BAD_REQUEST", message: "裝備中的裝備無法販售" });
       const sellQty = Math.min(input.quantity, invItem.quantity);
       if (sellQty <= 0) throw new TRPCError({ code: "BAD_REQUEST", message: "數量不足" });
-      // 計算販售價格（依稾有度定價）
+      // 計算販售價格（依稀有度定價，乘以後台折扣率）
       const { getItemInfo } = await import("../../shared/itemNames");
       const itemInfo = getItemInfo(invItem.itemId);
-      const rarityPrice: Record<string, number> = { common: 20, uncommon: 60, rare: 150, epic: 500, legendary: 2000 };
-      const unitPrice = rarityPrice[itemInfo.rarity] ?? 20;
+      // 從 game_config 讀取販售折扣率
+      const discountCfg = await db.select({ configValue: gameConfig.configValue })
+        .from(gameConfig)
+        .where(and(eq(gameConfig.isActive, 1), eq(gameConfig.configKey, 'sell_discount_rate')))
+        .limit(1);
+      const sellDiscountRate = discountCfg[0] ? (parseFloat(discountCfg[0].configValue) || 0.3) : 0.3;
+      const rarityBasePrice: Record<string, number> = { common: 20, uncommon: 60, rare: 150, epic: 500, legendary: 2000 };
+      const basePrice = rarityBasePrice[itemInfo.rarity] ?? 20;
+      const unitPrice = Math.max(1, Math.floor(basePrice * sellDiscountRate));
       const totalGold = unitPrice * sellQty;
       // 更新背包數量
       if (invItem.quantity <= sellQty) {

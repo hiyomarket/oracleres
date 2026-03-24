@@ -3842,3 +3842,23 @@
 - [x] 後台加入「商店管理」 Tab
 - [x] 管理員可查看/新增/刪除一般商店、靈相商店、密店商品池
 - [x] 管理員可手動觸發商店刷新
+
+## V42 Bug 修復 + 建議功能實作
+
+### Bug 修復
+- [x] 體力恢復顯示與後台設定同步（前台「下次恢復：X 分鐘後（+Y）」應讀取 stamina_regen_minutes/amount 全域參數）
+- [ ] 聊天大廳展開後置中、縮小框架、不被截斷
+- [ ] 移除頂部殘留的「丁酉/火旺」「木命/尋67」名稱區塊
+- [ ] 靈相干預「明日再來」鎖定問題（神癒恢復/神眼加持/靈癒疲勞 應可正常使用）
+
+### 新功能
+- [x] 商店刷新倒數計時（距下次刷新）
+- [ ] 道具詳細說明彈窗（五行屬性、效果數值、使用方式）
+- [x] 後台全域參數加入「販售折扣率」設定
+- [x] 移動不扣靈力，改為只扣體力，後台加入移動消耗體力設定（move_stamina_cost）
+- [x] 後端 regenStamina 改為讀取 game_config stamina_regen_minutes/amount（現在硬編碼 30分/+30）
+- [x] 後端 getAgentStatus 改為讀取 game_config 動態計算 staminaInfo，回傳 regenAmount
+- [x] 後端 processAgentTick STAMINA_COST 改為讀取 game_config.stamina_per_tick（現在硬編碼 5，後台設定 2）
+- [x] 後端 triggerTick 體力不足判斷改為讀取 game_config.stamina_per_tick
+- [x] 前端體力恢復顯示改為讀取後台 regenAmount（移除硬編碼 +30）
+- [x] 前端移動提示改為顯示體力消耗（不顯示靈力消耗）

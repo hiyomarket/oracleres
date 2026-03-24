@@ -7,7 +7,7 @@
  *   - 靈石專區（靈石購買）：稀有道具、特殊素材
  *   - 密店（感知觸發）：隨機稀有商品
  */
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -191,6 +191,7 @@ type ShopTab = "coin" | "stone" | "hidden" | "sell";
 export default function GameShop() {
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<ShopTab>("coin");
+  const [shopRefreshCountdown, setShopRefreshCountdown] = useState("");
   const [confirmItem, setConfirmItem] = useState<{
     id: number;
     displayName: string;
@@ -209,6 +210,27 @@ export default function GameShop() {
     enabled: activeTab === "hidden",
     staleTime: 0,
   });
+  // 讀取後台設定（折扣率等）
+  const { data: statusData } = trpc.gameWorld.getAgentStatus.useQuery(undefined, { staleTime: 60000 });
+  const sellDiscountRate = (statusData?.staminaInfo as { sellDiscountRate?: number } | undefined)?.sellDiscountRate ?? 0.3;
+
+  // 商店刷新倒數計時器（每日 00:00 台灣時間刷新）
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date(Date.now() + 8 * 3600000); // UTC+8
+      const tomorrow = new Date(now);
+      tomorrow.setUTCHours(16, 0, 0, 0); // 台灣 00:00 = UTC 16:00
+      if (tomorrow <= now) tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+      const diff = tomorrow.getTime() - (Date.now() + 8 * 3600000);
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setShopRefreshCountdown(`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`);
+    };
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // ─── 購買 Mutation ───
   const buyGameItem = trpc.gameWorld.buyGameShopItem.useMutation({
@@ -351,8 +373,12 @@ export default function GameShop() {
               <div style={{ fontSize: "14px", fontWeight: 700, color: "#c4b5fd" }}>{gameStones.toLocaleString()}</div>
             </div>
           </div>
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
+          <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
             <span style={{ fontSize: "10px", color: "#475569" }}>虛相世界專用貨幣</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ fontSize: "9px", color: "#334155" }}>🔄 刷新</span>
+              <span style={{ fontSize: "10px", color: "#38bdf8", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{shopRefreshCountdown}</span>
+            </div>
           </div>
         </div>
 
@@ -484,7 +510,8 @@ export default function GameShop() {
             <>
               <div style={{ marginBottom: "12px" }}>
                 <p style={{ fontSize: "12px", color: "#64748b", margin: 0 }}>
-                  選擇背包中不需要的道具販售换取 <span style={{ color: "#fbbf24" }}>🪙 金幣</span>。販售價格依稾有度而定。
+                  選擇背包中不需要的道具販售換取 <span style={{ color: "#fbbf24" }}>🪙 金幣</span>。
+                  販售價格 = 基礎價 × <span style={{ color: "#4ade80", fontWeight: 700 }}>{Math.round(sellDiscountRate * 100)}%</span>（後台可調整）。
                 </p>
               </div>
               {invLoading ? (
@@ -499,8 +526,9 @@ export default function GameShop() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {(invData as Array<{ id: number; itemId: string; quantity: number; isEquipped: number | null }>).filter(i => !i.isEquipped).map((item) => {
                     const info = getItemInfo(item.itemId);
-                    const rarityPrice: Record<string, number> = { common: 20, uncommon: 60, rare: 150, epic: 500, legendary: 2000 };
-                    const unitPrice = rarityPrice[info.rarity] ?? 20;
+                    const rarityBasePrice: Record<string, number> = { common: 20, uncommon: 60, rare: 150, epic: 500, legendary: 2000 };
+                    const basePrice = rarityBasePrice[info.rarity] ?? 20;
+                    const unitPrice = Math.max(1, Math.floor(basePrice * sellDiscountRate));
                     const totalGold = unitPrice * item.quantity;
                     const rarityColor = {
                       common: "#94a3b8", uncommon: "#4ade80", rare: "#60a5fa", epic: "#a78bfa", legendary: "#fbbf24",

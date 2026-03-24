@@ -612,15 +612,19 @@ export function calcExpToNext(level: number): number {
 }
 
 // ─── 體力値再生（每 30 分鐘 +30 點，上限 maxStamina） ───
-export function regenStamina(agent: typeof gameAgents.$inferSelect): number {
+export function regenStamina(
+  agent: typeof gameAgents.$inferSelect,
+  regenMinutes: number = 30,
+  regenAmount: number = 30
+): number {
   const now = Date.now();
   const lastRegen = agent.staminaLastRegen ?? now;
   const elapsed = now - lastRegen;
-  const regenIntervalMs = 30 * 60 * 1000; // 30 分鐘
+  const regenIntervalMs = regenMinutes * 60 * 1000;
   const regenCycles = Math.floor(elapsed / regenIntervalMs);
   if (regenCycles <= 0) return agent.stamina;
-  const regenAmount = regenCycles * 30; // 每循環 +30 點
-  return Math.min(agent.maxStamina, agent.stamina + regenAmount);
+  const totalRegen = regenCycles * regenAmount;
+  return Math.min(agent.maxStamina, agent.stamina + totalRegen);
 }
 
 // ─── 戰鬥結果類型（共用） ───
@@ -708,7 +712,8 @@ export async function processTick(): Promise<TickResult> {
 export async function processAgentTick(
   agent: typeof gameAgents.$inferSelect,
   tick: number,
-  dailyElement: WuXing
+  dailyElement: WuXing,
+  staminaPerTick: number = 5
 ): Promise<{ events: number; levelUps: TickResult["levelUps"]; legendaryDrops: TickResult["legendaryDrops"]; lastCombat?: CombatResultItem }> {
   const EMPTY = { events: 0, levelUps: [] as TickResult["levelUps"], legendaryDrops: [] as TickResult["legendaryDrops"] };
   const db = await getDb();
@@ -802,16 +807,15 @@ export async function processAgentTick(
   const currentNode: MapNode | undefined = MAP_NODE_MAP.get(agent.currentNodeId);
   if (!currentNode) return EMPTY;
 
-  // 體力檢查：每次行動消耗 5 點體力
-  const STAMINA_COST = 5;
-  if (agent.stamina < STAMINA_COST) {
+  // 體力檢查：每次行動消耗 staminaPerTick 點體力（從 game_config 讀取）
+  if (agent.stamina < staminaPerTick) {
     // 體力不足，跳過行動（等待自然回復）
     return EMPTY;
   }
 
-  // 消耗 5 點體力
+  // 消耗 staminaPerTick 點體力
   await db.update(gameAgents).set({
-    stamina: Math.max(0, agent.stamina - STAMINA_COST),
+    stamina: Math.max(0, agent.stamina - staminaPerTick),
     staminaLastRegen: agent.staminaLastRegen ?? Date.now(),
   }).where(eq(gameAgents.id, agent.id));
 

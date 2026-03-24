@@ -212,11 +212,12 @@ function NamingDialog({ onNamed }: { onNamed: () => void }) {
 // 地圖傳送彈窗（V14）
 // ─────────────────────────────────────────────────────────────
 function TeleportModal({
-  nodes, currentNodeId, onClose, onTeleport, isPending, agentAP, agentStamina,
+  nodes, currentNodeId, onClose, onTeleport, isPending, agentAP, agentStamina, moveStaminaCost,
 }: {
   nodes: MapNode[];
   currentNodeId: string;
   agentStamina?: number;
+  moveStaminaCost?: number;
   onClose: () => void;
   onTeleport: (nodeId: string) => void;
   isPending: boolean;
@@ -251,7 +252,7 @@ function TeleportModal({
         <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "rgba(56,189,248,0.2)" }}>
           <div>
             <h2 className="text-lg font-bold text-sky-300">🗺️ 地圖傳送</h2>
-            <p className="text-xs text-slate-500 mt-0.5">目前：{currentNode?.name ?? currentNodeId} · 靈力 {agentAP} 點 · 體力 {currentStamina} 點</p>
+            <p className="text-xs text-slate-500 mt-0.5">目前：{currentNode?.name ?? currentNodeId} · 體力 {currentStamina} 點</p>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl px-2">✕</button>
         </div>
@@ -313,16 +314,16 @@ function TeleportModal({
         <div className="px-4 py-3 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
           <button
             onClick={() => selected && onTeleport(selected)}
-            disabled={!selected || isPending || agentAP < 1}
+            disabled={!selected || isPending || currentStamina < (moveStaminaCost ?? 2)}
             className="w-full py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
-              background: selected && agentAP >= 1 ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(100,100,120,0.2)",
-              color: selected && agentAP >= 1 ? "#000" : "#475569",
+              background: selected && currentStamina >= (moveStaminaCost ?? 2) ? "linear-gradient(135deg,#0ea5e9,#38bdf8)" : "rgba(100,100,120,0.2)",
+              color: selected && currentStamina >= (moveStaminaCost ?? 2) ? "#000" : "#475569",
             }}>
-            {isPending ? "⏳ 傳送中…" : selected ? `🗺️ 傳送至 ${nodes.find(n => n.id === selected)?.name ?? selected}（消耗 1 靈力）` : "請選擇目標地點"}
+            {isPending ? "⏳ 移動中…" : selected ? `🗺️ 前往 ${nodes.find(n => n.id === selected)?.name ?? selected}（消耗 ${moveStaminaCost ?? 2} 體力）` : "請選擇目標地點"}
           </button>
-          {agentAP < 1 && (
-            <p className="text-center text-red-400 text-xs mt-2">靈力不足，無法傳送（需要 1 靈力）</p>
+          {currentStamina < (moveStaminaCost ?? 2) && (
+            <p className="text-center text-red-400 text-xs mt-2">體力不足，無法移動（需要 {moveStaminaCost ?? 2} 點體力）</p>
           )}
         </div>
       </div>
@@ -546,7 +547,7 @@ function CharacterPanel({
   divineHeal, divineEye, divineStamina, setStrategy, ec, mobileMode = false,
 }: {
   agent: AgentData | null | undefined;
-  staminaInfo: { current?: number; max?: number; nextRegenMin?: number } | null | undefined;
+  staminaInfo: { current?: number; max?: number; nextRegenMin?: number; regenAmount?: number; regenMinutes?: number; staminaPerTick?: number; moveStaminaCost?: number; sellDiscountRate?: number } | null | undefined;
   natalStats: { hp?: number; atk?: number; def?: number; spd?: number; mp?: number } | null | undefined;
   equippedData: { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string } | null> } | null | undefined;
   balanceData: { gameCoins?: number; gameStones?: number } | null | undefined;
@@ -804,7 +805,7 @@ function CharacterPanel({
             <StatBar icon="💧" label="MP"   value={agentMp}      max={agentMaxMp}      color="#38bdf8" />
             <StatBar icon="⚡" label="活躍" value={agentStamina} max={agentMaxStamina} color="#f59e0b" />
               {staminaInfo && agentStamina < agentMaxStamina && (
-              <p className="text-xs text-slate-600 text-right">下次恢復：{staminaInfo.nextRegenMin} 分鐘後（+30）</p>
+              <p className="text-xs text-slate-600 text-right">下次恢復：{staminaInfo.nextRegenMin} 分鐘後（+{staminaInfo.regenAmount ?? 30}）</p>
             )}
 
             {/* GD-002 戰鬥系五行屬性 */}
@@ -2156,8 +2157,11 @@ export default function VirtualWorldPage() {
         const curStaminaInfo = statusData?.staminaInfo as { current?: number } | undefined;
         const curStamina = curStaminaInfo?.current ?? agent?.stamina ?? 100;
         const curStrategy = agent?.strategy ?? "explore";
-        // Bug 6 fix: 體力 < 5 時自動暫停 Tick（對應一次行動消耗 5 體力）
-        if (curStamina < 5) {
+        // Bug 6 fix: 體力不足時自動暫停 Tick（讀取後台 staminaPerTick 設定）
+        const curStaminaPerTick = (statusData?.staminaInfo as { staminaPerTick?: number } | undefined)?.staminaPerTick ?? 5;
+        const curRegenAmount = (statusData?.staminaInfo as { regenAmount?: number } | undefined)?.regenAmount ?? 30;
+        const curRegenMinutes = (statusData?.staminaInfo as { regenMinutes?: number } | undefined)?.regenMinutes ?? 30;
+        if (curStamina < curStaminaPerTick) {
           if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
           tickIntervalRef.current = null;
           setTickRunning(false);
@@ -2165,12 +2169,12 @@ export default function VirtualWorldPage() {
           if (curStrategy !== "rest") {
             setStrategy.mutate({ strategy: "rest" });
             toast.info("😴 體力不足！自動暫停行動並切換「休息」模式", {
-              description: "體力將每 30 分鐘自動回復 30 點，回復後可再次開始行動",
+              description: `體力將每 ${curRegenMinutes} 分鐘自動回復 ${curRegenAmount} 點，回復後可再次開始行動`,
               duration: 5000,
             });
           } else {
             toast.info("😴 體力不足！行動已暫停", {
-              description: "體力將每 30 分鐘自動回復 30 點，回復後可再次開始行動",
+              description: `體力將每 ${curRegenMinutes} 分鐘自動回復 ${curRegenAmount} 點，回復後可再次開始行動`,
               duration: 5000,
             });
           }
@@ -2253,7 +2257,7 @@ export default function VirtualWorldPage() {
     if (agentData?.needsNaming) setShowNaming(true);
   }, [agentData?.needsNaming]);
 
-  const staminaInfo = statusData?.staminaInfo as { current?: number; max?: number; nextRegenMin?: number } | undefined;
+  const staminaInfo = statusData?.staminaInfo as { current?: number; max?: number; nextRegenMin?: number; regenAmount?: number; regenMinutes?: number; staminaPerTick?: number; moveStaminaCost?: number; sellDiscountRate?: number } | undefined;
   const natalStats = equippedData?.natalStats as { hp?: number; atk?: number; def?: number; spd?: number; mp?: number } | undefined;
   const mapNodeList = useMemo(() => (mapNodes ?? []) as MapNode[], [mapNodes]);
   const agentElement = agent?.dominantElement ?? equippedData?.dayMasterElementEn ?? "metal";
@@ -2503,6 +2507,8 @@ export default function VirtualWorldPage() {
           onTeleport={(nodeId) => setTeleport.mutate({ targetNodeId: nodeId })}
           isPending={setTeleport.isPending}
           agentAP={agent?.actionPoints ?? 0}
+          agentStamina={staminaInfo?.current ?? agent?.stamina ?? 100}
+          moveStaminaCost={staminaInfo?.moveStaminaCost ?? 2}
         />
       )}
 
@@ -2535,13 +2541,13 @@ export default function VirtualWorldPage() {
                     setTeleport.mutate({ targetNodeId: selectedTeleportNode });
                     setShowQuickTeleport(false);
                   }}
-                  disabled={setTeleport.isPending || (agent?.actionPoints ?? 0) < 1}
+                  disabled={setTeleport.isPending || (agent?.stamina ?? 0) < (staminaInfo?.moveStaminaCost ?? 2)}
                   className="flex-1 py-3 rounded-xl font-bold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
                   style={{
-                    background: (agent?.actionPoints ?? 0) >= 1 ? `linear-gradient(135deg,${elColor},${elColor}cc)` : "rgba(100,100,120,0.2)",
-                    color: (agent?.actionPoints ?? 0) >= 1 ? "#000" : "#475569",
+                    background: (agent?.stamina ?? 0) >= (staminaInfo?.moveStaminaCost ?? 2) ? `linear-gradient(135deg,${elColor},${elColor}cc)` : "rgba(100,100,120,0.2)",
+                    color: (agent?.stamina ?? 0) >= (staminaInfo?.moveStaminaCost ?? 2) ? "#000" : "#475569",
                   }}>
-                  {setTeleport.isPending ? "⏳ 傳送中…" : "🗺️ 前往此地（1靈力）"}
+                  {setTeleport.isPending ? "⏳ 移動中…" : `🗺️ 前往此地（消耗 ${staminaInfo?.moveStaminaCost ?? 2} 體力）`}
                 </button>
                 <button
                   onClick={() => { setShowTeleport(true); setShowQuickTeleport(false); }}
@@ -2550,8 +2556,8 @@ export default function VirtualWorldPage() {
                   全圖
                 </button>
               </div>
-              {(agent?.actionPoints ?? 0) < 1 && (
-                <p className="text-center text-red-400 text-xs">靈力不足，無法傳送（需要 1 靈力）</p>
+              {(agent?.stamina ?? 0) < (staminaInfo?.moveStaminaCost ?? 2) && (
+                <p className="text-center text-red-400 text-xs">體力不足，無法移動（需要 {staminaInfo?.moveStaminaCost ?? 2} 點體力）</p>
               )}
             </div>
           </div>
