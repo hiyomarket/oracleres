@@ -483,9 +483,18 @@ function regenStamina(agent: typeof gameAgents.$inferSelect): number {
 }
 
 // ─── 主 Tick 處理函數 ───
-export async function processTick(): Promise<{ processed: number; events: number }> {
+export interface TickResult {
+  processed: number;
+  events: number;
+  /** 本次 Tick 中發生升級的角色資訊 */
+  levelUps: Array<{ agentId: number; agentName: string; newLevel: number }>;
+  /** 本次 Tick 中掉落的傳說/高級裝備 */
+  legendaryDrops: Array<{ agentId: number; agentName: string; equipId: string; tier: string }>;
+}
+
+export async function processTick(): Promise<TickResult> {
   const db = await getDb();
-  if (!db) return { processed: 0, events: 0 };
+  if (!db) return { processed: 0, events: 0, levelUps: [], legendaryDrops: [] };
 
   // 取得或建立世界狀態
   const worlds = await db.select().from(gameWorld).limit(1);
@@ -498,7 +507,7 @@ export async function processTick(): Promise<{ processed: number; events: number
     });
     const newWorlds = await db.select().from(gameWorld).limit(1);
     world = newWorlds[0];
-    if (!world) return { processed: 0, events: 0 };
+    if (!world) return { processed: 0, events: 0, levelUps: [], legendaryDrops: [] };
   }
 
   const worldData = (world.worldData as Record<string, unknown>) ?? {};
@@ -518,6 +527,8 @@ export async function processTick(): Promise<{ processed: number; events: number
     .where(and(eq(gameAgents.isActive, 1)));
 
   let totalEvents = 0;
+  const allLevelUps: TickResult["levelUps"] = [];
+  const allLegendaryDrops: TickResult["legendaryDrops"] = [];
 
   for (const agent of agents) {
     try {
@@ -533,8 +544,10 @@ export async function processTick(): Promise<{ processed: number; events: number
       // 體力值不足時跳過行動
       if (newStamina <= 0) continue;
 
-      const events = await processAgentTick({ ...agent, stamina: newStamina }, currentTick, dailyElement);
-      totalEvents += events;
+      const agentResult = await processAgentTick({ ...agent, stamina: newStamina }, currentTick, dailyElement);
+      totalEvents += agentResult.events;
+      if (agentResult.levelUps.length > 0) allLevelUps.push(...agentResult.levelUps);
+      if (agentResult.legendaryDrops.length > 0) allLegendaryDrops.push(...agentResult.legendaryDrops);
     } catch (err) {
       console.error(`[Tick] Error processing agent ${agent.id}:`, err);
     }
@@ -547,7 +560,7 @@ export async function processTick(): Promise<{ processed: number; events: number
     console.error("[Tick] hiddenEventEngine error:", err);
   }
 
-  return { processed: agents.length, events: totalEvents };
+  return { processed: agents.length, events: totalEvents, levelUps: allLevelUps, legendaryDrops: allLegendaryDrops };
 }
 
 // ─── 單一角色 Tick 處理 ───
@@ -555,12 +568,13 @@ async function processAgentTick(
   agent: typeof gameAgents.$inferSelect,
   tick: number,
   dailyElement: WuXing
-): Promise<number> {
+): Promise<{ events: number; levelUps: TickResult["levelUps"]; legendaryDrops: TickResult["legendaryDrops"] }> {
+  const EMPTY = { events: 0, levelUps: [] as TickResult["levelUps"], legendaryDrops: [] as TickResult["legendaryDrops"] };
   const db = await getDb();
-  if (!db) return 0;
+  if (!db) return EMPTY;
 
   // 死亡狀態：不處理
-  if (agent.status === "dead") return 0;
+  if (agent.status === "dead") return EMPTY;
 
   // 移動中：檢查是否抵達
   if (agent.status === "moving" && agent.targetNodeId) {
@@ -580,7 +594,7 @@ async function processAgentTick(
       });
       await createEvent(agent.id, "move", msg, { nodeId: destNode.id }, destNode.id);
       agent = { ...agent, currentNodeId: agent.targetNodeId, status: "idle" };
-      return 1;
+      return { events: 1, levelUps: [], legendaryDrops: [] };
     }
   }
 
@@ -603,20 +617,20 @@ async function processAgentTick(
       mp: mpRestore,
     });
     await createEvent(agent.id, "rest", msg, {}, agent.currentNodeId);
-    return 1;
+    return { events: 1, levelUps: [], legendaryDrops: [] };
   }
 
   // HP 過低：強制休息
   if (agent.hp < agent.maxHp * 0.2) {
     await db.update(gameAgents).set({ status: "resting" }).where(eq(gameAgents.id, agent.id));
-    return 0;
+    return EMPTY;
   }
 
   // 根據策略決定行動
   const currentNode: MapNode | undefined = MAP_NODE_MAP.get(agent.currentNodeId);
-  if (!currentNode) return 0;
+  if (!currentNode) return EMPTY;
 
-  // 消耗體力值
+  // 消耗體力値
   await db.update(gameAgents).set({
     stamina: Math.max(0, agent.stamina - 1),
     staminaLastRegen: agent.staminaLastRegen ?? Date.now(),
@@ -624,6 +638,8 @@ async function processAgentTick(
 
   const roll = Math.random();
   let eventsCreated = 0;
+  const tickLevelUps: TickResult["levelUps"] = [];
+  const tickLegendaryDrops: TickResult["legendaryDrops"] = [];
 
   // 從全域引擎配置取得動態機率
   const chances = getEventChances();
@@ -631,7 +647,7 @@ async function processAgentTick(
   // Roguelike 奇遇（動態機率）
   if (roll < chances.rogue) {
     eventsCreated += await processRogueEvent(agent, currentNode, tick);
-    return eventsCreated;
+    return { events: eventsCreated, levelUps: tickLevelUps, legendaryDrops: tickLegendaryDrops };
   }
 
   const strategy = agent.strategy;
@@ -640,7 +656,10 @@ async function processAgentTick(
 
   if (strategy === "explore" || strategy === "combat") {
     if (roll < combatThreshold) {
-      eventsCreated += await processCombatEvent(agent, currentNode, tick, dailyElement);
+      const combatResult = await processCombatEvent(agent, currentNode, tick, dailyElement);
+      eventsCreated += combatResult.events;
+      tickLevelUps.push(...combatResult.levelUps);
+      tickLegendaryDrops.push(...combatResult.legendaryDrops);
     } else if (roll < gatherThreshold) {
       eventsCreated += await processGatherEvent(agent, currentNode, tick);
     } else if (strategy === "explore") {
@@ -652,13 +671,16 @@ async function processAgentTick(
     } else if (roll < 0.75) {
       eventsCreated += await processMoveEvent(agent, currentNode, tick);
     } else {
-      eventsCreated += await processCombatEvent(agent, currentNode, tick, dailyElement);
+      const combatResult = await processCombatEvent(agent, currentNode, tick, dailyElement);
+      eventsCreated += combatResult.events;
+      tickLevelUps.push(...combatResult.levelUps);
+      tickLegendaryDrops.push(...combatResult.legendaryDrops);
     }
   } else if (strategy === "rest") {
     await db.update(gameAgents).set({ status: "resting" }).where(eq(gameAgents.id, agent.id));
   }
 
-  return eventsCreated;
+  return { events: eventsCreated, levelUps: tickLevelUps, legendaryDrops: tickLegendaryDrops };
 }
 
 // ─── 戰鬥事件 ───
@@ -667,12 +689,13 @@ async function processCombatEvent(
   currentNode: MapNode,
   tick: number,
   dailyElement: WuXing
-): Promise<number> {
+): Promise<{ events: number; levelUps: TickResult["levelUps"]; legendaryDrops: TickResult["legendaryDrops"] }> {
+  const EMPTY = { events: 0, levelUps: [] as TickResult["levelUps"], legendaryDrops: [] as TickResult["legendaryDrops"] };
   const db = await getDb();
-  if (!db) return 0;
+  if (!db) return EMPTY;
 
   const monsters = getMonstersForNode(currentNode.element, currentNode.monsterLevel);
-  if (monsters.length === 0) return 0;
+  if (monsters.length === 0) return EMPTY;
 
   const monster = pickRandom(monsters);
 
@@ -718,6 +741,7 @@ async function processCombatEvent(
   let newTotalKills = agent.totalKills + (result.won ? 1 : 0);
 
   // 升級判斷（GD-018：等級只是地圖通行證，上限 60）
+  const combatLevelUps: TickResult["levelUps"] = [];
   while (newExp >= newExpToNext && newLevel < 60) {
     newExp -= newExpToNext;
     newLevel++;
@@ -727,6 +751,7 @@ async function processCombatEvent(
       level: newLevel,
     });
     await createEvent(agent.id, "system", lvupMsg, { type: "levelup", level: newLevel }, currentNode.id);
+    combatLevelUps.push({ agentId: agent.id, agentName: agent.agentName ?? "旅人", newLevel });
   }
 
   if (newHp <= 1) {
@@ -785,7 +810,8 @@ async function processCombatEvent(
     lootItems: result.lootItems,
   }, currentNode.id);
 
-  // GD-021：命格共鳴裝備掉落（從資料庫掉落表計算）
+  // GD-021：命格共鳴裝備摀落（從資料庫摀落表計算）
+  const combatLegendaryDrops: TickResult["legendaryDrops"] = [];
   if (result.won) {
     const dropCtx: DropContext = {
       monsterId: monster.id,
@@ -798,13 +824,19 @@ async function processCombatEvent(
         metal: agent.wuxingMetal ?? 20,
         water: agent.wuxingWater ?? 20,
       },
-      luckyValue: Math.min(1000, (agent.wuxingMetal ?? 20) * 10), // 金屬性 × 10 = 幸運值
+      luckyValue: Math.min(1000, (agent.wuxingMetal ?? 20) * 10), // 金屬性 × 10 = 幸運値
       hasTaskBonus: false,
     };
     const equipDrops = await rollEquipmentDrops(agent.id, monster.id, dropCtx);
     for (const equipId of equipDrops) {
       const lootMsg = `${agent.agentName ?? "旅人"} 從 ${monster.name} 身上獲得了裝備！`;
       await createEvent(agent.id, "gather", lootMsg, { itemId: equipId, isEquipment: true }, currentNode.id);
+      // 判斷是否為高級摀落（傳說/高級裝備）
+      const tierMatch = equipId.match(/-(basic|mid|high|legendary)/);
+      const tier = tierMatch ? tierMatch[1] : "basic";
+      if (tier === "legendary" || tier === "high") {
+        combatLegendaryDrops.push({ agentId: agent.id, agentName: agent.agentName ?? "旅人", equipId, tier });
+      }
       // 寫入背包（裝備類型）
       try {
         const [existingEquip] = await db.select().from(agentInventory)
@@ -872,7 +904,7 @@ async function processCombatEvent(
     }
   }
 
-  return 1 + result.lootItems.length;
+  return { events: 1 + result.lootItems.length, levelUps: combatLevelUps, legendaryDrops: combatLegendaryDrops };
 }
 
 // ─── 採集事件 ───

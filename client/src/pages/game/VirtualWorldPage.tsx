@@ -434,25 +434,42 @@ function NodeInfoPanel({
                 {adventurers.map((a, i) => {
                   const ac = WX_HEX[a.element] ?? "#888";
                   const hpPct = a.maxHp > 0 ? Math.min(100, (a.hp / a.maxHp) * 100) : 0;
-                  const statusLabel = a.status === "idle" ? "待機" : a.status === "moving" ? "移動" : a.status === "resting" ? "休息" : a.status === "combat" ? "戰鬥中" : a.status;
+                  const isCombat = a.status === "combat";
+                  const isResting = a.status === "resting";
+                  const isMoving = a.status === "moving";
+                  const statusLabel = isCombat ? "⚔️ 戰鬥中" : isMoving ? "🚶 移動中" : isResting ? "💤 休息中" : "✨ 探索中";
+                  const statusColor = isCombat ? "#ef4444" : isMoving ? "#38bdf8" : isResting ? "#94a3b8" : "#22c55e";
+                  const statusBg = isCombat ? "rgba(239,68,68,0.15)" : isMoving ? "rgba(56,189,248,0.1)" : isResting ? "rgba(148,163,184,0.1)" : "rgba(34,197,94,0.1)";
+                  const hpColor = hpPct > 60 ? "#22c55e" : hpPct > 30 ? "#f59e0b" : "#ef4444";
                   return (
-                    <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border"
-                      style={{ background: `${ac}06`, borderColor: `${ac}20` }}>
-                      <span className="text-sm shrink-0">{WX_EMOJI[a.element] ?? "👤"}</span>
+                    <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all"
+                      style={{ background: `${ac}08`, borderColor: isCombat ? `${statusColor}40` : `${ac}20`,
+                        boxShadow: isCombat ? `0 0 8px ${statusColor}20` : "none" }}>
+                      <div className="relative shrink-0">
+                        <span className="text-sm">{WX_EMOJI[a.element] ?? "👤"}</span>
+                        {/* 狀態脈衝點 */}
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+                          style={{ background: statusColor,
+                            animation: isCombat ? "nodeAdventurerPulse 0.8s ease-in-out infinite" : "none",
+                            boxShadow: isCombat ? `0 0 4px ${statusColor}` : "none" }}
+                        />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 flex-wrap">
-                          <span className="text-sm font-bold text-slate-200">{a.name}</span>
+                          <span className="text-sm font-bold text-slate-200 truncate max-w-[80px]">{a.name}</span>
                           <span className="text-xs text-slate-500">Lv.{a.level}</span>
-                          <span className="text-xs px-1 py-0.5 rounded"
-                            style={{ background: a.status === "combat" ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.1)", color: a.status === "combat" ? "#ef4444" : "#22c55e" }}>
+                          <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
+                            style={{ background: statusBg, color: statusColor, fontSize: "10px" }}>
                             {statusLabel}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 mt-0.5">
-                          <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full" style={{ width: `${hpPct}%`, background: "#ef4444" }} />
+                          <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all duration-500"
+                              style={{ width: `${hpPct}%`, background: hpColor,
+                                boxShadow: hpPct < 30 ? `0 0 4px ${hpColor}` : "none" }} />
                           </div>
-                          <span className="text-xs text-slate-600 shrink-0">{a.hp}/{a.maxHp}</span>
+                          <span className="text-xs text-slate-600 shrink-0" style={{ fontSize: "10px" }}>{a.hp}/{a.maxHp}</span>
                         </div>
                       </div>
                     </div>
@@ -475,7 +492,7 @@ function NodeInfoPanel({
 // 角色面板
 // ─────────────────────────────────────────────────────────────
 type AgentData = {
-  agentName?: string; level?: number; hp?: number; maxHp?: number; mp?: number; maxMp?: number;
+  id?: number; agentName?: string; level?: number; hp?: number; maxHp?: number; mp?: number; maxMp?: number;
   stamina?: number; maxStamina?: number; gold?: number; strategy?: string; status?: string;
   dominantElement?: string; currentNodeId?: string; actionPoints?: number; maxActionPoints?: number;
   exp?: number; expToNext?: number; experience?: number; attack?: number; defense?: number; speed?: number;
@@ -1517,7 +1534,13 @@ export default function VirtualWorldPage() {
   const [showTeleport, setShowTeleport] = useState(false);
   const [nodeInfoOpen, setNodeInfoOpen] = useState(true);
   const [tickRunning, setTickRunning] = useState(false);
-  const [charPanelOpen, setCharPanelOpen] = useState(false); // 手機版底部抽屜：預設收合（地圖優先）
+  const [charPanelOpen, setCharPanelOpen] = useState(false); // 手機版底部抗屉：預設收合（地圖優先）
+  // 升級/傳說摀落特效
+  const [levelUpEffect, setLevelUpEffect] = useState<{ agentName: string; newLevel: number } | null>(null);
+  const [legendaryEffect, setLegendaryEffect] = useState<{ agentName: string; equipId: string; tier: string } | null>(null);
+  // Tick 進度條
+  const [tickProgress, setTickProgress] = useState(0); // 0-100
+  const tickProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const mapRef = useRef<LeafletMapHandle>(null);
   const utils = trpc.useUtils();
@@ -1567,7 +1590,7 @@ export default function VirtualWorldPage() {
   const currentNodeId = agent?.currentNodeId ?? "tp-zhongzheng";
   const { data: nodeInfoData } = trpc.gameWorld.getNodeInfo.useQuery(
     { nodeId: currentNodeId },
-    { enabled: !!currentNodeId, refetchInterval: 30000 }
+    { enabled: !!currentNodeId, refetchInterval: 10000 }
   );
 
   const setStrategy    = trpc.gameWorld.setStrategy.useMutation({
@@ -1589,17 +1612,57 @@ export default function VirtualWorldPage() {
     onMutate: () => {
       // 儲存目前狀態供比對
       prevAgentRef.current = agent;
+      // 啟動 Tick 進度條
+      setTickProgress(0);
+      if (tickProgressRef.current) clearInterval(tickProgressRef.current);
+      tickProgressRef.current = setInterval(() => {
+        setTickProgress(prev => {
+          if (prev >= 90) { // 最高到 90%，等待實際完成
+            if (tickProgressRef.current) clearInterval(tickProgressRef.current);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
     },
     onSuccess: (result) => {
+      // 進度條完成
+      if (tickProgressRef.current) clearInterval(tickProgressRef.current);
+      setTickProgress(100);
+      setTimeout(() => setTickProgress(0), 600);
+
       refetchStatus();
       refetchLog();
+
+      // 升級特效（只顯示自己的升級）
+      const myLevelUp = (result.levelUps ?? []).find(
+        (lu: { agentId: number; agentName: string; newLevel: number }) => lu.agentId === agent?.id
+      );
+      if (myLevelUp) {
+        setLevelUpEffect({ agentName: myLevelUp.agentName, newLevel: myLevelUp.newLevel });
+        setTimeout(() => setLevelUpEffect(null), 5000);
+      }
+
+      // 傳說摀落特效（只顯示自己的摀落）
+      const myLegendary = (result.legendaryDrops ?? []).find(
+        (ld: { agentId: number; agentName: string; equipId: string; tier: string }) => ld.agentId === agent?.id
+      );
+      if (myLegendary && !myLevelUp) { // 升級優先於傳說摀落
+        setLegendaryEffect({ agentName: myLegendary.agentName, equipId: myLegendary.equipId, tier: myLegendary.tier });
+        setTimeout(() => setLegendaryEffect(null), 4000);
+      }
+
       // 展示 Tick 結果 Toast
-      if (result.events > 0) {
+      if (result.events > 0 && !myLevelUp && !myLegendary) {
         toast.success(`✨ 旅人行動完成`, {
           description: `處理了 ${result.events} 個事件`,
           duration: 2000,
         });
       }
+    },
+    onError: () => {
+      if (tickProgressRef.current) clearInterval(tickProgressRef.current);
+      setTickProgress(0);
     },
   });
   const setTeleport = trpc.gameWorld.setTeleport.useMutation({
@@ -1718,6 +1781,100 @@ export default function VirtualWorldPage() {
 
   return (
     <GameTabLayout activeTab="world">
+      {/* Tick 進度條 */}
+      {tickProgress > 0 && (
+        <div className="fixed top-0 left-0 right-0 z-[999] h-[3px] overflow-hidden">
+          <div
+            className="h-full transition-all duration-300 ease-out"
+            style={{
+              width: `${tickProgress}%`,
+              background: "linear-gradient(90deg, #f59e0b, #ef4444, #a855f7)",
+              boxShadow: "0 0 8px rgba(245,158,11,0.8)",
+            }}
+          />
+        </div>
+      )}
+
+      {/* 升級全螢幕特效 */}
+      {levelUpEffect && (
+        <div
+          className="fixed inset-0 z-[900] flex items-center justify-center pointer-events-none"
+          style={{ animation: "fadeInOut 5s ease-in-out forwards" }}
+        >
+          {/* 金色光芒背景 */}
+          <div className="absolute inset-0" style={{
+            background: "radial-gradient(ellipse at center, rgba(245,158,11,0.3) 0%, rgba(239,68,68,0.15) 40%, transparent 70%)",
+            animation: "pulseGlow 1s ease-in-out infinite alternate",
+          }} />
+          {/* 升級內容卡片 */}
+          <div className="relative flex flex-col items-center gap-4 px-8 py-6 rounded-3xl"
+            style={{
+              background: "linear-gradient(135deg, rgba(15,20,40,0.95) 0%, rgba(30,15,60,0.95) 100%)",
+              border: "2px solid rgba(245,158,11,0.8)",
+              boxShadow: "0 0 60px rgba(245,158,11,0.5), 0 0 120px rgba(239,68,68,0.3), inset 0 0 30px rgba(245,158,11,0.1)",
+              backdropFilter: "blur(20px)",
+              animation: "scaleIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards",
+            }}
+          >
+            <div className="text-6xl" style={{ filter: "drop-shadow(0 0 20px rgba(245,158,11,1))" }}>⬆️</div>
+            <div className="text-center">
+              <div className="text-amber-400 text-sm font-medium tracking-widest mb-1">✨ 天命展开 ✨</div>
+              <div className="text-white text-2xl font-bold">{levelUpEffect.agentName}</div>
+              <div className="text-amber-300 text-lg mt-1">將至 <span className="text-3xl font-bold text-amber-400">Lv.{levelUpEffect.newLevel}</span></div>
+            </div>
+            {/* 粒子光點 */}
+            {[...Array(12)].map((_, i) => (
+              <div key={i} className="absolute w-1 h-1 rounded-full bg-amber-400"
+                style={{
+                  top: `${20 + Math.sin(i * 30 * Math.PI / 180) * 45}%`,
+                  left: `${50 + Math.cos(i * 30 * Math.PI / 180) * 45}%`,
+                  opacity: 0.8,
+                  animation: `orbit${i % 3} 2s linear infinite`,
+                  animationDelay: `${i * 0.15}s`,
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 傳說摀落全螢幕特效 */}
+      {legendaryEffect && (
+        <div
+          className="fixed inset-0 z-[900] flex items-center justify-center pointer-events-none"
+          style={{ animation: "fadeInOut 4s ease-in-out forwards" }}
+        >
+          <div className="absolute inset-0" style={{
+            background: legendaryEffect.tier === "legendary"
+              ? "radial-gradient(ellipse at center, rgba(168,85,247,0.35) 0%, rgba(236,72,153,0.2) 40%, transparent 70%)"
+              : "radial-gradient(ellipse at center, rgba(59,130,246,0.3) 0%, rgba(99,102,241,0.15) 40%, transparent 70%)",
+            animation: "pulseGlow 0.8s ease-in-out infinite alternate",
+          }} />
+          <div className="relative flex flex-col items-center gap-4 px-8 py-6 rounded-3xl"
+            style={{
+              background: "linear-gradient(135deg, rgba(15,20,40,0.95) 0%, rgba(40,10,70,0.95) 100%)",
+              border: legendaryEffect.tier === "legendary" ? "2px solid rgba(168,85,247,0.9)" : "2px solid rgba(59,130,246,0.8)",
+              boxShadow: legendaryEffect.tier === "legendary"
+                ? "0 0 60px rgba(168,85,247,0.6), 0 0 120px rgba(236,72,153,0.3)"
+                : "0 0 60px rgba(59,130,246,0.5), 0 0 100px rgba(99,102,241,0.3)",
+              backdropFilter: "blur(20px)",
+              animation: "scaleIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards",
+            }}
+          >
+            <div className="text-5xl" style={{ filter: legendaryEffect.tier === "legendary" ? "drop-shadow(0 0 20px rgba(168,85,247,1))" : "drop-shadow(0 0 16px rgba(59,130,246,1))" }}>
+              {legendaryEffect.tier === "legendary" ? "💎" : "🔷"}
+            </div>
+            <div className="text-center">
+              <div className="text-sm font-medium tracking-widest mb-1" style={{ color: legendaryEffect.tier === "legendary" ? "#a855f7" : "#60a5fa" }}>
+                {legendaryEffect.tier === "legendary" ? "✨ 傳說裝備摀落 ✨" : "🔷 高級裝備摀落"}
+              </div>
+              <div className="text-white text-xl font-bold">{legendaryEffect.agentName}</div>
+              <div className="text-slate-300 text-sm mt-1">獲得了神秘裝備</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 全服廣播橫幅 */}
       {activeBroadcasts.length > 0 && (
         <div className="fixed top-14 left-0 right-0 z-[200] flex flex-col gap-1 px-2 pt-1">
