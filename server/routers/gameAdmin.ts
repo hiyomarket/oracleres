@@ -49,6 +49,7 @@ import {
   startWorldTickEngine,
   stopWorldTickEngine,
 } from "../worldTickEngine";
+import { resetWorld, triggerHiddenShop, cleanExpiredHiddenShops } from "../worldResetEngine";
 
 // Admin guard middleware
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -1074,4 +1075,35 @@ export const gameAdminRouter = router({
       }
       return { success: true, isRunning: isWorldTickRunning() };
     }),
+
+  // ─── 世界重置 ────────────────────────────────────────────────
+  /** 格式化世界並重新啟動新世界（清除所有角色資料、重置商店） */
+  resetWorld: adminProcedure
+    .input(z.object({ confirmText: z.string() }))
+    .mutation(async ({ input }) => {
+      if (input.confirmText !== "確認重置世界") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "請輸入正確的確認文字" });
+      }
+      const result = await resetWorld();
+      return result;
+    }),
+
+  /** 手動觸發隱藏商店（在指定節點生成密店） */
+  triggerHiddenShop: adminProcedure
+    .input(z.object({
+      nodeId: z.string(),
+      reason: z.enum(["world_tick", "node_explore", "meteor_shower"]).default("world_tick"),
+    }))
+    .mutation(async ({ input }) => {
+      const success = await triggerHiddenShop(input.nodeId, input.reason);
+      return { success };
+    }),
+
+  /** 清除過期的隱藏商店實例 */
+  cleanExpiredHiddenShops: adminProcedure
+    .mutation(async () => {
+      const count = await cleanExpiredHiddenShops();
+      return { cleaned: count };
+    }),
+
 });

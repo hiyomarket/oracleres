@@ -2448,3 +2448,140 @@ export const agentAchievements = mysqlTable("agent_achievements", {
 });
 export type AgentAchievement = typeof agentAchievements.$inferSelect;
 export type InsertAgentAchievement = typeof agentAchievements.$inferInsert;
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GD022 技能系統 DB Schema
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─────────────────────────────────────────────
+// 技能模板表（靜態資料，由企劃填入）
+// ─────────────────────────────────────────────
+export const skillTemplates = mysqlTable("skill_templates", {
+  /** 技能 ID，例：S_Wd001 */
+  id: varchar("id", { length: 20 }).primaryKey(),
+  name: varchar("name", { length: 50 }).notNull(),
+  /** 屬性：wood/fire/earth/metal/water/cross */
+  element: varchar("element", { length: 10 }).notNull(),
+  /** 類型：active/passive/life/forge/hidden/fusion */
+  category: varchar("category", { length: 20 }).notNull(),
+  /** 稀有度：basic/rare/epic/legend/fate/hidden */
+  rarity: varchar("rarity", { length: 20 }).notNull(),
+  /** 覺醒階段 0=普通 1=大招 2=奧義 3=神技 */
+  tier: int("tier").notNull().default(0),
+  mpCost: int("mp_cost").notNull().default(0),
+  /** 冷卻回合數 */
+  cooldown: int("cooldown").notNull().default(0),
+  effectDesc: text("effect_desc").notNull(),
+  /** 倍率或效果數值 */
+  effectValue: float("effect_value").notNull().default(1.0),
+  /** 異常狀態：burn/freeze/stun/bleed/silence/charm */
+  statusEffect: varchar("status_effect", { length: 50 }),
+  /** 異常狀態觸發機率 0~1 */
+  statusChance: float("status_chance").default(0),
+  /** 目標類型：single/all/self/ally */
+  targetType: varchar("target_type", { length: 20 }).notNull().default("single"),
+  /** 取得方式：shop/quest/drop/trigger */
+  acquireMethod: varchar("acquire_method", { length: 20 }).notNull(),
+  /** 連擊標籤，逗號分隔，例："fire,aoe,burn" */
+  comboTags: varchar("combo_tags", { length: 100 }),
+  isActive: tinyint("is_active").notNull().default(1),
+});
+export type SkillTemplate = typeof skillTemplates.$inferSelect;
+export type InsertSkillTemplate = typeof skillTemplates.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 角色已習得技能表（動態資料）
+// ─────────────────────────────────────────────
+export const agentSkills = mysqlTable("agent_skills", {
+  id: int("id").primaryKey().autoincrement(),
+  /** 對應 game_agents.id */
+  agentId: int("agent_id").notNull(),
+  /** 對應 skill_templates.id */
+  skillId: varchar("skill_id", { length: 20 }).notNull(),
+  /** 當前覺醒階段 */
+  awakeTier: int("awake_tier").notNull().default(0),
+  /** 累計使用次數（覺醒條件） */
+  useCount: int("use_count").notNull().default(0),
+  /** 裝備槽位，null=未裝備；skillSlot1~8 / passiveSlot1~5 / hiddenSlot1~3 */
+  installedSlot: varchar("installed_slot", { length: 20 }),
+  acquiredAt: timestamp("acquired_at").defaultNow(),
+});
+export type AgentSkill = typeof agentSkills.$inferSelect;
+export type InsertAgentSkill = typeof agentSkills.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 技能書道具表（掉落後需使用才習得）
+// ─────────────────────────────────────────────
+export const skillBooks = mysqlTable("skill_books", {
+  id: int("id").primaryKey().autoincrement(),
+  agentId: int("agent_id").notNull(),
+  skillId: varchar("skill_id", { length: 20 }).notNull(),
+  quantity: int("quantity").notNull().default(1),
+  obtainedAt: timestamp("obtained_at").defaultNow(),
+});
+export type SkillBook = typeof skillBooks.$inferSelect;
+export type InsertSkillBook = typeof skillBooks.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 技能覺醒素材表（精華 + 天命碎片）
+// ─────────────────────────────────────────────
+export const awakeMaterials = mysqlTable("awake_materials", {
+  id: int("id").primaryKey().autoincrement(),
+  agentId: int("agent_id").notNull(),
+  /** wood_essence / fire_essence / earth_essence / metal_essence / water_essence / fate_shard */
+  materialType: varchar("material_type", { length: 30 }).notNull(),
+  quantity: int("quantity").notNull().default(0),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
+});
+export type AwakeMaterial = typeof awakeMaterials.$inferSelect;
+export type InsertAwakeMaterial = typeof awakeMaterials.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 隱藏技能觸發條件追蹤表
+// ─────────────────────────────────────────────
+export const hiddenSkillTrackers = mysqlTable("hidden_skill_trackers", {
+  id: int("id").primaryKey().autoincrement(),
+  agentId: int("agent_id").notNull(),
+  /** 例："S_Wd051_kill_count" / "S_X032_low_battery_wins" */
+  trackerId: varchar("tracker_id", { length: 50 }).notNull(),
+  currentValue: int("current_value").notNull().default(0),
+  targetValue: int("target_value").notNull(),
+  isUnlocked: tinyint("is_unlocked").notNull().default(0),
+  unlockedAt: timestamp("unlocked_at"),
+});
+export type HiddenSkillTracker = typeof hiddenSkillTrackers.$inferSelect;
+export type InsertHiddenSkillTracker = typeof hiddenSkillTrackers.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 全服首觸發記錄表
+// ─────────────────────────────────────────────
+export const globalFirstTriggers = mysqlTable("global_first_triggers", {
+  skillId: varchar("skill_id", { length: 20 }).primaryKey(),
+  firstAgentId: int("first_agent_id").notNull(),
+  firstAgentName: varchar("first_agent_name", { length: 50 }).notNull(),
+  triggeredAt: timestamp("triggered_at").defaultNow(),
+});
+export type GlobalFirstTrigger = typeof globalFirstTriggers.$inferSelect;
+export type InsertGlobalFirstTrigger = typeof globalFirstTriggers.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 隱藏商店實例表（當前活躍的隱藏商店）
+// ─────────────────────────────────────────────
+export const hiddenShopInstances = mysqlTable("hidden_shop_instances", {
+  id: int("id").primaryKey().autoincrement(),
+  /** 出現的地圖節點 ID */
+  nodeId: varchar("node_id", { length: 50 }).notNull(),
+  /** 觸發原因：world_tick / node_explore / meteor_shower */
+  triggerReason: varchar("trigger_reason", { length: 30 }).notNull().default("world_tick"),
+  /** 商品列表（JSON 陣列，從 gameHiddenShopPool 抽取） */
+  items: json("items").$type<Array<{ itemId: number; price: number; quantity: number }>>().notNull(),
+  /** 開始時間（毫秒 timestamp） */
+  startAt: bigint("start_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  /** 結束時間（毫秒 timestamp，預設 30 分鐘後） */
+  expiresAt: bigint("expires_at", { mode: "number" }).notNull().$defaultFn(() => Date.now() + 30 * 60 * 1000),
+  /** 是否已關閉 */
+  isClosed: tinyint("is_closed").notNull().default(0),
+});
+export type HiddenShopInstance = typeof hiddenShopInstances.$inferSelect;
+export type InsertHiddenShopInstance = typeof hiddenShopInstances.$inferInsert;

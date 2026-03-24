@@ -533,6 +533,13 @@
       "when": 1774324690018,
       "tag": "0075_red_talkback",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "5",
+      "when": 1774327611341,
+      "tag": "0076_tan_slipstream",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,7 @@ import { getDb } from "./db";
 import { checkAchievements, seedAchievements } from "./achievementEngine";
 import { broadcastToAll, sendToAgent } from "./wsServer";
 import { broadcastLevelUp, broadcastLegendaryDrop, broadcastAchievementUnlock } from "./liveFeedBroadcast";
+import { calcSkillCombo, updateHiddenSkillTracker } from "./skillComboEngine";
 import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates } from "../drizzle/schema";
 import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs } from "./gameEngineConfig";
@@ -16,6 +17,7 @@ import {
   MAP_NODES,
   MAP_NODE_MAP,
   calcWuxingMultiplier,
+  calcMoveCost,
   type MapNode,
 } from "../shared/mapNodes";
 import type { WuXing } from "../shared/types";
@@ -847,10 +849,17 @@ async function processCombatEvent(
   });
   await createEvent(agent.id, "combat", startMsg, { phase: "start", monsterId: monster.id }, currentNode.id);
 
+  // GD-022：計算技能 Combo 加成和命格加成
+  const comboResult = await calcSkillCombo(
+    agent.id,
+    (agent.dominantElement ?? "wood") as WuXing,
+    agent.skillSlot1 ?? null
+  );
+
   // 結算戰鬥
   const result = resolveCombat(
     {
-      attack: agent.attack,
+      attack: Math.round(agent.attack * comboResult.damageMultiplier),
       defense: agent.defense,
       speed: agent.speed,
       hp: agent.hp,
@@ -922,10 +931,12 @@ async function processCombatEvent(
         monster: monster.name,
         hp: newHp,
       });
-  // 若有五行加成說明，附加在訊息後（不顯示係數數字）
+  // 如有五行加成說明，附加在訊息後（不顯示係數數字）
   const boostParts: string[] = [];
   if (result.wuxingBoostDesc) boostParts.push(result.wuxingBoostDesc);
   if (result.raceBoostDesc) boostParts.push(result.raceBoostDesc);
+  // GD-022：加入 Combo 說明
+  if (comboResult.description) boostParts.push(comboResult.description);
   const resultMsg = boostParts.length > 0
     ? `${baseResultMsg}（${boostParts.join("，")}）`
     : baseResultMsg;
@@ -1044,6 +1055,12 @@ async function processCombatEvent(
     }
   }
 
+  // GD-022 P2：擊殺後更新隱藏技能追蹤器
+  if (result.won) {
+    const killTrackerId = `kill_count_${agent.id}`;
+    await updateHiddenSkillTracker(agent.id, killTrackerId, 1).catch(() => {});
+  }
+
   return { events: 1 + result.lootItems.length, levelUps: combatLevelUps, legendaryDrops: combatLegendaryDrops };
 }
 
@@ -1117,18 +1134,40 @@ async function processMoveEvent(
   const destNode = MAP_NODE_MAP.get(destId);
   if (!destNode) return 0;
 
+  // ── 距離制體力消耗（V34 新增）──
+  // 根據兩節點的 x,y 距離計算移動體力消耗（最少 2 點，最多 12 點）
+  const moveCost = calcMoveCost(currentNode, destNode);
+  const currentStamina = agent.stamina ?? 0;
+  if (currentStamina < moveCost) {
+    // 體力不足以完成此次移動，跳過（等待自然回復）
+    const warnMsg = `${agent.agentName ?? '旅人'} 想前往 ${destNode.name}，但體力不足（需 ${moveCost} 點，剩餘 ${currentStamina} 點），原地休息。`;
+    await createEvent(agent.id, "rest", warnMsg, { staminaNeeded: moveCost, staminaLeft: currentStamina }, currentNode.id);
+    return 0;
+  }
+
+  // 扣除移動體力（移動體力在此扣除，主體力扣除在 processAgentTick 已處理）
+  // 注意：主體力扣除 5 點已在 processAgentTick 執行，此處額外扣除距離差額
+  const extraCost = Math.max(0, moveCost - 5); // 超出基礎 5 點的額外消耗
+  if (extraCost > 0) {
+    await db.update(gameAgents).set({
+      stamina: Math.max(0, currentStamina - extraCost),
+      updatedAt: Date.now(),
+    }).where(eq(gameAgents.id, agent.id));
+  }
+
   await db.update(gameAgents).set({
     targetNodeId: destId,
     status: "moving",
     updatedAt: Date.now(),
   }).where(eq(gameAgents.id, agent.id));
 
+  const distLabel = moveCost <= 2 ? '近距離' : moveCost <= 5 ? '短途' : moveCost <= 8 ? '中途' : '長途';
   const msg = formatMessage(pickRandom(EVENT_MESSAGES.move), {
     name: agent.agentName ?? "旅人",
     dest: destNode.name,
-  });
+  }) + `（${distLabel}，消耗 ${moveCost} 點體力）`;
 
-  await createEvent(agent.id, "move", msg, { destNodeId: destId }, currentNode.id);
+  await createEvent(agent.id, "move", msg, { destNodeId: destId, moveCost }, currentNode.id);
   return 1;
 }
 

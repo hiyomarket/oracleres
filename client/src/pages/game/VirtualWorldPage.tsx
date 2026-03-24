@@ -13,6 +13,7 @@ import GameTabLayout from "@/components/GameTabLayout";
 import LeafletMap from "@/components/LeafletMap";
 import type { LeafletMapHandle } from "@/components/LeafletMap";
 import type { MapNode } from "../../../../shared/mapNodes";
+import { calcMoveCost } from "../../../../shared/mapNodes";
 import { DraggableWidget } from "@/components/DraggableWidget";
 import { safePlay, playLevelUpSound, playLegendarySound, playTickSound, isSoundEnabled, setSoundEnabled } from "@/hooks/useGameSound";
 import { useGameWebSocket } from "@/hooks/useGameWebSocket";
@@ -201,10 +202,11 @@ function NamingDialog({ onNamed }: { onNamed: () => void }) {
 // 地圖傳送彈窗（V14）
 // ─────────────────────────────────────────────────────────────
 function TeleportModal({
-  nodes, currentNodeId, onClose, onTeleport, isPending, agentAP,
+  nodes, currentNodeId, onClose, onTeleport, isPending, agentAP, agentStamina,
 }: {
   nodes: MapNode[];
   currentNodeId: string;
+  agentStamina?: number;
   onClose: () => void;
   onTeleport: (nodeId: string) => void;
   isPending: boolean;
@@ -216,7 +218,13 @@ function TeleportModal({
     n.id !== currentNodeId &&
     (search === "" || n.name.includes(search) || (n.county ?? "").includes(search))
   );
+  const currentStamina = agentStamina ?? 100;
   const currentNode = nodes.find(n => n.id === currentNodeId);
+  // 計算每個目標節點的移動體力消耗
+  const getMoveCost = (targetNode: MapNode): number => {
+    if (!currentNode) return 2;
+    return calcMoveCost(currentNode, targetNode);
+  };
   return (
     <div className="fixed inset-0 z-[500] flex items-center justify-center p-4"
       style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(16px)" }}
@@ -233,7 +241,7 @@ function TeleportModal({
         <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: "rgba(56,189,248,0.2)" }}>
           <div>
             <h2 className="text-lg font-bold text-sky-300">🗺️ 地圖傳送</h2>
-            <p className="text-xs text-slate-500 mt-0.5">目前：{currentNode?.name ?? currentNodeId} · 靈力 {agentAP} 點</p>
+            <p className="text-xs text-slate-500 mt-0.5">目前：{currentNode?.name ?? currentNodeId} · 靈力 {agentAP} 點 · 體力 {currentStamina} 點</p>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl px-2">✕</button>
         </div>
@@ -254,6 +262,9 @@ function TeleportModal({
           ) : filtered.map(node => {
             const isSelected = selected === node.id;
             const elColor = WX_HEX[node.element ?? "metal"] ?? "#e2e8f0";
+            const moveCost = getMoveCost(node);
+            const canAfford = currentStamina >= moveCost;
+            const costColor = !canAfford ? '#ef4444' : moveCost <= 3 ? '#34d399' : moveCost <= 6 ? '#f59e0b' : '#ef4444';
             return (
               <button key={node.id}
                 onClick={() => setSelected(isSelected ? null : node.id)}
@@ -261,6 +272,7 @@ function TeleportModal({
                 style={{
                   background: isSelected ? `${elColor}18` : "rgba(255,255,255,0.03)",
                   border: `1px solid ${isSelected ? elColor + "50" : "rgba(255,255,255,0.06)"}`,
+                  opacity: canAfford ? 1 : 0.6,
                 }}>
                 <span className="text-lg shrink-0">{WX_EMOJI[node.element ?? "metal"] ?? "📍"}</span>
                 <div className="flex-1 min-w-0">
@@ -275,6 +287,9 @@ function TeleportModal({
                     {node.dangerLevel && (
                       <span className="text-xs text-slate-600">危險 Lv.{node.dangerLevel}</span>
                     )}
+                    <span className="text-xs font-bold" style={{ color: costColor }}>
+                      🏃 -{moveCost} 體力{!canAfford ? ' (不足)' : ''}
+                    </span>
                   </div>
                 </div>
                 {isSelected && (

@@ -3122,3 +3122,50 @@ export function getDailyElement(stem: string): WuXing {
   };
   return stemMap[stem] ?? "earth";
 }
+
+
+// ─────────────────────────────────────────────
+// 距離制移動體力消耗系統
+// ─────────────────────────────────────────────
+
+/**
+ * 計算兩節點之間的歐幾里得距離（基於 x,y 座標，0-100 範圍）
+ */
+export function calcNodeDistance(fromNode: MapNode, toNode: MapNode): number {
+  const dx = toNode.x - fromNode.x;
+  const dy = toNode.y - fromNode.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+/**
+ * 計算移動體力消耗
+ * 公式：
+ *   - 基礎消耗：2 點
+ *   - 距離加成：每超過 5 個單位距離，額外 +1 點（向上取整）
+ *   - 危險等級加成：目標節點 dangerLevel × 0.5（向下取整）
+ *   - 最小消耗：2 點，最大消耗：12 點
+ *
+ * 範例：
+ *   - 相鄰節點（距離 ~3）：2 點
+ *   - 中距離（距離 ~10）：2 + 2 = 4 點
+ *   - 遠距離（距離 ~20）：2 + 4 = 6 點
+ *   - 跨縣市（距離 ~30）：2 + 6 = 8 點
+ */
+export function calcMoveCost(fromNode: MapNode, toNode: MapNode): number {
+  const dist = calcNodeDistance(fromNode, toNode);
+  const distBonus = Math.ceil(dist / 5);
+  const dangerBonus = Math.floor(toNode.dangerLevel * 0.5);
+  const total = 2 + distBonus + dangerBonus;
+  return Math.max(2, Math.min(12, total));
+}
+
+/**
+ * 取得移動體力消耗的文字描述（用於前端顯示）
+ */
+export function getMoveCostLabel(cost: number): string {
+  if (cost <= 2) return '近距離（-2 體力）';
+  if (cost <= 4) return '短途（-' + cost + ' 體力）';
+  if (cost <= 6) return '中途（-' + cost + ' 體力）';
+  if (cost <= 8) return '長途（-' + cost + ' 體力）';
+  return '遠征（-' + cost + ' 體力）';
+}

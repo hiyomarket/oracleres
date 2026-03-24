@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
+import { playAchievementSound, safePlay } from "@/hooks/useGameSound";
 
 export interface AchievementUnlockData {
   id: string;
@@ -64,6 +65,8 @@ export function AchievementToastContainer({ latestMessage }: AchievementToastPro
     if (!payload?.id || !payload?.name) return;
 
     const toastId = `toast-${payload.ts}-${Math.random().toString(36).slice(2, 7)}`;
+    // 播放成就解鎖音效
+    safePlay(playAchievementSound);
     const newToast: ToastItem = {
       ...payload,
       toastId,

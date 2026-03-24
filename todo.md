@@ -3586,3 +3586,109 @@
 - [x] 更新 gameWorld.test.ts（PvP 戰績 API 測試）
 - [x] TypeScript 零錯誤確認
 - [x] 儲存 V32 Checkpoint（ee2fa675）
+
+## V33 - 全服即時動態橫幅 + 成就通知彈窗（100% 完成）
+- [x] liveFeedBroadcast.ts 工具函數（broadcastLevelUp/Achievement/LegendaryDrop/PvpVictory/WeeklyChampion）
+- [x] wsServer.ts 加入 live_feed 事件類型
+- [x] tickEngine 整合 live_feed 廣播（升級/傳說掉落/成就解鎖）
+- [x] pvpChallenge 整合 live_feed 廣播（PvP 勝利）
+- [x] worldTickEngine 整合 live_feed 廣播（週冠軍/世界事件）
+- [x] LiveFeedBanner.tsx 滾動橫幅組件（六種事件類型、動畫、顏色）
+- [x] AchievementToast.tsx 右下角持久 Toast（進度條倒數、佇列管理）
+- [x] useGameWebSocket hook 升級（指數退避重連、live_feed 分發）
+- [x] GameLobby.tsx 整合 LiveFeedBanner + AchievementToast
+- [x] GlobalChat.tsx 連動（live_feed 事件轉為金色「天命廣播」訊息）
+- [x] index.css 加入 shrink-width 動畫
+- [x] v33.test.ts（590 項測試全部通過）
+- [x] 儲存 V33 Checkpoint（9e36f710）
+
+## V34 大型升級 + GD022 技能系統
+
+### GD022 P0 - DB Schema
+- [x] skill_templates 表新增（技能靜態資料）
+- [x] agent_skills 表新增（角色已習得技能）
+- [x] skill_books 表新增（技能書道具）
+- [x] awake_materials 表新增（覺醒素材）
+- [x] hidden_skill_trackers 表新增（隱藏技能追蹤）
+- [x] global_first_triggers 表新增（全服首觸發）
+- [x] pnpm db:push 推送 schema
+- [x] 插入木屬性 10 筆種子技能（S_Wd001~S_Wd010）
+
+### V34 - 距離制移動體力消耗
+- [x] 建立 calcMoveCost(fromNode, toNode) 函數（基礎2點，距離加成）
+- [x] 地圖節點距離表（歐幾里得距離 x,y 計算）
+- [x] tickEngine processMoveEvent 整合距離體力扣除
+- [x] 移動前體力驗證（不足則跳過移動）
+- [x] 前端 VirtualWorldPage 移動前顯示體力消耗預覽
+- [x] 地圖節點距離標示（hover 顯示消耗體力）
+- [x] 手動移動 API 整合距離體力扣除
+
+### V34 - 世界重置系統
+- [x] 後端 resetWorld API（admin only）
+- [x] 清除所有 gameAgents 角色資料
+- [x] 清除 agentInventory、agentTitles、agentEvents
+- [x] 清除 agent_skills、awake_materials、hidden_skill_trackers
+- [x] 清除 pvpChallenges、weeklyChampions、chatMessages
+- [x] 保留 users 帳號資料（不清除登入資訊）
+- [x] 初始化基礎商店（gameVirtualShop 插入 20+ 種物品/道具/裝備）
+- [x] 初始化靈相商店（gameSpiritShop 插入 10+ 種稀有道具）
+- [x] 初始化隱藏商店商品池（gameHiddenShopPool 插入 30+ 種商品）
+- [x] 重置後廣播「新世界誕生」全服公告
+- [x] Admin UI 重置按鈕（確認對話框 + 進度顯示）
+- [x] 重置後玩家重新登入自動引導創建角色
+
+### V34 - 隨機隱藏商店機制
+- [x] hiddenShopInstances 表（當前活躍的隱藏商店實例）
+- [x] 觸發條件：世界Tick 5% 機率、特定節點探索 10%、流星雨事件必觸發
+- [x] 商品池加權抽取（weight 欄位）
+- [x] 隱藏商店限時消失（30分鐘後自動關閉）
+- [x] 稀有度加權顯示（legendary 商品有特殊光效）
+- [x] 前端隱藏商店彈窗（地圖節點上顯示特殊圖示）
+- [x] 隱藏商店出現時全服廣播
+
+### GD022 P1 - tRPC 端點
+- [x] getAgentSkills 端點（角色已習得技能列表）
+- [x] getSkillCodex 端點（技能圖鑑含霧化規則）
+- [x] installSkill 端點（裝備技能到槽位）
+- [x] useSkillBook 端點（使用技能書習得技能）
+- [x] awakeSkill 端點（觸發技能覺醒）
+- [x] getAwakeMaterials 端點（覺醒素材庫存）
+- [x] getHiddenSkillTrackers 端點（隱藏技能進度）
+- [x] getSkillBooks 端點（背包技能書列表）
+
+### GD022 P1 - Tick 引擎整合
+- [x] ComboBuildState 介面定義
+- [x] calculateComboBonus 函數
+- [x] calculateSkillResonance 函數
+- [x] calcNatalSkillBonus 命格加成函數
+- [x] calcNatalSkillPenalty 命格弱點懲罰函數
+- [x] tickEngine 戰鬥結算整合 Combo 計算
+- [x] tickEngine 戰鬥傷害整合命格加成
+
+### GD022 P2 - 隱藏技能追蹤器
+- [x] updateHiddenSkillTrackers 函數
+- [x] checkAndUnlockHiddenSkills 函數
+- [x] tickEngine 結算後呼叫追蹤器更新
+- [x] 全服首觸發公告（broadcastLiveFeed）
+- [x] 採集事件掉落屬性精華（5% 機率）
+- [x] Boss 戰鬥掉落屬性精華（20% 機率 ×3）
+- [x] 世界 Boss 必定掉落天命碎片 ×1
+
+### GD022 P1 - 前端技能圖鑑
+- [x] getSkillDisplayInfo 霧化規則函數（client/src/lib/skillCodex.ts）
+- [x] SkillCodexPage 技能圖鑑頁面（五行頁簽+天命頁簽）
+- [x] 每頁簽下四類（戰鬥主動/戰鬥被動/生活採集/鍛造精煉）
+- [x] 已習得技能顯示覺醒進度條和使用次數
+- [x] 傳說技能效果模糊顯示
+- [x] 天命/隱藏技能顯示「???」佔位格
+- [x] 技能書使用介面（背包中使用技能書）
+- [x] 技能覺醒介面（素材消耗+成功率顯示）
+- [x] App.tsx 路由新增 /game/skills
+
+### V34 - 其他補充
+- [x] PvP 挑戰歷史記錄頁（最近 10 場對戰）
+- [x] 全站 LiveFeedBanner 提升至 App.tsx 層級
+- [x] 成就解鎖音效（Web Audio API）
+
+### GD022 - GitHub 回覆文件
+- [x] 在 MANUS-AGENTS/FOR-SYSTEM/REPLIES/ 新增回覆文件

@@ -178,3 +178,130 @@ export function safePlay(fn: () => void): void {
     }
   }
 }
+
+/** 成就解鎖音效：神聖鐘聲 + 上升光芒感 */
+export function playAchievementSound() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // 神聖鐘聲：三連音（C5 → E5 → G5）
+  const bellNotes = [523.25, 659.25, 783.99];
+  bellNotes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, now + i * 0.15);
+    gain.gain.setValueAtTime(0, now + i * 0.15);
+    gain.gain.linearRampToValueAtTime(0.22, now + i * 0.15 + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 1.2);
+    osc.start(now + i * 0.15);
+    osc.stop(now + i * 0.15 + 1.2);
+  });
+
+  // 光芒感：高頻泛音掃頻
+  const sweep = ctx.createOscillator();
+  const sweepGain = ctx.createGain();
+  sweep.connect(sweepGain);
+  sweepGain.connect(ctx.destination);
+  sweep.type = "triangle";
+  sweep.frequency.setValueAtTime(1046.5, now + 0.45); // C6
+  sweep.frequency.exponentialRampToValueAtTime(2093.0, now + 1.0); // C7
+  sweepGain.gain.setValueAtTime(0, now + 0.45);
+  sweepGain.gain.linearRampToValueAtTime(0.08, now + 0.55);
+  sweepGain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+  sweep.start(now + 0.45);
+  sweep.stop(now + 1.5);
+
+  // 底部共鳴：溫暖低音
+  const bass = ctx.createOscillator();
+  const bassGain = ctx.createGain();
+  bass.connect(bassGain);
+  bassGain.connect(ctx.destination);
+  bass.type = "sine";
+  bass.frequency.setValueAtTime(130.81, now); // C3
+  bassGain.gain.setValueAtTime(0.12, now);
+  bassGain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+  bass.start(now);
+  bass.stop(now + 1.8);
+}
+
+/** PvP 勝利音效：鼓聲 + 勝利號角 */
+export function playPvpVictorySound() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // 鼓聲：低頻衝擊
+  const drum = ctx.createOscillator();
+  const drumGain = ctx.createGain();
+  drum.connect(drumGain);
+  drumGain.connect(ctx.destination);
+  drum.type = "sine";
+  drum.frequency.setValueAtTime(150, now);
+  drum.frequency.exponentialRampToValueAtTime(50, now + 0.15);
+  drumGain.gain.setValueAtTime(0.3, now);
+  drumGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+  drum.start(now);
+  drum.stop(now + 0.2);
+
+  // 號角：G4 → C5 → E5 → G5
+  const hornNotes = [392.0, 523.25, 659.25, 783.99];
+  hornNotes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(freq, now + 0.1 + i * 0.12);
+    gain.gain.setValueAtTime(0, now + 0.1 + i * 0.12);
+    gain.gain.linearRampToValueAtTime(0.1, now + 0.1 + i * 0.12 + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1 + i * 0.12 + 0.35);
+    osc.start(now + 0.1 + i * 0.12);
+    osc.stop(now + 0.1 + i * 0.12 + 0.35);
+  });
+}
+
+/** 技能習得音效：神秘書卷翻頁聲 */
+export function playSkillLearnSound() {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // 翻頁感：白噪音短爆發
+  const bufferSize = ctx.sampleRate * 0.15;
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * 0.3;
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = "bandpass";
+  noiseFilter.frequency.setValueAtTime(3000, now);
+  const noiseGain = ctx.createGain();
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(ctx.destination);
+  noiseGain.gain.setValueAtTime(0.15, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+  noise.start(now);
+
+  // 神秘音調：五聲音階上升
+  const pentatonic = [261.63, 293.66, 329.63, 392.0, 440.0]; // C D E G A
+  pentatonic.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq * 2, now + i * 0.08);
+    gain.gain.setValueAtTime(0.08, now + i * 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.4);
+    osc.start(now + i * 0.08);
+    osc.stop(now + i * 0.08 + 0.4);
+  });
+}

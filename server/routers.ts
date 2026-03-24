@@ -24,6 +24,7 @@ import { gameShopRouter } from './routers/gameShop';
 import { gameAdminRouter } from './routers/gameAdmin';
 import { gameAchievementRouter } from './routers/gameAchievement';
 import { gameWorldRouter } from './routers/gameWorld';
+import { gameSkillSystemRouter } from './routers/gameSkillSystem';
 import { startTickEngine } from './tickEngine';
 import { startWorldTickEngine } from './worldTickEngine';
 
@@ -75,6 +76,7 @@ export const appRouter = router({
   gameAdmin: gameAdminRouter,
   gameAchievement: gameAchievementRouter,
   gameWorld: gameWorldRouter,
+  gameSkill: gameSkillSystemRouter,
   businessHub: businessHubRouter,
   userGroups: userGroupsRouter,
   auth: router({

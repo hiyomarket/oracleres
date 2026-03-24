@@ -43,6 +43,8 @@ import GameShop from "./pages/game/GameShop";
 import CombatRoom from "./pages/game/CombatRoom";
 import CharacterProfile from "./pages/game/CharacterProfile";
 import AdventureAchievements from "./pages/game/AdventureAchievements";
+import SkillCatalogPage from "./pages/game/SkillCatalogPage";
+import PvpHistoryPage from "./pages/game/PvpHistoryPage";
 import ExpertMarket from "./pages/ExpertMarket";
 import ExpertDetail from "./pages/ExpertDetail";
 import ExpertDashboard from "./pages/expert/ExpertDashboard";
@@ -62,6 +64,10 @@ import { DailySigninModal } from "./components/DailySigninModal";
 import { FloatingBanner } from "./components/FloatingBanner";
 import { AiReadOnlyBanner } from "./components/AiReadOnlyBanner";
 import { ThemeInitializer } from "./components/ThemeInitializer";
+import { LiveFeedContainer } from "./components/LiveFeedBanner";
+import { AchievementToastContainer } from "./components/AchievementToast";
+import { useGameWebSocket } from "./hooks/useGameWebSocket";
+import { useAuth } from "./_core/hooks/useAuth";
 
 function Router() {
   return (
@@ -127,6 +133,8 @@ function Router() {
             <Route path={"/game/combat"} component={CombatRoom} />
             <Route path={"/game/profile"} component={CharacterProfile} />
             <Route path={"/game/achievements"} component={AdventureAchievements} />
+            <Route path={"/game/skills"} component={SkillCatalogPage} />
+            <Route path={"/game/pvp-history"} component={PvpHistoryPage} />
             <Route path={"/404"} component={NotFound} />
             {/* Final fallback route */}
             <Route component={NotFound} />
@@ -134,6 +142,17 @@ function Router() {
         </AccessGate>
       </Route>
     </Switch>
+  );
+}
+
+function GlobalGameOverlay() {
+  const { user } = useAuth();
+  const { latestMessage } = useGameWebSocket({ agentId: null, enabled: !!user });
+  return (
+    <>
+      <LiveFeedContainer latestMessage={latestMessage} className="fixed top-0 left-0 right-0 z-50" />
+      <AchievementToastContainer latestMessage={latestMessage} />
+    </>
   );
 }
 
@@ -150,6 +169,7 @@ function App() {
           <AiReadOnlyBanner />
           <DailySigninModal />
           <FloatingBanner />
+          <GlobalGameOverlay />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

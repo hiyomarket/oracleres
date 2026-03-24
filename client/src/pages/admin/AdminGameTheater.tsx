@@ -15,6 +15,203 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
+// ─── 世界重置 Tab ───────────────────────────────────────────────────────────
+function WorldResetTab() {
+  const [confirmText, setConfirmText] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetResult, setResetResult] = useState<null | {
+    success: boolean;
+    agentsCleared: number;
+    eventsCleared: number;
+    chatCleared: number;
+    pvpCleared: number;
+    shopItemsAdded: number;
+    hiddenPoolAdded: number;
+    errors: string[];
+  }>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [nodeId, setNodeId] = useState("node_001");
+
+  const resetWorldMutation = trpc.gameAdmin.resetWorld.useMutation({
+    onSuccess: (data) => {
+      setIsResetting(false);
+      setResetResult(data);
+      setShowConfirm(false);
+      setConfirmText("");
+      if (data.success) {
+        toast.success("🌍 新世界已誕生！所有角色資料已清除，商店已重置。");
+      } else {
+        toast.error(`重置完成但有錯誤：${data.errors.join(", ")}`);
+      }
+    },
+    onError: (err) => {
+      setIsResetting(false);
+      toast.error(`重置失敗：${err.message}`);
+    },
+  });
+
+  const triggerHiddenShopMutation = trpc.gameAdmin.triggerHiddenShop.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success(`✅ 密店已在節點 ${nodeId} 觸發！`);
+      } else {
+        toast.error("密店觸發失敗（可能已達上限或商品池為空）");
+      }
+    },
+  });
+
+  const cleanShopsMutation = trpc.gameAdmin.cleanExpiredHiddenShops.useMutation({
+    onSuccess: (data) => {
+      toast.success(`✅ 已清除 ${data.cleaned} 個過期密店`);
+    },
+  });
+
+  const handleReset = () => {
+    if (confirmText !== "確認重置世界") {
+      toast.error("請輸入正確的確認文字：確認重置世界");
+      return;
+    }
+    setIsResetting(true);
+    resetWorldMutation.mutate({ confirmText });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* 警告說明 */}
+      <div className="rounded-xl border border-red-500/30 bg-red-950/20 p-5">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl">⚠️</span>
+          <div>
+            <h3 className="font-bold text-red-400 text-lg">格式化世界 — 不可逆操作</h3>
+            <p className="text-sm text-red-300/80 mt-1">此操作將清除所有角色資料（保留帳號），重置商店，並廣播新世界誕生訊息。所有玩家需重新建立角色。</p>
+            <ul className="text-xs text-slate-400 mt-3 space-y-1 list-disc list-inside">
+              <li>清除所有角色（gameAgents）及其背包、事件記錄</li>
+              <li>清除世界事件歷史、聊天訊息、PvP 戰績、週冠軍</li>
+              <li>重置基礎商店（插入 20 種初始商品）</li>
+              <li>初始化隱藏商店商品池（如為空）</li>
+              <li>重啟 Tick 引擎和世界 Tick 引擎</li>
+              <li>廣播「新世界誕生」全服通知</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* 重置操作區 */}
+      {!showConfirm ? (
+        <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-5">
+          <h4 className="font-bold text-slate-200 mb-3">🔴 執行世界重置</h4>
+          <p className="text-sm text-slate-400 mb-4">點擊下方按鈕開始重置流程，系統將要求您輸入確認文字。</p>
+          <Button
+            variant="destructive"
+            onClick={() => setShowConfirm(true)}
+            className="w-full"
+          >
+            🌍 格式化世界並重新啟動
+          </Button>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-red-500/50 bg-red-950/30 p-5 space-y-4">
+          <h4 className="font-bold text-red-400">⚠️ 最終確認</h4>
+          <p className="text-sm text-slate-300">請在下方輸入 <code className="bg-slate-800 px-2 py-0.5 rounded text-red-300">確認重置世界</code> 以繼續：</p>
+          <Input
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder="輸入：確認重置世界"
+            className="border-red-500/50 bg-slate-900"
+          />
+          <div className="flex gap-3">
+            <Button
+              variant="destructive"
+              onClick={handleReset}
+              disabled={isResetting || confirmText !== "確認重置世界"}
+              className="flex-1"
+            >
+              {isResetting ? "🔄 重置中..." : "✅ 確認執行重置"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => { setShowConfirm(false); setConfirmText(""); }}
+              className="flex-1"
+            >
+              取消
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* 重置結果 */}
+      {resetResult && (
+        <div className={`rounded-xl border p-5 ${
+          resetResult.success ? "border-green-500/30 bg-green-950/20" : "border-yellow-500/30 bg-yellow-950/20"
+        }`}>
+          <h4 className={`font-bold mb-3 ${resetResult.success ? "text-green-400" : "text-yellow-400"}`}>
+            {resetResult.success ? "✅ 重置成功" : "⚠️ 重置完成（有警告）"}
+          </h4>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="bg-slate-800/50 rounded-lg p-3">
+              <div className="text-slate-400 text-xs">清除角色數</div>
+              <div className="text-2xl font-bold text-slate-200">{resetResult.agentsCleared}</div>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-3">
+              <div className="text-slate-400 text-xs">商店商品數</div>
+              <div className="text-2xl font-bold text-green-400">{resetResult.shopItemsAdded}</div>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-3">
+              <div className="text-slate-400 text-xs">清除事件數</div>
+              <div className="text-2xl font-bold text-slate-200">{resetResult.eventsCleared}</div>
+            </div>
+            <div className="bg-slate-800/50 rounded-lg p-3">
+              <div className="text-slate-400 text-xs">密店商品池</div>
+              <div className="text-2xl font-bold text-purple-400">
+                {resetResult.hiddenPoolAdded === -1 ? "已存在" : resetResult.hiddenPoolAdded}
+              </div>
+            </div>
+          </div>
+          {resetResult.errors.length > 0 && (
+            <div className="mt-3 space-y-1">
+              {resetResult.errors.map((err, i) => (
+                <p key={i} className="text-xs text-yellow-400">⚠️ {err}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 隱藏商店管理 */}
+      <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-5 space-y-4">
+        <h4 className="font-bold text-slate-200">🏪 隱藏密店管理</h4>
+        <p className="text-xs text-slate-400">
+          密店觸發條件：世界 Tick（每 6 次，15% 機率）、探索（尋寶力≥30，10% 機率）、流星雨（強制觸發）。<br />
+          密店持續 30 分鐘後自動消失。
+        </p>
+        <div className="flex gap-2">
+          <Input
+            value={nodeId}
+            onChange={(e) => setNodeId(e.target.value)}
+            placeholder="節點 ID（如 node_001）"
+            className="flex-1"
+          />
+          <Button
+            onClick={() => triggerHiddenShopMutation.mutate({ nodeId, reason: "world_tick" })}
+            disabled={triggerHiddenShopMutation.isPending}
+            className="bg-purple-600 hover:bg-purple-500"
+          >
+            🎪 手動觸發密店
+          </Button>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => cleanShopsMutation.mutate()}
+          disabled={cleanShopsMutation.isPending}
+          className="w-full"
+        >
+          🧹 清除過期密店
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ─── 五行顏色 ────────────────────────────────────────────────────────────────
 const WUXING_COLORS: Record<string, string> = {
   木: "#2E8B57", 火: "#DC143C", 土: "#CD853F", 金: "#C9A227", 水: "#00CED1",
@@ -1164,6 +1361,7 @@ export default function AdminGameTheater() {
           <TabsTrigger value="broadcast">📢 全服廣播</TabsTrigger>
           <TabsTrigger value="engine">🌟 引擎調控</TabsTrigger>
           <TabsTrigger value="world">🌍 世界事件</TabsTrigger>
+          <TabsTrigger value="reset" className="text-red-400">🔴 世界重置</TabsTrigger>
         </TabsList>
 
         <TabsContent value="agents"><AgentManagementTab /></TabsContent>
@@ -1172,6 +1370,7 @@ export default function AdminGameTheater() {
         <TabsContent value="broadcast"><BroadcastTab /></TabsContent>
         <TabsContent value="engine"><EngineControlTab /></TabsContent>
         <TabsContent value="world"><WorldEventTab /></TabsContent>
+        <TabsContent value="reset"><WorldResetTab /></TabsContent>
       </Tabs>
     </div>
   );

@@ -274,6 +274,16 @@ export default function AdventureAchievements() {
               )}
             </div>
 
+            {/* 查看對戰記錄連結 */}
+            <div className="text-center pt-2">
+              <a
+                href="/game/pvp-history"
+                className="inline-flex items-center gap-2 text-sm text-red-400 hover:text-red-300 border border-red-500/30 rounded-lg px-4 py-2 hover:bg-red-950/30 transition-colors"
+              >
+                ⚔️ 查看我的對戰記錄
+              </a>
+            </div>
+
             {/* 連勝榜 */}
             {(pvpLeaderboard?.streakRank ?? []).length > 0 && (
               <div>
