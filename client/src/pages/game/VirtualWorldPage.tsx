@@ -2003,14 +2003,28 @@ export default function VirtualWorldPage() {
 
   const agent = agentData?.agent as AgentData | null | undefined;
   const currentNodeId = agent?.currentNodeId ?? "tp-zhongzheng";
+  // 在線玩家：靠近玩家節點，最多 50 位，每 30 秒更新
+  const { data: nearbyPlayersData } = trpc.gameWorld.getNearbyPlayers.useQuery(
+    { currentNodeId },
+    { enabled: !!user && !!currentNodeId, refetchInterval: 30000 }
+  );
+  const nearbyPlayers = nearbyPlayersData?.players ?? [];
   const { data: nodeInfoData } = trpc.gameWorld.getNodeInfo.useQuery(
     { nodeId: currentNodeId },
     { enabled: !!currentNodeId, refetchInterval: 10000 }
   );
 
   const setStrategy    = trpc.gameWorld.setStrategy.useMutation({
+    onMutate: (vars) => {
+      // 樂觀更新：立即更新快取中的 agent.strategy
+      utils.gameWorld.getOrCreateAgent.setData(undefined, (old) => {
+        if (!old?.agent) return old;
+        return { ...old, agent: { ...old.agent, strategy: vars.strategy, movementMode: vars.movementMode ?? old.agent.movementMode } };
+      });
+    },
     onSuccess: (_, vars) => {
       utils.gameWorld.getAgentStatus.invalidate();
+      utils.gameWorld.getOrCreateAgent.invalidate();
       const s = STRATEGIES.find(x => x.id === vars.strategy);
       if (vars.strategy === "rest") {
         toast.success(`😴 已切換為休息模式`, {
@@ -2023,6 +2037,10 @@ export default function VirtualWorldPage() {
           duration: 2500,
         });
       }
+    },
+    onError: () => {
+      // 失敗時回滾：重新拉取真實資料
+      utils.gameWorld.getOrCreateAgent.invalidate();
     },
   });
   const divineHeal     = trpc.gameWorld.divineHeal.useMutation({
@@ -2288,6 +2306,38 @@ export default function VirtualWorldPage() {
     staleTime: 25000,
   });
   const hiddenNodeIds = (activeShopData?.nodes ?? []).map(n => n.nodeId);
+
+  // 密店通知推播：當玩家所在節點出現密店時，自動推送 Toast
+  const prevHiddenNodeIdsRef = useRef<string[]>([]);
+  useEffect(() => {
+    if (!currentNodeId || hiddenNodeIds.length === 0) {
+      prevHiddenNodeIdsRef.current = hiddenNodeIds;
+      return;
+    }
+    const prev = prevHiddenNodeIdsRef.current;
+    const newlyAppeared = hiddenNodeIds.filter(id => !prev.includes(id));
+    if (newlyAppeared.includes(currentNodeId)) {
+      // 玩家所在節點新出現密店
+      import("sonner").then(({ toast }) => {
+        toast("✨ 神秘商人出現了！", {
+          description: "您所在的地點出現了限時密店，點擊「密店」按鈕進入！",
+          duration: 8000,
+          icon: "🔮",
+        });
+      });
+    } else if (hiddenNodeIds.includes(currentNodeId) && !prev.includes(currentNodeId)) {
+      // 玩家移動到有密店的節點
+      import("sonner").then(({ toast }) => {
+        toast("✨ 感知到神秘氣息！", {
+          description: "此地有限時密店，點擊「密店」按鈕即可進入！",
+          duration: 6000,
+          icon: "🔮",
+        });
+      });
+    }
+    prevHiddenNodeIdsRef.current = hiddenNodeIds;
+  }, [hiddenNodeIds, currentNodeId]);
+
   useEffect(() => {
     if (agentData?.needsNaming) setShowNaming(true);
   }, [agentData?.needsNaming]);
@@ -2841,6 +2891,7 @@ export default function VirtualWorldPage() {
                   currentNodeId={currentNodeId}
                   hiddenNodeIds={hiddenNodeIds}
                   agentAvatarUrl={agent?.avatarUrl ?? undefined}
+                  nearbyPlayers={nearbyPlayers}
                   onNodeClick={(nodeId) => {
                     // 點擊密店發光節點：如果是當前位置且有密店，顯示密店彈窗
                     if (nodeId === currentNodeId && hiddenNodeIds.includes(nodeId)) {
@@ -2858,6 +2909,52 @@ export default function VirtualWorldPage() {
                     }
                   }}
                 />
+              )}
+
+              {/* 在線玩家浮動面板：地圖右下角 */}
+              {nearbyPlayers.length > 0 && (
+                <div
+                  className="absolute z-[390] flex flex-col"
+                  style={{
+                    bottom: "72px",
+                    right: "56px",
+                    maxWidth: "160px",
+                    background: "rgba(6,10,22,0.88)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(245,158,11,0.25)",
+                    borderRadius: "10px",
+                    padding: "8px 10px",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <span className="text-amber-400 text-xs">👥</span>
+                    <span className="text-amber-300 text-xs font-semibold">在線旅人</span>
+                    <span className="text-xs text-slate-500 ml-auto">{nearbyPlayers.length}</span>
+                  </div>
+                  <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
+                    {nearbyPlayers.slice(0, 8).map(p => {
+                      const elColors: Record<string, string> = { wood: "#22c55e", fire: "#ef4444", earth: "#eab308", metal: "#94a3b8", water: "#3b82f6" };
+                      const elC = elColors[p.element] ?? "#94a3b8";
+                      const isSameNode = p.nodeId === currentNodeId;
+                      return (
+                        <div key={p.id} className="flex items-center gap-1.5">
+                          <div
+                            className="w-1.5 h-1.5 rounded-full shrink-0"
+                            style={{ background: isSameNode ? "#22c55e" : elC }}
+                          />
+                          <span className="text-[10px] truncate" style={{ color: isSameNode ? "#86efac" : "#94a3b8" }}>
+                            {p.agentName}
+                          </span>
+                          {isSameNode && <span className="text-[9px] text-green-500 ml-auto shrink-0">此地</span>}
+                        </div>
+                      );
+                    })}
+                    {nearbyPlayers.length > 8 && (
+                      <div className="text-[9px] text-slate-600 text-center mt-1">+{nearbyPlayers.length - 8} 位旅人</div>
+                    )}
+                  </div>
+                </div>
               )}
 
               {/* 日誌按鈕：左下角圓形按鈕（手機版） */}
@@ -3428,6 +3525,14 @@ export default function VirtualWorldPage() {
                   <span className="text-lg">🔍</span>
                   <span className="text-sm font-bold" style={{ color: hiddenShopColor }}>密店</span>
                 </button>
+                {/* 拍賣行 */}
+                <button
+                  onClick={() => navigate("/game/auction")}
+                  className="flex-1 flex items-center justify-center gap-2 px-2 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  style={{ background: "rgba(251,191,36,0.08)", borderColor: "rgba(251,191,36,0.28)" }}>
+                  <span className="text-lg">🏛️</span>
+                  <span className="text-sm text-amber-300 font-bold">拍賣行</span>
+                </button>
                 {/* Widget 重置按鈕 */}
                 <button
                   onClick={() => {
@@ -3581,6 +3686,14 @@ export default function VirtualWorldPage() {
                       }}>
                       <span className="text-sm">🔍</span>
                       <span className="text-xs font-bold" style={{ color: hiddenShopColor }}>密店</span>
+                    </button>
+                    {/* 拍賣行 */}
+                    <button
+                      onClick={() => navigate("/game/auction")}
+                      className="flex-1 flex items-center justify-center gap-1 px-1.5 py-2 rounded-xl border transition-all active:scale-[0.98]"
+                      style={{ background: "rgba(251,191,36,0.08)", borderColor: "rgba(251,191,36,0.28)" }}>
+                      <span className="text-sm">🏛️</span>
+                      <span className="text-xs text-amber-300 font-bold">拍賣行</span>
                     </button>
                   </div>
                   {/* Bug 3+9 fix: 管理員按鈕已整合到 GameTabLayout 底部 Tab Bar（僅 admin 可見） */}

@@ -568,6 +568,13 @@
       "when": 1774358407465,
       "tag": "0080_zippy_aqueduct",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "5",
+      "when": 1774370141915,
+      "tag": "0081_glossy_speed_demon",
+      "breakpoints": true
     }
   ]
 }

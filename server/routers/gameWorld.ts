@@ -2055,4 +2055,47 @@ export const gameWorldRouter = router({
       const result = await refreshShopItems(db);
       return { success: true, virtualCount: result?.virtualCount ?? 0, spiritCount: result?.spiritCount ?? 0 };
     }),
+
+  // ─── 在線玩家地圖顯示（靠近玩家節點，最多 50 位） ───
+  getNearbyPlayers: protectedProcedure
+    .input(z.object({ currentNodeId: z.string().optional() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return { players: [] };
+      const myUserId = String(ctx.user.id);
+      const now = Date.now();
+      // 視為在線：5 分鐘內有更新的角色
+      const onlineThreshold = now - 5 * 60 * 1000;
+      // 取得所有在線玩家（排除自己）
+      const allOnline = await db
+        .select({
+          id: gameAgents.id,
+          agentName: gameAgents.agentName,
+          currentNodeId: gameAgents.currentNodeId,
+          dominantElement: gameAgents.dominantElement,
+          avatarUrl: gameAgents.avatarUrl,
+          level: gameAgents.level,
+        })
+        .from(gameAgents)
+        .where(sql`${gameAgents.userId} != ${myUserId} AND ${gameAgents.updatedAt} > ${onlineThreshold} AND ${gameAgents.agentName} IS NOT NULL`)
+        .limit(500);
+      if (allOnline.length === 0) return { players: [] };
+      const currentNode = input.currentNodeId;
+      // 排序邏輯：同節點的玩家排在前面，最多 50 位
+      const sorted = allOnline.sort((a, b) => {
+        const aScore = a.currentNodeId === currentNode ? 2 : 0;
+        const bScore = b.currentNodeId === currentNode ? 2 : 0;
+        return bScore - aScore;
+      }).slice(0, 50);
+      return {
+        players: sorted.map(p => ({
+          id: p.id,
+          agentName: p.agentName ?? "旅人",
+          nodeId: p.currentNodeId,
+          element: p.dominantElement,
+          avatarUrl: p.avatarUrl,
+          level: p.level,
+        })),
+      };
+    }),
 });

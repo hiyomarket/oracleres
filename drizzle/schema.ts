@@ -2634,3 +2634,45 @@ export const gameRogueEvents = mysqlTable("game_rogue_events", {
 });
 export type GameRogueEvent = typeof gameRogueEvents.$inferSelect;
 export type InsertGameRogueEvent = typeof gameRogueEvents.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────
+// 拍賣行系統
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * 拍賣行上架列表
+ * 每位玩家最多同時上架 3 件
+ */
+export const auctionListings = mysqlTable("auction_listings", {
+  id: int("id").primaryKey().autoincrement(),
+  /** 賣家 agent ID */
+  sellerAgentId: int("seller_agent_id").notNull(),
+  /** 賣家名稱（快取，避免 join） */
+  sellerName: varchar("seller_name", { length: 50 }).notNull(),
+  /** 道具 ID（對應 gameItems） */
+  itemId: varchar("item_id", { length: 50 }).notNull(),
+  /** 道具名稱（快取） */
+  itemName: varchar("item_name", { length: 100 }).notNull(),
+  /** 道具稀有度（快取） */
+  itemRarity: varchar("item_rarity", { length: 20 }).notNull().default("common"),
+  /** 道具五行屬性（快取） */
+  itemElement: varchar("item_element", { length: 20 }).notNull().default(""),
+  /** 上架數量 */
+  quantity: int("quantity").notNull().default(1),
+  /** 賣家設定的金幣售價 */
+  price: int("price").notNull(),
+  /** 狀態：active=在售, sold=已售出, cancelled=已下架 */
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+  /** 買家 agent ID（成交後填入） */
+  buyerAgentId: int("buyer_agent_id"),
+  /** 買家名稱（成交後填入） */
+  buyerName: varchar("buyer_name", { length: 50 }),
+  /** 成交時間 */
+  soldAt: bigint("sold_at", { mode: "number" }),
+  /** 上架時間 */
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  /** 更新時間 */
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type AuctionListing = typeof auctionListings.$inferSelect;
+export type InsertAuctionListing = typeof auctionListings.$inferInsert;

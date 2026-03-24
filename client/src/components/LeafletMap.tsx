@@ -269,6 +269,14 @@ export interface LeafletMapHandle {
   highlightNode: (nodeId: string) => void;
 }
 
+interface NearbyPlayer {
+  id: number;
+  agentName: string;
+  nodeId: string;
+  element: string;
+  avatarUrl?: string | null;
+  level: number;
+}
 interface LeafletMapProps {
   nodes: MapNode[];
   currentNodeId: string;
@@ -277,9 +285,11 @@ interface LeafletMapProps {
   hiddenNodeIds?: string[];
   /** 玩家自訂頭像 URL（地圖標記顯示） */
   agentAvatarUrl?: string;
+  /** 靠近玩家列表（地圖節點顯示在線人數） */
+  nearbyPlayers?: NearbyPlayer[];
 }
 
-const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function LeafletMap({ nodes, currentNodeId, onNodeClick, hiddenNodeIds = [], agentAvatarUrl }, ref) {
+const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function LeafletMap({ nodes, currentNodeId, onNodeClick, hiddenNodeIds = [], agentAvatarUrl, nearbyPlayers = [] }, ref) {
   const mapRef = useRef<ReturnType<typeof import("leaflet")["map"]> | null>(null);
   const markersRef = useRef<Map<string, ReturnType<typeof import("leaflet")["marker"]>>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
@@ -433,6 +443,22 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
                 📍 ${node.landmarks.slice(0, 3).join(" · ")}
               </div>
             ` : ""}
+            ${(() => {
+              const playersHere = nearbyPlayers.filter(p => p.nodeId === node.id);
+              return playersHere.length > 0 ? `
+                <div style="border-top:1px solid rgba(255,255,255,0.07);padding-top:6px;margin-bottom:8px;">
+                  <div style="font-size:10px;color:#94a3b8;margin-bottom:4px;">👥 此地旅人（${playersHere.length}）</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:3px;">
+                    ${playersHere.slice(0, 5).map(p => {
+                      const elColors: Record<string,string> = {wood:"#22c55e",fire:"#ef4444",earth:"#eab308",metal:"#94a3b8",water:"#3b82f6"};
+                      const elC = elColors[p.element] ?? "#94a3b8";
+                      return `<span style="background:${elC}22;color:${elC};border:1px solid ${elC}44;border-radius:4px;padding:1px 5px;font-size:9px;">${p.agentName}</span>`;
+                    }).join("")}
+                    ${playersHere.length > 5 ? `<span style="color:#64748b;font-size:9px;">+${playersHere.length - 5}</span>` : ""}
+                  </div>
+                </div>
+              ` : "";
+            })()}
             ${!isCurNode ? `
               <button
                 data-node-id="${node.id}"
