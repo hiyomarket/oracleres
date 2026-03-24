@@ -3,8 +3,10 @@
  * 遊戲模組底部 Tab 導航包裝器
  * V23：新增寵物系統/鍛造屋/拍賣行（即將推出），靈相空間/天命商城改為即將推出
  *      Tab Bar 改為可橫向滾動，支援 7 個 Tab
+ * Bug 3+4+9 fix：管理員按鈕整合到底部 Tab Bar（僅 admin 可見）
  */
 import { useLocation } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 type GameTab = {
   id: string;
@@ -12,6 +14,7 @@ type GameTab = {
   icon: string;
   label: string;
   comingSoon?: boolean;
+  adminOnly?: boolean;
 };
 
 const GAME_TABS: GameTab[] = [
@@ -22,6 +25,8 @@ const GAME_TABS: GameTab[] = [
   { id: "pet",      path: "/game/pet",       icon: "🐾", label: "寵物系統",  comingSoon: true },
   { id: "forge",    path: "/game/forge",     icon: "⚒️", label: "鍛造屋",    comingSoon: true },
   { id: "auction",  path: "/game/auction",   icon: "🏛️", label: "拍賣行",    comingSoon: true },
+  // Bug 3+9 fix: 管理員後台整合為單一按鈕（僅 admin 可見）
+  { id: "admin",    path: "/admin/game",     icon: "⚙️", label: "後台管理",  adminOnly: true },
 ];
 
 /** 底部 Tab Bar 高度（不含 safe-area，safe-area 由 CSS 處理） */
@@ -35,6 +40,8 @@ interface GameTabLayoutProps {
 
 export default function GameTabLayout({ children, activeTab }: GameTabLayoutProps) {
   const [location, navigate] = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   // 判斷目前 active tab
   const currentTab = activeTab ?? (() => {
@@ -45,8 +52,12 @@ export default function GameTabLayout({ children, activeTab }: GameTabLayoutProp
     if (location.startsWith("/game/pet")) return "pet";
     if (location.startsWith("/game/forge")) return "forge";
     if (location.startsWith("/game/auction")) return "auction";
+    if (location.startsWith("/admin")) return "admin";
     return "world";
   })();
+
+  // 過濾出要顯示的 Tab（adminOnly 的只有 admin 能看到）
+  const visibleTabs = GAME_TABS.filter(tab => !tab.adminOnly || isAdmin);
 
   return (
     <div
@@ -74,7 +85,7 @@ export default function GameTabLayout({ children, activeTab }: GameTabLayoutProp
         {children}
       </div>
 
-      {/* 底部 Tab Bar — 可橫向滾動，支援 7 個 Tab */}
+      {/* 底部 Tab Bar — 可橫向滾動，支援 7+ 個 Tab */}
       <nav
         style={{
           position: "fixed",
@@ -93,8 +104,9 @@ export default function GameTabLayout({ children, activeTab }: GameTabLayoutProp
           WebkitOverflowScrolling: "touch",
         } as React.CSSProperties}
       >
-        {GAME_TABS.map((tab) => {
+        {visibleTabs.map((tab) => {
           const isActive = currentTab === tab.id;
+          const isAdminTab = tab.adminOnly === true;
           return (
             <button
               key={tab.id}
@@ -111,9 +123,13 @@ export default function GameTabLayout({ children, activeTab }: GameTabLayoutProp
                 position: "relative",
                 transition: "all 0.15s",
                 WebkitTapHighlightColor: "transparent",
-                background: "transparent",
+                background: isAdminTab
+                  ? (isActive ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.05)")
+                  : "transparent",
                 border: "none",
                 cursor: tab.comingSoon ? "default" : "pointer",
+                // Admin 按鈕左側加分隔線
+                borderLeft: isAdminTab ? "1px solid rgba(239,68,68,0.2)" : undefined,
               }}
               onClick={() => {
                 if (tab.comingSoon) return;
@@ -131,7 +147,9 @@ export default function GameTabLayout({ children, activeTab }: GameTabLayoutProp
                     width: "40px",
                     height: "2px",
                     borderRadius: "1px",
-                    background: "linear-gradient(90deg, #f59e0b, #ef4444)",
+                    background: isAdminTab
+                      ? "linear-gradient(90deg, #ef4444, #dc2626)"
+                      : "linear-gradient(90deg, #f59e0b, #ef4444)",
                   }}
                 />
               )}
@@ -156,9 +174,11 @@ export default function GameTabLayout({ children, activeTab }: GameTabLayoutProp
                   fontWeight: 500,
                   letterSpacing: "0.03em",
                   color: isActive
-                    ? "#f59e0b"
+                    ? (isAdminTab ? "#ef4444" : "#f59e0b")
                     : tab.comingSoon
                     ? "rgba(148,163,184,0.3)"
+                    : isAdminTab
+                    ? "rgba(239,68,68,0.7)"
                     : "rgba(148,163,184,0.7)",
                   transition: "color 0.15s",
                   whiteSpace: "nowrap",

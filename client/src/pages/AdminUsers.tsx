@@ -4,6 +4,7 @@
  * 職責：查看所有用戶、篩選方案/生命靈數/活躍時間、管理訂閱
  */
 import { useState, useCallback } from "react";
+import { useLocation } from "wouter";
 import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -536,6 +537,7 @@ function RecalcLifePathButton() {
 // ─── 主頁面 ─────────────────────────────────────────────────────────────────
 export default function AdminUsers() {
   const { readOnly } = useAdminRole();
+  const [, navigate] = useLocation();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [searchName, setSearchName] = useState("");
@@ -664,7 +666,15 @@ export default function AdminUsers() {
             <h1 className="text-xl font-bold text-amber-400 mb-1">用戶管理</h1>
             <p className="text-slate-400 text-sm">查看所有用戶、篩選方案與活躍狀態、管理訂閱權益</p>
           </div>
-          <RecalcLifePathButton />
+          <div className="flex gap-2 items-center">
+            {/* Bug 4 fix: 返回遊戲世界按鈕 */}
+            <button
+              onClick={() => navigate("/game")}
+              className="text-xs bg-green-500/20 hover:bg-green-500/30 border border-green-500/40 text-green-400 px-3 py-1.5 rounded-lg transition-colors shrink-0">
+              🌏 返回遊戲
+            </button>
+            <RecalcLifePathButton />
+          </div>
         </div>
 
         {/* 批量操作工具列 */}

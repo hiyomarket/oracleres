@@ -155,6 +155,12 @@ export default function AdminDashboard() {
             <p className="text-slate-400 text-sm">{dateStr} · 數據基準：近 30 天</p>
           </div>
           <div className="flex gap-2">
+            {/* Bug 4 fix: 返回遊戲世界按鈕 */}
+            <button
+              onClick={() => navigate("/game")}
+              className="text-xs bg-green-500/20 hover:bg-green-500/30 border border-green-500/40 text-green-400 px-3 py-1.5 rounded-lg transition-colors">
+              🌏 返回遊戲
+            </button>
             <Link href="/admin/users">
               <button className="text-xs bg-slate-700/60 hover:bg-slate-700 border border-slate-600/50 text-slate-300 px-3 py-1.5 rounded-lg transition-colors">
                 👤 用戶管理

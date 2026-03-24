@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { useLocation } from "wouter";
 
 // ─── 世界重置 Tab ───────────────────────────────────────────────────────────
 function WorldResetTab() {
@@ -1421,11 +1422,23 @@ function WorldEventTab() {
 
 // ─── 主頁面 ────────────────────────────────────────────────────────────────────────────────────
 export default function AdminGameTheater() {
+  const [, navigate] = useLocation();
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">🎭 遊戲劇院</h1>
-        <p className="text-muted-foreground text-sm mt-1">管理角色資源、全域參數、Tick 引擎、全服廣播</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">🎭 遊戲劇院</h1>
+          <p className="text-muted-foreground text-sm mt-1">管理角色資源、全域參數、Tick 引擎、全服廣播</p>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          {/* Bug 4 fix: 返回遊戲世界按鈕 */}
+          <Button variant="outline" size="sm" onClick={() => navigate("/game")}>
+            🌏 返回遊戲
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/admin/game")}>
+            📊 遊戲CMS
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="agents">

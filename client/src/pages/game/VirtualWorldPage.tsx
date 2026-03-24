@@ -19,8 +19,15 @@ import { safePlay, playLevelUpSound, playLegendarySound, playTickSound, isSoundE
 import { useGameWebSocket } from "@/hooks/useGameWebSocket";
 import { CombatWindow } from "@/components/CombatWindow";
 import type { CombatWindowData } from "@/components/CombatWindow";
+import { GlobalChat } from "@/components/GlobalChat";
 
-// ─── 五行配色 ─────────────────────────────────────────────────
+/// ─── 經驗升級公式（和後端 tickEngine.ts 相同） ───
+function calcExpToNextFn(level: number): number {
+  if (level >= 60) return 999999;
+  return Math.floor(100 * Math.pow(1.4, level - 1));
+}
+
+// ─── 五行配色 ─────────────────────────────────────────────
 const WX_HEX: Record<string, string> = {
   wood: "#22c55e", fire: "#ef4444", earth: "#f59e0b", metal: "#e2e8f0", water: "#38bdf8",
 };
@@ -568,7 +575,12 @@ function CharacterPanel({
   const agentAP = agent?.actionPoints ?? 5;
   const agentMaxAP = agent?.maxActionPoints ?? 5;
   const agentExp = agent?.exp ?? 0;
-  const agentExpToNext = agent?.expToNext ?? 100;
+  // Bug 5 fix: 使用和後端相同的公式計算 expToNext（Math.floor(100 * 1.4^(level-1))）
+  const calcExpToNextFn = (level: number): number => {
+    if (level >= 60) return 999999;
+    return Math.floor(100 * Math.pow(1.4, level - 1));
+  };
+  const agentExpToNext = calcExpToNextFn(agent?.level ?? 1);
   const userGender = equippedData?.userGender ?? "female";
   const gameCoins = balanceData?.gameCoins ?? 0;
   const gameStones = balanceData?.gameStones ?? 0;
@@ -612,10 +624,14 @@ function CharacterPanel({
     skillWuxingFilter ? { wuxing: skillWuxingFilter } : undefined,
     { enabled: showSkillPicker, staleTime: 60000 }
   );
+  const cpUtils = trpc.useUtils();
   const installSkillMutation = trpc.gameWorld.installSkill.useMutation({
     onSuccess: () => {
       setShowSkillPicker(false);
       toast.success("技能安裝成功！");
+      // Bug 1 fix: 安裝後立即刷新 agent 資料，讓技能槽 UI 更新
+      cpUtils.gameWorld.getOrCreateAgent.invalidate();
+      cpUtils.gameWorld.getAgentStatus.invalidate();
     },
     onError: (e) => toast.error("安裝失敗：" + e.message),
   });
@@ -640,6 +656,14 @@ function CharacterPanel({
       invQuery.refetch();
     },
     onError: (e) => toast.error("使用失敗：" + e.message),
+  });
+  const learnSkillMutation = trpc.gameWorld.learnSkillFromBook.useMutation({
+    onSuccess: (data) => {
+      toast.success(`成功習得技能「${data.skillId}」！可在技能面板裝備使用`);
+      invQuery.refetch();
+      cpUtils.gameWorld.getOrCreateAgent.invalidate();
+    },
+    onError: (e) => toast.error("學習失敗：" + e.message),
   });
   const PANELS: { id: PanelId; icon: string; label: string }[] = [
     { id: "combat", icon: "⚔️", label: "戰鬥" },
@@ -869,6 +893,15 @@ function CharacterPanel({
                           className="shrink-0 px-2 py-1 rounded-lg text-xs font-bold transition-all active:scale-95"
                           style={{ background: `${ec}25`, color: ec, border: `1px solid ${ec}40` }}>
                           使用
+                        </button>
+                      )}
+                      {item.itemType === "skill_book" && (
+                        <button
+                          onClick={() => learnSkillMutation.mutate({ inventoryId: item.id })}
+                          disabled={learnSkillMutation.isPending}
+                          className="shrink-0 px-2 py-1 rounded-lg text-xs font-bold transition-all active:scale-95"
+                          style={{ background: `${ec}25`, color: ec, border: `1px solid ${ec}40` }}>
+                          學習
                         </button>
                       )}
                       {item.itemType === "equipment" && (() => {
@@ -1795,8 +1828,9 @@ export default function VirtualWorldPage() {
           duration: 2000,
         });
       }
-      // 戰鬥視窗：如果有戰鬥結果且是自己的戰鬥，就顯示戰鬥視窗
-      if (result.lastCombat && result.lastCombat.agentId === agent?.id) {
+      // 戰鬥視窗：只要有 lastCombat 資料就顯示戰鬥視窗
+      // Bug 7 fix: 移除 agentId 比對（agent?.id 可能為 undefined 導致永遠不觸發）
+      if (result.lastCombat) {
         setCombatWindowData(result.lastCombat as CombatWindowData);
       }
       // 偵測休息完成後自動切回策略
@@ -1845,10 +1879,24 @@ export default function VirtualWorldPage() {
         const curStaminaInfo = statusData?.staminaInfo as { current?: number } | undefined;
         const curStamina = curStaminaInfo?.current ?? agent?.stamina ?? 100;
         const curStrategy = agent?.strategy ?? "explore";
-        if (curStamina <= 0 && curStrategy !== "rest") {
-          // 體力歸零，自動切換休息
-          setStrategy.mutate({ strategy: "rest" });
-          toast.info("😴 體力不足，自動切換為「休息」模式", { duration: 3000 });
+        // Bug 6 fix: 體力 < 5 時自動暫停 Tick（對應一次行動消耗 5 體力）
+        if (curStamina < 5) {
+          if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
+          tickIntervalRef.current = null;
+          setTickRunning(false);
+          autoExecRef.current = false;
+          if (curStrategy !== "rest") {
+            setStrategy.mutate({ strategy: "rest" });
+            toast.info("😴 體力不足！自動暫停行動並切換「休息」模式", {
+              description: "體力將每 30 分鐘自動回復 30 點，回復後可再次開始行動",
+              duration: 5000,
+            });
+          } else {
+            toast.info("😴 體力不足！行動已暫停", {
+              description: "體力將每 30 分鐘自動回復 30 點，回復後可再次開始行動",
+              duration: 5000,
+            });
+          }
         } else {
           triggerTick.mutate();
         }
@@ -2099,6 +2147,25 @@ export default function VirtualWorldPage() {
         />
       )}
 
+      {/* Bug 2 fix: 全服聊天室整合到虛相世界主頁面 */}
+      {agent && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "72px", // 底部 Tab Bar 之上
+            right: "12px",
+            zIndex: 300,
+            width: "min(320px, calc(100vw - 24px))",
+          }}
+        >
+          <GlobalChat
+            collapsed={true}
+            agentId={agent?.id ?? null}
+            agentName={agent?.agentName ?? null}
+          />
+        </div>
+      )}
+
       {/* 全服廣播橫幅 */}
       {activeBroadcasts.length > 0 && (
         <div className="fixed top-14 left-0 right-0 z-[200] flex flex-col gap-1 px-2 pt-1">
@@ -2320,7 +2387,8 @@ export default function VirtualWorldPage() {
             {/* 經驗條 */}
             {(() => {
               const expCur = agent?.exp ?? agent?.experience ?? 0;
-              const expNext = agent?.expToNext ?? (agent?.level ?? 1) * 100;
+              // Bug 5 fix: 使用和後端相同的公式
+              const expNext = calcExpToNextFn(agent?.level ?? 1);
               const pct = expNext > 0 ? Math.min(100, (expCur / expNext) * 100) : 0;
               return (
                 <div className="flex items-center gap-1 w-full max-w-[120px]">
@@ -3181,39 +3249,7 @@ export default function VirtualWorldPage() {
                       <span className="text-xs font-bold" style={{ color: hiddenShopColor }}>密店</span>
                     </button>
                   </div>
-                  {/* 管理員後台快捷鍵（僅 admin 可見） */}
-                  {user?.role === "admin" && (
-                    <div className="px-3 pb-2 pt-1 flex gap-1.5">
-                      <button
-                        onClick={() => navigate("/admin/game")}
-                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border transition-all active:scale-[0.98]"
-                        style={{ background: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.35)" }}>
-                        <span className="text-xs">⚙️</span>
-                        <span className="text-xs text-red-300 font-bold">遊戲CMS</span>
-                      </button>
-                      <button
-                        onClick={() => navigate("/admin/dashboard")}
-                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border transition-all active:scale-[0.98]"
-                        style={{ background: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.35)" }}>
-                        <span className="text-xs">📊</span>
-                        <span className="text-xs text-red-300 font-bold">管理後台</span>
-                      </button>
-                      <button
-                        onClick={() => navigate("/admin/users")}
-                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border transition-all active:scale-[0.98]"
-                        style={{ background: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.35)" }}>
-                        <span className="text-xs">👥</span>
-                        <span className="text-xs text-red-300 font-bold">用戶管理</span>
-                      </button>
-                      <button
-                        onClick={() => navigate("/admin/logic-config")}
-                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border transition-all active:scale-[0.98]"
-                        style={{ background: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.35)" }}>
-                        <span className="text-xs">🔧</span>
-                        <span className="text-xs text-red-300 font-bold">邏輯配置</span>
-                      </button>
-                    </div>
-                  )}
+                  {/* Bug 3+9 fix: 管理員按鈕已整合到 GameTabLayout 底部 Tab Bar（僅 admin 可見） */}
                 </div>
               )}
             </div>

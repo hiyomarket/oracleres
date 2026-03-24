@@ -8,6 +8,7 @@
  */
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -1256,6 +1257,7 @@ function ElementColorMapPanel() {
 // ============================================================
 export default function AdminLogicConfig() {
   const { readOnly } = useAdminRole();
+  const [, navigate] = useLocation();
   const [activeSection, setActiveSection] = useState<string>("strategy");
 
   const navItems = [
@@ -1270,9 +1272,17 @@ export default function AdminLogicConfig() {
     <AdminLayout>
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* 頁面標題 */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-amber-400 mb-1">算法核心控制中心</h1>
-          <p className="text-slate-400 text-sm">管理策略引擎、能量計算規則、手串資料庫與飲食分類——所有變更即時生效。</p>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-amber-400 mb-1">算法核心控制中心</h1>
+            <p className="text-slate-400 text-sm">管理策略引擎、能量計算規則、手串資料庫與飲食分類——所有變更即時生效。</p>
+          </div>
+          {/* Bug 4 fix: 返回遊戲世界按鈕 */}
+          <button
+            onClick={() => navigate("/game")}
+            className="text-xs bg-green-500/20 hover:bg-green-500/30 border border-green-500/40 text-green-400 px-3 py-1.5 rounded-lg transition-colors shrink-0">
+            🌏 返回遊戲
+          </button>
         </div>
 
         {/* 主從佈局 */}

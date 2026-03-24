@@ -3731,3 +3731,18 @@
 - [ ] VirtualWorldPage 地圖節點加入神秘商人發光效果
 - [ ] 點擊發光節點彈出限時商店介面（倒數計時 + 稀有物品）
 - [ ] 隱藏商店 API（getHiddenShopInstance/buyHiddenShopItem）
+
+## V36 Bug 修復批次
+
+### 核心邏輯 Bug
+- [x] 升級系統：經驗溢出後仍未升級（前端使用正確的 calcExpToNextFn 公式）
+- [x] 行動値耗盡後應進入暫停模式，不再執行事件（前端體力 < 5 時自動停止 Tick）
+- [x] 技能安裝後角色面板未顯示技能（加入 invalidate 刷新）
+- [x] 戰鬥視窗（CombatWindow）未彈出（移除 agentId 比對条件）
+- [x] 確認技能書掉落系統已存在，加入背包「學習」按鈕 + 後端 learnSkillFromBook procedure
+
+### UI/UX Bug
+- [x] 聊天室整合到虛相空間（VirtualWorldPage），移除遊戲大廳入口
+- [x] 管理員後台按鈕移到介面底端功能表（GameTabLayout 底部 Tab），僅顯示一個「後台」按鈕
+- [x] 後台頁面加入「返回遊戲世界」按鈕（GameCMS/AdminDashboard/AdminLogicConfig/AdminUsers/AdminGameTheater）
+- [x] 後台各子頁面加入返回上層後台的邏輯

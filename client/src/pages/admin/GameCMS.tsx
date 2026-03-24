@@ -452,9 +452,15 @@ export default function GameCMS() {
             <h1 className="text-2xl font-bold">靈相世界 · 遊戲內容管理</h1>
             <p className="text-muted-foreground text-sm mt-1">管理怪物、技能、成就等遊戲內容資料，變更即時生效。</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => navigate("/admin/game-theater")} className="shrink-0">
-            🎭 遊戲劇院
-          </Button>
+          <div className="flex gap-2 shrink-0">
+            {/* Bug 4 fix: 返回遊戲世界按鈕 */}
+            <Button variant="outline" size="sm" onClick={() => navigate("/game")} className="shrink-0">
+              🌏 返回遊戲
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/game-theater")} className="shrink-0">
+              🎭 遊戲劇院
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="monsters">

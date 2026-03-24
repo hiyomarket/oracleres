@@ -1064,6 +1064,50 @@ export const gameWorldRouter = router({
       return { success: true };
     }),
 
+  // ─── 學習技能書 ───
+  learnSkillFromBook: protectedProcedure
+    .input(z.object({ inventoryId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const agent = agents[0];
+      const [invItem] = await db.select().from(agentInventory)
+        .where(and(eq(agentInventory.id, input.inventoryId), eq(agentInventory.agentId, agent.id))).limit(1);
+      if (!invItem) throw new TRPCError({ code: "NOT_FOUND", message: "道具不存在" });
+      if (invItem.itemType !== "skill_book") throw new TRPCError({ code: "BAD_REQUEST", message: "此道具不是技能書" });
+      // 技能 ID 就是 itemId（例如 skill-wood-001）
+      const skillId = invItem.itemId;
+      // 檢查是否已習得
+      const already = await db.select().from(agentSkills)
+        .where(and(eq(agentSkills.agentId, agent.id), eq(agentSkills.skillId, skillId))).limit(1);
+      if (already[0]) throw new TRPCError({ code: "CONFLICT", message: "已習得此技能，無需重複學習" });
+      // 寫入 agentSkills
+      await db.insert(agentSkills).values({
+        agentId: agent.id,
+        skillId,
+        awakeTier: 0,
+        useCount: 0,
+      });
+      // 消耗技能書（數量 -1 或刪除）
+      if (invItem.quantity > 1) {
+        await db.update(agentInventory).set({ quantity: invItem.quantity - 1, updatedAt: Date.now() }).where(eq(agentInventory.id, invItem.id));
+      } else {
+        await db.delete(agentInventory).where(eq(agentInventory.id, invItem.id));
+      }
+      // 寫入事件日誌
+      await db.insert(agentEvents).values({
+        agentId: agent.id,
+        eventType: "system",
+        detail: { skillId },
+        message: `習得了技能「${skillId}」！`,
+        createdAt: Date.now(),
+      });
+      return { success: true, skillId };
+    }),
+
   // ─── 使用消耗道具 ───
   useItem: protectedProcedure
     .input(z.object({ inventoryId: z.number().int().positive() }))
