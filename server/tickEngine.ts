@@ -7,6 +7,7 @@
 import { getDb } from "./db";
 import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates } from "../drizzle/schema";
 import { processHiddenEvents } from "./hiddenEventEngine";
+import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs } from "./gameEngineConfig";
 import { eq, and, sql } from "drizzle-orm";
 import {
   MAP_NODES,
@@ -624,18 +625,23 @@ async function processAgentTick(
   const roll = Math.random();
   let eventsCreated = 0;
 
-  // Roguelike 奇遇（5% 機率）
-  if (roll < 0.05) {
+  // 從全域引擎配置取得動態機率
+  const chances = getEventChances();
+
+  // Roguelike 奇遇（動態機率）
+  if (roll < chances.rogue) {
     eventsCreated += await processRogueEvent(agent, currentNode, tick);
     return eventsCreated;
   }
 
   const strategy = agent.strategy;
+  const combatThreshold = chances.rogue + chances.combat;
+  const gatherThreshold = combatThreshold + chances.gather;
 
   if (strategy === "explore" || strategy === "combat") {
-    if (roll < 0.65) {
+    if (roll < combatThreshold) {
       eventsCreated += await processCombatEvent(agent, currentNode, tick, dailyElement);
-    } else if (roll < 0.85) {
+    } else if (roll < gatherThreshold) {
       eventsCreated += await processGatherEvent(agent, currentNode, tick);
     } else if (strategy === "explore") {
       eventsCreated += await processMoveEvent(agent, currentNode, tick);
@@ -701,10 +707,11 @@ async function processCombatEvent(
   );
 
   // 更新角色狀態
+  const multipliers = getMultipliers();
   let newHp = Math.max(1, agent.hp - result.hpLost);
   let newMp = Math.max(0, agent.mp - result.mpUsed);
-  let newExp = agent.exp + result.expGained;
-  let newGold = agent.gold + result.goldGained;
+  let newExp = agent.exp + Math.floor(result.expGained * multipliers.exp);
+  let newGold = agent.gold + Math.floor(result.goldGained * multipliers.gold);
   let newLevel = agent.level;
   let newExpToNext = calcExpToNext(agent.level);
   let newStatus: typeof agent.status = agent.status;
@@ -892,7 +899,9 @@ async function processGatherEvent(
   });
 
   await createEvent(agent.id, "gather", msg, { itemId: item }, currentNode.id);
-  // 寫入背包
+  // 寫入背包（套用掉落倍率）
+  const mults = getMultipliers();
+  const gatherQty = Math.max(1, Math.floor(mults.drop));
   const db2 = await getDb();
   if (db2) {
     try {
@@ -901,7 +910,7 @@ async function processGatherEvent(
         .limit(1);
       if (existing[0]) {
         await db2.update(agentInventory).set({
-          quantity: existing[0].quantity + 1,
+          quantity: existing[0].quantity + gatherQty,
           updatedAt: Date.now(),
         }).where(eq(agentInventory.id, existing[0].id));
       } else {
@@ -909,7 +918,7 @@ async function processGatherEvent(
           agentId: agent.id,
           itemId: item,
           itemType: "material",
-          quantity: 1,
+          quantity: gatherQty,
           acquiredAt: Date.now(),
           updatedAt: Date.now(),
         });
@@ -1040,12 +1049,17 @@ async function createEvent(
 
 // ─── Tick 引擎啟動器 ───
 let tickInterval: ReturnType<typeof setInterval> | null = null;
-const TICK_INTERVAL_MS = 5 * 60 * 1000; // 5 分鐘
 
 export function startTickEngine(): void {
   if (tickInterval) return;
-  console.log("[TickEngine] 啟動虛相世界 Tick 引擎，間隔 5 分鐘");
+  const intervalMs = getTickIntervalMs();
+  console.log(`[TickEngine] 啟動虛相世界 Tick 引擎，間隔 ${intervalMs / 1000} 秒`);
   tickInterval = setInterval(async () => {
+    const cfg = getEngineConfig();
+    if (!cfg.gameEnabled) {
+      console.log("[TickEngine] 遊戲已暫停（維護模式），跳過 Tick");
+      return;
+    }
     try {
       const result = await processTick();
       if (result.processed > 0) {
@@ -1054,7 +1068,7 @@ export function startTickEngine(): void {
     } catch (err) {
       console.error("[TickEngine] Tick 錯誤：", err);
     }
-  }, TICK_INTERVAL_MS);
+  }, intervalMs);
 }
 
 export function stopTickEngine(): void {
@@ -1063,4 +1077,10 @@ export function stopTickEngine(): void {
     tickInterval = null;
     console.log("[TickEngine] 已停止");
   }
+}
+
+/** 重啟 Tick 引擎（用於動態調整間隔後） */
+export function restartTickEngine(): void {
+  stopTickEngine();
+  startTickEngine();
 }

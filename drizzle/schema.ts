@@ -2246,3 +2246,24 @@ export const adminGameControl = mysqlTable("admin_game_control", {
 });
 export type AdminGameControl = typeof adminGameControl.$inferSelect;
 export type InsertAdminGameControl = typeof adminGameControl.$inferInsert;
+
+/**
+ * 全服廣播訊息表
+ * 管理員發送的系統公告，前端輪詢顯示
+ */
+export const gameBroadcast = mysqlTable("game_broadcast", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 訊息類型：info=一般公告, warning=警告, event=活動, maintenance=維護 */
+  msgType: mysqlEnum("msg_type", ["info", "warning", "event", "maintenance"]).notNull().default("info"),
+  /** 廣播內容 */
+  content: text("content").notNull(),
+  /** 發送者（管理員 openId） */
+  sentBy: varchar("sent_by", { length: 255 }),
+  /** 是否有效（可手動關閉） */
+  isActive: tinyint("is_active").notNull().default(1),
+  /** 顯示到期時間（Unix ms，null = 永久） */
+  expiresAt: bigint("expires_at", { mode: "number" }),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameBroadcast = typeof gameBroadcast.$inferSelect;
+export type InsertGameBroadcast = typeof gameBroadcast.$inferInsert;

@@ -7,9 +7,9 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users, equipmentTemplates, agentDropCounters } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users, equipmentTemplates, agentDropCounters, gameBroadcast } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gt } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
 import { MONSTERS } from "../../shared/monsters";
 import { processTick, calcExpToNext, resolveCombat, calcCharacterStats } from "../tickEngine";
@@ -1324,5 +1324,19 @@ export const gameWorldRouter = router({
     const [counter] = await db.select().from(agentDropCounters)
       .where(eq(agentDropCounters.agentId, agents[0].id)).limit(1);
     return counter ?? null;
+  }),
+
+  // ─── 全服廣播（前端輪詢） ───
+  getBroadcast: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    const now = Date.now();
+    // 取有效且未過期的廣播（最新 5 筆）
+    const rows = await db.select().from(gameBroadcast)
+      .where(eq(gameBroadcast.isActive, 1))
+      .orderBy(desc(gameBroadcast.createdAt))
+      .limit(5);
+    // 過濾已過期的
+    return rows.filter(r => !r.expiresAt || r.expiresAt > now);
   }),
 });

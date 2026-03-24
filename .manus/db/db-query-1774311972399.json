@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS game_broadcast (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  msg_type ENUM('info','warning','event','maintenance') NOT NULL DEFAULT 'info',\n  content TEXT NOT NULL,\n  sent_by VARCHAR(255),\n  is_active TINYINT NOT NULL DEFAULT 1,\n  expires_at BIGINT,\n  created_at BIGINT NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute CREATE TABLE IF NOT EXISTS game_broadcast (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  msg_type ENUM('info','warning','event','maintenance') NOT NULL DEFAULT 'info',\n  content TEXT NOT NULL,\n  sent_by VARCHAR(255),\n  is_active TINYINT NOT NULL DEFAULT 1,\n  expires_at BIGINT,\n  created_at BIGINT NOT NULL\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1776
+}

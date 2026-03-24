@@ -1583,7 +1583,25 @@ export default function VirtualWorldPage() {
   const divineHeal     = trpc.gameWorld.divineHeal.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
   const divineEye      = trpc.gameWorld.divineEye.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
   const divineStamina  = trpc.gameWorld.divineStamina.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
-  const triggerTick    = trpc.gameWorld.triggerTick.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
+  // 記錄上次 Tick 前的角色狀態，用於比對變化
+  const prevAgentRef = useRef<AgentData | null | undefined>(null);
+  const triggerTick    = trpc.gameWorld.triggerTick.useMutation({
+    onMutate: () => {
+      // 儲存目前狀態供比對
+      prevAgentRef.current = agent;
+    },
+    onSuccess: (result) => {
+      refetchStatus();
+      refetchLog();
+      // 展示 Tick 結果 Toast
+      if (result.events > 0) {
+        toast.success(`✨ 旅人行動完成`, {
+          description: `處理了 ${result.events} 個事件`,
+          duration: 2000,
+        });
+      }
+    },
+  });
   const setTeleport = trpc.gameWorld.setTeleport.useMutation({
     onSuccess: (data) => {
       setShowTeleport(false);
@@ -1635,6 +1653,16 @@ export default function VirtualWorldPage() {
   const [showDivinePanel, setShowDivinePanel] = useState(false);
   const [showQuickTeleport, setShowQuickTeleport] = useState(false);
   const [selectedTeleportNode, setSelectedTeleportNode] = useState<string | null>(null);
+  const [dismissedBroadcasts, setDismissedBroadcasts] = useState<Set<number>>(new Set());
+
+  // 全服廣播輪詢（20 秒一次）
+  const { data: broadcastData } = trpc.gameWorld.getBroadcast.useQuery(undefined, {
+    refetchInterval: 20000,
+    staleTime: 15000,
+  });
+  const activeBroadcasts = (broadcastData ?? []).filter(
+    (b: { id: number }) => !dismissedBroadcasts.has(b.id)
+  );
   useEffect(() => {
     if (agentData?.needsNaming) setShowNaming(true);
   }, [agentData?.needsNaming]);
@@ -1680,8 +1708,38 @@ export default function VirtualWorldPage() {
     );
   }
 
+  // 廣播訊息配色
+  const BROADCAST_STYLES: Record<string, { bg: string; border: string; text: string; icon: string }> = {
+    info:        { bg: "rgba(56,189,248,0.12)",  border: "rgba(56,189,248,0.4)",  text: "#38bdf8", icon: "📢" },
+    warning:     { bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.4)",  text: "#f59e0b", icon: "⚠️" },
+    event:       { bg: "rgba(168,85,247,0.12)",  border: "rgba(168,85,247,0.4)",  text: "#a855f7", icon: "🎉" },
+    maintenance: { bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.4)",   text: "#ef4444", icon: "🔧" },
+  };
+
   return (
     <GameTabLayout activeTab="world">
+      {/* 全服廣播橫幅 */}
+      {activeBroadcasts.length > 0 && (
+        <div className="fixed top-14 left-0 right-0 z-[200] flex flex-col gap-1 px-2 pt-1">
+          {activeBroadcasts.slice(0, 2).map((b: { id: number; msgType: string; content: string }) => {
+            const style = BROADCAST_STYLES[b.msgType] ?? BROADCAST_STYLES.info;
+            return (
+              <div key={b.id}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl border text-sm"
+                style={{ background: style.bg, borderColor: style.border, backdropFilter: "blur(12px)" }}>
+                <span className="shrink-0">{style.icon}</span>
+                <span className="flex-1 font-medium" style={{ color: style.text }}>{b.content}</span>
+                <button
+                  onClick={() => setDismissedBroadcasts(prev => new Set(Array.from(prev).concat(b.id)))}
+                  className="shrink-0 text-slate-500 hover:text-slate-300 text-base px-1">
+                  ✕
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {showNaming && (
         <NamingDialog onNamed={() => {
           setShowNaming(false);

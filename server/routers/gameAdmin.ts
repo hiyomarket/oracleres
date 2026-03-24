@@ -30,8 +30,15 @@ import {
   gameAgents,
   users,
   equipmentTemplates,
+  gameBroadcast,
 } from "../../drizzle/schema";
-import { sql, like, or, eq } from "drizzle-orm";
+import { sql, like, or, eq, desc } from "drizzle-orm";
+import {
+  getEngineConfig,
+  updateEngineConfig,
+  resetEngineConfig,
+} from "../gameEngineConfig";
+import { restartTickEngine } from "../tickEngine";
 
 // Admin guard middleware
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -901,6 +908,89 @@ export const gameAdminRouter = router({
       const { id, ...rest } = input;
       const cleanData = Object.fromEntries(Object.entries(rest).filter(([, v]) => v !== undefined));
       await db.update(equipmentTemplates).set(cleanData).where(eq(equipmentTemplates.id, id));
+      return { success: true };
+    }),
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 引擎彈性調控（記憶體即時生效）
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /** 取得目前引擎配置 */
+  getEngineConfig: adminProcedure.query(() => {
+    return getEngineConfig();
+  }),
+
+  /** 更新引擎配置（部分更新，立即生效） */
+  updateEngineConfig: adminProcedure
+    .input(z.object({
+      tickIntervalMs: z.number().int().min(5000).max(30 * 60 * 1000).optional(),
+      expMultiplier: z.number().min(0.1).max(10).optional(),
+      goldMultiplier: z.number().min(0.1).max(10).optional(),
+      dropMultiplier: z.number().min(0.1).max(10).optional(),
+      combatChance: z.number().min(0).max(0.95).optional(),
+      gatherChance: z.number().min(0).max(0.95).optional(),
+      rogueChance: z.number().min(0).max(0.5).optional(),
+      gameEnabled: z.boolean().optional(),
+      maintenanceMsg: z.string().max(200).optional(),
+    }))
+    .mutation(({ input, ctx }) => {
+      const { tickIntervalMs, ...rest } = input;
+      const updated = updateEngineConfig({ ...rest, ...(tickIntervalMs ? { tickIntervalMs } : {}) }, String(ctx.user.id));
+      // 如果調整了 Tick 間隔，重啟引擎
+      if (tickIntervalMs !== undefined) {
+        restartTickEngine();
+      }
+      return updated;
+    }),
+
+  /** 重置引擎配置為預設値 */
+  resetEngineConfig: adminProcedure.mutation(({ ctx }) => {
+    const reset = resetEngineConfig(String(ctx.user.id));
+    restartTickEngine();
+    return reset;
+  }),
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 全服廣播系統
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  /** 發送全服廣播訊息 */
+  broadcastMessage: adminProcedure
+    .input(z.object({
+      content: z.string().min(1).max(500),
+      msgType: z.enum(["info", "warning", "event", "maintenance"]).default("info"),
+      /** 顯示持續秒數（null = 永久） */
+      durationSeconds: z.number().int().min(10).max(3600).nullable().default(300),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const expiresAt = input.durationSeconds ? Date.now() + input.durationSeconds * 1000 : null;
+      await db.insert(gameBroadcast).values({
+        content: input.content,
+        msgType: input.msgType,
+        sentBy: String(ctx.user.id),
+        isActive: 1,
+        expiresAt: expiresAt ?? undefined,
+        createdAt: Date.now(),
+      });
+      return { success: true };
+    }),
+
+  /** 取得廣播歷史（最新 20 筆） */
+  getBroadcastHistory: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameBroadcast).orderBy(desc(gameBroadcast.createdAt)).limit(20);
+  }),
+
+  /** 關閉廣播訊息 */
+  closeBroadcast: adminProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameBroadcast).set({ isActive: 0 }).where(eq(gameBroadcast.id, input.id));
       return { success: true };
     }),
 });

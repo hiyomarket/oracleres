@@ -524,13 +524,404 @@ function TickEngineTab() {
   );
 }
 
-// ─── 主頁面 ───────────────────────────────────────────────────────────────────
+// ─── 全服廣播 Tab ─────────────────────────────────────────────────────────────────────────────
+const MSG_TYPE_OPTIONS = [
+  { value: "info",        label: "📢 一般公告",  color: "#38bdf8" },
+  { value: "warning",     label: "⚠️ 警告",      color: "#f59e0b" },
+  { value: "event",       label: "🎉 活動公告",  color: "#a855f7" },
+  { value: "maintenance", label: "🔧 維護公告",  color: "#ef4444" },
+];
+
+function BroadcastTab() {
+  const [content, setContent] = useState("");
+  const [msgType, setMsgType] = useState<"info" | "warning" | "event" | "maintenance">("info");
+  const [duration, setDuration] = useState("300");
+
+  const { data: history, refetch: refetchHistory } = trpc.gameAdmin.getBroadcastHistory.useQuery();
+
+  const sendBroadcast = trpc.gameAdmin.broadcastMessage.useMutation({
+    onSuccess: () => {
+      toast.success("📢 廣播已發送！玩家將在 20 秒內看到");
+      setContent("");
+      refetchHistory();
+    },
+    onError: (e) => toast.error("發送失敗：" + e.message),
+  });
+
+  const closeBroadcast = trpc.gameAdmin.closeBroadcast.useMutation({
+    onSuccess: () => { toast.success("已關閉廣播"); refetchHistory(); },
+  });
+
+  const selectedStyle = MSG_TYPE_OPTIONS.find(o => o.value === msgType);
+
+  return (
+    <div className="space-y-6">
+      {/* 發送區 */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">📢 發送全服廣播</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* 訊息類型 */}
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">訊息類型</p>
+            <div className="flex flex-wrap gap-2">
+              {MSG_TYPE_OPTIONS.map(opt => (
+                <button key={opt.value}
+                  onClick={() => setMsgType(opt.value as typeof msgType)}
+                  className="px-3 py-1.5 rounded-lg border text-xs font-medium transition-all"
+                  style={msgType === opt.value
+                    ? { background: `${opt.color}20`, borderColor: opt.color, color: opt.color }
+                    : { background: "transparent", borderColor: "rgba(255,255,255,0.1)", color: "#64748b" }}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* 內容 */}
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">廣播內容（最多 500 字）</p>
+            <textarea
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              maxLength={500}
+              rows={3}
+              placeholder="輸入廣播內容，玩家將在選區頂部看到此訊息…"
+              className="w-full px-3 py-2 rounded-lg border border-border/50 bg-background text-sm resize-none outline-none focus:border-amber-500/50 transition-colors"
+            />
+            <p className="text-right text-xs text-muted-foreground mt-1">{content.length}/500</p>
+          </div>
+          {/* 持續時間 */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <p className="text-xs text-muted-foreground mb-2">顯示持續（秒）</p>
+              <Input
+                type="number"
+                value={duration}
+                onChange={e => setDuration(e.target.value)}
+                min={10} max={3600}
+                className="h-8 text-sm"
+                placeholder="300 = 5 分鐘"
+              />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs text-muted-foreground mb-2">預覽</p>
+              <div className="px-3 py-2 rounded-lg border text-xs font-medium"
+                style={selectedStyle
+                  ? { background: `${selectedStyle.color}15`, borderColor: `${selectedStyle.color}40`, color: selectedStyle.color }
+                  : {}}>
+                {content || "廣播內容預覽"}
+              </div>
+            </div>
+          </div>
+          <Button
+            onClick={() => sendBroadcast.mutate({ content, msgType, durationSeconds: parseInt(duration) || 300 })}
+            disabled={!content.trim() || sendBroadcast.isPending}
+            className="w-full">
+            {sendBroadcast.isPending ? "發送中…" : "📢 發送全服廣播"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* 廣播歷史 */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">📜 廣播歷史（最新 20 筆）</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!history || history.length === 0 ? (
+            <p className="text-muted-foreground text-sm text-center py-4">尚無廣播歷史</p>
+          ) : (
+            <div className="space-y-2">
+              {history.map(b => {
+                const style = MSG_TYPE_OPTIONS.find(o => o.value === b.msgType);
+                return (
+                  <div key={b.id} className="flex items-start gap-3 p-3 rounded-lg border border-border/40">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium" style={{ color: style?.color ?? "#94a3b8" }}>
+                          {style?.label ?? b.msgType}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(b.createdAt).toLocaleString("zh-TW")}
+                        </span>
+                        {b.isActive ? (
+                          <Badge variant="outline" className="text-[10px] text-green-500 border-green-500/40">結束中</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] text-slate-500">已關閉</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-foreground/80 break-words">{b.content}</p>
+                      {b.expiresAt && (
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          到期：{new Date(b.expiresAt).toLocaleString("zh-TW")}
+                        </p>
+                      )}
+                    </div>
+                    {b.isActive === 1 && (
+                      <Button variant="outline" size="sm" className="shrink-0 text-xs h-7"
+                        onClick={() => closeBroadcast.mutate({ id: b.id })}
+                        disabled={closeBroadcast.isPending}>
+                        關閉
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ─── 引擎彈性調控 Tab ─────────────────────────────────────────────────────────────────────────────
+function EngineControlTab() {
+  const { data: cfg, refetch: refetchCfg } = trpc.gameAdmin.getEngineConfig.useQuery();
+  const [localCfg, setLocalCfg] = useState<Record<string, string | boolean>>({});
+  const [isDirty, setIsDirty] = useState(false);
+
+  // 從伺服器載入初始値
+  useEffect(() => {
+    if (cfg) {
+      setLocalCfg({
+        tickIntervalMs: String(cfg.tickIntervalMs),
+        expMultiplier: String(cfg.expMultiplier),
+        goldMultiplier: String(cfg.goldMultiplier),
+        dropMultiplier: String(cfg.dropMultiplier),
+        combatChance: String(cfg.combatChance),
+        gatherChance: String(cfg.gatherChance),
+        rogueChance: String(cfg.rogueChance),
+        gameEnabled: cfg.gameEnabled,
+        maintenanceMsg: cfg.maintenanceMsg,
+      });
+      setIsDirty(false);
+    }
+  }, [cfg]);
+
+  const updateConfig = trpc.gameAdmin.updateEngineConfig.useMutation({
+    onSuccess: () => {
+      toast.success("✅ 引擎配置已更新，立即生效！");
+      refetchCfg();
+      setIsDirty(false);
+    },
+    onError: (e) => toast.error("更新失敗：" + e.message),
+  });
+
+  const resetConfig = trpc.gameAdmin.resetEngineConfig.useMutation({
+    onSuccess: () => {
+      toast.success("✅ 已重置為預設値");
+      refetchCfg();
+    },
+    onError: (e) => toast.error("重置失敗：" + e.message),
+  });
+
+  const handleChange = (key: string, value: string | boolean) => {
+    setLocalCfg(prev => ({ ...prev, [key]: value }));
+    setIsDirty(true);
+  };
+
+  const handleSave = () => {
+    updateConfig.mutate({
+      tickIntervalMs: parseInt(String(localCfg.tickIntervalMs)) || undefined,
+      expMultiplier: parseFloat(String(localCfg.expMultiplier)) || undefined,
+      goldMultiplier: parseFloat(String(localCfg.goldMultiplier)) || undefined,
+      dropMultiplier: parseFloat(String(localCfg.dropMultiplier)) || undefined,
+      combatChance: parseFloat(String(localCfg.combatChance)) || undefined,
+      gatherChance: parseFloat(String(localCfg.gatherChance)) || undefined,
+      rogueChance: parseFloat(String(localCfg.rogueChance)) || undefined,
+      gameEnabled: Boolean(localCfg.gameEnabled),
+      maintenanceMsg: String(localCfg.maintenanceMsg || ""),
+    });
+  };
+
+  const MULTIPLIER_FIELDS = [
+    { key: "expMultiplier",  label: "📈 經驗値倍率",   min: 0.1, max: 10, step: 0.1, desc: "1.0 = 正常，2.0 = 雙倍經驗" },
+    { key: "goldMultiplier", label: "🪙 金幣倍率",     min: 0.1, max: 10, step: 0.1, desc: "1.0 = 正常，2.0 = 雙倍金幣" },
+    { key: "dropMultiplier", label: "🎁 採集掉落倍率", min: 0.1, max: 10, step: 0.1, desc: "1.0 = 正常，2.0 = 雙倍材料" },
+  ];
+
+  const CHANCE_FIELDS = [
+    { key: "combatChance", label: "⚔️ 戰鬥機率", min: 0, max: 0.95, step: 0.05, desc: "預設 0.65，越高戰鬥越多" },
+    { key: "gatherChance", label: "🌿 採集機率", min: 0, max: 0.95, step: 0.05, desc: "預設 0.20，越高採集越多" },
+    { key: "rogueChance",  label: "🎲 奇遇機率", min: 0, max: 0.50, step: 0.01, desc: "預設 0.05，越高奇遇越多" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* 遊戲開關 */}
+      <Card className={!localCfg.gameEnabled ? "border-red-500/40" : ""}>
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold">🔮 遊戲開關</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {localCfg.gameEnabled ? "遊戲運行中，Tick 正常執行" : "維護模式，所有 Tick 暫停"}
+              </p>
+            </div>
+            <Switch
+              checked={Boolean(localCfg.gameEnabled)}
+              onCheckedChange={v => handleChange("gameEnabled", v)}
+            />
+          </div>
+          {!localCfg.gameEnabled && (
+            <div className="mt-3">
+              <p className="text-xs text-muted-foreground mb-1">維護公告（玩家看到的訊息）</p>
+              <Input
+                value={String(localCfg.maintenanceMsg ?? "")}
+                onChange={e => handleChange("maintenanceMsg", e.target.value)}
+                placeholder="系統維護中，請稍後再試"
+                className="text-sm"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Tick 間隔 */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">⏱ Tick 間隔（伺服器自動執行）</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3">
+            <Input
+              type="number"
+              value={String(localCfg.tickIntervalMs ?? "300000")}
+              onChange={e => handleChange("tickIntervalMs", e.target.value)}
+              min={5000} max={1800000} step={5000}
+              className="h-8 text-sm flex-1"
+            />
+            <span className="text-sm text-muted-foreground shrink-0">
+              = {(parseInt(String(localCfg.tickIntervalMs ?? 300000)) / 1000 / 60).toFixed(1)} 分鐘
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1.5">預設 300000 ms（5 分鐘），最小 5000 ms（5 秒）。調整後引擎自動重啟。</p>
+        </CardContent>
+      </Card>
+
+      {/* 倍率調控 */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">🌟 全域倍率調控</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {MULTIPLIER_FIELDS.map(f => (
+              <div key={f.key}>
+                <p className="text-xs font-medium mb-1">{f.label}</p>
+                <p className="text-[10px] text-muted-foreground mb-1.5">{f.desc}</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min={f.min} max={f.max} step={f.step}
+                    value={parseFloat(String(localCfg[f.key] ?? 1))}
+                    onChange={e => handleChange(f.key, e.target.value)}
+                    className="flex-1 accent-amber-500"
+                  />
+                  <span className="text-sm font-bold tabular-nums w-10 text-right">
+                    {parseFloat(String(localCfg[f.key] ?? 1)).toFixed(1)}x
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 機率調控 */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">🎲 事件機率調控</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {CHANCE_FIELDS.map(f => (
+              <div key={f.key}>
+                <p className="text-xs font-medium mb-1">{f.label}</p>
+                <p className="text-[10px] text-muted-foreground mb-1.5">{f.desc}</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min={f.min} max={f.max} step={f.step}
+                    value={parseFloat(String(localCfg[f.key] ?? 0))}
+                    onChange={e => handleChange(f.key, e.target.value)}
+                    className="flex-1 accent-amber-500"
+                  />
+                  <span className="text-sm font-bold tabular-nums w-12 text-right">
+                    {(parseFloat(String(localCfg[f.key] ?? 0)) * 100).toFixed(0)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            注意：三種機率合計建議不超過 90%，剩餘為移動事件。
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* 操作按鈕 */}
+      <div className="flex gap-3">
+        <Button
+          onClick={handleSave}
+          disabled={!isDirty || updateConfig.isPending}
+          className="flex-1">
+          {updateConfig.isPending ? "儲存中…" : "✅ 儲存引擎配置（立即生效）"}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => resetConfig.mutate()}
+          disabled={resetConfig.isPending}>
+          {resetConfig.isPending ? "重置中…" : "↩ 重置預設"}
+        </Button>
+      </div>
+
+      {/* 目前生效狀態 */}
+      {cfg && (
+        <Card className="border-border/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs text-muted-foreground">目前伺服器生效狀態</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-muted-foreground">遊戲狀態</p>
+                <p className="font-bold mt-0.5" style={{ color: cfg.gameEnabled ? "#22c55e" : "#ef4444" }}>
+                  {cfg.gameEnabled ? "運行中" : "維護中"}
+                </p>
+              </div>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-muted-foreground">Tick 間隔</p>
+                <p className="font-bold mt-0.5">{(cfg.tickIntervalMs / 60000).toFixed(1)} 分鐘</p>
+              </div>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-muted-foreground">經驗/金幣倍率</p>
+                <p className="font-bold mt-0.5">{cfg.expMultiplier}x / {cfg.goldMultiplier}x</p>
+              </div>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-muted-foreground">戰鬥/採集/奇遇</p>
+                <p className="font-bold mt-0.5">{(cfg.combatChance*100).toFixed(0)}% / {(cfg.gatherChance*100).toFixed(0)}% / {(cfg.rogueChance*100).toFixed(0)}%</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2">
+              最後更新：{new Date(cfg.lastUpdatedAt).toLocaleString("zh-TW")} by {cfg.lastUpdatedBy}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ─── 主頁面 ─────────────────────────────────────────────────────────────────────────────
 export default function AdminGameTheater() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">🎭 遊戲劇院</h1>
-        <p className="text-muted-foreground text-sm mt-1">管理角色資源、全域遊戲參數、Tick 引擎狀態</p>
+        <p className="text-muted-foreground text-sm mt-1">管理角色資源、全域參數、Tick 引擎、全服廣播</p>
       </div>
 
       <Tabs defaultValue="agents">
@@ -538,11 +929,15 @@ export default function AdminGameTheater() {
           <TabsTrigger value="agents">👤 角色管理</TabsTrigger>
           <TabsTrigger value="configs">⚙️ 全域參數</TabsTrigger>
           <TabsTrigger value="tick">⚡ Tick 引擎</TabsTrigger>
+          <TabsTrigger value="broadcast">📢 全服廣播</TabsTrigger>
+          <TabsTrigger value="engine">🌟 引擎調控</TabsTrigger>
         </TabsList>
 
         <TabsContent value="agents"><AgentManagementTab /></TabsContent>
         <TabsContent value="configs"><GameConfigTab /></TabsContent>
         <TabsContent value="tick"><TickEngineTab /></TabsContent>
+        <TabsContent value="broadcast"><BroadcastTab /></TabsContent>
+        <TabsContent value="engine"><EngineControlTab /></TabsContent>
       </Tabs>
     </div>
   );

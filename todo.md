@@ -3359,3 +3359,31 @@
 - [x] 修正 gameAdmin.ts 裝備模板端點（欄位名稱對齊 schema）
 - [x] 修正 gameAdmin.ts 類型錯誤（users.openId、String(ctx.user.id)）
 - [x] TypeScript 零錯誤
+
+## 功能優化 V28 - 遊戲流暢度 100% + 後台主控性強化
+
+### 前端流暢度優化
+- [x] 事件日誌 Tab 切換加入 keepPreviousData，避免切換時空白閃爍
+- [x] Tick 執行後解析回傳事件，自動彈出 Toast 通知
+- [ ] 數値變化動畫：HP/MP/體力/AP 數値變動時加入數字跳動效果（待後續迭代）
+- [ ] 事件日誌新增條目時加入滑入動畫（待後續迭代）
+- [ ] 角色狀態轉場：idle→moving→combat 狀態切換時加入過渡動畫（待後續迭代）
+- [ ] Tick 執行中加入全域 loading 指示器（頂部進度條）（待後續迭代）
+
+### 後台遊戲劇院擴充
+- [x] 全服廣播功能（管理員發送系統訊息，所有線上玩家前端顯示）
+- [x] 彈性調控面板：Tick 間隔即時調整
+- [x] 彈性調控面板：事件機率即時調整（奇遇/戰鬥/採集各自比例）
+- [x] 彈性調控面板：採落率全局倍率
+- [x] 彈性調控面板：經驗値全局倍率
+- [x] 彈性調控面板：金幣全局倍率
+- [x] 後台即時預覽：目前伺服器生效狀態卷登
+
+### 後端 API
+- [x] gameAdmin.broadcastMessage：發送全服廣播訊息
+- [x] gameAdmin.getBroadcastHistory：取得廣播歷史
+- [x] gameAdmin.closeBroadcast：關閉廣播
+- [x] gameAdmin.getEngineConfig：取得引擎配置
+- [x] gameAdmin.updateEngineConfig：更新引擎配置（立即生效）
+- [x] gameAdmin.resetEngineConfig：重置引擎配置
+- [x] gameWorld.getBroadcast：前端輪詢取得最新廣播訊息
