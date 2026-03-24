@@ -1479,9 +1479,7 @@ function CharacterPanel({
                     更多稱號開發中…
                   </span>
                 </div>
-              </div>
-
-              {/* 加成來源說明 */}
+              </div>              {/* 加成來源說明 */}
               <div className="px-2.5 py-2 rounded-xl border"
                 style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
                 <p className="text-xs text-slate-500 mb-1.5">加成來源</p>
@@ -1493,9 +1491,68 @@ function CharacterPanel({
                   <p>📅 流日加成 → 今日屬性浮動（已套用）</p>
                 </div>
               </div>
+
+              {/* 旅人頭像上傳 */}
+              <div className="px-2.5 py-2 rounded-xl border"
+                style={{ background: "rgba(168,85,247,0.04)", borderColor: "rgba(168,85,247,0.2)" }}>
+                <p className="text-xs font-bold text-slate-400 mb-2">📷 旅人頭像</p>
+                <div className="flex items-center gap-3">
+                  {/* 預覽 */}
+                  <div className="w-14 h-14 rounded-full overflow-hidden border-2 shrink-0"
+                    style={{ borderColor: ec + "60" }}>
+                    {agent?.avatarUrl ? (
+                      <img src={agent.avatarUrl} alt="頭像" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-2xl"
+                        style={{ background: ec + "22" }}>
+                        {userGender === "male" ? "🧙" : "🧙‍♀️"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-500 mb-1.5">上傳後將顯示於地圖標記上</p>
+                    <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer transition-all hover:scale-105 active:scale-95 text-xs font-bold"
+                      style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.4)" }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          // 在瀏覽器端壓縮為 200x200 JPEG
+                          const canvas = document.createElement("canvas");
+                          canvas.width = 200; canvas.height = 200;
+                          const ctx2d = canvas.getContext("2d")!;
+                          const img = new Image();
+                          img.onload = async () => {
+                            const size = Math.min(img.width, img.height);
+                            const sx = (img.width - size) / 2;
+                            const sy = (img.height - size) / 2;
+                            ctx2d.drawImage(img, sx, sy, size, size, 0, 0, 200, 200);
+                            const base64 = canvas.toDataURL("image/jpeg", 0.8).split(",")[1];
+                            try {
+                              await uploadAvatarMutation.mutateAsync({ imageBase64: base64, mimeType: "image/jpeg" });
+                            } catch (err) {
+                              import("sonner").then(({ toast }) => toast.error("上傳失敗"));
+                            }
+                          };
+                          img.src = URL.createObjectURL(file);
+                          e.target.value = "";
+                        }}
+                      />
+                      {uploadAvatarMutation.isPending ? "⏳ 上傳中..." : "📷 選擇照片"}
+                    </label>
+                    {agent?.avatarUrl && (
+                      <p className="text-[10px] text-green-400 mt-1">✓ 已設定自訂頭像</p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           );
-        })()}
+        })()
+      }
       </div>
     </div>
   );
@@ -1889,6 +1946,12 @@ export default function VirtualWorldPage() {
   const { enabled: combatWindowEnabled, setEnabled: setCombatWindowEnabled } = useCombatWindowSettings();
   // 戰鬥中鎖定：戰鬥視窗開啟且動畫進行中時，不允許執行下一個 Tick
   const [combatLocked, setCombatLocked] = useState(false);
+  // 收納式聊天大廳
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatMessages_data = trpc.gameWorld.getChatMessages.useQuery({ since: undefined }, { refetchInterval: chatOpen ? 5000 : false, staleTime: 0 });
+  const sendChatMsg = trpc.gameWorld.sendChatMessage.useMutation({ onSuccess: () => { setChatInput(""); chatMessages_data.refetch(); } });
   // Tick 進度條
   const [tickProgress, setTickProgress] = useState(0); // 0-100
   const tickProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -2608,32 +2671,81 @@ export default function VirtualWorldPage() {
             </div>
           </div>
 
-          {/* 中：角色名稱 + 等級 + 經驗條 */}
-          <div className="flex-1 flex flex-col items-center justify-center min-w-0 px-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-slate-200 truncate" style={{ maxWidth: "80px" }}>
-                {agent?.agentName ?? "旅人"}
-              </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold shrink-0"
-                style={{ background: `${ec}22`, color: ec }}>Lv.{agent?.level ?? 1}</span>
-              <span className="w-1.5 h-1.5 rounded-full shrink-0"
-                style={{ background: agent?.status === "combat" ? "#ef4444" : agent?.status === "moving" ? "#60a5fa" : "#22c55e" }} />
-            </div>
-            {/* 經驗條 */}
-            {(() => {
-              const expCur = agent?.exp ?? agent?.experience ?? 0;
-              // Bug 5 fix: 使用和後端相同的公式
-              const expNext = calcExpToNextFn(agent?.level ?? 1);
-              const pct = expNext > 0 ? Math.min(100, (expCur / expNext) * 100) : 0;
-              return (
-                <div className="flex items-center gap-1 w-full max-w-[120px]">
-                  <div className="flex-1 h-1 bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: ec }} />
-                  </div>
-                  <span className="text-[9px] text-slate-600 tabular-nums shrink-0">{expCur}/{expNext}</span>
+          {/* 中：收納式聊天大廳 */}
+          <div className="flex-1 flex flex-col items-center justify-center min-w-0 px-1 relative">
+            {/* 按鈕 */}
+            <button
+              onClick={() => setChatOpen(v => !v)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all hover:scale-105 active:scale-95"
+              style={{
+                background: chatOpen ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.04)",
+                borderColor: chatOpen ? "rgba(168,85,247,0.5)" : "rgba(255,255,255,0.1)",
+                color: chatOpen ? "#a855f7" : "#94a3b8",
+                boxShadow: chatOpen ? "0 0 12px rgba(168,85,247,0.3)" : "none",
+              }}
+            >
+              <span className="text-sm">{chatOpen ? "💬" : "💬"}</span>
+              <span className="text-xs font-bold">聊天大廳</span>
+              {!chatOpen && (chatMessages_data.data?.length ?? 0) > 0 && (
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+              )}
+            </button>
+            {/* 展開面板 */}
+            {chatOpen && (
+              <div
+                className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-[200] rounded-xl border overflow-hidden"
+                style={{
+                  width: "min(360px, 90vw)",
+                  background: "rgba(6,10,22,0.97)",
+                  backdropFilter: "blur(20px)",
+                  borderColor: "rgba(168,85,247,0.3)",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+                }}
+              >
+                {/* 標題列 */}
+                <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: "rgba(168,85,247,0.2)" }}>
+                  <span className="text-xs font-bold text-purple-300">💬 天命共震 · 大廳</span>
+                  <button onClick={() => setChatOpen(false)} className="text-slate-500 hover:text-slate-300 text-xs">✕</button>
                 </div>
-              );
-            })()}
+                {/* 訊息列表 */}
+                <div className="overflow-y-auto px-3 py-2 space-y-1.5" style={{ height: "200px" }}>
+                  {(chatMessages_data.data ?? []).length === 0 ? (
+                    <p className="text-center text-slate-600 text-xs py-4">尚無訊息，成為第一個發言的旅人！</p>
+                  ) : (
+                    (chatMessages_data.data ?? []).map((msg: { id: number; agentName: string; agentElement: string; agentLevel: number; content: string; createdAt: number }) => {
+                      const msgColor = { wood: "#4ade80", fire: "#f87171", earth: "#fbbf24", metal: "#e2e8f0", water: "#60a5fa" }[msg.agentElement] ?? "#94a3b8";
+                      return (
+                        <div key={msg.id} className="flex items-start gap-2">
+                          <span className="text-[10px] font-bold shrink-0 mt-0.5" style={{ color: msgColor }}>[Lv.{msg.agentLevel}] {msg.agentName}</span>
+                          <span className="text-xs text-slate-300 break-all">{msg.content}</span>
+                        </div>
+                      );
+                    })
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+                {/* 輸入區 */}
+                <div className="flex gap-2 px-3 py-2 border-t" style={{ borderColor: "rgba(168,85,247,0.2)" }}>
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={e => setChatInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && chatInput.trim()) sendChatMsg.mutate({ content: chatInput.trim() }); }}
+                    placeholder="輸入訊息..."
+                    maxLength={100}
+                    className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded-lg px-2 py-1 text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-purple-500/50"
+                  />
+                  <button
+                    onClick={() => { if (chatInput.trim()) sendChatMsg.mutate({ content: chatInput.trim() }); }}
+                    disabled={sendChatMsg.isPending || !chatInput.trim()}
+                    className="px-3 py-1 rounded-lg text-xs font-bold transition-all disabled:opacity-40"
+                    style={{ background: "rgba(168,85,247,0.2)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.4)" }}
+                  >
+                    {sendChatMsg.isPending ? "⏳" : "發送"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 右：跟隨冒險者 + Tick 按鈕 */}

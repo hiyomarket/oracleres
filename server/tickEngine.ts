@@ -9,7 +9,7 @@ import { checkAchievements, seedAchievements } from "./achievementEngine";
 import { broadcastToAll, sendToAgent } from "./wsServer";
 import { broadcastLevelUp, broadcastLegendaryDrop, broadcastAchievementUnlock } from "./liveFeedBroadcast";
 import { calcSkillCombo, updateHiddenSkillTracker } from "./skillComboEngine";
-import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates, gameRogueEvents } from "../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates, gameRogueEvents, gameVirtualShop, gameSpiritShop, gameItemCatalog } from "../drizzle/schema";
 import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs, getInfuseConfig } from "./gameEngineConfig";
 import { eq, and, sql } from "drizzle-orm";
@@ -695,6 +695,11 @@ export async function processTick(): Promise<TickResult> {
 
   // 確保成就種子資料存在
   try { await seedAchievements(); } catch { }
+
+  // 自動刷新商店商品（每次全地圖 Tick 同步更新）
+  try { await refreshShopItems(db); } catch (err) {
+    console.error("[Tick] 商店刷新失敗:", err);
+  }
 
   return { processed: 0, events: 0, levelUps: [], legendaryDrops: [], lastCombats: [] };
 }
@@ -1579,4 +1584,98 @@ export function stopTickEngine(): void {
 export function restartTickEngine(): void {
   stopTickEngine();
   startTickEngine();
+}
+
+// ─── 商店自動刷新邏輯 ───
+/**
+ * 從 gameItemCatalog 中隨機抽取初階/中階道具填充商店
+ * 一般商店（金幣）：8-12 件 common/rare 道具
+ * 靈相商店（靈石）：4-6 件 rare/epic 道具
+ * 每次全地圖 Tick 時執行，清空舊商品後重新填充
+ */
+export async function refreshShopItems(db: Awaited<ReturnType<typeof getDb>>): Promise<{ virtualCount: number; spiritCount: number }> {
+  if (!db) return { virtualCount: 0, spiritCount: 0 };
+
+  // 取得所有啟用的道具（排除 quest/treasure 類別）
+  const allItems = await db.select({
+    itemId: gameItemCatalog.itemId,
+    name: gameItemCatalog.name,
+    rarity: gameItemCatalog.rarity,
+    category: gameItemCatalog.category,
+    wuxing: gameItemCatalog.wuxing,
+  }).from(gameItemCatalog)
+    .where(sql`is_active = 1 AND category NOT IN ('quest', 'treasure')`);
+
+  if (allItems.length === 0) return { virtualCount: 0, spiritCount: 0 };
+
+  // 分層：一般商店用 common/rare，靈相商店用 rare/epic
+  const coinPool = allItems.filter(i => i.rarity === "common" || i.rarity === "rare");
+  const stonePool = allItems.filter(i => i.rarity === "rare" || i.rarity === "epic");
+
+  if (coinPool.length === 0 && stonePool.length === 0) return { virtualCount: 0, spiritCount: 0 };
+
+  // 隨機抽取（不重複）
+  function pickRandom<T>(arr: T[], count: number): T[] {
+    const shuffled = [...arr].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(count, shuffled.length));
+  }
+
+  // 計算道具基礎售價
+  function calcPrice(rarity: string, currency: "coins" | "stones"): number {
+    if (currency === "coins") {
+      const base: Record<string, number> = { common: 50, rare: 200, epic: 800, legendary: 3000 };
+      return base[rarity] ?? 100;
+    } else {
+      const base: Record<string, number> = { common: 5, rare: 20, epic: 80, legendary: 300 };
+      return base[rarity] ?? 20;
+    }
+  }
+
+  // ─── 刷新一般商店（金幣）───
+  if (coinPool.length > 0) {
+    const coinItems = pickRandom(coinPool, 10);
+    // 清空舊商品（只清除自動生成的，保留 admin 手動添加的）
+    await db.delete(gameVirtualShop).where(sql`node_id = '' OR node_id IS NULL`);
+    // 插入新商品
+    for (let i = 0; i < coinItems.length; i++) {
+      const item = coinItems[i];
+      await db.insert(gameVirtualShop).values({
+        itemKey: item.itemId,
+        displayName: item.name,
+        description: `【${item.wuxing}行】${item.category === "consumable" ? "消耗品" : item.category === "skill_book" ? "技能書" : "材料"}`,
+        priceCoins: calcPrice(item.rarity, "coins"),
+        quantity: 1,
+        stock: -1,
+        nodeId: "",
+        sortOrder: i,
+        isOnSale: 1,
+      });
+    }
+  }
+
+  // ─── 刷新靈相商店（靈石）───
+  if (stonePool.length > 0) {
+    const stoneItems = pickRandom(stonePool, 5);
+    // 清空舊商品
+    await db.delete(gameSpiritShop).where(sql`1=1`);
+    // 插入新商品
+    for (let i = 0; i < stoneItems.length; i++) {
+      const item = stoneItems[i];
+      await db.insert(gameSpiritShop).values({
+        itemKey: item.itemId,
+        displayName: item.name,
+        description: `【${item.wuxing}行】稀有商品`,
+        priceStones: calcPrice(item.rarity, "stones"),
+        quantity: 1,
+        rarity: (item.rarity === "common" ? "common" : item.rarity === "rare" ? "rare" : item.rarity === "epic" ? "epic" : "legendary") as "common" | "rare" | "epic" | "legendary",
+        sortOrder: i,
+        isOnSale: 1,
+      });
+    }
+  }
+
+  const virtualCount = coinPool.length > 0 ? 10 : 0;
+  const spiritCount = stonePool.length > 0 ? 5 : 0;
+  console.log(`[ShopRefresh] 一般商店 ${virtualCount} 件，靈相商店 ${spiritCount} 件`);
+  return { virtualCount, spiritCount };
 }

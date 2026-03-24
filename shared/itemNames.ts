@@ -1,6 +1,7 @@
 /**
  * shared/itemNames.ts
  * 道具名稱、稀有度、Emoji 對應表（前後端共用）
+ * 支援舊格式（herb-001）和新格式（I_W001）
  */
 export interface ItemInfo {
   name: string;
@@ -9,6 +10,7 @@ export interface ItemInfo {
 }
 
 export const ITEM_NAMES: Record<string, ItemInfo> = {
+  // ═══ 舊格式道具 ID ═══
   // 木系草藥
   "herb-001":          { name: "青草藥",     rarity: "common",    emoji: "🌿" },
   "herb-002":          { name: "靈芝草",     rarity: "uncommon",  emoji: "🍄" },
@@ -32,7 +34,7 @@ export const ITEM_NAMES: Record<string, ItemInfo> = {
   "mat-fire-001":      { name: "火焰石",     rarity: "common",    emoji: "🔥" },
   "mat-fire-002":      { name: "熔岩碎片",   rarity: "uncommon",  emoji: "🌋" },
   "mat-fire-003":      { name: "烈焰碎片",   rarity: "uncommon",  emoji: "🔥" },
-  "mat-fire-004":      { name: "火靈結晶",   rarity: "rare",      emoji: "❤️‍🔥" },
+  "mat-fire-004":      { name: "火靈結晶",   rarity: "rare",      emoji: "🔥" },
   "mat-fire-005":      { name: "鳳凰羽毛",   rarity: "rare",      emoji: "🪶" },
   "mat-fire-006":      { name: "熔岩精華",   rarity: "epic",      emoji: "🌋" },
   "mat-fire-007":      { name: "火元素核",   rarity: "epic",      emoji: "🔴" },
@@ -112,17 +114,128 @@ export const ITEM_NAMES: Record<string, ItemInfo> = {
   "equip-water-003":   { name: "水靈劍",     rarity: "rare",      emoji: "🗡️" },
   "equip-water-004":   { name: "深海鎧甲",   rarity: "epic",      emoji: "🛡️" },
   "equip-water-005":   { name: "水命神器",   rarity: "legendary", emoji: "⚔️" },
-  // 技能書
-  "skill-wood-001":    { name: "木靈術·初",  rarity: "uncommon",  emoji: "📗" },
-  "skill-wood-002":    { name: "木靈術·進",  rarity: "rare",      emoji: "📗" },
-  "skill-fire-001":    { name: "火靈術·初",  rarity: "uncommon",  emoji: "📕" },
-  "skill-fire-002":    { name: "火靈術·進",  rarity: "rare",      emoji: "📕" },
-  "skill-earth-001":   { name: "土靈術·初",  rarity: "uncommon",  emoji: "📒" },
-  "skill-earth-002":   { name: "土靈術·進",  rarity: "rare",      emoji: "📒" },
-  "skill-metal-001":   { name: "金靈術·初",  rarity: "uncommon",  emoji: "📙" },
-  "skill-metal-002":   { name: "金靈術·進",  rarity: "rare",      emoji: "📙" },
-  "skill-water-001":   { name: "水靈術·初",  rarity: "uncommon",  emoji: "📘" },
-  "skill-water-002":   { name: "水靈術·進",  rarity: "rare",      emoji: "📘" },
+
+  // ═══ 資料庫新格式道具 ID ═══
+  // 木行 — 基礎材料
+  "I_W001": { name: "靈草",       rarity: "common",    emoji: "🌿" },
+  "I_W002": { name: "堅韌藤蔓",   rarity: "common",    emoji: "🌿" },
+  "I_W003": { name: "苦澀樹皮",   rarity: "common",    emoji: "🪵" },
+  "I_W004": { name: "迷幻蘑菇",   rarity: "common",    emoji: "🍄" },
+  "I_W005": { name: "晨露",       rarity: "common",    emoji: "💧" },
+  "I_W006": { name: "芳香花瓣",   rarity: "common",    emoji: "🌸" },
+  "I_W007": { name: "帶刺荊棘",   rarity: "common",    emoji: "🌿" },
+  "I_W008": { name: "黏稠樹液",   rarity: "common",    emoji: "🌿" },
+  "I_W009": { name: "翠綠樹葉",   rarity: "common",    emoji: "🍃" },
+  "I_W010": { name: "奇異種子",   rarity: "rare",      emoji: "🌱" },
+  // 木行 — 怪物掉落材料
+  "I_W011": { name: "木晶石",     rarity: "common",    emoji: "💫" },
+  "I_W012": { name: "毒液腺",     rarity: "common",    emoji: "🪲" },
+  "I_W013": { name: "綠色核心",   rarity: "common",    emoji: "🟢" },
+  "I_W014": { name: "迷幻孢子",   rarity: "common",    emoji: "🍄" },
+  "I_W015": { name: "古木心材",   rarity: "rare",      emoji: "🪵" },
+  "I_W016": { name: "消化液",     rarity: "rare",      emoji: "🧪" },
+  "I_W017": { name: "幻影鐮刀",   rarity: "rare",      emoji: "⚔️" },
+  "I_W018": { name: "腐敗核心",   rarity: "rare",      emoji: "🟢" },
+  "I_W019": { name: "森猿獠牙",   rarity: "rare",      emoji: "🦷" },
+  "I_W020": { name: "鐵木熊皮",   rarity: "epic",      emoji: "🐻" },
+  "I_W021": { name: "木靈王核心", rarity: "epic",      emoji: "🟢" },
+  "I_W022": { name: "蛛后毒囊",   rarity: "epic",      emoji: "🕷️" },
+  "I_W023": { name: "翡翠龍鱗",   rarity: "legendary", emoji: "🐉" },
+  "I_W024": { name: "世界樹枝",   rarity: "legendary", emoji: "🌳" },
+  "I_W025": { name: "花神之淚",   rarity: "legendary", emoji: "🌸" },
+  // 木行 — 消耗品
+  "I_W026": { name: "初級解毒草", rarity: "common",    emoji: "🌿" },
+  "I_W027": { name: "活力樹汁",   rarity: "common",    emoji: "🌿" },
+  "I_W028": { name: "森林精華",   rarity: "rare",      emoji: "🌿" },
+  "I_W029": { name: "荊棘護甲藥劑", rarity: "rare",   emoji: "🛡️" },
+  "I_W030": { name: "疾風草",     rarity: "rare",      emoji: "🍃" },
+  "I_W031": { name: "劇毒塗劑",   rarity: "rare",      emoji: "🧪" },
+  "I_W032": { name: "迷幻花粉",   rarity: "rare",      emoji: "🌸" },
+  "I_W033": { name: "復甦之風",   rarity: "epic",      emoji: "🌬️" },
+  "I_W034": { name: "萬能解毒劑", rarity: "epic",      emoji: "💚" },
+  "I_W035": { name: "生命之水",   rarity: "legendary", emoji: "💧" },
+  // 木行 — 任務/紀念
+  "I_W036": { name: "迷路藥童的草藥", rarity: "common", emoji: "🌿" },
+  "I_W037": { name: "破損的木雕", rarity: "rare",      emoji: "🪵" },
+  "I_W038": { name: "森林守護者印記", rarity: "epic",  emoji: "📜" },
+  "I_W039": { name: "奇異的蟲卵", rarity: "rare",      emoji: "🥚" },
+  "I_W040": { name: "枯萎的樹枝", rarity: "common",    emoji: "🪵" },
+  "I_W041": { name: "春分紀念徽章", rarity: "epic",    emoji: "🏅" },
+  "I_W042": { name: "驚蟄雷木枝", rarity: "epic",      emoji: "⚡" },
+  "I_W043": { name: "迷霧精華",   rarity: "epic",      emoji: "🌫️" },
+  "I_W044": { name: "毒沼之心",   rarity: "legendary", emoji: "🟢" },
+  "I_W045": { name: "幸運四葉草", rarity: "legendary", emoji: "🍀" },
+  // 木行 — 寶物
+  "I_W046": { name: "萬古神木之魂", rarity: "legendary", emoji: "🌳" },
+  "I_W047": { name: "逢春露",     rarity: "legendary", emoji: "💧" },
+  "I_W048": { name: "復甦種子",   rarity: "legendary", emoji: "🌱" },
+  "I_W049": { name: "女妖之吻",   rarity: "legendary", emoji: "💋" },
+  "I_W050": { name: "天命木靈珠", rarity: "legendary", emoji: "💫" },
+  // 水行 — 基礎材料
+  "I_W051": { name: "水滴",       rarity: "common",    emoji: "💧" },
+  // 水行 — 怪物掉落材料
+  "I_W061": { name: "水晶石",     rarity: "common",    emoji: "💎" },
+  // 水行 — 消耗品
+  "I_W076": { name: "小靈泉",     rarity: "common",    emoji: "💧" },
+  "I_W077": { name: "大靈泉",     rarity: "rare",      emoji: "💧" },
+  "I_W079": { name: "淨化之水",   rarity: "rare",      emoji: "💧" },
+  "I_W084": { name: "人魚之歌",   rarity: "epic",      emoji: "🎵" },
+  // 水行 — 任務/紀念
+  "I_W091": { name: "冬至紀念徽章", rarity: "epic",    emoji: "🏅" },
+  // 水行 — 寶物
+  "I_W096": { name: "海嘯核心",   rarity: "legendary", emoji: "🌊" },
+  "I_W100": { name: "天命水靈珠", rarity: "legendary", emoji: "💫" },
+  // 火行 — 基礎材料
+  "I_F001": { name: "餘燼",       rarity: "common",    emoji: "🔥" },
+  // 火行 — 怪物掉落材料
+  "I_F011": { name: "火晶石",     rarity: "common",    emoji: "🔥" },
+  // 火行 — 消耗品
+  "I_F026": { name: "初級燒傷藥", rarity: "common",    emoji: "🧪" },
+  "I_F027": { name: "狂暴藥水",   rarity: "rare",      emoji: "🧪" },
+  "I_F028": { name: "烈焰炸彈",   rarity: "rare",      emoji: "💥" },
+  "I_F034": { name: "鳳凰之血",   rarity: "legendary", emoji: "🦅" },
+  // 火行 — 任務/紀念
+  "I_F041": { name: "夏至紀念徽章", rarity: "epic",    emoji: "🏅" },
+  // 火行 — 寶物
+  "I_F046": { name: "隕石核心",   rarity: "legendary", emoji: "☄️" },
+  "I_F050": { name: "天命火靈珠", rarity: "legendary", emoji: "💫" },
+  // 土行 — 基礎材料
+  "I_E001": { name: "礦石",       rarity: "common",    emoji: "🪨" },
+  // 土行 — 怪物掉落材料
+  "I_E011": { name: "土晶石",     rarity: "common",    emoji: "🪨" },
+  // 土行 — 消耗品
+  "I_E026": { name: "鐵甲藥劑",   rarity: "rare",      emoji: "🛡️" },
+  "I_E027": { name: "磐石護盾",   rarity: "rare",      emoji: "🛡️" },
+  // 土行 — 任務/紀念
+  "I_E041": { name: "秋分紀念徽章", rarity: "epic",    emoji: "🏅" },
+  // 土行 — 寶物
+  "I_E046": { name: "脈動之核",   rarity: "legendary", emoji: "⭐" },
+  "I_E050": { name: "天命土靈珠", rarity: "legendary", emoji: "💫" },
+  // 金行 — 基礎材料
+  "I_M001": { name: "金屬零件",   rarity: "common",    emoji: "⚙️" },
+  // 金行 — 怪物掉落材料
+  "I_M011": { name: "金晶石",     rarity: "common",    emoji: "⚙️" },
+  // 金行 — 消耗品
+  "I_M026": { name: "磨刀石",     rarity: "common",    emoji: "⚔️" },
+  "I_M027": { name: "疾風藥劑",   rarity: "rare",      emoji: "🧪" },
+  "I_M032": { name: "煙霧彈",     rarity: "rare",      emoji: "💨" },
+  // 金行 — 任務/紀念
+  "I_M041": { name: "立秋紀念徽章", rarity: "epic",    emoji: "🏅" },
+  // 金行 — 寶物
+  "I_M046": { name: "衛星殘骸",   rarity: "legendary", emoji: "🛸" },
+  "I_M050": { name: "天命金靈珠", rarity: "legendary", emoji: "💫" },
+
+  // ═══ 技能書（資料庫格式，含實際技能名稱）═══
+  "skill-wood-001":  { name: "翠羽鳳凰技能書", rarity: "rare",  emoji: "📗" },
+  "skill-wood-002":  { name: "青龍技能書",     rarity: "epic",  emoji: "📗" },
+  "skill-fire-001":  { name: "炎魔將軍技能書", rarity: "rare",  emoji: "📕" },
+  "skill-fire-002":  { name: "朱雀技能書",     rarity: "epic",  emoji: "📕" },
+  "skill-earth-001": { name: "山嶽巨靈技能書", rarity: "rare",  emoji: "📒" },
+  "skill-earth-002": { name: "黃龍技能書",     rarity: "epic",  emoji: "📒" },
+  "skill-metal-001": { name: "鎧甲巨龜技能書", rarity: "rare",  emoji: "📙" },
+  "skill-metal-002": { name: "白虎技能書",     rarity: "epic",  emoji: "📙" },
+  "skill-water-001": { name: "水靈祭司技能書", rarity: "rare",  emoji: "📘" },
+  "skill-water-002": { name: "玄武技能書",     rarity: "epic",  emoji: "📘" },
 };
 
 /** 稀有度顏色對應 */

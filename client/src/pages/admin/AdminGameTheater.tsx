@@ -1670,7 +1670,205 @@ function WorldEventTab() {
   );
 }
 
-// ─── 主頁面 ────────────────────────────────────────────────────────────────────────────────────
+// ─── 商店管理 Tab ──────────────────────────────────────────────────────────────────────────────────────
+function ShopManagementTab() {
+  const [shopType, setShopType] = useState<"virtual" | "spirit" | "hidden">("virtual");
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    itemKey: "", displayName: "", description: "",
+    priceCoins: 50, priceStones: 1, price: 100,
+    quantity: 1, stock: -1, rarity: "common" as string,
+    currencyType: "coins" as string, weight: 10, sortOrder: 0,
+  });
+
+  const { data: virtualItems, refetch: refetchVirtual } = trpc.gameAdmin.getVirtualShop.useQuery(
+    undefined, { enabled: shopType === "virtual" }
+  );
+  const { data: spiritItems, refetch: refetchSpirit } = trpc.gameAdmin.getSpiritShop.useQuery(
+    undefined, { enabled: shopType === "spirit" }
+  );
+  const { data: hiddenPool, refetch: refetchHidden } = trpc.gameAdmin.getHiddenShopPool.useQuery(
+    undefined, { enabled: shopType === "hidden" }
+  );
+
+  const createVirtual = trpc.gameAdmin.createVirtualShopItem.useMutation({
+    onSuccess: () => { toast.success("✅ 商品已新增"); refetchVirtual(); setShowForm(false); },
+    onError: (e) => toast.error(`❌ ${e.message}`),
+  });
+  const deleteVirtual = trpc.gameAdmin.deleteVirtualShopItem.useMutation({
+    onSuccess: () => { toast.success("已刪除"); refetchVirtual(); },
+    onError: (e) => toast.error(`❌ ${e.message}`),
+  });
+  const createSpirit = trpc.gameAdmin.createSpiritShopItem.useMutation({
+    onSuccess: () => { toast.success("✅ 商品已新增"); refetchSpirit(); setShowForm(false); },
+    onError: (e) => toast.error(`❌ ${e.message}`),
+  });
+  const deleteSpirit = trpc.gameAdmin.deleteSpiritShopItem.useMutation({
+    onSuccess: () => { toast.success("已刪除"); refetchSpirit(); },
+    onError: (e) => toast.error(`❌ ${e.message}`),
+  });
+  const createHidden = trpc.gameAdmin.createHiddenShopItem.useMutation({
+    onSuccess: () => { toast.success("✅ 商品已加入密店池"); refetchHidden(); setShowForm(false); },
+    onError: (e) => toast.error(`❌ ${e.message}`),
+  });
+  const deleteHidden = trpc.gameAdmin.deleteHiddenShopItem.useMutation({
+    onSuccess: () => { toast.success("已刪除"); refetchHidden(); },
+    onError: (e) => toast.error(`❌ ${e.message}`),
+  });
+  const refreshShop = trpc.gameWorld.adminRefreshShop.useMutation({
+    onSuccess: (r) => toast.success(`🔄 商店已刷新！一般 ${r.virtualCount} 件，靈石 ${r.spiritCount} 件`),
+    onError: (e) => toast.error(`❌ ${e.message}`),
+  });
+
+  const handleSubmit = () => {
+    if (!form.itemKey || !form.displayName) { toast.error("請填寫道具 Key 和顯示名稱"); return; }
+    if (shopType === "virtual") {
+      createVirtual.mutate({ itemKey: form.itemKey, displayName: form.displayName, description: form.description, priceCoins: form.priceCoins, quantity: form.quantity, stock: form.stock, sortOrder: form.sortOrder, isOnSale: 1 });
+    } else if (shopType === "spirit") {
+      createSpirit.mutate({ itemKey: form.itemKey, displayName: form.displayName, description: form.description, priceStones: form.priceStones, quantity: form.quantity, rarity: form.rarity as "common" | "rare" | "epic" | "legendary", sortOrder: form.sortOrder, isOnSale: 1 });
+    } else {
+      createHidden.mutate({ itemKey: form.itemKey, displayName: form.displayName, description: form.description, currencyType: form.currencyType as "coins" | "stones", price: form.price, quantity: form.quantity, weight: form.weight, rarity: form.rarity as "common" | "rare" | "epic" | "legendary", isActive: 1 });
+    }
+  };
+
+  const currentItems = shopType === "virtual" ? (virtualItems ?? []) : shopType === "spirit" ? (spiritItems ?? []) : (hiddenPool ?? []);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex gap-2">
+          {(["virtual", "spirit", "hidden"] as const).map(t => (
+            <Button key={t} variant={shopType === t ? "default" : "outline"} size="sm" onClick={() => { setShopType(t); setShowForm(false); }}>
+              {t === "virtual" ? "🪙 一般商店" : t === "spirit" ? "💎 靈石專區" : "🔮 密店商品池"}
+            </Button>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => refreshShop.mutate()} disabled={refreshShop.isPending}>
+            🔄 立即刷新商店
+          </Button>
+          <Button size="sm" onClick={() => setShowForm(!showForm)}>
+            {showForm ? "✕ 取消" : "+ 新增商品"}
+          </Button>
+        </div>
+      </div>
+
+      {/* 新增表單 */}
+      {showForm && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">新增商品</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">道具 Key（如 I_W001）</p>
+                <Input value={form.itemKey} onChange={e => setForm(f => ({ ...f, itemKey: e.target.value }))} placeholder="I_W001" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">顯示名稱</p>
+                <Input value={form.displayName} onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))} placeholder="青龍草" />
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs text-muted-foreground mb-1">描述（選填）</p>
+                <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="道具描述" />
+              </div>
+              {shopType === "virtual" && (
+                <>
+                  <div><p className="text-xs text-muted-foreground mb-1">金幣價格</p><Input type="number" value={form.priceCoins} onChange={e => setForm(f => ({ ...f, priceCoins: +e.target.value }))} /></div>
+                  <div><p className="text-xs text-muted-foreground mb-1">數量</p><Input type="number" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} /></div>
+                  <div><p className="text-xs text-muted-foreground mb-1">庫存(-1=無限)</p><Input type="number" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: +e.target.value }))} /></div>
+                  <div><p className="text-xs text-muted-foreground mb-1">排序</p><Input type="number" value={form.sortOrder} onChange={e => setForm(f => ({ ...f, sortOrder: +e.target.value }))} /></div>
+                </>
+              )}
+              {shopType === "spirit" && (
+                <>
+                  <div><p className="text-xs text-muted-foreground mb-1">靈石價格</p><Input type="number" value={form.priceStones} onChange={e => setForm(f => ({ ...f, priceStones: +e.target.value }))} /></div>
+                  <div><p className="text-xs text-muted-foreground mb-1">數量</p><Input type="number" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} /></div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">稾有度</p>
+                    <select className="w-full border rounded px-2 py-1.5 text-sm bg-background" value={form.rarity} onChange={e => setForm(f => ({ ...f, rarity: e.target.value }))}>
+                      <option value="common">普通</option><option value="rare">稀有</option><option value="epic">史詩</option><option value="legendary">傳奇</option>
+                    </select>
+                  </div>
+                  <div><p className="text-xs text-muted-foreground mb-1">排序</p><Input type="number" value={form.sortOrder} onChange={e => setForm(f => ({ ...f, sortOrder: +e.target.value }))} /></div>
+                </>
+              )}
+              {shopType === "hidden" && (
+                <>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">貨幣類型</p>
+                    <select className="w-full border rounded px-2 py-1.5 text-sm bg-background" value={form.currencyType} onChange={e => setForm(f => ({ ...f, currencyType: e.target.value }))}>
+                      <option value="coins">🪙 金幣</option><option value="stones">💎 靈石</option>
+                    </select>
+                  </div>
+                  <div><p className="text-xs text-muted-foreground mb-1">價格</p><Input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: +e.target.value }))} /></div>
+                  <div><p className="text-xs text-muted-foreground mb-1">數量</p><Input type="number" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} /></div>
+                  <div><p className="text-xs text-muted-foreground mb-1">權重(1-100)</p><Input type="number" value={form.weight} onChange={e => setForm(f => ({ ...f, weight: +e.target.value }))} /></div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">稾有度</p>
+                    <select className="w-full border rounded px-2 py-1.5 text-sm bg-background" value={form.rarity} onChange={e => setForm(f => ({ ...f, rarity: e.target.value }))}>
+                      <option value="common">普通</option><option value="rare">稀有</option><option value="epic">史詩</option><option value="legendary">傳奇</option>
+                    </select>
+                  </div>
+                </>
+              )}
+            </div>
+            <Button className="mt-4 w-full" onClick={handleSubmit} disabled={createVirtual.isPending || createSpirit.isPending || createHidden.isPending}>
+              新增商品
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 商品列表 */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">
+            {shopType === "virtual" ? "🪙 一般商店商品" : shopType === "spirit" ? "💎 靈石專區商品" : "🔮 密店隨機生成池"}
+            <span className="ml-2 text-muted-foreground font-normal">({currentItems.length} 件)</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {currentItems.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">目前無商品，點擊「+ 新增商品」或「立即刷新商店」自動生成</p>
+          ) : (
+            <div className="space-y-2">
+              {currentItems.map((item: Record<string, unknown>) => (
+                <div key={String(item.id)} className="flex items-center justify-between gap-2 p-2 rounded border">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{String(item.displayName)}</span>
+                      <Badge variant="outline" className="text-xs">{String(item.itemKey)}</Badge>
+                      {item.rarity != null && <Badge variant="outline" className="text-xs">{String(item.rarity)}</Badge>}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {shopType === "virtual" && `🪙 ${item.priceCoins} 金幣 · x${item.quantity}`}
+                      {shopType === "spirit" && `💎 ${item.priceStones} 靈石 · x${item.quantity}`}
+                      {shopType === "hidden" && `${item.currencyType === "coins" ? "🪙" : "💎"} ${item.price} · x${item.quantity} · 權重 ${item.weight}`}
+                    </div>
+                  </div>
+                  <Button
+                    variant="destructive" size="sm"
+                    onClick={() => {
+                      if (shopType === "virtual") deleteVirtual.mutate({ id: Number(item.id) });
+                      else if (shopType === "spirit") deleteSpirit.mutate({ id: Number(item.id) });
+                      else deleteHidden.mutate({ id: Number(item.id) });
+                    }}
+                  >刪除</Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <p className="text-xs text-muted-foreground">
+        密店池是隨機抽取名單，權重越高出現機率越大。一般商店和靈石專區會在每次 Tick 自動從道具圖鑑隨機補充商品。
+      </p>
+    </div>
+  );
+}
+
+// ─── 主頁面 ──────────────────────────────────────────────────────────────────────────────────────
 export default function AdminGameTheater() {
   const [, navigate] = useLocation();
   return (
@@ -1701,6 +1899,7 @@ export default function AdminGameTheater() {
           <TabsTrigger value="world">🌍 世界事件</TabsTrigger>
           <TabsTrigger value="rogue">🎲 奇遇事件</TabsTrigger>
           <TabsTrigger value="reset" className="text-red-400">🔴 世界重置</TabsTrigger>
+          <TabsTrigger value="shop">🏪 商店管理</TabsTrigger>
         </TabsList>
 
         <TabsContent value="agents"><AgentManagementTab /></TabsContent>
@@ -1711,6 +1910,7 @@ export default function AdminGameTheater() {
         <TabsContent value="world"><WorldEventTab /></TabsContent>
         <TabsContent value="rogue"><RogueEventTab /></TabsContent>
         <TabsContent value="reset"><WorldResetTab /></TabsContent>
+        <TabsContent value="shop"><ShopManagementTab /></TabsContent>
       </Tabs>
     </div>
   );

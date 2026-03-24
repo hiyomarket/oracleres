@@ -1949,4 +1949,62 @@ export const gameWorldRouter = router({
       unlockedAt: r.unlockedAt,
     }));
   }),
+
+  // ─── 玩家販售道具（換取金幣） ───
+  sellInventoryItem: protectedProcedure
+    .input(z.object({
+      inventoryId: z.number().int().positive(),
+      quantity: z.number().int().positive().default(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const agent = agents[0];
+      // 查詢背包道具
+      const [invItem] = await db.select().from(agentInventory)
+        .where(and(eq(agentInventory.id, input.inventoryId), eq(agentInventory.agentId, agent.id)))
+        .limit(1);
+      if (!invItem) throw new TRPCError({ code: "NOT_FOUND", message: "道具不存在" });
+      if (invItem.isEquipped) throw new TRPCError({ code: "BAD_REQUEST", message: "裝備中的裝備無法販售" });
+      const sellQty = Math.min(input.quantity, invItem.quantity);
+      if (sellQty <= 0) throw new TRPCError({ code: "BAD_REQUEST", message: "數量不足" });
+      // 計算販售價格（依稾有度定價）
+      const { getItemInfo } = await import("../../shared/itemNames");
+      const itemInfo = getItemInfo(invItem.itemId);
+      const rarityPrice: Record<string, number> = { common: 20, uncommon: 60, rare: 150, epic: 500, legendary: 2000 };
+      const unitPrice = rarityPrice[itemInfo.rarity] ?? 20;
+      const totalGold = unitPrice * sellQty;
+      // 更新背包數量
+      if (invItem.quantity <= sellQty) {
+        await db.delete(agentInventory).where(eq(agentInventory.id, invItem.id));
+      } else {
+        await db.update(agentInventory).set({ quantity: invItem.quantity - sellQty, updatedAt: Date.now() })
+          .where(eq(agentInventory.id, invItem.id));
+      }
+      // 增加金幣
+      await db.update(gameAgents).set({ gold: agent.gold + totalGold, updatedAt: Date.now() })
+        .where(eq(gameAgents.id, agent.id));
+      // 記錄事件
+      await db.insert(agentEvents).values({
+        agentId: agent.id, eventType: "system",
+        message: `💰 販售了「${itemInfo.name}」 x${sellQty}，獲得 ${totalGold} 金幣`,
+        detail: { type: "sell_item", itemId: invItem.itemId, qty: sellQty, gold: totalGold },
+        createdAt: Date.now(),
+      });
+      return { success: true, itemName: itemInfo.name, quantity: sellQty, goldEarned: totalGold };
+    }),
+
+  // ─── 立即刷新商店（管理員手動觸發） ───
+  adminRefreshShop: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const { refreshShopItems } = await import("../tickEngine");
+      const result = await refreshShopItems(db);
+      return { success: true, virtualCount: result?.virtualCount ?? 0, spiritCount: result?.spiritCount ?? 0 };
+    }),
 });

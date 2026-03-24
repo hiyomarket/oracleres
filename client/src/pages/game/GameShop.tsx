@@ -12,7 +12,8 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import GameTabLayout from "@/components/GameTabLayout";
-import { ArrowLeft, RefreshCw, ShoppingBag, Gem, Coins, Eye, Lock, Sparkles } from "lucide-react";
+import { ArrowLeft, RefreshCw, ShoppingBag, Gem, Eye, Sparkles, PackageOpen } from "lucide-react";
+import { getItemInfo, RARITY_COLORS as SHARED_RARITY_COLORS } from "../../../../shared/itemNames";
 
 // ─── 稀有度顏色 ─────────────────────────────────────────────
 const RARITY_COLORS: Record<string, { bg: string; border: string; text: string; glow: string }> = {
@@ -184,8 +185,8 @@ const ShopItemCard: React.FC<ShopItemCardProps> = ({ name, description, price, c
   );
 };
 
-// ─── 主頁面 ───────────────────────────────────────────────────
-type ShopTab = "coin" | "stone" | "hidden";
+// ─── 主頁面 ─────────────────────────────────────────────
+type ShopTab = "coin" | "stone" | "hidden" | "sell";
 
 export default function GameShop() {
   const [, navigate] = useLocation();
@@ -248,10 +249,29 @@ export default function GameShop() {
   const stoneItems = data?.stoneItems ?? [];
 
   // ─── Tab 設定 ───
+  // ─── 背包道具查詢（販售用） ───
+  const { data: invData, isLoading: invLoading, refetch: refetchInv } = trpc.gameWorld.getInventory.useQuery(undefined, {
+    enabled: activeTab === "sell",
+    staleTime: 0,
+  });
+
+  // ─── 販售 Mutation ───
+  const sellItem = trpc.gameWorld.sellInventoryItem.useMutation({
+    onSuccess: (res) => {
+      toast.success(`💰 販售成功！「${res.itemName}」 x${res.quantity}，獲得 ${res.goldEarned} 金幣`);
+      refetchInv();
+      refetch();
+    },
+    onError: (err) => {
+      toast.error(`❌ 販售失敗：${err.message}`);
+    },
+  });
+
   const TABS: { id: ShopTab; icon: string; label: string; color: string }[] = [
     { id: "coin",   icon: "🪙", label: "一般商店",  color: "#f59e0b" },
     { id: "stone",  icon: "💎", label: "靈石專區",  color: "#a78bfa" },
     { id: "hidden", icon: "🔮", label: "密店",       color: "#38bdf8" },
+    { id: "sell",   icon: "📦", label: "販售道具", color: "#4ade80" },
   ];
 
   return (
@@ -454,6 +474,79 @@ export default function GameShop() {
                       })}
                     />
                   ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* 販售道具 */}
+          {activeTab === "sell" && (
+            <>
+              <div style={{ marginBottom: "12px" }}>
+                <p style={{ fontSize: "12px", color: "#64748b", margin: 0 }}>
+                  選擇背包中不需要的道具販售换取 <span style={{ color: "#fbbf24" }}>🪙 金幣</span>。販售價格依稾有度而定。
+                </p>
+              </div>
+              {invLoading ? (
+                <div style={{ textAlign: "center", color: "#475569", padding: "40px 0" }}>載入中...</div>
+              ) : !(invData as unknown[])?.length ? (
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <PackageOpen size={36} style={{ color: "#334155", margin: "0 auto 12px" }} />
+                  <p style={{ color: "#475569", fontSize: "14px" }}>背包是空的</p>
+                  <p style={{ color: "#334155", fontSize: "12px" }}>先去探索獲得道具吧！</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {(invData as Array<{ id: number; itemId: string; quantity: number; isEquipped: number | null }>).filter(i => !i.isEquipped).map((item) => {
+                    const info = getItemInfo(item.itemId);
+                    const rarityPrice: Record<string, number> = { common: 20, uncommon: 60, rare: 150, epic: 500, legendary: 2000 };
+                    const unitPrice = rarityPrice[info.rarity] ?? 20;
+                    const totalGold = unitPrice * item.quantity;
+                    const rarityColor = {
+                      common: "#94a3b8", uncommon: "#4ade80", rare: "#60a5fa", epic: "#a78bfa", legendary: "#fbbf24",
+                    }[info.rarity] ?? "#94a3b8";
+                    return (
+                      <div key={item.id} style={{
+                        display: "flex", alignItems: "center", gap: "10px",
+                        padding: "10px 12px", borderRadius: "10px",
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      }}>
+                        <span style={{ fontSize: "20px" }}>{info.emoji}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: rarityColor, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {info.name}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "#64748b" }}>
+                            x{item.quantity} · 單價 {unitPrice} 金幣
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: "12px", fontWeight: 700, color: "#fbbf24", marginBottom: "4px" }}>
+                            🪙 {totalGold}
+                          </div>
+                          <button
+                            onClick={() => sellItem.mutate({ inventoryId: item.id, quantity: item.quantity })}
+                            disabled={sellItem.isPending}
+                            style={{
+                              padding: "4px 10px", borderRadius: "6px", border: "none",
+                              background: "linear-gradient(135deg, #16a34a, #4ade80)",
+                              color: "#fff", fontSize: "11px", fontWeight: 700,
+                              cursor: sellItem.isPending ? "not-allowed" : "pointer",
+                              opacity: sellItem.isPending ? 0.6 : 1,
+                            }}
+                          >
+                            全販
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {(invData as Array<{ id: number; itemId: string; quantity: number; isEquipped: number | null }>).filter(i => i.isEquipped).length > 0 && (
+                    <p style={{ fontSize: "11px", color: "#475569", textAlign: "center", marginTop: "8px" }}>
+                      裝備中的裝備無法販售，請先卸下裝備再販售
+                    </p>
+                  )}
                 </div>
               )}
             </>
