@@ -293,6 +293,8 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
   const mapRef = useRef<ReturnType<typeof import("leaflet")["map"]> | null>(null);
   const markersRef = useRef<Map<string, ReturnType<typeof import("leaflet")["marker"]>>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
+  // 在線玩家 layer（獨立管理，不影響節點 marker）
+  const playerMarkersRef = useRef<ReturnType<typeof import("leaflet")["marker"]>[]>([]);
 
   // 初始化地圖
   useEffect(() => {
@@ -519,6 +521,8 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
 
     return () => {
       if (mapRef.current) {
+        playerMarkersRef.current.forEach(m => m.remove());
+        playerMarkersRef.current = [];
         mapRef.current.remove();
         mapRef.current = null;
         markersRef.current.clear();
@@ -589,6 +593,85 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
       });
     });
   }, [currentNodeId, nodes, agentAvatarUrl]);
+
+  // nearbyPlayers 更新時，在節點上繪製玩家小點
+  useEffect(() => {
+    if (!mapRef.current) return;
+    import("leaflet").then((leaflet) => {
+      const L = leaflet.default ?? leaflet;
+      const map = mapRef.current;
+      if (!map) return;
+
+      // 清除舊的玩家標記
+      playerMarkersRef.current.forEach(m => m.remove());
+      playerMarkersRef.current = [];
+
+      // 按節點分組
+      const byNode: Record<string, typeof nearbyPlayers> = {};
+      nearbyPlayers.forEach(p => {
+        if (!byNode[p.nodeId]) byNode[p.nodeId] = [];
+        byNode[p.nodeId].push(p);
+      });
+
+      const elColors: Record<string, string> = {
+        wood: "#22c55e", fire: "#ef4444", earth: "#eab308",
+        metal: "#94a3b8", water: "#3b82f6",
+      };
+
+      Object.entries(byNode).forEach(([nodeId, players]) => {
+        const coords = NODE_COORDS[nodeId];
+        if (!coords) return;
+        const isSelf = nodeId === currentNodeId;
+        // 偏移一點，避免完全疊在節點 marker 上
+        const offsetLat = isSelf ? 0.018 : 0.015;
+        const offsetLng = isSelf ? 0.025 : 0.022;
+        const count = players.length;
+        const firstEl = players[0]?.element ?? "water";
+        const dotColor = elColors[firstEl] ?? "#94a3b8";
+
+        const dotHtml = `
+          <div style="position:relative;">
+            <div style="
+              width:${count > 1 ? 20 : 14}px;
+              height:${count > 1 ? 20 : 14}px;
+              border-radius:50%;
+              background:${dotColor};
+              border:2px solid rgba(255,255,255,0.85);
+              box-shadow:0 0 8px 3px ${dotColor}88;
+              display:flex;align-items:center;justify-content:center;
+              font-size:8px;font-weight:700;color:#fff;
+            ">${count > 1 ? count : ""}</div>
+            ${count > 1 ? `<div style="
+              position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
+              background:rgba(6,10,22,0.85);border:1px solid ${dotColor}66;
+              border-radius:4px;padding:1px 4px;
+              font-size:8px;color:${dotColor};white-space:nowrap;
+              font-family:'Noto Serif TC',serif;
+            ">${players.slice(0,2).map(p=>p.agentName).join("·")}${count>2?"…":""}</div>` : `<div style="
+              position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
+              background:rgba(6,10,22,0.85);border:1px solid ${dotColor}66;
+              border-radius:4px;padding:1px 4px;
+              font-size:8px;color:${dotColor};white-space:nowrap;
+              font-family:'Noto Serif TC',serif;
+            ">${players[0]?.agentName ?? ""}</div>`}
+          </div>
+        `;
+
+        const icon = L.divIcon({
+          className: "",
+          html: dotHtml,
+          iconSize: [count > 1 ? 20 : 14, 34],
+          iconAnchor: [count > 1 ? 10 : 7, count > 1 ? 10 : 7],
+        });
+
+        const m = L.marker(
+          [coords[0] + offsetLat, coords[1] + offsetLng],
+          { icon, interactive: false, zIndexOffset: 200 }
+        ).addTo(map);
+        playerMarkersRef.current.push(m);
+      });
+    });
+  }, [nearbyPlayers, currentNodeId]);
 
   // 點擊節點時飛到該位置
   const flyToNode = useCallback((nodeId: string) => {

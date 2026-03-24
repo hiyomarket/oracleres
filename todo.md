@@ -3900,3 +3900,41 @@
 - [x] GameTabLayout 啟用拍賣行（移除 comingSoon 標記）
 - [x] 日誌面板（EventLogDrawer）改為固定置中顯示（全螢幕 overlay + 置中彈窗）
 - [x] TypeScript 零錯誤
+
+## V47 地圖互動強化 + PVP/排行榜入口
+- [ ] LeafletMap：在線玩家在地圖節點上顯示小頭像/彩色小點標記（獨立 layer，不覆蓋節點 marker）
+- [ ] LeafletMap：nearbyPlayers 更新時重繪玩家 layer（useEffect 監聽 nearbyPlayers）
+- [ ] GameTabLayout：加入「⚔️ 排行/PVP」Tab，指向 /game/achievements
+- [ ] AdventureAchievements：activeTab 改為 "pvp" 讓底部導覽列正確高亮
+
+## V47 地圖互動強化 + PVP/排行榜入口 + 聊天大廳優化
+- [ ] LeafletMap：在線玩家在地圖節點上顯示彩色小點標記（獨立 playerLayerRef，nearbyPlayers 更新時重繪）
+- [ ] LeafletMap：同一節點多人時顯示人數徽章（+N）
+- [ ] GameTabLayout：加入「⚔️ 排行/PVP」Tab，指向 /game/achievements
+- [ ] AdventureAchievements：activeTab 改為 "pvp" 讓底部導覽列正確高亮
+- [ ] 聊天大廳：前端訊息列表改為最新在最上方（reverse order）
+- [ ] 聊天大廳：每則訊息顯示發送時間（HH:mm 格式）
+- [ ] 後端 sendChatMessage：儲存前先清理 30 分鐘前的訊息，並限制最多保留 20 則
+
+## V47 完整功能清單
+### 地圖互動 + PVP Tab（Phase 1 已完成）
+- [x] LeafletMap：在線玩家在地圖節點上顯示彩色小點標記（playerMarkersRef 獨立 layer）
+- [x] LeafletMap：nearbyPlayers 更新時重繪玩家 layer
+- [x] GameTabLayout：加入「⚔️ 排行/PVP」Tab，指向 /game/achievements
+- [x] GameTabLayout：/game/achievements 和 /game/pvp 路徑對應 pvp tab 高亮
+
+### 聊天大廳優化
+- - [x] 後端 sendChatMessage：儲存前清理30分鐘前的訊息，並限制最多保留20則
+- [x] 後端 getChatMessages：改為最新在前（不再 reverse），limit 改為 20
+- [x] 前端聊天大廳：訊息列表最新在最上方
+- [x] 前端聊天大廳：每則訊息顯示發送時間（HH:mm 格式）
+
+### 首頁 UI 優化 + 靈虛入口
+- [x] 首頁頂端導覽列重新設計（Logo + 主選單 + 下拉選單）
+- [x] 下拉選單加入「靈虛入口」分區，含靈相虛界（/game）、排行/PVP、天命商城、拍賣行入口
+- [x] 靈虛入口按鈕已整合到頂端導覽列右側
+
+### 進入遊戲過場動畫
+- [x] 建立 GameTransition 組件（黑幕→符文光芒→淡入）
+- [x] 點擊靈虛入口時觸發過場動畫，動畫結束後導向 /game
+- [x] 過場效果：黑底→金色/紫色符文光抈紼放→白光閃爍→畫面淡入

@@ -2707,22 +2707,23 @@ export default function VirtualWorldPage() {
                   <span className="text-xs font-bold text-purple-300">💬 天命共震 · 大廳</span>
                   <button onClick={() => setChatOpen(false)} className="text-slate-500 hover:text-slate-300 text-xs">✕</button>
                 </div>
-                {/* 訊息列表 */}
+                {/* 訊息列表（最新在最上） */}
                 <div className="overflow-y-auto px-3 py-2 space-y-1.5" style={{ height: "200px" }}>
                   {(chatMessages_data.data ?? []).length === 0 ? (
                     <p className="text-center text-slate-600 text-xs py-4">尚無訊息，成為第一個發言的旅人！</p>
                   ) : (
                     (chatMessages_data.data ?? []).map((msg: { id: number; agentName: string; agentElement: string; agentLevel: number; content: string; createdAt: number }) => {
                       const msgColor = { wood: "#4ade80", fire: "#f87171", earth: "#fbbf24", metal: "#e2e8f0", water: "#60a5fa" }[msg.agentElement] ?? "#94a3b8";
+                      const msgTime = new Date(msg.createdAt).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", hour12: false });
                       return (
                         <div key={msg.id} className="flex items-start gap-2">
+                          <span className="text-[9px] text-slate-600 shrink-0 mt-0.5 tabular-nums">{msgTime}</span>
                           <span className="text-[10px] font-bold shrink-0 mt-0.5" style={{ color: msgColor }}>[Lv.{msg.agentLevel}] {msg.agentName}</span>
                           <span className="text-xs text-slate-300 break-all">{msg.content}</span>
                         </div>
                       );
                     })
                   )}
-                  <div ref={chatEndRef} />
                 </div>
                 {/* 輸入區 */}
                 <div className="flex gap-2 px-3 py-2 border-t" style={{ borderColor: "rgba(168,85,247,0.2)" }}>

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
 import { User, LogOut, ChevronDown, Smartphone, LayoutDashboard, Star, Coins, Gift, ShoppingBag, Calendar, MessageSquare, Send, X } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
+import GameTransition from "@/components/GameTransition";
 
 type NavPage = string;
 
@@ -629,6 +630,22 @@ export function SharedNav({ currentPage }: SharedNavProps) {
   const [desktopCanScrollRight, setDesktopCanScrollRight] = useState(false);
   const [mobileCanScrollLeft, setMobileCanScrollLeft] = useState(false);
   const [mobileCanScrollRight, setMobileCanScrollRight] = useState(false);
+  // 靈虛入口下拉選單
+  const [gameMenuOpen, setGameMenuOpen] = useState(false);
+  const gameMenuRef = useRef<HTMLDivElement>(null);
+  // 過場動畫
+  const [showTransition, setShowTransition] = useState(false);
+
+  // 點擊外部關閉靈虛選單
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (gameMenuRef.current && !gameMenuRef.current.contains(e.target as Node)) {
+        setGameMenuOpen(false);
+      }
+    };
+    if (gameMenuOpen) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [gameMenuOpen]);
   const notifyMutation = trpc.oracle.notifyDailyEnergy.useMutation({
     onSuccess: () => toast.success("今日能量通知已發送！"),
     onError: () => toast.error("通知發送失敗，請稍後再試。"),
@@ -743,23 +760,217 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                 📬
               </button>
             )}
-            {/* 天命共振遊戲大廳入口 */}
+            {/* 靈虛入口下拉選單 */}
             {user && (
-              <button
-                onClick={() => navigate("/game")}
-                className={`
-                  flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0
-                  ${location.pathname.startsWith("/game")
-                    ? "border border-amber-500/60 text-amber-300 bg-amber-900/20"
-                    : "border border-amber-700/30 text-amber-500 hover:text-amber-300 hover:border-amber-500/50 hover:bg-amber-900/20"
-                  }
-                `}
-                title="天命共振遊戲大廳"
-              >
-                <span className="text-base leading-none">⚔️</span>
-                <span className="hidden sm:inline">天命共振</span>
-              </button>
+              <div ref={gameMenuRef} style={{ position: "relative" }}>
+                <button
+                  onClick={() => setGameMenuOpen(v => !v)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0"
+                  style={{
+                    border: gameMenuOpen || location.pathname.startsWith("/game")
+                      ? "1px solid rgba(168,85,247,0.6)"
+                      : "1px solid rgba(168,85,247,0.25)",
+                    color: gameMenuOpen || location.pathname.startsWith("/game")
+                      ? "#c084fc"
+                      : "rgba(168,85,247,0.7)",
+                    background: gameMenuOpen || location.pathname.startsWith("/game")
+                      ? "rgba(168,85,247,0.12)"
+                      : "transparent",
+                    boxShadow: gameMenuOpen ? "0 0 12px rgba(168,85,247,0.3)" : "none",
+                  }}
+                  title="靈虛入口"
+                >
+                  <span style={{ fontSize: "15px", lineHeight: 1 }}>⚔️</span>
+                  <span className="hidden sm:inline" style={{ letterSpacing: "0.05em" }}>靈虛入口</span>
+                  <ChevronDown
+                    style={{
+                      width: "12px", height: "12px",
+                      transform: gameMenuOpen ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s",
+                      opacity: 0.7,
+                    }}
+                  />
+                </button>
+
+                {/* 下拉選單面板 */}
+                {gameMenuOpen && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 8px)",
+                      right: 0,
+                      width: "220px",
+                      background: "rgba(6,10,22,0.97)",
+                      backdropFilter: "blur(20px)",
+                      border: "1px solid rgba(168,85,247,0.25)",
+                      borderRadius: "14px",
+                      boxShadow: "0 16px 48px rgba(0,0,0,0.7), 0 0 24px rgba(168,85,247,0.15)",
+                      overflow: "hidden",
+                      zIndex: 200,
+                    }}
+                  >
+                    {/* 選單標題 */}
+                    <div style={{
+                      padding: "10px 14px 8px",
+                      borderBottom: "1px solid rgba(168,85,247,0.12)",
+                    }}>
+                      <p style={{
+                        fontSize: "10px",
+                        letterSpacing: "0.3em",
+                        color: "rgba(168,85,247,0.6)",
+                        fontFamily: "'Noto Serif TC', serif",
+                        margin: 0,
+                      }}>靈 虛 入 口</p>
+                    </div>
+
+                    {/* 靈相虛界入口（主要） */}
+                    <button
+                      onClick={() => {
+                        setGameMenuOpen(false);
+                        if (location.pathname.startsWith("/game")) return;
+                        setShowTransition(true);
+                      }}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "12px 14px",
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "background 0.15s",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(168,85,247,0.1)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <div style={{
+                        width: "32px", height: "32px",
+                        borderRadius: "10px",
+                        background: "rgba(168,85,247,0.15)",
+                        border: "1px solid rgba(168,85,247,0.3)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "16px", flexShrink: 0,
+                      }}>☯</div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "#c084fc", fontFamily: "'Noto Serif TC', serif" }}>靈相虛界</p>
+                        <p style={{ margin: 0, fontSize: "10px", color: "rgba(148,163,184,0.6)", marginTop: "1px" }}>進入虛相世界地圖</p>
+                      </div>
+                      {location.pathname.startsWith("/game") && (
+                        <span style={{ marginLeft: "auto", fontSize: "9px", color: "#a855f7", background: "rgba(168,85,247,0.15)", border: "1px solid rgba(168,85,247,0.3)", borderRadius: "4px", padding: "1px 5px" }}>當前</span>
+                      )}
+                    </button>
+
+                    {/* 分隔線 */}
+                    <div style={{ margin: "0 14px", borderTop: "1px solid rgba(255,255,255,0.05)" }} />
+
+                    {/* 排行/PVP */}
+                    <button
+                      onClick={() => { setGameMenuOpen(false); navigate("/game/achievements"); }}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "10px 14px",
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "background 0.15s",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(239,68,68,0.08)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <div style={{
+                        width: "32px", height: "32px",
+                        borderRadius: "10px",
+                        background: "rgba(239,68,68,0.1)",
+                        border: "1px solid rgba(239,68,68,0.25)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "14px", flexShrink: 0,
+                      }}>⚔️</div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "#f87171", fontFamily: "'Noto Serif TC', serif" }}>排行 / PVP</p>
+                        <p style={{ margin: 0, fontSize: "10px", color: "rgba(148,163,184,0.6)", marginTop: "1px" }}>勝負排行、對戰成绩</p>
+                      </div>
+                    </button>
+
+                    {/* 天命商城 */}
+                    <button
+                      onClick={() => { setGameMenuOpen(false); navigate("/game/gameshop"); }}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "10px 14px",
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "background 0.15s",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(245,158,11,0.08)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <div style={{
+                        width: "32px", height: "32px",
+                        borderRadius: "10px",
+                        background: "rgba(245,158,11,0.1)",
+                        border: "1px solid rgba(245,158,11,0.25)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "14px", flexShrink: 0,
+                      }}>🛒</div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "#fbbf24", fontFamily: "'Noto Serif TC', serif" }}>天命商城</p>
+                        <p style={{ margin: 0, fontSize: "10px", color: "rgba(148,163,184,0.6)", marginTop: "1px" }}>道具、裝備、特殊物品</p>
+                      </div>
+                    </button>
+
+                    {/* 拍賣行 */}
+                    <button
+                      onClick={() => { setGameMenuOpen(false); navigate("/game/auction"); }}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        padding: "10px 14px 12px",
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "background 0.15s",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(56,189,248,0.08)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <div style={{
+                        width: "32px", height: "32px",
+                        borderRadius: "10px",
+                        background: "rgba(56,189,248,0.1)",
+                        border: "1px solid rgba(56,189,248,0.25)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "14px", flexShrink: 0,
+                      }}>🏛️</div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "#38bdf8", fontFamily: "'Noto Serif TC', serif" }}>拍賣行</p>
+                        <p style={{ margin: 0, fontSize: "10px", color: "rgba(148,163,184,0.6)", marginTop: "1px" }}>玩家交易市場</p>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
+
+            {/* 過場動畫 */}
+            <GameTransition
+              active={showTransition}
+              targetPath="/game"
+              onCancel={() => setShowTransition(false)}
+            />
             {/* 通知鈴鐺 */}
             {user && <NotificationBell />}
             {!user ? (

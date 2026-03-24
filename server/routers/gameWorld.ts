@@ -9,7 +9,7 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
 import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, hiddenShopInstances, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements, agentSkills, gameConfig } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
-import { eq, and, desc, gt, sql, count, asc } from "drizzle-orm";
+import { eq, and, desc, gt, lt, sql, count, asc, inArray } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
 import { broadcastToAll, broadcastToAllIncludingAnon, sendToAgent } from "../wsServer";
 import { updatePvpStats } from "../achievementEngine";
@@ -1798,9 +1798,9 @@ export const gameWorldRouter = router({
       if (!db) return [];
       const rows = await db.select().from(chatMessages)
         .where(input.since ? gt(chatMessages.createdAt, input.since) : undefined)
-        .orderBy(desc(chatMessages.createdAt))
-        .limit(50);
-      return rows.reverse(); // 最舊在上、最新在下
+        .orderBy(desc(chatMessages.createdAt)) // 最新在前
+        .limit(20);
+      return rows; // 最新在最上
     }),
 
   sendChatMessage: protectedProcedure
@@ -1827,6 +1827,17 @@ export const gameWorldRouter = router({
         throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "發言太頻繁，請稍候再試" });
       }
       const now = Date.now();
+      // 清理30分鐘前的訊息
+      await db.delete(chatMessages).where(lt(chatMessages.createdAt, now - 30 * 60 * 1000));
+      // 如果剩餘訊息還是超過 20 則，刪除最舊的超出部分
+      const existing = await db.select({ id: chatMessages.id })
+        .from(chatMessages).orderBy(desc(chatMessages.createdAt)).limit(100);
+      if (existing.length >= 20) {
+        const toDelete = existing.slice(19).map(r => r.id);
+        if (toDelete.length > 0) {
+          await db.delete(chatMessages).where(inArray(chatMessages.id, toDelete));
+        }
+      }
       const [inserted] = await db.insert(chatMessages).values({
         agentId: agent.id,
         agentName: agent.agentName ?? "旅人",
