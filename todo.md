@@ -3746,3 +3746,31 @@
 - [x] 管理員後台按鈕移到介面底端功能表（GameTabLayout 底部 Tab），僅顯示一個「後台」按鈕
 - [x] 後台頁面加入「返回遊戲世界」按鈕（GameCMS/AdminDashboard/AdminLogicConfig/AdminUsers/AdminGameTheater）
 - [x] 後台各子頁面加入返回上層後台的邏輯
+
+## V37 三大功能完整實作
+
+### 功能一：四屬性技能種子資料（各 10 筆）
+- [x] 火屬性技能 15 筆（S_F001~S_F015）已在資料庫
+- [x] 土屬性技能 13 筆（S_E001~S_E013）已在資料庫
+- [x] 金屬性技能 12 筆（S_M001~S_M012）已在資料庫
+- [x] 水屬性技能 19 筆（S_W051~S_W069）已在資料庫
+- [x] 對應技能書道具寫入 game_item_catalog（skill-fire-001/002、skill-earth-001/002、skill-metal-001/002、skill-water-001/002 等）
+- [x] 修正 learnSkillFromBook：技能書 ID 映射表對應正確的技能目錄 ID
+
+### 功能二：技能書掉落率調整
+- [x] 中低等級怪物（Lv.1~15）加入技能書掉落機率（1~3%）
+- [x] 中等怪物（Lv.16~30）技能書掉落機率（3~8%）
+- [x] 高等怪物（Lv.31+）技能書掉落機率（8~15%）
+- [x] 更新 shared/monsters.ts 的 dropItems
+
+### 功能三：隱藏商店完整實作
+- [x] hiddenShopInstances 表已存在於資料庫
+- [x] DB helpers：getHiddenShopItems / buyHiddenShopItem 已完成
+- [x] tRPC：gameWorld.getHiddenShopItems / buyHiddenShopItem 已完成
+- [x] 流星雨世界事件觸發密店（worldTickEngine 流星雨自動在 3 個高險節點生成密店）
+- [x] 商品池已填充（20 筆稀有道具包含技能書/消耗品/靈石）
+- [x] 天命商城 Tab 連到 /game/gameshop，移除 comingSoon 標記
+- [x] 前端：地圖節點加入神秘商人發光效果（有隱藏商店時顯示）
+- [x] 前端：點擊發光節點彈出限時商店介面（倒數計時 + 稀有物品列表）
+- [x] 前端：購買按鈕 + 購買成功/失敗回饋
+- [x] 修正 buyHiddenShopItem：技能書道具存入背包正確的 itemType

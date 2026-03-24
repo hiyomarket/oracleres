@@ -7,7 +7,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements, agentSkills } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, hiddenShopInstances, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements, agentSkills } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { eq, and, desc, gt, sql, count, asc } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
@@ -1078,12 +1078,29 @@ export const gameWorldRouter = router({
         .where(and(eq(agentInventory.id, input.inventoryId), eq(agentInventory.agentId, agent.id))).limit(1);
       if (!invItem) throw new TRPCError({ code: "NOT_FOUND", message: "道具不存在" });
       if (invItem.itemType !== "skill_book") throw new TRPCError({ code: "BAD_REQUEST", message: "此道具不是技能書" });
-      // 技能 ID 就是 itemId（例如 skill-wood-001）
-      const skillId = invItem.itemId;
+      // 技能書 itemId 對應的技能目錄 skillId
+      const SKILL_BOOK_MAP: Record<string, string> = {
+        "skill-wood-001": "S_W005",
+        "skill-wood-002": "S_W012",
+        "skill-fire-001": "S_F004",
+        "skill-fire-002": "S_F006",
+        "skill-earth-001": "S_E003",
+        "skill-earth-002": "S_E005",
+        "skill-metal-001": "S_M003",
+        "skill-metal-002": "S_M004",
+        "skill-water-001": "S_W057",
+        "skill-water-002": "S_W060",
+      };
+      const skillId = SKILL_BOOK_MAP[invItem.itemId];
+      if (!skillId) throw new TRPCError({ code: "BAD_REQUEST", message: "此技能書對應的技能不存在" });
       // 檢查是否已習得
       const already = await db.select().from(agentSkills)
         .where(and(eq(agentSkills.agentId, agent.id), eq(agentSkills.skillId, skillId))).limit(1);
       if (already[0]) throw new TRPCError({ code: "CONFLICT", message: "已習得此技能，無需重複學習" });
+      // 查詢技能名稱
+      const [skillCatalog] = await db.select().from(gameSkillCatalog)
+        .where(eq(gameSkillCatalog.skillId, skillId)).limit(1);
+      const skillName = skillCatalog?.name ?? skillId;
       // 寫入 agentSkills
       await db.insert(agentSkills).values({
         agentId: agent.id,
@@ -1101,11 +1118,11 @@ export const gameWorldRouter = router({
       await db.insert(agentEvents).values({
         agentId: agent.id,
         eventType: "system",
-        detail: { skillId },
-        message: `習得了技能「${skillId}」！`,
+        detail: { skillId, skillName },
+        message: `習得了技能「${skillName}」！`,
         createdAt: Date.now(),
       });
-      return { success: true, skillId };
+      return { success: true, skillId, skillName };
     }),
 
   // ─── 使用消耗道具 ───
@@ -1339,6 +1356,17 @@ export const gameWorldRouter = router({
       }
     }),
 
+  // ─── 取得目前活躍的密店節點（地圖發光用） ───
+  getActiveHiddenShopNodes: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return { nodes: [] };
+    const now = Date.now();
+    const shops = await db.select({ nodeId: hiddenShopInstances.nodeId, expiresAt: hiddenShopInstances.expiresAt })
+      .from(hiddenShopInstances)
+      .where(sql`is_closed = 0 AND expires_at > ${now}`);
+    return { nodes: shops.map(s => ({ nodeId: s.nodeId, expiresAt: s.expiresAt })) };
+  }),
+
   // ─── 取得密店商品（需感知檢定） ───
   getHiddenShopItems: protectedProcedure
     .query(async ({ ctx }) => {
@@ -1412,13 +1440,16 @@ export const gameWorldRouter = router({
         await db.update(users).set({ gameStones: userRows[0].gameStones - item.price })
           .where(eq(users.id, ctx.user.id));
       }
+      // 判斷道具類型（技能書需要特殊處理）
+      const isSkillBook = item.itemKey.startsWith("skill-");
+      const resolvedItemType = isSkillBook ? "skill_book" : "consumable";
       const existing = await db.select().from(agentInventory)
         .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
       if (existing[0]) {
         await db.update(agentInventory).set({ quantity: existing[0].quantity + item.quantity, updatedAt: Date.now() })
           .where(eq(agentInventory.id, existing[0].id));
       } else {
-        await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: "consumable", quantity: item.quantity, acquiredAt: Date.now(), updatedAt: Date.now() });
+        await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: resolvedItemType, quantity: item.quantity, acquiredAt: Date.now(), updatedAt: Date.now() });
       }
       const currencyLabel = item.currencyType === "coins" ? "金幣" : "靈石";
       await db.insert(agentEvents).values({

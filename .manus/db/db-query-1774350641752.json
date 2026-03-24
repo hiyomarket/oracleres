@@ -1,0 +1,98 @@
+{
+  "query": "DESCRIBE game_hidden_shop_pool;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DESCRIBE game_hidden_shop_pool;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "item_key",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "display_name",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "currency_type",
+      "Type": "enum('coins','stones')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "coins",
+      "Extra": ""
+    },
+    {
+      "Field": "price",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "quantity",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "weight",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "10",
+      "Extra": ""
+    },
+    {
+      "Field": "rarity",
+      "Type": "enum('common','rare','epic','legendary')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "rare",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nitem_key\tvarchar(100)\tNO\t\tNULL\t\ndisplay_name\tvarchar(100)\tNO\t\tNULL\t\ndescription\ttext\tYES\t\tNULL\t\ncurrency_type\tenum('coins','stones')\tNO\t\tcoins\t\nprice\tint\tNO\t\t0\t\nquantity\tint\tNO\t\t1\t\nweight\tint\tNO\t\t10\t\nrarity\tenum('common','rare','epic','legendary')\tNO\t\trare\t\nis_active\ttinyint\tNO\t\t1\t\ncreated_at\tbigint\tNO\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 1606
+}

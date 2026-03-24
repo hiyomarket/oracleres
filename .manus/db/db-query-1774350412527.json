@@ -1,0 +1,30 @@
+{
+  "query": "SELECT wuxing, COUNT(*) as count FROM game_skill_catalog GROUP BY wuxing ORDER BY wuxing;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT wuxing, COUNT(*) as count FROM game_skill_catalog GROUP BY wuxing ORDER BY wuxing;",
+  "rows": [
+    {
+      "wuxing": "土",
+      "count": "13"
+    },
+    {
+      "wuxing": "木",
+      "count": "50"
+    },
+    {
+      "wuxing": "水",
+      "count": "19"
+    },
+    {
+      "wuxing": "火",
+      "count": "15"
+    },
+    {
+      "wuxing": "金",
+      "count": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "wuxing\tcount\n土\t13\n木\t50\n水\t19\n火\t15\n金\t12\n",
+  "stderr": "",
+  "execution_time_ms": 1905
+}

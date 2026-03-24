@@ -18,15 +18,15 @@ type GameTab = {
 };
 
 const GAME_TABS: GameTab[] = [
-  { id: "world",    path: "/game",           icon: "🌏", label: "虛相世界" },
-  { id: "avatar",   path: "/game/profile",   icon: "👤", label: "靈相空間",  comingSoon: true },
-  { id: "shop",     path: "/game/shop",      icon: "🛒", label: "天命商城",  comingSoon: true },
-  { id: "blessing", path: "/game/blessings", icon: "📿", label: "命理加成",  comingSoon: true },
-  { id: "pet",      path: "/game/pet",       icon: "🐾", label: "寵物系統",  comingSoon: true },
-  { id: "forge",    path: "/game/forge",     icon: "⚒️", label: "鍛造屋",    comingSoon: true },
-  { id: "auction",  path: "/game/auction",   icon: "🏛️", label: "拍賣行",    comingSoon: true },
+  { id: "world",    path: "/game",              icon: "🌏", label: "虛相世界" },
+  { id: "shop",     path: "/game/gameshop",     icon: "🛒", label: "天命商城" },
+  { id: "avatar",   path: "/game/profile",      icon: "👤", label: "靈相空間",  comingSoon: true },
+  { id: "blessing", path: "/game/blessings",    icon: "📿", label: "命理加成",  comingSoon: true },
+  { id: "pet",      path: "/game/pet",           icon: "🐾", label: "寵物系統",  comingSoon: true },
+  { id: "forge",    path: "/game/forge",         icon: "⚒️", label: "鍛造屋",    comingSoon: true },
+  { id: "auction",  path: "/game/auction",       icon: "🏙️", label: "拍賣行",    comingSoon: true },
   // Bug 3+9 fix: 管理員後台整合為單一按鈕（僅 admin 可見）
-  { id: "admin",    path: "/admin/game",     icon: "⚙️", label: "後台管理",  adminOnly: true },
+  { id: "admin",    path: "/admin/game",         icon: "⚙️", label: "後台管理",  adminOnly: true },
 ];
 
 /** 底部 Tab Bar 高度（不含 safe-area，safe-area 由 CSS 處理） */
@@ -46,6 +46,7 @@ export default function GameTabLayout({ children, activeTab }: GameTabLayoutProp
   // 判斷目前 active tab
   const currentTab = activeTab ?? (() => {
     if (location === "/game") return "world";
+    if (location.startsWith("/game/gameshop")) return "shop";
     if (location.startsWith("/game/profile")) return "avatar";
     if (location.startsWith("/game/shop")) return "shop";
     if (location.startsWith("/game/blessings")) return "blessing";

@@ -1453,7 +1453,150 @@ function CharacterPanel({
   );
 }
 
-// ─── 事件日誌抽屜
+// ─── 密店彈窗組件
+// ─────────────────────────────────────────────────────────────
+function HiddenShopModal({ onClose, agentGold, agentStones }: { onClose: () => void; agentGold: number; agentStones: number }) {
+  const utils = trpc.useUtils();
+  const { data: shopData, isLoading } = trpc.gameWorld.getHiddenShopItems.useQuery(undefined, {
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+  const buyMutation = trpc.gameWorld.buyHiddenShopItem.useMutation({
+    onSuccess: (res) => {
+      toast.success(`🔮 密店購買成功！獲得「${res.itemName}」x${res.quantity}`);
+      utils.gameWorld.getOrCreateAgent.invalidate();
+      utils.gameWorld.getHiddenShopItems.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+  const RARITY_COLOR: Record<string, string> = {
+    common: "#94a3b8",
+    rare: "#60a5fa",
+    epic: "#a78bfa",
+    legendary: "#f59e0b",
+  };
+  const RARITY_ZH: Record<string, string> = {
+    common: "普通",
+    rare: "稀有",
+    epic: "史詩",
+    legendary: "傳說",
+  };
+  return (
+    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.88)", backdropFilter: "blur(16px)" }}
+      onClick={onClose}>
+      <div className="w-full max-w-md rounded-2xl flex flex-col overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #0a0a1a 0%, #12082a 50%, #0a1020 100%)",
+          border: "1px solid rgba(167,139,250,0.4)",
+          boxShadow: "0 0 80px rgba(167,139,250,0.25), 0 0 30px rgba(245,158,11,0.15), 0 20px 40px rgba(0,0,0,0.7)",
+          maxHeight: "85vh",
+        }}
+        onClick={e => e.stopPropagation()}>
+        {/* 標題列 */}
+        <div className="flex items-center justify-between px-5 py-4 border-b"
+          style={{ borderColor: "rgba(167,139,250,0.2)" }}>
+          <div>
+            <h2 className="text-xl font-bold" style={{ color: "#f59e0b" }}>✨ 神秘密店</h2>
+            <p className="text-xs text-slate-500 mt-0.5">限時出現的神秘商人，提供稀有商品</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <div className="text-xs text-slate-500">金幣</div>
+              <div className="text-sm font-bold text-yellow-400">🪙 {agentGold.toLocaleString()}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-slate-500">靈石</div>
+              <div className="text-sm font-bold text-sky-400">💎 {agentStones.toLocaleString()}</div>
+            </div>
+            <button onClick={onClose} className="text-slate-500 hover:text-slate-300 text-xl px-2">✕</button>
+          </div>
+        </div>
+        {/* 內容 */}
+        <div className="overflow-y-auto flex-1 px-4 py-3">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-slate-500 text-sm animate-pulse">🔮 感知密店中…</div>
+            </div>
+          ) : !shopData?.found ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <div className="text-4xl">🔮</div>
+              <p className="text-slate-500 text-sm">未感知到密店商品</p>
+              <p className="text-slate-600 text-xs">提升尋寶力可增加感知機率</p>
+            </div>
+          ) : shopData.items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <div className="text-4xl">📦</div>
+              <p className="text-slate-500 text-sm">密店今日無貨</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="text-xs text-slate-500 pb-1">
+                🔮 密店已出現！共 {shopData.items.length} 件商品
+              </div>
+              {shopData.items.map((item: { id: number; displayName: string; description?: string | null; currencyType: string; price: number; quantity: number; rarity: string }) => {
+                const rarityColor = RARITY_COLOR[item.rarity] ?? "#94a3b8";
+                const canAfford = item.currencyType === "coins" ? agentGold >= item.price : agentStones >= item.price;
+                return (
+                  <div key={item.id}
+                    className="rounded-xl p-3 border"
+                    style={{
+                      background: `${rarityColor}08`,
+                      borderColor: `${rarityColor}30`,
+                      boxShadow: item.rarity === "legendary" ? `0 0 20px ${rarityColor}20` : "none",
+                    }}>
+                    <div className="flex items-start gap-3">
+                      <div className="text-2xl shrink-0">
+                        {item.currencyType === "stones" ? "💎" : item.rarity === "legendary" ? "✨" : item.rarity === "epic" ? "🔮" : "📦"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-slate-200">{item.displayName}</span>
+                          <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
+                            style={{ background: `${rarityColor}20`, color: rarityColor }}>
+                            {RARITY_ZH[item.rarity] ?? item.rarity}
+                          </span>
+                          {item.quantity > 1 && (
+                            <span className="text-xs text-slate-500">x{item.quantity}</span>
+                          )}
+                        </div>
+                        {item.description && (
+                          <p className="text-xs text-slate-500 mt-0.5">{item.description}</p>
+                        )}
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-sm font-bold" style={{ color: item.currencyType === "coins" ? "#f59e0b" : "#38bdf8" }}>
+                            {item.currencyType === "coins" ? "🪙" : "💎"} {item.price.toLocaleString()}
+                          </span>
+                          <button
+                            onClick={() => buyMutation.mutate({ itemId: item.id })}
+                            disabled={!canAfford || buyMutation.isPending}
+                            className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:scale-[1.03] active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed"
+                            style={{
+                              background: canAfford ? `linear-gradient(135deg, ${rarityColor}cc, ${rarityColor})` : "rgba(100,100,120,0.2)",
+                              color: canAfford ? "#000" : "#475569",
+                            }}>
+                            {buyMutation.isPending ? "⏳" : canAfford ? "購買" : "不足"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        {/* 底部提示 */}
+        <div className="px-5 py-3 border-t text-center"
+          style={{ borderColor: "rgba(167,139,250,0.15)" }}>
+          <p className="text-xs text-slate-600">密店商品每次感知都是隨機的 · 提升尋寶力可增加感知機率</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 事件日誌抒屉
 // ─────────────────────────────────────────────────────────────
 function EventLogDrawer({
   events, logTab, setLogTab, isOpen, onClose, anchorBottom,
@@ -1946,6 +2089,7 @@ export default function VirtualWorldPage() {
   const [showDivinePanel, setShowDivinePanel] = useState(false);
   const [showQuickTeleport, setShowQuickTeleport] = useState(false);
   const [selectedTeleportNode, setSelectedTeleportNode] = useState<string | null>(null);
+  const [showHiddenShopModal, setShowHiddenShopModal] = useState(false);
   const [dismissedBroadcasts, setDismissedBroadcasts] = useState<Set<number>>(new Set());
 
   // 全服廣播輪詢（20 秒一次）
@@ -1962,7 +2106,12 @@ export default function VirtualWorldPage() {
     refetchInterval: 30000,
     staleTime: 25000,
   });
-  const hiddenNodeIds = (worldState?.activeHiddenNodes ?? []) as string[];
+  // 密店發光節點：從實際密店實例查詢（每 30 秒更新）
+  const { data: activeShopData } = trpc.gameWorld.getActiveHiddenShopNodes.useQuery(undefined, {
+    refetchInterval: 30000,
+    staleTime: 25000,
+  });
+  const hiddenNodeIds = (activeShopData?.nodes ?? []).map(n => n.nodeId);
   useEffect(() => {
     if (agentData?.needsNaming) setShowNaming(true);
   }, [agentData?.needsNaming]);
@@ -2269,6 +2418,15 @@ export default function VirtualWorldPage() {
         );
       })()}
 
+      {/* 密店彈窗 */}
+      {showHiddenShopModal && (
+        <HiddenShopModal
+          onClose={() => setShowHiddenShopModal(false)}
+          agentGold={agent?.gold ?? 0}
+          agentStones={(balanceData as { gameStones?: number } | null | undefined)?.gameStones ?? 0}
+        />
+      )}
+
       {/* ══════════════════════════════════════════════════════
           固定視窗主佈局：頂端~10% + 中間~80% + 底端由 GameTabLayout 提供
           手機：地圖 50vh + 角色面板 30vh（底部抽屜）
@@ -2519,6 +2677,15 @@ export default function VirtualWorldPage() {
                   currentNodeId={currentNodeId}
                   hiddenNodeIds={hiddenNodeIds}
                   onNodeClick={(nodeId) => {
+                    // 點擊密店發光節點：如果是當前位置且有密店，顯示密店彈窗
+                    if (nodeId === currentNodeId && hiddenNodeIds.includes(nodeId)) {
+                      setShowHiddenShopModal(true);
+                      return;
+                    }
+                    // 點擊密店發光節點：非當前位置且有密店，顯示密店提示
+                    if (nodeId !== currentNodeId && hiddenNodeIds.includes(nodeId)) {
+                      toast("🔮 此地有密店出現！傳送到此地後可進入密店", { icon: "✨" });
+                    }
                     // 點擊地圖節點：如果不是當前位置，顯示「前往此地」快捷傳送
                     if (nodeId !== currentNodeId) {
                       setSelectedTeleportNode(nodeId);

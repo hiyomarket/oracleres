@@ -1,0 +1,430 @@
+{
+  "query": "SELECT skill_id, name, wuxing, category, tier FROM game_skill_catalog ORDER BY wuxing, skill_id LIMIT 60;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, wuxing, category, tier FROM game_skill_catalog ORDER BY wuxing, skill_id LIMIT 60;",
+  "rows": [
+    {
+      "skill_id": "S_E001",
+      "name": "岩石投擲",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_E002",
+      "name": "大地護盾",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_E003",
+      "name": "地震術",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_E004",
+      "name": "磐石防禦",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_E005",
+      "name": "大地崩裂",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_E006",
+      "name": "天命·大地之怒",
+      "wuxing": "土",
+      "category": "active_combat",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_E007",
+      "name": "土之親和",
+      "wuxing": "土",
+      "category": "passive_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_E008",
+      "name": "鐵壁防禦",
+      "wuxing": "土",
+      "category": "passive_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_E009",
+      "name": "天命·土靈庇護",
+      "wuxing": "土",
+      "category": "passive_combat",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_E010",
+      "name": "尋土訣",
+      "wuxing": "土",
+      "category": "life_gather",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_E011",
+      "name": "天命·土地之子",
+      "wuxing": "土",
+      "category": "life_gather",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_E012",
+      "name": "土工基礎",
+      "wuxing": "土",
+      "category": "craft_forge",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_E013",
+      "name": "天命·大地工匠",
+      "wuxing": "土",
+      "category": "craft_forge",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_W001",
+      "name": "藤蔓束縛",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_W002",
+      "name": "孢子噴射",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_W003",
+      "name": "自然之箭",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_W004",
+      "name": "毒霧術",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_W005",
+      "name": "森林衝刺",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W006",
+      "name": "生命汲取",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W007",
+      "name": "荊棘護甲",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W008",
+      "name": "古木打擊",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W009",
+      "name": "自然恢復",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W010",
+      "name": "世界樹庇護",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W011",
+      "name": "萬毒侵蝕",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W012",
+      "name": "翡翠龍息",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W013",
+      "name": "天命·森林領域",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_W014",
+      "name": "天命·生命之樹",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_W015",
+      "name": "天命·萬古神木",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_W016",
+      "name": "天命·花神降臨",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_W017",
+      "name": "毒刺反擊",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "傳說"
+    },
+    {
+      "skill_id": "S_W018",
+      "name": "森林迷陣",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "傳說"
+    },
+    {
+      "skill_id": "S_W019",
+      "name": "古樹復甦",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "傳說"
+    },
+    {
+      "skill_id": "S_W020",
+      "name": "世界樹之怒",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "傳說"
+    },
+    {
+      "skill_id": "S_W021",
+      "name": "木之親和",
+      "wuxing": "木",
+      "category": "passive_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_W022",
+      "name": "自然恢復力",
+      "wuxing": "木",
+      "category": "passive_combat",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_W023",
+      "name": "毒素精通",
+      "wuxing": "木",
+      "category": "passive_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W024",
+      "name": "生命力旺盛",
+      "wuxing": "木",
+      "category": "passive_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W025",
+      "name": "木系抗性",
+      "wuxing": "木",
+      "category": "passive_combat",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W026",
+      "name": "荊棘皮膚",
+      "wuxing": "木",
+      "category": "passive_combat",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W027",
+      "name": "毒免疫",
+      "wuxing": "木",
+      "category": "passive_combat",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W028",
+      "name": "森林之子",
+      "wuxing": "木",
+      "category": "passive_combat",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W029",
+      "name": "吸血藤蔓",
+      "wuxing": "木",
+      "category": "passive_combat",
+      "tier": "傳說"
+    },
+    {
+      "skill_id": "S_W030",
+      "name": "天命·木靈庇護",
+      "wuxing": "木",
+      "category": "passive_combat",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_W031",
+      "name": "尋木訣",
+      "wuxing": "木",
+      "category": "life_gather",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_W032",
+      "name": "採集加速·木",
+      "wuxing": "木",
+      "category": "life_gather",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_W033",
+      "name": "草藥辨識",
+      "wuxing": "木",
+      "category": "life_gather",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W034",
+      "name": "豐收之手",
+      "wuxing": "木",
+      "category": "life_gather",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W035",
+      "name": "林間疾行",
+      "wuxing": "木",
+      "category": "life_gather",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W036",
+      "name": "馴獸師·木",
+      "wuxing": "木",
+      "category": "life_gather",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W037",
+      "name": "製藥大師",
+      "wuxing": "木",
+      "category": "life_gather",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W038",
+      "name": "木靈感知",
+      "wuxing": "木",
+      "category": "life_gather",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W039",
+      "name": "種子收集",
+      "wuxing": "木",
+      "category": "life_gather",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W040",
+      "name": "天命·森林之子",
+      "wuxing": "木",
+      "category": "life_gather",
+      "tier": "天命"
+    },
+    {
+      "skill_id": "S_W041",
+      "name": "木工基礎",
+      "wuxing": "木",
+      "category": "craft_forge",
+      "tier": "初階"
+    },
+    {
+      "skill_id": "S_W042",
+      "name": "節儉·木",
+      "wuxing": "木",
+      "category": "craft_forge",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W043",
+      "name": "精密雕刻",
+      "wuxing": "木",
+      "category": "craft_forge",
+      "tier": "中階"
+    },
+    {
+      "skill_id": "S_W044",
+      "name": "毒刃淬煉",
+      "wuxing": "木",
+      "category": "craft_forge",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W045",
+      "name": "輕盈覆膜",
+      "wuxing": "木",
+      "category": "craft_forge",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W046",
+      "name": "翡翠鑲嵌",
+      "wuxing": "木",
+      "category": "craft_forge",
+      "tier": "高階"
+    },
+    {
+      "skill_id": "S_W047",
+      "name": "裝備保養·木",
+      "wuxing": "木",
+      "category": "craft_forge",
+      "tier": "中階"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\twuxing\tcategory\ttier\nS_E001\t岩石投擲\t土\tactive_combat\t初階\nS_E002\t大地護盾\t土\tactive_combat\t初階\nS_E003\t地震術\t土\tactive_combat\t中階\nS_E004\t磐石防禦\t土\tactive_combat\t中階\nS_E005\t大地崩裂\t土\tactive_combat\t高階\nS_E006\t天命·大地之怒\t土\tactive_combat\t天命\nS_E007\t土之親和\t土\tpassive_combat\t初階\nS_E008\t鐵壁防禦\t土\tpassive_combat\t中階\nS_E009\t天命·土靈庇護\t土\tpassive_combat\t天命\nS_E010\t尋土訣\t土\tlife_gather\t初階\nS_E011\t天命·土地之子\t土\tlife_gather\t天命\nS_E012\t土工基礎\t土\tcraft_forge\t初階\nS_E013\t天命·大地工匠\t土\tcraft_forge\t天命\nS_W001\t藤蔓束縛\t木\tactive_combat\t初階\nS_W002\t孢子噴射\t木\tactive_combat\t初階\nS_W003\t自然之箭\t木\tactive_combat\t初階\nS_W004\t毒霧術\t木\tactive_combat\t初階\nS_W005\t森林衝刺\t木\tactive_combat\t中階\nS_W006\t生命汲取\t木\tactive_combat\t中階\nS_W007\t荊棘護甲\t木\tactive_combat\t中階\nS_W008\t古木打擊\t木\tactive_combat\t中階\nS_W009\t自然恢復\t木\tactive_combat\t高階\nS_W010\t世界樹庇護\t木\tactive_combat\t高階\nS_W011\t萬毒侵蝕\t木\tactive_combat\t高階\nS_W012\t翡翠龍息\t木\tactive_combat\t高階\nS_W013\t天命·森林領域\t木\tactive_combat\t天命\nS_W014\t天命·生命之樹\t木\tactive_combat\t天命\nS_W015\t天命·萬古神木\t木\tactive_combat\t天命\nS_W016\t天命·花神降臨\t木\tactive_combat\t天命\nS_W017\t毒刺反擊\t木\tactive_combat\t傳說\nS_W018\t森林迷陣\t木\tactive_combat\t傳說\nS_W019\t古樹復甦\t木\tactive_combat\t傳說\nS_W020\t世界樹之怒\t木\tactive_combat\t傳說\nS_W021\t木之親和\t木\tpassive_combat\t初階\nS_W022\t自然恢復力\t木\tpassive_combat\t初階\nS_W023\t毒素精通\t木\tpassive_combat\t中階\nS_W024\t生命力旺盛\t木\tpassive_combat\t中階\nS_W025\t木系抗性\t木\tpassive_combat\t中階\nS_W026\t荊棘皮膚\t木\tpassive_combat\t高階\nS_W027\t毒免疫\t木\tpassive_combat\t高階\nS_W028\t森林之子\t木\tpassive_combat\t高階\nS_W029\t吸血藤蔓\t木\tpassive_combat\t傳說\nS_W030\t天命·木靈庇護\t木\tpassive_combat\t天命\nS_W031\t尋木訣\t木\tlife_gather\t初階\nS_W032\t採集加速·木\t木\tlife_gather\t初階\nS_W033\t草藥辨識\t木\tlife_gather\t中階\nS_W034\t豐收之手\t木\tlife_gather\t中階\nS_W035\t林間疾行\t木\tlife_gather\t中階\nS_W036\t馴獸師·木\t木\tlife_gather\t高階\nS_W037\t製藥大師\t木\tlife_gather\t高階\nS_W038\t木靈感知\t木\tlife_gather\t高階\nS_W039\t種子收集\t木\tlife_gather\t中階\nS_W040\t天命·森林之子\t木\tlife_gather\t天命\nS_W041\t木工基礎\t木\tcraft_forge\t初階\nS_W042\t節儉·木\t木\tcraft_forge\t中階\nS_W043\t精密雕刻\t木\tcraft_forge\t中階\nS_W044\t毒刃淬煉\t木\tcraft_forge\t高階\nS_W045\t輕盈覆膜\t木\tcraft_forge\t高階\nS_W046\t翡翠鑲嵌\t木\tcraft_forge\t高階\nS_W047\t裝備保養·木\t木\tcraft_forge\t中階\n",
+  "stderr": "",
+  "execution_time_ms": 2515
+}

@@ -348,7 +348,7 @@ async function processMeteorShower(): Promise<void> {
   worldState.meteorActive = true;
 
   const title = "流星雨降臨！所有旅人下次行動必觸奇遇";
-  const desc = "璀璨的流星雨劃過夜空，天地靈氣激盪，所有旅人在下次行動中必定觸發奇遇事件！";
+  const desc = "璧燦的流星雨划過夜空，天地靈氣激跪，所有旅人在下次行動中必定觸發奇遇事件！";
 
   const db = await getDb();
   if (db) {
@@ -362,8 +362,21 @@ async function processMeteorShower(): Promise<void> {
     });
   }
 
+  // 流星雨觸發密店：隨機選擇 2-4 個節點出現密店
+  try {
+    const { triggerHiddenShop } = await import("./worldResetEngine");
+    const shopNodes = MAP_NODES.filter(n => n.dangerLevel && n.dangerLevel >= 3);
+    const selectedNodes = shopNodes.sort(() => Math.random() - 0.5).slice(0, 3);
+    for (const node of selectedNodes) {
+      await triggerHiddenShop(node.id, "meteor_shower");
+    }
+    console.log(`[WorldTick] 流星雨觸發密店：${selectedNodes.map(n => n.name).join(", ")}`);
+  } catch (err) {
+    console.error("[WorldTick] 密店觸發失敗:", err);
+  }
+
   await sendWorldBroadcast(`🌠 ${title}`, desc, 300);
-  await sendChatSystemMessage(`🌠 流星雨降臨！`);
+  await sendChatSystemMessage(`🌠 流星雨降臨！多处神秘密店同時出現！`);
   console.log("[WorldTick] 流星雨降臨");
 }
 
