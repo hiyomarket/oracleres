@@ -9,7 +9,7 @@ import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
 import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users, equipmentTemplates, agentDropCounters, gameBroadcast } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
-import { eq, and, desc, gt } from "drizzle-orm";
+import { eq, and, desc, gt, sql, count } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
 import { MONSTERS } from "../../shared/monsters";
 import { processTick, calcExpToNext, resolveCombat, calcCharacterStats } from "../tickEngine";
@@ -1324,6 +1324,74 @@ export const gameWorldRouter = router({
     const [counter] = await db.select().from(agentDropCounters)
       .where(eq(agentDropCounters.agentId, agents[0].id)).limit(1);
     return counter ?? null;
+  }),
+
+  // ─── 玩家排行榜 ───
+  getLeaderboard: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return { levelRank: [], combatRank: [] };
+
+    // 等級排行：前 20 名（依等級降序，同等級依 exp 降序）
+    const levelRankRaw = await db
+      .select({
+        agentName: gameAgents.agentName,
+        level: gameAgents.level,
+        exp: gameAgents.exp,
+        dominantElement: gameAgents.dominantElement,
+        status: gameAgents.status,
+        currentNodeId: gameAgents.currentNodeId,
+      })
+      .from(gameAgents)
+      .where(sql`${gameAgents.isNamed} = 1`)
+      .orderBy(desc(gameAgents.level), desc(gameAgents.exp))
+      .limit(20);
+
+    // 戰鬥王排行：本週戰鬥場次最多（近 7 天）
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const combatRankRaw = await db
+      .select({
+        agentId: agentEvents.agentId,
+        combatCount: count(agentEvents.id).as("combat_count"),
+      })
+      .from(agentEvents)
+      .where(and(
+        eq(agentEvents.eventType, "combat"),
+        gt(agentEvents.createdAt, weekAgo)
+      ))
+      .groupBy(agentEvents.agentId)
+      .orderBy(desc(sql`combat_count`))
+      .limit(20);
+
+    // 對戰鬥排行补充角色名稱
+    const combatRank: Array<{ agentName: string; combatCount: number; level: number; dominantElement: string }> = [];
+    for (const row of combatRankRaw) {
+      const agentRow = await db.select({
+        agentName: gameAgents.agentName,
+        level: gameAgents.level,
+        dominantElement: gameAgents.dominantElement,
+        isNamed: gameAgents.isNamed,
+      }).from(gameAgents).where(eq(gameAgents.id, row.agentId)).limit(1);
+      if (agentRow[0]?.isNamed) {
+        combatRank.push({
+          agentName: agentRow[0].agentName ?? "旅人",
+          combatCount: Number(row.combatCount),
+          level: agentRow[0].level,
+          dominantElement: agentRow[0].dominantElement,
+        });
+      }
+    }
+
+    return {
+      levelRank: levelRankRaw.map(r => ({
+        agentName: r.agentName ?? "旅人",
+        level: r.level,
+        exp: r.exp,
+        dominantElement: r.dominantElement,
+        status: r.status,
+        currentNodeId: r.currentNodeId,
+      })),
+      combatRank,
+    };
   }),
 
   // ─── 全服廣播（前端輪詢） ───

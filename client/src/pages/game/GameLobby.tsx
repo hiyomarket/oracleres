@@ -9,7 +9,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 // ─── TASK-008 立繪 CDN URL ───────────────────────────────────
 const PLAYER_SPRITES: Record<string, string> = {
@@ -298,13 +298,16 @@ export default function GameLobby() {
         </div>
       </div>
 
-      {/* ── 成就徽章牆 ───────────────────────────── */}
+      {/* ── 玩家排行榜 ─────────────────────────────────────────── */}
+      <LeaderboardSection />
+
+      {/* ── 成就徽章牆 ──────────────────────────────────────────── */}
       <AchievementWall userId={user?.id} />
     </div>
   );
 }
 
-// ── 成就牆子組件 ────────────────────────────────────────────────
+// ── 成就牆子組件 ────────────────────────────────────────────
 function AchievementWall({ userId }: { userId?: number }) {
   const { data: achievements, isLoading } = trpc.gameAchievement.getAll.useQuery(undefined, {
     enabled: !!userId,
@@ -407,6 +410,133 @@ function AchievementWall({ userId }: { userId?: number }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ── 排行榜子組件 ────────────────────────────────────────────────
+const WX_HEX_LB: Record<string, string> = {
+  wood: "#22c55e", fire: "#ef4444", earth: "#f59e0b", metal: "#e2e8f0", water: "#38bdf8",
+};
+const WX_ZH_LB: Record<string, string> = {
+  wood: "木", fire: "火", earth: "土", metal: "金", water: "水",
+};
+const STATUS_LABEL: Record<string, string> = {
+  idle: "✨探索", combat: "⚔️戰鬥", moving: "🚶移動", gathering: "🌿採集", resting: "💤休息",
+};
+
+function LeaderboardSection() {
+  const [tab, setTab] = useState<"level" | "combat">("level");
+  const { data, isLoading } = trpc.gameWorld.getLeaderboard.useQuery(undefined, {
+    staleTime: 60000,
+    refetchInterval: 120000,
+  });
+
+  return (
+    <div className="max-w-screen-md mx-auto px-4 mb-8">
+      {/* 標題 */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🏆</span>
+          <h2 className="text-sm font-bold tracking-widest text-slate-300">英雄排行榜</h2>
+        </div>
+        {/* Tab 切換 */}
+        <div className="flex gap-1 p-0.5 rounded-lg" style={{ background: "rgba(255,255,255,0.05)" }}>
+          {(["level", "combat"] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className="px-3 py-1 rounded-md text-xs font-medium transition-all"
+              style={{
+                background: tab === t ? "rgba(245,158,11,0.2)" : "transparent",
+                color: tab === t ? "#f59e0b" : "#64748b",
+                borderBottom: tab === t ? "1px solid rgba(245,158,11,0.5)" : "1px solid transparent",
+              }}
+            >
+              {t === "level" ? "⭐ 等級榜" : "⚔️ 戰鬥王"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 排行榜內容 */}
+      <div
+        className="rounded-2xl border overflow-hidden"
+        style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.06)" }}
+      >
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8 text-slate-500 text-sm">載入中...</div>
+        ) : tab === "level" ? (
+          <div>
+            {(!data?.levelRank || data.levelRank.length === 0) ? (
+              <div className="flex items-center justify-center py-8 text-slate-500 text-sm">尚無旅人上榜</div>
+            ) : (
+              data.levelRank.slice(0, 10).map((r, i) => {
+                const color = WX_HEX_LB[r.dominantElement] ?? "#94a3b8";
+                const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`;
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 px-4 py-2.5 border-b last:border-b-0 transition-colors hover:bg-white/[0.02]"
+                    style={{ borderColor: "rgba(255,255,255,0.04)" }}
+                  >
+                    {/* 排名 */}
+                    <span className="w-6 text-center text-sm shrink-0">{medal}</span>
+                    {/* 五行標籤 */}
+                    <span
+                      className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0"
+                      style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}
+                    >
+                      {WX_ZH_LB[r.dominantElement] ?? "？"}
+                    </span>
+                    {/* 名稱 */}
+                    <span className="flex-1 text-sm text-slate-200 truncate">{r.agentName}</span>
+                    {/* 狀態 */}
+                    <span className="text-[10px] text-slate-500 shrink-0">
+                      {STATUS_LABEL[r.status ?? "idle"] ?? "✨探索"}
+                    </span>
+                    {/* 等級 */}
+                    <span className="text-sm font-bold shrink-0" style={{ color }}>
+                      Lv.{r.level}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        ) : (
+          <div>
+            {(!data?.combatRank || data.combatRank.length === 0) ? (
+              <div className="flex items-center justify-center py-8 text-slate-500 text-sm">本週尚無戰鬥記錄</div>
+            ) : (
+              data.combatRank.slice(0, 10).map((r, i) => {
+                const color = WX_HEX_LB[r.dominantElement] ?? "#94a3b8";
+                const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`;
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 px-4 py-2.5 border-b last:border-b-0 transition-colors hover:bg-white/[0.02]"
+                    style={{ borderColor: "rgba(255,255,255,0.04)" }}
+                  >
+                    <span className="w-6 text-center text-sm shrink-0">{medal}</span>
+                    <span
+                      className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0"
+                      style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}
+                    >
+                      {WX_ZH_LB[r.dominantElement] ?? "？"}
+                    </span>
+                    <span className="flex-1 text-sm text-slate-200 truncate">{r.agentName}</span>
+                    <span className="text-[10px] text-slate-500 shrink-0">Lv.{r.level}</span>
+                    <span className="text-sm font-bold text-red-400 shrink-0">
+                      ⚔️ {r.combatCount}場
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

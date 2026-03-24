@@ -14,6 +14,7 @@ import LeafletMap from "@/components/LeafletMap";
 import type { LeafletMapHandle } from "@/components/LeafletMap";
 import type { MapNode } from "../../../../shared/mapNodes";
 import { DraggableWidget } from "@/components/DraggableWidget";
+import { safePlay, playLevelUpSound, playLegendarySound, playTickSound, isSoundEnabled, setSoundEnabled } from "@/hooks/useGameSound";
 
 // ─── 五行配色 ─────────────────────────────────────────────────
 const WX_HEX: Record<string, string> = {
@@ -1411,6 +1412,7 @@ function EventLogDrawer({
   anchorBottom?: number; // px from bottom
 }) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [todayOnly, setTodayOnly] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // 最新在上，每次更新自動滾到頂部
@@ -1420,7 +1422,20 @@ function EventLogDrawer({
   if (!isOpen) return null;
 
   // 後端已按 desc(createdAt) 排序（最新在前），直接取前 20 條
-  const displayEvents = events ? events.slice(0, 20) : [];
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const allEvents = events ? events.slice(0, 60) : [];
+  const filteredEvents = todayOnly
+    ? allEvents.filter(ev => new Date(ev.createdAt).getTime() >= todayStart.getTime())
+    : allEvents;
+  const displayEvents = filteredEvents.slice(0, 20);
+
+  // 重要事件判斷：升級或傳說摀落
+  function isImportantEvent(ev: { message: string; detail?: Record<string, unknown> | null }): { type: 'levelup' | 'legendary' | null } {
+    if (ev.message.includes('升級') || ev.message.includes('Level Up') || ev.message.includes('等級成長')) return { type: 'levelup' };
+    if (ev.detail && (ev.detail.tier === 'legendary' || ev.detail.tier === 'epic' || ev.detail.tier === 'rare')) return { type: 'legendary' };
+    if (ev.message.includes('傳說') || ev.message.includes('史詩級') || ev.message.includes('精英級')) return { type: 'legendary' };
+    return { type: null };
+  }
 
   return (
     <div className="fixed z-50 left-2 flex flex-col"
@@ -1432,9 +1447,20 @@ function EventLogDrawer({
           <div className="flex items-center gap-1.5">
             <span className="text-sm">📜</span>
             <span className="text-xs font-bold text-amber-300">冒險日誌</span>
-            <span className="text-xs text-slate-600">（最新20條）</span>
           </div>
           <div className="flex items-center gap-1.5">
+            {/* 今日笻選 */}
+            <button
+              onClick={() => setTodayOnly(t => !t)}
+              className="px-1.5 py-0.5 rounded-full text-xs border transition-all"
+              style={{
+                background: todayOnly ? "rgba(56,189,248,0.15)" : "transparent",
+                borderColor: todayOnly ? "rgba(56,189,248,0.4)" : "rgba(255,255,255,0.1)",
+                color: todayOnly ? "#38bdf8" : "#64748b",
+              }}
+            >
+              📅今日
+            </button>
             {(["all", "combat", "rogue"] as const).map(tab => (
               <button key={tab} onClick={() => setLogTab(tab)}
                 className="px-1.5 py-0.5 rounded-full text-xs border transition-all"
@@ -1458,10 +1484,28 @@ function EventLogDrawer({
             const detail = ev.detail;
             const hasCombat = Boolean(detail && detail.phase === "result" && detail.rounds);
             const isExp = expandedId === ev.id;
+            const important = isImportantEvent(ev);
             return (
-              <div key={ev.id} className="flex flex-col gap-0.5 text-xs leading-relaxed">
+              <div
+                key={ev.id}
+                className="flex flex-col gap-0.5 text-xs leading-relaxed"
+                style={important.type === 'levelup' ? {
+                  background: "rgba(245,158,11,0.08)",
+                  borderLeft: "2px solid rgba(245,158,11,0.6)",
+                  borderRadius: "4px",
+                  paddingLeft: "4px",
+                } : important.type === 'legendary' ? {
+                  background: "rgba(168,85,247,0.08)",
+                  borderLeft: "2px solid rgba(168,85,247,0.6)",
+                  borderRadius: "4px",
+                  paddingLeft: "4px",
+                } : undefined}
+              >
                 <div className="flex gap-1.5 cursor-pointer py-0.5"
                   onClick={() => hasCombat && setExpandedId(isExp ? null : ev.id)}>
+                  {/* 重要事件圖示 */}
+                  {important.type === 'levelup' && <span className="shrink-0 text-amber-400" title="升級">⭐</span>}
+                  {important.type === 'legendary' && <span className="shrink-0 text-purple-400" title="傳說摀落">💎</span>}
                   <span className="text-slate-700 shrink-0 tabular-nums text-[10px] pt-0.5">
                     {new Date(ev.createdAt).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
                   </span>
@@ -1535,6 +1579,13 @@ export default function VirtualWorldPage() {
   const [nodeInfoOpen, setNodeInfoOpen] = useState(true);
   const [tickRunning, setTickRunning] = useState(false);
   const [charPanelOpen, setCharPanelOpen] = useState(false); // 手機版底部抗屉：預設收合（地圖優先）
+  // 音效開關
+  const [soundOn, setSoundOn] = useState(() => isSoundEnabled());
+  const toggleSound = useCallback(() => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setSoundEnabled(next);
+  }, [soundOn]);
   // 升級/傳說摀落特效
   const [levelUpEffect, setLevelUpEffect] = useState<{ agentName: string; newLevel: number } | null>(null);
   const [legendaryEffect, setLegendaryEffect] = useState<{ agentName: string; equipId: string; tier: string } | null>(null);
@@ -1612,6 +1663,8 @@ export default function VirtualWorldPage() {
     onMutate: () => {
       // 儲存目前狀態供比對
       prevAgentRef.current = agent;
+      // Tick 執行音效
+      safePlay(playTickSound);
       // 啟動 Tick 進度條
       setTickProgress(0);
       if (tickProgressRef.current) clearInterval(tickProgressRef.current);
@@ -1641,6 +1694,8 @@ export default function VirtualWorldPage() {
       if (myLevelUp) {
         setLevelUpEffect({ agentName: myLevelUp.agentName, newLevel: myLevelUp.newLevel });
         setTimeout(() => setLevelUpEffect(null), 5000);
+        // 升級音效
+        safePlay(playLevelUpSound);
       }
 
       // 傳說摀落特效（只顯示自己的摀落）
@@ -1650,6 +1705,8 @@ export default function VirtualWorldPage() {
       if (myLegendary && !myLevelUp) { // 升級優先於傳說摀落
         setLegendaryEffect({ agentName: myLegendary.agentName, equipId: myLegendary.equipId, tier: myLegendary.tier });
         setTimeout(() => setLegendaryEffect(null), 4000);
+        // 傳說音效
+        safePlay(playLegendarySound);
       }
 
       // 展示 Tick 結果 Toast
@@ -2158,6 +2215,19 @@ export default function VirtualWorldPage() {
                   <span>Tick</span>
                 </>
               )}
+            </button>
+            {/* 音效開關按鈕 */}
+            <button
+              onClick={toggleSound}
+              className="flex items-center justify-center w-8 h-8 rounded-xl border transition-all hover:scale-105 active:scale-95"
+              style={{
+                background: soundOn ? "rgba(34,197,94,0.1)" : "rgba(148,163,184,0.08)",
+                borderColor: soundOn ? "rgba(34,197,94,0.3)" : "rgba(148,163,184,0.2)",
+                color: soundOn ? "#22c55e" : "#64748b",
+              }}
+              title={soundOn ? "音效開啟（點擊關閉）" : "音效關閉（點擊開啟）"}
+            >
+              {soundOn ? "🔊" : "🔇"}
             </button>
             {/* 返回前台按鈕 */}
             <button
