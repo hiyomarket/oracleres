@@ -892,10 +892,6 @@ function EngineControlTab() {
         rogueChance: String(cfg.rogueChance),
         gameEnabled: cfg.gameEnabled,
         maintenanceMsg: cfg.maintenanceMsg,
-        infuseMinGain: String((cfg as any).infuseMinGain ?? 0.1),
-        infuseMaxGain: String((cfg as any).infuseMaxGain ?? 0.5),
-        infuseFailRate: String((cfg as any).infuseFailRate ?? 0.2),
-        infuseMaxWuxing: String((cfg as any).infuseMaxWuxing ?? 100),
       });
       setIsDirty(false);
     }
@@ -934,11 +930,6 @@ function EngineControlTab() {
       rogueChance: parseFloat(String(localCfg.rogueChance)) || undefined,
       gameEnabled: Boolean(localCfg.gameEnabled),
       maintenanceMsg: String(localCfg.maintenanceMsg || ""),
-      // 注靈配置
-      infuseMinGain: parseFloat(String(localCfg.infuseMinGain)) || undefined,
-      infuseMaxGain: parseFloat(String(localCfg.infuseMaxGain)) || undefined,
-      infuseFailRate: parseFloat(String(localCfg.infuseFailRate)) || undefined,
-      infuseMaxWuxing: parseFloat(String(localCfg.infuseMaxWuxing)) || undefined,
     });
   };
 
@@ -1064,72 +1055,6 @@ function EngineControlTab() {
           </div>
           <p className="text-xs text-muted-foreground mt-3">
             注意：三種機率合計建議不超過 90%，剩餘為移動事件。
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* 注靈指令配置 */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">✨ 注靈指令配置</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs font-medium mb-1">📉 最小截取値</p>
-              <p className="text-[10px] text-muted-foreground mb-1.5">注靈成功時最小獲得五行值（預設 0.1）</p>
-              <div className="flex items-center gap-2">
-                <input type="range" min={0.01} max={2} step={0.01}
-                  value={parseFloat(String(localCfg.infuseMinGain ?? 0.1))}
-                  onChange={e => handleChange("infuseMinGain", e.target.value)}
-                  className="flex-1 accent-purple-500" />
-                <span className="text-sm font-bold tabular-nums w-12 text-right">
-                  {parseFloat(String(localCfg.infuseMinGain ?? 0.1)).toFixed(2)}
-                </span>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-medium mb-1">📈 最大截取値</p>
-              <p className="text-[10px] text-muted-foreground mb-1.5">注靈成功時最大獲得五行値（預設 0.5）</p>
-              <div className="flex items-center gap-2">
-                <input type="range" min={0.01} max={5} step={0.01}
-                  value={parseFloat(String(localCfg.infuseMaxGain ?? 0.5))}
-                  onChange={e => handleChange("infuseMaxGain", e.target.value)}
-                  className="flex-1 accent-purple-500" />
-                <span className="text-sm font-bold tabular-nums w-12 text-right">
-                  {parseFloat(String(localCfg.infuseMaxGain ?? 0.5)).toFixed(2)}
-                </span>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-medium mb-1">🎲 失敗機率</p>
-              <p className="text-[10px] text-muted-foreground mb-1.5">注靈失敗機率（預設 20%）</p>
-              <div className="flex items-center gap-2">
-                <input type="range" min={0} max={0.99} step={0.01}
-                  value={parseFloat(String(localCfg.infuseFailRate ?? 0.2))}
-                  onChange={e => handleChange("infuseFailRate", e.target.value)}
-                  className="flex-1 accent-red-500" />
-                <span className="text-sm font-bold tabular-nums w-12 text-right">
-                  {(parseFloat(String(localCfg.infuseFailRate ?? 0.2)) * 100).toFixed(0)}%
-                </span>
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-medium mb-1">🔝 五行値上限</p>
-              <p className="text-[10px] text-muted-foreground mb-1.5">注靈累積上限（預設 100）</p>
-              <div className="flex items-center gap-2">
-                <input type="range" min={10} max={999} step={1}
-                  value={parseFloat(String(localCfg.infuseMaxWuxing ?? 100))}
-                  onChange={e => handleChange("infuseMaxWuxing", e.target.value)}
-                  className="flex-1 accent-amber-500" />
-                <span className="text-sm font-bold tabular-nums w-14 text-right">
-                  {parseFloat(String(localCfg.infuseMaxWuxing ?? 100)).toFixed(0)}
-                </span>
-              </div>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            注靈指令：玩家在節點上截取屬性五行能量，每次 Tick 有失敗機率，成功則獲得 min~max 之間隨機値。
           </p>
         </CardContent>
       </Card>

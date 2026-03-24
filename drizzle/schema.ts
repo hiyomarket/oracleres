@@ -1663,9 +1663,7 @@ export const gameAgents = mysqlTable("game_agents", {
   exp: int("exp").notNull().default(0),
   currentNodeId: varchar("current_node_id", { length: 50 }).notNull().default("taipei_main"),
   targetNodeId: varchar("target_node_id", { length: 50 }),
-  strategy: mysqlEnum("strategy", ["explore", "gather", "rest", "combat", "infuse"]).notNull().default("explore"),
-  /** 休息前的上一個策略（回滿後自動切回） */
-  previousStrategy: mysqlEnum("previous_strategy", ["explore", "gather", "rest", "combat", "infuse"]),
+  strategy: mysqlEnum("strategy", ["explore", "gather", "rest", "combat"]).notNull().default("explore"),
   /** 移動模式：roaming 漫遊（隨機移動探索世界）/ stationary 定點（固定在當前節點行動） */
   movementMode: mysqlEnum("movement_mode", ["roaming", "stationary"]).notNull().default("roaming"),
   /** 當前狀態 */

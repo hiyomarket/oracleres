@@ -17,8 +17,6 @@ import { calcMoveCost } from "../../../../shared/mapNodes";
 import { DraggableWidget } from "@/components/DraggableWidget";
 import { safePlay, playLevelUpSound, playLegendarySound, playTickSound, isSoundEnabled, setSoundEnabled } from "@/hooks/useGameSound";
 import { useGameWebSocket } from "@/hooks/useGameWebSocket";
-import { CombatWindow } from "@/components/CombatWindow";
-import type { CombatWindowData } from "@/components/CombatWindow";
 
 // ─── 五行配色 ─────────────────────────────────────────────────
 const WX_HEX: Record<string, string> = {
@@ -47,7 +45,6 @@ const STRATEGIES = [
   { id: "combat"  as const, icon: "⚔️", label: "戰鬥" },
   { id: "gather"  as const, icon: "🌿", label: "採集" },
   { id: "rest"    as const, icon: "😴", label: "休息" },
-  { id: "infuse"  as const, icon: "✨", label: "注靈" },
 ];
 const QUALITY_COLOR: Record<string, string> = {
   legendary: "#f59e0b", epic: "#a78bfa", rare: "#60a5fa",
@@ -545,7 +542,7 @@ function CharacterPanel({
   divineHeal: { mutate: () => void; isPending: boolean };
   divineEye: { mutate: () => void; isPending: boolean };
   divineStamina: { mutate: () => void; isPending: boolean };
-  setStrategy: { mutate: (a: { strategy: "combat" | "gather" | "rest" | "explore" | "infuse" }) => void; isPending: boolean };
+  setStrategy: { mutate: (a: { strategy: "combat" | "gather" | "rest" | "explore" }) => void; isPending: boolean };
   ec: string;
   mobileMode?: boolean;
 }) {
@@ -1546,67 +1543,18 @@ function EventLogDrawer({
                       </span>
                     </div>
                     {((detail.rounds as Array<Record<string, unknown>>) ?? []).length > 0 && (
-                      <div className="space-y-1">
-                        <p className="text-slate-400 font-medium">⚔️ 戰鬥過程（{(detail.rounds as unknown[]).length} 回合）</p>
-                        {(detail.rounds as Array<Record<string, unknown>>).map((r, i) => {
-                          const desc = r.description as string | undefined;
-                          const skillName = r.agentSkillName as string | undefined;
-                          const skillType = r.agentSkillType as string | undefined;
-                          const isCrit = r.isCritical as boolean | undefined;
-                          const dodged = r.agentDodged as boolean | undefined;
-                          const blocked = r.agentBlocked as boolean | undefined;
-                          const monsterDodged = r.monsterDodged as boolean | undefined;
-                          const monsterBlocked = r.monsterBlocked as boolean | undefined;
-                          const monsterCrit = r.monsterIsCritical as boolean | undefined;
-                          const healAmt = r.agentHealAmount as number | undefined;
-                          const agentHpAfter = r.agentHpAfter as number | undefined;
-                          const monsterHpAfter = r.monsterHpAfter as number | undefined;
-                          const agentAtk = r.agentAtk as number | undefined;
-                          const monsterAtk = r.monsterAtk as number | undefined;
-                          const monsterSkillName = r.monsterSkillName as string | undefined;
-                          return (
-                            <div key={i} className="rounded bg-slate-800/60 p-1.5 space-y-0.5">
-                              <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium">
-                                <span className="text-amber-500/80">第 {i+1} 回合</span>
-                                {skillType === "heal" && <span className="text-green-400 bg-green-900/30 px-1 rounded">治癒</span>}
-                                {isCrit && <span className="text-yellow-300 bg-yellow-900/30 px-1 rounded">暴擊！</span>}
-                                {monsterCrit && <span className="text-red-400 bg-red-900/30 px-1 rounded">被暴擊</span>}
-                              </div>
-                              {desc ? (
-                                <p className="text-slate-300 text-[10px] leading-relaxed">{desc}</p>
-                              ) : (
-                                <div className="space-y-0.5">
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-cyan-400 shrink-0">旅人</span>
-                                    {skillType === "heal" ? (
-                                      <span className="text-green-400">{skillName ?? "治癒技能"} 治癒 +{healAmt}</span>
-                                    ) : monsterDodged ? (
-                                      <span className="text-slate-500">{skillName ?? "普攻"}（{detail.monsterName as string ?? "怪物"}閃避）</span>
-                                    ) : monsterBlocked ? (
-                                      <span className="text-blue-400">{skillName ?? "普攻"} 造成 {agentAtk} 傷害（被格擋）</span>
-                                    ) : (
-                                      <span className={isCrit ? "text-yellow-300 font-bold" : "text-cyan-300"}>{skillName ?? "普攻"} 造成 {agentAtk} 傷害{isCrit ? "！" : ""}</span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-red-400 shrink-0">{detail.monsterName as string ?? "怪物"}</span>
-                                    {dodged ? (
-                                      <span className="text-green-400">閃避了 {monsterSkillName ?? "攻擊"}</span>
-                                    ) : blocked ? (
-                                      <span className="text-blue-400">格擋了 {monsterSkillName ?? "攻擊"}（傷害減半）</span>
-                                    ) : (
-                                      <span className={monsterCrit ? "text-red-300 font-bold" : "text-orange-400"}>{monsterSkillName ?? "攻擊"} 造成 {monsterAtk} 傷害{monsterCrit ? "！" : ""}</span>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                              <div className="flex gap-3 text-[9px] text-slate-500 border-t border-slate-700/30 pt-0.5">
-                                <span>旅人 HP: {agentHpAfter}</span>
-                                <span>{detail.monsterName as string ?? "怪物"} HP: {monsterHpAfter}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
+                      <div className="space-y-0.5">
+                        <p className="text-slate-500">共 {(detail.rounds as unknown[]).length} 回合</p>
+                        {(detail.rounds as Array<Record<string, unknown>>).slice(0, 3).map((r, i) => (
+                          <div key={i} className="flex gap-2">
+                            <span className="text-slate-600 w-8">R{i+1}</span>
+                            <span className="text-orange-400">旅人 -{String(r.monsterAtk ?? 0)}</span>
+                            <span className="text-cyan-400">怪物 -{String(r.agentAtk ?? 0)}</span>
+                          </div>
+                        ))}
+                        {(detail.rounds as unknown[]).length > 3 && (
+                          <p className="text-slate-600">…共 {(detail.rounds as unknown[]).length} 回合</p>
+                        )}
                       </div>
                     )}
 {(() => {
@@ -1656,11 +1604,9 @@ export default function VirtualWorldPage() {
     setSoundOn(next);
     setSoundEnabled(next);
   }, [soundOn]);
-  // 升級/傳說摩落特效
+  // 升級/傳說摀落特效
   const [levelUpEffect, setLevelUpEffect] = useState<{ agentName: string; newLevel: number } | null>(null);
   const [legendaryEffect, setLegendaryEffect] = useState<{ agentName: string; equipId: string; tier: string } | null>(null);
-  // 戰鬥視窗
-  const [combatWindowData, setCombatWindowData] = useState<CombatWindowData | null>(null);
   // Tick 進度條
   const [tickProgress, setTickProgress] = useState(0); // 0-100
   const tickProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1720,17 +1666,10 @@ export default function VirtualWorldPage() {
     onSuccess: (_, vars) => {
       utils.gameWorld.getAgentStatus.invalidate();
       const s = STRATEGIES.find(x => x.id === vars.strategy);
-      if (vars.strategy === "rest") {
-        toast.success(`😴 已切換為休息模式`, {
-          description: "旅人正在休息回血，HP/MP 回滿後自動切回前一個行動",
-          duration: 3000,
-        });
-      } else {
-        toast.success(`已切換為${s?.label ?? vars.strategy}模式`, {
-          description: s ? `${s.icon} 旅人將以「${s.label}」策略行動` : undefined,
-          duration: 2500,
-        });
-      }
+      toast.success(`已切換為${s?.label ?? vars.strategy}模式`, {
+        description: s ? `${s.icon} 旅人將以「${s.label}」策略行動` : undefined,
+        duration: 2500,
+      });
     },
   });
   const divineHeal     = trpc.gameWorld.divineHeal.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
@@ -1793,20 +1732,6 @@ export default function VirtualWorldPage() {
         toast.success(`✨ 旅人行動完成`, {
           description: `處理了 ${result.events} 個事件`,
           duration: 2000,
-        });
-      }
-      // 戰鬥視窗：如果有戰鬥結果且是自己的戰鬥，就顯示戰鬥視窗
-      if (result.lastCombat && result.lastCombat.agentId === agent?.id) {
-        setCombatWindowData(result.lastCombat as CombatWindowData);
-      }
-      // 偵測休息完成後自動切回策略
-      const prevStrategy = prevAgentRef.current?.strategy;
-      const newStrategy = agent?.strategy;
-      if (prevStrategy === "rest" && newStrategy && newStrategy !== "rest") {
-        const s = STRATEGIES.find(x => x.id === newStrategy);
-        toast.success(`✅ 已回滿，自動切回「${s?.label ?? newStrategy}」模式`, {
-          description: `${s?.icon ?? ""} HP/MP 已回滿，繼續行動！`,
-          duration: 3000,
         });
       }
     },
@@ -2089,14 +2014,6 @@ export default function VirtualWorldPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* 戰鬥視窗 */}
-      {combatWindowData && (
-        <CombatWindow
-          data={combatWindowData}
-          onClose={() => setCombatWindowData(null)}
-        />
       )}
 
       {/* 全服廣播橫幅 */}
@@ -2779,7 +2696,7 @@ export default function VirtualWorldPage() {
                       <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
                         {(["roaming", "stationary"] as const).map(mode => (
                           <button key={mode}
-                            onClick={() => setStrategy.mutate({ strategy: (agent?.strategy ?? "explore") as "explore" | "gather" | "rest" | "combat" | "infuse", movementMode: mode })}
+                            onClick={() => setStrategy.mutate({ strategy: (agent?.strategy ?? "explore") as "explore" | "gather" | "rest" | "combat", movementMode: mode })}
                             className="flex-1 py-1.5 text-[10px] font-bold transition-all"
                             style={{
                               background: (agent?.movementMode ?? "roaming") === mode ? `${ec}25` : "transparent",
@@ -2908,7 +2825,7 @@ export default function VirtualWorldPage() {
                       <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
                         {(["roaming", "stationary"] as const).map(mode => (
                           <button key={mode}
-                            onClick={() => setStrategy.mutate({ strategy: (agent?.strategy ?? "explore") as "explore" | "gather" | "rest" | "combat" | "infuse", movementMode: mode })}
+                            onClick={() => setStrategy.mutate({ strategy: (agent?.strategy ?? "explore") as "explore" | "gather" | "rest" | "combat", movementMode: mode })}
                             className="flex-1 py-2 text-xs font-bold transition-all"
                             style={{
                               background: (agent?.movementMode ?? "roaming") === mode ? `${ec}25` : "transparent",
@@ -3181,39 +3098,6 @@ export default function VirtualWorldPage() {
                       <span className="text-xs font-bold" style={{ color: hiddenShopColor }}>密店</span>
                     </button>
                   </div>
-                  {/* 管理員後台快捷鍵（僅 admin 可見） */}
-                  {user?.role === "admin" && (
-                    <div className="px-3 pb-2 pt-1 flex gap-1.5">
-                      <button
-                        onClick={() => navigate("/admin/game")}
-                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border transition-all active:scale-[0.98]"
-                        style={{ background: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.35)" }}>
-                        <span className="text-xs">⚙️</span>
-                        <span className="text-xs text-red-300 font-bold">遊戲CMS</span>
-                      </button>
-                      <button
-                        onClick={() => navigate("/admin/dashboard")}
-                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border transition-all active:scale-[0.98]"
-                        style={{ background: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.35)" }}>
-                        <span className="text-xs">📊</span>
-                        <span className="text-xs text-red-300 font-bold">管理後台</span>
-                      </button>
-                      <button
-                        onClick={() => navigate("/admin/users")}
-                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border transition-all active:scale-[0.98]"
-                        style={{ background: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.35)" }}>
-                        <span className="text-xs">👥</span>
-                        <span className="text-xs text-red-300 font-bold">用戶管理</span>
-                      </button>
-                      <button
-                        onClick={() => navigate("/admin/logic-config")}
-                        className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border transition-all active:scale-[0.98]"
-                        style={{ background: "rgba(239,68,68,0.10)", borderColor: "rgba(239,68,68,0.35)" }}>
-                        <span className="text-xs">🔧</span>
-                        <span className="text-xs text-red-300 font-bold">邏輯配置</span>
-                      </button>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
