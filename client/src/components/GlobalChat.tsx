@@ -1,16 +1,16 @@
 /**
  * GlobalChat.tsx — 全服聊天室組件
- * 輪詢架構，每 5 秒自動更新
+ * WebSocket 即時接收 + HTTP fallback 輪詢
  */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Send, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Send, MessageCircle, ChevronDown, ChevronUp, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
+import { useGameWebSocket } from "@/hooks/useGameWebSocket";
 
 // 五行顏色映射
 const ELEMENT_COLORS: Record<string, string> = {
@@ -37,33 +37,85 @@ function formatTime(ts: number) {
   return new Date(ts).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
 }
 
-interface GlobalChatProps {
-  collapsed?: boolean;
+interface ChatMessageItem {
+  id: number;
+  agentId: number;
+  agentName: string;
+  agentElement: string;
+  agentLevel: number;
+  content: string;
+  msgType: "normal" | "system" | "world_event";
+  createdAt: number;
+  agentTitle?: string | null;
 }
 
-export function GlobalChat({ collapsed: initCollapsed = false }: GlobalChatProps) {
+interface GlobalChatProps {
+  collapsed?: boolean;
+  agentId?: number | null;
+  agentName?: string | null;
+}
+
+export function GlobalChat({ collapsed: initCollapsed = false, agentId, agentName }: GlobalChatProps) {
   const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(initCollapsed);
   const [input, setInput] = useState("");
-  const [lastSeenTs, setLastSeenTs] = useState<number>(Date.now() - 5 * 60 * 1000); // 最近5分鐘
+  const [wsMessages, setWsMessages] = useState<ChatMessageItem[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const utils = trpc.useUtils();
+  const isAtBottomRef = useRef(true);
 
-  // 取得聊天訊息（輪詢）
-  const { data: messages = [] } = trpc.gameWorld.getChatMessages.useQuery(
+  // WebSocket 連線
+  const handleWsMessage = useCallback((msg: { type: string; payload: unknown }) => {
+    if (msg.type === "chat_message") {
+      const chatMsg = msg.payload as ChatMessageItem;
+      setWsMessages((prev) => {
+        // 避免重複
+        if (prev.some((m) => m.id === chatMsg.id)) return prev;
+        return [...prev.slice(-99), chatMsg]; // 保留最新 100 條
+      });
+    }
+  }, []);
+
+  const { status: wsStatus } = useGameWebSocket({
+    agentId,
+    agentName,
+    onMessage: handleWsMessage,
+    enabled: true,
+  });
+
+  const isWsConnected = wsStatus === "connected";
+
+  // HTTP 初始載入（最近 50 條）
+  const { data: initialMessages = [] } = trpc.gameWorld.getChatMessages.useQuery(
     { since: undefined },
     {
-      refetchInterval: 5000,
+      // WS 已連線時降低輪詢頻率；斷線時每 5 秒輪詢
+      refetchInterval: isWsConnected ? 30000 : 5000,
       staleTime: 3000,
     }
   );
 
-  // 自動滾到底部
+  // 合併 HTTP 初始訊息和 WS 即時訊息
+  const allMessages = (() => {
+    const map = new Map<number, ChatMessageItem>();
+    for (const m of initialMessages as ChatMessageItem[]) map.set(m.id, m);
+    for (const m of wsMessages) map.set(m.id, m);
+    return Array.from(map.values()).sort((a, b) => a.createdAt - b.createdAt).slice(-50);
+  })();
+
+  // 追蹤是否在底部
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    isAtBottomRef.current = scrollHeight - scrollTop - clientHeight < 40;
+  };
+
+  // 新訊息到達時自動滾到底部（若已在底部）
   useEffect(() => {
-    if (!collapsed && scrollRef.current) {
+    if (!collapsed && scrollRef.current && isAtBottomRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, collapsed]);
+  }, [allMessages, collapsed]);
 
   // 發送訊息
   const sendMsg = trpc.gameWorld.sendChatMessage.useMutation({
@@ -103,7 +155,19 @@ export function GlobalChat({ collapsed: initCollapsed = false }: GlobalChatProps
         <div className="flex items-center gap-2">
           <MessageCircle className="w-4 h-4 text-amber-400" />
           <span className="text-sm font-medium text-amber-300">全服聊天室</span>
-          <span className="text-xs text-white/40">{messages.length} 則</span>
+          <span className="text-xs text-white/40">{allMessages.length} 則</span>
+          {/* WS 連線狀態指示 */}
+          {isWsConnected ? (
+            <span className="flex items-center gap-1 text-[10px] text-green-400">
+              <Wifi className="w-3 h-3" />
+              即時
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-[10px] text-yellow-500">
+              <WifiOff className="w-3 h-3" />
+              輪詢
+            </span>
+          )}
         </div>
         {collapsed ? (
           <ChevronDown className="w-4 h-4 text-white/40" />
@@ -117,12 +181,13 @@ export function GlobalChat({ collapsed: initCollapsed = false }: GlobalChatProps
         <>
           <div
             ref={scrollRef}
+            onScroll={handleScroll}
             className="h-48 overflow-y-auto px-3 py-2 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10"
           >
-            {messages.length === 0 ? (
+            {allMessages.length === 0 ? (
               <p className="text-center text-white/30 text-xs py-8">尚無訊息，成為第一個發言的旅人！</p>
             ) : (
-              messages.map((msg) => (
+              allMessages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex items-start gap-2 text-xs ${
@@ -134,16 +199,17 @@ export function GlobalChat({ collapsed: initCollapsed = false }: GlobalChatProps
                   {msg.msgType === "normal" ? (
                     <>
                       <span className="text-white/30 shrink-0 mt-0.5">{formatTime(msg.createdAt)}</span>
-                      <span
-                        className={`shrink-0 font-medium ${ELEMENT_COLORS[msg.agentElement] ?? "text-white"}`}
-                      >
+                      <span className={`shrink-0 font-medium ${ELEMENT_COLORS[msg.agentElement] ?? "text-white"}`}>
                         {msg.agentName}
                       </span>
-                      <span
-                        className={`shrink-0 text-[10px] px-1 py-0.5 rounded border ${ELEMENT_BADGE[msg.agentElement] ?? ""}`}
-                      >
+                      <span className={`shrink-0 text-[10px] px-1 py-0.5 rounded border ${ELEMENT_BADGE[msg.agentElement] ?? ""}`}>
                         Lv.{msg.agentLevel} {ELEMENT_LABELS[msg.agentElement] ?? ""}
                       </span>
+                      {msg.agentTitle && (
+                        <span className="shrink-0 text-[10px] px-1 py-0.5 rounded border bg-purple-900/40 text-purple-300 border-purple-700/50">
+                          {msg.agentTitle}
+                        </span>
+                      )}
                       <span className="text-white/80 break-all">{msg.content}</span>
                     </>
                   ) : (

@@ -15,6 +15,7 @@ import type { LeafletMapHandle } from "@/components/LeafletMap";
 import type { MapNode } from "../../../../shared/mapNodes";
 import { DraggableWidget } from "@/components/DraggableWidget";
 import { safePlay, playLevelUpSound, playLegendarySound, playTickSound, isSoundEnabled, setSoundEnabled } from "@/hooks/useGameSound";
+import { useGameWebSocket } from "@/hooks/useGameWebSocket";
 
 // ─── 五行配色 ─────────────────────────────────────────────────
 const WX_HEX: Record<string, string> = {
@@ -1770,6 +1771,38 @@ export default function VirtualWorldPage() {
     return () => { if (tickIntervalRef.current) clearInterval(tickIntervalRef.current); };
   }, []);
 
+  // 成就解鎖通知
+  const [achievementEffect, setAchievementEffect] = useState<{ name: string; icon: string; desc: string } | null>(null);
+
+  // WebSocket 連線（地圖即時狀態 + 廣播 + 成就）
+  const { status: wsStatus } = useGameWebSocket({
+    agentId: agent?.id ?? null,
+    agentName: agent?.agentName ?? null,
+    onMessage: (msg) => {
+      if (msg.type === "map_update") {
+        utils.gameWorld.getNodeInfo.invalidate();
+        utils.gameWorld.getAgentStatus.invalidate();
+      } else if (msg.type === "world_event") {
+        utils.gameWorld.getBroadcast.invalidate();
+        utils.gameWorld.getWorldState.invalidate();
+      } else if (msg.type === "tick_event") {
+        const payload = msg.payload as { levelUps?: Array<{ agentId: number; agentName: string; newLevel: number }>; legendaryDrops?: Array<{ agentId: number; agentName: string; equipId: string; tier: string }> };
+        const othersLevelUp = (payload.levelUps ?? []).filter((lu: { agentId: number }) => lu.agentId !== agent?.id);
+        if (othersLevelUp.length > 0) {
+          const lu = othersLevelUp[0] as { agentName: string; newLevel: number };
+          toast.success(`${lu.agentName} 升級到 Lv.${lu.newLevel}`, { duration: 3000 });
+        }
+      } else if (msg.type === "achievement") {
+        const payload = msg.payload as { agentId: number; name: string; icon: string; desc: string };
+        if (payload.agentId === agent?.id) {
+          setAchievementEffect({ name: payload.name, icon: payload.icon, desc: payload.desc });
+          setTimeout(() => setAchievementEffect(null), 5000);
+        }
+      }
+    },
+    enabled: !!agent?.id,
+  });
+
   const [showNaming, setShowNaming] = useState(false);
   const [showStrategyPanel, setShowStrategyPanel] = useState(false);
   const [showDivinePanel, setShowDivinePanel] = useState(false);
@@ -1936,6 +1969,33 @@ export default function VirtualWorldPage() {
               </div>
               <div className="text-white text-xl font-bold">{legendaryEffect.agentName}</div>
               <div className="text-slate-300 text-sm mt-1">獲得了神秘裝備</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 成就解鎖特效 */}
+      {achievementEffect && (
+        <div className="fixed inset-0 z-[350] flex items-center justify-center pointer-events-none">
+          <div
+            className="flex flex-col items-center gap-3 px-8 py-6 rounded-2xl border-2"
+            style={{
+              background: "rgba(88,28,135,0.95)",
+              borderColor: "rgba(168,85,247,0.9)",
+              boxShadow: "0 0 60px rgba(168,85,247,0.7), 0 0 120px rgba(168,85,247,0.3)",
+              backdropFilter: "blur(20px)",
+              animation: "fadeInScale 0.4s ease-out",
+            }}
+          >
+            <div className="text-5xl" style={{ filter: "drop-shadow(0 0 20px rgba(168,85,247,1))" }}>
+              {achievementEffect.icon}
+            </div>
+            <div className="text-center">
+              <div className="text-xs font-medium tracking-widest mb-1 text-purple-300">
+                ✨ 成就解鎖 ✨
+              </div>
+              <div className="text-white text-xl font-bold">{achievementEffect.name}</div>
+              <div className="text-slate-300 text-sm mt-1">{achievementEffect.desc}</div>
             </div>
           </div>
         </div>

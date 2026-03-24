@@ -5,6 +5,8 @@
  */
 
 import { getDb } from "./db";
+import { checkAchievements, seedAchievements } from "./achievementEngine";
+import { broadcastToAll, sendToAgent } from "./wsServer";
 import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates } from "../drizzle/schema";
 import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs } from "./gameEngineConfig";
@@ -558,6 +560,32 @@ export async function processTick(): Promise<TickResult> {
     await processHiddenEvents();
   } catch (err) {
     console.error("[Tick] hiddenEventEngine error:", err);
+  }
+
+  // 確保成就種子資料存在
+  try { await seedAchievements(); } catch { }
+
+  // 對每個玩家觸發成就檢查
+  for (const agent of agents) {
+    try {
+      const myLevelUp = allLevelUps.find(lu => lu.agentId === agent.id);
+      const myLegendary = allLegendaryDrops.filter(ld => ld.agentId === agent.id);
+      await checkAchievements(agent.id, {
+        level: myLevelUp ? myLevelUp.newLevel : agent.level,
+        legendary_drops: myLegendary.length > 0 ? (agent.level) : 0, // 用第一次觸發檢查
+        ap: agent.actionPoints ?? 0,
+      });
+    } catch { }
+  }
+
+  // WS 廣播 Tick 事件（升級/傳說掉落）
+  if (allLevelUps.length > 0 || allLegendaryDrops.length > 0) {
+    try {
+      broadcastToAll({
+        type: "tick_event",
+        payload: { levelUps: allLevelUps, legendaryDrops: allLegendaryDrops },
+      });
+    } catch { }
   }
 
   return { processed: agents.length, events: totalEvents, levelUps: allLevelUps, legendaryDrops: allLegendaryDrops };

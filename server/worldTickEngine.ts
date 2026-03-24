@@ -6,6 +6,7 @@
  * 隨機事件（7種）：天氣變化、全服祝福、隱藏NPC、隱藏任務、天災/祥瑞、流星雨、神明降臨
  */
 import { getDb } from "./db";
+import { broadcastToAll } from "./wsServer";
 import {
   gameAgents,
   worldEvents,
@@ -136,7 +137,7 @@ async function sendWorldBroadcast(title: string, content: string, durationSec = 
   }
 }
 
-async function sendChatSystemMessage(content: string): Promise<void> {
+async function sendChatSystemMessage(content: string, eventType?: string): Promise<void> {
   const db = await getDb();
   if (!db) return;
   try {
@@ -149,6 +150,27 @@ async function sendChatSystemMessage(content: string): Promise<void> {
       msgType: "world_event",
       createdAt: Date.now(),
     });
+    // WS 廣播世界事件（即時推送給所有連線玩家）
+    try {
+      broadcastToAll({
+        type: "world_event",
+        payload: { eventType: eventType ?? "world_event", content },
+      });
+      // 同時廣播聊天訊息
+      broadcastToAll({
+        type: "chat_message",
+        payload: {
+          id: Date.now(),
+          agentId: 0,
+          agentName: "🌍 世界之聲",
+          agentElement: "earth",
+          agentLevel: 99,
+          content: content.slice(0, 100),
+          msgType: "world_event",
+          createdAt: Date.now(),
+        },
+      });
+    } catch { }
   } catch (e) {
     console.error("[WorldTick] 聊天室系統訊息失敗：", e);
   }

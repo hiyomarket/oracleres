@@ -138,6 +138,16 @@ export default function GameLobby() {
       badge: null,
       tag: "測試中",
     },
+    {
+      id: "achievements",
+      path: "/game/achievements",
+      icon: "🏅",
+      title: "冠軍成就",
+      desc: "PvP戰績・徽章牆・連勝榜",
+      color: "#a855f7",
+      badge: null,
+      tag: "V32 NEW",
+    },
   ];
 
   return (
@@ -353,7 +363,14 @@ function AchievementWall({ userId }: { userId?: number }) {
       {/* 標題列 */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-bold text-slate-200 tracking-wide">成就徽章</h2>
-        <span className="text-xs text-slate-500">{unlockedCount} / {achievements.length} 已解鎖</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-slate-500">{unlockedCount} / {achievements.length} 已解鎖</span>
+          <a href="/game/achievements"
+            className="text-xs px-2.5 py-1 rounded-lg font-medium transition-all hover:opacity-80"
+            style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}>
+            🏅 冠軍成就
+          </a>
+        </div>
       </div>
 
       {/* 進度條 */}
@@ -431,8 +448,43 @@ const STATUS_LABEL: Record<string, string> = {
   idle: "✨探索", combat: "⚔️戰鬥", moving: "🚶移動", gathering: "🌿採集", resting: "💤休息",
 };
 
+function PvpLeaderboardTab() {
+  const { data: pvpLb } = trpc.gameWorld.getPvpLeaderboard.useQuery(undefined, { staleTime: 60000 });
+  const winRank = pvpLb?.winRank ?? [];
+  if (winRank.length === 0) {
+    return <div className="flex items-center justify-center py-8 text-slate-500 text-sm">尚無足夠戰績資料（至少5場）</div>;
+  }
+  return (
+    <div>
+      {winRank.map((r, i) => {
+        const color = WX_HEX_LB[r.agentElement] ?? "#94a3b8";
+        const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`;
+        return (
+          <div key={r.agentId}
+            className="flex items-center gap-3 px-4 py-2.5 border-b last:border-b-0 transition-colors hover:bg-white/[0.02]"
+            style={{ borderColor: "rgba(255,255,255,0.04)" }}>
+            <span className="w-6 text-center text-sm shrink-0">{medal}</span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0"
+              style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}>
+              {WX_ZH_LB[r.agentElement] ?? "？"}
+            </span>
+            <span className="flex-1 text-sm text-slate-200 truncate">{r.agentName}</span>
+            <div className="text-right shrink-0">
+              <div className="text-sm font-bold" style={{ color: "#f59e0b" }}>{r.winRate}%</div>
+              <div className="text-[10px] text-slate-500">{r.wins}勝{r.losses}敗</div>
+            </div>
+            {r.currentStreak > 0 && (
+              <span className="text-[10px] text-orange-400 shrink-0">🔥{r.currentStreak}</span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function LeaderboardSection() {
-  const [tab, setTab] = useState<"level" | "combat">("level");
+  const [tab, setTab] = useState<"level" | "combat" | "pvp">("level");
   const { user } = useAuth();
   const utils = trpc.useUtils();
   const challengePvp = trpc.gameWorld.challengePvp.useMutation({
@@ -460,7 +512,7 @@ function LeaderboardSection() {
         </div>
         {/* Tab 切換 */}
         <div className="flex gap-1 p-0.5 rounded-lg" style={{ background: "rgba(255,255,255,0.05)" }}>
-          {(["level", "combat"] as const).map(t => (
+          {(["level", "combat", "pvp"] as const).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -471,7 +523,7 @@ function LeaderboardSection() {
                 borderBottom: tab === t ? "1px solid rgba(245,158,11,0.5)" : "1px solid transparent",
               }}
             >
-              {t === "level" ? "⭐ 等級榜" : "⚔️ 戰鬥王"}
+              {t === "level" ? "⭐ 等級榜" : t === "combat" ? "⚔️ 戰鬥王" : "📊 勝率榜"}
             </button>
           ))}
         </div>
@@ -533,7 +585,7 @@ function LeaderboardSection() {
               })
             )}
           </div>
-        ) : (
+        ) : tab === "combat" ? (
           <div>
             {(!data?.combatRank || data.combatRank.length === 0) ? (
               <div className="flex items-center justify-center py-8 text-slate-500 text-sm">本週尚無戰鬥記錄</div>
@@ -564,6 +616,8 @@ function LeaderboardSection() {
               })
             )}
           </div>
+        ) : (
+          <PvpLeaderboardTab />
         )}
       </div>
     </div>

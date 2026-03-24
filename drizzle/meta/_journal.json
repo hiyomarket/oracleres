@@ -526,6 +526,13 @@
       "when": 1774321314512,
       "tag": "0074_sleepy_master_chief",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "5",
+      "when": 1774324690018,
+      "tag": "0075_red_talkback",
+      "breakpoints": true
     }
   ]
 }

@@ -2375,3 +2375,76 @@ export const pvpChallenges = mysqlTable("pvp_challenges", {
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
 export type PvpChallenge = typeof pvpChallenges.$inferSelect;
+
+// ─────────────────────────────────────────────
+// PvP 戰績統計表（快取，每次 PvP 後更新）
+// ─────────────────────────────────────────────
+export const agentPvpStats = mysqlTable("agent_pvp_stats", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 角色 ID */
+  agentId: int("agent_id").notNull(),
+  /** 角色名稱（快取） */
+  agentName: varchar("agent_name", { length: 50 }).notNull(),
+  /** 五行屬性（快取） */
+  agentElement: varchar("agent_element", { length: 10 }).notNull().default("wood"),
+  /** 等級（快取） */
+  agentLevel: int("agent_level").notNull().default(1),
+  /** 勝場數 */
+  wins: int("wins").notNull().default(0),
+  /** 敗場數 */
+  losses: int("losses").notNull().default(0),
+  /** 平局數 */
+  draws: int("draws").notNull().default(0),
+  /** 當前連勝數 */
+  currentStreak: int("current_streak").notNull().default(0),
+  /** 歷史最高連勝 */
+  maxStreak: int("max_streak").notNull().default(0),
+  /** 最後挑戰時間 */
+  lastChallengeAt: bigint("last_challenge_at", { mode: "number" }),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type AgentPvpStats = typeof agentPvpStats.$inferSelect;
+export type InsertAgentPvpStats = typeof agentPvpStats.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 成就定義表
+// ─────────────────────────────────────────────
+export const achievements = mysqlTable("achievements", {
+  id: varchar("id", { length: 50 }).primaryKey(),
+  /** 成就名稱 */
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 成就描述 */
+  desc: text("desc").notNull(),
+  /** 成就圖示（emoji） */
+  icon: varchar("icon", { length: 10 }).notNull().default("🏅"),
+  /** 成就類型 */
+  type: mysqlEnum("type", ["level", "pvp", "combat", "gather", "explore", "legendary", "weekly", "chat", "special"]).notNull().default("special"),
+  /** 解鎖條件 JSON（{ metric: string, threshold: number }） */
+  condition: json("condition").$type<{ metric: string; threshold: number }>().notNull(),
+  /** 是否啟用 */
+  isActive: tinyint("is_active").notNull().default(1),
+  /** 排序 */
+  sortOrder: int("sort_order").notNull().default(0),
+});
+export type Achievement = typeof achievements.$inferSelect;
+export type InsertAchievement = typeof achievements.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 玩家成就解鎖記錄表
+// ─────────────────────────────────────────────
+export const agentAchievements = mysqlTable("agent_achievements", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 角色 ID */
+  agentId: int("agent_id").notNull(),
+  /** 成就 ID */
+  achievementId: varchar("achievement_id", { length: 50 }).notNull(),
+  /** 當前進度（用於顯示進度條） */
+  progress: int("progress").notNull().default(0),
+  /** 是否已解鎖 */
+  unlocked: tinyint("unlocked").notNull().default(0),
+  /** 解鎖時間 */
+  unlockedAt: bigint("unlocked_at", { mode: "number" }),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type AgentAchievement = typeof agentAchievements.$inferSelect;
+export type InsertAgentAchievement = typeof agentAchievements.$inferInsert;

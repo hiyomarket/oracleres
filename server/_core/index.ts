@@ -14,6 +14,7 @@ import { checkAndNotifyFestival } from "../lib/festivalNotification";
 import { checkExpiringSubscriptions } from "../lib/expiryReminder";
 import { checkAndLockWbcMatches } from "../lib/wbcMatchLock";
 import { checkAndFetchWbcScores } from "../lib/wbcScoreFetcher";
+import { initWsServer } from "../wsServer";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -67,6 +68,9 @@ async function startServer() {
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
+
+  // 初始化 WebSocket 伺服器（掛載在同一個 HTTP server）
+  initWsServer(server);
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);

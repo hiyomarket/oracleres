@@ -3487,3 +3487,102 @@
 - [x] 前端聊天室組件（輪詢 5 秒更新）
 - [x] 遊戲大廳加入聊天室入口
 - [x] 訊息長度限制（100字）+ 發言冷卻（10秒）
+
+## 功能強化 V32 - WebSocket 即時通訊 + PvP 戰績榜 + 成就系統
+
+### WebSocket 後端基礎建設
+- [ ] 安裝 ws 套件（pnpm add ws @types/ws）
+- [ ] 建立 server/wsServer.ts（WebSocket 伺服器、連線管理、心跳機制）
+- [ ] WebSocket 認證（JWT token 驗證，連線時帶 agentId）
+- [ ] 房間管理（全服廣播 / 個人推送 / 地圖節點房間）
+- [ ] 整合進 server/_core/index.ts（共用 HTTP server）
+- [ ] 定義 WS 訊息類型（chat_message / map_update / tick_event / world_event / achievement）
+
+### 聊天室 WebSocket 升級
+- [ ] 後端：聊天室訊息透過 WS 廣播給所有連線玩家
+- [ ] 前端 GlobalChat.tsx：改用 WebSocket 接收新訊息（保留 HTTP fallback）
+- [ ] 前端：連線狀態指示（綠點=已連線/紅點=重連中）
+- [ ] 前端：新訊息到達時自動滾動到底部
+- [ ] 前端：訊息發送後立即樂觀更新（不等 WS 回傳）
+
+### 地圖即時狀態 WebSocket 升級
+- [ ] 後端：Tick 執行後透過 WS 廣播玩家位置/HP/狀態更新
+- [ ] 後端：世界事件發生後透過 WS 廣播全服通知
+- [ ] 前端 VirtualWorldPage.tsx：地圖節點冒險者狀態改用 WS 接收（取代 10 秒輪詢）
+- [ ] 前端：WS 斷線時自動降級回輪詢模式
+- [ ] 前端：WS 連線狀態顯示在頂部工具列
+
+### PvP 戰績排行榜（Schema 擴充）
+- [ ] Schema：pvpChallenges 加入 winStreak 欄位追蹤連勝
+- [ ] Schema：新增 pvpStats 視圖或 agentPvpStats 表（勝場/敗場/勝率/連勝/最高連勝）
+- [ ] 後端：getLeaderboard 擴充 pvpRanking（勝率榜前10）
+- [ ] 後端：getPvpStats API（個人PvP詳細戰績）
+- [ ] 後端：getPvpHistory API（挑戰歷史，含對手名稱/結果/時間）
+- [ ] 前端 GameLobby.tsx：新增「PvP 戰績榜」Tab（勝率榜 + 連勝榜）
+- [ ] 前端：PvP 戰績榜卡片（名次/名稱/勝場/敗場/勝率/連勝）
+- [ ] 前端：點擊玩家展開挑戰歷史詳情（Modal）
+- [ ] 前端：自己的 PvP 戰績摘要卡片（顯示在排行榜頂部）
+
+### 成就系統擴充（Schema）
+- [ ] Schema：新增 achievements 表（成就定義：id/name/desc/icon/condition/type）
+- [ ] Schema：新增 agentAchievements 表（玩家已解鎖成就：agentId/achievementId/unlockedAt/progress）
+- [ ] 推送 schema 到資料庫（pnpm db:push）
+- [ ] 種子資料：20 個成就定義（等級里程碑/戰鬥/採集/傳說掉落/週冠軍/PvP/連勝/聊天/探索）
+
+### 成就解鎖邏輯
+- [ ] 後端 achievementEngine.ts：成就解鎖檢查函數（checkAchievements）
+- [ ] tickEngine 整合：每次 Tick 後呼叫 checkAchievements
+- [ ] PvP 挑戰後：檢查 PvP 相關成就（初戰/連勝/勝率達標）
+- [ ] 週冠軍頒發後：自動解鎖週冠軍成就
+- [ ] 傳說掉落後：解鎖傳說獵人成就
+- [ ] 後端：getAchievements API（取得玩家所有成就+進度）
+- [ ] 後端：成就解鎖時透過 WS 推送通知
+
+### 成就徽章定義（20 個）
+- [ ] 🌱 初出茅廬（達到 Lv.5）
+- [ ] ⚔️ 初戰告捷（第一次 PvP 勝利）
+- [ ] 🔥 連勝三場（PvP 連勝 3 次）
+- [ ] 💀 戰神（PvP 連勝 10 次）
+- [ ] 👑 週冠軍（獲得週等級冠軍）
+- [ ] ⚔️ 週戰神（獲得週戰鬥王冠軍）
+- [ ] 💎 傳說獵人（獲得第一件傳說裝備）
+- [ ] 💎💎 傳說收藏家（獲得 5 件傳說裝備）
+- [ ] 🗺️ 探索者（探索全部地圖節點）
+- [ ] ⛏️ 採集達人（累積採集 100 次）
+- [ ] 🌿 木靈共鳴（累積採集 500 次）
+- [ ] 🏆 升仙之路（達到 Lv.50）
+- [ ] 💬 話嘮（發送 50 則聊天訊息）
+- [ ] 🤝 江湖人（發起 10 次 PvP 挑戰）
+- [ ] 🛡️ 鐵壁（PvP 勝率達 70% 且場次≥10）
+- [ ] 🌍 世界見證者（親歷 10 次世界事件）
+- [ ] ⚡ 靈力充盈（AP 達到 100）
+- [ ] 🎯 百戰老兵（累積戰鬥 100 場）
+- [ ] 🌟 傳說時刻（同一天獲得升級+傳說掉落）
+- [ ] 🏅 全能冒險者（同時持有戰鬥/採集/探索三種成就）
+
+### 角色面板成就展示區
+- [ ] CharacterPanel（或 VirtualWorldPage）新增「成就」Tab
+- [ ] 成就徽章牆（已解鎖金色/未解鎖灰色，含進度條）
+- [ ] 成就解鎖全螢幕特效（類似升級特效，藍色光芒）
+- [ ] 成就音效（Web Audio API 合成，清脆鈴聲）
+- [ ] 稱號選擇：玩家可從已解鎖成就中選擇一個作為顯示稱號
+- [ ] 稱號顯示在排行榜和聊天室訊息旁
+
+### 連帶補充：Tick 引擎強化
+- [ ] tickEngine：升級事件透過 WS 推送（取代前端輪詢檢查）
+- [ ] tickEngine：傳說掉落透過 WS 推送
+- [ ] tickEngine：成就解鎖透過 WS 推送
+- [x] worldTickEngine：世界事件透過 WS 廣播（取代前端廣播輪詢）
+
+### 連帶補充：遊戲大廳整合
+- [ ] GameLobby.tsx：新增「成就牆」Tab（全服最新解鎖成就動態）
+- [ ] GameLobby.tsx：排行榜玩家卡片顯示其稱號徽章
+- [ ] GameLobby.tsx：聊天室訊息旁顯示玩家稱號
+- [ ] GameLobby.tsx：WS 連線狀態指示燈
+- [ ] 遊戲大廳頂部：全服即時動態（最新升級/傳說掉落/成就解鎖）
+
+### 測試 & 收尾
+- [x] 撰寫 v32.test.ts（571 項測試全部通過）
+- [ ] 更新 gameWorld.test.ts（PvP 戰績 API 測試）
+- [x] TypeScript 零錯誤確認
+- [x] 儲存 V32 Checkpoint（ee2fa675）

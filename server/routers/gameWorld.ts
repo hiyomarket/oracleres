@@ -7,10 +7,12 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
-import { eq, and, desc, gt, sql, count } from "drizzle-orm";
+import { eq, and, desc, gt, sql, count, asc } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
+import { broadcastToAll, sendToAgent } from "../wsServer";
+import { updatePvpStats } from "../achievementEngine";
 import { MONSTERS } from "../../shared/monsters";
 import { processTick, calcExpToNext, resolveCombat, calcCharacterStats } from "../tickEngine";
 import type { WuXing } from "../../shared/types";
@@ -535,6 +537,29 @@ export const gameWorldRouter = router({
         goldReward,
         createdAt: Date.now(),
       });
+
+      // 更新 PvP 戰績統計並觸發成就檢查
+      try {
+        await updatePvpStats(challenger.id, defender.id, result);
+      } catch (e) {
+        console.error("[PvP] updatePvpStats error:", e);
+      }
+
+      // WS 廣播 PvP 結果
+      try {
+        const pvpMsg = {
+          type: "pvp_result" as const,
+          payload: {
+            challengerName: challenger.agentName ?? "旅人",
+            defenderName: defender.agentName ?? "旅人",
+            result,
+          },
+        };
+        sendToAgent(challenger.id, pvpMsg);
+        sendToAgent(defender.id, pvpMsg);
+      } catch {
+        // 忽略
+      }
 
       return {
         result,
@@ -1561,15 +1586,168 @@ export const gameWorldRouter = router({
       if ((recentCount[0]?.c ?? 0) >= 3) {
         throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "發言太頻繁，請稍候再試" });
       }
-      await db.insert(chatMessages).values({
+      const now = Date.now();
+      const [inserted] = await db.insert(chatMessages).values({
         agentId: agent.id,
         agentName: agent.agentName ?? "旅人",
         agentElement: agent.dominantElement ?? "wood",
         agentLevel: agent.level,
         content: input.content.trim(),
         msgType: "normal",
-        createdAt: Date.now(),
+        createdAt: now,
       });
+      // 透過 WebSocket 即時廣播給所有連線玩家
+      try {
+        broadcastToAll({
+          type: "chat_message",
+          payload: {
+            id: (inserted as { insertId?: number })?.insertId ?? now,
+            agentId: agent.id,
+            agentName: agent.agentName ?? "旅人",
+            agentElement: agent.dominantElement ?? "wood",
+            agentLevel: agent.level,
+            content: input.content.trim(),
+            msgType: "normal",
+            createdAt: now,
+          },
+        });
+      } catch {
+        // WS 廣播失敗不影響 HTTP 回導
+      }
       return { ok: true };
     }),
+
+  // ─── PvP 戰績排行榜 ───
+  getPvpLeaderboard: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return { winRank: [], streakRank: [] };
+
+    const all = await db.select().from(agentPvpStats)
+      .orderBy(desc(agentPvpStats.wins))
+      .limit(50);
+
+    // 勝率榜（至少 5 場）
+    const winRank = all
+      .filter(r => r.wins + r.losses + r.draws >= 5)
+      .map(r => ({
+        agentId: r.agentId,
+        agentName: r.agentName,
+        agentElement: r.agentElement,
+        agentLevel: r.agentLevel,
+        wins: r.wins,
+        losses: r.losses,
+        draws: r.draws,
+        total: r.wins + r.losses + r.draws,
+        winRate: r.wins + r.losses + r.draws > 0
+          ? Math.round((r.wins / (r.wins + r.losses + r.draws)) * 100)
+          : 0,
+        currentStreak: r.currentStreak,
+        maxStreak: r.maxStreak,
+      }))
+      .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins)
+      .slice(0, 10);
+
+    // 連勝榜（依當前連勝排序）
+    const streakRank = all
+      .filter(r => r.currentStreak > 0)
+      .map(r => ({
+        agentId: r.agentId,
+        agentName: r.agentName,
+        agentElement: r.agentElement,
+        agentLevel: r.agentLevel,
+        currentStreak: r.currentStreak,
+        maxStreak: r.maxStreak,
+        wins: r.wins,
+      }))
+      .sort((a, b) => b.currentStreak - a.currentStreak)
+      .slice(0, 10);
+
+    return { winRank, streakRank };
+  }),
+
+  // ─── 取得自己 PvP 戰績 ───
+  getMyPvpStats: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return null;
+    const agentRows = await db.select({ id: gameAgents.id })
+      .from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    if (!agentRows[0]) return null;
+    const agentId = agentRows[0].id;
+    const rows = await db.select().from(agentPvpStats)
+      .where(eq(agentPvpStats.agentId, agentId)).limit(1);
+    if (!rows[0]) return { wins: 0, losses: 0, draws: 0, currentStreak: 0, maxStreak: 0, winRate: 0, total: 0 };
+    const r = rows[0];
+    const total = r.wins + r.losses + r.draws;
+    return {
+      wins: r.wins,
+      losses: r.losses,
+      draws: r.draws,
+      currentStreak: r.currentStreak,
+      maxStreak: r.maxStreak,
+      winRate: total > 0 ? Math.round((r.wins / total) * 100) : 0,
+      total,
+    };
+  }),
+
+  // ─── 取得成就列表 ───
+  getAchievements: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return [];
+    const agentRows = await db.select({ id: gameAgents.id })
+      .from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    if (!agentRows[0]) return [];
+    const agentId = agentRows[0].id;
+
+    const allDefs = await db.select().from(achievements)
+      .where(eq(achievements.isActive, 1))
+      .orderBy(asc(achievements.sortOrder));
+
+    const myProgress = await db.select().from(agentAchievements)
+      .where(eq(agentAchievements.agentId, agentId));
+    const progressMap = new Map(myProgress.map(p => [p.achievementId, p]));
+
+    return allDefs.map(def => {
+      const prog = progressMap.get(def.id);
+      return {
+        id: def.id,
+        name: def.name,
+        desc: def.desc,
+        icon: def.icon,
+        type: def.type,
+        threshold: (def.condition as { threshold: number }).threshold,
+        progress: prog?.progress ?? 0,
+        unlocked: (prog?.unlocked ?? 0) === 1,
+        unlockedAt: prog?.unlockedAt ?? null,
+      };
+    });
+  }),
+
+  // ─── 全服最新成就動態 ───
+  getRecentAchievements: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    const recent = await db.select({
+      agentId: agentAchievements.agentId,
+      achievementId: agentAchievements.achievementId,
+      unlockedAt: agentAchievements.unlockedAt,
+      agentName: gameAgents.agentName,
+    })
+      .from(agentAchievements)
+      .innerJoin(gameAgents, eq(agentAchievements.agentId, gameAgents.id))
+      .where(eq(agentAchievements.unlocked, 1))
+      .orderBy(desc(agentAchievements.unlockedAt))
+      .limit(20);
+
+    const allDefs = await db.select({ id: achievements.id, name: achievements.name, icon: achievements.icon })
+      .from(achievements);
+    const defMap = new Map(allDefs.map(d => [d.id, d]));
+
+    return recent.map(r => ({
+      agentName: r.agentName ?? "旅人",
+      achievementId: r.achievementId,
+      name: defMap.get(r.achievementId)?.name ?? r.achievementId,
+      icon: defMap.get(r.achievementId)?.icon ?? "🏅",
+      unlockedAt: r.unlockedAt,
+    }));
+  }),
 });
