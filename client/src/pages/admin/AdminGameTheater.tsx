@@ -1188,6 +1188,256 @@ function EngineControlTab() {
   );
 }
 
+// ─── 奇遇事件管理 Tab ─────────────────────────────────────────────────────────────────────────────────────
+const REWARD_TYPE_LABELS: Record<string, string> = {
+  gold: "💰 金幣",
+  exp: "⭐ 經驗",
+  item: "📦 道具",
+  heal: "💚 治療",
+  buff: "✨ 增益",
+  debuff: "💀 減益",
+  mixed: "🎁 混合",
+};
+
+function RogueEventTab() {
+  const { data: rogueEvents, refetch } = trpc.gameAdmin.getRogueEvents.useQuery();
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [form, setForm] = useState({
+    eventId: "",
+    name: "",
+    description: "",
+    icon: "✨",
+    rewardType: "gold" as "gold" | "exp" | "item" | "heal" | "buff" | "debuff" | "mixed",
+    goldMin: 0,
+    goldMax: 0,
+    expReward: 0,
+    hpChange: 0,
+    healFull: 0,
+    itemRewardId: "",
+    itemRewardQty: 0,
+    weight: 10,
+    isActive: 1,
+    wuxingFilter: "",
+    minLevel: 0,
+  });
+
+  const createMutation = trpc.gameAdmin.createRogueEvent.useMutation({
+    onSuccess: () => { toast.success("奇遇事件已新增"); refetch(); setShowForm(false); resetForm(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const updateMutation = trpc.gameAdmin.updateRogueEvent.useMutation({
+    onSuccess: () => { toast.success("奇遇事件已更新"); refetch(); setShowForm(false); setEditingId(null); resetForm(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const deleteMutation = trpc.gameAdmin.deleteRogueEvent.useMutation({
+    onSuccess: () => { toast.success("奇遇事件已刪除"); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const toggleMutation = trpc.gameAdmin.updateRogueEvent.useMutation({
+    onSuccess: () => refetch(),
+  });
+
+  function resetForm() {
+    setForm({ eventId: "", name: "", description: "", icon: "✨", rewardType: "gold", goldMin: 0, goldMax: 0, expReward: 0, hpChange: 0, healFull: 0, itemRewardId: "", itemRewardQty: 0, weight: 10, isActive: 1, wuxingFilter: "", minLevel: 0 });
+  }
+
+  function startEdit(e: typeof rogueEvents extends (infer T)[] | undefined ? T : never) {
+    if (!e) return;
+    setEditingId((e as any).id);
+    setForm({
+      eventId: (e as any).eventId,
+      name: (e as any).name,
+      description: (e as any).description,
+      icon: (e as any).icon || "✨",
+      rewardType: (e as any).rewardType,
+      goldMin: (e as any).goldMin,
+      goldMax: (e as any).goldMax,
+      expReward: (e as any).expReward,
+      hpChange: (e as any).hpChange,
+      healFull: (e as any).healFull,
+      itemRewardId: (e as any).itemRewardId || "",
+      itemRewardQty: (e as any).itemRewardQty,
+      weight: (e as any).weight,
+      isActive: (e as any).isActive,
+      wuxingFilter: (e as any).wuxingFilter || "",
+      minLevel: (e as any).minLevel,
+    });
+    setShowForm(true);
+  }
+
+  function handleSubmit() {
+    if (!form.name.trim() || !form.description.trim()) {
+      toast.error("請填寫事件名稱和描述");
+      return;
+    }
+    if (editingId !== null) {
+      updateMutation.mutate({ id: editingId, data: { ...form, rewardType: form.rewardType as "gold" | "exp" | "item" | "heal" | "buff" | "debuff" | "mixed" } });
+    } else {
+      if (!form.eventId.trim()) { toast.error("請填寫事件 ID"); return; }
+      createMutation.mutate({ ...form, rewardType: form.rewardType as "gold" | "exp" | "item" | "heal" | "buff" | "debuff" | "mixed" });
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">🎲 奇遇事件管理</h3>
+          <p className="text-sm text-muted-foreground mt-1">管理玩家在探索時可能觸發的奇遇事件。每個事件有獨立的觸發權重、獎勵設定和屬性/等級過濾條件。</p>
+        </div>
+        <Button onClick={() => { setShowForm(!showForm); setEditingId(null); resetForm(); }} variant="outline" size="sm">
+          {showForm ? "取消" : "+ 新增奇遇"}
+        </Button>
+      </div>
+
+      {/* 新增/編輯表單 */}
+      {showForm && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardHeader><CardTitle className="text-base">{editingId ? "✏️ 編輯奇遇事件" : "➕ 新增奇遇事件"}</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {!editingId && (
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">事件 ID（英文小寫+底線）</label>
+                  <Input placeholder="treasure_chest" value={form.eventId} onChange={e => setForm(f => ({...f, eventId: e.target.value}))} />
+                </div>
+              )}
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">事件名稱</label>
+                <Input placeholder="神秘寶笱" value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">圖示 Emoji</label>
+                <Input placeholder="✨" value={form.icon} onChange={e => setForm(f => ({...f, icon: e.target.value}))} className="w-20" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">事件描述（玩家看到的文字）</label>
+              <Input placeholder="發現了一個神秘的寶笱..." value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">獎勵類型</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.rewardType} onChange={e => setForm(f => ({...f, rewardType: e.target.value as "gold" | "exp" | "item" | "heal" | "buff" | "debuff" | "mixed"}))}>
+                  {Object.entries(REWARD_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">金幣最小值</label>
+                <Input type="number" value={form.goldMin} onChange={e => setForm(f => ({...f, goldMin: parseInt(e.target.value)||0}))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">金幣最大值</label>
+                <Input type="number" value={form.goldMax} onChange={e => setForm(f => ({...f, goldMax: parseInt(e.target.value)||0}))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">經驗獎勵</label>
+                <Input type="number" value={form.expReward} onChange={e => setForm(f => ({...f, expReward: parseInt(e.target.value)||0}))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">HP 變化（負=損失）</label>
+                <Input type="number" value={form.hpChange} onChange={e => setForm(f => ({...f, hpChange: parseInt(e.target.value)||0}))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">全量治療 HP</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.healFull} onChange={e => setForm(f => ({...f, healFull: parseInt(e.target.value)}))}>
+                  <option value={0}>否</option>
+                  <option value={1}>是</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">道具 ID（選填）</label>
+                <Input placeholder="potion-001" value={form.itemRewardId} onChange={e => setForm(f => ({...f, itemRewardId: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">道具數量</label>
+                <Input type="number" value={form.itemRewardQty} onChange={e => setForm(f => ({...f, itemRewardQty: parseInt(e.target.value)||0}))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">觸發權重（越高越常觸發）</label>
+                <Input type="number" min={1} value={form.weight} onChange={e => setForm(f => ({...f, weight: parseInt(e.target.value)||10}))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">最低等級限制</label>
+                <Input type="number" min={0} value={form.minLevel} onChange={e => setForm(f => ({...f, minLevel: parseInt(e.target.value)||0}))} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">屬性限制（空=全部）</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.wuxingFilter} onChange={e => setForm(f => ({...f, wuxingFilter: e.target.value}))}>
+                  <option value="">全部屬性</option>
+                  <option value="木">🌿 木</option>
+                  <option value="火">🔥 火</option>
+                  <option value="土">🌍 土</option>
+                  <option value="金">⚡ 金</option>
+                  <option value="水">💧 水</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">啟用狀態</label>
+                <select className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.isActive} onChange={e => setForm(f => ({...f, isActive: parseInt(e.target.value)}))}>
+                  <option value={1}>✅ 啟用</option>
+                  <option value={0}>❌ 停用</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending}>
+                {editingId ? "💾 儲存變更" : "➕ 新增事件"}
+              </Button>
+              <Button variant="outline" onClick={() => { setShowForm(false); setEditingId(null); resetForm(); }}>取消</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* 事件列表 */}
+      <div className="space-y-2">
+        {!rogueEvents?.length && <p className="text-muted-foreground text-center py-8">尚無奇遇事件，點擊「新增奇遇」開始建立。</p>}
+        {rogueEvents?.map(e => (
+          <Card key={(e as any).id} className={`transition-opacity ${(e as any).isActive ? "" : "opacity-50"}`}>
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl shrink-0">{(e as any).icon || "✨"}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold">{(e as any).name}</span>
+                    <Badge variant="outline" className="text-xs">{(e as any).eventId}</Badge>
+                    <Badge variant={(e as any).isActive ? "default" : "secondary"} className="text-xs">
+                      {(e as any).isActive ? "啟用" : "停用"}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">{REWARD_TYPE_LABELS[(e as any).rewardType] || (e as any).rewardType}</Badge>
+                    <span className="text-xs text-muted-foreground">權重 {(e as any).weight}</span>
+                    {(e as any).minLevel > 0 && <span className="text-xs text-muted-foreground">Lv.{(e as any).minLevel}+</span>}
+                    {(e as any).wuxingFilter && <span className="text-xs text-muted-foreground">{(e as any).wuxingFilter}屬性</span>}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">{(e as any).description}</p>
+                  <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
+                    {((e as any).goldMin > 0 || (e as any).goldMax > 0) && <span>💰 {(e as any).goldMin}~{(e as any).goldMax} 金幣</span>}
+                    {(e as any).expReward > 0 && <span>⭐ +{(e as any).expReward} EXP</span>}
+                    {(e as any).hpChange !== 0 && <span>{(e as any).hpChange > 0 ? "💚" : "💔"} {(e as any).hpChange > 0 ? "+" : ""}{(e as any).hpChange} HP</span>}
+                    {(e as any).healFull === 1 && <span>💚 全量治療</span>}
+                    {(e as any).itemRewardId && <span>📦 {(e as any).itemRewardId} x{(e as any).itemRewardQty}</span>}
+                  </div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <Button size="sm" variant="outline" onClick={() => toggleMutation.mutate({ id: (e as any).id, data: { isActive: (e as any).isActive ? 0 : 1 } })}>
+                    {(e as any).isActive ? "停用" : "啟用"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => startEdit(e)}>編輯</Button>
+                  <Button size="sm" variant="destructive" onClick={() => { if (confirm(`確定刪除「${(e as any).name}」？`)) deleteMutation.mutate({ id: (e as any).id }); }}>刪除</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ──// ─── 世界事件 Tab ────────────────────────────────────────────────────────────────────────────────────
 const EVENT_TYPE_LABELS: Record<string, string> = {
   weather_change:   "🌤️ 天氣變化",
@@ -1449,6 +1699,7 @@ export default function AdminGameTheater() {
           <TabsTrigger value="broadcast">📢 全服廣播</TabsTrigger>
           <TabsTrigger value="engine">🌟 引擎調控</TabsTrigger>
           <TabsTrigger value="world">🌍 世界事件</TabsTrigger>
+          <TabsTrigger value="rogue">🎲 奇遇事件</TabsTrigger>
           <TabsTrigger value="reset" className="text-red-400">🔴 世界重置</TabsTrigger>
         </TabsList>
 
@@ -1458,6 +1709,7 @@ export default function AdminGameTheater() {
         <TabsContent value="broadcast"><BroadcastTab /></TabsContent>
         <TabsContent value="engine"><EngineControlTab /></TabsContent>
         <TabsContent value="world"><WorldEventTab /></TabsContent>
+        <TabsContent value="rogue"><RogueEventTab /></TabsContent>
         <TabsContent value="reset"><WorldResetTab /></TabsContent>
       </Tabs>
     </div>

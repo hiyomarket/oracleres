@@ -2,6 +2,10 @@
  * CombatWindow.tsx
  * 戰鬥彈出視窗：顯示詳細的回合制戰鬥過程
  * 在戰鬥事件觸發時彈出，顯示每回合的技能使用、閃避、格擋、暴擊等資訊
+ *
+ * Bug 修復：
+ * 1. 使用 combatKey（戰鬥唯一識別碼）防止 data 物件引用變化導致 setInterval 無限疊加
+ * 2. 修正「旅人」寫死名稱問題：使用 data.agentName
  */
 import { useEffect, useRef, useState } from "react";
 
@@ -38,6 +42,8 @@ export type CombatWindowData = {
   rounds: CombatRoundData[];
   agentMaxHp: number;
   monsterMaxHp: number;
+  /** 戰鬥唯一識別碼（時間戳），用於防止 data 物件引用變化導致無限 setInterval */
+  combatKey?: number;
 };
 
 interface CombatWindowProps {
@@ -51,14 +57,31 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
   const [isAnimating, setIsAnimating] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // 用 combatKey 追蹤是否是新的一場戰鬥（防止 data 物件引用變化導致無限重啟）
+  const lastCombatKeyRef = useRef<number | string | null>(null);
 
   useEffect(() => {
     if (!data) {
       setVisibleRounds([]);
       setShowResult(false);
       setIsAnimating(false);
+      lastCombatKeyRef.current = null;
       return;
     }
+
+    // 用 combatKey 或 agentName+monsterName+rounds.length 組合作為唯一識別碼
+    const currentKey = data.combatKey ?? `${data.agentName}-${data.monsterName}-${data.rounds.length}-${data.expGained}`;
+
+    // 如果是同一場戰鬥，不重新啟動動畫（防止無限 setInterval）
+    if (lastCombatKeyRef.current === currentKey) return;
+    lastCombatKeyRef.current = currentKey;
+
+    // 清除上一個計時器
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
     // 重置狀態
     setVisibleRounds([]);
     setShowResult(false);
@@ -79,13 +102,17 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
       } else {
         // 所有回合顯示完畢，顯示結果
         if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = null;
         setIsAnimating(false);
         setTimeout(() => setShowResult(true), 300);
       }
     }, 600);
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
   }, [data]);
 
@@ -97,6 +124,9 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
   const monsterHpPercent = data.rounds.length > 0
     ? Math.max(0, Math.min(100, (data.rounds[data.rounds.length - 1].monsterHpAfter / data.monsterMaxHp) * 100))
     : 100;
+
+  // 顯示名稱：使用 data.agentName（來自後端的實際角色名稱），不寫死「旅人」
+  const displayAgentName = data.agentName || "旅人";
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm"
@@ -110,7 +140,7 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
           <div className="flex items-center gap-2">
             <span className="text-lg">⚔️</span>
             <div>
-              <p className="text-white font-bold text-sm">{data.agentName} vs {data.monsterName}</p>
+              <p className="text-white font-bold text-sm">{displayAgentName} vs {data.monsterName}</p>
               {data.monsterRace && (
                 <p className="text-purple-300 text-[10px]">{data.monsterRace}</p>
               )}
@@ -123,7 +153,7 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
         {/* HP 條 */}
         <div className="px-4 py-2 space-y-1.5 border-b border-indigo-900/30">
           <div className="flex items-center gap-2">
-            <span className="text-cyan-400 text-[10px] w-14 shrink-0">{data.agentName}</span>
+            <span className="text-cyan-400 text-[10px] w-14 shrink-0 truncate">{displayAgentName}</span>
             <div className="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden">
               <div className="h-full rounded-full transition-all duration-500"
                 style={{ width: `${agentHpPercent}%`, background: agentHpPercent > 50 ? "#22c55e" : agentHpPercent > 25 ? "#f59e0b" : "#ef4444" }} />
@@ -131,7 +161,7 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
             <span className="text-[10px] text-slate-400 w-8 text-right">{Math.round(agentHpPercent)}%</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-red-400 text-[10px] w-14 shrink-0">{data.monsterName}</span>
+            <span className="text-red-400 text-[10px] w-14 shrink-0 truncate">{data.monsterName}</span>
             <div className="flex-1 h-2 rounded-full bg-slate-800 overflow-hidden">
               <div className="h-full rounded-full transition-all duration-500"
                 style={{ width: `${monsterHpPercent}%`, background: "#ef4444" }} />
@@ -143,7 +173,7 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
         {/* 回合記錄 */}
         <div ref={scrollRef} className="overflow-y-auto max-h-64 px-3 py-2 space-y-1.5">
           {visibleRounds.map((r, i) => (
-            <RoundCard key={i} round={r} monsterName={data.monsterName} index={i} />
+            <RoundCard key={i} round={r} agentName={displayAgentName} monsterName={data.monsterName} index={i} />
           ))}
           {isAnimating && (
             <div className="flex items-center gap-2 text-slate-500 text-xs py-1">
@@ -185,7 +215,7 @@ export function CombatWindow({ data, onClose }: CombatWindowProps) {
   );
 }
 
-function RoundCard({ round, monsterName, index }: { round: CombatRoundData; monsterName: string; index: number }) {
+function RoundCard({ round, agentName, monsterName, index }: { round: CombatRoundData; agentName: string; monsterName: string; index: number }) {
   const isHeal = round.agentSkillType === "heal";
   const isCrit = round.isCritical;
   const monsterCrit = round.monsterIsCritical;
@@ -206,7 +236,7 @@ function RoundCard({ round, monsterName, index }: { round: CombatRoundData; mons
         <div className="space-y-0.5">
           {/* 玩家行動 */}
           <div className="flex items-center gap-1.5">
-            <span className="text-cyan-400 shrink-0 w-8">旅人</span>
+            <span className="text-cyan-400 shrink-0 w-10 truncate">{agentName.slice(0, 4)}</span>
             {isHeal ? (
               <span className="text-green-400">{round.agentSkillName ?? "治癒"} 回復 +{round.agentHealAmount} HP</span>
             ) : round.monsterDodged ? (
@@ -221,7 +251,7 @@ function RoundCard({ round, monsterName, index }: { round: CombatRoundData; mons
           </div>
           {/* 怪物行動 */}
           <div className="flex items-center gap-1.5">
-            <span className="text-red-400 shrink-0 w-8">{monsterName.slice(0, 4)}</span>
+            <span className="text-red-400 shrink-0 w-10 truncate">{monsterName.slice(0, 4)}</span>
             {round.agentDodged ? (
               <span className="text-green-400">閃避了 {round.monsterSkillName ?? "攻擊"}</span>
             ) : round.agentBlocked ? (
@@ -237,7 +267,7 @@ function RoundCard({ round, monsterName, index }: { round: CombatRoundData; mons
 
       {/* HP 狀態 */}
       <div className="flex gap-3 text-[9px] text-slate-500 border-t border-indigo-900/30 pt-0.5">
-        <span className="text-cyan-500">旅人 HP: {round.agentHpAfter}</span>
+        <span className="text-cyan-500">{agentName.slice(0, 4)} HP: {round.agentHpAfter}</span>
         <span className="text-red-500">{monsterName.slice(0, 4)} HP: {round.monsterHpAfter}</span>
       </div>
     </div>

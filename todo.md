@@ -3774,3 +3774,11 @@
 - [x] 前端：點擊發光節點彈出限時商店介面（倒數計時 + 稀有物品列表）
 - [x] 前端：購買按鈕 + 購買成功/失敗回饋
 - [x] 修正 buyHiddenShopItem：技能書道具存入背包正確的 itemType
+
+## V38 Bug 修復批次
+
+- [x] 開場顯示名稱錯誤（CombatWindow 中「旅人」寫死問題已修復，現在顯示實際角色名稱）
+- [x] 戰鬥畫面幾輯後整個頁面當掉（CombatWindow useEffect 依賴 data 物件引用變化導致無限 setInterval 已修復，加入 combatKey 機制）
+- [x] 靈相干預功能失效（日期格式不匹配已修復，加入 onError toast 和 invalidate）
+- [x] 背包技能書分類缺失（加入「技能書」獨立分類按鈕）
+- [x] 奇遇獎勵後台管理系統（後台新增 game_rogue_events 表 + CRUD procedures + AdminGameTheater 奇遇事件 Tab + tickEngine 從 DB 讀取奇遇）

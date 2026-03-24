@@ -9,7 +9,7 @@ import { checkAchievements, seedAchievements } from "./achievementEngine";
 import { broadcastToAll, sendToAgent } from "./wsServer";
 import { broadcastLevelUp, broadcastLegendaryDrop, broadcastAchievementUnlock } from "./liveFeedBroadcast";
 import { calcSkillCombo, updateHiddenSkillTracker } from "./skillComboEngine";
-import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates } from "../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates, gameRogueEvents } from "../drizzle/schema";
 import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs, getInfuseConfig } from "./gameEngineConfig";
 import { eq, and, sql } from "drizzle-orm";
@@ -646,6 +646,7 @@ export interface TickResult {
     rounds: CombatRound[];
     agentMaxHp: number;
     monsterMaxHp: number;
+    combatKey?: number; // 唯一識別碼，防止前端 data 物件引用變化導致無限 setInterval
   };
 }
 
@@ -1333,6 +1334,7 @@ async function processCombatEvent(
       rounds: result.rounds,
       agentMaxHp: agent.maxHp,
       monsterMaxHp: monster.hp,
+      combatKey: Date.now(), // 唯一識別碼，防止前端 data 物件引用變化導致無限 setInterval
     },
   };
 }
@@ -1445,15 +1447,55 @@ async function processMoveEvent(
 }
 
 // ─── Roguelike 奇遇事件 ───
-const ROGUE_EVENTS = [
-  { id: "treasure_chest", name: "神秘寶箱", desc: "發現一個古老的寶箱，裡面藏有珍貴的道具！", goldReward: [50, 150] as [number, number] },
-  { id: "wandering_merchant", name: "流浪商人", desc: "遇到一位神秘的流浪商人，以低廉的價格出售稀有道具。", goldReward: [0, 0] as [number, number] },
-  { id: "ancient_ruins", name: "古代遺跡", desc: "發現了隱藏的古代遺跡，獲得了大量的經驗值！", expReward: 200 },
-  { id: "spirit_spring", name: "靈泉", desc: "找到了一處神秘的靈泉，HP 和 MP 完全恢復！", healFull: true },
-  { id: "cursed_item", name: "詛咒道具", desc: "撿到了一件詛咒道具，損失了一些 HP。", hpLoss: 20 },
-  { id: "divine_blessing", name: "神明祝福", desc: "感受到神明的祝福，臨時提升了戰鬥能力！", buffTick: 3 },
-  { id: "lost_traveler", name: "迷路旅人", desc: "遇到了一位迷路的旅人，幫助他後獲得了獎勵。", goldReward: [20, 80] as [number, number] },
-  { id: "elemental_surge", name: "元素湧動", desc: "感受到強烈的五行元素湧動，五行能量暫時增強！", elementBuff: true },
+// 奇遇事件快取（從 DB 讀取，5 分鐘更新一次）
+let rogueEventsCache: Array<{
+  id: number;
+  eventId: string;
+  name: string;
+  description: string;
+  icon: string;
+  rewardType: string;
+  goldMin: number;
+  goldMax: number;
+  expReward: number;
+  hpChange: number;
+  healFull: number;
+  itemRewardId: string;
+  itemRewardQty: number;
+  weight: number;
+  isActive: number;
+  wuxingFilter: string;
+  minLevel: number;
+}> | null = null;
+let rogueEventsCacheTime = 0;
+const ROGUE_CACHE_TTL = 5 * 60 * 1000; // 5 分鐘
+
+async function getActiveRogueEvents(agentLevel = 1, agentWuxing = "") {
+  const now = Date.now();
+  if (!rogueEventsCache || now - rogueEventsCacheTime > ROGUE_CACHE_TTL) {
+    const db = await getDb();
+    if (db) {
+      rogueEventsCache = await db.select().from(gameRogueEvents).where(eq(gameRogueEvents.isActive, 1));
+      rogueEventsCacheTime = now;
+    }
+  }
+  if (!rogueEventsCache || rogueEventsCache.length === 0) {
+    // fallback 到預設奇遇事件
+    return ROGUE_EVENTS_FALLBACK;
+  }
+  // 適用等級和屬性過濾
+  return rogueEventsCache.filter(e =>
+    e.minLevel <= agentLevel &&
+    (e.wuxingFilter === "" || e.wuxingFilter === agentWuxing)
+  );
+}
+
+/** 快取失效時的備用奇遇事件 */
+const ROGUE_EVENTS_FALLBACK = [
+  { id: 0, eventId: "treasure_chest", name: "神秘寶笱", description: "發現一個古老的寶笱，裡面藏有珍貴的道具！", icon: "📦", rewardType: "gold", goldMin: 50, goldMax: 150, expReward: 0, hpChange: 0, healFull: 0, itemRewardId: "", itemRewardQty: 0, weight: 10, isActive: 1, wuxingFilter: "", minLevel: 0 },
+  { id: 0, eventId: "ancient_ruins", name: "古代遺跡", description: "發現了隱藏的古代遺跡，獲得了大量的經驗値！", icon: "🏗️", rewardType: "exp", goldMin: 0, goldMax: 0, expReward: 200, hpChange: 0, healFull: 0, itemRewardId: "", itemRewardQty: 0, weight: 8, isActive: 1, wuxingFilter: "", minLevel: 0 },
+  { id: 0, eventId: "spirit_spring", name: "靈泉", description: "找到了一處神秘的靈泉，HP 完全恢復！", icon: "💧", rewardType: "heal", goldMin: 0, goldMax: 0, expReward: 0, hpChange: 0, healFull: 1, itemRewardId: "", itemRewardQty: 0, weight: 6, isActive: 1, wuxingFilter: "", minLevel: 0 },
+  { id: 0, eventId: "lost_traveler", name: "迷路旅人", description: "遇到了一位迷路的旅人，幫助他後獲得了獎勵。", icon: "🧭", rewardType: "mixed", goldMin: 20, goldMax: 80, expReward: 30, hpChange: 0, healFull: 0, itemRewardId: "", itemRewardQty: 0, weight: 9, isActive: 1, wuxingFilter: "", minLevel: 0 },
 ];
 
 async function processRogueEvent(
@@ -1464,22 +1506,33 @@ async function processRogueEvent(
   const db = await getDb();
   if (!db) return 0;
 
-  const rogueEvent = pickRandom(ROGUE_EVENTS);
+  // 從 DB 讀取奇遇事件（快取）
+  const activeEvents = await getActiveRogueEvents(agent.level, currentNode.element);
+  if (activeEvents.length === 0) return 0;
+
+  // 加權隨機選擇（weight 越高越容易觸發）
+  const totalWeight = activeEvents.reduce((sum, e) => sum + e.weight, 0);
+  let rand = Math.random() * totalWeight;
+  let rogueEvent = activeEvents[0];
+  for (const e of activeEvents) {
+    rand -= e.weight;
+    if (rand <= 0) { rogueEvent = e; break; }
+  }
+
   let goldChange = 0;
   let expChange = 0;
   let hpChange = 0;
 
-  if (rogueEvent.goldReward) {
-    goldChange = randInt(rogueEvent.goldReward[0], rogueEvent.goldReward[1]);
+  if (rogueEvent.goldMin > 0 || rogueEvent.goldMax > 0) {
+    goldChange = randInt(rogueEvent.goldMin, rogueEvent.goldMax);
   }
-  if (rogueEvent.expReward) {
+  if (rogueEvent.expReward > 0) {
     expChange = rogueEvent.expReward;
   }
-  if (rogueEvent.healFull) {
+  if (rogueEvent.healFull === 1) {
     hpChange = agent.maxHp - agent.hp;
-  }
-  if (rogueEvent.hpLoss) {
-    hpChange = -rogueEvent.hpLoss;
+  } else if (rogueEvent.hpChange !== 0) {
+    hpChange = rogueEvent.hpChange;
   }
 
   const newGold = agent.gold + goldChange;
@@ -1493,19 +1546,52 @@ async function processRogueEvent(
     updatedAt: Date.now(),
   }).where(eq(gameAgents.id, agent.id));
 
+  // 如果有道具獎勵，存入背包
+  if (rogueEvent.itemRewardId && rogueEvent.itemRewardQty > 0) {
+    try {
+      const existing = await db.select().from(agentInventory)
+        .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, rogueEvent.itemRewardId)))
+        .limit(1);
+      if (existing.length > 0) {
+        await db.update(agentInventory).set({ quantity: existing[0].quantity + rogueEvent.itemRewardQty })
+          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, rogueEvent.itemRewardId)));
+      } else {
+        await db.insert(agentInventory).values({
+          agentId: agent.id,
+          itemId: rogueEvent.itemRewardId,
+          quantity: rogueEvent.itemRewardQty,
+          acquiredAt: Date.now(),
+        });
+      }
+    } catch (_) { /* 道具獎勵失敗不影響其他獎勵 */ }
+  }
+
+  // 建構獎勵描述文字
+  const rewardParts: string[] = [];
+  if (goldChange > 0) rewardParts.push(`+${goldChange} 金幣`);
+  if (expChange > 0) rewardParts.push(`+${expChange} EXP`);
+  if (hpChange > 0) rewardParts.push(`回復 ${hpChange} HP`);
+  if (hpChange < 0) rewardParts.push(`損失 ${Math.abs(hpChange)} HP`);
+  if (rogueEvent.itemRewardId && rogueEvent.itemRewardQty > 0) rewardParts.push(`獲得道具 x${rogueEvent.itemRewardQty}`);
+  const rewardDesc = rewardParts.length > 0 ? `（${rewardParts.join("、")}）` : "";
+
   const msg = formatMessage(pickRandom(EVENT_MESSAGES.rogue), {
     name: agent.agentName ?? "旅人",
     node: currentNode.name,
     event: rogueEvent.name,
-  });
+  }) + rewardDesc;
 
   await createEvent(agent.id, "rogue", msg, {
-    rogueEventId: rogueEvent.id,
+    rogueEventId: rogueEvent.eventId,
     rogueEventName: rogueEvent.name,
-    rogueEventDesc: rogueEvent.desc,
+    rogueEventDesc: rogueEvent.description,
+    rogueEventIcon: rogueEvent.icon,
     goldChange,
     expChange,
     hpChange,
+    itemRewardId: rogueEvent.itemRewardId,
+    itemRewardQty: rogueEvent.itemRewardQty,
+    rewardDesc,
   }, currentNode.id);
 
   return 1;

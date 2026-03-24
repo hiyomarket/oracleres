@@ -32,6 +32,7 @@ import {
   equipmentTemplates,
   gameBroadcast,
   worldEvents,
+  gameRogueEvents,
 } from "../../drizzle/schema";
 import { sql, like, or, eq, desc, lt } from "drizzle-orm";
 import {
@@ -1104,11 +1105,92 @@ export const gameAdminRouter = router({
       return { success };
     }),
 
-  /** 清除過期的隱藏商店實例 */
+   /** 清除過期的隱藏商店實例 */
   cleanExpiredHiddenShops: adminProcedure
     .mutation(async () => {
       const count = await cleanExpiredHiddenShops();
       return { cleaned: count };
     }),
 
+  // ─── 奇遇事件 CRUD ──────────────────────────────────────────────────
+  /** 取得所有奇遇事件（包含停用的） */
+  getRogueEvents: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameRogueEvents).orderBy(gameRogueEvents.id);
+  }),
+
+  /** 新增奇遇事件 */
+  createRogueEvent: adminProcedure
+    .input(z.object({
+      eventId: z.string().min(1).max(50).regex(/^[a-z0-9_]+$/, "只能使用小寫英文、數字和底線"),
+      name: z.string().min(1).max(50),
+      description: z.string().min(1),
+      icon: z.string().default("\u2728"),
+      rewardType: z.enum(["gold", "exp", "item", "heal", "buff", "debuff", "mixed"]).default("gold"),
+      goldMin: z.number().int().nonnegative().default(0),
+      goldMax: z.number().int().nonnegative().default(0),
+      expReward: z.number().int().nonnegative().default(0),
+      hpChange: z.number().int().default(0),
+      healFull: z.number().int().min(0).max(1).default(0),
+      itemRewardId: z.string().default(""),
+      itemRewardQty: z.number().int().nonnegative().default(0),
+      weight: z.number().int().positive().default(10),
+      isActive: z.number().int().min(0).max(1).default(1),
+      wuxingFilter: z.string().default(""),
+      minLevel: z.number().int().nonnegative().default(0),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const now = Date.now();
+      const [result] = await db.insert(gameRogueEvents).values({
+        ...input,
+        createdAt: now,
+        updatedAt: now,
+      });
+      return { id: (result as any).insertId };
+    }),
+
+  /** 更新奇遇事件 */
+  updateRogueEvent: adminProcedure
+    .input(z.object({
+      id: z.number().int(),
+      data: z.object({
+        name: z.string().min(1).max(50).optional(),
+        description: z.string().min(1).optional(),
+        icon: z.string().optional(),
+        rewardType: z.enum(["gold", "exp", "item", "heal", "buff", "debuff", "mixed"]).optional(),
+        goldMin: z.number().int().nonnegative().optional(),
+        goldMax: z.number().int().nonnegative().optional(),
+        expReward: z.number().int().nonnegative().optional(),
+        hpChange: z.number().int().optional(),
+        healFull: z.number().int().min(0).max(1).optional(),
+        itemRewardId: z.string().optional(),
+        itemRewardQty: z.number().int().nonnegative().optional(),
+        weight: z.number().int().positive().optional(),
+        isActive: z.number().int().min(0).max(1).optional(),
+        wuxingFilter: z.string().optional(),
+        minLevel: z.number().int().nonnegative().optional(),
+      }),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameRogueEvents).set({
+        ...input.data,
+        updatedAt: Date.now(),
+      }).where(eq(gameRogueEvents.id, input.id));
+      return { success: true };
+    }),
+
+  /** 刪除奇遇事件 */
+  deleteRogueEvent: adminProcedure
+    .input(z.object({ id: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.delete(gameRogueEvents).where(eq(gameRogueEvents.id, input.id));
+      return { success: true };
+    }),
 });

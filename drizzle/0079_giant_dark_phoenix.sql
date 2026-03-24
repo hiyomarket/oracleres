@@ -1,0 +1,23 @@
+CREATE TABLE `game_rogue_events` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`event_id` varchar(50) NOT NULL,
+	`name` varchar(50) NOT NULL,
+	`description` text NOT NULL,
+	`icon` varchar(10) NOT NULL DEFAULT '✨',
+	`reward_type` varchar(20) NOT NULL DEFAULT 'gold',
+	`gold_min` int NOT NULL DEFAULT 0,
+	`gold_max` int NOT NULL DEFAULT 0,
+	`exp_reward` int NOT NULL DEFAULT 0,
+	`hp_change` int NOT NULL DEFAULT 0,
+	`heal_full` tinyint NOT NULL DEFAULT 0,
+	`item_reward_id` varchar(50) NOT NULL DEFAULT '',
+	`item_reward_qty` int NOT NULL DEFAULT 0,
+	`weight` int NOT NULL DEFAULT 10,
+	`is_active` tinyint NOT NULL DEFAULT 1,
+	`wuxing_filter` varchar(10) NOT NULL DEFAULT '',
+	`min_level` int NOT NULL DEFAULT 0,
+	`created_at` bigint NOT NULL,
+	`updated_at` bigint NOT NULL,
+	CONSTRAINT `game_rogue_events_id` PRIMARY KEY(`id`),
+	CONSTRAINT `game_rogue_events_event_id_unique` UNIQUE(`event_id`)
+);

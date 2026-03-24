@@ -635,7 +635,7 @@ function CharacterPanel({
     },
     onError: (e) => toast.error("安裝失敗：" + e.message),
   });
-  const [itemCategory, setItemCategory] = useState<"all" | "material" | "consumable" | "equipment">("all");
+  const [itemCategory, setItemCategory] = useState<"all" | "material" | "consumable" | "equipment" | "skill_book">("all");
   const [showEquipShop, setShowEquipShop] = useState(false);
   const [equipShopWuxing, setEquipShopWuxing] = useState("");
   const [equipShopSlot, setEquipShopSlot] = useState("");
@@ -836,6 +836,7 @@ function CharacterPanel({
                 { id: "material",    label: "鍛造素材" },
                 { id: "consumable",  label: "消耗道具" },
                 { id: "equipment",   label: "裝備" },
+                { id: "skill_book",  label: "📖 技能書" },
               ] as const).map(cat => (
                 <button key={cat.id} onClick={() => setItemCategory(cat.id)}
                   className="flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all"
@@ -857,7 +858,8 @@ function CharacterPanel({
                 if (itemCategory === "material") return item.itemType === "material" || (!item.itemType && !item.rarity);
                 if (itemCategory === "consumable") return item.itemType === "consumable" || item.itemType === "potion";
                 // 裝備分類：只根據 itemType，不用 rarity 判斷（避免鍵造素材被誤分入裝備）
-                if (itemCategory === "equipment") return item.itemType === "equipment" || item.itemType === "skill_book";
+                if (itemCategory === "equipment") return item.itemType === "equipment";
+                if (itemCategory === "skill_book") return item.itemType === "skill_book";
                 return true;
               });
               if (filtered.length === 0) return (
@@ -1909,9 +1911,33 @@ export default function VirtualWorldPage() {
       }
     },
   });
-  const divineHeal     = trpc.gameWorld.divineHeal.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
-  const divineEye      = trpc.gameWorld.divineEye.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
-  const divineStamina  = trpc.gameWorld.divineStamina.useMutation({ onSuccess: () => { refetchStatus(); refetchLog(); } });
+  const divineHeal     = trpc.gameWorld.divineHeal.useMutation({
+    onSuccess: () => {
+      refetchStatus();
+      refetchLog();
+      utils.gameWorld.getOrCreateAgent.invalidate();
+      import("sonner").then(({ toast }) => toast.success("✨ 神蹟治癒降臨！HP 恢復 50%"));
+    },
+    onError: (e) => import("sonner").then(({ toast }) => toast.error(e.message || "神蹟治癒失敗")),
+  });
+  const divineEye      = trpc.gameWorld.divineEye.useMutation({
+    onSuccess: () => {
+      refetchStatus();
+      refetchLog();
+      utils.gameWorld.getOrCreateAgent.invalidate();
+      import("sonner").then(({ toast }) => toast.success("👁 神眼加持降臨！洞察力提升 15%"));
+    },
+    onError: (e) => import("sonner").then(({ toast }) => toast.error(e.message || "神眼加持失敗")),
+  });
+  const divineStamina  = trpc.gameWorld.divineStamina.useMutation({
+    onSuccess: () => {
+      refetchStatus();
+      refetchLog();
+      utils.gameWorld.getOrCreateAgent.invalidate();
+      import("sonner").then(({ toast }) => toast.success("✨ 靈癒疲勞降臨！體力恢復 50 點"));
+    },
+    onError: (e) => import("sonner").then(({ toast }) => toast.error(e.message || "靈癒疲勞失敗")),
+  });
   // 記錄上次 Tick 前的角色狀態，用於比對變化
   const prevAgentRef = useRef<AgentData | null | undefined>(null);
   const triggerTick    = trpc.gameWorld.triggerTick.useMutation({
@@ -2932,7 +2958,8 @@ export default function VirtualWorldPage() {
                   <span>{showDivinePanel ? "▲" : "▼"}</span>
                 </button>
                 {showDivinePanel && (() => {
-                  const todayStr = new Date().toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei" });
+                  // Bug 3 fix: 使用與後端相同的 ISO 格式（2026-03-24）比較
+                  const todayStr = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
                   const agentAP = agent?.actionPoints ?? 0;
                   const healUsedToday = agent?.lastDivineHealDate === todayStr;
                   const eyeUsedToday  = agent?.lastDivineEyeDate  === todayStr;
@@ -3054,7 +3081,8 @@ export default function VirtualWorldPage() {
                   <span>{showDivinePanel ? "▲" : "▼"}</span>
                 </button>
                 {showDivinePanel && (() => {
-                  const todayStr = new Date().toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei" });
+                  // Bug 3 fix: 使用與後端相同的 ISO 格式（2026-03-24）比較
+                  const todayStr = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
                   const agentAP = agent?.actionPoints ?? 0;
                   const healUsedToday = agent?.lastDivineHealDate === todayStr;
                   const eyeUsedToday  = agent?.lastDivineEyeDate  === todayStr;

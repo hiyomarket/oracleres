@@ -2587,3 +2587,48 @@ export const hiddenShopInstances = mysqlTable("hidden_shop_instances", {
 });
 export type HiddenShopInstance = typeof hiddenShopInstances.$inferSelect;
 export type InsertHiddenShopInstance = typeof hiddenShopInstances.$inferInsert;
+
+// ─────────────────────────────────────────────
+// 奇遇事件設定表（管理員可自訂奇遇內容與獎勵）
+// ─────────────────────────────────────────────
+export const gameRogueEvents = mysqlTable("game_rogue_events", {
+  id: int("id").primaryKey().autoincrement(),
+  /** 事件唯一識別碼（英文，用於程式邏輯） */
+  eventId: varchar("event_id", { length: 50 }).notNull().unique(),
+  /** 事件名稱（中文顯示用） */
+  name: varchar("name", { length: 50 }).notNull(),
+  /** 事件描述（顯示給玩家的文字） */
+  description: text("description").notNull(),
+  /** 事件圖示（emoji） */
+  icon: varchar("icon", { length: 10 }).notNull().default("✨"),
+  /** 獎勵類型：gold / exp / item / heal / buff / debuff / mixed */
+  rewardType: varchar("reward_type", { length: 20 }).notNull().default("gold"),
+  /** 金幣獎勵最小值（0 表示無金幣獎勵） */
+  goldMin: int("gold_min").notNull().default(0),
+  /** 金幣獎勵最大值 */
+  goldMax: int("gold_max").notNull().default(0),
+  /** 經驗值獎勵（0 表示無經驗獎勵） */
+  expReward: int("exp_reward").notNull().default(0),
+  /** HP 變化（正數=回血，負數=扣血，0=無變化） */
+  hpChange: int("hp_change").notNull().default(0),
+  /** 是否完全回復 HP/MP */
+  healFull: tinyint("heal_full").notNull().default(0),
+  /** 道具獎勵 ID（空字串表示無道具獎勵） */
+  itemRewardId: varchar("item_reward_id", { length: 50 }).notNull().default(""),
+  /** 道具獎勵數量 */
+  itemRewardQty: int("item_reward_qty").notNull().default(0),
+  /** 觸發機率權重（越高越容易觸發，預設 10） */
+  weight: int("weight").notNull().default(10),
+  /** 是否啟用 */
+  isActive: tinyint("is_active").notNull().default(1),
+  /** 適用的五行屬性（空字串=所有屬性，wood/fire/earth/metal/water=特定屬性） */
+  wuxingFilter: varchar("wuxing_filter", { length: 10 }).notNull().default(""),
+  /** 最低等級限制（0=無限制） */
+  minLevel: int("min_level").notNull().default(0),
+  /** 建立時間 */
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  /** 更新時間 */
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameRogueEvent = typeof gameRogueEvents.$inferSelect;
+export type InsertGameRogueEvent = typeof gameRogueEvents.$inferInsert;
