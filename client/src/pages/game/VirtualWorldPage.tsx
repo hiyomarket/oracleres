@@ -2525,25 +2525,6 @@ export default function VirtualWorldPage() {
         />
       )}
 
-      {/* Bug 2 fix: 全服聊天室整合到虛相世界主頁面 */}
-      {agent && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: "72px", // 底部 Tab Bar 之上
-            right: "12px",
-            zIndex: 300,
-            width: "min(320px, calc(100vw - 24px))",
-          }}
-        >
-          <GlobalChat
-            collapsed={true}
-            agentId={agent?.id ?? null}
-            agentName={agent?.agentName ?? null}
-          />
-        </div>
-      )}
-
       {/* 全服廣播橫幅 */}
       {activeBroadcasts.length > 0 && (
         <div className="fixed top-14 left-0 right-0 z-[200] flex flex-col gap-1 px-2 pt-1">
@@ -2692,13 +2673,13 @@ export default function VirtualWorldPage() {
                 boxShadow: chatOpen ? "0 0 12px rgba(168,85,247,0.3)" : "none",
               }}
             >
-              <span className="text-sm">{chatOpen ? "💬" : "💬"}</span>
+              <span className="text-sm">💬</span>
               <span className="text-xs font-bold">聊天大廳</span>
               {!chatOpen && (chatMessages_data.data?.length ?? 0) > 0 && (
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
               )}
             </button>
-            {/* 展開面板（改為 fixed 定位避免被 overflow:hidden 截斷） */}
+            {/* 展開面板（fixed 定位避免被 overflow:hidden 截斷） */}
             {chatOpen && (
               <div
                 className="fixed z-[300] rounded-xl border overflow-hidden"
