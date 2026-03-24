@@ -7,6 +7,7 @@
 import { getDb } from "./db";
 import { checkAchievements, seedAchievements } from "./achievementEngine";
 import { broadcastToAll, sendToAgent } from "./wsServer";
+import { broadcastLevelUp, broadcastLegendaryDrop, broadcastAchievementUnlock } from "./liveFeedBroadcast";
 import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates } from "../drizzle/schema";
 import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs } from "./gameEngineConfig";
@@ -489,9 +490,9 @@ export interface TickResult {
   processed: number;
   events: number;
   /** 本次 Tick 中發生升級的角色資訊 */
-  levelUps: Array<{ agentId: number; agentName: string; newLevel: number }>;
+  levelUps: Array<{ agentId: number; agentName: string; newLevel: number; agentElement?: string }>;  // agentElement for live_feed
   /** 本次 Tick 中掉落的傳說/高級裝備 */
-  legendaryDrops: Array<{ agentId: number; agentName: string; equipId: string; tier: string }>;
+  legendaryDrops: Array<{ agentId: number; agentName: string; equipId: string; tier: string; agentElement?: string; agentLevel?: number; itemName?: string }>;  // extra fields for live_feed
 }
 
 export async function processTick(): Promise<TickResult> {
@@ -584,6 +585,29 @@ export async function processTick(): Promise<TickResult> {
       broadcastToAll({
         type: "tick_event",
         payload: { levelUps: allLevelUps, legendaryDrops: allLegendaryDrops },
+      });
+    } catch { }
+  }
+  // live_feed 廣播：升級事件
+  for (const lu of allLevelUps) {
+    try {
+      broadcastLevelUp({
+        agentId: lu.agentId,
+        agentName: lu.agentName,
+        agentElement: lu.agentElement ?? "wood",
+        newLevel: lu.newLevel,
+      });
+    } catch { }
+  }
+  // live_feed 廣播：傳說掉落
+  for (const ld of allLegendaryDrops) {
+    try {
+      broadcastLegendaryDrop({
+        agentId: ld.agentId,
+        agentName: ld.agentName,
+        agentElement: ld.agentElement ?? "wood",
+        agentLevel: ld.agentLevel ?? 1,
+        itemName: ld.itemName ?? ld.equipId,
       });
     } catch { }
   }
@@ -867,7 +891,7 @@ async function processCombatEvent(
       level: newLevel,
     });
     await createEvent(agent.id, "system", lvupMsg, { type: "levelup", level: newLevel }, currentNode.id);
-    combatLevelUps.push({ agentId: agent.id, agentName: agent.agentName ?? "旅人", newLevel });
+    combatLevelUps.push({ agentId: agent.id, agentName: agent.agentName ?? "旅人", newLevel, agentElement: agent.dominantElement ?? "wood" });
   }
 
   if (newHp <= 1) {
@@ -951,7 +975,7 @@ async function processCombatEvent(
       const tierMatch = equipId.match(/-(basic|mid|high|legendary)/);
       const tier = tierMatch ? tierMatch[1] : "basic";
       if (tier === "legendary" || tier === "high") {
-        combatLegendaryDrops.push({ agentId: agent.id, agentName: agent.agentName ?? "旅人", equipId, tier });
+        combatLegendaryDrops.push({ agentId: agent.id, agentName: agent.agentName ?? "旅人", equipId, tier, agentElement: agent.dominantElement ?? "wood", agentLevel: agent.level, itemName: equipId });
       }
       // 寫入背包（裝備類型）
       try {

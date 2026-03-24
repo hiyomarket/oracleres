@@ -7,6 +7,7 @@
  */
 import { getDb } from "./db";
 import { broadcastToAll } from "./wsServer";
+import { broadcastWeeklyChampion } from "./liveFeedBroadcast";
 import {
   gameAgents,
   worldEvents,
@@ -536,7 +537,8 @@ export async function processWeeklyChampions(): Promise<void> {
     const has = await db.select({ id: agentTitles.id }).from(agentTitles)
       .where(and(eq(agentTitles.agentId, champ.id), eq(agentTitles.titleKey, titleKey))).limit(1);
     if (has.length === 0) await db.insert(agentTitles).values({ agentId: champ.id, titleKey, isEquipped: 0, acquiredAt: Date.now() });
-    await sendWorldBroadcast(`⭐ 週冠軍頒發`, `恭喜 ${champ.agentName ?? "旅人"} 獲得 ${weekKey} 週等級冠軍稱號！`, 120);
+    await sendWorldBroadcast(`⭐ 週冠軍領發`, `恭喜 ${champ.agentName ?? "旅人"} 獲得 ${weekKey} 週等級冠軍稱號！`, 120);
+    try { broadcastWeeklyChampion({ agentName: champ.agentName ?? "旅人", agentElement: "earth", agentLevel: champ.level, category: "level" }); } catch { }
   }
 
   if (combatRankRows[0]) {
@@ -550,7 +552,8 @@ export async function processWeeklyChampions(): Promise<void> {
       const has = await db.select({ id: agentTitles.id }).from(agentTitles)
         .where(and(eq(agentTitles.agentId, champ.id), eq(agentTitles.titleKey, titleKey))).limit(1);
       if (has.length === 0) await db.insert(agentTitles).values({ agentId: champ.id, titleKey, isEquipped: 0, acquiredAt: Date.now() });
-      await sendWorldBroadcast(`⚔️ 週冠軍頒發`, `恭喜 ${champ.agentName ?? "旅人"} 獲得 ${weekKey} 週戰鬥王稱號！`, 120);
+      await sendWorldBroadcast(`⚔️ 週冠軍領發`, `恭喜 ${champ.agentName ?? "旅人"} 獲得 ${weekKey} 週戰鬥王稱號！`, 120);
+      try { broadcastWeeklyChampion({ agentName: champ.agentName ?? "旅人", agentElement: "fire", agentLevel: 0, category: "combat" }); } catch { }
     }
   }
 

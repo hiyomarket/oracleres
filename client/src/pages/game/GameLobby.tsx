@@ -11,6 +11,9 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { useMemo, useState } from "react";
 import { GlobalChat } from "@/components/GlobalChat";
+import { LiveFeedContainer } from "@/components/LiveFeedBanner";
+import { AchievementToastContainer } from "@/components/AchievementToast";
+import { useGameWebSocket } from "@/hooks/useGameWebSocket";
 
 // ─── TASK-008 立繪 CDN URL ───────────────────────────────────
 const PLAYER_SPRITES: Record<string, string> = {
@@ -150,11 +153,22 @@ export default function GameLobby() {
     },
   ];
 
+  // WebSocket 連線（全服動態橫幅 + 成就通知）
+  const { latestMessage } = useGameWebSocket({ agentId: null, enabled: !!user });
+
   return (
     <div
       className="min-h-screen"
       style={{ background: "radial-gradient(ellipse at 50% 20%, #1E3A5F 0%, #050d14 65%)" }}
     >
+      {/* 全服即時動態橫幅 */}
+      <div className="max-w-screen-md mx-auto px-4 pt-3">
+        <LiveFeedContainer latestMessage={latestMessage} />
+      </div>
+
+      {/* 成就解鎖通知彈窗 */}
+      <AchievementToastContainer latestMessage={latestMessage} />
+
       {/* 頂部標題區 */}
       <div className="max-w-screen-md mx-auto px-4 pt-10 pb-6">
         <div className="flex items-center gap-3 mb-1">

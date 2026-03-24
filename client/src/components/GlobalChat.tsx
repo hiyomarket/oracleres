@@ -69,9 +69,35 @@ export function GlobalChat({ collapsed: initCollapsed = false, agentId, agentNam
     if (msg.type === "chat_message") {
       const chatMsg = msg.payload as ChatMessageItem;
       setWsMessages((prev) => {
-        // 避免重複
         if (prev.some((m) => m.id === chatMsg.id)) return prev;
-        return [...prev.slice(-99), chatMsg]; // 保留最新 100 條
+        return [...prev.slice(-99), chatMsg];
+      });
+    }
+    // live_feed 事件：轉化為聊天室系統訊息（讓全服動態在聊天室也能看到）
+    if (msg.type === "live_feed") {
+      const feed = msg.payload as {
+        feedType: string; agentName: string; detail: string; ts: number;
+      };
+      if (!feed?.feedType || !feed?.agentName) return;
+      const feedIcons: Record<string, string> = {
+        level_up: "⬆️", achievement_unlock: "🏅", legendary_drop: "💎",
+        pvp_win: "⚔️", weekly_champion: "👑", world_event: "🌍",
+      };
+      const icon = feedIcons[feed.feedType] ?? "✨";
+      const syntheticMsg: ChatMessageItem = {
+        id: -(feed.ts + Math.floor(Math.random() * 10000)),
+        agentId: 0,
+        agentName: `${icon} 天命廣播`,
+        agentElement: "water",
+        agentLevel: 0,
+        agentTitle: null,
+        content: `${feed.agentName} ${feed.detail}`,
+        msgType: "world_event",
+        createdAt: feed.ts,
+      };
+      setWsMessages((prev) => {
+        if (prev.some((m) => m.id === syntheticMsg.id)) return prev;
+        return [...prev.slice(-99), syntheticMsg];
       });
     }
   }, []);
@@ -212,7 +238,16 @@ export function GlobalChat({ collapsed: initCollapsed = false, agentId, agentNam
                       )}
                       <span className="text-white/80 break-all">{msg.content}</span>
                     </>
+                  ) : msg.msgType === "world_event" ? (
+                    // 全服動態（live_feed）樣式：金色橫幅
+                    <>
+                      <span className="shrink-0 text-amber-300 font-bold text-[10px] px-1.5 py-0.5 rounded bg-amber-900/40 border border-amber-600/40">
+                        {msg.agentName}
+                      </span>
+                      <span className="text-amber-200/90 break-all font-medium">{msg.content}</span>
+                    </>
                   ) : (
+                    // 系統訊息（system）樣式
                     <>
                       <span className="text-amber-400">🌐</span>
                       <span className="text-amber-300 break-all">{msg.content}</span>

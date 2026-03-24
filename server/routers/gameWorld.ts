@@ -13,6 +13,7 @@ import { eq, and, desc, gt, sql, count, asc } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
 import { broadcastToAll, sendToAgent } from "../wsServer";
 import { updatePvpStats } from "../achievementEngine";
+import { broadcastPvpWin, broadcastWeeklyChampion } from "../liveFeedBroadcast";
 import { MONSTERS } from "../../shared/monsters";
 import { processTick, calcExpToNext, resolveCombat, calcCharacterStats } from "../tickEngine";
 import type { WuXing } from "../../shared/types";
@@ -559,6 +560,18 @@ export const gameWorldRouter = router({
         sendToAgent(defender.id, pvpMsg);
       } catch {
         // 忽略
+      }
+      // live_feed 廣播：PvP 勝利
+      if (result === "challenger_win") {
+        try {
+          broadcastPvpWin({
+            agentId: challenger.id,
+            agentName: challenger.agentName ?? "旅人",
+            agentElement: challenger.dominantElement ?? "wood",
+            agentLevel: challenger.level,
+            defenderName: defender.agentName ?? "旅人",
+          });
+        } catch { }
       }
 
       return {

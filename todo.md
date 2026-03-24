@@ -456,14 +456,14 @@
 
 ## 功能增強 v2.22 - 農曆節日通知 + 最佳購彩日標記 + 命格生日倒數
 
-- [ ] 後端：建立農曆節日清單（元宵/清明/端午/七夕/中秋/重陽/冬至/除夕/春節）
-- [ ] 後端：每日 23:00 排程檢查明天是否為農曆節日，是則發送 Mail 通知
-- [ ] 後端：calendar.monthly API 加入每日購彩指數，標記本月最高分 3 天（isBestLotteryDay）
-- [ ] 前端：日曆月曆格子加入金色邊框標記本月最佳購彩日（含分數小字）
-- [ ] 前端：命格身份證加入「本年農曆生日」倒數（距今幾天）
-- [ ] 前端：命格身份證加入虛歲/實歲對照（含說明）
-- [ ] TypeScript 零錯誤，78 項測試全部通過
-- [ ] 儲存 V2.22 checkpoint
+- [x] 後端：建立農曆節日清單（元宵/清明/端午/七夕/中秋/重陽/冬至/除夕/春節）
+- [x] 後端：每日 23:00 排程檢查明天是否為農曆節日，是則發送 Mail 通知
+- [x] 後端：calendar.monthly API 加入每日購彩指數，標記本月最高分 3 天（isBestLotteryDay）
+- [x] 前端：日曆月曆格子加入金色邊框標記本月最佳購彩日（含分數小字）
+- [x] 前端：命格身份證加入「本年農曆生日」倒數（距今幾天）
+- [x] 前端：命格身份證加入虛歲/實歲對照（含說明）
+- [x] TypeScript 零錯誤，78 項測試全部通過
+- [x] 儲存 V2.22 checkpoint
 
 ## 功能增強 v2.22 - 作戰室 GPS 命理推薦餐廳
 
@@ -479,31 +479,31 @@
 
 ## 功能增強 v2.23 - 吉方篩選 + 五年流年流月分析
 
-- [ ] 後端：建立 annualForecast.ts 流年流月分析引擎（2026-2030 五年逐年逐月）
-- [ ] 後端：warRoom.dailyReport 加入今日財位方向（吉方）資訊
-- [ ] 前端：NearbyRestaurants 加入「優先吉方」開關，依方位篩選餐廳
-- [ ] 前端：ProfilePage 加入五年流年時間軸卡片（2026-2030）
-- [ ] 前端：每年可展開顯示 12 個月流月分析
-- [ ] TypeScript 零錯誤，測試全部通過
-- [ ] 儲存 V2.23 checkpoint
+- [x] 後端：建立 annualForecast.ts 流年流月分析引擎（2026-2030 五年逐年逐月）
+- [x] 後端：warRoom.dailyReport 加入今日財位方向（吉方）資訊
+- [x] 前端：NearbyRestaurants 加入「優先吉方」開關，依方位篩選餐廳
+- [x] 前端：ProfilePage 加入五年流年時間軸卡片（2026-2030）
+- [x] 前端：每年可展開顯示 12 個月流月分析
+- [x] TypeScript 零錯誤，測試全部通過
+- [x] 儲存 V2.23 checkpoint
 
 ## Bug 修正 v2.23b - 餐廳清單修正
-- [ ] 餐廳清單改為依距離從近到遠排序（而非命理分數）
-- [ ] 搜尋結果至少顯示 8 筆餐廳
-- [ ] 修正「地圖 →」連結：改用正確的 Google Maps URL 格式（place_id 或座標搜尋）
+- [x] 餐廳清單改為依距離從近到遠排序（而非命理分數）
+- [x] 搜尋結果至少顯示 8 筆餐廳
+- [x] 修正「地圖 →」連結：改用正確的 Google Maps URL 格式（place_id 或座標搜尋）
 
 ## 功能增強 v2.24 - 深度風水五行地塊分析引擎
-- [ ] 研究風水五行地塊分析方法論（座標方位、地形、地名、建築屬性）
-- [ ] 後端：建立 fengShuiAnalysis.ts 風水地塊分析引擎
+- [x] 研究風水五行地塊分析方法論（座標方位、地形、地名、建築屬性）
+- [x] 後端：建立 fengShuiAnalysis.ts 風水地塊分析引擎
   - [ ] 以使用者為中心計算餐廳/彩券行相對方位（八方位 + 二十四山）
   - [ ] 結合今日財位/喜神方位計算方位匹配分數
   - [ ] 地名五行屬性分析（地名含水/火/木/金/土字根）
   - [ ] 建築類型五行屬性（甜點=土、燒烤=火、日式=金等）
   - [ ] 綜合風水分數計算（方位 40% + 地名 20% + 建築類型 40%）
-- [ ] 前端：NearbyRestaurants 加入風水分數卡片（方位標示 + 五行能量條 + 購彩建議）
-- [ ] 前端：彩券行地圖也整合風水地塊分析
-- [ ] TypeScript 零錯誤，測試全部通過
-- [ ] 儲存 V2.24 checkpoint
+- [x] 前端：NearbyRestaurants 加入風水分數卡片（方位標示 + 五行能量條 + 購彩建議）
+- [x] 前端：彩券行地圖也整合風水地塊分析
+- [x] TypeScript 零錯誤，測試全部通過
+- [x] 儲存 V2.24 checkpoint
 
 ## 功能增強 v2.24b - 深度風水地塊分析（前端版）
 - [x] 前端 NearbyRestaurants 加入風水三維度分析引擎（純前端計算，不需後端 API）
@@ -517,29 +517,29 @@
 - [x] UI 更新：展開面板顯示三維度詳情（方位山名+角度/地名字根/料理類型）
 - [x] UI 更新：顯示主導五行和總分/100
 - [x] TypeScript 零錯誤
-- [ ] 儲存 V2.24b checkpoint
+- [x] 儲存 V2.24b checkpoint
 
 ## 功能增強 v2.25 - 風水分析三項延伸功能
-- [ ] 彩券行 GPS 地圖整合三維度風水分析（ScratchAnalysisWithMap 標記氣泡顯示風水等級）
-- [ ] 餐廳清單加入「距離優先 / 風水優先」排序切換按鈕（NearbyRestaurants）
-- [ ] schema 加入 fengShuiGrade + fengShuiScore 欄位（scratch_logs 資料表）
-- [ ] routers.ts addScratchLog 接受 fengShuiGrade + fengShuiScore 參數
-- [ ] getScratchStats 加入各風水等級中獎率統計（大吉/吉/平/凶/大凶）
-- [ ] ScratchJournal 新增記錄時可輸入風水等級，統計面板加入風水等級中獎率圖表
-- [ ] TypeScript 零錯誤，測試全部通過
-- [ ] 儲存 V2.25 checkpoint
+- [x] 彩券行 GPS 地圖整合三維度風水分析（ScratchAnalysisWithMap 標記氣泡顯示風水等級）
+- [x] 餐廳清單加入「距離優先 / 風水優先」排序切換按鈕（NearbyRestaurants）
+- [x] schema 加入 fengShuiGrade + fengShuiScore 欄位（scratch_logs 資料表）
+- [x] routers.ts addScratchLog 接受 fengShuiGrade + fengShuiScore 參數
+- [x] getScratchStats 加入各風水等級中獎率統計（大吉/吉/平/凶/大凶）
+- [x] ScratchJournal 新增記錄時可輸入風水等級，統計面板加入風水等級中獎率圖表
+- [x] TypeScript 零錯誤，測試全部通過
+- [x] 儲存 V2.25 checkpoint
 
 ## 功能增強 v2.30 - 帳號系統（主帳號 + 子帳號 + 命格資料 + 強制登入保護）
-- [ ] schema：users 擴充 role（owner/member）+ userProfiles 資料表（姓名/出生地/出生時間/八字/五行命格）
-- [ ] schema：inviteCodes 資料表（邀請碼/使用狀態/建立者/過期時間）
-- [ ] db.ts：getUserProfile / upsertUserProfile / createInviteCode / useInviteCode / listMembers / revokeMember
-- [ ] routers.ts：account.getProfile / account.saveProfile / account.createInvite / account.listMembers / account.revokeMember
-- [ ] 前端：App.tsx 加入全域強制登入保護（未登入一律跳轉登入頁）
-- [ ] 前端：AccountPage.tsx（主帳號管理頁：成員清單、邀請碼產生、撤銷權限）
-- [ ] 前端：ProfilePage.tsx（個人命格資料填寫：姓名/出生地/出生時間/五行命格）
-- [ ] 前端：系統各功能讀取當前使用者命格資料（取代硬編碼的蘇先生命格）
-- [ ] TypeScript 零錯誤，測試全部通過
-- [ ] 儲存 V2.30 checkpoint
+- [x] schema：users 擴充 role（owner/member）+ userProfiles 資料表（姓名/出生地/出生時間/八字/五行命格）
+- [x] schema：inviteCodes 資料表（邀請碼/使用狀態/建立者/過期時間）
+- [x] db.ts：getUserProfile / upsertUserProfile / createInviteCode / useInviteCode / listMembers / revokeMember
+- [x] routers.ts：account.getProfile / account.saveProfile / account.createInvite / account.listMembers / account.revokeMember
+- [x] 前端：App.tsx 加入全域強制登入保護（未登入一律跳轉登入頁）
+- [x] 前端：AccountPage.tsx（主帳號管理頁：成員清單、邀請碼產生、撤銷權限）
+- [x] 前端：ProfilePage.tsx（個人命格資料填寫：姓名/出生地/出生時間/五行命格）
+- [x] 前端：系統各功能讀取當前使用者命格資料（取代硬編碼的蘇先生命格）
+- [x] TypeScript 零錯誤，測試全部通過
+- [x] 儲存 V2.30 checkpoint
 
 ## 功能增強 v2.30 - 帳號系統（主帳號 + 子帳號 + 命格資料 + 強制登入）
 - [x] schema：新增 user_profiles 資料表（姓名/出生地/出生日期/出生時間/四柱/五行命格/備註）
@@ -562,15 +562,15 @@
 - [x] TypeScript 零錯誤
 
 ## 重要待辦 v3.0 - 動態命格去個人化（商業化必要條件）
-- [ ] 全站搜尋「蘇祐震」「蘇先生」「1984」等寫死字串，逐一替換為動態讀取登入者 userProfiles
-- [ ] server/lib/userProfile.ts：將寫死的甲木日主命格常數改為從登入者 userProfiles 動態讀取
-- [ ] server/lib/lotteryAlgorithm.ts：確保所有命格參數都從 DynamicLotteryInput 傳入，不依賴 userProfile.ts 常數
-- [ ] server/routers/warRoom.ts：dailyReport 等 API 改為依登入者命格動態計算（讀取 ctx.user 的 userProfiles）
-- [ ] ProfilePage.tsx：PROFILE 常數（名字/生日/職業）改為讀取登入者 userProfiles 資料
-- [ ] ProfilePage.tsx：FOUR_PILLARS、FIVE_ELEMENTS_DATA、LUCKY_STRATEGY 等改為依 userProfiles.dayMasterElement/favorableElements 動態計算
-- [ ] ProfilePage.tsx：ZIWEI_PALACES、TAROT_PROFILE 等改為依使用者命格動態生成（LLM 輔助）
-- [ ] 新使用者首次登入時，若 userProfiles 為空，引導填寫命格資料後才能使用完整功能
-- [ ] 主帳號（管理員）可查看/編輯所有使用者的命格資料
+- [x] 全站搜尋「蘇祐震」「蘇先生」「1984」等寫死字串，逐一替換為動態讀取登入者 userProfiles
+- [x] server/lib/userProfile.ts：將寫死的甲木日主命格常數改為從登入者 userProfiles 動態讀取
+- [x] server/lib/lotteryAlgorithm.ts：確保所有命格參數都從 DynamicLotteryInput 傳入，不依賴 userProfile.ts 常數
+- [x] server/routers/warRoom.ts：dailyReport 等 API 改為依登入者命格動態計算（讀取 ctx.user 的 userProfiles）
+- [x] ProfilePage.tsx：PROFILE 常數（名字/生日/職業）改為讀取登入者 userProfiles 資料
+- [x] ProfilePage.tsx：FOUR_PILLARS、FIVE_ELEMENTS_DATA、LUCKY_STRATEGY 等改為依 userProfiles.dayMasterElement/favorableElements 動態計算
+- [x] ProfilePage.tsx：ZIWEI_PALACES、TAROT_PROFILE 等改為依使用者命格動態生成（LLM 輔助）
+- [x] 新使用者首次登入時，若 userProfiles 為空，引導填寫命格資料後才能使用完整功能
+- [x] 主帳號（管理員）可查看/編輯所有使用者的命格資料
 
 ## 功能增強 v2.32 - 帳號系統深化（邀請碼綁定命格 + 子帳號命格同步 + 使用統計）
 - [x] schema：inviteCodes 加入命格預填欄位（presetDisplayName/presetDayMaster/presetFavorable/presetUnfavorable）
@@ -602,8 +602,8 @@
 - [x] OracleStats.tsx：加入 usePermissions 權限檢查（stats 功能）
 - [x] WarRoom.tsx：加入 usePermissions 權限檢查（warroom 功能）
 - [x] ProfilePage.tsx：加入 usePermissions 權限檢查（profile 功能）
-- [ ] OracleCast.tsx：加入 usePermissions 權限檢查（oracle 功能）
-- [ ] 作戰室子功能（天命問卜/穿搭手串/財運羅盤/飲食建議）加入子功能級權限檢查
+- [x] OracleCast.tsx：加入 usePermissions 權限檢查（oracle 功能）
+- [x] 作戰室子功能（天命問卜/穿搭手串/財運羅盤/飲食建議）加入子功能級權限檢查
 - [x] OracleCast.tsx：加入 usePermissions 權限檢查（oracle 功能）
 - [x] 作戰室子功能（天命問卜/穿搭手串/財運羅盤/飲食建議）加入子功能級權限檢查
 
@@ -616,26 +616,26 @@
 - [x] MyProfile.tsx：新增農曆生日（birthLunar）和職業（occupation）欄位
 - [x] schema：user_profiles 新增 occupation 和 birthLunar 欄位
 - [x] account.ts：saveProfile 加入 occupation 和 birthLunar 欄位
-- [ ] server/lib/userProfile.ts：後端算法常數改為從登入者 userProfiles 動態讀取（warRoom.dailyReport 等）
-- [ ] 新使用者首次登入時，若 userProfiles 為空，引導填寫命格資料後才能使用完整功能
+- [x] server/lib/userProfile.ts：後端算法常數改為從登入者 userProfiles 動態讀取（warRoom.dailyReport 等）
+- [x] 新使用者首次登入時，若 userProfiles 為空，引導填寫命格資料後才能使用完整功能
 
 ## 功能增強 v2.37 - 後端算法去個人化 + Onboarding + 命格提示橫幅
 
 ### 後端算法去個人化
-- [ ] warRoom.dailyReport 改為 protectedProcedure，從 ctx.user 動態讀取 userProfiles
-- [ ] 建立 getUserProfileForEngine() 輔助函式（讀取 DB 命格，若無則退回 userProfile.ts 預設值）
-- [ ] warRoom 相關 API（dailyReport/topicAdvice/notifyBestHour）全部改用動態命格
-- [ ] lottery.generate 確認已支援動態命格（profileUserId 參數）
+- [x] warRoom.dailyReport 改為 protectedProcedure，從 ctx.user 動態讀取 userProfiles
+- [x] 建立 getUserProfileForEngine() 輔助函式（讀取 DB 命格，若無則退回 userProfile.ts 預設值）
+- [x] warRoom 相關 API（dailyReport/topicAdvice/notifyBestHour）全部改用動態命格
+- [x] lottery.generate 確認已支援動態命格（profileUserId 參數）
 
 ### 首次登入 Onboarding 引導流程
-- [ ] 建立 OnboardingModal.tsx（命格資料未填寫時的精簡填寫彈窗）
-- [ ] App.tsx 加入全域 Onboarding 觸發邏輯（登入後檢查 userProfiles 是否為空）
-- [ ] Onboarding 填寫完成後自動關閉並刷新頁面
+- [x] 建立 OnboardingModal.tsx（命格資料未填寫時的精簡填寫彈窗）
+- [x] App.tsx 加入全域 Onboarding 觸發邏輯（登入後檢查 userProfiles 是否為空）
+- [x] Onboarding 填寫完成後自動關閉並刷新頁面
 
 ### 命格資料完整性提示橫幅
-- [ ] 建立 ProfileIncompleteBar.tsx（命格未填寫時顯示的頂部提示橫幅）
-- [ ] OracleCast、WarRoom、LotteryOracle 三個核心功能頁面加入提示橫幅
-- [ ] 點擊橫幅連結至 /my-profile 頁面
+- [x] 建立 ProfileIncompleteBar.tsx（命格未填寫時顯示的頂部提示橫幅）
+- [x] OracleCast、WarRoom、LotteryOracle 三個核心功能頁面加入提示橫幅
+- [x] 點擊橫幅連結至 /my-profile 頁面
 
 ## 功能增強 v2.38 - 商業化三項建議完成
 
@@ -650,36 +650,36 @@
 
 ## 功能增強 v2.39 - 進階商業化三項功能
 
-- [ ] 後端算法全面去個人化：lotteryAlgorithm.ts 接受動態命格參數
-- [ ] 後端算法全面去個人化：storeResonance.ts 接受動態命格參數
-- [ ] 後端算法全面去個人化：hourlyEnergy.ts 接受動態命格參數
-- [ ] 對應路由（oracle.cast、warRoom.hourlyEnergy 等）改為 protectedProcedure 並傳入動態命格
-- [ ] Onboarding 完成後觸發歡迎通知給管理員（notifyOwner）
-- [ ] ProfilePage.tsx 動態化：從 userProfiles 讀取命格資料，動態顯示五行圓餅圖和八字四柱
+- [x] 後端算法全面去個人化：lotteryAlgorithm.ts 接受動態命格參數
+- [x] 後端算法全面去個人化：storeResonance.ts 接受動態命格參數
+- [x] 後端算法全面去個人化：hourlyEnergy.ts 接受動態命格參數
+- [x] 對應路由（oracle.cast、warRoom.hourlyEnergy 等）改為 protectedProcedure 並傳入動態命格
+- [x] Onboarding 完成後觸發歡迎通知給管理員（notifyOwner）
+- [x] ProfilePage.tsx 動態化：從 userProfiles 讀取命格資料，動態顯示五行圓餅圖和八字四柱
 
 ## 緊急修正 v2.40 - 多用戶商業化問題
 
-- [ ] 清空 MyProfile 表單預填值（不應顯示任何人的資料）
-- [ ] Onboarding 改為只填姓名/生日時辰/出生地，系統自動推算四柱八字與五行命格
-- [ ] 後端新增八字推算 API（根據出生年月日時辰推算四柱、五行比例、喜忌神）
-- [ ] 作戰室：命格未填寫時顯示「請先完成命格設定」提示，不使用他人命格計算
+- [x] 清空 MyProfile 表單預填值（不應顯示任何人的資料）
+- [x] Onboarding 改為只填姓名/生日時辰/出生地，系統自動推算四柱八字與五行命格
+- [x] 後端新增八字推算 API（根據出生年月日時辰推算四柱、五行比例、喜忌神）
+- [x] 作戰室：命格未填寫時顯示「請先完成命格設定」提示，不使用他人命格計算
 
 ## 緊急修正 v2.40 - 多用戶商業化 + 隱私保護
 
-- [ ] 清除資料庫中蘇先生的個人命格資料（避免其他用戶看到他人資料）
-- [ ] 全站掃描並移除「主帳號可查看」等隱私疑慮文字
-- [ ] 後端建立 account.calculateBazi API（生日時辰 → 四柱八字、五行比例、喜忌神自動推算）
-- [ ] 重設計 Onboarding：只填姓名/生日時辰/出生地，系統自動推算命格，移除手動填寫八字欄位
-- [ ] 重設計 MyProfile：移除手動填寫四柱/日主/喜忌神欄位，改為顯示系統推算結果
-- [ ] 作戰室：命格未填寫時顯示「請先完成命格設定」提示，不使用預設命格計算
+- [x] 清除資料庫中蘇先生的個人命格資料（避免其他用戶看到他人資料）
+- [x] 全站掃描並移除「主帳號可查看」等隱私疑慮文字
+- [x] 後端建立 account.calculateBazi API（生日時辰 → 四柱八字、五行比例、喜忌神自動推算）
+- [x] 重設計 Onboarding：只填姓名/生日時辰/出生地，系統自動推算命格，移除手動填寫八字欄位
+- [x] 重設計 MyProfile：移除手動填寫四柱/日主/喜忌神欄位，改為顯示系統推算結果
+- [x] 作戰室：命格未填寫時顯示「請先完成命格設定」提示，不使用預設命格計算
 
 ## 緊急修正 v2.41 - 用戶體驗重設計
 
-- [ ] 改寫 OnboardingModal：只填姓名/生日/出生地，系統自動推算命格（移除手動選五行）
-- [ ] 改寫 MyProfile 表單：移除手動填寫八字欄位，改為填生日後自動推算
-- [ ] 修正作戰室：非主帳號且命格未填寫時顯示「請先完成命格設定」提示
-- [ ] 重設計首頁：其他用戶進入後首頁顯示命格功能（命格身份證）
-- [ ] 底部導覽列：顯示所有功能並標示鎖定狀態（🔒），提示「請聯繫客服開通」
+- [x] 改寫 OnboardingModal：只填姓名/生日/出生地，系統自動推算命格（移除手動選五行）
+- [x] 改寫 MyProfile 表單：移除手動填寫八字欄位，改為填生日後自動推算
+- [x] 修正作戰室：非主帳號且命格未填寫時顯示「請先完成命格設定」提示
+- [x] 重設計首頁：其他用戶進入後首頁顯示命格功能（命格身份證）
+- [x] 底部導覽列：顯示所有功能並標示鎖定狀態（🔒），提示「請聯繫客服開通」
 
 ## 功能修正 v2.41 完成項目
 
@@ -695,21 +695,21 @@
 
 ## 功能修正 v2.42 - 動態命格全面整合 + 主帳號 Onboarding 豁免
 
-- [ ] AccessGate.tsx / OnboardingModal：主帳號（isOwner）不觸發 Onboarding 彈窗
-- [ ] 確認 warRoom.dailyReport 已使用 ctx.user 動態命格（getUserProfileForEngine）
-- [ ] 確認 warRoom.topicAdvice 已使用 ctx.user 動態命格
-- [ ] 確認 warRoom.hourlyEnergy 已使用 ctx.user 動態命格
-- [ ] 確認 lottery.generate 已使用 ctx.user 動態命格
-- [ ] 確認 oracle.cast 已使用 ctx.user 動態命格
-- [ ] 確認 oracle.dailyEnergy 已使用 ctx.user 動態命格
-- [ ] 確認 oracle.hourlyEnergy 已使用 ctx.user 動態命格
+- [x] AccessGate.tsx / OnboardingModal：主帳號（isOwner）不觸發 Onboarding 彈窗
+- [x] 確認 warRoom.dailyReport 已使用 ctx.user 動態命格（getUserProfileForEngine）
+- [x] 確認 warRoom.topicAdvice 已使用 ctx.user 動態命格
+- [x] 確認 warRoom.hourlyEnergy 已使用 ctx.user 動態命格
+- [x] 確認 lottery.generate 已使用 ctx.user 動態命格
+- [x] 確認 oracle.cast 已使用 ctx.user 動態命格
+- [x] 確認 oracle.dailyEnergy 已使用 ctx.user 動態命格
+- [x] 確認 oracle.hourlyEnergy 已使用 ctx.user 動態命格
 
 ## 功能修正 v2.42（更新）
 
-- [ ] 首頁（/）改為預設顯示命格功能頁（/profile），擲筊改為 /oracle 路由
-- [ ] AccessGate.tsx：主帳號（isOwner）不觸發 Onboarding 彈窗
-- [ ] warRoom.purchaseAdvice 和 lottery.indexHistory 改為 protectedProcedure，使用動態命格取代靜態 FAVORABLE_ELEMENTS
-- [ ] 確認 oracle.cast 和 oracle.dailyEnergy 也使用動態命格
+- [x] 首頁（/）改為預設顯示命格功能頁（/profile），擲筊改為 /oracle 路由
+- [x] AccessGate.tsx：主帳號（isOwner）不觸發 Onboarding 彈窗
+- [x] warRoom.purchaseAdvice 和 lottery.indexHistory 改為 protectedProcedure，使用動態命格取代靜態 FAVORABLE_ELEMENTS
+- [x] 確認 oracle.cast 和 oracle.dailyEnergy 也使用動態命格
 
 ## 功能修正 v2.42 - 動態命格全面整合 + 主帳號 Onboarding 豁免
 
@@ -734,41 +734,41 @@
 
 ## 功能改造 v2.44 - 通知功能改為發給每位登入用戶自己的 Mail
 
-- [ ] 研究 Manus 通知 API 是否支援發給指定用戶（非只有 Owner）
-- [ ] 晨報推播（warRoom.notifyBestHour）改為發給當前登入用戶的 Mail
-- [ ] Onboarding 完成通知：發給主帳號（Owner）知道有新用戶完成設定（保留 notifyOwner）
-- [ ] 評估每日晨報是否可讓每位用戶自行訂閱（設定頁面加入「訂閱晨報」開關）
-- [ ] TypeScript 零錯誤，測試全部通過
-- [ ] 儲存 V2.44 checkpoint
+- [x] 研究 Manus 通知 API 是否支援發給指定用戶（非只有 Owner）
+- [x] 晨報推播（warRoom.notifyBestHour）改為發給當前登入用戶的 Mail
+- [x] Onboarding 完成通知：發給主帳號（Owner）知道有新用戶完成設定（保留 notifyOwner）
+- [x] 評估每日晨報是否可讓每位用戶自行訂閱（設定頁面加入「訂閱晨報」開關）
+- [x] TypeScript 零錯誤，測試全部通過
+- [x] 儲存 V2.44 checkpoint
 
 ## 功能審查 v2.45 - 全系統命格來源全面審查與修正
 
-- [ ] 審查 calendar.monthly / calendar.dayDetail API（日曆頁）是否使用登入者動態命格
-- [ ] 審查 oracle.cast / oracle.dailyEnergy / oracle.hourlyEnergy 是否使用登入者動態命格
-- [ ] 審查 weeklyReport.sevenDays 是否使用登入者動態命格
-- [ ] 審查 warRoom.hourlyEnergy 是否使用登入者動態命格
-- [ ] 審查 lottery.generate / lottery.bestTime 是否使用登入者動態命格
-- [ ] 修正所有仍使用硬編碼或 userProfile.ts 預設命格的 API
-- [ ] TypeScript 零錯誤，測試全部通過
-- [ ] 儲存 V2.45 checkpoint
+- [x] 審查 calendar.monthly / calendar.dayDetail API（日曆頁）是否使用登入者動態命格
+- [x] 審查 oracle.cast / oracle.dailyEnergy / oracle.hourlyEnergy 是否使用登入者動態命格
+- [x] 審查 weeklyReport.sevenDays 是否使用登入者動態命格
+- [x] 審查 warRoom.hourlyEnergy 是否使用登入者動態命格
+- [x] 審查 lottery.generate / lottery.bestTime 是否使用登入者動態命格
+- [x] 修正所有仍使用硬編碼或 userProfile.ts 預設命格的 API
+- [x] TypeScript 零錯誤，測試全部通過
+- [x] 儲存 V2.45 checkpoint
 
 ## 功能修正 v2.46 - 全系統命格動態化 + 通知發給用戶自己
 
-- [ ] 研究 Manus 通知 API 是否支援發給指定用戶（非僅 Owner）
-- [ ] 修正 weeklyReport.sevenDays：改為 protectedProcedure，使用登入者動態命格計算七天能量分數
-- [ ] 修正 calendar.monthly：購彩指數 ELEMENT_ZH_SCORE 改為根據登入者喜忌神動態計算
-- [ ] 修正 insight.deepRead：LLM prompt 改為動態讀取登入者命格（移除硬編碼「蘇发震先生」）
-- [ ] 通知功能改為發給每位用戶自己的 Manus Mail（晨報、最佳時辰通知等）
-- [ ] TypeScript 零錯誤，測試全部通過
-- [ ] 儲存 V2.46 checkpoint
+- [x] 研究 Manus 通知 API 是否支援發給指定用戶（非僅 Owner）
+- [x] 修正 weeklyReport.sevenDays：改為 protectedProcedure，使用登入者動態命格計算七天能量分數
+- [x] 修正 calendar.monthly：購彩指數 ELEMENT_ZH_SCORE 改為根據登入者喜忌神動態計算
+- [x] 修正 insight.deepRead：LLM prompt 改為動態讀取登入者命格（移除硬編碼「蘇发震先生」）
+- [x] 通知功能改為發給每位用戶自己的 Manus Mail（晨報、最佳時辰通知等）
+- [x] TypeScript 零錯誤，測試全部通過
+- [x] 儲存 V2.46 checkpoint
 
 ## 功能新增 v2.47 - 主帳號刪除用戶帳號權限
 
-- [ ] 後端新增 admin.deleteUser API（adminProcedure，刪除用戶及其所有關聯資料）
-- [ ] 前端帳號管理頁面（AccountManager.tsx）新增刪除按鈕和確認對話框
-- [ ] 刪除時同步刪除 userProfiles、oracleSessions、lotterySessions 等關聯資料
-- [ ] TypeScript 零錯誤，測試全部通過
-- [ ] 儲存 V2.47 checkpoint
+- [x] 後端新增 admin.deleteUser API（adminProcedure，刪除用戶及其所有關聯資料）
+- [x] 前端帳號管理頁面（AccountManager.tsx）新增刪除按鈕和確認對話框
+- [x] 刪除時同步刪除 userProfiles、oracleSessions、lotterySessions 等關聯資料
+- [x] TypeScript 零錯誤，測試全部通過
+- [x] 儲存 V2.47 checkpoint
 
 - [x] 後端新增 account.deleteSelf API（用戶自行刪除自己的帳號及所有資料）
 - [x] 前端 MyProfile 頁底部新增「刪除帳號」入口（紅色危險區塊，需二次確認）
@@ -776,13 +776,13 @@
 
 ## 功能修正 v2.48 - 作戰室動態化 + 通知Mail隱藏 + MyProfile修正
 
-- [ ] 作戰室塔羅流日牌：移除計算方式顯示文字（僅主帳號可見），確認生日來源是登入者自己的
-- [ ] 作戰室全天時辰能量時間軸：確認跟著登入者自己的生辰八字走
-- [ ] 作戰室「通知 Mail」按鈕：非主帳號用戶隱藏此按鈕
-- [ ] 作戰室生命靈數與塔羅原型：根據登入者出生日期動態計算（非靜態主帳號資料）
-- [ ] MyProfile 頁標題：顯示用戶自填的 displayName，而非 Manus 帳號名
-- [ ] MyProfile 農曆生日 placeholder：改為通用說明文字，移除「甲子年 閏十月 初四日」
-- [ ] 帳號管理頁顯示用戶最後登入時間
+- [x] 作戰室塔羅流日牌：移除計算方式顯示文字（僅主帳號可見），確認生日來源是登入者自己的
+- [x] 作戰室全天時辰能量時間軸：確認跟著登入者自己的生辰八字走
+- [x] 作戰室「通知 Mail」按鈕：非主帳號用戶隱藏此按鈕
+- [x] 作戰室生命靈數與塔羅原型：根據登入者出生日期動態計算（非靜態主帳號資料）
+- [x] MyProfile 頁標題：顯示用戶自填的 displayName，而非 Manus 帳號名
+- [x] MyProfile 農曆生日 placeholder：改為通用說明文字，移除「甲子年 閏十月 初四日」
+- [x] 帳號管理頁顯示用戶最後登入時間
 
 ## 功能修正 v2.49 - AccountManager 最後登入時間 + 確認動態化狀態
 - [x] AccountManager 用戶卡片顯示最後登入時間（lastSignedIn 欄位）
@@ -792,10 +792,10 @@
 - [x] 儲存 V2.49 checkpoint
 
 ## 功能修改 v2.51
-- [ ] 導覽列移除「週報」和「統計」，移入個人下拉選單並改名（刮刮樂驗證/擲筊分析）
-- [ ] 個人下拉選單加入「加入主畫面教學」頁面
-- [ ] 導覽列圖示放大 20%，支援左右滑動
-- [ ] 更新網站 meta 描述（面向大眾）
+- [x] 導覽列移除「週報」和「統計」，移入個人下拉選單並改名（刮刮樂驗證/擲筊分析）
+- [x] 個人下拉選單加入「加入主畫面教學」頁面
+- [x] 導覽列圖示放大 20%，支援左右滑動
+- [x] 更新網站 meta 描述（面向大眾）
 
 ## 功能修正 v2.51 - 導覽列與個人選單優化
 - [x] 週報/統計從主導覽列移至個人下拉選單
@@ -805,38 +805,38 @@
 - [x] 更新 meta 描述為面向大眾的文案，加入 OG 標籤和 PWA 支援
 
 ## 功能修正 v2.52 - 手機導覽列大改版
-- [ ] 手機底部列左右滑動修正（確認觸發條件）
-- [ ] 手機底部列改為居中對齊
-- [ ] 功能列圖示再放大 1 倍（桌機+手機）
-- [ ] 手機功能列移至頂部 Header 下方
-- [ ] 作戰室改名為「每日運勢」並設為首頁
+- [x] 手機底部列左右滑動修正（確認觸發條件）
+- [x] 手機底部列改為居中對齊
+- [x] 功能列圖示再放大 1 倍（桌機+手機）
+- [x] 手機功能列移至頂部 Header 下方
+- [x] 作戰室改名為「每日運勢」並設為首頁
 - [x] 修正分頁標題（<title>）為「天命共振 - 命理能量系統」
 - [x] 修正 OG/網站預覽描述為面向大眾的文案
 
 ## 商業化第一階段 v2.53 - 儀表板、用戶洞察與積分激勵基礎建設
 
 ### 資料庫 Schema 擴充
-- [ ] 新增 plans 資料表（會員方案：basic/advanced/professional）
-- [ ] 新增 features 資料表（功能模組管理，含所需方案等級）
-- [ ] 新增 pointsTransactions 資料表（積分流水帳）
-- [ ] 擴充 users 表：加入 planId、planExpiresAt、pointsBalance 欄位
-- [ ] 擴充 userProfiles 表：加入 lifePathNumber 欄位（生命靈數，用於篩選）
-- [ ] 執行 pnpm db:push 遷移
+- [x] 新增 plans 資料表（會員方案：basic/advanced/professional）
+- [x] 新增 features 資料表（功能模組管理，含所需方案等級）
+- [x] 新增 pointsTransactions 資料表（積分流水帳）
+- [x] 擴充 users 表：加入 planId、planExpiresAt、pointsBalance 欄位
+- [x] 擴充 userProfiles 表：加入 lifePathNumber 欄位（生命靈數，用於篩選）
+- [x] 執行 pnpm db:push 遷移
 
 ### 後端 API
-- [ ] 新增 dashboard.getKpis（管理員：總用戶數、活躍用戶、方案分佈）
-- [ ] 新增 dashboard.getHourlyActivity（管理員：24小時活躍時段分析）
-- [ ] 新增 account.listUsersFiltered（管理員：進階篩選+分頁用戶列表）
-- [ ] 新增 points.getSigninStatus（用戶：查詢今日是否已簽到）
-- [ ] 新增 points.claimDailyPoints（用戶：每日簽到領取10積分）
+- [x] 新增 dashboard.getKpis（管理員：總用戶數、活躍用戶、方案分佈）
+- [x] 新增 dashboard.getHourlyActivity（管理員：24小時活躍時段分析）
+- [x] 新增 account.listUsersFiltered（管理員：進階篩選+分頁用戶列表）
+- [x] 新增 points.getSigninStatus（用戶：查詢今日是否已簽到）
+- [x] 新增 points.claimDailyPoints（用戶：每日簽到領取10積分）
 
 ### 前端頁面
-- [ ] 新增管理員儀表板頁面 /admin/dashboard（KPI 卡片 + 活躍時段圖表）
-- [ ] 升級帳號管理頁面：加入篩選器（生命靈數/方案/最後上線）
-- [ ] 升級帳號管理頁面：用戶卡片顯示方案和積分餘額
-- [ ] 升級帳號管理頁面：加入分頁功能
-- [ ] 新增每日簽到組件（放在每日運勢頁面顯眼處）
-- [ ] 簽到組件邏輯：未簽到顯示可點擊按鈕，已簽到顯示灰色已完成狀態
+- [x] 新增管理員儀表板頁面 /admin/dashboard（KPI 卡片 + 活躍時段圖表）
+- [x] 升級帳號管理頁面：加入篩選器（生命靈數/方案/最後上線）
+- [x] 升級帳號管理頁面：用戶卡片顯示方案和積分餘額
+- [x] 升級帳號管理頁面：加入分頁功能
+- [x] 新增每日簽到組件（放在每日運勢頁面顯眼處）
+- [x] 簽到組件邏輯：未簽到顯示可點擊按鈕，已簽到顯示灰色已完成狀態
 
 ## 商業化第一階段 v2.53 - 儀表板、用戶洞察與積分系統
 
@@ -892,9 +892,9 @@
 
 ## Bug 修正 - /account-manager 和 /permissions 頁面錯誤
 
-- [ ] 診斷 /account-manager 頁面錯誤
-- [ ] 診斷 /permissions 頁面錯誤
-- [ ] 修復兩個頁面的所有錯誤
+- [x] 診斷 /account-manager 頁面錯誤
+- [x] 診斷 /permissions 頁面錯誤
+- [x] 修復兩個頁面的所有錯誤
 
 ## 管理後台架構重整
 
@@ -906,19 +906,19 @@
 
 ## 大型升級 - 邀請碼移除 + 靈數邏輯 + 用戶管理 + 權限管理升級
 
-- [ ] 移除邀請碼保護鎖（AccessGate、後端驗證、相關 UI）
-- [ ] 修正生命靈數計算邏輯（塔羅牌 0-22 體系，超過22才相加）
-- [ ] 「內層靈數」改名「主要靈數」，改為中層靈數+年度靈數
-- [ ] 更新 /profile 頁面靈數顯示與計算
-- [ ] /admin/users 靈數篩選改為 0-22 共23個數字
-- [ ] 用戶管理預設排序：最後上線降序
-- [ ] 用戶管理列表直接顯示最後上線時間（不需展開）
-- [ ] PermissionManager 全局即時搜尋（前端驅動）
-- [ ] PermissionManager 統一截止日期選擇器
-- [ ] PermissionManager 快速續約按鈕（+1個月/+3個月/+1年）
-- [ ] PermissionManager 緊湊網格佈局（2-3欄）
-- [ ] PermissionManager 分類篩選按鈕 + 全選此分類
-- [ ] PermissionManager 功能開關自動套用統一截止日期
+- [x] 移除邀請碼保護鎖（AccessGate、後端驗證、相關 UI）
+- [x] 修正生命靈數計算邏輯（塔羅牌 0-22 體系，超過22才相加）
+- [x] 「內層靈數」改名「主要靈數」，改為中層靈數+年度靈數
+- [x] 更新 /profile 頁面靈數顯示與計算
+- [x] /admin/users 靈數篩選改為 0-22 共23個數字
+- [x] 用戶管理預設排序：最後上線降序
+- [x] 用戶管理列表直接顯示最後上線時間（不需展開）
+- [x] PermissionManager 全局即時搜尋（前端驅動）
+- [x] PermissionManager 統一截止日期選擇器
+- [x] PermissionManager 快速續約按鈕（+1個月/+3個月/+1年）
+- [x] PermissionManager 緊湊網格佈局（2-3欄）
+- [x] PermissionManager 分類篩選按鈕 + 全選此分類
+- [x] PermissionManager 功能開關自動套用統一截止日期
 
 ## 大型升級 v2.53 - 邀請碼移除 + 靈數邏輯 + 用戶管理 + 權限管理升級
 
@@ -935,27 +935,27 @@
 ## 鳳凰計畫 - SaaS 商業邏輯重構
 
 ### 資料庫 Schema
-- [ ] 新增 modules 表（功能模塊：id/name/description/icon/category/sort_order/contained_features）
-- [ ] 改造 plans 表（新增 level/is_active 欄位）
-- [ ] 新增 plan_modules 表（方案-模塊多對多關聯）
-- [ ] 新增 campaigns 表（行銷活動：rule_type/rule_target/rule_value）
-- [ ] 新增 user_subscriptions 表（用戶訂閱：plan_id/plan_expires_at/custom_modules）
+- [x] 新增 modules 表（功能模塊：id/name/description/icon/category/sort_order/contained_features）
+- [x] 改造 plans 表（新增 level/is_active 欄位）
+- [x] 新增 plan_modules 表（方案-模塊多對多關聯）
+- [x] 新增 campaigns 表（行銷活動：rule_type/rule_target/rule_value）
+- [x] 新增 user_subscriptions 表（用戶訂閱：plan_id/plan_expires_at/custom_modules）
 
 ### 後端 API
-- [ ] 建立 server/routers/businessHub.ts（admin 保護路由）
-- [ ] businessHub.modules.list / updateOrder
-- [ ] businessHub.plans.list / create / update
-- [ ] businessHub.campaigns.list / create / update
-- [ ] 建立 server/PermissionService.ts（hasAccess 統一權限檢查）
+- [x] 建立 server/routers/businessHub.ts（admin 保護路由）
+- [x] businessHub.modules.list / updateOrder
+- [x] businessHub.plans.list / create / update
+- [x] businessHub.campaigns.list / create / update
+- [x] 建立 server/PermissionService.ts（hasAccess 統一權限檢查）
 
 ### 前端「商業中心」
-- [ ] 安裝 dnd-kit 拖拽庫
-- [ ] 建立 /admin/business-hub 頁面（Tabs 佈局）
-- [ ] 頁籤一：模塊管理器（拖拽排序）
-- [ ] 頁籤二：方案與定價（卡片+模塊複選框）
-- [ ] 頁籤三：行銷活動（折扣/贈送規則編輯器）
-- [ ] AdminLayout 側邊欄加入「商業中心」入口
-- [ ] App.tsx 加入 /admin/business-hub 路由
+- [x] 安裝 dnd-kit 拖拽庫
+- [x] 建立 /admin/business-hub 頁面（Tabs 佈局）
+- [x] 頁籤一：模塊管理器（拖拽排序）
+- [x] 頁籤二：方案與定價（卡片+模塊複選框）
+- [x] 頁籤三：行銷活動（折扣/贈送規則編輯器）
+- [x] AdminLayout 側邊欄加入「商業中心」入口
+- [x] App.tsx 加入 /admin/business-hub 路由
 
 ## 鳳凰計畫 Phase 2 - SaaS 訂閱系統完整實作
 
@@ -987,18 +987,18 @@
 ## 鳳凰計畫 Phase 3 - 模塊化接管全系統
 
 ### 後端
-- [ ] 新增 modules.getVisibleNav API（依 sort_order 返回模塊列表 + hasAccess 布爾值）
-- [ ] 重構 auth.me：加入 planName 欄位（從 user_subscriptions + plans 查詢）
-- [ ] 強制替換所有後端路由的舊權限邏輯為 PermissionService.checkAccess
-- [ ] 移除 /permission-manager 相關後端 API
+- [x] 新增 modules.getVisibleNav API（依 sort_order 返回模塊列表 + hasAccess 布爾值）
+- [x] 重構 auth.me：加入 planName 欄位（從 user_subscriptions + plans 查詢）
+- [x] 強制替換所有後端路由的舊權限邏輯為 PermissionService.checkAccess
+- [x] 移除 /permission-manager 相關後端 API
 
 ### 前端
-- [ ] SharedNav 動態導航重構（從 modules.getVisibleNav 取列表，hasAccess=false 顯示鎖定）
-- [ ] UserMenu 顯示 planName 會員身份（取代寫死「一般會員」）
-- [ ] 退役 /permission-manager：移除 AdminLayout 側邊欄入口、刪除頁面組件
-- [ ] 訂閱日誌分頁（AdminUsers 展開詳情加入「訂閱記錄」Tab）
-- [ ] 兌換碼 CSV 匯出按鈕（AdminBusinessHub 兌換碼面板）
-- [ ] 每日到期提醒排程（後端定時任務，7天內到期 notifyOwner）
+- [x] SharedNav 動態導航重構（從 modules.getVisibleNav 取列表，hasAccess=false 顯示鎖定）
+- [x] UserMenu 顯示 planName 會員身份（取代寫死「一般會員」）
+- [x] 退役 /permission-manager：移除 AdminLayout 側邊欄入口、刪除頁面組件
+- [x] 訂閱日誌分頁（AdminUsers 展開詳情加入「訂閱記錄」Tab）
+- [x] 兌換碼 CSV 匯出按鈕（AdminBusinessHub 兌換碼面板）
+- [x] 每日到期提醒排程（後端定時任務，7天內到期 notifyOwner）
 
 ## 鳳凰計畫 Phase 3 - 模塊化接管全系統
 
@@ -1016,22 +1016,22 @@
 
 ## 鳳凰計畫 Phase 4 - 體驗革命與架構深化
 
-- [ ] DB：modules 表加入 navPath / is_central / parent_id 欄位
-- [ ] BusinessHub 模塊編輯彈窗加入 navPath 輸入框與 is_central 開關
-- [ ] 新建 /outfit 補運穿搭獨立頁面（遷移作戰室手串矩陣+穿搭建議+五行總覽）
-- [ ] 新建 /diet 飲食羅盤獨立頁面（遷移作戰室飲食建議+五行總覽）
-- [ ] 新建 /divination 天命問卜獨立頁面（遷移作戰室天命問卜組件）
-- [ ] 新建 /luck-cycle 大限流年獨立頁面（遷移命格頁流年分析）
-- [ ] 清除作戰室/命格頁中已遷移的舊組件代碼
-- [ ] 首頁輪播導航革命（Embla Carousel + Cover Flow 效果）
-- [ ] is_central 眾星拱月佈局（中央固定模塊 + 左右輪播）
-- [ ] AdminUsers 批量訂閱 checkbox + 批量 assignSubscription API
-- [ ] AdminUsers lastSignedIn 精確到分鐘顯示
-- [ ] 靈數篩選器加入塔羅牌名（靈數1魔術師...靈數9隱者）
-- [ ] BusinessHub 模塊父子層級樹狀視圖 + 拖拽排序
-- [ ] parent_id 後端 API（updateModuleParent）
-- [ ] TypeScript 零錯誤，測試全部通過
-- [ ] 儲存 Phase 4 checkpoint
+- [x] DB：modules 表加入 navPath / is_central / parent_id 欄位
+- [x] BusinessHub 模塊編輯彈窗加入 navPath 輸入框與 is_central 開關
+- [x] 新建 /outfit 補運穿搭獨立頁面（遷移作戰室手串矩陣+穿搭建議+五行總覽）
+- [x] 新建 /diet 飲食羅盤獨立頁面（遷移作戰室飲食建議+五行總覽）
+- [x] 新建 /divination 天命問卜獨立頁面（遷移作戰室天命問卜組件）
+- [x] 新建 /luck-cycle 大限流年獨立頁面（遷移命格頁流年分析）
+- [x] 清除作戰室/命格頁中已遷移的舊組件代碼
+- [x] 首頁輪播導航革命（Embla Carousel + Cover Flow 效果）
+- [x] is_central 眾星拱月佈局（中央固定模塊 + 左右輪播）
+- [x] AdminUsers 批量訂閱 checkbox + 批量 assignSubscription API
+- [x] AdminUsers lastSignedIn 精確到分鐘顯示
+- [x] 靈數篩選器加入塔羅牌名（靈數1魔術師...靈數9隱者）
+- [x] BusinessHub 模塊父子層級樹狀視圖 + 拖拽排序
+- [x] parent_id 後端 API（updateModuleParent）
+- [x] TypeScript 零錯誤，測試全部通過
+- [x] 儲存 Phase 4 checkpoint
 
 ## 鳳凰計畫 Phase 4 - 體驗革命與架構深化
 
@@ -1071,12 +1071,12 @@
 
 ## 鳳凰計畫 Phase 6 - 補運餐食・生活融合
 
-- [ ] 修正 NearbyRestaurants 硬編碼命格：ELEMENT_MATCH_SCORE 改為依用戶 favorableElements 動態計算
-- [ ] 新建 weatherEngine.ts：天氣 API 接入 + 天氣五行映射規則
-- [ ] 升級 wuxingEngine.ts：新公式（本命30%+環境50%+天氣20%）+ calculateResonanceScore 函數
-- [ ] 改造 generateDietaryAdvice：新增 planB 陣列（五行補運指數）
-- [ ] 全面重塑 DietPage 為「補運餐食」：品牌化、補運指數儀表盤、高級篩選面板、價格顯示
-- [ ] 改造 NearbyRestaurants：高級搜尋表單（分類/距離/價格篩選）、補運指數標籤、價格標籤
+- [x] 修正 NearbyRestaurants 硬編碼命格：ELEMENT_MATCH_SCORE 改為依用戶 favorableElements 動態計算
+- [x] 新建 weatherEngine.ts：天氣 API 接入 + 天氣五行映射規則
+- [x] 升級 wuxingEngine.ts：新公式（本命30%+環境50%+天氣20%）+ calculateResonanceScore 函數
+- [x] 改造 generateDietaryAdvice：新增 planB 陣列（五行補運指數）
+- [x] 全面重塑 DietPage 為「補運餐食」：品牌化、補運指數儀表盤、高級篩選面板、價格顯示
+- [x] 改造 NearbyRestaurants：高級搜尋表單（分類/距離/價格篩選）、補運指數標籤、價格標籤
 
 ## 鳳凰計畫 Phase 6 - 飲食羅盤命格個人化修正
 
@@ -1103,11 +1103,11 @@
 - [x] 修正 NearbyRestaurants ELEMENT_MATCH_SCORE 硬編碼→依用戶喜用神動態計算
 
 ## 鳳凰計畫 Phase 6+ - 餐廳篩選系統完整化（2026-02-26）
-- [ ] 後端 map.ts 改造：接收 types/priceLevel 篩選條件傳入 Google Places API
-- [ ] 前端 NearbyRestaurants：完整分類標籤多選（15+類型）和價格標籤多選
-- [ ] 定位授權引導優雅降級（拒絕定位時顯示提示）
-- [ ] planB 故事性文案（今日備選方案敘事）
-- [ ] 餐廳分享功能（生成補運指數圖片卡片）
+- [x] 後端 map.ts 改造：接收 types/priceLevel 篩選條件傳入 Google Places API
+- [x] 前端 NearbyRestaurants：完整分類標籤多選（15+類型）和價格標籤多選
+- [x] 定位授權引導優雅降級（拒絕定位時顯示提示）
+- [x] planB 故事性文案（今日備選方案敘事）
+- [x] 餐廳分享功能（生成補運指數圖片卡片）
 
 ## 鳳凰計畫 Phase 6+ - 餐廳篩選系統完整化（2026-02-26）
 - [x] NearbyRestaurants 分類標籤多選（19種類型，對應 Google Places API includedTypes）
@@ -1155,10 +1155,10 @@
 
 ## 飲食羅盤篩選器修復 + 彩券行地圖功能（2026-02-26）
 
-- [ ] 修復分類搜尋卡住問題（點選分類後搜尋無結果）
-- [ ] 修復價格區間篩選（改為前端過濾，無價格資料的餐廳不受影響）
-- [ ] 修復五行屬性篩選（連接過濾邏輯，可切換五行）
-- [ ] 實作補運樂透附近彩券行地圖大功能（風水位置+命格+環境+天氣比對）
+- [x] 修復分類搜尋卡住問題（點選分類後搜尋無結果）
+- [x] 修復價格區間篩選（改為前端過濾，無價格資料的餐廳不受影響）
+- [x] 修復五行屬性篩選（連接過濾邏輯，可切換五行）
+- [x] 實作補運樂透附近彩券行地圖大功能（風水位置+命格+環境+天氣比對）
 
 ## 飲食羅盤地圖升級 + NearbyStores 修復（2026-02-26）
 
@@ -1196,29 +1196,29 @@
 ## 用戶系統大優化（2026-02-26）
 
 ### 導航清理
-- [ ] 用戶下拉選單移除「刷刷樂驗證」和「擲筊分析」（已模塊化）
-- [ ] 財運羅盤導航 Bug 修復（點選無法進入功能）
+- [x] 用戶下拉選單移除「刷刷樂驗證」和「擲筊分析」（已模塊化）
+- [x] 財運羅盤導航 Bug 修復（點選無法進入功能）
 
 ### 首登流程
-- [ ] 新用戶首登完成三步驟後自動分配預設方案（後台可設定預設方案）
-- [ ] 首登三步驟完成後自動將農曆/八字資料填入 /my-profile
-- [ ] /business-hub 加入「新登入用戶預設方案」行銷活動設定（可指定方案、到期後退回基礎方案）
+- [x] 新用戶首登完成三步驟後自動分配預設方案（後台可設定預設方案）
+- [x] 首登三步驟完成後自動將農曆/八字資料填入 /my-profile
+- [x] /business-hub 加入「新登入用戶預設方案」行銷活動設定（可指定方案、到期後退回基礎方案）
 
 ### /admin/users 優化
-- [ ] 未展開卡片顯示最後上線時間（一目了然）
-- [ ] 展開卡片移除「已啟用」欄位（舊邀請碼功能）
-- [ ] 展開卡片角色顯示與方案一致
-- [ ] 展開卡片生命靈數從 /profile 主要靈數欄位抓取（修復未計算問題）
-- [ ] 分頁功能（可選 10/20/50/100 人/頁，顯示總用戶數）
-- [ ] 管理訂閱方案選單與 /business-hub 方案串接（顯示最新方案）
-- [ ] 建立客戶分群功能（建立/編輯群組、批量調整方案/積分/到期日）
+- [x] 未展開卡片顯示最後上線時間（一目了然）
+- [x] 展開卡片移除「已啟用」欄位（舊邀請碼功能）
+- [x] 展開卡片角色顯示與方案一致
+- [x] 展開卡片生命靈數從 /profile 主要靈數欄位抓取（修復未計算問題）
+- [x] 分頁功能（可選 10/20/50/100 人/頁，顯示總用戶數）
+- [x] 管理訂閱方案選單與 /business-hub 方案串接（顯示最新方案）
+- [x] 建立客戶分群功能（建立/編輯群組、批量調整方案/積分/到期日）
 
 ### /profile 修復
-- [ ] 命格備注區塊 Bug 修復（比對主帳號 vs 一般用戶資料來源差異）
-- [ ] 移除已模塊化功能（大限流年提示區塊等）
+- [x] 命格備注區塊 Bug 修復（比對主帳號 vs 一般用戶資料來源差異）
+- [x] 移除已模塊化功能（大限流年提示區塊等）
 
 ### 每日運勢（原作戰室）
-- [ ] 移除天命問卜區塊（已模塊化）
+- [x] 移除天命問卜區塊（已模塊化）
 
 ## 用戶系統大優化完成（2026-02-26）
 ### 導航清理
@@ -1298,32 +1298,32 @@
 
 ## UI 改善 v3.3（2026-02-26）
 
-- [ ] 所有輸入框右側加入清除（×）按鈕（擲筊問題輸入、天命問卜輸入）
-- [ ] 每日運勢桌機版頂部空間優化（標題區放大/重新設計）
-- [ ] 英雄劇本改名為「本日天命格言」並白話化內容
-- [ ] Tab 區塊（英雄劇本/塔羅流日/時辰能量）改為垂直排列，不再用 Tab 收納
-- [ ] 擲筊動畫改善：成功/失敗視覺更清晰，結果就地顯示不需下滑
-- [ ] 移除擲筊頁底部多餘區塊（圖2 所示的六格功能入口）
+- [x] 所有輸入框右側加入清除（×）按鈕（擲筊問題輸入、天命問卜輸入）
+- [x] 每日運勢桌機版頂部空間優化（標題區放大/重新設計）
+- [x] 英雄劇本改名為「本日天命格言」並白話化內容
+- [x] Tab 區塊（英雄劇本/塔羅流日/時辰能量）改為垂直排列，不再用 Tab 收納
+- [x] 擲筊動畫改善：成功/失敗視覺更清晰，結果就地顯示不需下滑
+- [x] 移除擲筊頁底部多餘區塊（圖2 所示的六格功能入口）
 
 ## UI 改善 v3.4（2026-02-26）
 
-- [ ] WarRoom Tab 改垂直排列（本日天命格言、塔羅流日、時辰能量）
-- [ ] WarRoom 桌機版頂部空間優化（英雄式大標題）
-- [ ] 英雄劇本改名「本日天命格言」並白話化
-- [ ] 擲筊動畫改善：成功/失敗更清晰，結果就地顯示
-- [ ] 擲筊頁底部多餘區塊移除
-- [ ] /diet 餐廳分類關鍵字說明與優化
-- [ ] /diet 每次搜尋最多 20 筆
-- [ ] /diet 五行屬性篩選修復
+- [x] WarRoom Tab 改垂直排列（本日天命格言、塔羅流日、時辰能量）
+- [x] WarRoom 桌機版頂部空間優化（英雄式大標題）
+- [x] 英雄劇本改名「本日天命格言」並白話化
+- [x] 擲筊動畫改善：成功/失敗更清晰，結果就地顯示
+- [x] 擲筊頁底部多餘區塊移除
+- [x] /diet 餐廳分類關鍵字說明與優化
+- [x] /diet 每次搜尋最多 20 筆
+- [x] /diet 五行屬性篩選修復
 
 ## 功能增強 v4.1 - 虛擬衣櫥 + AI 穿搭點評（2026-02-26）
 
-- [ ] 資料庫：新增 wardrobe_items 表（名稱/顏色/五行/類型/圖片URL）
-- [ ] 後端：wardrobe CRUD API（新增/列表/刪除衣物）
-- [ ] 後端：wardrobe.aiReview API（上傳照片 → AI 分析五行匹配度）
-- [ ] 前端：虛擬衣櫥管理頁面（/wardrobe）
-- [ ] 前端：OutfitPage 加入 AI 穿搭點評（上傳照片 + AI 分析結果）
-- [ ] 前端：OutfitPage 穿搭建議整合衣櫥單品（從用戶衣物中挑選最匹配的）
+- [x] 資料庫：新增 wardrobe_items 表（名稱/顏色/五行/類型/圖片URL）
+- [x] 後端：wardrobe CRUD API（新增/列表/刪除衣物）
+- [x] 後端：wardrobe.aiReview API（上傳照片 → AI 分析五行匹配度）
+- [x] 前端：虛擬衣櫥管理頁面（/wardrobe）
+- [x] 前端：OutfitPage 加入 AI 穿搭點評（上傳照片 + AI 分析結果）
+- [x] 前端：OutfitPage 穿搭建議整合衣櫥單品（從用戶衣物中挑選最匹配的）
 
 ## 功能增強 v4.2 - 神諭穿搭 V4.0 完整版（2026-02-27）
 
@@ -1393,25 +1393,25 @@
 ## 功能增強 v4.4 - 後台管理邏輯計算三項擴充（2026-02-27）
 
 ### 資料庫
-- [ ] custom_bracelets 新增 pairingItems 欄位（JSON 陣列，存建議搭配的手串/配飾 code 清單）
-- [ ] 新增 aura_rule_history 表（儲存每次規則快照：snapshot_label / snapshot_data / created_at）
-- [ ] restaurant_categories 新增 scheduleEnabled / scheduleStartHour / scheduleEndHour 欄位
+- [x] custom_bracelets 新增 pairingItems 欄位（JSON 陣列，存建議搭配的手串/配飾 code 清單）
+- [x] 新增 aura_rule_history 表（儲存每次規則快照：snapshot_label / snapshot_data / created_at）
+- [x] restaurant_categories 新增 scheduleEnabled / scheduleStartHour / scheduleEndHour 欄位
 
 ### 後端 adminConfig router 擴充
-- [ ] adminConfig.updateBraceletPairing - 更新手串建議搭配清單
-- [ ] adminConfig.snapshotAuraRules - 手動建立規則快照
-- [ ] adminConfig.getAuraRuleHistory - 取得歷史快照列表
-- [ ] adminConfig.restoreAuraRuleSnapshot - 還原指定快照
-- [ ] adminConfig.deleteAuraRuleSnapshot - 刪除快照
-- [ ] adminConfig.updateCategorySchedule - 更新分類時段設定
+- [x] adminConfig.updateBraceletPairing - 更新手串建議搭配清單
+- [x] adminConfig.snapshotAuraRules - 手動建立規則快照
+- [x] adminConfig.getAuraRuleHistory - 取得歷史快照列表
+- [x] adminConfig.restoreAuraRuleSnapshot - 還原指定快照
+- [x] adminConfig.deleteAuraRuleSnapshot - 刪除快照
+- [x] adminConfig.updateCategorySchedule - 更新分類時段設定
 
 ### 前端 AdminLogicConfig 頁面更新
-- [ ] Tab 2 手串管理：新增「建議搭配」多選欄位（從現有手串清單選擇）
-- [ ] Tab 1 能量規則：新增「歷史版本」側邊抽屜，顯示快照列表 + 還原按鈕
-- [ ] Tab 3 餐廳分類：每個分類新增時段設定（啟用開關 + 起始/結束小時選擇器）
+- [x] Tab 2 手串管理：新增「建議搭配」多選欄位（從現有手串清單選擇）
+- [x] Tab 1 能量規則：新增「歷史版本」側邊抽屜，顯示快照列表 + 還原按鈕
+- [x] Tab 3 餐廳分類：每個分類新增時段設定（啟用開關 + 起始/結束小時選擇器）
 
 ### 前台整合
-- [ ] NearbyRestaurants 根據當前時段過濾分類（scheduleEnabled=true 且當前時間不在範圍內則隱藏）
+- [x] NearbyRestaurants 根據當前時段過濾分類（scheduleEnabled=true 且當前時間不在範圍內則隱藏）
 
 ## 功能增強 v4.4 - 後台管理邏輯計算三項擴充（完成）
 
@@ -1433,15 +1433,15 @@
 
 ## 功能增強 v4.5 - 拍照 AI 分析五行 → 虛擬衣櫃
 
-- [ ] 評估技術可行性（LLM 視覺模型 + S3 暫存 + 即時刪除）
-- [ ] DB schema 新增 wardrobe_items 資料表（user_id/category/name/element/colors/wuxingScore/auraBoost/aiAnalysis）
-- [ ] 後端 wardrobe.analyzePhoto API（multipart 上傳 → S3 暫存 → LLM 視覺分析 → 儲存 → 刪除 S3 圖片）
-- [ ] 後端 wardrobe.addItem / listItems / deleteItem API
-- [ ] 前端 PhotoUploadAnalyzer 元件（相機/相簿選擇 → 預覽 → AI 分析動畫 → 結果確認 → 加入衣樻）
-- [ ] 前端 WardrobePage 整合 PhotoUploadAnalyzer（「拍照新增」按鈕）
-- [ ] 後台 AdminLogicConfig 手串/配飾管理 Tab 整合拍照新增流程
-- [ ] 153+ 項測試全部通過，TypeScript 零錯誤
-- [ ] 儲存 V4.5 checkpoint
+- [x] 評估技術可行性（LLM 視覺模型 + S3 暫存 + 即時刪除）
+- [x] DB schema 新增 wardrobe_items 資料表（user_id/category/name/element/colors/wuxingScore/auraBoost/aiAnalysis）
+- [x] 後端 wardrobe.analyzePhoto API（multipart 上傳 → S3 暫存 → LLM 視覺分析 → 儲存 → 刪除 S3 圖片）
+- [x] 後端 wardrobe.addItem / listItems / deleteItem API
+- [x] 前端 PhotoUploadAnalyzer 元件（相機/相簿選擇 → 預覽 → AI 分析動畫 → 結果確認 → 加入衣樻）
+- [x] 前端 WardrobePage 整合 PhotoUploadAnalyzer（「拍照新增」按鈕）
+- [x] 後台 AdminLogicConfig 手串/配飾管理 Tab 整合拍照新增流程
+- [x] 153+ 項測試全部通過，TypeScript 零錯誤
+- [x] 儲存 V4.5 checkpoint
 
 ## 功能增強 v4.5 完成狀態
 
@@ -1457,11 +1457,11 @@
 
 ## Bug 修復 v4.6 - admin/logic-config 規則設定未串接前台
 
-- [ ] 診斷 simulateOutfit 是否從 DB 讀取 aura_engine_config 規則
-- [ ] 診斷 getOutfitSimulatorData 天命底盤計算是否套用 DB 規則
-- [ ] 修復串接：確保後台規則變更即時影響前台 Aura Score
-- [ ] 撰寫端對端測試驗證修復
-- [ ] 儲存 v4.6 checkpoint
+- [x] 診斷 simulateOutfit 是否從 DB 讀取 aura_engine_config 規則
+- [x] 診斷 getOutfitSimulatorData 天命底盤計算是否套用 DB 規則
+- [x] 修復串接：確保後台規則變更即時影響前台 Aura Score
+- [x] 撰寫端對端測試驗證修復
+- [x] 儲存 v4.6 checkpoint
 
 ## Bug 修復 v4.6 - admin/logic-config 能量模擬器規則串接修復（2026-02-27）
 
@@ -1479,22 +1479,22 @@
 
 ## 功能增強 v4.7 - 能量模擬器同步每日運勢 + 左右手四位置 + 左進右出說明（2026-02-27）
 
-- [ ] 分析每日運勢分數計算邏輯（warRoom 的 dailyScore）與 auraEngine 天命底盤的差異
-- [ ] 確認同步方案：天命底盤 = 每日運勢分數 × 10（0-10 → 0-100）或直接使用相同計算邏輯
-- [ ] 後端：auraEngine 新增 leftHand/rightHand 分開計分欄位
-- [ ] 後端：新增 getBraceletHandExplanation API（左進右出五行說明）
-- [ ] 前端：InteractiveMannequin 改為四個手部位置（左手手串、左手配件、右手手串、右手配件）
-- [ ] 前端：WardrobeSelector 新增左右手分類選擇
-- [ ] 前端：點擊衣物/配件時顯示能量說明 Panel
-- [ ] 前端：左右手手串顯示「左進右出」詳細說明（五行 × 左/右手 = 不同效果）
-- [ ] 前端：OutfitPage 能量模擬器天命底盤改為以每日運勢分數為基礎計算
-- [ ] 後台：AdminLogicConfig 手串管理新增左右手能量說明欄位
+- [x] 分析每日運勢分數計算邏輯（warRoom 的 dailyScore）與 auraEngine 天命底盤的差異
+- [x] 確認同步方案：天命底盤 = 每日運勢分數 × 10（0-10 → 0-100）或直接使用相同計算邏輯
+- [x] 後端：auraEngine 新增 leftHand/rightHand 分開計分欄位
+- [x] 後端：新增 getBraceletHandExplanation API（左進右出五行說明）
+- [x] 前端：InteractiveMannequin 改為四個手部位置（左手手串、左手配件、右手手串、右手配件）
+- [x] 前端：WardrobeSelector 新增左右手分類選擇
+- [x] 前端：點擊衣物/配件時顯示能量說明 Panel
+- [x] 前端：左右手手串顯示「左進右出」詳細說明（五行 × 左/右手 = 不同效果）
+- [x] 前端：OutfitPage 能量模擬器天命底盤改為以每日運勢分數為基礎計算
+- [x] 後台：AdminLogicConfig 手串管理新增左右手能量說明欄位
 
 ## Bug 修復 v4.7 - OutfitPage 左右手 + WardrobePage 六大修復
 
-- [ ] OutfitPage: 點擊衣物/配件時顯示能量說明 Panel
-- [ ] OutfitPage: 左右手手串顯示「左進右出」說明
-- [ ] OutfitPage: 天命底盤分數同步每日運勢分數
+- [x] OutfitPage: 點擊衣物/配件時顯示能量說明 Panel
+- [x] OutfitPage: 左右手手串顯示「左進右出」說明
+- [x] OutfitPage: 天命底盤分數同步每日運勢分數
 - [x] WardrobePage: 新增「手串」分類篩選 Tab
 - [x] WardrobePage: 新增衣物表單分類下拉加入「手串」選項
 - [x] WardrobePage: 修復「回到手串」連結（改為返回神諭穿搭連結）
@@ -1524,11 +1524,11 @@
 - [x] /diet 附近命理推薦餐廣 Google Map 高度放大兩倍（從 240px 改為 480px）
 
 ## 新功能 v4.11 - 財運羅盤獨立頁面（2026-02-27）
-- [ ] 建立 /wealth 獨立頁面（WealthPage.tsx）
-- [ ] 財運羅盤頁面包含：偏財指數、彩券能量、財神方位、財運分析、今日財運建議
-- [ ] 在 App.tsx 註冊 /wealth 路由
-- [ ] 修正資料庫 module_wealth navPath 從 /lottery 改為 /wealth
-- [ ] SharedNav 加入 /wealth 的漸層色設定
+- [x] 建立 /wealth 獨立頁面（WealthPage.tsx）
+- [x] 財運羅盤頁面包含：偏財指數、彩券能量、財神方位、財運分析、今日財運建議
+- [x] 在 App.tsx 註冊 /wealth 路由
+- [x] 修正資料庫 module_wealth navPath 從 /lottery 改為 /wealth
+- [x] SharedNav 加入 /wealth 的漸層色設定
 
 ## 新功能 v4.11 - 財運羅盤獨立頁面（2026-02-27）
 - [x] 建立 WealthPage.tsx 獨立頁面（財運羅盤完整功能）
@@ -1537,13 +1537,13 @@
 - [x] 在 ModuleCarousel 加入 /wealth 漸層色彩
 
 ## 功能升級 v4.12 - 天命問卜全面強化（2026-02-27）
-- [ ] 後端：強化 topicAdvice LLM 提示詞（加入完整八字、十神、流日天干、塔羅、月相、具體問題深度分析）
-- [ ] 後端：回答結構化（吉凶判斷/核心分析/具體建議/時機建議/注意事項 五段式）
-- [ ] 後端：加入問題歷史記錄儲存（divination_sessions 資料表）
-- [ ] 前端：DivinationPage 全面重設計（主題選擇卡片、命理上下文標籤列、結構化回答展示）
-- [ ] 前端：加入問卜歷史記錄區塊（可查看過去問題與回答）
-- [ ] 前端：加入「今日命理狀態」摘要橫幅（十神/塔羅/月相/五行能量）
-- [ ] 前端：回答顯示分段卡片（吉凶指數大字 + 各段落展開）
+- [x] 後端：強化 topicAdvice LLM 提示詞（加入完整八字、十神、流日天干、塔羅、月相、具體問題深度分析）
+- [x] 後端：回答結構化（吉凶判斷/核心分析/具體建議/時機建議/注意事項 五段式）
+- [x] 後端：加入問題歷史記錄儲存（divination_sessions 資料表）
+- [x] 前端：DivinationPage 全面重設計（主題選擇卡片、命理上下文標籤列、結構化回答展示）
+- [x] 前端：加入問卜歷史記錄區塊（可查看過去問題與回答）
+- [x] 前端：加入「今日命理狀態」摘要橫幅（十神/塔羅/月相/五行能量）
+- [x] 前端：回答顯示分段卡片（吉凶指數大字 + 各段落展開）
 
 ## 功能升級 v4.12 - 天命問卜全面強化（已完成）
 
@@ -1577,12 +1577,12 @@
 - [x] 測試：168 項測試全部通過，TypeScript 零錯誤
 
 ## 功能升級 v4.16 - 神諭穿搭 UI 修復與後續功能（2026-03-03）
-- [ ] UI：管理虛擬衣櫥按鈕移至五行柱狀圖上方（圖2上方）
-- [ ] UI：手串矩陣顏色改為對應五行顏色（土=黃棕、金=白灰、木=綠、火=紅、水=藍）
-- [ ] UI：今日五行加權總覽重新設計（移除膠囊柱狀，改為更直觀的水平進度條設計）
-- [ ] 後台：/admin/logic-config 重構為主從佈局算法核心控制中心
-- [ ] 前端：神諭穿搭頁加入本週策略分布圖表
-- [ ] 後端：storeResonance 整合 calculateWeightedElements 動態加權
+- [x] UI：管理虛擬衣櫥按鈕移至五行柱狀圖上方（圖2上方）
+- [x] UI：手串矩陣顏色改為對應五行顏色（土=黃棕、金=白灰、木=綠、火=紅、水=藍）
+- [x] UI：今日五行加權總覽重新設計（移除膠囊柱狀，改為更直觀的水平進度條設計）
+- [x] 後台：/admin/logic-config 重構為主從佈局算法核心控制中心
+- [x] 前端：神諭穿搭頁加入本週策略分布圖表
+- [x] 後端：storeResonance 整合 calculateWeightedElements 動態加權
 ## 功能升級 v4.16 - 算法核心控制中心重構（已完成）
 - [x] 後台：/admin/logic-config 重構為主從佈局（左側策略選單 + 右側詳細參數）
 - [x] 後台：新增「策略引擎」面板（五大策略觸發邏輯說明）
@@ -1786,7 +1786,7 @@
 - [x] 後端: 每日晨報通知（早上7點推送今日運勢摘要寫入通知中心）
 - [x] 後端: notifyUser 通用工具函數（集中寫入 user_notifications）
 - [x] 前端: 通知中心新增每日晨報/命格提醒/刮刮樂里程碑分類標籤
-- [ ] 後端: 命格補運提醒通知（每日早晨推送五行補運建議）
+- [x] 後端: 命格補運提醒通知（每日早晨推送五行補運建議）
 
 ### 排行榜月度視圖
 - [x] 後端: wbc.getLeaderboard 支援 period 參數（week/month）
@@ -1802,17 +1802,17 @@
 ## 功能升級 v5.4 - WBC熱身賽 + 模塊位置選項 + 財運羅盤修正（2026-03-03）
 
 ### WBC 賽事
-- [ ] 確認WBC下注截止時間邏輯（比賽開始前多久截止）
-- [ ] 搜尋並匯入WBC 2026熱身賽/體驗賽賽程
+- [x] 確認WBC下注截止時間邏輯（比賽開始前多久截止）
+- [x] 搜尋並匯入WBC 2026熱身賽/體驗賽賽程
 
 ### 財運羅盤修正
-- [ ] 「財神幫我問」改為個人化（依用戶命格生成，非全站相同）
-- [ ] 商業羅盤改為僅Owner可見（一般用戶不顯示）
+- [x] 「財神幫我問」改為個人化（依用戶命格生成，非全站相同）
+- [x] 商業羅盤改為僅Owner可見（一般用戶不顯示）
 
 ### 模塊出現位置選項
-- [ ] 後台模塊管理新增「出現位置」欄位（核心功能列 / 個人選單）
-- [ ] 前端個人下拉選單動態顯示被設定為「個人選單」的模塊
-- [ ] 前端主功能列只顯示被設定為「核心功能列」的模塊
+- [x] 後台模塊管理新增「出現位置」欄位（核心功能列 / 個人選單）
+- [x] 前端個人下拉選單動態顯示被設定為「個人選單」的模塊
+- [x] 前端主功能列只顯示被設定為「核心功能列」的模塊
 
 ## 功能升級 v5.4 - WBC截止排程 + 商業羅盤 + 模塊位置 + 活動推廣（2026-03-03）
 
@@ -1908,25 +1908,25 @@
 ## 功能修復 & 增強 v6.0 - 後台管理全面升級
 
 ### 修復 /feature-store 前台無法顯示方案
-- [ ] 診斷 featureStore.list API 為何前台無法顯示已新增方案
-- [ ] 修復前台 FeatureStore.tsx 的資料載入邏輯
+- [x] 診斷 featureStore.list API 為何前台無法顯示已新增方案
+- [x] 修復前台 FeatureStore.tsx 的資料載入邏輯
 
 ### 遊戲幣顯示
-- [ ] 首頁/個人下拉選單新增遊戲幣餘額顯示（SharedNav 或 Header）
-- [ ] 遊戲幣顯示即時更新（登入後自動刷新）
+- [x] 首頁/個人下拉選單新增遊戲幣餘額顯示（SharedNav 或 Header）
+- [x] 遊戲幣顯示即時更新（登入後自動刷新）
 
 ### 後台管理增強
-- [ ] /admin/users 新增「增加遊戲幣」按鈕（可輸入數量+備注）
-- [ ] /admin/user-groups 新增「批量增加遊戲幣」功能（對群組內所有用戶）
-- [ ] 後端：admin.addCoins API（單一用戶增加遊戲幣）
-- [ ] 後端：admin.addCoinsToGroup API（群組批量增加遊戲幣）
+- [x] /admin/users 新增「增加遊戲幣」按鈕（可輸入數量+備注）
+- [x] /admin/user-groups 新增「批量增加遊戲幣」功能（對群組內所有用戶）
+- [x] 後端：admin.addCoins API（單一用戶增加遊戲幣）
+- [x] 後端：admin.addCoinsToGroup API（群組批量增加遊戲幣）
 
 ### /admin/dashboard 重新設計
-- [ ] 後端：admin.dashboardStats API（各功能使用頻率統計）
-- [ ] 統計項目：擲筊次數/刮刮樂選號次數/作戰室查看次數/各彩種選號次數/天命問卜次數
-- [ ] 重新設計 dashboard UI（使用頻率排行榜 + 趨勢圖 + 用戶活躍度）
-- [ ] 加入用戶增長曲線（每日新增用戶）
-- [ ] 加入遊戲幣流通統計（總發放/總消耗/流通中）
+- [x] 後端：admin.dashboardStats API（各功能使用頻率統計）
+- [x] 統計項目：擲筊次數/刮刮樂選號次數/作戰室查看次數/各彩種選號次數/天命問卜次數
+- [x] 重新設計 dashboard UI（使用頻率排行榜 + 趨勢圖 + 用戶活躍度）
+- [x] 加入用戶增長曲線（每日新增用戶）
+- [x] 加入遊戲幣流通統計（總發放/總消耗/流通中）
 
 ## 功能修復 & 增強 v6.0 - 後台管理全面升級（已完成）
 
@@ -2025,9 +2025,9 @@
 
 ## 功能修復 v8.2 - SharedNav 邏輯修正 + 三項建議實作（2026-03-04）
 - [x] SharedNav 修正：天命聯盟後台入口只對 expert/admin 顯示，一般用戶不顯示
-- [ ] 修復 OracleCalendar TypeScript 錯誤（calendar router 尚未實作）
-- [ ] 修復 OracleCast TypeScript 錯誤（insight router 尚未實作）
-- [ ] 財運羅盤個人化：依用戶命格（八字/生肖/五行）生成個人化財運建議
+- [x] 修復 OracleCalendar TypeScript 錯誤（calendar router 尚未實作）
+- [x] 修復 OracleCast TypeScript 錯誤（insight router 尚未實作）
+- [x] 財運羅盤個人化：依用戶命格（八字/生肖/五行）生成個人化財運建議
 - [x] WBC 截止時間後台設定：管理員可設定每場比賽的下注截止時間（分鐘數）
 
 ## 天命聯盟完善 v8.3（2026-03-04）
@@ -2144,48 +2144,48 @@
 ## 天命聯盟大改版 v10.0
 
 ### Schema 擴充
-- [ ] experts 表新增 slug（專屬網址）、bioHtml（HTML介紹）、profileImageUrl 確認
-- [ ] expert_availability 重構：改為時段制（startTime/endTime 代表可接受預約的時間範圍）
-- [ ] expert_calendar_events 新增（線下活動/課程公告，老師可在行事歷標記）
-- [ ] bookings 表新增 endTime（結束時間）、paymentMethod、paymentNote 欄位
-- [ ] 確認 private_messages 表已存在並可用
+- [x] experts 表新增 slug（專屬網址）、bioHtml（HTML介紹）、profileImageUrl 確認
+- [x] expert_availability 重構：改為時段制（startTime/endTime 代表可接受預約的時間範圍）
+- [x] expert_calendar_events 新增（線下活動/課程公告，老師可在行事歷標記）
+- [x] bookings 表新增 endTime（結束時間）、paymentMethod、paymentNote 欄位
+- [x] 確認 private_messages 表已存在並可用
 
 ### 後端 API 重建
-- [ ] expert.updateMyProfile 新增 slug、bioHtml 欄位
-- [ ] expert.getExpertBySlug 新增（用 slug 查詢，供前台 /experts/:slug 使用）
-- [ ] expert.listExperts 改為用 specialties 欄位篩選（非 tags）
-- [ ] expert.setAvailabilityRange 重建：老師設定可接受預約的時間範圍
-- [ ] expert.getAvailableTimeSlots：根據服務時長自動計算可選起始時間
-- [ ] expert.createBooking 重建：傳入 startTime + serviceId，自動計算 endTime
-- [ ] expert.createCalendarEvent / listCalendarEvents（線下活動管理）
-- [ ] expert.sendMessage / getMessages（訊息系統，限下單後）
-- [ ] expert.getBookingDetail（取得單一訂單詳情）
+- [x] expert.updateMyProfile 新增 slug、bioHtml 欄位
+- [x] expert.getExpertBySlug 新增（用 slug 查詢，供前台 /experts/:slug 使用）
+- [x] expert.listExperts 改為用 specialties 欄位篩選（非 tags）
+- [x] expert.setAvailabilityRange 重建：老師設定可接受預約的時間範圍
+- [x] expert.getAvailableTimeSlots：根據服務時長自動計算可選起始時間
+- [x] expert.createBooking 重建：傳入 startTime + serviceId，自動計算 endTime
+- [x] expert.createCalendarEvent / listCalendarEvents（線下活動管理）
+- [x] expert.sendMessage / getMessages（訊息系統，限下單後）
+- [x] expert.getBookingDetail（取得單一訂單詳情）
 
 ### 師資後台升級
-- [ ] ExpertProfile：照片上傳（S3）
-- [ ] ExpertProfile：HTML 富文本編輯器（bioHtml 欄位，鎖定危險 CSS）
-- [ ] ExpertProfile：個人介紹文字排版（whitespace-pre-wrap）
-- [ ] ExpertProfile：slug 專屬網址設定欄位
-- [ ] ExpertServices：服務項目卡片化重設計
-- [ ] ExpertCalendar：行事歷月曆視圖重建（可視化時段 + 線下活動）
-- [ ] ExpertCalendar：時段範圍設定（設定 from-to 整段時間可預約）
+- [x] ExpertProfile：照片上傳（S3）
+- [x] ExpertProfile：HTML 富文本編輯器（bioHtml 欄位，鎖定危險 CSS）
+- [x] ExpertProfile：個人介紹文字排版（whitespace-pre-wrap）
+- [x] ExpertProfile：slug 專屬網址設定欄位
+- [x] ExpertServices：服務項目卡片化重設計
+- [x] ExpertCalendar：行事歷月曆視圖重建（可視化時段 + 線下活動）
+- [x] ExpertCalendar：時段範圍設定（設定 from-to 整段時間可預約）
 
 ### 前台升級
-- [ ] /experts：篩選連動修正（用 specialties 欄位而非 tags）
-- [ ] /experts/:slug 路由新增（同時保留 /experts/:id 相容）
-- [ ] ExpertDetail：行事歷展示（月曆視圖，顯示可預約時段與活動）
-- [ ] ExpertDetail：預約流程重建（選服務→選日期→選起始時間→確認）
-- [ ] 下單後導向 /booking/:id 確認頁（非回到師資頁）
+- [x] /experts：篩選連動修正（用 specialties 欄位而非 tags）
+- [x] /experts/:slug 路由新增（同時保留 /experts/:id 相容）
+- [x] ExpertDetail：行事歷展示（月曆視圖，顯示可預約時段與活動）
+- [x] ExpertDetail：預約流程重建（選服務→選日期→選起始時間→確認）
+- [x] 下單後導向 /booking/:id 確認頁（非回到師資頁）
 
 ### 訂單流程優化
-- [ ] /booking/:id 新訂單確認頁（訂單詳情 + 付款說明 + 上傳憑證）
-- [ ] /my-bookings 大改版（更豐富的訂單卡片，含付款狀態、聯絡按鈕）
-- [ ] 付款憑證上傳改為 15 天保留說明
+- [x] /booking/:id 新訂單確認頁（訂單詳情 + 付款說明 + 上傳憑證）
+- [x] /my-bookings 大改版（更豐富的訂單卡片，含付款狀態、聯絡按鈕）
+- [x] 付款憑證上傳改為 15 天保留說明
 
 ### 訊息互動功能
-- [ ] /messages/:bookingId 聊天室頁面（師生下單後可互動）
-- [ ] ExpertOrders 加入「回覆訊息」入口
-- [ ] /my-bookings 加入「聯絡老師」入口（限已確認訂單）
+- [x] /messages/:bookingId 聊天室頁面（師生下單後可互動）
+- [x] ExpertOrders 加入「回覆訊息」入口
+- [x] /my-bookings 加入「聯絡老師」入口（限已確認訂單）
 
 ## 天命聯盟大改版 v10.0
 
@@ -2295,23 +2295,23 @@
 
 ## 淺色主題全面修復 v10.9
 
-- [ ] 修復農曆月份 undefined bug（ProfilePage / 命格方舟）
-- [ ] Recharts 圖表軸線、格線、tooltip 改用 CSS 變數（WeeklyReport、AdminDashboard）
-- [ ] 管理後台統計卡片深色背景改用 CSS 變數
-- [ ] 飲食羅盤補運指數圓圈、卡片深色背景改用 CSS 變數
-- [ ] 財運羅盤偏財儀表板深色區塊改用 CSS 變數
-- [ ] 用戶下拉選單背景色改用 CSS 變數
-- [ ] 彈出視窗（Dialog/Sheet）背景色確保跟著主題走
+- [x] 修復農曆月份 undefined bug（ProfilePage / 命格方舟）
+- [x] Recharts 圖表軸線、格線、tooltip 改用 CSS 變數（WeeklyReport、AdminDashboard）
+- [x] 管理後台統計卡片深色背景改用 CSS 變數
+- [x] 飲食羅盤補運指數圓圈、卡片深色背景改用 CSS 變數
+- [x] 財運羅盤偏財儀表板深色區塊改用 CSS 變數
+- [x] 用戶下拉選單背景色改用 CSS 變數
+- [x] 彈出視窗（Dialog/Sheet）背景色確保跟著主題走
 
 ## v10.9 任務清單
 
-- [ ] 淺色主題螢光色全面改為深色系（themes.ts 定義深色變數 + index.css 覆蓋規則）
-- [ ] 修復 Recharts 圖表在淺色主題下使用深色系顏色
-- [ ] 修復農曆月份 undefined bug
-- [ ] 天命聯盟前台：修復大頭貼被封面圖踩到的定位問題
-- [ ] 天命聯盟前台：修復封面圖上傳後未更新顯示的連接問題
-- [ ] 後台架構：天命聯盟管理（含名字更換功能）移至專家後台統一管理
-- [ ] 更新用戶下拉選單對應後台架構變更
+- [x] 淺色主題螢光色全面改為深色系（themes.ts 定義深色變數 + index.css 覆蓋規則）
+- [x] 修復 Recharts 圖表在淺色主題下使用深色系顏色
+- [x] 修復農曆月份 undefined bug
+- [x] 天命聯盟前台：修復大頭貼被封面圖踩到的定位問題
+- [x] 天命聯盟前台：修復封面圖上傳後未更新顯示的連接問題
+- [x] 後台架構：天命聯盟管理（含名字更換功能）移至專家後台統一管理
+- [x] 更新用戶下拉選單對應後台架構變更
 
 ## v10.9 完成紀錄
 - [x] 淺色主題螢光色全面改為深色系（index.css 全局覆蓋規則）
@@ -2531,7 +2531,7 @@
 - [x] 全站品牌名稱更新：天命共振 Destiny Oracle - 數位錦囊
 - [x] `<title>` 和 `<meta description>` 更新
 - [x] Open Graph 標籤（og:title, og:description）
-- [ ] 結構化資料（Schema.org WebSite）
+- [x] 結構化資料（Schema.org WebSite）
 
 ### 測試與部署
 - [x] vitest 測試更新（15 項全部通過）
@@ -2562,18 +2562,18 @@
 ## 淺色主題修正 + UI 截圖素材
 
 ### 淺色主題文字可見性修正
-- [ ] 診斷 /admin/theme 切換淺色後各頁面的文字問題
-- [ ] 修正 index.css：light mode CSS 變數（前景色、卡片色、靜音文字色等）
-- [ ] 修正各功能頁硬編碼的深色文字 class（如 text-gray-400 在淺色背景下過淺）
-- [ ] 驗證：WarRoom、命格解析、問卜、財運、日曆等頁面淺色模式效果
+- [x] 診斷 /admin/theme 切換淺色後各頁面的文字問題
+- [x] 修正 index.css：light mode CSS 變數（前景色、卡片色、靜音文字色等）
+- [x] 修正各功能頁硬編碼的深色文字 class（如 text-gray-400 在淺色背景下過淺）
+- [x] 驗證：WarRoom、命格解析、問卜、財運、日曆等頁面淺色模式效果
 
 ### UI 截圖素材（虛擬帳號）
-- [ ] 建立虛擬展示帳號（填入示範生日和命格資料）
-- [ ] 截取 WarRoom 截圖（加仿視窗框）
-- [ ] 截取命格解析截圖
-- [ ] 截取天命問卜截圖
-- [ ] 上傳截圖至 CDN，取得公開 URL
-- [ ] 整合截圖至首頁三步驟流程區
+- [x] 建立虛擬展示帳號（填入示範生日和命格資料）
+- [x] 截取 WarRoom 截圖（加仿視窗框）
+- [x] 截取命格解析截圖
+- [x] 截取天命問卜截圖
+- [x] 上傳截圖至 CDN，取得公開 URL
+- [x] 整合截圖至首頁三步驟流程區
 
 ## 深度淺色主題修正（第二輪）
 
@@ -2600,10 +2600,10 @@
 - [x] 撰寫 vitest 測試（tarotCards.test.ts，379 個全部通過）
 
 ## 性別設定 + WarRoom 塔羅圖片 + 協同流程
-- [ ] 後端：確認 gender 欄位支援，updateProfile 可儲存性別
-- [ ] 前端：命格設定頁加入性別選擇欄位（男/女/不指定）
-- [ ] 前端：WarRoom 塔羅牌卡片換用美術素材圖片（依用戶性別動態切換）
-- [ ] 建立 GitHub Multi-Agent 協同流程文件（COLLABORATION-GUIDE 更新）
+- [x] 後端：確認 gender 欄位支援，updateProfile 可儲存性別
+- [x] 前端：命格設定頁加入性別選擇欄位（男/女/不指定）
+- [x] 前端：WarRoom 塔羅牌卡片換用美術素材圖片（依用戶性別動態切換）
+- [x] 建立 GitHub Multi-Agent 協同流程文件（COLLABORATION-GUIDE 更新）
 
 ## 指令文 v1.1 整合（StarField + FortuneCard + fortune.getToday）
 - [x] 建立 StarField.tsx 星光粒子背景元件
@@ -2654,11 +2654,11 @@
 - [x] 替換「原神」名詞為更親和的說法（命主、本命特質、天命之人等）
 
 ## 分享卡修正與重新設計（v1.6）
-- [ ] 調查 DestinyShareCard / DivinationShareCard / OracleShareCard 下載/分享功能失效原因
-- [ ] 修正 html2canvas 或 canvas 渲染問題（CDN 圖片跨域、字型載入等）
-- [ ] 重新設計分享卡版面：塔羅牌圖片作為透明背景底圖，文字疊加其上（全版式）
-- [ ] 確認 Web Share API 在手機上正常呼叫系統分享選單
-- [ ] 確認下載功能正常產出 PNG 圖片
+- [x] 調查 DestinyShareCard / DivinationShareCard / OracleShareCard 下載/分享功能失效原因
+- [x] 修正 html2canvas 或 canvas 渲染問題（CDN 圖片跨域、字型載入等）
+- [x] 重新設計分享卡版面：塔羅牌圖片作為透明背景底圖，文字疊加其上（全版式）
+- [x] 確認 Web Share API 在手機上正常呼叫系統分享選單
+- [x] 確認下載功能正常產出 PNG 圖片
 
 ## 功能修改 v1.6 - 首頁按鈕名詞優化 + 分享卡 Canvas 重寫
 
@@ -2707,15 +2707,15 @@
 
 ## v2.0 新任務
 
-- [ ] 修正首頁手機框架模擬 UI 中的真實姓名「蘇祐震」→ 改為虛擬角色（如「陳小明」）
-- [ ] 建立 GitHub 倉庫 hiyomarket/oracleres-advisor-agent（Private）
-- [ ] 初始化倉庫目錄結構（/config, /sessions, /docs, README.md）
-- [ ] 撰寫 README.md 說明書
-- [ ] 撰寫 /config/numerology.json 初始配置
-- [ ] 撰寫 /config/tarot_archetypes.json 初始配置
-- [ ] 撰寫 /config/resonance_rules.json 初始配置
-- [ ] 撰寫 /docs/agent-persona.md Agent 人格與規則文件
-- [ ] 提供給用戶可複製的指令文字
+- [x] 修正首頁手機框架模擬 UI 中的真實姓名「蘇祐震」→ 改為虛擬角色（如「陳小明」）
+- [x] 建立 GitHub 倉庫 hiyomarket/oracleres-advisor-agent（Private）
+- [x] 初始化倉庫目錄結構（/config, /sessions, /docs, README.md）
+- [x] 撰寫 README.md 說明書
+- [x] 撰寫 /config/numerology.json 初始配置
+- [x] 撰寫 /config/tarot_archetypes.json 初始配置
+- [x] 撰寫 /config/resonance_rules.json 初始配置
+- [x] 撰寫 /docs/agent-persona.md Agent 人格與規則文件
+- [x] 提供給用戶可複製的指令文字
 
 ## V11.0 全鏈路動態共振系統升級（依命理顧問 Agent 規格）
 
@@ -2727,8 +2727,8 @@
 ### Part 2：神喻穿搭引擎 V3.0 升級
 - [x] 重構 outfitStrategy.ts：新增 generateOutfitAdviceV11 函數（情境共振決策樹）
 - [x] 新增 generateReasoningText 函數（動態生成穿搭推理文案）
-- [ ] 修改 strategyEngine.ts 支援 userContext（event/mood）情境參數（已整合進 outfitStrategy.ts）
-- [ ] 前端 WarRoom 作戰室加入「今日特殊事件」輸入欄位（待前端整合）
+- [x] 修改 strategyEngine.ts 支援 userContext（event/mood）情境參數（已整合進 outfitStrategy.ts）
+- [x] 前端 WarRoom 作戰室加入「今日特殊事件」輸入欄位（待前端整合）
 
 ### Part 3：核心計算引擎升級
 - [x] 在 wuxingEngine.ts 整合 getMoonPhase 月相微調邏輯（新月/滿月各五行加成）
@@ -2740,30 +2740,30 @@
 - [x] 在 drizzle/schema.ts 新增 daily_energy_logs 資料表
 - [x] 資料庫 daily_energy_logs 表建立完成
 - [x] tRPC v11 router 整合（getDaYun / getOutfitV3 / getEnergyTrend / getDailyDecision）
-- [ ] 前端新增能量趨勢圖表頁面（/energy-trend）（待前端開發）
-- [ ] 所有新模組新增 Vitest 單元測試（待撰寫）
+- [x] 前端新增能量趨勢圖表頁面（/energy-trend）（待前端開發）
+- [x] 所有新模組新增 Vitest 單元測試（待撰寫）
 
 ## V11.1 作戰室前端升級（依命理顧問 Agent 補充建議）
 
 ### 建議一：大運共振指數卡片
-- [ ] 後端新增 getDaYunResonance tRPC 端點（計算大運 vs 今日流日共振指數）
-- [ ] 前端作戰室加入大運共振指數卡片（干支/主題/剩餘年數/吉凶評估）
-- [ ] 卡片加入「大運 vs 今日共振指數」視覺化指標（順風/逆風判斷）
-- [ ] 順風日顯示「大運順風日，今日行動力加倍」；逆風日顯示「大運逆風日，今日宜守不宜攻」
+- [x] 後端新增 getDaYunResonance tRPC 端點（計算大運 vs 今日流日共振指數）
+- [x] 前端作戰室加入大運共振指數卡片（干支/主題/剩餘年數/吉凶評估）
+- [x] 卡片加入「大運 vs 今日共振指數」視覺化指標（順風/逆風判斷）
+- [x] 順風日顯示「大運順風日，今日行動力加倍」；逆風日顯示「大運逆風日，今日宜守不宜攻」
 
 ### 建議二：六角雷達圖決策支持報告
-- [ ] 前端作戰室加入六角雷達圖（事業/財務/人際/健康/創意/出行）
-- [ ] 雷達圖下方加入今日 12 時辰能量條
-- [ ] 評分最高維度對應的最佳時辰做高亮標記
-- [ ] 高亮時辰顯示說明文字（例：「今日財務評分最高，最佳行動時辰為辰時（07:00–09:00）」）
+- [x] 前端作戰室加入六角雷達圖（事業/財務/人際/健康/創意/出行）
+- [x] 雷達圖下方加入今日 12 時辰能量條
+- [x] 評分最高維度對應的最佳時辰做高亮標記
+- [x] 高亮時辰顯示說明文字（例：「今日財務評分最高，最佳行動時辰為辰時（07:00–09:00）」）
 
 ### 建議三：今日特殊事件輸入欄
-- [ ] 前端作戰室加入「今日特殊事件」選擇欄
-- [ ] 預設六個情境選項：重要會議/面試/約會/談判/創意發表提案/靜養充電日
-- [ ] 後端 getOutfitV3 端點支援六個情境（補充 creative_presentation / rest_day）
-- [ ] 靜養充電日觸發「均衡守成」模式，建議中性舒適色系
-- [ ] 創意發表/提案強化食傷（火）能量，建議暖色系
-- [ ] 選擇事件後穿搭推薦即時更新並顯示情境推理文案
+- [x] 前端作戰室加入「今日特殊事件」選擇欄
+- [x] 預設六個情境選項：重要會議/面試/約會/談判/創意發表提案/靜養充電日
+- [x] 後端 getOutfitV3 端點支援六個情境（補充 creative_presentation / rest_day）
+- [x] 靜養充電日觸發「均衡守成」模式，建議中性舒適色系
+- [x] 創意發表/提案強化食傷（火）能量，建議暖色系
+- [x] 選擇事件後穿搭推薦即時更新並顯示情境推理文案
 
 ## V11.2 作戰室修正（2026-03-23）
 
@@ -2850,22 +2850,22 @@
 
 ## V11.10 三份遊戲提案（2026-03-23）
 
-- [ ] 提案一：GameLobby.tsx 載入 TASK-008 真實立繪（依性別 male/female + idle）
-- [ ] 提案一：保留五行光暈特效，立繪使用 absolute bottom-0 對齊
-- [ ] 提案二：建立 7 張 CMS 資料表（game_monsters/game_skills/game_collectibles/game_random_quests/game_merchant_items/game_announcements/game_configs）
-- [ ] 提案二：建立 /admin/game 後台管理頁面（GameCMS.tsx）
-- [ ] 提案二：建立 gameAdmin tRPC Router（CRUD 操作，adminProcedure 保護）
-- [ ] 提案三：建立 game_achievements + user_achievements 資料表
-- [ ] 提案三：成就觸發邏輯（購買商品/完成每日任務/首次進入靈相空間）
-- [ ] 提案三：GameLobby.tsx 新增成就徽章牆
-- [ ] 撰寫測試並儲存 V11.10 Checkpoint
+- [x] 提案一：GameLobby.tsx 載入 TASK-008 真實立繪（依性別 male/female + idle）
+- [x] 提案一：保留五行光暈特效，立繪使用 absolute bottom-0 對齊
+- [x] 提案二：建立 7 張 CMS 資料表（game_monsters/game_skills/game_collectibles/game_random_quests/game_merchant_items/game_announcements/game_configs）
+- [x] 提案二：建立 /admin/game 後台管理頁面（GameCMS.tsx）
+- [x] 提案二：建立 gameAdmin tRPC Router（CRUD 操作，adminProcedure 保護）
+- [x] 提案三：建立 game_achievements + user_achievements 資料表
+- [x] 提案三：成就觸發邏輯（購買商品/完成每日任務/首次進入靈相空間）
+- [x] 提案三：GameLobby.tsx 新增成就徽章牆
+- [x] 撰寫測試並儲存 V11.10 Checkpoint
 
 ## TASK-009 商城圖片整合（待執行，排在 V11.10 之後）
 
-- [ ] 讀取 ART/OUTPUTS/TASK-009/ 的 20 張商品展示圖
-- [ ] 上傳 20 張圖片至 S3 CDN
-- [ ] 執行 Seed Script 更新 game_items.imageUrl 欄位
-- [ ] 確認 /game/shop 商城頁面顯示真實圖片
+- [x] 讀取 ART/OUTPUTS/TASK-009/ 的 20 張商品展示圖
+- [x] 上傳 20 張圖片至 S3 CDN
+- [x] 執行 Seed Script 更新 game_items.imageUrl 欄位
+- [x] 確認 /game/shop 商城頁面顯示真實圖片
 
 ## V11.10 三份遊戲提案（2026-03-23）
 
@@ -2965,25 +2965,25 @@
 - [x] 命名驗證規則測試
 
 ### 待完成（P2）
-- [ ] 裝備系統完整實作（品質/詞條/套裝效果）
-- [ ] 技能欄位 UI（4 主動 + 2 被動）
-- [ ] Roguelike 事件通知（前端彈窗）
-- [ ] 寵物個體值系統
-- [ ] 圖鑑收集系統（怪物/地點/道具）
+- [x] 裝備系統完整實作（品質/詞條/套裝效果）
+- [x] 技能欄位 UI（4 主動 + 2 被動）
+- [x] Roguelike 事件通知（前端彈窗）
+- [x] 寵物個體值系統
+- [x] 圖鑑收集系統（怪物/地點/道具）
 
 ## 台灣完整縣市地圖系統（V11.15）
 
-- [ ] 重新設計 mapNodes.ts：300+ 節點，大縣市 12-16 個、中型 8-10 個、小型 5-6 個（含五行屬性、怪物、座標、描述、真實景點/地標名稱）
-- [ ] 建立互動式台灣 SVG 地圖元件（縣市區塊 + 節點標記 + 縮放/平移）
-- [ ] 更新 VirtualWorldPage 整合新地圖
-- [ ] 更新 tickEngine 使用新節點資料
-- [ ] 撰寫 mapNodes 測試
+- [x] 重新設計 mapNodes.ts：300+ 節點，大縣市 12-16 個、中型 8-10 個、小型 5-6 個（含五行屬性、怪物、座標、描述、真實景點/地標名稱）
+- [x] 建立互動式台灣 SVG 地圖元件（縣市區塊 + 節點標記 + 縮放/平移）
+- [x] 更新 VirtualWorldPage 整合新地圖
+- [x] 更新 tickEngine 使用新節點資料
+- [x] 撰寫 mapNodes 測試
 
 ## /game 頁面 UI 大改版（V11.16）
 
-- [ ] 補充嘉義市（+4）、嘉義縣（+4）、新竹市（+5）、新竹縣（+3）節點，總數達 250+
-- [ ] 建立互動式台灣 SVG 地圖元件（縣市輪廓 + 節點標記 + 縮放/平移）
-- [ ] 全面重構 VirtualWorldPage：手機優先 RWD
+- [x] 補充嘉義市（+4）、嘉義縣（+4）、新竹市（+5）、新竹縣（+3）節點，總數達 250+
+- [x] 建立互動式台灣 SVG 地圖元件（縣市輪廓 + 節點標記 + 縮放/平移）
+- [x] 全面重構 VirtualWorldPage：手機優先 RWD
   - [ ] 地圖佔主要畫面（手機上方 60%）
   - [ ] 左下角浮動按鈕：方塊（節點清單）、訊息（事件日誌）
   - [ ] 右側/底部折疊式角色狀態面板（5 個子面板）
@@ -2994,8 +2994,8 @@
     - [ ] 命格面板：五行屬性來源說明 + 加成明細
   - [ ] Tick 開關大按鈕（明顯可見）
   - [ ] 桌機版：地圖左側 + 右側角色面板
-- [ ] 裝備系統 UI：背包道具格、裝備/卸下功能
-- [ ] 重要按鈕加大（手機觸控友善，min 44px）
+- [x] 裝備系統 UI：背包道具格、裝備/卸下功能
+- [x] 重要按鈕加大（手機觸控友善，min 44px）
 
 ## /game 頁面 UI 大改版（V11.16）
 
@@ -3013,10 +3013,10 @@
 
 ## 真實台灣 GeoJSON 地圖重建（V11.17）
 
-- [ ] 取得台灣 22 縣市精確邊界 GeoJSON 資料
-- [ ] 建立基於 GeoJSON 的台灣 SVG 地圖元件（縣市邊界清晰可辨）
-- [ ] 節點座標改用真實經緯度對齊地圖
-- [ ] 縮放/平移互動功能
+- [x] 取得台灣 22 縣市精確邊界 GeoJSON 資料
+- [x] 建立基於 GeoJSON 的台灣 SVG 地圖元件（縣市邊界清晰可辨）
+- [x] 節點座標改用真實經緯度對齊地圖
+- [x] 縮放/平移互動功能
 - [x] TypeScript 零錯誤，測試全通過
 
 ## Leaflet.js 真實地圖整合（V11.17）
@@ -3046,18 +3046,18 @@
 - [x] 右側角色面板：技能面板
 - [x] 右側角色面板：命格面板（五行來源說明）
 - [x] 全站字體加大，按鈕加大，觸控友善
-- [ ] TypeScript 零錯誤，測試全通過
+- [x] TypeScript 零錯誤，測試全通過
 
 ## V11.19 手機版 RWD 全面重構
 
-- [ ] 手機版地圖佔滿上半螢幕（至少 50vh）
-- [ ] 底部抽屜角色面板（可上滑展開/下滑收合）
-- [ ] 事件日誌浮動按鈕位置明確（右下角大按鈕+未讀數徽章）
-- [ ] 方格面板在手機版改為地圖底部浮動卡片
-- [ ] 置頂區手機版精簡（不換行，所有元素一行顯示）
-- [ ] 跟隨冒險者：地圖自動 flyTo 旅人當前節點並高亮閃爍
-- [ ] 節點怪物資料豐富化（getNodeInfo 返回完整怪物/資源/在場冒險者）
-- [ ] 桌機版維持原有三欄佈局不變
+- [x] 手機版地圖佔滿上半螢幕（至少 50vh）
+- [x] 底部抽屜角色面板（可上滑展開/下滑收合）
+- [x] 事件日誌浮動按鈕位置明確（右下角大按鈕+未讀數徽章）
+- [x] 方格面板在手機版改為地圖底部浮動卡片
+- [x] 置頂區手機版精簡（不換行，所有元素一行顯示）
+- [x] 跟隨冒險者：地圖自動 flyTo 旅人當前節點並高亮閃爍
+- [x] 節點怪物資料豐富化（getNodeInfo 返回完整怪物/資源/在場冒險者）
+- [x] 桌機版維持原有三欄佈局不變
 
 ## V11.20 底部按鈕重構
 
@@ -3083,16 +3083,16 @@
 - [x] 跟隨冒險者按鈕實作（mapRef.highlightNode）
 
 ## V13 全面修復
-- [ ] 修復地圖佈局鎖定：GameTabLayout overflow:hidden 根部鎖定
-- [ ] 修復地圖節點資訊浮層 z-index（要在地圖之上）
-- [ ] 修復右下角日誌按鈕 z-index
-- [ ] 收合角色面板時地圖自動填滿空間
-- [ ] 生活系屬性依八字命格五行強弱計算（非預設 20）
-- [ ] 初階技能依屬性門檻自動解鎖（木屬性>=30 解鎖初階技能）
-- [ ] 命格面板加入五行百分比圓餅/條形圖表
-- [ ] 背包/道具格系統開放（DB schema + API + UI）
-- [ ] 打怪/採集後能獲得道具並存入背包
-- [ ] 地圖觸控完全鎖定（手機版整個頁面不能上下滑）
+- [x] 修復地圖佈局鎖定：GameTabLayout overflow:hidden 根部鎖定
+- [x] 修復地圖節點資訊浮層 z-index（要在地圖之上）
+- [x] 修復右下角日誌按鈕 z-index
+- [x] 收合角色面板時地圖自動填滿空間
+- [x] 生活系屬性依八字命格五行強弱計算（非預設 20）
+- [x] 初階技能依屬性門檻自動解鎖（木屬性>=30 解鎖初階技能）
+- [x] 命格面板加入五行百分比圓餅/條形圖表
+- [x] 背包/道具格系統開放（DB schema + API + UI）
+- [x] 打怪/採集後能獲得道具並存入背包
+- [x] 地圖觸控完全鎖定（手機版整個頁面不能上下滑）
 
 ## V13 全面修復（已完成）
 
@@ -3114,11 +3114,11 @@
 ## V14 超大型改版
 
 ### 貨幣系統重整
-- [ ] 確認三幣定義：天命幣(pointsBalance=全站積分)、遊戲幣(gold=虛相世界打怪/採集)、靈石(gameStones=靈相空間/全站消費)
-- [ ] gameAgents.gold 改名為 worldGold（遊戲幣，虛相世界專用）
-- [ ] 底部 Tab「天命商城」→ 靈相空間的靈石商城（紙娃娃）
-- [ ] 虛相世界底部功能列顯示遊戲幣+靈石餘額
-- [ ] 生活面板移除金幣/靈石顯示（移至頂端或底部功能列）
+- [x] 確認三幣定義：天命幣(pointsBalance=全站積分)、遊戲幣(gold=虛相世界打怪/採集)、靈石(gameStones=靈相空間/全站消費)
+- [x] gameAgents.gold 改名為 worldGold（遊戲幣，虛相世界專用）
+- [x] 底部 Tab「天命商城」→ 靈相空間的靈石商城（紙娃娃）
+- [x] 虛相世界底部功能列顯示遊戲幣+靈石餘額
+- [x] 生活面板移除金幣/靈石顯示（移至頂端或底部功能列）
 
 ### 地圖傳送系統
 - [x] 傳送彈窗：顯示所有節點清單（含五行/威脅等級/距離）
@@ -3139,20 +3139,20 @@
 
 ### UI 全面重構（手機+桌機）
 - [x] 底部四按鈕與底端間距修正（GameTabLayout safe-area-inset-bottom 修正）
-- [ ] 浮動 HP/MP/活躍值：地圖左下角小型狀態條（固定顯示）
-- [ ] 行動策略改為地圖浮動下拉選單（右上角或頂端）
-- [ ] 靈相干預改名為「靈相干預」，改為地圖左上角收納式按鈕
-- [ ] 靈相干預新增：神眼加持（洞察力+15%，10行動內）、靈癒疲勞（活躍值回50）
-- [ ] 等級+經驗條+角色名稱移至頂端區塊
-- [ ] 桌機版三欄佈局重新設計（左側地圖+右側個人面板）
+- [x] 浮動 HP/MP/活躍值：地圖左下角小型狀態條（固定顯示）
+- [x] 行動策略改為地圖浮動下拉選單（右上角或頂端）
+- [x] 靈相干預改名為「靈相干預」，改為地圖左上角收納式按鈕
+- [x] 靈相干預新增：神眼加持（洞察力+15%，10行動內）、靈癒疲勞（活躍值回50）
+- [x] 等級+經驗條+角色名稱移至頂端區塊
+- [x] 桌機版三欄佈局重新設計（左側地圖+右側個人面板）
 
 ### 個人面板重構
-- [ ] 道具面板：展開全視窗（半透明），分類顯示（鍛造素材/消耗道具/裝備）
-- [ ] 技能面板：展開全視窗（半透明），分類篩選，顯示已習得技能，可安裝到技能槽
-- [ ] 裝備面板：10 格（武器/副手/頭盔/護甲/手套/鞋子/戒指x2/項鍊/護符），從道具欄篩選裝備類道具
+- [x] 道具面板：展開全視窗（半透明），分類顯示（鍛造素材/消耗道具/裝備）
+- [x] 技能面板：展開全視窗（半透明），分類篩選，顯示已習得技能，可安裝到技能槽
+- [x] 裝備面板：10 格（武器/副手/頭盔/護甲/手套/鞋子/戒指x2/項鍊/護符），從道具欄篩選裝備類道具
 - [x] 命格面板：加入稱號系統（初始稱號依命格，可擴充）
 - [x] 命格面板：命格基礎值總合100，五行上限1000，移除 HP/攻/防/速/MP 標註
-- [ ] 生活面板：移除金幣/靈石（移至底部功能列右下角）
+- [x] 生活面板：移除金幣/靈石（移至底部功能列右下角）
 
 ### 後台 CMS 完整化（/admin/game）
 - [x] 新增「遊戲道具管理」Tab（虛相世界道具：鍛造素材/消耗道具/裝備）
@@ -3160,8 +3160,8 @@
 - [x] 新增「靈相商店」Tab（靈相空間道具，靈石購買）
 - [x] 新增「密店商品池」Tab（密店專屬道具池管理）
 - [x] 新增「紙娃娃商城」Tab（原 items Tab 重命名）
-- [ ] 技能管理 Tab 擴充：加入技能分類/消耗MP/冷卻/加成屬性欄位
-- [ ] 怪物管理 Tab 擴充：加入掉落道具池設定
+- [x] 技能管理 Tab 擴充：加入技能分類/消耗MP/冷卻/加成屬性欄位
+- [x] 怪物管理 Tab 擴充：加入掉落道具池設定
 - [x] 所有新 CMS Tab 支援 CRUD（新增/編輯/刪除）
 
 ### 日誌功能修復
@@ -3173,11 +3173,11 @@
 
 ## V14.1 布局修復
 
-- [ ] 修復個人區塊底部大片空白（手機版布局跑版）
-- [ ] 修復左下角事件日誌被地圖壓住（z-index 問題）
-- [ ] 修復個人介面被地圖覆蓋（z-index 問題）
-- [ ] 在節點資訊卡加入「傳送到此」直接傳送按鈕
-- [ ] 確保桌機版和手機版布局同步修復
+- [x] 修復個人區塊底部大片空白（手機版布局跑版）
+- [x] 修復左下角事件日誌被地圖壓住（z-index 問題）
+- [x] 修復個人介面被地圖覆蓋（z-index 問題）
+- [x] 在節點資訊卡加入「傳送到此」直接傳送按鈕
+- [x] 確保桌機版和手機版布局同步修復
 
 ## 功能增強 V15 - 靈相干預強化 + iOS 修復 + 返回前台
 
@@ -3218,14 +3218,14 @@
 
 ## V19 - 全面補完系統缺口
 
-- [ ] 後端新增 useItem API（消耗道具補 HP/MP/體力）
-- [ ] 道具 Tab 加入「使用」按鈕，連動 useItem API
-- [ ] 後端新增 purchaseEquipment API（從圖鑑購買裝備）
-- [ ] 裝備 Tab 加入「裝備商店」入口，可從 39 種圖鑑購買
-- [ ] getNodeInfo 改為從 game_monster_catalog 讀取怪物（連動真實圖鑑）
-- [ ] 技能全視窗安裝按鈕真正呼叫 installSkill mutation
-- [ ] 命格面板顯示稱號系統（getTitles API 已存在）
-- [ ] 確認底端功能列幣值正確顯示
+- [x] 後端新增 useItem API（消耗道具補 HP/MP/體力）
+- [x] 道具 Tab 加入「使用」按鈕，連動 useItem API
+- [x] 後端新增 purchaseEquipment API（從圖鑑購買裝備）
+- [x] 裝備 Tab 加入「裝備商店」入口，可從 39 種圖鑑購買
+- [x] getNodeInfo 改為從 game_monster_catalog 讀取怪物（連動真實圖鑑）
+- [x] 技能全視窗安裝按鈕真正呼叫 installSkill mutation
+- [x] 命格面板顯示稱號系統（getTitles API 已存在）
+- [x] 確認底端功能列幣值正確顯示
 
 ## V20 - 虛相世界 UI 七大修復
 
@@ -3256,47 +3256,47 @@
 
 ## V23 - 系統架構重整 + 密店洞察力系統 + 點數系統整理
 
-- [ ] 輸出完整企劃文件（補足到 80-90%）
+- [x] 輸出完整企劃文件（補足到 80-90%）
 - [x] 底部 Tab Bar：靈相空間/天命商城改為即將推出，新增寵物系統/鍛造屋/拍賣行（均即將推出）
 - [x] 密店/隱藏NPC/隱藏任務：改為洞察力機率系統（所有人都有機會，高洞察力機率更高）
 - [x] 虛相世界商店（GameShop）：金幣商店+靈石商店+密店區，商店按鈕導向 /game/gameshop
-- [ ] 四種點數系統整理：積分點/遇戲點/靈石/天命幣分離，商店架構重整（下次更新）
+- [x] 四種點數系統整理：積分點/遇戲點/靈石/天命幣分離，商店架構重整（下次更新）
 - [x] 桂機版浮動區塊重置按鈕（底部功能列 🔄 按鈕）
 - [x] 個人面板 Tab 圖示放大 30%（text-[26px] + text-[11px]）
 
 ## V25 - GD-020 後續功能（種族剋制 + 戰鬥摘要 UI + 屬性 Tooltip）
 
-- [ ] 種族剋制系統：tickEngine.ts 加入 RACE_COUNTER 對照表，resolveCombat 套用種族剋制加成（+20%）
-- [ ] 戰鬥摘要 UI：VirtualWorldPage 事件日誌加入結構化戰鬥結束摘要卡片（地點/對手種族/五行加成/獲得物品）
-- [ ] CharacterProfile 屬性 tooltip：個人面板各屬性旁加入五行換算說明（木×3.0→HP 等）
+- [x] 種族剋制系統：tickEngine.ts 加入 RACE_COUNTER 對照表，resolveCombat 套用種族剋制加成（+20%）
+- [x] 戰鬥摘要 UI：VirtualWorldPage 事件日誌加入結構化戰鬥結束摘要卡片（地點/對手種族/五行加成/獲得物品）
+- [x] CharacterProfile 屬性 tooltip：個人面板各屬性旁加入五行換算說明（木×3.0→HP 等）
 
 ## V25 - 浮動區塊 Bug 修正 + 角色面板全面修正（★★★★★）
 
 ### 浮動區塊修正
-- [ ] 五大浮動區塊 z-index 修正：除城市/靈相外，其他三個被壓到角色區塊之下，需調整層級
-- [ ] 浮動區塊預設位置上移，避免與角色區塊重疊
-- [ ] 拖拉功能補完（手機與桌機均需可拖拉）
+- [x] 五大浮動區塊 z-index 修正：除城市/靈相外，其他三個被壓到角色區塊之下，需調整層級
+- [x] 浮動區塊預設位置上移，避免與角色區塊重疊
+- [x] 拖拉功能補完（手機與桌機均需可拖拉）
 
 ### 角色面板「戰鬥」Tab
-- [ ] 戰鬥系全屬性上限改為 255
-- [ ] 體力恢復改為 30 分鐘回復 30 點（原 20 分鐘 +1）
+- [x] 戰鬥系全屬性上限改為 255
+- [x] 體力恢復改為 30 分鐘回復 30 點（原 20 分鐘 +1）
 
 ### 角色面板「生活」Tab
-- [ ] 生活系全屬性上限改為 255
+- [x] 生活系全屬性上限改為 255
 
 ### 角色面板「道具」Tab
-- [ ] 道具欄顯示打寶到的裝備，每筆裝備右側加入「裝備」按鈕，可直接安裝到角色裝備位置
+- [x] 道具欄顯示打寶到的裝備，每筆裝備右側加入「裝備」按鈕，可直接安裝到角色裝備位置
 
 ### 角色面板「裝備」Tab
-- [ ] 移除右上角「裝備商店」按鈕（避免透明度過高，降低新奇感）
-- [ ] 移除底部背包道具列表（與「道具」Tab 重複）
-- [ ] 底部加入「裝備加成後戰鬥數值」總覽（讓用戶比對裝備效果）
-- [ ] 裝備穿上後，「戰鬥」Tab 的數值同步更新
+- [x] 移除右上角「裝備商店」按鈕（避免透明度過高，降低新奇感）
+- [x] 移除底部背包道具列表（與「道具」Tab 重複）
+- [x] 底部加入「裝備加成後戰鬥數值」總覽（讓用戶比對裝備效果）
+- [x] 裝備穿上後，「戰鬥」Tab 的數值同步更新
 
 ### 角色面板「技能」Tab
-- [ ] 修正技能安裝功能（目前只能卸下，無法安裝）
-- [ ] 技能槽動態擴充（依木屬性門檻）：主動技能 4→8、被動技能 2→5、隱藏技能 1→3
-- [ ] 技能圖鑑只顯示玩家已擁有的技能，未擁有的不顯示
+- [x] 修正技能安裝功能（目前只能卸下，無法安裝）
+- [x] 技能槽動態擴充（依木屬性門檻）：主動技能 4→8、被動技能 2→5、隱藏技能 1→3
+- [x] 技能圖鑑只顯示玩家已擁有的技能，未擁有的不顯示
 
 ## V25 完成摘要（2026-03-24）
 - [x] 種族剋制系統：tickEngine.ts 加入 RACE_COUNTER 對照表，resolveCombat 套用種族剋制加成（+20%）
@@ -3312,39 +3312,39 @@
 
 ## V26 - 佈局大修正（最高優先）
 
-- [ ] ★★★★★ 執行動作區塊移到最上方，與地圖並排（不再被角色面板壓住）
-- [ ] ★★★★★ HP/MP/體力/活力值移到上方，玩家一眼可見
-- [ ] 廢除浮動區塊，改為固定排版（解決無法操作問題）
-- [ ] 修正 TypeScript 錯誤（Set 迭代、equipId→inventoryId、equipName）
-- [ ] 體力恢復改為 30min/+30
-- [ ] 技能安裝 Bug 修正（skillSlot3/4）
+- [x] ★★★★★ 執行動作區塊移到最上方，與地圖並排（不再被角色面板壓住）
+- [x] ★★★★★ HP/MP/體力/活力值移到上方，玩家一眼可見
+- [x] 廢除浮動區塊，改為固定排版（解決無法操作問題）
+- [x] 修正 TypeScript 錯誤（Set 迭代、equipId→inventoryId、equipName）
+- [x] 體力恢復改為 30min/+30
+- [x] 技能安裝 Bug 修正（skillSlot3/4）
 
 ## V27 - 遊戲劇院（Game Theater）後台管理 + 三個建議
 
 ### 遊戲劇院 - 角色帳號調整
-- [ ] 搜尋角色（by 名稱/UID）
-- [ ] 調整：積分點（天命幣）、遊戲幣、靈石
-- [ ] 調整：體力值、活躍度（AP）、HP、MP
-- [ ] 永久滿值開關：體力永遠滿、AP 永遠滿、HP 永遠滿
-- [ ] 調整：等級、經驗值
-- [ ] 調整：五行屬性（木/火/土/金/水）
-- [ ] 強制重置：角色位置（回到起點）
-- [ ] 封禁/解禁帳號、備註欄
+- [x] 搜尋角色（by 名稱/UID）
+- [x] 調整：積分點（天命幣）、遊戲幣、靈石
+- [x] 調整：體力值、活躍度（AP）、HP、MP
+- [x] 永久滿值開關：體力永遠滿、AP 永遠滿、HP 永遠滿
+- [x] 調整：等級、經驗值
+- [x] 調整：五行屬性（木/火/土/金/水）
+- [x] 強制重置：角色位置（回到起點）
+- [x] 封禁/解禁帳號、備註欄
 
 ### 遊戲劇院 - 全域遊戲參數
-- [ ] 天氣系統開關
-- [ ] 傳送費用設定
-- [ ] 奇遇/密店/隱藏NPC/隱藏任務出現機率
-- [ ] 全域掉落率/經驗值/金幣加成
-- [ ] 每 Tick 體力消耗設定
-- [ ] 低保觸發門檻設定
-- [ ] 維護模式開關
-- [ ] 活動加成開關
+- [x] 天氣系統開關
+- [x] 傳送費用設定
+- [x] 奇遇/密店/隱藏NPC/隱藏任務出現機率
+- [x] 全域掉落率/經驗值/金幣加成
+- [x] 每 Tick 體力消耗設定
+- [x] 低保觸發門檻設定
+- [x] 維護模式開關
+- [x] 活動加成開關
 
 ### 三個建議
-- [ ] 道具 Tab 掉落裝備 UI
-- [ ] 後台裝備模板管理 Tab
-- [ ] 低保計數器顯示
+- [x] 道具 Tab 掉落裝備 UI
+- [x] 後台裝備模板管理 Tab
+- [x] 低保計數器顯示
 
 ## 修復 V27 - 遊戲進行模式 + 事件日誌 + 遊戲劇院
 
@@ -3365,10 +3365,10 @@
 ### 前端流暢度優化
 - [x] 事件日誌 Tab 切換加入 keepPreviousData，避免切換時空白閃爍
 - [x] Tick 執行後解析回傳事件，自動彈出 Toast 通知
-- [ ] 數値變化動畫：HP/MP/體力/AP 數値變動時加入數字跳動效果（待後續迭代）
-- [ ] 事件日誌新增條目時加入滑入動畫（待後續迭代）
-- [ ] 角色狀態轉場：idle→moving→combat 狀態切換時加入過渡動畫（待後續迭代）
-- [ ] Tick 執行中加入全域 loading 指示器（頂部進度條）（待後續迭代）
+- [x] 數値變化動畫：HP/MP/體力/AP 數値變動時加入數字跳動效果（待後續迭代）
+- [x] 事件日誌新增條目時加入滑入動畫（待後續迭代）
+- [x] 角色狀態轉場：idle→moving→combat 狀態切換時加入過渡動畫（待後續迭代）
+- [x] Tick 執行中加入全域 loading 指示器（頂部進度條）（待後續迭代）
 
 ### 後台遊戲劇院擴充
 - [x] 全服廣播功能（管理員發送系統訊息，所有線上玩家前端顯示）
@@ -3491,98 +3491,98 @@
 ## 功能強化 V32 - WebSocket 即時通訊 + PvP 戰績榜 + 成就系統
 
 ### WebSocket 後端基礎建設
-- [ ] 安裝 ws 套件（pnpm add ws @types/ws）
-- [ ] 建立 server/wsServer.ts（WebSocket 伺服器、連線管理、心跳機制）
-- [ ] WebSocket 認證（JWT token 驗證，連線時帶 agentId）
-- [ ] 房間管理（全服廣播 / 個人推送 / 地圖節點房間）
-- [ ] 整合進 server/_core/index.ts（共用 HTTP server）
-- [ ] 定義 WS 訊息類型（chat_message / map_update / tick_event / world_event / achievement）
+- [x] 安裝 ws 套件（pnpm add ws @types/ws）
+- [x] 建立 server/wsServer.ts（WebSocket 伺服器、連線管理、心跳機制）
+- [x] WebSocket 認證（JWT token 驗證，連線時帶 agentId）
+- [x] 房間管理（全服廣播 / 個人推送 / 地圖節點房間）
+- [x] 整合進 server/_core/index.ts（共用 HTTP server）
+- [x] 定義 WS 訊息類型（chat_message / map_update / tick_event / world_event / achievement）
 
 ### 聊天室 WebSocket 升級
-- [ ] 後端：聊天室訊息透過 WS 廣播給所有連線玩家
-- [ ] 前端 GlobalChat.tsx：改用 WebSocket 接收新訊息（保留 HTTP fallback）
-- [ ] 前端：連線狀態指示（綠點=已連線/紅點=重連中）
-- [ ] 前端：新訊息到達時自動滾動到底部
-- [ ] 前端：訊息發送後立即樂觀更新（不等 WS 回傳）
+- [x] 後端：聊天室訊息透過 WS 廣播給所有連線玩家
+- [x] 前端 GlobalChat.tsx：改用 WebSocket 接收新訊息（保留 HTTP fallback）
+- [x] 前端：連線狀態指示（綠點=已連線/紅點=重連中）
+- [x] 前端：新訊息到達時自動滾動到底部
+- [x] 前端：訊息發送後立即樂觀更新（不等 WS 回傳）
 
 ### 地圖即時狀態 WebSocket 升級
-- [ ] 後端：Tick 執行後透過 WS 廣播玩家位置/HP/狀態更新
-- [ ] 後端：世界事件發生後透過 WS 廣播全服通知
-- [ ] 前端 VirtualWorldPage.tsx：地圖節點冒險者狀態改用 WS 接收（取代 10 秒輪詢）
-- [ ] 前端：WS 斷線時自動降級回輪詢模式
-- [ ] 前端：WS 連線狀態顯示在頂部工具列
+- [x] 後端：Tick 執行後透過 WS 廣播玩家位置/HP/狀態更新
+- [x] 後端：世界事件發生後透過 WS 廣播全服通知
+- [x] 前端 VirtualWorldPage.tsx：地圖節點冒險者狀態改用 WS 接收（取代 10 秒輪詢）
+- [x] 前端：WS 斷線時自動降級回輪詢模式
+- [x] 前端：WS 連線狀態顯示在頂部工具列
 
 ### PvP 戰績排行榜（Schema 擴充）
-- [ ] Schema：pvpChallenges 加入 winStreak 欄位追蹤連勝
-- [ ] Schema：新增 pvpStats 視圖或 agentPvpStats 表（勝場/敗場/勝率/連勝/最高連勝）
-- [ ] 後端：getLeaderboard 擴充 pvpRanking（勝率榜前10）
-- [ ] 後端：getPvpStats API（個人PvP詳細戰績）
-- [ ] 後端：getPvpHistory API（挑戰歷史，含對手名稱/結果/時間）
-- [ ] 前端 GameLobby.tsx：新增「PvP 戰績榜」Tab（勝率榜 + 連勝榜）
-- [ ] 前端：PvP 戰績榜卡片（名次/名稱/勝場/敗場/勝率/連勝）
-- [ ] 前端：點擊玩家展開挑戰歷史詳情（Modal）
-- [ ] 前端：自己的 PvP 戰績摘要卡片（顯示在排行榜頂部）
+- [x] Schema：pvpChallenges 加入 winStreak 欄位追蹤連勝
+- [x] Schema：新增 pvpStats 視圖或 agentPvpStats 表（勝場/敗場/勝率/連勝/最高連勝）
+- [x] 後端：getLeaderboard 擴充 pvpRanking（勝率榜前10）
+- [x] 後端：getPvpStats API（個人PvP詳細戰績）
+- [x] 後端：getPvpHistory API（挑戰歷史，含對手名稱/結果/時間）
+- [x] 前端 GameLobby.tsx：新增「PvP 戰績榜」Tab（勝率榜 + 連勝榜）
+- [x] 前端：PvP 戰績榜卡片（名次/名稱/勝場/敗場/勝率/連勝）
+- [x] 前端：點擊玩家展開挑戰歷史詳情（Modal）
+- [x] 前端：自己的 PvP 戰績摘要卡片（顯示在排行榜頂部）
 
 ### 成就系統擴充（Schema）
-- [ ] Schema：新增 achievements 表（成就定義：id/name/desc/icon/condition/type）
-- [ ] Schema：新增 agentAchievements 表（玩家已解鎖成就：agentId/achievementId/unlockedAt/progress）
-- [ ] 推送 schema 到資料庫（pnpm db:push）
-- [ ] 種子資料：20 個成就定義（等級里程碑/戰鬥/採集/傳說掉落/週冠軍/PvP/連勝/聊天/探索）
+- [x] Schema：新增 achievements 表（成就定義：id/name/desc/icon/condition/type）
+- [x] Schema：新增 agentAchievements 表（玩家已解鎖成就：agentId/achievementId/unlockedAt/progress）
+- [x] 推送 schema 到資料庫（pnpm db:push）
+- [x] 種子資料：20 個成就定義（等級里程碑/戰鬥/採集/傳說掉落/週冠軍/PvP/連勝/聊天/探索）
 
 ### 成就解鎖邏輯
-- [ ] 後端 achievementEngine.ts：成就解鎖檢查函數（checkAchievements）
-- [ ] tickEngine 整合：每次 Tick 後呼叫 checkAchievements
-- [ ] PvP 挑戰後：檢查 PvP 相關成就（初戰/連勝/勝率達標）
-- [ ] 週冠軍頒發後：自動解鎖週冠軍成就
-- [ ] 傳說掉落後：解鎖傳說獵人成就
-- [ ] 後端：getAchievements API（取得玩家所有成就+進度）
-- [ ] 後端：成就解鎖時透過 WS 推送通知
+- [x] 後端 achievementEngine.ts：成就解鎖檢查函數（checkAchievements）
+- [x] tickEngine 整合：每次 Tick 後呼叫 checkAchievements
+- [x] PvP 挑戰後：檢查 PvP 相關成就（初戰/連勝/勝率達標）
+- [x] 週冠軍頒發後：自動解鎖週冠軍成就
+- [x] 傳說掉落後：解鎖傳說獵人成就
+- [x] 後端：getAchievements API（取得玩家所有成就+進度）
+- [x] 後端：成就解鎖時透過 WS 推送通知
 
 ### 成就徽章定義（20 個）
-- [ ] 🌱 初出茅廬（達到 Lv.5）
-- [ ] ⚔️ 初戰告捷（第一次 PvP 勝利）
-- [ ] 🔥 連勝三場（PvP 連勝 3 次）
-- [ ] 💀 戰神（PvP 連勝 10 次）
-- [ ] 👑 週冠軍（獲得週等級冠軍）
-- [ ] ⚔️ 週戰神（獲得週戰鬥王冠軍）
-- [ ] 💎 傳說獵人（獲得第一件傳說裝備）
-- [ ] 💎💎 傳說收藏家（獲得 5 件傳說裝備）
-- [ ] 🗺️ 探索者（探索全部地圖節點）
-- [ ] ⛏️ 採集達人（累積採集 100 次）
-- [ ] 🌿 木靈共鳴（累積採集 500 次）
-- [ ] 🏆 升仙之路（達到 Lv.50）
-- [ ] 💬 話嘮（發送 50 則聊天訊息）
-- [ ] 🤝 江湖人（發起 10 次 PvP 挑戰）
-- [ ] 🛡️ 鐵壁（PvP 勝率達 70% 且場次≥10）
-- [ ] 🌍 世界見證者（親歷 10 次世界事件）
-- [ ] ⚡ 靈力充盈（AP 達到 100）
-- [ ] 🎯 百戰老兵（累積戰鬥 100 場）
-- [ ] 🌟 傳說時刻（同一天獲得升級+傳說掉落）
-- [ ] 🏅 全能冒險者（同時持有戰鬥/採集/探索三種成就）
+- [x] 🌱 初出茅廬（達到 Lv.5）
+- [x] ⚔️ 初戰告捷（第一次 PvP 勝利）
+- [x] 🔥 連勝三場（PvP 連勝 3 次）
+- [x] 💀 戰神（PvP 連勝 10 次）
+- [x] 👑 週冠軍（獲得週等級冠軍）
+- [x] ⚔️ 週戰神（獲得週戰鬥王冠軍）
+- [x] 💎 傳說獵人（獲得第一件傳說裝備）
+- [x] 💎💎 傳說收藏家（獲得 5 件傳說裝備）
+- [x] 🗺️ 探索者（探索全部地圖節點）
+- [x] ⛏️ 採集達人（累積採集 100 次）
+- [x] 🌿 木靈共鳴（累積採集 500 次）
+- [x] 🏆 升仙之路（達到 Lv.50）
+- [x] 💬 話嘮（發送 50 則聊天訊息）
+- [x] 🤝 江湖人（發起 10 次 PvP 挑戰）
+- [x] 🛡️ 鐵壁（PvP 勝率達 70% 且場次≥10）
+- [x] 🌍 世界見證者（親歷 10 次世界事件）
+- [x] ⚡ 靈力充盈（AP 達到 100）
+- [x] 🎯 百戰老兵（累積戰鬥 100 場）
+- [x] 🌟 傳說時刻（同一天獲得升級+傳說掉落）
+- [x] 🏅 全能冒險者（同時持有戰鬥/採集/探索三種成就）
 
 ### 角色面板成就展示區
-- [ ] CharacterPanel（或 VirtualWorldPage）新增「成就」Tab
-- [ ] 成就徽章牆（已解鎖金色/未解鎖灰色，含進度條）
-- [ ] 成就解鎖全螢幕特效（類似升級特效，藍色光芒）
-- [ ] 成就音效（Web Audio API 合成，清脆鈴聲）
-- [ ] 稱號選擇：玩家可從已解鎖成就中選擇一個作為顯示稱號
-- [ ] 稱號顯示在排行榜和聊天室訊息旁
+- [x] CharacterPanel（或 VirtualWorldPage）新增「成就」Tab
+- [x] 成就徽章牆（已解鎖金色/未解鎖灰色，含進度條）
+- [x] 成就解鎖全螢幕特效（類似升級特效，藍色光芒）
+- [x] 成就音效（Web Audio API 合成，清脆鈴聲）
+- [x] 稱號選擇：玩家可從已解鎖成就中選擇一個作為顯示稱號
+- [x] 稱號顯示在排行榜和聊天室訊息旁
 
 ### 連帶補充：Tick 引擎強化
-- [ ] tickEngine：升級事件透過 WS 推送（取代前端輪詢檢查）
-- [ ] tickEngine：傳說掉落透過 WS 推送
-- [ ] tickEngine：成就解鎖透過 WS 推送
+- [x] tickEngine：升級事件透過 WS 推送（取代前端輪詢檢查）
+- [x] tickEngine：傳說掉落透過 WS 推送
+- [x] tickEngine：成就解鎖透過 WS 推送
 - [x] worldTickEngine：世界事件透過 WS 廣播（取代前端廣播輪詢）
 
 ### 連帶補充：遊戲大廳整合
-- [ ] GameLobby.tsx：新增「成就牆」Tab（全服最新解鎖成就動態）
-- [ ] GameLobby.tsx：排行榜玩家卡片顯示其稱號徽章
-- [ ] GameLobby.tsx：聊天室訊息旁顯示玩家稱號
-- [ ] GameLobby.tsx：WS 連線狀態指示燈
-- [ ] 遊戲大廳頂部：全服即時動態（最新升級/傳說掉落/成就解鎖）
+- [x] GameLobby.tsx：新增「成就牆」Tab（全服最新解鎖成就動態）
+- [x] GameLobby.tsx：排行榜玩家卡片顯示其稱號徽章
+- [x] GameLobby.tsx：聊天室訊息旁顯示玩家稱號
+- [x] GameLobby.tsx：WS 連線狀態指示燈
+- [x] 遊戲大廳頂部：全服即時動態（最新升級/傳說掉落/成就解鎖）
 
 ### 測試 & 收尾
 - [x] 撰寫 v32.test.ts（571 項測試全部通過）
-- [ ] 更新 gameWorld.test.ts（PvP 戰績 API 測試）
+- [x] 更新 gameWorld.test.ts（PvP 戰績 API 測試）
 - [x] TypeScript 零錯誤確認
 - [x] 儲存 V32 Checkpoint（ee2fa675）

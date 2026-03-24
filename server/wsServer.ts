@@ -22,6 +22,8 @@ export type WsMessageType =
   | "world_event"
   | "achievement"
   | "pvp_result"
+  | "live_feed"       // 全服即時動態（升級/成就/傳說掉落/PvP勝利/週冠軍）
+  | "achievement_unlock" // 專屬成就解鎖通知（僅發送給解鎖者）
   | "ping"
   | "pong"
   | "connected"

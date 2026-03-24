@@ -2699,3 +2699,22 @@
   50%  { opacity: 1;   transform: scale(1.2); }
   100% { opacity: 0.7; transform: scale(1); }
 }
+
+/* AchievementToast 倒計時進度條動畫 */
+@keyframes shrink-width {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+
+/* LiveFeedBanner 滑入動畫 */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* 成就解鎖特效光暈 */
+@keyframes achievement-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+  50%  { box-shadow: 0 0 20px 8px rgba(234, 179, 8, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); }
+}
