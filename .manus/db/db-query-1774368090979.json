@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, agent_name, last_divine_heal_date, last_divine_eye_date, last_divine_stamina_date FROM game_agents LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_name, last_divine_heal_date, last_divine_eye_date, last_divine_stamina_date FROM game_agents LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "agent_name": "凜冬月",
+      "last_divine_heal_date": "2026-03-24",
+      "last_divine_eye_date": "2026-03-24",
+      "last_divine_stamina_date": "2026-03-24"
+    },
+    {
+      "id": "2",
+      "agent_name": "御詠漓",
+      "last_divine_heal_date": "NULL",
+      "last_divine_eye_date": "NULL",
+      "last_divine_stamina_date": "NULL"
+    },
+    {
+      "id": "3",
+      "agent_name": "NULL",
+      "last_divine_heal_date": "NULL",
+      "last_divine_eye_date": "NULL",
+      "last_divine_stamina_date": "NULL"
+    },
+    {
+      "id": "4",
+      "agent_name": "阿成",
+      "last_divine_heal_date": "NULL",
+      "last_divine_eye_date": "NULL",
+      "last_divine_stamina_date": "NULL"
+    },
+    {
+      "id": "5",
+      "agent_name": "齊藤優作",
+      "last_divine_heal_date": "NULL",
+      "last_divine_eye_date": "NULL",
+      "last_divine_stamina_date": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_name\tlast_divine_heal_date\tlast_divine_eye_date\tlast_divine_stamina_date\n1\t凜冬月\t2026-03-24\t2026-03-24\t2026-03-24\n2\t御詠漓\tNULL\tNULL\tNULL\n3\tNULL\tNULL\tNULL\tNULL\n4\t阿成\tNULL\tNULL\tNULL\n5\t齊藤優作\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1770
+}

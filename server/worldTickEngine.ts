@@ -19,6 +19,7 @@ import {
   agentEvents,
 } from "../drizzle/schema";
 import { eq, gt, and, desc, count, sql } from "drizzle-orm";
+import { gameConfig } from "../drizzle/schema";
 import { MAP_NODES } from "../shared/mapNodes";
 import type { WuXing } from "../shared/types";
 
@@ -182,11 +183,14 @@ async function processApRegen(): Promise<number> {
   const db = await getDb();
   if (!db) return 0;
   try {
+    // 讀取後台設定的靈力恢復量
+    const configRows = await db.select().from(gameConfig).where(eq(gameConfig.configKey, "ap_regen_amount")).limit(1);
+    const apRegenAmount = Math.max(1, parseInt(configRows[0]?.configValue ?? "1", 10) || 1);
     const result = await db.execute(
-      `UPDATE game_agents SET action_points = LEAST(max_action_points, action_points + 1), updated_at = ${Date.now()} WHERE is_active = 1`
+      `UPDATE game_agents SET action_points = LEAST(max_action_points, action_points + ${apRegenAmount}), updated_at = ${Date.now()} WHERE is_active = 1`
     );
     const affected = (result as { affectedRows?: number }).affectedRows ?? 0;
-    console.log(`[WorldTick] 固定事件：${affected} 位旅人獲得 +1 靈力值`);
+    console.log(`[WorldTick] 固定事件：${affected} 位旅人獲得 +${apRegenAmount} 靈力値`);
     return affected;
   } catch (e) {
     console.error("[WorldTick] AP 回復失敗：", e);

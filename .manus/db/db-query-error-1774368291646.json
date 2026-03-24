@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO game_config (config_key, config_value, description, category, created_at, updated_at)\nVALUES ('ap_regen_amount', '1', '每次世界 Tick 恢復的靈力值（預設 1）', 'global', UNIX_TIMESTAMP()*1000, UNIX_TIMESTAMP()*1000)\nON DUPLICATE KEY UPDATE description = VALUES(description);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute INSERT INTO game_config (config_key, config_value, description, category, created_at, updated_at)\nVALUES ('ap_regen_amount', '1', '每次世界 Tick 恢復的靈力值（預設 1）', 'global', UNIX_TIMESTAMP()*1000, UNIX_TIMESTAMP()*1000)\nON DUPLICATE KEY UPDATE description = VALUES(description);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1364 (HY000) at line 1: Field 'label' doesn't have a default value"
+  ]
+}

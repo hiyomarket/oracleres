@@ -233,16 +233,19 @@ const CONFIG_CATEGORY_LABELS: Record<string, string> = {
 
 // ─── 角色管理 Tab ─────────────────────────────────────────────────────────────
 function AgentManagementTab() {
+  const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [selectedAgent, setSelectedAgent] = useState<AgentResult | null>(null);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [showEditPanel, setShowEditPanel] = useState(false);
 
-  const { data: agents, isLoading, refetch } = trpc.gameAdmin.searchAgents.useQuery(
-    { keyword },
-    { enabled: keyword.length > 0 }
+  const { data: pagedData, isLoading, refetch } = trpc.gameAdmin.listAgentsPaginated.useQuery(
+    { page, pageSize: 20, keyword: keyword || undefined }
   );
+  const agents = pagedData?.agents;
+  const total = pagedData?.total ?? 0;
+  const totalPages = pagedData?.totalPages ?? 1;
 
   const adjustValues = trpc.gameAdmin.adjustAgentValues.useMutation({
     onSuccess: () => {
@@ -264,7 +267,8 @@ function AgentManagementTab() {
   type AgentResult = NonNullable<typeof agents>[number];
 
   const handleSearch = () => {
-    if (searchInput.trim()) setKeyword(searchInput.trim());
+    setKeyword(searchInput.trim());
+    setPage(1);
   };
 
   const openEdit = (agent: AgentResult) => {
@@ -322,21 +326,27 @@ function AgentManagementTab() {
 
   return (
     <div className="space-y-4">
-      {/* 搜尋列 */}
-      <div className="flex gap-2">
+      {/* 搜尋列 + 統計 */}
+      <div className="flex items-center gap-2 flex-wrap">
         <Input
-          placeholder="輸入角色名稱或 UserID 搜尋…"
+          placeholder="輸入角色名稱或 UserID 篩選…（留空顯示全部）"
           value={searchInput}
           onChange={e => setSearchInput(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleSearch()}
           className="max-w-sm"
         />
-        <Button onClick={handleSearch} variant="outline">🔍 搜尋</Button>
+        <Button onClick={handleSearch} variant="outline" size="sm">🔍 篩選</Button>
+        {keyword && (
+          <Button variant="ghost" size="sm" onClick={() => { setKeyword(""); setSearchInput(""); setPage(1); }}>✕ 清除篩選</Button>
+        )}
+        <span className="text-xs text-muted-foreground ml-auto">
+          共 <span className="text-amber-400 font-medium">{total}</span> 位玩家
+        </span>
       </div>
 
-      {/* 搜尋結果 */}
-      {isLoading && <p className="text-muted-foreground text-sm">搜尋中…</p>}
-      {agents && agents.length === 0 && (
+      {/* 結果列表 */}
+      {isLoading && <p className="text-muted-foreground text-sm">載入中…</p>}
+      {!isLoading && agents && agents.length === 0 && (
         <p className="text-muted-foreground text-sm">找不到符合的角色</p>
       )}
 
@@ -424,7 +434,30 @@ function AgentManagementTab() {
         </div>
       )}
 
-      {/* 編輯面板（浮動抽屜） */}
+      {/* 分頁控制器 */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <Button
+            variant="outline" size="sm"
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page <= 1 || isLoading}
+          >
+            ← 上一頁
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            第 <span className="text-amber-400 font-medium">{page}</span> / {totalPages} 頁
+          </span>
+          <Button
+            variant="outline" size="sm"
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages || isLoading}
+          >
+            下一頁 →
+          </Button>
+        </div>
+      )}
+
+      {/* 編輯面板（浮動抄屉） */}
       {showEditPanel && selectedAgent && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60"
           onClick={() => setShowEditPanel(false)}>

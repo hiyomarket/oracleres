@@ -34,7 +34,7 @@ import {
   worldEvents,
   gameRogueEvents,
 } from "../../drizzle/schema";
-import { sql, like, or, eq, desc, lt } from "drizzle-orm";
+import { sql, like, or, eq, desc, lt, and, gte, asc } from "drizzle-orm";
 import {
   getEngineConfig,
   updateEngineConfig,
@@ -1192,5 +1192,89 @@ export const gameAdminRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       await db.delete(gameRogueEvents).where(eq(gameRogueEvents.id, input.id));
       return { success: true };
+    }),
+
+  /** 分頁列出有玩的角色（createdAt 不為 null，即已建立角色的帳號） */
+  listAgentsPaginated: adminProcedure
+    .input(z.object({
+      page: z.number().int().min(1).default(1),
+      pageSize: z.number().int().min(1).max(100).default(20),
+      keyword: z.string().optional(),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const offset = (input.page - 1) * input.pageSize;
+
+      // 建立搜尋條件
+      const conditions = [];
+      if (input.keyword && input.keyword.trim()) {
+        conditions.push(
+          or(
+            like(gameAgents.agentName, `%${input.keyword.trim()}%`),
+            like(gameAgents.userId, `%${input.keyword.trim()}%`)
+          )
+        );
+      }
+      const whereClause = conditions.length > 0 ? and(...conditions as [ReturnType<typeof eq>]) : undefined;
+
+      // 取得總數
+      const countRows = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(gameAgents)
+        .where(whereClause);
+      const total = Number(countRows[0]?.count ?? 0);
+      const totalPages = Math.ceil(total / input.pageSize);
+
+      // 取得分頁資料
+      const agents = await db.select({
+        id: gameAgents.id,
+        userId: gameAgents.userId,
+        agentName: gameAgents.agentName,
+        level: gameAgents.level,
+        exp: gameAgents.exp,
+        dominantElement: gameAgents.dominantElement,
+        hp: gameAgents.hp,
+        maxHp: gameAgents.maxHp,
+        mp: gameAgents.mp,
+        maxMp: gameAgents.maxMp,
+        stamina: gameAgents.stamina,
+        maxStamina: gameAgents.maxStamina,
+        actionPoints: gameAgents.actionPoints,
+        maxActionPoints: gameAgents.maxActionPoints,
+        gold: gameAgents.gold,
+        wuxingWood: gameAgents.wuxingWood,
+        wuxingFire: gameAgents.wuxingFire,
+        wuxingEarth: gameAgents.wuxingEarth,
+        wuxingMetal: gameAgents.wuxingMetal,
+        wuxingWater: gameAgents.wuxingWater,
+        currentNodeId: gameAgents.currentNodeId,
+        isActive: gameAgents.isActive,
+        createdAt: gameAgents.createdAt,
+      })
+        .from(gameAgents)
+        .where(whereClause)
+        .orderBy(desc(gameAgents.createdAt))
+        .limit(input.pageSize)
+        .offset(offset);
+
+      // 補充 users 表的 pointsBalance、gameCoins、gameStones
+      const results = await Promise.all(agents.map(async (agent) => {
+        const userRows = await db.select({
+          pointsBalance: users.pointsBalance,
+          gameCoins: users.gameCoins,
+          gameStones: users.gameStones,
+        }).from(users).where(eq(users.openId, agent.userId)).limit(1);
+        const control = await db.select().from(adminGameControl).where(eq(adminGameControl.agentId, agent.id)).limit(1);
+        return {
+          ...agent,
+          pointsBalance: userRows[0]?.pointsBalance ?? 0,
+          gameCoins: userRows[0]?.gameCoins ?? 0,
+          gameStones: userRows[0]?.gameStones ?? 0,
+          control: control[0] ?? null,
+        };
+      }));
+
+      return { agents: results, total, totalPages, page: input.page, pageSize: input.pageSize };
     }),
 });

@@ -2027,15 +2027,26 @@ export default function VirtualWorldPage() {
   });
   const divineHeal     = trpc.gameWorld.divineHeal.useMutation({
     onSuccess: () => {
+      const todayTW = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+      // 樂觀更新快取，立即顯示「明日再來」
+      utils.gameWorld.getOrCreateAgent.setData(undefined, (old) => {
+        if (!old?.agent) return old;
+        return { ...old, agent: { ...old.agent, lastDivineHealDate: todayTW } };
+      });
       refetchStatus();
       refetchLog();
       utils.gameWorld.getOrCreateAgent.invalidate();
-      import("sonner").then(({ toast }) => toast.success("✨ 神蹟治癒降臨！HP 恢復 50%"));
+      import("sonner").then(({ toast }) => toast.success("✨ 神跡治癒降臨！HP 恢復 50%"));
     },
-    onError: (e) => import("sonner").then(({ toast }) => toast.error(e.message || "神蹟治癒失敗")),
+    onError: (e) => import("sonner").then(({ toast }) => toast.error(e.message || "神跡治癒失敗")),
   });
   const divineEye      = trpc.gameWorld.divineEye.useMutation({
     onSuccess: () => {
+      const todayTW = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+      utils.gameWorld.getOrCreateAgent.setData(undefined, (old) => {
+        if (!old?.agent) return old;
+        return { ...old, agent: { ...old.agent, lastDivineEyeDate: todayTW } };
+      });
       refetchStatus();
       refetchLog();
       utils.gameWorld.getOrCreateAgent.invalidate();
@@ -2045,6 +2056,11 @@ export default function VirtualWorldPage() {
   });
   const divineStamina  = trpc.gameWorld.divineStamina.useMutation({
     onSuccess: () => {
+      const todayTW = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+      utils.gameWorld.getOrCreateAgent.setData(undefined, (old) => {
+        if (!old?.agent) return old;
+        return { ...old, agent: { ...old.agent, lastDivineStaminaDate: todayTW } };
+      });
       refetchStatus();
       refetchLog();
       utils.gameWorld.getOrCreateAgent.invalidate();
@@ -2138,6 +2154,25 @@ export default function VirtualWorldPage() {
         if (data.targetNode?.id) mapRef.current?.highlightNode(data.targetNode.id);
       }
     },
+    onError: (e) => {
+      import("sonner").then(({ toast }) => {
+        const msg = e.message || "移動失敗";
+        // 體力不足時，自動切換休息策略
+        if (msg.includes("體力不足") || msg.includes("stamina")) {
+          const curRegenAmount = (statusData?.staminaInfo as { regenAmount?: number } | undefined)?.regenAmount ?? 20;
+          const curRegenMinutes = (statusData?.staminaInfo as { regenMinutes?: number } | undefined)?.regenMinutes ?? 5;
+          if (agent?.strategy !== "rest") {
+            setStrategy.mutate({ strategy: "rest" });
+          }
+          toast.warning("😴 體力不足！已自動切換「休息」模式", {
+            description: `體力將每 ${curRegenMinutes} 分鐘自動回復 ${curRegenAmount} 點，回復後可再次移動`,
+            duration: 5000,
+          });
+        } else {
+          toast.error(msg);
+        }
+      });
+    },
   });
 
   // 修復 6：自動執行直到體力歸零，體力不足時自動切換為休息策略
@@ -2158,7 +2193,7 @@ export default function VirtualWorldPage() {
         const curStamina = curStaminaInfo?.current ?? agent?.stamina ?? 100;
         const curStrategy = agent?.strategy ?? "explore";
         // Bug 6 fix: 體力不足時自動暫停 Tick（讀取後台 staminaPerTick 設定）
-        const curStaminaPerTick = (statusData?.staminaInfo as { staminaPerTick?: number } | undefined)?.staminaPerTick ?? 5;
+        const curStaminaPerTick = (statusData?.staminaInfo as { staminaPerTick?: number } | undefined)?.staminaPerTick ?? 2;
         const curRegenAmount = (statusData?.staminaInfo as { regenAmount?: number } | undefined)?.regenAmount ?? 30;
         const curRegenMinutes = (statusData?.staminaInfo as { regenMinutes?: number } | undefined)?.regenMinutes ?? 30;
         if (curStamina < curStaminaPerTick) {
@@ -2591,91 +2626,8 @@ export default function VirtualWorldPage() {
             zIndex: 20,
           }}>
 
-          {/* 左：流日 + 本命（帶有意義資訊） */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {/* 流日標籤 */}
-            <div
-              className="relative flex flex-col items-center px-2 py-1 rounded-xl border font-bold cursor-pointer group"
-              style={{
-                background: `${todayColor}12`,
-                borderColor: `${todayColor}40`,
-                color: todayColor,
-                boxShadow: `0 0 12px ${todayColor}35`,
-                textShadow: `0 0 6px ${todayColor}`,
-                fontSize: "10px",
-                lineHeight: "1.2",
-              }}
-              onClick={() => {
-                // 手機版：點擊顯示說明
-                if (window.innerWidth < 1024) {
-                  import("sonner").then(({ toast }) => {
-                    toast.info(`流日天干：${todayStem}${todayBranch}`, {
-                      description: `今日主氣為「${todayElement}」行，${todayElement}旺代表今日所有與${todayElement}行相關的行動和事物都會得到加持。你的本命屬${WX_ZH[agentElement] ?? "金"}，不同流日對你的屬性值會有加成或耠減。`,
-                      duration: 5000,
-                    });
-                  });
-                }
-              }}
-            >
-              <span style={{ fontSize: "11px" }}>{todayStem}{todayBranch}</span>
-              <span style={{ fontSize: "9px", opacity: 0.8 }}>{todayElement}旺</span>
-              {/* 桌機版 hover tooltip */}
-              <div className="hidden lg:group-hover:block absolute left-0 top-full mt-1 z-[500] pointer-events-none"
-                style={{ minWidth: "220px" }}>
-                <div className="rounded-xl border px-3 py-2.5 text-left"
-                  style={{
-                    background: "rgba(6,10,22,0.97)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: `${todayColor}40`,
-                    boxShadow: `0 4px 20px rgba(0,0,0,0.6)`,
-                  }}>
-                  <p className="text-xs font-bold mb-1" style={{ color: todayColor }}>流日天干：{todayStem}{todayBranch}</p>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">今日主氣為「{todayElement}」行，{todayElement}旺代表今日所有與{todayElement}行相關的行動和事物都會得到加持。你的本命屬{WX_ZH[agentElement] ?? "金"}，不同流日對你的屬性值會有加成或耠減。</p>
-                </div>
-              </div>
-            </div>
-            {/* 本命標籤（含尋寶力等級） */}
-            <div
-              className="relative flex flex-col items-center px-2 py-1 rounded-xl border font-bold cursor-pointer group"
-              style={{
-                background: `${ec}12`,
-                borderColor: `${ec}40`,
-                color: ec,
-                boxShadow: WX_GLOW[agentElement] ?? "none",
-                textShadow: `0 0 6px ${ec}`,
-                fontSize: "10px",
-                lineHeight: "1.2",
-              }}
-              onClick={() => {
-                // 手機版：點擊顯示說明
-                if (window.innerWidth < 1024) {
-                  import("sonner").then(({ toast }) => {
-                    toast.info(`本命：${WX_ZH[agentElement] ?? "金"}行`, {
-                      description: `你的命格屬「${WX_ZH[agentElement] ?? "金"}」行，尋寶力為 ${treasureHunting}。尋寶力越高，在尋寶探索中發現稀有資源的機率越大。本命屬性與流日天干相生時，行動效率提升。`,
-                      duration: 5000,
-                    });
-                  });
-                }
-              }}
-            >
-              <span style={{ fontSize: "11px" }}>{WX_ZH[agentElement] ?? "金"}命</span>
-              <span style={{ fontSize: "9px", opacity: 0.8 }}>尋{treasureHunting}</span>
-              {/* 桌機版 hover tooltip */}
-              <div className="hidden lg:group-hover:block absolute left-0 top-full mt-1 z-[500] pointer-events-none"
-                style={{ minWidth: "220px" }}>
-                <div className="rounded-xl border px-3 py-2.5 text-left"
-                  style={{
-                    background: "rgba(6,10,22,0.97)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: `${ec}40`,
-                    boxShadow: `0 4px 20px rgba(0,0,0,0.6)`,
-                  }}>
-                  <p className="text-xs font-bold mb-1" style={{ color: ec }}>本命：{WX_ZH[agentElement] ?? "金"}行</p>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">你的命格屬「{WX_ZH[agentElement] ?? "金"}」行，尋寶力為 {treasureHunting}。尋寶力越高，在尋寶探索中發現稀有資源的機率越大。本命屬性與流日天干相生時，行動效率提升。</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* 左：空白占位（已移除流日/本命標籤） */}
+          <div className="shrink-0" />
 
           {/* 中：收納式聊天大廳 */}
           <div className="flex-1 flex flex-col items-center justify-center min-w-0 px-1 relative">
@@ -2696,11 +2648,15 @@ export default function VirtualWorldPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
               )}
             </button>
-            {/* 展開面板 */}
+            {/* 展開面板（改為 fixed 定位避免被 overflow:hidden 截斷） */}
             {chatOpen && (
               <div
-                className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-[200] rounded-xl border overflow-hidden"
+                className="fixed z-[300] rounded-xl border overflow-hidden"
                 style={{
+                  top: "clamp(44px, 10%, 56px)",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  marginTop: "4px",
                   width: "min(360px, 90vw)",
                   background: "rgba(6,10,22,0.97)",
                   backdropFilter: "blur(20px)",
