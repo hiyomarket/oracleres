@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "configKey": "exchange_rates",
+    "configValue": null,
+    "description": "積分與遊戲點兌換比率",
+    "updatedAt": "2026-03-03T16:37:01.000Z"
+  },
+  {
+    "id": 2,
+    "configKey": "casino_enabled",
+    "configValue": true,
+    "description": "天命娛樂城是否開放",
+    "updatedAt": "2026-03-03T16:37:01.000Z"
+  },
+  {
+    "id": 3,
+    "configKey": "new_games",
+    "configValue": null,
+    "description": "是否有新遊戲上線",
+    "updatedAt": "2026-03-03T16:37:01.000Z"
+  },
+  {
+    "id": 30001,
+    "configKey": "wbc_enabled",
+    "configValue": false,
+    "description": "WBC 2026 活動開關",
+    "updatedAt": "2026-03-07T01:33:13.000Z"
+  },
+  {
+    "id": 30002,
+    "configKey": "divination_cost",
+    "configValue": 30,
+    "description": "天命問卜每次積分費用",
+    "updatedAt": "2026-03-07T01:24:51.000Z"
+  }
+]

@@ -1,0 +1,197 @@
+[
+  {
+    "id": 150001,
+    "planId": "2026_TEST1",
+    "moduleId": "module_calendar"
+  },
+  {
+    "id": 150002,
+    "planId": "2026_TEST1",
+    "moduleId": "module_divination"
+  },
+  {
+    "id": 150003,
+    "planId": "2026_TEST1",
+    "moduleId": "module_profile"
+  },
+  {
+    "id": 150004,
+    "planId": "2026_TEST1",
+    "moduleId": "module_warroom"
+  },
+  {
+    "id": 150005,
+    "planId": "2026_TEST1",
+    "moduleId": "module_oracle"
+  },
+  {
+    "id": 150006,
+    "planId": "2026_TEST1",
+    "moduleId": "module_outfit"
+  },
+  {
+    "id": 150007,
+    "planId": "2026_TEST1",
+    "moduleId": "module_diet"
+  },
+  {
+    "id": 150008,
+    "planId": "2026_TEST1",
+    "moduleId": "module_lottery"
+  },
+  {
+    "id": 150009,
+    "planId": "2026_TEST1",
+    "moduleId": "module_wealth"
+  },
+  {
+    "id": 150010,
+    "planId": "2026_TEST1",
+    "moduleId": "module_luck_cycle"
+  },
+  {
+    "id": 180001,
+    "planId": "life_299",
+    "moduleId": "module_profile"
+  },
+  {
+    "id": 180002,
+    "planId": "life_299",
+    "moduleId": "module_divination"
+  },
+  {
+    "id": 180003,
+    "planId": "life_299",
+    "moduleId": "module_calendar"
+  },
+  {
+    "id": 180004,
+    "planId": "life_299",
+    "moduleId": "module_warroom"
+  },
+  {
+    "id": 180005,
+    "planId": "life_299",
+    "moduleId": "module_oracle"
+  },
+  {
+    "id": 180006,
+    "planId": "life_299",
+    "moduleId": "module_outfit"
+  },
+  {
+    "id": 180007,
+    "planId": "basic",
+    "moduleId": "module_divination"
+  },
+  {
+    "id": 180008,
+    "planId": "basic",
+    "moduleId": "module_profile"
+  },
+  {
+    "id": 180009,
+    "planId": "basic",
+    "moduleId": "module_warroom"
+  },
+  {
+    "id": 180010,
+    "planId": "basic",
+    "moduleId": "module_oracle"
+  },
+  {
+    "id": 180023,
+    "planId": "advanced",
+    "moduleId": "module_calendar"
+  },
+  {
+    "id": 180024,
+    "planId": "advanced",
+    "moduleId": "module_divination"
+  },
+  {
+    "id": 180025,
+    "planId": "advanced",
+    "moduleId": "module_profile"
+  },
+  {
+    "id": 180026,
+    "planId": "advanced",
+    "moduleId": "module_warroom"
+  },
+  {
+    "id": 180027,
+    "planId": "advanced",
+    "moduleId": "module_oracle"
+  },
+  {
+    "id": 180028,
+    "planId": "advanced",
+    "moduleId": "module_outfit"
+  },
+  {
+    "id": 180029,
+    "planId": "advanced",
+    "moduleId": "module_diet"
+  },
+  {
+    "id": 180030,
+    "planId": "advanced",
+    "moduleId": "module_lottery"
+  },
+  {
+    "id": 180031,
+    "planId": "advanced",
+    "moduleId": "module_wealth"
+  },
+  {
+    "id": 180032,
+    "planId": "professional",
+    "moduleId": "module_calendar"
+  },
+  {
+    "id": 180033,
+    "planId": "professional",
+    "moduleId": "module_diet"
+  },
+  {
+    "id": 180034,
+    "planId": "professional",
+    "moduleId": "module_divination"
+  },
+  {
+    "id": 180035,
+    "planId": "professional",
+    "moduleId": "module_lottery"
+  },
+  {
+    "id": 180036,
+    "planId": "professional",
+    "moduleId": "module_luck_cycle"
+  },
+  {
+    "id": 180037,
+    "planId": "professional",
+    "moduleId": "module_oracle"
+  },
+  {
+    "id": 180038,
+    "planId": "professional",
+    "moduleId": "module_outfit"
+  },
+  {
+    "id": 180039,
+    "planId": "professional",
+    "moduleId": "module_profile"
+  },
+  {
+    "id": 180040,
+    "planId": "professional",
+    "moduleId": "module_warroom"
+  },
+  {
+    "id": 180041,
+    "planId": "professional",
+    "moduleId": "module_wealth"
+  }
+]

@@ -1,0 +1,1772 @@
+[
+  {
+    "id": 1,
+    "operatorId": 1,
+    "targetUserId": 480009,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T01:57:12.000Z"
+  },
+  {
+    "id": 2,
+    "operatorId": 1,
+    "targetUserId": 480009,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "basic"
+    },
+    "createdAt": "2026-02-26T02:32:17.000Z"
+  },
+  {
+    "id": 3,
+    "operatorId": 1,
+    "targetUserId": 480009,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T02:35:50.000Z"
+  },
+  {
+    "id": 4,
+    "operatorId": 1,
+    "targetUserId": 750001,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:54:47.000Z"
+  },
+  {
+    "id": 5,
+    "operatorId": 1,
+    "targetUserId": 540175,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:25.000Z"
+  },
+  {
+    "id": 6,
+    "operatorId": 1,
+    "targetUserId": 1800001,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:25.000Z"
+  },
+  {
+    "id": 7,
+    "operatorId": 1,
+    "targetUserId": 1500001,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:25.000Z"
+  },
+  {
+    "id": 8,
+    "operatorId": 1,
+    "targetUserId": 2130001,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:25.000Z"
+  },
+  {
+    "id": 9,
+    "operatorId": 1,
+    "targetUserId": 690036,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:26.000Z"
+  },
+  {
+    "id": 10,
+    "operatorId": 1,
+    "targetUserId": 1290011,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:26.000Z"
+  },
+  {
+    "id": 11,
+    "operatorId": 1,
+    "targetUserId": 1500116,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:26.000Z"
+  },
+  {
+    "id": 12,
+    "operatorId": 1,
+    "targetUserId": 750001,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:26.000Z"
+  },
+  {
+    "id": 13,
+    "operatorId": 1,
+    "targetUserId": 1590141,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:26.000Z"
+  },
+  {
+    "id": 14,
+    "operatorId": 1,
+    "targetUserId": 690067,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:26.000Z"
+  },
+  {
+    "id": 15,
+    "operatorId": 1,
+    "targetUserId": 1590036,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:26.000Z"
+  },
+  {
+    "id": 16,
+    "operatorId": 1,
+    "targetUserId": 690118,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:26.000Z"
+  },
+  {
+    "id": 17,
+    "operatorId": 1,
+    "targetUserId": 1590008,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:26.000Z"
+  },
+  {
+    "id": 18,
+    "operatorId": 1,
+    "targetUserId": 1290021,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:42.000Z"
+  },
+  {
+    "id": 19,
+    "operatorId": 1,
+    "targetUserId": 1590249,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:42.000Z"
+  },
+  {
+    "id": 20,
+    "operatorId": 1,
+    "targetUserId": 1320007,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:42.000Z"
+  },
+  {
+    "id": 21,
+    "operatorId": 1,
+    "targetUserId": 1260042,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:42.000Z"
+  },
+  {
+    "id": 22,
+    "operatorId": 1,
+    "targetUserId": 810024,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:42.000Z"
+  },
+  {
+    "id": 23,
+    "operatorId": 1,
+    "targetUserId": 660067,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:42.000Z"
+  },
+  {
+    "id": 24,
+    "operatorId": 1,
+    "targetUserId": 660061,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T03:55:42.000Z"
+  },
+  {
+    "id": 30001,
+    "operatorId": 1,
+    "targetUserId": 690036,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T12:41:22.000Z"
+  },
+  {
+    "id": 30002,
+    "operatorId": 1,
+    "targetUserId": 2970001,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T13:05:42.000Z"
+  },
+  {
+    "id": 30003,
+    "operatorId": 1,
+    "targetUserId": 3180097,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "professional"
+    },
+    "createdAt": "2026-02-26T13:38:47.000Z"
+  },
+  {
+    "id": 60001,
+    "operatorId": 1,
+    "targetUserId": 3210620,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T16:54:05.000Z"
+  },
+  {
+    "id": 60002,
+    "operatorId": 1,
+    "targetUserId": 3210620,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:07.000Z"
+  },
+  {
+    "id": 60003,
+    "operatorId": 1,
+    "targetUserId": 750001,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:07.000Z"
+  },
+  {
+    "id": 60004,
+    "operatorId": 1,
+    "targetUserId": 690067,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:07.000Z"
+  },
+  {
+    "id": 60005,
+    "operatorId": 1,
+    "targetUserId": 690036,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60006,
+    "operatorId": 1,
+    "targetUserId": 2130001,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60007,
+    "operatorId": 1,
+    "targetUserId": 690118,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60008,
+    "operatorId": 1,
+    "targetUserId": 1290021,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60009,
+    "operatorId": 1,
+    "targetUserId": 1290011,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60010,
+    "operatorId": 1,
+    "targetUserId": 2970001,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60011,
+    "operatorId": 1,
+    "targetUserId": 540175,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60012,
+    "operatorId": 1,
+    "targetUserId": 1260042,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60013,
+    "operatorId": 1,
+    "targetUserId": 1800001,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60014,
+    "operatorId": 1,
+    "targetUserId": 1500001,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60015,
+    "operatorId": 1,
+    "targetUserId": 1500116,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60016,
+    "operatorId": 1,
+    "targetUserId": 1590141,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60017,
+    "operatorId": 1,
+    "targetUserId": 1590036,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60018,
+    "operatorId": 1,
+    "targetUserId": 1590249,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60019,
+    "operatorId": 1,
+    "targetUserId": 1590008,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:08.000Z"
+  },
+  {
+    "id": 60020,
+    "operatorId": 1,
+    "targetUserId": 810024,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:09.000Z"
+  },
+  {
+    "id": 60021,
+    "operatorId": 1,
+    "targetUserId": 1320007,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:09.000Z"
+  },
+  {
+    "id": 60022,
+    "operatorId": 1,
+    "targetUserId": 660067,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:09.000Z"
+  },
+  {
+    "id": 60023,
+    "operatorId": 1,
+    "targetUserId": 660061,
+    "action": "batch_assign",
+    "details": {
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T17:02:09.000Z"
+  },
+  {
+    "id": 90001,
+    "operatorId": 1,
+    "targetUserId": 3270013,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T18:53:28.000Z"
+  },
+  {
+    "id": 120001,
+    "operatorId": 1,
+    "targetUserId": 3330308,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-26T22:13:23.000Z"
+  },
+  {
+    "id": 150001,
+    "operatorId": 1,
+    "targetUserId": 3960001,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-06",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-27T18:54:02.000Z"
+  },
+  {
+    "id": 180001,
+    "operatorId": 1,
+    "targetUserId": 4140001,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-06",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-27T22:33:22.000Z"
+  },
+  {
+    "id": 210001,
+    "operatorId": 1,
+    "targetUserId": 4350001,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-07",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-28T10:55:51.000Z"
+  },
+  {
+    "id": 240001,
+    "operatorId": 1,
+    "targetUserId": 4440001,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-07",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-28T12:38:04.000Z"
+  },
+  {
+    "id": 240002,
+    "operatorId": 1,
+    "targetUserId": 4440014,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-07",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-28T12:38:46.000Z"
+  },
+  {
+    "id": 270001,
+    "operatorId": 1,
+    "targetUserId": 4830007,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-07",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-02-28T22:20:32.000Z"
+  },
+  {
+    "id": 300001,
+    "operatorId": 1,
+    "targetUserId": 5580007,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-08",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-01T14:40:16.000Z"
+  },
+  {
+    "id": 330001,
+    "operatorId": 1,
+    "targetUserId": 5880001,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-08",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-01T21:57:20.000Z"
+  },
+  {
+    "id": 360001,
+    "operatorId": 1,
+    "targetUserId": 1500001,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-02T10:05:38.000Z"
+  },
+  {
+    "id": 360002,
+    "operatorId": 1,
+    "targetUserId": 6390033,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-04-30",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-02T10:05:55.000Z"
+  },
+  {
+    "id": 360003,
+    "operatorId": 1,
+    "targetUserId": 6390033,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-04-30",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-02T10:06:14.000Z"
+  },
+  {
+    "id": 390001,
+    "operatorId": 1,
+    "targetUserId": 540175,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390002,
+    "operatorId": 1,
+    "targetUserId": 660061,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390003,
+    "operatorId": 1,
+    "targetUserId": 660067,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390004,
+    "operatorId": 1,
+    "targetUserId": 690036,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390005,
+    "operatorId": 1,
+    "targetUserId": 690067,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390006,
+    "operatorId": 1,
+    "targetUserId": 690118,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390007,
+    "operatorId": 1,
+    "targetUserId": 750001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390008,
+    "operatorId": 1,
+    "targetUserId": 810024,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390009,
+    "operatorId": 1,
+    "targetUserId": 1260042,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390010,
+    "operatorId": 1,
+    "targetUserId": 1290011,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390011,
+    "operatorId": 1,
+    "targetUserId": 1290021,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390012,
+    "operatorId": 1,
+    "targetUserId": 1320007,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390013,
+    "operatorId": 1,
+    "targetUserId": 1500001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390014,
+    "operatorId": 1,
+    "targetUserId": 1500116,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390015,
+    "operatorId": 1,
+    "targetUserId": 1590008,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390016,
+    "operatorId": 1,
+    "targetUserId": 1590036,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390017,
+    "operatorId": 1,
+    "targetUserId": 1590141,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:34.000Z"
+  },
+  {
+    "id": 390018,
+    "operatorId": 1,
+    "targetUserId": 1590249,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390019,
+    "operatorId": 1,
+    "targetUserId": 1800001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390020,
+    "operatorId": 1,
+    "targetUserId": 2130001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390021,
+    "operatorId": 1,
+    "targetUserId": 2970001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390022,
+    "operatorId": 1,
+    "targetUserId": 3270013,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390023,
+    "operatorId": 1,
+    "targetUserId": 3330308,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390024,
+    "operatorId": 1,
+    "targetUserId": 3960001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390025,
+    "operatorId": 1,
+    "targetUserId": 4140001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390026,
+    "operatorId": 1,
+    "targetUserId": 4350001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390027,
+    "operatorId": 1,
+    "targetUserId": 4440001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390028,
+    "operatorId": 1,
+    "targetUserId": 4440014,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390029,
+    "operatorId": 1,
+    "targetUserId": 4830007,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390030,
+    "operatorId": 1,
+    "targetUserId": 5580007,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390031,
+    "operatorId": 1,
+    "targetUserId": 5880001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390032,
+    "operatorId": 1,
+    "targetUserId": 6390033,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #60001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T10:58:35.000Z"
+  },
+  {
+    "id": 390033,
+    "operatorId": 1,
+    "targetUserId": 7740633,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-11",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T15:53:48.000Z"
+  },
+  {
+    "id": 390034,
+    "operatorId": 1,
+    "targetUserId": 7740782,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-11",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T16:27:14.000Z"
+  },
+  {
+    "id": 390035,
+    "operatorId": 1,
+    "targetUserId": 7740633,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-11",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T16:35:02.000Z"
+  },
+  {
+    "id": 390036,
+    "operatorId": 1,
+    "targetUserId": 7740633,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2027-03-11",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-04T16:35:10.000Z"
+  },
+  {
+    "id": 420001,
+    "operatorId": 1,
+    "targetUserId": 7860012,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-04-12",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-05T07:51:32.000Z"
+  },
+  {
+    "id": 450001,
+    "operatorId": 1,
+    "targetUserId": 7890138,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-04-30",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-05T10:53:17.000Z"
+  },
+  {
+    "id": 480001,
+    "operatorId": 1,
+    "targetUserId": 8133001,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-03-31",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-07T16:17:45.000Z"
+  },
+  {
+    "id": 480002,
+    "operatorId": 1,
+    "targetUserId": 4140001,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-04-30",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-07T16:22:06.000Z"
+  },
+  {
+    "id": 510001,
+    "operatorId": 1,
+    "targetUserId": 540175,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510002,
+    "operatorId": 1,
+    "targetUserId": 660061,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510003,
+    "operatorId": 1,
+    "targetUserId": 660067,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510004,
+    "operatorId": 1,
+    "targetUserId": 690036,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510005,
+    "operatorId": 1,
+    "targetUserId": 690067,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510006,
+    "operatorId": 1,
+    "targetUserId": 690118,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510007,
+    "operatorId": 1,
+    "targetUserId": 750001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510008,
+    "operatorId": 1,
+    "targetUserId": 810024,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510009,
+    "operatorId": 1,
+    "targetUserId": 1260042,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510010,
+    "operatorId": 1,
+    "targetUserId": 1290011,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510011,
+    "operatorId": 1,
+    "targetUserId": 1290021,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510012,
+    "operatorId": 1,
+    "targetUserId": 1320007,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510013,
+    "operatorId": 1,
+    "targetUserId": 1500001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510014,
+    "operatorId": 1,
+    "targetUserId": 1500116,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510015,
+    "operatorId": 1,
+    "targetUserId": 1590008,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510016,
+    "operatorId": 1,
+    "targetUserId": 1590036,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510017,
+    "operatorId": 1,
+    "targetUserId": 1590141,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510018,
+    "operatorId": 1,
+    "targetUserId": 1590249,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510019,
+    "operatorId": 1,
+    "targetUserId": 1800001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510020,
+    "operatorId": 1,
+    "targetUserId": 2130001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510021,
+    "operatorId": 1,
+    "targetUserId": 2970001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510022,
+    "operatorId": 1,
+    "targetUserId": 3270013,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510023,
+    "operatorId": 1,
+    "targetUserId": 3330308,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510024,
+    "operatorId": 1,
+    "targetUserId": 3960001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510025,
+    "operatorId": 1,
+    "targetUserId": 4140001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510026,
+    "operatorId": 1,
+    "targetUserId": 4350001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510027,
+    "operatorId": 1,
+    "targetUserId": 4440001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510028,
+    "operatorId": 1,
+    "targetUserId": 4440014,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510029,
+    "operatorId": 1,
+    "targetUserId": 4830007,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510030,
+    "operatorId": 1,
+    "targetUserId": 5580007,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510031,
+    "operatorId": 1,
+    "targetUserId": 5880001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510032,
+    "operatorId": 1,
+    "targetUserId": 6390033,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510033,
+    "operatorId": 1,
+    "targetUserId": 7740633,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510034,
+    "operatorId": 1,
+    "targetUserId": 7740782,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510035,
+    "operatorId": 1,
+    "targetUserId": 7860012,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510036,
+    "operatorId": 1,
+    "targetUserId": 7890138,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510037,
+    "operatorId": 1,
+    "targetUserId": 8133001,
+    "action": "assign_plan",
+    "details": {
+      "note": "分組批量指派（分組 #90001）",
+      "planExpiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:06:45.000Z"
+  },
+  {
+    "id": 510038,
+    "operatorId": 1,
+    "targetUserId": 8280081,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:17:23.000Z"
+  },
+  {
+    "id": 510039,
+    "operatorId": 1,
+    "targetUserId": 8280171,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-09T19:53:46.000Z"
+  },
+  {
+    "id": 540001,
+    "operatorId": 1,
+    "targetUserId": 8370004,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-10T19:36:36.000Z"
+  },
+  {
+    "id": 540002,
+    "operatorId": 1,
+    "targetUserId": 8400321,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2026-04-14",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-11T18:03:32.000Z"
+  },
+  {
+    "id": 570001,
+    "operatorId": 1,
+    "targetUserId": 4440001,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-20T09:14:11.000Z"
+  },
+  {
+    "id": 600001,
+    "operatorId": 1,
+    "targetUserId": 9423663,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": null,
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-22T22:22:27.000Z"
+  },
+  {
+    "id": 600002,
+    "operatorId": 1,
+    "targetUserId": 9426044,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2027-03-26",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-23T19:18:49.000Z"
+  },
+  {
+    "id": 600003,
+    "operatorId": 1,
+    "targetUserId": 9435053,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2027-03-27",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-24T14:58:11.000Z"
+  },
+  {
+    "id": 600004,
+    "operatorId": 1,
+    "targetUserId": 9468297,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2027-03-28",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-25T15:47:49.000Z"
+  },
+  {
+    "id": 600005,
+    "operatorId": 1,
+    "targetUserId": 9468290,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2027-03-28",
+      "planId": "basic"
+    },
+    "createdAt": "2026-03-25T15:49:45.000Z"
+  },
+  {
+    "id": 600006,
+    "operatorId": 1,
+    "targetUserId": 9468290,
+    "action": "assign",
+    "details": {
+      "customModules": [],
+      "expiresAt": "2027-03-28",
+      "planId": "2026_TEST1"
+    },
+    "createdAt": "2026-03-25T15:50:03.000Z"
+  }
+]

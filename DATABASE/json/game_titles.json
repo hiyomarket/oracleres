@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "title_key": "wood-born",
+    "title_name": "木命旅人",
+    "title_desc": "天生木命，生機盎然，採集之力天下無雙",
+    "title_type": "natal",
+    "color": "#22c55e",
+    "created_at": 1774275492069
+  },
+  {
+    "id": 2,
+    "title_key": "fire-born",
+    "title_name": "火命旅人",
+    "title_desc": "天生火命，烈焰沸騰，鍛冶之術爐火純青",
+    "title_type": "natal",
+    "color": "#ef4444",
+    "created_at": 1774275492069
+  },
+  {
+    "id": 3,
+    "title_key": "earth-born",
+    "title_name": "土命旅人",
+    "title_desc": "天生土命，厚德載物，承重之力堅如磐石",
+    "title_type": "natal",
+    "color": "#d97706",
+    "created_at": 1774275492069
+  },
+  {
+    "id": 4,
+    "title_key": "metal-born",
+    "title_name": "金命旅人",
+    "title_desc": "天生金命，精金百煉，精煉之術出神入化",
+    "title_type": "natal",
+    "color": "#94a3b8",
+    "created_at": 1774275492069
+  },
+  {
+    "id": 5,
+    "title_key": "water-born",
+    "title_name": "水命旅人",
+    "title_desc": "天生水命，靈動如水，尋寶之眼洞察秋毫",
+    "title_type": "natal",
+    "color": "#38bdf8",
+    "created_at": 1774275492069
+  },
+  {
+    "id": 6,
+    "title_key": "first-blood",
+    "title_name": "初入江湖",
+    "title_desc": "完成第一次戰鬥的旅人",
+    "title_type": "achievement",
+    "color": "#f59e0b",
+    "created_at": 1774275492069
+  },
+  {
+    "id": 7,
+    "title_key": "explorer",
+    "title_name": "天涯旅人",
+    "title_desc": "探索超過 10 個節點的旅人",
+    "title_type": "achievement",
+    "color": "#a78bfa",
+    "created_at": 1774275492069
+  },
+  {
+    "id": 8,
+    "title_key": "collector",
+    "title_name": "萬物收藏家",
+    "title_desc": "背包道具超過 50 個的旅人",
+    "title_type": "achievement",
+    "color": "#34d399",
+    "created_at": 1774275492069
+  }
+]

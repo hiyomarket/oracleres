@@ -1,0 +1,67 @@
+[
+  {
+    "id": 1,
+    "strategyName": "強勢補弱",
+    "description": "當本命最弱元素佔比低於閾值時觸發，主動補充最缺乏的五行能量",
+    "primaryTarget": "補弱",
+    "weakThreshold": 15,
+    "strongThreshold": 25,
+    "priority": 1,
+    "enabled": 1,
+    "notes": "最優先策略：命格最弱元素低於 weakThreshold% 時觸發",
+    "createdAt": "2026-03-03T13:49:30.000Z",
+    "updatedAt": "2026-03-03T13:49:30.000Z"
+  },
+  {
+    "id": 2,
+    "strategyName": "順勢生旺",
+    "description": "當流日喜用神能量充沛時觸發，順勢強化已旺的五行",
+    "primaryTarget": "生旺",
+    "weakThreshold": 20,
+    "strongThreshold": 40,
+    "priority": 2,
+    "enabled": 1,
+    "notes": "流日喜用神佔比超過 strongThreshold% 時觸發",
+    "createdAt": "2026-03-03T13:49:30.000Z",
+    "updatedAt": "2026-03-03T13:49:30.000Z"
+  },
+  {
+    "id": 3,
+    "strategyName": "借力打力",
+    "description": "當流日強勢元素可生助本命喜用神時觸發，借助環境能量",
+    "primaryTarget": "借力",
+    "weakThreshold": 18,
+    "strongThreshold": 35,
+    "priority": 3,
+    "enabled": 1,
+    "notes": "流日強勢元素相生本命喜用神時觸發",
+    "createdAt": "2026-03-03T13:49:30.000Z",
+    "updatedAt": "2026-03-03T13:49:30.000Z"
+  },
+  {
+    "id": 4,
+    "strategyName": "食神生財",
+    "description": "當本命食傷元素旺盛時觸發，以食傷生財的方式提升財運",
+    "primaryTarget": "生財",
+    "weakThreshold": 25,
+    "strongThreshold": 45,
+    "priority": 4,
+    "enabled": 1,
+    "notes": "本命食傷佔比超過 strongThreshold% 時觸發",
+    "createdAt": "2026-03-03T13:49:30.000Z",
+    "updatedAt": "2026-03-03T13:49:30.000Z"
+  },
+  {
+    "id": 5,
+    "strategyName": "均衡守成",
+    "description": "當五行能量相對均衡時觸發，維持穩定不宜冒進",
+    "primaryTarget": "守成",
+    "weakThreshold": 10,
+    "strongThreshold": 30,
+    "priority": 5,
+    "enabled": 1,
+    "notes": "預設策略：其他策略均不觸發時使用",
+    "createdAt": "2026-03-03T13:49:30.000Z",
+    "updatedAt": "2026-03-03T13:49:30.000Z"
+  }
+]

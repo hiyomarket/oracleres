@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "agent_id": 1,
+    "skill_id": "S_E003",
+    "awake_tier": 0,
+    "use_count": 0,
+    "installed_slot": null,
+    "acquired_at": "2026-03-24T21:37:43.000Z"
+  },
+  {
+    "id": 2,
+    "agent_id": 9,
+    "skill_id": "S_W005",
+    "awake_tier": 0,
+    "use_count": 0,
+    "installed_slot": null,
+    "acquired_at": "2026-03-25T12:32:35.000Z"
+  }
+]

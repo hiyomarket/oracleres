@@ -1,0 +1,1532 @@
+[
+  {
+    "id": 1,
+    "agent_id": 99999,
+    "achievement_id": "first-steps",
+    "progress": 1,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325405094
+  },
+  {
+    "id": 2,
+    "agent_id": 99999,
+    "achievement_id": "first-pvp-win",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325405540
+  },
+  {
+    "id": 3,
+    "agent_id": 99999,
+    "achievement_id": "streak-3",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325405979
+  },
+  {
+    "id": 4,
+    "agent_id": 99999,
+    "achievement_id": "wargod",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325406418
+  },
+  {
+    "id": 5,
+    "agent_id": 99999,
+    "achievement_id": "weekly-champion",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325406857
+  },
+  {
+    "id": 6,
+    "agent_id": 99999,
+    "achievement_id": "weekly-warrior",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325407302
+  },
+  {
+    "id": 7,
+    "agent_id": 99999,
+    "achievement_id": "legend-hunter",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325407741
+  },
+  {
+    "id": 8,
+    "agent_id": 99999,
+    "achievement_id": "legend-collector",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325408181
+  },
+  {
+    "id": 9,
+    "agent_id": 1,
+    "achievement_id": "first-steps",
+    "progress": 7,
+    "unlocked": 1,
+    "unlocked_at": 1774325453412,
+    "updated_at": 1774325453412
+  },
+  {
+    "id": 10,
+    "agent_id": 1,
+    "achievement_id": "first-pvp-win",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368199525
+  },
+  {
+    "id": 11,
+    "agent_id": 1,
+    "achievement_id": "streak-3",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368199989
+  },
+  {
+    "id": 12,
+    "agent_id": 1,
+    "achievement_id": "wargod",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368200452
+  },
+  {
+    "id": 13,
+    "agent_id": 1,
+    "achievement_id": "weekly-champion",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368200915
+  },
+  {
+    "id": 14,
+    "agent_id": 1,
+    "achievement_id": "weekly-warrior",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368201381
+  },
+  {
+    "id": 15,
+    "agent_id": 1,
+    "achievement_id": "legend-hunter",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368201845
+  },
+  {
+    "id": 16,
+    "agent_id": 1,
+    "achievement_id": "legend-collector",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368202310
+  },
+  {
+    "id": 17,
+    "agent_id": 1,
+    "achievement_id": "explorer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368202775
+  },
+  {
+    "id": 18,
+    "agent_id": 1,
+    "achievement_id": "gatherer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368203241
+  },
+  {
+    "id": 19,
+    "agent_id": 1,
+    "achievement_id": "wood-spirit",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368203708
+  },
+  {
+    "id": 20,
+    "agent_id": 1,
+    "achievement_id": "ascension",
+    "progress": 10,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368204171
+  },
+  {
+    "id": 21,
+    "agent_id": 1,
+    "achievement_id": "chatterbox",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368204635
+  },
+  {
+    "id": 22,
+    "agent_id": 1,
+    "achievement_id": "challenger",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368205100
+  },
+  {
+    "id": 23,
+    "agent_id": 1,
+    "achievement_id": "ironwall",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368205563
+  },
+  {
+    "id": 24,
+    "agent_id": 1,
+    "achievement_id": "world-witness",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368206027
+  },
+  {
+    "id": 25,
+    "agent_id": 1,
+    "achievement_id": "spirit-full",
+    "progress": 5,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368206491
+  },
+  {
+    "id": 26,
+    "agent_id": 1,
+    "achievement_id": "veteran",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368206957
+  },
+  {
+    "id": 27,
+    "agent_id": 1,
+    "achievement_id": "legend-moment",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368207423
+  },
+  {
+    "id": 28,
+    "agent_id": 1,
+    "achievement_id": "all-rounder",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368207888
+  },
+  {
+    "id": 29,
+    "agent_id": 2,
+    "achievement_id": "first-steps",
+    "progress": 5,
+    "unlocked": 1,
+    "unlocked_at": 1774325462383,
+    "updated_at": 1774325462383
+  },
+  {
+    "id": 30,
+    "agent_id": 2,
+    "achievement_id": "first-pvp-win",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368208811
+  },
+  {
+    "id": 31,
+    "agent_id": 2,
+    "achievement_id": "streak-3",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368209274
+  },
+  {
+    "id": 32,
+    "agent_id": 2,
+    "achievement_id": "wargod",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368209738
+  },
+  {
+    "id": 33,
+    "agent_id": 2,
+    "achievement_id": "weekly-champion",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368210201
+  },
+  {
+    "id": 34,
+    "agent_id": 2,
+    "achievement_id": "weekly-warrior",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368210665
+  },
+  {
+    "id": 35,
+    "agent_id": 2,
+    "achievement_id": "legend-hunter",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368211129
+  },
+  {
+    "id": 36,
+    "agent_id": 2,
+    "achievement_id": "legend-collector",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368211598
+  },
+  {
+    "id": 37,
+    "agent_id": 2,
+    "achievement_id": "explorer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368212072
+  },
+  {
+    "id": 38,
+    "agent_id": 2,
+    "achievement_id": "gatherer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368212537
+  },
+  {
+    "id": 39,
+    "agent_id": 2,
+    "achievement_id": "wood-spirit",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368213007
+  },
+  {
+    "id": 40,
+    "agent_id": 2,
+    "achievement_id": "ascension",
+    "progress": 10,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368213471
+  },
+  {
+    "id": 41,
+    "agent_id": 2,
+    "achievement_id": "chatterbox",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368213936
+  },
+  {
+    "id": 42,
+    "agent_id": 2,
+    "achievement_id": "challenger",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368214400
+  },
+  {
+    "id": 43,
+    "agent_id": 2,
+    "achievement_id": "ironwall",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368214865
+  },
+  {
+    "id": 44,
+    "agent_id": 2,
+    "achievement_id": "world-witness",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368215329
+  },
+  {
+    "id": 45,
+    "agent_id": 2,
+    "achievement_id": "spirit-full",
+    "progress": 5,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368215794
+  },
+  {
+    "id": 46,
+    "agent_id": 2,
+    "achievement_id": "veteran",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368216258
+  },
+  {
+    "id": 47,
+    "agent_id": -1,
+    "achievement_id": "first-steps",
+    "progress": 1,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325469882
+  },
+  {
+    "id": 48,
+    "agent_id": 2,
+    "achievement_id": "legend-moment",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368216723
+  },
+  {
+    "id": 49,
+    "agent_id": -1,
+    "achievement_id": "first-pvp-win",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325470336
+  },
+  {
+    "id": 50,
+    "agent_id": 2,
+    "achievement_id": "all-rounder",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368217187
+  },
+  {
+    "id": 51,
+    "agent_id": -1,
+    "achievement_id": "streak-3",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325470790
+  },
+  {
+    "id": 52,
+    "agent_id": -1,
+    "achievement_id": "wargod",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325471244
+  },
+  {
+    "id": 53,
+    "agent_id": 3,
+    "achievement_id": "first-steps",
+    "progress": 6,
+    "unlocked": 1,
+    "unlocked_at": 1774325471297,
+    "updated_at": 1774325471297
+  },
+  {
+    "id": 54,
+    "agent_id": -1,
+    "achievement_id": "weekly-champion",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325471699
+  },
+  {
+    "id": 55,
+    "agent_id": 3,
+    "achievement_id": "first-pvp-win",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368218109
+  },
+  {
+    "id": 56,
+    "agent_id": -1,
+    "achievement_id": "weekly-warrior",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325472153
+  },
+  {
+    "id": 57,
+    "agent_id": 3,
+    "achievement_id": "streak-3",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368218573
+  },
+  {
+    "id": 58,
+    "agent_id": 3,
+    "achievement_id": "wargod",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368219037
+  },
+  {
+    "id": 59,
+    "agent_id": -1,
+    "achievement_id": "legend-hunter",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325472606
+  },
+  {
+    "id": 60,
+    "agent_id": 3,
+    "achievement_id": "weekly-champion",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368219502
+  },
+  {
+    "id": 61,
+    "agent_id": -1,
+    "achievement_id": "legend-collector",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325473060
+  },
+  {
+    "id": 62,
+    "agent_id": 3,
+    "achievement_id": "weekly-warrior",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368219966
+  },
+  {
+    "id": 63,
+    "agent_id": -1,
+    "achievement_id": "explorer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325473513
+  },
+  {
+    "id": 64,
+    "agent_id": 3,
+    "achievement_id": "legend-hunter",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368220434
+  },
+  {
+    "id": 65,
+    "agent_id": -1,
+    "achievement_id": "gatherer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325473968
+  },
+  {
+    "id": 66,
+    "agent_id": 3,
+    "achievement_id": "legend-collector",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368220897
+  },
+  {
+    "id": 67,
+    "agent_id": -1,
+    "achievement_id": "wood-spirit",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325474421
+  },
+  {
+    "id": 68,
+    "agent_id": 3,
+    "achievement_id": "explorer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368221362
+  },
+  {
+    "id": 69,
+    "agent_id": -1,
+    "achievement_id": "ascension",
+    "progress": 1,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325474874
+  },
+  {
+    "id": 70,
+    "agent_id": 3,
+    "achievement_id": "gatherer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368221834
+  },
+  {
+    "id": 71,
+    "agent_id": -1,
+    "achievement_id": "chatterbox",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325475328
+  },
+  {
+    "id": 72,
+    "agent_id": 3,
+    "achievement_id": "wood-spirit",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368222298
+  },
+  {
+    "id": 73,
+    "agent_id": -1,
+    "achievement_id": "challenger",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325475783
+  },
+  {
+    "id": 74,
+    "agent_id": 3,
+    "achievement_id": "ascension",
+    "progress": 10,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368222763
+  },
+  {
+    "id": 75,
+    "agent_id": -1,
+    "achievement_id": "ironwall",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325476237
+  },
+  {
+    "id": 76,
+    "agent_id": 3,
+    "achievement_id": "chatterbox",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368223227
+  },
+  {
+    "id": 77,
+    "agent_id": -1,
+    "achievement_id": "world-witness",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325476748
+  },
+  {
+    "id": 78,
+    "agent_id": 3,
+    "achievement_id": "challenger",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368223693
+  },
+  {
+    "id": 79,
+    "agent_id": -1,
+    "achievement_id": "spirit-full",
+    "progress": 5,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325477203
+  },
+  {
+    "id": 80,
+    "agent_id": 3,
+    "achievement_id": "ironwall",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368224158
+  },
+  {
+    "id": 81,
+    "agent_id": -1,
+    "achievement_id": "veteran",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774325477658
+  },
+  {
+    "id": 82,
+    "agent_id": 3,
+    "achievement_id": "world-witness",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368224641
+  },
+  {
+    "id": 83,
+    "agent_id": 3,
+    "achievement_id": "spirit-full",
+    "progress": 5,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368225107
+  },
+  {
+    "id": 84,
+    "agent_id": 3,
+    "achievement_id": "veteran",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368225574
+  },
+  {
+    "id": 85,
+    "agent_id": 3,
+    "achievement_id": "legend-moment",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368226043
+  },
+  {
+    "id": 86,
+    "agent_id": 3,
+    "achievement_id": "all-rounder",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368226507
+  },
+  {
+    "id": 87,
+    "agent_id": 4,
+    "achievement_id": "first-steps",
+    "progress": 4,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774331406703
+  },
+  {
+    "id": 88,
+    "agent_id": 4,
+    "achievement_id": "first-pvp-win",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368227432
+  },
+  {
+    "id": 89,
+    "agent_id": 4,
+    "achievement_id": "streak-3",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368227902
+  },
+  {
+    "id": 90,
+    "agent_id": 4,
+    "achievement_id": "wargod",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368228377
+  },
+  {
+    "id": 91,
+    "agent_id": 4,
+    "achievement_id": "weekly-champion",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368228841
+  },
+  {
+    "id": 92,
+    "agent_id": 4,
+    "achievement_id": "weekly-warrior",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368229304
+  },
+  {
+    "id": 93,
+    "agent_id": 4,
+    "achievement_id": "legend-hunter",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368229768
+  },
+  {
+    "id": 94,
+    "agent_id": 4,
+    "achievement_id": "legend-collector",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368230231
+  },
+  {
+    "id": 95,
+    "agent_id": 4,
+    "achievement_id": "explorer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368230694
+  },
+  {
+    "id": 96,
+    "agent_id": 4,
+    "achievement_id": "gatherer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368231158
+  },
+  {
+    "id": 97,
+    "agent_id": 4,
+    "achievement_id": "wood-spirit",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368231636
+  },
+  {
+    "id": 98,
+    "agent_id": 4,
+    "achievement_id": "ascension",
+    "progress": 9,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368232108
+  },
+  {
+    "id": 99,
+    "agent_id": 4,
+    "achievement_id": "chatterbox",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368232572
+  },
+  {
+    "id": 100,
+    "agent_id": 4,
+    "achievement_id": "challenger",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368233040
+  },
+  {
+    "id": 101,
+    "agent_id": 4,
+    "achievement_id": "ironwall",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368233503
+  },
+  {
+    "id": 102,
+    "agent_id": 4,
+    "achievement_id": "world-witness",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368233968
+  },
+  {
+    "id": 103,
+    "agent_id": 4,
+    "achievement_id": "spirit-full",
+    "progress": 5,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368234431
+  },
+  {
+    "id": 104,
+    "agent_id": 4,
+    "achievement_id": "veteran",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368234896
+  },
+  {
+    "id": 105,
+    "agent_id": 4,
+    "achievement_id": "legend-moment",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368235360
+  },
+  {
+    "id": 106,
+    "agent_id": 4,
+    "achievement_id": "all-rounder",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368235824
+  },
+  {
+    "id": 107,
+    "agent_id": 4,
+    "achievement_id": "first-steps",
+    "progress": 5,
+    "unlocked": 1,
+    "unlocked_at": 1774331411882,
+    "updated_at": 1774331411882
+  },
+  {
+    "id": 108,
+    "agent_id": 5,
+    "achievement_id": "first-steps",
+    "progress": 4,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774345216256
+  },
+  {
+    "id": 109,
+    "agent_id": 5,
+    "achievement_id": "first-pvp-win",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368236747
+  },
+  {
+    "id": 110,
+    "agent_id": 5,
+    "achievement_id": "streak-3",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368237214
+  },
+  {
+    "id": 111,
+    "agent_id": 5,
+    "achievement_id": "wargod",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368237680
+  },
+  {
+    "id": 112,
+    "agent_id": 5,
+    "achievement_id": "weekly-champion",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368238143
+  },
+  {
+    "id": 113,
+    "agent_id": 5,
+    "achievement_id": "weekly-warrior",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368238608
+  },
+  {
+    "id": 114,
+    "agent_id": 5,
+    "achievement_id": "legend-hunter",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368239073
+  },
+  {
+    "id": 115,
+    "agent_id": 5,
+    "achievement_id": "legend-collector",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368239535
+  },
+  {
+    "id": 116,
+    "agent_id": 5,
+    "achievement_id": "explorer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368239999
+  },
+  {
+    "id": 117,
+    "agent_id": 5,
+    "achievement_id": "gatherer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368240467
+  },
+  {
+    "id": 118,
+    "agent_id": 5,
+    "achievement_id": "wood-spirit",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368240932
+  },
+  {
+    "id": 119,
+    "agent_id": 5,
+    "achievement_id": "ascension",
+    "progress": 8,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368241404
+  },
+  {
+    "id": 120,
+    "agent_id": 5,
+    "achievement_id": "chatterbox",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368241869
+  },
+  {
+    "id": 121,
+    "agent_id": 5,
+    "achievement_id": "challenger",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368242336
+  },
+  {
+    "id": 122,
+    "agent_id": 5,
+    "achievement_id": "ironwall",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368242799
+  },
+  {
+    "id": 123,
+    "agent_id": 5,
+    "achievement_id": "world-witness",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368243265
+  },
+  {
+    "id": 124,
+    "agent_id": 5,
+    "achievement_id": "spirit-full",
+    "progress": 5,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368243735
+  },
+  {
+    "id": 125,
+    "agent_id": 5,
+    "achievement_id": "veteran",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368244203
+  },
+  {
+    "id": 126,
+    "agent_id": 5,
+    "achievement_id": "legend-moment",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368244670
+  },
+  {
+    "id": 127,
+    "agent_id": 5,
+    "achievement_id": "ascension",
+    "progress": 1,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774337631307
+  },
+  {
+    "id": 128,
+    "agent_id": 5,
+    "achievement_id": "all-rounder",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368245134
+  },
+  {
+    "id": 129,
+    "agent_id": 5,
+    "achievement_id": "first-steps",
+    "progress": 5,
+    "unlocked": 1,
+    "unlocked_at": 1774345523130,
+    "updated_at": 1774345523130
+  },
+  {
+    "id": 130,
+    "agent_id": 6,
+    "achievement_id": "first-steps",
+    "progress": 4,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774356395343
+  },
+  {
+    "id": 131,
+    "agent_id": 6,
+    "achievement_id": "first-pvp-win",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368246114
+  },
+  {
+    "id": 132,
+    "agent_id": 6,
+    "achievement_id": "streak-3",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368246578
+  },
+  {
+    "id": 133,
+    "agent_id": 6,
+    "achievement_id": "wargod",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368247043
+  },
+  {
+    "id": 134,
+    "agent_id": 6,
+    "achievement_id": "weekly-champion",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368247505
+  },
+  {
+    "id": 135,
+    "agent_id": 6,
+    "achievement_id": "weekly-warrior",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368247968
+  },
+  {
+    "id": 136,
+    "agent_id": 6,
+    "achievement_id": "legend-hunter",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368248433
+  },
+  {
+    "id": 137,
+    "agent_id": 6,
+    "achievement_id": "legend-collector",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368248898
+  },
+  {
+    "id": 138,
+    "agent_id": 6,
+    "achievement_id": "explorer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368249364
+  },
+  {
+    "id": 139,
+    "agent_id": 6,
+    "achievement_id": "gatherer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368249829
+  },
+  {
+    "id": 140,
+    "agent_id": 6,
+    "achievement_id": "wood-spirit",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368250293
+  },
+  {
+    "id": 141,
+    "agent_id": 6,
+    "achievement_id": "ascension",
+    "progress": 7,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368250760
+  },
+  {
+    "id": 142,
+    "agent_id": 6,
+    "achievement_id": "chatterbox",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368251223
+  },
+  {
+    "id": 143,
+    "agent_id": 6,
+    "achievement_id": "challenger",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368251686
+  },
+  {
+    "id": 144,
+    "agent_id": 6,
+    "achievement_id": "ironwall",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368252153
+  },
+  {
+    "id": 145,
+    "agent_id": 6,
+    "achievement_id": "world-witness",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368252618
+  },
+  {
+    "id": 146,
+    "agent_id": 6,
+    "achievement_id": "spirit-full",
+    "progress": 5,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368253082
+  },
+  {
+    "id": 147,
+    "agent_id": 6,
+    "achievement_id": "veteran",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368253546
+  },
+  {
+    "id": 148,
+    "agent_id": 6,
+    "achievement_id": "legend-moment",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774368254010
+  },
+  {
+    "id": 149,
+    "agent_id": 6,
+    "achievement_id": "all-rounder",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367955391
+  },
+  {
+    "id": 150,
+    "agent_id": 6,
+    "achievement_id": "first-steps",
+    "progress": 5,
+    "unlocked": 1,
+    "unlocked_at": 1774356560759,
+    "updated_at": 1774356560759
+  },
+  {
+    "id": 151,
+    "agent_id": 7,
+    "achievement_id": "first-steps",
+    "progress": 4,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367956283
+  },
+  {
+    "id": 152,
+    "agent_id": 7,
+    "achievement_id": "first-pvp-win",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367956733
+  },
+  {
+    "id": 153,
+    "agent_id": 7,
+    "achievement_id": "streak-3",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367957181
+  },
+  {
+    "id": 154,
+    "agent_id": 7,
+    "achievement_id": "wargod",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367957634
+  },
+  {
+    "id": 155,
+    "agent_id": 7,
+    "achievement_id": "weekly-champion",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367958082
+  },
+  {
+    "id": 156,
+    "agent_id": 7,
+    "achievement_id": "weekly-warrior",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367958532
+  },
+  {
+    "id": 157,
+    "agent_id": 7,
+    "achievement_id": "legend-hunter",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367958989
+  },
+  {
+    "id": 158,
+    "agent_id": 7,
+    "achievement_id": "legend-collector",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367959438
+  },
+  {
+    "id": 159,
+    "agent_id": 7,
+    "achievement_id": "explorer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367959888
+  },
+  {
+    "id": 160,
+    "agent_id": 7,
+    "achievement_id": "gatherer",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367960337
+  },
+  {
+    "id": 161,
+    "agent_id": 7,
+    "achievement_id": "wood-spirit",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367960786
+  },
+  {
+    "id": 162,
+    "agent_id": 7,
+    "achievement_id": "ascension",
+    "progress": 4,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367961238
+  },
+  {
+    "id": 163,
+    "agent_id": 7,
+    "achievement_id": "chatterbox",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367961694
+  },
+  {
+    "id": 164,
+    "agent_id": 7,
+    "achievement_id": "challenger",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367962142
+  },
+  {
+    "id": 165,
+    "agent_id": 7,
+    "achievement_id": "ironwall",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367962594
+  },
+  {
+    "id": 166,
+    "agent_id": 7,
+    "achievement_id": "world-witness",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367963044
+  },
+  {
+    "id": 167,
+    "agent_id": 7,
+    "achievement_id": "spirit-full",
+    "progress": 5,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367963493
+  },
+  {
+    "id": 168,
+    "agent_id": 7,
+    "achievement_id": "veteran",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367963942
+  },
+  {
+    "id": 169,
+    "agent_id": 7,
+    "achievement_id": "legend-moment",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367964391
+  },
+  {
+    "id": 170,
+    "agent_id": 7,
+    "achievement_id": "all-rounder",
+    "progress": 0,
+    "unlocked": 0,
+    "unlocked_at": null,
+    "updated_at": 1774367964840
+  }
+]

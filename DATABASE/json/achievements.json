@@ -1,0 +1,262 @@
+[
+  {
+    "id": "all-rounder",
+    "name": "全能冒險者",
+    "desc": "同時持有戰鬥/採集/探索成就",
+    "icon": "🏅",
+    "type": "special",
+    "condition": {
+      "metric": "all_rounder",
+      "threshold": 1
+    },
+    "is_active": 1,
+    "sort_order": 20
+  },
+  {
+    "id": "ascension",
+    "name": "升仙之路",
+    "desc": "旅人達到 Lv.50",
+    "icon": "🏆",
+    "type": "level",
+    "condition": {
+      "metric": "level",
+      "threshold": 50
+    },
+    "is_active": 1,
+    "sort_order": 12
+  },
+  {
+    "id": "challenger",
+    "name": "江湖人",
+    "desc": "發起 10 次 PvP 挑戰",
+    "icon": "🤝",
+    "type": "pvp",
+    "condition": {
+      "metric": "pvp_total",
+      "threshold": 10
+    },
+    "is_active": 1,
+    "sort_order": 14
+  },
+  {
+    "id": "chatterbox",
+    "name": "話嘮",
+    "desc": "發送 50 則聊天訊息",
+    "icon": "💬",
+    "type": "chat",
+    "condition": {
+      "metric": "chat_count",
+      "threshold": 50
+    },
+    "is_active": 1,
+    "sort_order": 13
+  },
+  {
+    "id": "explorer",
+    "name": "探索者",
+    "desc": "累積探索 50 次",
+    "icon": "🗺️",
+    "type": "explore",
+    "condition": {
+      "metric": "explore_count",
+      "threshold": 50
+    },
+    "is_active": 1,
+    "sort_order": 9
+  },
+  {
+    "id": "first-pvp-win",
+    "name": "初戰告捷",
+    "desc": "第一次 PvP 勝利",
+    "icon": "⚔️",
+    "type": "pvp",
+    "condition": {
+      "metric": "pvp_wins",
+      "threshold": 1
+    },
+    "is_active": 1,
+    "sort_order": 2
+  },
+  {
+    "id": "first-steps",
+    "name": "初出茅廬",
+    "desc": "旅人達到 Lv.5",
+    "icon": "🌱",
+    "type": "level",
+    "condition": {
+      "metric": "level",
+      "threshold": 5
+    },
+    "is_active": 1,
+    "sort_order": 1
+  },
+  {
+    "id": "gatherer",
+    "name": "採集達人",
+    "desc": "累積採集 100 次",
+    "icon": "⛏️",
+    "type": "gather",
+    "condition": {
+      "metric": "gather_count",
+      "threshold": 100
+    },
+    "is_active": 1,
+    "sort_order": 10
+  },
+  {
+    "id": "ironwall",
+    "name": "鐵壁",
+    "desc": "PvP 勝率達 70% 且場次≥10",
+    "icon": "🛡️",
+    "type": "pvp",
+    "condition": {
+      "metric": "pvp_winrate70",
+      "threshold": 1
+    },
+    "is_active": 1,
+    "sort_order": 15
+  },
+  {
+    "id": "legend-collector",
+    "name": "傳說收藏家",
+    "desc": "獲得 5 件傳說裝備",
+    "icon": "💎",
+    "type": "legendary",
+    "condition": {
+      "metric": "legendary_drops",
+      "threshold": 5
+    },
+    "is_active": 1,
+    "sort_order": 8
+  },
+  {
+    "id": "legend-hunter",
+    "name": "傳說獵人",
+    "desc": "獲得第一件傳說裝備",
+    "icon": "💎",
+    "type": "legendary",
+    "condition": {
+      "metric": "legendary_drops",
+      "threshold": 1
+    },
+    "is_active": 1,
+    "sort_order": 7
+  },
+  {
+    "id": "legend-moment",
+    "name": "傳說時刻",
+    "desc": "同一天升級並獲得傳說裝備",
+    "icon": "🌟",
+    "type": "special",
+    "condition": {
+      "metric": "legend_moment",
+      "threshold": 1
+    },
+    "is_active": 1,
+    "sort_order": 19
+  },
+  {
+    "id": "spirit-full",
+    "name": "靈力充盈",
+    "desc": "AP 達到 100",
+    "icon": "⚡",
+    "type": "special",
+    "condition": {
+      "metric": "ap",
+      "threshold": 100
+    },
+    "is_active": 1,
+    "sort_order": 17
+  },
+  {
+    "id": "streak-3",
+    "name": "連勝三場",
+    "desc": "PvP 連勝 3 次",
+    "icon": "🔥",
+    "type": "pvp",
+    "condition": {
+      "metric": "pvp_streak",
+      "threshold": 3
+    },
+    "is_active": 1,
+    "sort_order": 3
+  },
+  {
+    "id": "veteran",
+    "name": "百戰老兵",
+    "desc": "累積戰鬥 100 場",
+    "icon": "🎯",
+    "type": "combat",
+    "condition": {
+      "metric": "combat_count",
+      "threshold": 100
+    },
+    "is_active": 1,
+    "sort_order": 18
+  },
+  {
+    "id": "wargod",
+    "name": "戰神",
+    "desc": "PvP 連勝 10 次",
+    "icon": "💀",
+    "type": "pvp",
+    "condition": {
+      "metric": "pvp_streak",
+      "threshold": 10
+    },
+    "is_active": 1,
+    "sort_order": 4
+  },
+  {
+    "id": "weekly-champion",
+    "name": "週冠軍",
+    "desc": "獲得週等級冠軍",
+    "icon": "👑",
+    "type": "weekly",
+    "condition": {
+      "metric": "weekly_level",
+      "threshold": 1
+    },
+    "is_active": 1,
+    "sort_order": 5
+  },
+  {
+    "id": "weekly-warrior",
+    "name": "週戰神",
+    "desc": "獲得週戰鬥王冠軍",
+    "icon": "⚔️",
+    "type": "weekly",
+    "condition": {
+      "metric": "weekly_combat",
+      "threshold": 1
+    },
+    "is_active": 1,
+    "sort_order": 6
+  },
+  {
+    "id": "wood-spirit",
+    "name": "木靈共鳴",
+    "desc": "累積採集 500 次",
+    "icon": "🌿",
+    "type": "gather",
+    "condition": {
+      "metric": "gather_count",
+      "threshold": 500
+    },
+    "is_active": 1,
+    "sort_order": 11
+  },
+  {
+    "id": "world-witness",
+    "name": "世界見證者",
+    "desc": "親歷 10 次世界事件",
+    "icon": "🌍",
+    "type": "explore",
+    "condition": {
+      "metric": "world_events",
+      "threshold": 10
+    },
+    "is_active": 1,
+    "sort_order": 16
+  }
+]

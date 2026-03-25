@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "agent_id": 1,
+    "title_key": "wood-born",
+    "is_equipped": 1,
+    "acquired_at": 1774275504773
+  },
+  {
+    "id": 2,
+    "agent_id": 2,
+    "title_key": "water-born",
+    "is_equipped": 1,
+    "acquired_at": 1774275504773
+  }
+]

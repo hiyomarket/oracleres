@@ -1,0 +1,1 @@
+ALTER TABLE `campaigns` ADD `isDefaultOnboarding` tinyint DEFAULT 0 NOT NULL;

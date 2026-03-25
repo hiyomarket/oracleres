@@ -1,0 +1,1133 @@
+[
+  {
+    "id": 1,
+    "userId": null,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙寅",
+    "hourPillar": "庚寅",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月21日 星期六",
+    "createdAt": "2026-02-21T14:13:32.000Z"
+  },
+  {
+    "id": 2,
+    "userId": 1,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙寅",
+    "hourPillar": "癸巳",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月21日 星期六",
+    "createdAt": "2026-02-21T14:22:10.000Z"
+  },
+  {
+    "id": 3,
+    "userId": 1,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙寅",
+    "hourPillar": "癸巳",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月21日 星期六",
+    "createdAt": "2026-02-21T14:27:05.000Z"
+  },
+  {
+    "id": 4,
+    "userId": 1,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙寅",
+    "hourPillar": "癸巳",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月21日 星期六",
+    "createdAt": "2026-02-21T14:28:08.000Z"
+  },
+  {
+    "id": 5,
+    "userId": 1,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙寅",
+    "hourPillar": "癸巳",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月21日 星期六",
+    "createdAt": "2026-02-21T14:54:11.000Z"
+  },
+  {
+    "id": 30001,
+    "userId": 1,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙寅",
+    "hourPillar": "癸巳",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月21日 星期六",
+    "createdAt": "2026-02-21T15:50:16.000Z"
+  },
+  {
+    "id": 60001,
+    "userId": 1,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙寅",
+    "hourPillar": "甲午",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月21日 星期六",
+    "createdAt": "2026-02-21T16:29:31.000Z"
+  },
+  {
+    "id": 60002,
+    "userId": 1,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙寅",
+    "hourPillar": "甲午",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月21日 星期六",
+    "createdAt": "2026-02-21T17:06:43.000Z"
+  },
+  {
+    "id": 60003,
+    "userId": 1,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙寅",
+    "hourPillar": "甲午",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月21日 星期六",
+    "createdAt": "2026-02-21T17:12:02.000Z"
+  },
+  {
+    "id": 90001,
+    "userId": 1,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙寅",
+    "hourPillar": "乙未",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月21日 星期六",
+    "createdAt": "2026-02-21T19:02:39.000Z"
+  },
+  {
+    "id": 120001,
+    "userId": null,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丁卯",
+    "hourPillar": "壬寅",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月22日 星期日",
+    "createdAt": "2026-02-22T01:58:40.000Z"
+  },
+  {
+    "id": 120002,
+    "userId": null,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丁卯",
+    "hourPillar": "壬寅",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "今日火氣當令，時辰火能量流動。用神之火正旺，此刻與您的天命最為共鳴，是購買刮刮樂的吉時。整體運勢極佳（8/10），推薦號碼 2、7、0 與您的天命高度共振。",
+    "dateString": "2026年2月22日 星期日",
+    "createdAt": "2026-02-22T01:59:52.000Z"
+  },
+  {
+    "id": 150001,
+    "userId": 1,
+    "numbers": [
+      2,
+      7,
+      4,
+      9,
+      0,
+      5
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丁卯",
+    "hourPillar": "庚戌",
+    "moonPhase": "眉月",
+    "todayElement": "fire",
+    "overallLuck": 8,
+    "recommendation": "【傷官日策略】傷官日：突破創新，火能量強，2/7 為核心，金助決斷。今處戌時(19-21點)，推薦號碼 2、7、4 為今日最高分，整體天命指數 8.3/10。",
+    "dateString": "2026年2月22日 星期日",
+    "createdAt": "2026-02-22T16:17:28.000Z"
+  },
+  {
+    "id": 180001,
+    "userId": 540175,
+    "numbers": [
+      0,
+      5,
+      4,
+      9,
+      2,
+      7
+    ],
+    "bonusNumbers": [
+      6,
+      1,
+      3
+    ],
+    "luckyDigits": [
+      0,
+      5
+    ],
+    "dayPillar": "戊辰",
+    "hourPillar": "癸丑",
+    "moonPhase": "上弦月",
+    "todayElement": "earth",
+    "overallLuck": 8,
+    "recommendation": "【偏財日策略】偏財日：機遇湧現，土氣最旺，0/5 為天命數字，火土金全開。今處丑時(1-3點)，丑時紫微破軍宮神秘加成，靈感與直覺特別敏銳。推薦號碼 0、5、4 為今日最高分，整體天命指數 7.9/10。",
+    "dateString": "2026年2月23日 星期一",
+    "createdAt": "2026-02-22T22:45:28.000Z"
+  },
+  {
+    "id": 180002,
+    "userId": 540175,
+    "numbers": [
+      0,
+      5,
+      4,
+      9,
+      2,
+      7
+    ],
+    "bonusNumbers": [
+      6,
+      1,
+      3
+    ],
+    "luckyDigits": [
+      0,
+      5
+    ],
+    "dayPillar": "戊辰",
+    "hourPillar": "癸丑",
+    "moonPhase": "上弦月",
+    "todayElement": "earth",
+    "overallLuck": 8,
+    "recommendation": "【偏財日策略】偏財日：機遇湧現，土氣最旺，0/5 為天命數字，火土金全開。今處丑時(1-3點)，丑時紫微破軍宮神秘加成，靈感與直覺特別敏銳。推薦號碼 0、5、4 為今日最高分，整體天命指數 7.9/10。",
+    "dateString": "2026年2月23日 星期一",
+    "createdAt": "2026-02-22T22:48:30.000Z"
+  },
+  {
+    "id": 210001,
+    "userId": 1,
+    "numbers": [
+      0,
+      5,
+      2,
+      7,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      0,
+      5
+    ],
+    "dayPillar": "戊辰",
+    "hourPillar": "戊午",
+    "moonPhase": "上弦月",
+    "todayElement": "earth",
+    "overallLuck": 9,
+    "recommendation": "【偏財日策略】偏財日：機遇湧現，土氣最旺，0/5 為天命數字，火土金全開。今處午時(11-13點)，午未時火土能量旺盛，用神加持中。推薦號碼 0、5、2 為今日最高分，整體天命指數 8.6/10。",
+    "dateString": "2026年2月23日 星期一",
+    "createdAt": "2026-02-23T09:53:01.000Z"
+  },
+  {
+    "id": 210002,
+    "userId": 1,
+    "numbers": [
+      0,
+      5,
+      2,
+      7,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      0,
+      5
+    ],
+    "dayPillar": "戊辰",
+    "hourPillar": "己未",
+    "moonPhase": "上弦月",
+    "todayElement": "earth",
+    "overallLuck": 9,
+    "recommendation": "【偏財日策略】偏財日：機遇湧現，土氣最旺，0/5 為天命數字，火土金全開。今處未時(13-15點)，午未時火土能量旺盛，用神加持中。推薦號碼 0、5、2 為今日最高分，整體天命指數 8.6/10。",
+    "dateString": "2026年2月23日 星期一",
+    "createdAt": "2026-02-23T10:08:47.000Z"
+  },
+  {
+    "id": 210003,
+    "userId": 690036,
+    "numbers": [
+      0,
+      5,
+      2,
+      7,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      1,
+      3,
+      6
+    ],
+    "luckyDigits": [
+      0,
+      5
+    ],
+    "dayPillar": "戊辰",
+    "hourPillar": "己未",
+    "moonPhase": "上弦月",
+    "todayElement": "earth",
+    "overallLuck": 9,
+    "recommendation": "【偏財日策略】偏財日：機遇湧現，土氣最旺，0/5 為天命數字，火土金全開。今處未時(13-15點)，午未時火土能量旺盛，用神加持中。推薦號碼 0、5、2 為今日最高分，整體天命指數 9.4/10。",
+    "dateString": "2026年2月23日 星期一",
+    "createdAt": "2026-02-23T10:23:11.000Z"
+  },
+  {
+    "id": 210004,
+    "userId": 690036,
+    "numbers": [
+      0,
+      5,
+      2,
+      7,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      1,
+      3,
+      6
+    ],
+    "luckyDigits": [
+      0,
+      5
+    ],
+    "dayPillar": "戊辰",
+    "hourPillar": "己未",
+    "moonPhase": "上弦月",
+    "todayElement": "earth",
+    "overallLuck": 9,
+    "recommendation": "【偏財日策略】偏財日：機遇湧現，土氣最旺，0/5 為天命數字，火土金全開。今處未時(13-15點)，午未時火土能量旺盛，用神加持中。推薦號碼 0、5、2 為今日最高分，整體天命指數 9.4/10。",
+    "dateString": "2026年2月23日 星期一",
+    "createdAt": "2026-02-23T10:38:27.000Z"
+  },
+  {
+    "id": 270001,
+    "userId": 1290011,
+    "numbers": [
+      4,
+      9,
+      0,
+      5,
+      6,
+      1
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      2
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "己巳",
+    "hourPillar": "壬申",
+    "moonPhase": "上弦月",
+    "todayElement": "earth",
+    "overallLuck": 6,
+    "recommendation": "【正財日策略】正財日：穩健積累，土金共振，0/5/4/9 為穩健之選。今處申時(15-17點)，申酉時金能量強，決斷力與直覺俱佳。推薦號碼 4、9、0 為今日最高分，整體天命指數 6.4/10。",
+    "dateString": "2026年2月24日 星期二",
+    "createdAt": "2026-02-24T12:37:12.000Z"
+  },
+  {
+    "id": 270002,
+    "userId": 1290011,
+    "numbers": [
+      4,
+      9,
+      0,
+      5,
+      6,
+      1
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      2
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "己巳",
+    "hourPillar": "壬申",
+    "moonPhase": "上弦月",
+    "todayElement": "earth",
+    "overallLuck": 6,
+    "recommendation": "【正財日策略】正財日：穩健積累，土金共振，0/5/4/9 為穩健之選。今處申時(15-17點)，申酉時金能量強，決斷力與直覺俱佳。推薦號碼 4、9、0 為今日最高分，整體天命指數 6.4/10。",
+    "dateString": "2026年2月24日 星期二",
+    "createdAt": "2026-02-24T12:37:19.000Z"
+  },
+  {
+    "id": 270003,
+    "userId": 1290011,
+    "numbers": [
+      4,
+      9,
+      0,
+      5,
+      6,
+      1
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      2
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "己巳",
+    "hourPillar": "壬申",
+    "moonPhase": "上弦月",
+    "todayElement": "earth",
+    "overallLuck": 6,
+    "recommendation": "【正財日策略】正財日：穩健積累，土金共振，0/5/4/9 為穩健之選。今處申時(15-17點)，申酉時金能量強，決斷力與直覺俱佳。推薦號碼 4、9、0 為今日最高分，整體天命指數 6.4/10。",
+    "dateString": "2026年2月24日 星期二",
+    "createdAt": "2026-02-24T12:37:25.000Z"
+  },
+  {
+    "id": 270004,
+    "userId": 1290011,
+    "numbers": [
+      4,
+      9,
+      0,
+      5,
+      6,
+      1
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      2
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "己巳",
+    "hourPillar": "壬申",
+    "moonPhase": "上弦月",
+    "todayElement": "earth",
+    "overallLuck": 6,
+    "recommendation": "【正財日策略】正財日：穩健積累，土金共振，0/5/4/9 為穩健之選。今處申時(15-17點)，申酉時金能量強，決斷力與直覺俱佳。推薦號碼 4、9、0 為今日最高分，整體天命指數 6.4/10。",
+    "dateString": "2026年2月24日 星期二",
+    "createdAt": "2026-02-24T12:37:30.000Z"
+  },
+  {
+    "id": 270005,
+    "userId": 1320007,
+    "numbers": [
+      0,
+      5,
+      2,
+      7,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      1,
+      3,
+      6
+    ],
+    "luckyDigits": [
+      0,
+      5
+    ],
+    "dayPillar": "己巳",
+    "hourPillar": "壬申",
+    "moonPhase": "上弦月",
+    "todayElement": "earth",
+    "overallLuck": 7,
+    "recommendation": "【正財日策略】正財日：穩健積累，土金共振，0/5/4/9 為穩健之選。今處申時(15-17點)，申酉時金能量強，決斷力與直覺俱佳。推薦號碼 0、5、2 為今日最高分，整體天命指數 7.4/10。",
+    "dateString": "2026年2月24日 星期二",
+    "createdAt": "2026-02-24T12:48:43.000Z"
+  },
+  {
+    "id": 300001,
+    "userId": 1590036,
+    "numbers": [
+      2,
+      7,
+      4,
+      0,
+      5,
+      9
+    ],
+    "bonusNumbers": [
+      1,
+      3,
+      8
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "庚午",
+    "hourPillar": "辛巳",
+    "moonPhase": "盈凸月",
+    "todayElement": "fire",
+    "overallLuck": 4,
+    "recommendation": "【七殺日策略】七殺日：壓力化機遇，金能量強，4/9 為突破數字，火克制七殺。今處巳時(9-11點)，此為您的出生時辰，天生命格共鳴最強！推薦號碼 2、7、4 為今日最高分，整體天命指數 3.9/10。",
+    "dateString": "2026年2月25日 星期三",
+    "createdAt": "2026-02-25T07:31:08.000Z"
+  },
+  {
+    "id": 330001,
+    "userId": 1290011,
+    "numbers": [
+      4,
+      9,
+      2,
+      7,
+      6,
+      0
+    ],
+    "bonusNumbers": [
+      5,
+      1,
+      3
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "庚午",
+    "hourPillar": "癸未",
+    "moonPhase": "盈凸月",
+    "todayElement": "metal",
+    "overallLuck": 8,
+    "recommendation": "【七殺日策略】七殺日：壓力化機遇，金能量強，4/9 為突破數字，火克制七殺。今處未時(13-15點)，午未時火土能量旺盛，用神加持中。推薦號碼 4、9、2 為今日最高分，整體天命指數 7.9/10。",
+    "dateString": "2026年2月25日 星期三",
+    "createdAt": "2026-02-25T10:22:14.000Z"
+  },
+  {
+    "id": 360001,
+    "userId": 1290011,
+    "numbers": [
+      4,
+      9,
+      2,
+      7,
+      6,
+      0
+    ],
+    "bonusNumbers": [
+      5,
+      1,
+      3
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "庚午",
+    "hourPillar": "癸未",
+    "moonPhase": "盈凸月",
+    "todayElement": "metal",
+    "overallLuck": 9,
+    "recommendation": "【七殺日策略】七殺日：壓力化機遇，金能量強，4/9 為突破數字，火克制七殺。今處未時(13-15點)，午未時火土能量旺盛，用神加持中。推薦號碼 4、9、2 為今日最高分，整體天命指數 8.5/10。",
+    "dateString": "2026年2月25日 星期三",
+    "createdAt": "2026-02-25T11:12:23.000Z"
+  },
+  {
+    "id": 360002,
+    "userId": 2130001,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      1,
+      3,
+      8
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "庚午",
+    "hourPillar": "癸未",
+    "moonPhase": "盈凸月",
+    "todayElement": "fire",
+    "overallLuck": 4,
+    "recommendation": "【七殺日策略】七殺日：壓力化機遇，金能量強，4/9 為突破數字，火克制七殺。今處未時(13-15點)，午未時火土能量旺盛，用神加持中。推薦號碼 2、7、0 為今日最高分，整體天命指數 3.9/10。",
+    "dateString": "2026年2月25日 星期三",
+    "createdAt": "2026-02-25T11:33:46.000Z"
+  },
+  {
+    "id": 390001,
+    "userId": 690036,
+    "numbers": [
+      0,
+      5,
+      2,
+      7,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      1,
+      3,
+      6
+    ],
+    "luckyDigits": [
+      0,
+      5
+    ],
+    "dayPillar": "辛未",
+    "hourPillar": "乙未",
+    "moonPhase": "盈凸月",
+    "todayElement": "earth",
+    "overallLuck": 6,
+    "recommendation": "【正官日策略】正官日：規則加持，金土穩定，4/9/0/5 為正統之選。今處未時(13-15點)，午未時火土能量旺盛，用神加持中。推薦號碼 0、5、2 為今日最高分，整體天命指數 6/10。",
+    "dateString": "2026年2月26日 星期四",
+    "createdAt": "2026-02-26T10:26:07.000Z"
+  },
+  {
+    "id": 420001,
+    "userId": 4440001,
+    "numbers": [
+      6,
+      4,
+      9,
+      1,
+      3,
+      8
+    ],
+    "bonusNumbers": [
+      0,
+      5,
+      7
+    ],
+    "luckyDigits": [
+      6,
+      4
+    ],
+    "dayPillar": "癸酉",
+    "hourPillar": "庚申",
+    "moonPhase": "盈凸月",
+    "todayElement": "water",
+    "overallLuck": 7,
+    "recommendation": "【正印日策略】正印日：貴人運佳但財星受壓，以金數字（4/9）為主。今處申時(15-17點)，申酉時金能量強，決斷力與直覺俱佳。推薦號碼 6、4、9 為今日最高分，整體天命指數 7/10。",
+    "dateString": "2026年2月28日 星期六",
+    "createdAt": "2026-02-28T12:45:02.000Z"
+  },
+  {
+    "id": 450001,
+    "userId": 1590141,
+    "numbers": [
+      4,
+      9,
+      6,
+      0,
+      5,
+      7
+    ],
+    "bonusNumbers": [
+      1,
+      2,
+      3
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "癸酉",
+    "hourPillar": "庚申",
+    "moonPhase": "盈凸月",
+    "todayElement": "water",
+    "overallLuck": 8,
+    "recommendation": "【正印日策略】正印日：貴人運佳但財星受壓，以金數字（4/9）為主。今處申時(15-17點)，申酉時金能量強，決斷力與直覺俱佳。推薦號碼 4、9、6 為今日最高分，整體天命指數 7.9/10。",
+    "dateString": "2026年2月28日 星期六",
+    "createdAt": "2026-02-28T13:47:34.000Z"
+  },
+  {
+    "id": 450002,
+    "userId": 1590249,
+    "numbers": [
+      4,
+      9,
+      6,
+      0,
+      5,
+      7
+    ],
+    "bonusNumbers": [
+      1,
+      2,
+      3
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "癸酉",
+    "hourPillar": "庚申",
+    "moonPhase": "盈凸月",
+    "todayElement": "water",
+    "overallLuck": 8,
+    "recommendation": "【正印日策略】正印日：貴人運佳但財星受壓，以金數字（4/9）為主。今處申時(15-17點)，申酉時金能量強，決斷力與直覺俱佳。推薦號碼 4、9、6 為今日最高分，整體天命指數 7.9/10。",
+    "dateString": "2026年2月28日 星期六",
+    "createdAt": "2026-02-28T13:48:16.000Z"
+  },
+  {
+    "id": 480001,
+    "userId": 540175,
+    "numbers": [
+      4,
+      9,
+      6,
+      0,
+      5,
+      7
+    ],
+    "bonusNumbers": [
+      2,
+      1,
+      3
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "癸酉",
+    "hourPillar": "辛酉",
+    "moonPhase": "盈凸月",
+    "todayElement": "water",
+    "overallLuck": 8,
+    "recommendation": "【正印日策略】正印日：貴人運佳但財星受壓，以金數字（4/9）為主。今處酉時(17-19點)，申酉時金能量強，決斷力與直覺俱佳。推薦號碼 4、9、6 為今日最高分，整體天命指數 7.9/10。",
+    "dateString": "2026年2月28日 星期六",
+    "createdAt": "2026-02-28T14:54:36.000Z"
+  },
+  {
+    "id": 480002,
+    "userId": 1,
+    "numbers": [
+      4,
+      9,
+      7,
+      2,
+      0,
+      5
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "癸酉",
+    "hourPillar": "辛酉",
+    "moonPhase": "盈凸月",
+    "todayElement": "metal",
+    "overallLuck": 5,
+    "recommendation": "【正印日策略】正印日：貴人運佳但財星受壓，以金數字（4/9）為主。今處酉時(17-19點)，申酉時金能量強，決斷力與直覺俱佳。推薦號碼 4、9、7 為今日最高分，整體天命指數 4.8/10。",
+    "dateString": "2026年2月28日 星期六",
+    "createdAt": "2026-02-28T14:55:50.000Z"
+  },
+  {
+    "id": 480003,
+    "userId": 540175,
+    "numbers": [
+      4,
+      9,
+      6,
+      0,
+      5,
+      7
+    ],
+    "bonusNumbers": [
+      2,
+      1,
+      3
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "癸酉",
+    "hourPillar": "辛酉",
+    "moonPhase": "盈凸月",
+    "todayElement": "water",
+    "overallLuck": 8,
+    "recommendation": "【正印日策略】正印日：貴人運佳但財星受壓，以金數字（4/9）為主。今處酉時(17-19點)，申酉時金能量強，決斷力與直覺俱佳。推薦號碼 4、9、6 為今日最高分，整體天命指數 7.9/10。",
+    "dateString": "2026年2月28日 星期六",
+    "createdAt": "2026-02-28T14:56:00.000Z"
+  },
+  {
+    "id": 510001,
+    "userId": 540175,
+    "numbers": [
+      4,
+      9,
+      6,
+      0,
+      5,
+      7
+    ],
+    "bonusNumbers": [
+      2,
+      1,
+      3
+    ],
+    "luckyDigits": [
+      4,
+      9
+    ],
+    "dayPillar": "癸酉",
+    "hourPillar": "壬戌",
+    "moonPhase": "盈凸月",
+    "todayElement": "water",
+    "overallLuck": 8,
+    "recommendation": "【正印日策略】正印日：貴人運佳但財星受壓，以金數字（4/9）為主。今處戌時(19-21點)，推薦號碼 4、9、6 為今日最高分，整體天命指數 7.9/10。",
+    "dateString": "2026年2月28日 星期六",
+    "createdAt": "2026-02-28T16:41:57.000Z"
+  },
+  {
+    "id": 540001,
+    "userId": 2130001,
+    "numbers": [
+      2,
+      7,
+      0,
+      5,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      1,
+      3,
+      8
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "乙亥",
+    "hourPillar": "丙戌",
+    "moonPhase": "盈凸月",
+    "todayElement": "wood",
+    "overallLuck": 5,
+    "recommendation": "【劫財日策略】劫財日：財運受阻，以火（2/7）洩木、金（4/9）制木為主。今處戌時(19-21點)，推薦號碼 2、7、0 為今日最高分，整體天命指數 5.4/10。",
+    "dateString": "2026年3月2日 星期一",
+    "createdAt": "2026-03-02T16:06:43.000Z"
+  },
+  {
+    "id": 570001,
+    "userId": 1,
+    "numbers": [
+      2,
+      7,
+      5,
+      0,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      3,
+      8,
+      1
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙子",
+    "hourPillar": "丁酉",
+    "moonPhase": "滿月（望）",
+    "todayElement": "fire",
+    "overallLuck": 10,
+    "recommendation": "【食神日策略】食神日：才華爆發，火土能量最旺，2/7/0/5 天命共振。今處酉時(17-19點)，申酉時金能量強，決斷力與直覺俱佳。今逢滿月，宇宙能量達頂峰，火系（2/7）天命共振！推薦號碼 2、7、5 為今日最高分，整體天命指數 10/10。",
+    "dateString": "2026年3月3日 星期二",
+    "createdAt": "2026-03-03T14:06:42.000Z"
+  },
+  {
+    "id": 600001,
+    "userId": 690036,
+    "numbers": [
+      2,
+      7,
+      5,
+      0,
+      4,
+      9
+    ],
+    "bonusNumbers": [
+      1,
+      3,
+      6
+    ],
+    "luckyDigits": [
+      2,
+      7
+    ],
+    "dayPillar": "丙子",
+    "hourPillar": "丁酉",
+    "moonPhase": "滿月（望）",
+    "todayElement": "fire",
+    "overallLuck": 10,
+    "recommendation": "【食神日策略】食神日：才華爆發，火土能量最旺，2/7/0/5 天命共振。今處酉時(17-19點)，申酉時金能量強，決斷力與直覺俱佳。今逢滿月，宇宙能量達頂峰，火系（2/7）天命共振！推薦號碼 2、7、5 為今日最高分，整體天命指數 10/10。",
+    "dateString": "2026年3月3日 星期二",
+    "createdAt": "2026-03-03T15:49:32.000Z"
+  }
+]

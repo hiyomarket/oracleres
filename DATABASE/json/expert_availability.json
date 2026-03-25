@@ -1,0 +1,128 @@
+[
+  {
+    "id": 1,
+    "expertId": 2,
+    "startTime": "2026-03-07T11:00:00.000Z",
+    "endTime": "2026-03-07T14:00:00.000Z",
+    "isBooked": 1,
+    "bookingId": 1,
+    "createdAt": "2026-03-04T07:36:02.000Z"
+  },
+  {
+    "id": 2,
+    "expertId": 2,
+    "startTime": "2026-03-08T10:00:00.000Z",
+    "endTime": "2026-03-08T13:00:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-04T07:36:13.000Z"
+  },
+  {
+    "id": 30001,
+    "expertId": 2,
+    "startTime": "2026-03-07T06:00:00.000Z",
+    "endTime": "2026-03-07T14:00:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-07T04:29:32.000Z"
+  },
+  {
+    "id": 30006,
+    "expertId": 2,
+    "startTime": "2026-03-14T09:00:00.000Z",
+    "endTime": "2026-03-14T10:00:00.000Z",
+    "isBooked": 1,
+    "bookingId": 60001,
+    "createdAt": "2026-03-07T23:52:38.000Z"
+  },
+  {
+    "id": 30007,
+    "expertId": 2,
+    "startTime": "2026-03-14T10:30:00.000Z",
+    "endTime": "2026-03-14T11:30:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-07T23:52:52.000Z"
+  },
+  {
+    "id": 30009,
+    "expertId": 2,
+    "startTime": "2026-03-14T11:30:00.000Z",
+    "endTime": "2026-03-14T12:30:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-07T23:53:15.000Z"
+  },
+  {
+    "id": 30010,
+    "expertId": 2,
+    "startTime": "2026-03-15T11:30:00.000Z",
+    "endTime": "2026-03-15T12:30:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-07T23:53:22.000Z"
+  },
+  {
+    "id": 30011,
+    "expertId": 2,
+    "startTime": "2026-03-15T10:00:00.000Z",
+    "endTime": "2026-03-15T11:00:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-07T23:53:55.000Z"
+  },
+  {
+    "id": 60001,
+    "expertId": 2,
+    "startTime": "2026-03-21T08:30:00.000Z",
+    "endTime": "2026-03-21T09:30:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-17T13:25:14.000Z"
+  },
+  {
+    "id": 60002,
+    "expertId": 2,
+    "startTime": "2026-03-21T09:30:00.000Z",
+    "endTime": "2026-03-21T10:30:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-17T13:25:30.000Z"
+  },
+  {
+    "id": 60003,
+    "expertId": 2,
+    "startTime": "2026-03-21T11:00:00.000Z",
+    "endTime": "2026-03-21T12:00:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-17T13:25:43.000Z"
+  },
+  {
+    "id": 60004,
+    "expertId": 2,
+    "startTime": "2026-03-22T09:30:00.000Z",
+    "endTime": "2026-03-22T10:30:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-17T13:26:10.000Z"
+  },
+  {
+    "id": 60005,
+    "expertId": 2,
+    "startTime": "2026-03-28T09:30:00.000Z",
+    "endTime": "2026-03-28T10:30:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-17T13:26:10.000Z"
+  },
+  {
+    "id": 60006,
+    "expertId": 2,
+    "startTime": "2026-03-29T09:30:00.000Z",
+    "endTime": "2026-03-29T10:30:00.000Z",
+    "isBooked": 0,
+    "bookingId": null,
+    "createdAt": "2026-03-17T13:26:10.000Z"
+  }
+]

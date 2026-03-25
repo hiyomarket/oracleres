@@ -1,0 +1,70 @@
+[
+  {
+    "id": 1,
+    "userId": 3330308,
+    "publicName": "星座撲克牌占卜",
+    "title": "通靈.占卜40年",
+    "bio": "結善緣，了因果",
+    "profileImageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/expert-images/1-profile-1772882412150.jpeg",
+    "coverImageUrl": null,
+    "tags": [],
+    "status": "active",
+    "paymentQrUrl": null,
+    "ratingAvg": "0.00",
+    "ratingCount": 0,
+    "createdAt": "2026-03-04T07:25:36.000Z",
+    "updatedAt": "2026-03-10T04:54:46.000Z",
+    "specialties": [
+      "前世今生",
+      "占星",
+      "靈魂解讀"
+    ],
+    "languages": "中文",
+    "consultationModes": [
+      "video",
+      "voice",
+      "text",
+      "in_person"
+    ],
+    "socialLinks": null,
+    "priceMin": 500,
+    "priceMax": 3000,
+    "slug": null,
+    "bioHtml": "",
+    "sectionTitle": null
+  },
+  {
+    "id": 2,
+    "userId": 1,
+    "publicName": "Wiliiam",
+    "title": "解語師",
+    "bio": "來「蒔境解語」，不用緊張、也不用假裝\n就當作是來找一個懂你的朋友，喝杯茶，把心裡的話，好好地說一次\n在這裡陪你一起，看懂自己\n不聊遙遠的命運，也不講深奧的大道理。\n我們就用你的生日，這組專屬於你的數字，來看看你的「使用說明書」上寫了些什麼——你的天賦、你的矛盾，還有你常常自己都沒發現的閃光點",
+    "profileImageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/expert-images/2-profile-1772839976353.jpeg",
+    "coverImageUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663104688923/MLF7bLVZzzxdGTPVXTct3c/expert-images/2-cover-1772840026238.jpeg",
+    "tags": [],
+    "status": "active",
+    "paymentQrUrl": null,
+    "ratingAvg": "0.00",
+    "ratingCount": 0,
+    "createdAt": "2026-03-04T07:31:44.000Z",
+    "updatedAt": "2026-03-07T23:49:12.000Z",
+    "specialties": [
+      "靈魂解讀",
+      "數字命理",
+      "塔羅牌"
+    ],
+    "languages": "中文",
+    "consultationModes": [
+      "video",
+      "voice",
+      "text",
+      "in_person"
+    ],
+    "socialLinks": null,
+    "priceMin": 500,
+    "priceMax": 3000,
+    "slug": "william",
+    "bioHtml": "<h2>來「蒔境解語」，看懂自己</h2>\n<p>\n  我是 William。在這裡，不用緊張，也不用假裝。  \n\n  就當作是來找一個懂你的朋友，喝杯茶，把心裡的話，好好地說一次。\n</p>\n<p>\n  我不聊遙遠的命運，也不講深奧的大道理。我們只專注於你，以及兩種看懂自己的方式：\n</p>\n\n<hr>\n\n<h3>📖 你的「人生使用說明書」</h3>\n<p>\n  <strong>透過【數字命理】深度解讀</strong>  \n\n  我們會用你的生日，這組專屬於你的數字，來看看說明書上寫了些什麼——你的天賦、你的矛盾，還有你常常自己都沒發現的閃光點。\n</p>\n\n<h3>🎴 當下的「十字路口指引」</h3>\n<p>\n  <strong>透過【塔羅牌】映照當下</strong>  \n\n  當你對某個具體問題感到困惑時，塔羅牌就像一面鏡子，能清晰地照出你內心的真實狀態、眼前的選擇，以及最適合你的下一步。\n</p>",
+    "sectionTitle": null
+  }
+]

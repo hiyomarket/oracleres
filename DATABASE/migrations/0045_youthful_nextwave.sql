@@ -1,0 +1,1 @@
+ALTER TABLE `user_profiles` ADD `gender` enum('male','female','other');

@@ -1,0 +1,24 @@
+[
+  {
+    "id": 30006,
+    "token": "3b4e1155f689cf54d7c8839a0a5e05c8a03e3275bec09079e74ecd7c7ee7ad7a",
+    "name": "Claw",
+    "description": null,
+    "isActive": 1,
+    "createdBy": 1,
+    "expiresAt": null,
+    "lastUsedAt": "2026-03-23T05:25:10.000Z",
+    "useCount": 1293,
+    "createdAt": "2026-03-21T15:40:16.000Z",
+    "updatedAt": "2026-03-23T05:25:09.000Z",
+    "allowedModules": null,
+    "access_mode": "admin_view",
+    "identityType": "ai_full",
+    "guestName": "陳建宏",
+    "guestGender": "male",
+    "guestBirthYear": 1994,
+    "guestBirthMonth": 3,
+    "guestBirthDay": 22,
+    "guestBirthHour": 6
+  }
+]

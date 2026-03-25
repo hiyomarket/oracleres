@@ -1,0 +1,1 @@
+ALTER TABLE `wbc_matches` ADD `bettingDeadlineMinutes` int DEFAULT 30 NOT NULL;

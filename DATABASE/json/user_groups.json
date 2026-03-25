@@ -1,0 +1,32 @@
+[
+  {
+    "id": 30001,
+    "name": "家人",
+    "description": null,
+    "color": "red",
+    "icon": "👥",
+    "createdBy": 1,
+    "createdAt": "2026-02-26T17:32:01.000Z",
+    "updatedAt": "2026-02-26T17:32:01.000Z"
+  },
+  {
+    "id": 30002,
+    "name": "朋友",
+    "description": null,
+    "color": "blue",
+    "icon": "👨‍👩‍👧‍👦",
+    "createdBy": 1,
+    "createdAt": "2026-02-26T18:06:35.000Z",
+    "updatedAt": "2026-02-26T18:06:35.000Z"
+  },
+  {
+    "id": 90001,
+    "name": "全站人員2026009",
+    "description": "體驗用",
+    "color": "amber",
+    "icon": "👥",
+    "createdBy": 1,
+    "createdAt": "2026-03-09T19:06:00.000Z",
+    "updatedAt": "2026-03-09T19:06:00.000Z"
+  }
+]

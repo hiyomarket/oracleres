@@ -1,0 +1,191 @@
+[
+  {
+    "id": 1,
+    "monster_id": "M_W001",
+    "equipment_id": "E_W001",
+    "base_drop_rate": 80,
+    "weight": 100,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 2,
+    "monster_id": "M_W001",
+    "equipment_id": "E_W006",
+    "base_drop_rate": 70,
+    "weight": 80,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 3,
+    "monster_id": "M_W002",
+    "equipment_id": "E_W002",
+    "base_drop_rate": 90,
+    "weight": 100,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 4,
+    "monster_id": "M_W002",
+    "equipment_id": "E_W004",
+    "base_drop_rate": 70,
+    "weight": 80,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 5,
+    "monster_id": "M_W003",
+    "equipment_id": "E_W003",
+    "base_drop_rate": 80,
+    "weight": 100,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 6,
+    "monster_id": "M_W003",
+    "equipment_id": "E_W005",
+    "base_drop_rate": 80,
+    "weight": 100,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 7,
+    "monster_id": "M_W004",
+    "equipment_id": "E_W001",
+    "base_drop_rate": 100,
+    "weight": 120,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 8,
+    "monster_id": "M_W004",
+    "equipment_id": "E_W002",
+    "base_drop_rate": 80,
+    "weight": 100,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 9,
+    "monster_id": "M_W005",
+    "equipment_id": "E_W004",
+    "base_drop_rate": 90,
+    "weight": 100,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 10,
+    "monster_id": "M_W005",
+    "equipment_id": "E_W005",
+    "base_drop_rate": 70,
+    "weight": 80,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 11,
+    "monster_id": "M_W006",
+    "equipment_id": "E_W002",
+    "base_drop_rate": 100,
+    "weight": 120,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 12,
+    "monster_id": "M_W006",
+    "equipment_id": "E_W003",
+    "base_drop_rate": 90,
+    "weight": 110,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 13,
+    "monster_id": "M_W007",
+    "equipment_id": "E_W001",
+    "base_drop_rate": 70,
+    "weight": 80,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 14,
+    "monster_id": "M_W007",
+    "equipment_id": "E_W002",
+    "base_drop_rate": 70,
+    "weight": 80,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 15,
+    "monster_id": "M_W007",
+    "equipment_id": "E_W003",
+    "base_drop_rate": 70,
+    "weight": 80,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 16,
+    "monster_id": "M_W008",
+    "equipment_id": "E_W001",
+    "base_drop_rate": 80,
+    "weight": 100,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 17,
+    "monster_id": "M_W008",
+    "equipment_id": "E_W006",
+    "base_drop_rate": 90,
+    "weight": 110,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 18,
+    "monster_id": "M_W009",
+    "equipment_id": "E_W004",
+    "base_drop_rate": 100,
+    "weight": 120,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 19,
+    "monster_id": "M_W009",
+    "equipment_id": "E_W003",
+    "base_drop_rate": 80,
+    "weight": 100,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 20,
+    "monster_id": "M_W010",
+    "equipment_id": "E_W005",
+    "base_drop_rate": 90,
+    "weight": 110,
+    "is_active": 1,
+    "created_at": 1774297414000
+  },
+  {
+    "id": 21,
+    "monster_id": "M_W010",
+    "equipment_id": "E_W006",
+    "base_drop_rate": 80,
+    "weight": 100,
+    "is_active": 1,
+    "created_at": 1774297414000
+  }
+]

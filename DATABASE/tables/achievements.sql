@@ -1,0 +1,22 @@
+-- Data for achievements (20 rows)
+INSERT INTO `achievements` (`id`, `name`, `desc`, `icon`, `type`, `condition`, `is_active`, `sort_order`) VALUES
+('all-rounder', '全能冒險者', '同時持有戰鬥/採集/探索成就', '🏅', 'special', '{"metric":"all_rounder","threshold":1}', 1, 20),
+('ascension', '升仙之路', '旅人達到 Lv.50', '🏆', 'level', '{"metric":"level","threshold":50}', 1, 12),
+('challenger', '江湖人', '發起 10 次 PvP 挑戰', '🤝', 'pvp', '{"metric":"pvp_total","threshold":10}', 1, 14),
+('chatterbox', '話嘮', '發送 50 則聊天訊息', '💬', 'chat', '{"metric":"chat_count","threshold":50}', 1, 13),
+('explorer', '探索者', '累積探索 50 次', '🗺️', 'explore', '{"metric":"explore_count","threshold":50}', 1, 9),
+('first-pvp-win', '初戰告捷', '第一次 PvP 勝利', '⚔️', 'pvp', '{"metric":"pvp_wins","threshold":1}', 1, 2),
+('first-steps', '初出茅廬', '旅人達到 Lv.5', '🌱', 'level', '{"metric":"level","threshold":5}', 1, 1),
+('gatherer', '採集達人', '累積採集 100 次', '⛏️', 'gather', '{"metric":"gather_count","threshold":100}', 1, 10),
+('ironwall', '鐵壁', 'PvP 勝率達 70% 且場次≥10', '🛡️', 'pvp', '{"metric":"pvp_winrate70","threshold":1}', 1, 15),
+('legend-collector', '傳說收藏家', '獲得 5 件傳說裝備', '💎', 'legendary', '{"metric":"legendary_drops","threshold":5}', 1, 8),
+('legend-hunter', '傳說獵人', '獲得第一件傳說裝備', '💎', 'legendary', '{"metric":"legendary_drops","threshold":1}', 1, 7),
+('legend-moment', '傳說時刻', '同一天升級並獲得傳說裝備', '🌟', 'special', '{"metric":"legend_moment","threshold":1}', 1, 19),
+('spirit-full', '靈力充盈', 'AP 達到 100', '⚡', 'special', '{"metric":"ap","threshold":100}', 1, 17),
+('streak-3', '連勝三場', 'PvP 連勝 3 次', '🔥', 'pvp', '{"metric":"pvp_streak","threshold":3}', 1, 3),
+('veteran', '百戰老兵', '累積戰鬥 100 場', '🎯', 'combat', '{"metric":"combat_count","threshold":100}', 1, 18),
+('wargod', '戰神', 'PvP 連勝 10 次', '💀', 'pvp', '{"metric":"pvp_streak","threshold":10}', 1, 4),
+('weekly-champion', '週冠軍', '獲得週等級冠軍', '👑', 'weekly', '{"metric":"weekly_level","threshold":1}', 1, 5),
+('weekly-warrior', '週戰神', '獲得週戰鬥王冠軍', '⚔️', 'weekly', '{"metric":"weekly_combat","threshold":1}', 1, 6),
+('wood-spirit', '木靈共鳴', '累積採集 500 次', '🌿', 'gather', '{"metric":"gather_count","threshold":500}', 1, 11),
+('world-witness', '世界見證者', '親歷 10 次世界事件', '🌍', 'explore', '{"metric":"world_events","threshold":10}', 1, 16);

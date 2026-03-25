@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "userId": 3270013,
+    "featurePlanId": "Oracle Outfit",
+    "moduleId": "module_outfit",
+    "durationDays": 30,
+    "pointsSpent": 1950,
+    "source": "points",
+    "previousExpiresAt": null,
+    "newExpiresAt": "2026-04-02T22:41:35.000Z",
+    "note": null,
+    "createdAt": "2026-03-03T23:41:35.000Z"
+  }
+]

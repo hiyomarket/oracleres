@@ -1,0 +1,1 @@
+ALTER TABLE `modules` ADD `navPath` varchar(100) DEFAULT '';

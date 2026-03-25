@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "settingKey": "alliance_section_title",
+    "settingValue": "天命聯盟",
+    "description": "天命聯盟模塊顯示名稱",
+    "updatedAt": "2026-03-07T04:05:53.000Z"
+  },
+  {
+    "id": 2,
+    "settingKey": "active_theme",
+    "settingValue": "coral_sun",
+    "description": null,
+    "updatedAt": "2026-03-22T21:47:13.000Z"
+  },
+  {
+    "id": 23,
+    "settingKey": "alliance_name",
+    "settingValue": "命理迴廊",
+    "description": "天命聯盟模塊名稱",
+    "updatedAt": "2026-03-07T16:41:32.000Z"
+  }
+]

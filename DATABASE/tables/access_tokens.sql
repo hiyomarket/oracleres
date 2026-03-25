@@ -1,0 +1,3 @@
+-- Data for access_tokens (1 rows)
+INSERT INTO `access_tokens` (`id`, `token`, `name`, `description`, `isActive`, `createdBy`, `expiresAt`, `lastUsedAt`, `useCount`, `createdAt`, `updatedAt`, `allowedModules`, `access_mode`, `identityType`, `guestName`, `guestGender`, `guestBirthYear`, `guestBirthMonth`, `guestBirthDay`, `guestBirthHour`) VALUES
+(30006, '3b4e1155f689cf54d7c8839a0a5e05c8a03e3275bec09079e74ecd7c7ee7ad7a', 'Claw', NULL, 1, 1, NULL, '"2026-03-23T05:25:10.000Z"', 1293, '"2026-03-21T15:40:16.000Z"', '"2026-03-23T05:25:09.000Z"', NULL, 'admin_view', 'ai_full', '陳建宏', 'male', 1994, 3, 22, 6);

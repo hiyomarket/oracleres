@@ -1,0 +1,1 @@
+ALTER TABLE `campaigns` MODIFY COLUMN `ruleType` enum('discount','giveaway','plan_assign') NOT NULL;

@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "healthTags": "[]",
+    "budgetPreference": "mid",
+    "dislikedElements": "[]",
+    "createdAt": "2026-03-07T09:08:42.000Z",
+    "updatedAt": "2026-03-07T09:08:42.000Z"
+  },
+  {
+    "id": 30001,
+    "userId": 690036,
+    "healthTags": "[\"high_protein\"]",
+    "budgetPreference": "mid",
+    "dislikedElements": "[]",
+    "createdAt": "2026-03-09T01:02:34.000Z",
+    "updatedAt": "2026-03-09T01:02:34.000Z"
+  },
+  {
+    "id": 60001,
+    "userId": 1500001,
+    "healthTags": "[]",
+    "budgetPreference": "mid",
+    "dislikedElements": "[]",
+    "createdAt": "2026-03-18T19:23:07.000Z",
+    "updatedAt": "2026-03-18T19:23:07.000Z"
+  }
+]

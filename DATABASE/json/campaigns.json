@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "系統啟用測試(完整版體驗)",
+    "startDate": "2026-02-27T05:00:00.000Z",
+    "endDate": "2026-04-30T04:00:00.000Z",
+    "isActive": 0,
+    "ruleType": "plan_assign",
+    "ruleTarget": {
+      "target_type": "all_users"
+    },
+    "ruleValue": {
+      "duration_days": 7,
+      "plan_id": "2026_TEST1"
+    },
+    "createdAt": "2026-02-27T18:15:12.000Z",
+    "updatedAt": "2026-03-07T23:58:44.000Z",
+    "isDefaultOnboarding": 0
+  },
+  {
+    "id": 30001,
+    "name": "系統試營運-3天體驗活動",
+    "startDate": "2026-03-01T05:00:00.000Z",
+    "endDate": "2026-03-31T04:00:00.000Z",
+    "isActive": 1,
+    "ruleType": "plan_assign",
+    "ruleTarget": {
+      "target_type": "all_users"
+    },
+    "ruleValue": {
+      "duration_days": 3,
+      "plan_id": "2026_TEST1"
+    },
+    "createdAt": "2026-03-07T23:58:40.000Z",
+    "updatedAt": "2026-03-07T23:58:46.000Z",
+    "isDefaultOnboarding": 1
+  }
+]

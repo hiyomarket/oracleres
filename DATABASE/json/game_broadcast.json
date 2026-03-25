@@ -1,0 +1,947 @@
+[
+  {
+    "id": 1,
+    "msg_type": "event",
+    "content": "✨ 財神降臨・金幣加倍\n財神爺顯靈，所有旅人的金幣獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774322519975,
+    "created_at": 1774322339975
+  },
+  {
+    "id": 2,
+    "msg_type": "event",
+    "content": "🌤️ 翠綠之氣籠罩大地\n天地五行之氣轉換，木行能量主導當前世界！木行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774323400020,
+    "created_at": 1774323280020
+  },
+  {
+    "id": 3,
+    "msg_type": "event",
+    "content": "🌤️ 烈日當空，火氣大旺\n天地五行之氣轉換，火行能量主導當前世界！火行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774324259949,
+    "created_at": 1774324139949
+  },
+  {
+    "id": 4,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「採集靈草」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774325200221,
+    "created_at": 1774325080221
+  },
+  {
+    "id": 5,
+    "msg_type": "event",
+    "content": "🌤️ 秋肅之氣，金光閃耀\n天地五行之氣轉換，金行能量主導當前世界！金行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774327853183,
+    "created_at": 1774327733183
+  },
+  {
+    "id": 6,
+    "msg_type": "event",
+    "content": "🌤️ 金風颯颯，金氣清肅\n天地五行之氣轉換，金行能量主導當前世界！金行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774328388137,
+    "created_at": 1774328268137
+  },
+  {
+    "id": 7,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「尋找失蹤的孩子」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774329052974,
+    "created_at": 1774328932974
+  },
+  {
+    "id": 8,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「護送商隊」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774330709380,
+    "created_at": 1774330589380
+  },
+  {
+    "id": 9,
+    "msg_type": "event",
+    "content": "🌟 神明降臨！「阿成」獲得神明祝福\n神明的目光落在「阿成」身上，賜予其 50 金幣與 20 點生命力的祝福！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774330913261,
+    "created_at": 1774330733261
+  },
+  {
+    "id": 10,
+    "msg_type": "event",
+    "content": "✨ 天降祥瑞・經驗加倍\n神明降下祥瑞之氣，所有旅人的經驗獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774332712673,
+    "created_at": 1774332532673
+  },
+  {
+    "id": 11,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「討伐惡靈」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774333911330,
+    "created_at": 1774333791330
+  },
+  {
+    "id": 12,
+    "msg_type": "event",
+    "content": "🌤️ 春風和煦，木氣盛行\n天地五行之氣轉換，木行能量主導當前世界！木行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774335705330,
+    "created_at": 1774335585330
+  },
+  {
+    "id": 13,
+    "msg_type": "event",
+    "content": "🌤️ 春風和煦，木氣盛行\n天地五行之氣轉換，木行能量主導當前世界！木行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774337505419,
+    "created_at": 1774337385419
+  },
+  {
+    "id": 14,
+    "msg_type": "event",
+    "content": "🌤️ 赤焰騰空，火行能量澎湃\n天地五行之氣轉換，火行能量主導當前世界！火行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774339167562,
+    "created_at": 1774339047562
+  },
+  {
+    "id": 15,
+    "msg_type": "event",
+    "content": "🌤️ 赤焰騰空，火行能量澎湃\n天地五行之氣轉換，火行能量主導當前世界！火行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774339305340,
+    "created_at": 1774339185340
+  },
+  {
+    "id": 16,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「調查異象」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774340967578,
+    "created_at": 1774340847578
+  },
+  {
+    "id": 17,
+    "msg_type": "event",
+    "content": "🌤️ 林間靈氣湧動，草木欣欣向榮\n天地五行之氣轉換，木行能量主導當前世界！木行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774341105239,
+    "created_at": 1774340985239
+  },
+  {
+    "id": 18,
+    "msg_type": "event",
+    "content": "✨ 天降祥瑞・經驗加倍\n神明降下祥瑞之氣，所有旅人的經驗獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774342965243,
+    "created_at": 1774342785243
+  },
+  {
+    "id": 19,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「採集靈草」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774343028275,
+    "created_at": 1774342908275
+  },
+  {
+    "id": 20,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位古老智者，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774344705530,
+    "created_at": 1774344585530
+  },
+  {
+    "id": 21,
+    "msg_type": "event",
+    "content": "✨ 靈氣充盈・掉落加倍\n天地靈氣充盈，所有旅人的道具掉落率提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774345042517,
+    "created_at": 1774344862517
+  },
+  {
+    "id": 22,
+    "msg_type": "event",
+    "content": "🌠 流星雨降臨！所有旅人下次行動必觸奇遇\n璀璨的流星雨劃過夜空，天地靈氣激盪，所有旅人在下次行動中必定觸發奇遇事件！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774347363526,
+    "created_at": 1774347063526
+  },
+  {
+    "id": 23,
+    "msg_type": "event",
+    "content": "🌤️ 雲霧繚繞，水氣氤氳\n天地五行之氣轉換，水行能量主導當前世界！水行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774347951270,
+    "created_at": 1774347831270
+  },
+  {
+    "id": 24,
+    "msg_type": "event",
+    "content": "🌤️ 雲霧繚繞，水氣氤氳\n天地五行之氣轉換，水行能量主導當前世界！水行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774348983527,
+    "created_at": 1774348863527
+  },
+  {
+    "id": 25,
+    "msg_type": "event",
+    "content": "🌟 神明降臨！「凜冬月」獲得神明祝福\n神明的目光落在「凜冬月」身上，賜予其 50 金幣與 20 點生命力的祝福！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774349812065,
+    "created_at": 1774349632065
+  },
+  {
+    "id": 26,
+    "msg_type": "event",
+    "content": "✨ 財神降臨・金幣加倍\n財神爺顯靈，所有旅人的金幣獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774352242635,
+    "created_at": 1774352062635
+  },
+  {
+    "id": 27,
+    "msg_type": "event",
+    "content": "⚡ 土行大旺！土行旅人獲得強化\n天地土行之氣大旺，土行屬性的旅人在此期間戰鬥力和採集效率大幅提升！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774353317119,
+    "created_at": 1774353137119
+  },
+  {
+    "id": 28,
+    "msg_type": "event",
+    "content": "⚡ 土行大旺！土行旅人獲得強化\n天地土行之氣大旺，土行屬性的旅人在此期間戰鬥力和採集效率大幅提升！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774353775995,
+    "created_at": 1774353595995
+  },
+  {
+    "id": 29,
+    "msg_type": "event",
+    "content": "🌤️ 秋肅之氣，金光閃耀\n天地五行之氣轉換，金行能量主導當前世界！金行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774355057140,
+    "created_at": 1774354937140
+  },
+  {
+    "id": 30,
+    "msg_type": "event",
+    "content": "⚡ 水行衰弱…水行旅人需謹慎行動\n水行之氣受到壓制，水行屬性的旅人在此期間需要更加謹慎，建議暫時休息或切換策略。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774355576195,
+    "created_at": 1774355396195
+  },
+  {
+    "id": 31,
+    "msg_type": "event",
+    "content": "✨ 財神降臨・金幣加倍\n財神爺顯靈，所有旅人的金幣獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774356917147,
+    "created_at": 1774356737147
+  },
+  {
+    "id": 32,
+    "msg_type": "event",
+    "content": "✨ 天降祥瑞・經驗加倍\n神明降下祥瑞之氣，所有旅人的經驗獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774357421521,
+    "created_at": 1774357241521
+  },
+  {
+    "id": 33,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位神秘使者，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774358541227,
+    "created_at": 1774358421227
+  },
+  {
+    "id": 34,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「討伐惡靈」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774360340627,
+    "created_at": 1774360220627
+  },
+  {
+    "id": 35,
+    "msg_type": "event",
+    "content": "⚡ 水行衰弱…水行旅人需謹慎行動\n水行之氣受到壓制，水行屬性的旅人在此期間需要更加謹慎，建議暫時休息或切換策略。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774360517123,
+    "created_at": 1774360337123
+  },
+  {
+    "id": 36,
+    "msg_type": "event",
+    "content": "✨ 財神降臨・金幣加倍\n財神爺顯靈，所有旅人的金幣獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774361628029,
+    "created_at": 1774361448029
+  },
+  {
+    "id": 37,
+    "msg_type": "event",
+    "content": "🌤️ 秋肅之氣，金光閃耀\n天地五行之氣轉換，金行能量主導當前世界！金行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774361867320,
+    "created_at": 1774361747320
+  },
+  {
+    "id": 38,
+    "msg_type": "event",
+    "content": "🌤️ 土行之力充盈四方\n天地五行之氣轉換，土行能量主導當前世界！土行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774362257127,
+    "created_at": 1774362137127
+  },
+  {
+    "id": 39,
+    "msg_type": "event",
+    "content": "⚡ 木行大旺！木行旅人獲得強化\n天地木行之氣大旺，木行屬性的旅人在此期間戰鬥力和採集效率大幅提升！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774363427329,
+    "created_at": 1774363247329
+  },
+  {
+    "id": 40,
+    "msg_type": "event",
+    "content": "🌟 神明降臨！「御詠漓」獲得神明祝福\n神明的目光落在「御詠漓」身上，賜予其 50 金幣與 20 點生命力的祝福！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774364117567,
+    "created_at": 1774363937567
+  },
+  {
+    "id": 41,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「採集靈草」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774364591174,
+    "created_at": 1774364471174
+  },
+  {
+    "id": 42,
+    "msg_type": "event",
+    "content": "🌤️ 炎陽普照，萬物生機勃發\n天地五行之氣轉換，火行能量主導當前世界！火行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774365857050,
+    "created_at": 1774365737050
+  },
+  {
+    "id": 43,
+    "msg_type": "event",
+    "content": "🌤️ 寒水凝聚，智慧之氣升騰\n天地五行之氣轉換，水行能量主導當前世界！水行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774366390774,
+    "created_at": 1774366270774
+  },
+  {
+    "id": 44,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「調查異象」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774367657053,
+    "created_at": 1774367537053
+  },
+  {
+    "id": 45,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位神秘商人，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774368270500,
+    "created_at": 1774368150500
+  },
+  {
+    "id": 46,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位神秘商人，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774370198540,
+    "created_at": 1774370078541
+  },
+  {
+    "id": 47,
+    "msg_type": "event",
+    "content": "🌟 神明降臨！「旅人」獲得神明祝福\n神明的目光落在「旅人」身上，賜予其 50 金幣與 20 點生命力的祝福！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774370910130,
+    "created_at": 1774370730130
+  },
+  {
+    "id": 48,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「尋找失蹤的孩子」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774372276450,
+    "created_at": 1774372156450
+  },
+  {
+    "id": 49,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「尋找失蹤的孩子」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774374076528,
+    "created_at": 1774373956528
+  },
+  {
+    "id": 50,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位神秘使者，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774374189376,
+    "created_at": 1774374069376
+  },
+  {
+    "id": 51,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「討伐惡靈」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774375225332,
+    "created_at": 1774375105332
+  },
+  {
+    "id": 52,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位古老智者，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774376301728,
+    "created_at": 1774376181728
+  },
+  {
+    "id": 53,
+    "msg_type": "event",
+    "content": "🌤️ 靈泉湧動，水行之力流轉\n天地五行之氣轉換，水行能量主導當前世界！水行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774376832004,
+    "created_at": 1774376712005
+  },
+  {
+    "id": 54,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「採集靈草」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774377928897,
+    "created_at": 1774377808897
+  },
+  {
+    "id": 55,
+    "msg_type": "event",
+    "content": "🌤️ 赤焰騰空，火行能量澎湃\n天地五行之氣轉換，火行能量主導當前世界！火行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774378831835,
+    "created_at": 1774378711835
+  },
+  {
+    "id": 56,
+    "msg_type": "event",
+    "content": "✨ 靈氣充盈・掉落加倍\n天地靈氣充盈，所有旅人的道具掉落率提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774378912120,
+    "created_at": 1774378732120
+  },
+  {
+    "id": 57,
+    "msg_type": "event",
+    "content": "✨ 靈氣充盈・掉落加倍\n天地靈氣充盈，所有旅人的道具掉落率提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774380692574,
+    "created_at": 1774380512574
+  },
+  {
+    "id": 58,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位神秘使者，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774381755619,
+    "created_at": 1774381635619
+  },
+  {
+    "id": 59,
+    "msg_type": "event",
+    "content": "🌤️ 寒水凝聚，智慧之氣升騰\n天地五行之氣轉換，水行能量主導當前世界！水行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774383120616,
+    "created_at": 1774383000616
+  },
+  {
+    "id": 60,
+    "msg_type": "event",
+    "content": "🌟 神明降臨！「凜冬月」獲得神明祝福\n神明的目光落在「凜冬月」身上，賜予其 50 金幣與 20 點生命力的祝福！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774384982515,
+    "created_at": 1774384802515
+  },
+  {
+    "id": 61,
+    "msg_type": "event",
+    "content": "🌠 流星雨降臨！所有旅人下次行動必觸奇遇\n璧燦的流星雨划過夜空，天地靈氣激跪，所有旅人在下次行動中必定觸發奇遇事件！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774385142301,
+    "created_at": 1774384842301
+  },
+  {
+    "id": 62,
+    "msg_type": "event",
+    "content": "🌤️ 寒水凝聚，智慧之氣升騰\n天地五行之氣轉換，水行能量主導當前世界！水行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774386719724,
+    "created_at": 1774386599724
+  },
+  {
+    "id": 63,
+    "msg_type": "event",
+    "content": "✨ 靈氣充盈・掉落加倍\n天地靈氣充盈，所有旅人的道具掉落率提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774388580237,
+    "created_at": 1774388400237
+  },
+  {
+    "id": 64,
+    "msg_type": "event",
+    "content": "🌟 神明降臨！「凜冬月」獲得神明祝福\n神明的目光落在「凜冬月」身上，賜予其 50 金幣與 20 點生命力的祝福！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774390381516,
+    "created_at": 1774390201516
+  },
+  {
+    "id": 65,
+    "msg_type": "event",
+    "content": "🌤️ 林間靈氣湧動，草木欣欣向榮\n天地五行之氣轉換，木行能量主導當前世界！木行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774392120108,
+    "created_at": 1774392000108
+  },
+  {
+    "id": 66,
+    "msg_type": "event",
+    "content": "⚡ 土行大旺！土行旅人獲得強化\n天地土行之氣大旺，土行屬性的旅人在此期間戰鬥力和採集效率大幅提升！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774393980115,
+    "created_at": 1774393800115
+  },
+  {
+    "id": 67,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「採集靈草」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774395720515,
+    "created_at": 1774395600515
+  },
+  {
+    "id": 68,
+    "msg_type": "event",
+    "content": "🌠 流星雨降臨！所有旅人下次行動必觸奇遇\n璧燦的流星雨划過夜空，天地靈氣激跪，所有旅人在下次行動中必定觸發奇遇事件！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774396715792,
+    "created_at": 1774396415792
+  },
+  {
+    "id": 69,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位古老智者，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774398331651,
+    "created_at": 1774398211651
+  },
+  {
+    "id": 70,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「討伐惡靈」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774398344833,
+    "created_at": 1774398224833
+  },
+  {
+    "id": 71,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「採集靈草」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774400131677,
+    "created_at": 1774400011677
+  },
+  {
+    "id": 72,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「採集靈草」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774400145834,
+    "created_at": 1774400025834
+  },
+  {
+    "id": 73,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「調查異象」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774401931641,
+    "created_at": 1774401811641
+  },
+  {
+    "id": 74,
+    "msg_type": "event",
+    "content": "🌤️ 厚土沉穩，地氣凝聚\n天地五行之氣轉換，土行能量主導當前世界！土行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774401944832,
+    "created_at": 1774401824832
+  },
+  {
+    "id": 75,
+    "msg_type": "event",
+    "content": "🌟 神明降臨！「凜冬月」獲得神明祝福\n神明的目光落在「凜冬月」身上，賜予其 50 金幣與 20 點生命力的祝福！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774403805434,
+    "created_at": 1774403625434
+  },
+  {
+    "id": 76,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「調查異象」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774405544522,
+    "created_at": 1774405424522
+  },
+  {
+    "id": 77,
+    "msg_type": "event",
+    "content": "🌤️ 翠綠之氣籠罩大地\n天地五行之氣轉換，木行能量主導當前世界！木行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774407344763,
+    "created_at": 1774407224763
+  },
+  {
+    "id": 78,
+    "msg_type": "event",
+    "content": "✨ 靈氣充盈・掉落加倍\n天地靈氣充盈，所有旅人的道具掉落率提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774409204563,
+    "created_at": 1774409024563
+  },
+  {
+    "id": 79,
+    "msg_type": "event",
+    "content": "🌤️ 靈泉湧動，水行之力流轉\n天地五行之氣轉換，水行能量主導當前世界！水行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774410944633,
+    "created_at": 1774410824633
+  },
+  {
+    "id": 80,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「調查異象」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774412744644,
+    "created_at": 1774412624644
+  },
+  {
+    "id": 81,
+    "msg_type": "event",
+    "content": "🌤️ 秋肅之氣，金光閃耀\n天地五行之氣轉換，金行能量主導當前世界！金行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774414544732,
+    "created_at": 1774414424732
+  },
+  {
+    "id": 82,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位神秘使者，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774416344932,
+    "created_at": 1774416224932
+  },
+  {
+    "id": 83,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「尋找失蹤的孩子」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774418144933,
+    "created_at": 1774418024933
+  },
+  {
+    "id": 84,
+    "msg_type": "event",
+    "content": "✨ 天降祥瑞・經驗加倍\n神明降下祥瑞之氣，所有旅人的經驗獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774420004844,
+    "created_at": 1774419824844
+  },
+  {
+    "id": 85,
+    "msg_type": "event",
+    "content": "🌠 流星雨降臨！所有旅人下次行動必觸奇遇\n璧燦的流星雨划過夜空，天地靈氣激跪，所有旅人在下次行動中必定觸發奇遇事件！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774421927234,
+    "created_at": 1774421627234
+  },
+  {
+    "id": 86,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「尋找失蹤的孩子」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774423544863,
+    "created_at": 1774423424863
+  },
+  {
+    "id": 87,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位神秘商人，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774425344743,
+    "created_at": 1774425224743
+  },
+  {
+    "id": 88,
+    "msg_type": "event",
+    "content": "✨ 財神降臨・金幣加倍\n財神爺顯靈，所有旅人的金幣獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774427204543,
+    "created_at": 1774427024543
+  },
+  {
+    "id": 89,
+    "msg_type": "event",
+    "content": "✨ 財神降臨・金幣加倍\n財神爺顯靈，所有旅人的金幣獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774429004733,
+    "created_at": 1774428824733
+  },
+  {
+    "id": 90,
+    "msg_type": "event",
+    "content": "✨ 天降祥瑞・經驗加倍\n神明降下祥瑞之氣，所有旅人的經驗獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774430804744,
+    "created_at": 1774430624744
+  },
+  {
+    "id": 91,
+    "msg_type": "event",
+    "content": "⚡ 火行大旺！火行旅人獲得強化\n天地火行之氣大旺，火行屬性的旅人在此期間戰鬥力和採集效率大幅提升！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774432604633,
+    "created_at": 1774432424633
+  },
+  {
+    "id": 92,
+    "msg_type": "event",
+    "content": "🌟 神明降臨！「碎楓」獲得神明祝福\n神明的目光落在「碎楓」身上，賜予其 50 金幣與 20 點生命力的祝福！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774434405146,
+    "created_at": 1774434225146
+  },
+  {
+    "id": 93,
+    "msg_type": "event",
+    "content": "🌤️ 秋肅之氣，金光閃耀\n天地五行之氣轉換，金行能量主導當前世界！金行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774436144743,
+    "created_at": 1774436024743
+  },
+  {
+    "id": 94,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「護送商隊」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774437945033,
+    "created_at": 1774437825033
+  },
+  {
+    "id": 95,
+    "msg_type": "event",
+    "content": "🌤️ 黃土氣息瀰漫，大地靜謐安詳\n天地五行之氣轉換，土行能量主導當前世界！土行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774439666537,
+    "created_at": 1774439546537
+  },
+  {
+    "id": 96,
+    "msg_type": "event",
+    "content": "🌤️ 金風颯颯，金氣清肅\n天地五行之氣轉換，金行能量主導當前世界！金行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774441465946,
+    "created_at": 1774441345946
+  },
+  {
+    "id": 97,
+    "msg_type": "event",
+    "content": "⚡ 木行衰弱…木行旅人需謹慎行動\n木行之氣受到壓制，木行屬性的旅人在此期間需要更加謹慎，建議暫時休息或切換策略。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774443326236,
+    "created_at": 1774443146236
+  },
+  {
+    "id": 98,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位受傷旅人，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774445065750,
+    "created_at": 1774444945750
+  },
+  {
+    "id": 99,
+    "msg_type": "event",
+    "content": "🌟 神明降臨！「阿成」獲得神明祝福\n神明的目光落在「阿成」身上，賜予其 50 金幣與 20 點生命力的祝福！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774446925837,
+    "created_at": 1774446745837
+  },
+  {
+    "id": 100,
+    "msg_type": "event",
+    "content": "👤 神秘人物現身\n據說在某個神秘之地出現了一位神秘使者，洞察力強的旅人或許能找到他…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774448665589,
+    "created_at": 1774448545589
+  },
+  {
+    "id": 101,
+    "msg_type": "event",
+    "content": "✨ 天降祥瑞・經驗加倍\n神明降下祥瑞之氣，所有旅人的經驗獲取提升至 1.5 倍！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774450525836,
+    "created_at": 1774450345836
+  },
+  {
+    "id": 102,
+    "msg_type": "event",
+    "content": "📜 限時任務出現\n某個地方出現了一個緊急任務：「調查異象」，洞察力強的旅人能感知到任務的位置…",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774452265836,
+    "created_at": 1774452145836
+  },
+  {
+    "id": 103,
+    "msg_type": "event",
+    "content": "⚡ 火行大旺！火行旅人獲得強化\n天地火行之氣大旺，火行屬性的旅人在此期間戰鬥力和採集效率大幅提升！",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774454125737,
+    "created_at": 1774453945737
+  },
+  {
+    "id": 104,
+    "msg_type": "event",
+    "content": "🌤️ 赤焰騰空，火行能量澎湃\n天地五行之氣轉換，火行能量主導當前世界！火行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774455710156,
+    "created_at": 1774455590156
+  },
+  {
+    "id": 105,
+    "msg_type": "event",
+    "content": "🌤️ 秋肅之氣，金光閃耀\n天地五行之氣轉換，金行能量主導當前世界！金行角色在此期間行動加成提升。",
+    "sent_by": null,
+    "is_active": 1,
+    "expires_at": 1774455865850,
+    "created_at": 1774455745850
+  }
+]

@@ -1,0 +1,1 @@
+ALTER TABLE `modules` ADD `displayLocation` enum('main','profile','both') DEFAULT 'main' NOT NULL;

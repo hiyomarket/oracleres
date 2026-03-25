@@ -1,0 +1,119 @@
+[
+  {
+    "id": "ai_report",
+    "name": "AI 深度命格解析",
+    "description": "個人化 AI 命格深度報告",
+    "requiredPlanLevel": 3,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 0
+  },
+  {
+    "id": "calendar",
+    "name": "命理日曆",
+    "description": "每日吉凶評分與農曆日曆",
+    "requiredPlanLevel": 1,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 0
+  },
+  {
+    "id": "lottery",
+    "name": "天命選號",
+    "description": "基於命格的彩券號碼推薦",
+    "requiredPlanLevel": 2,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 0
+  },
+  {
+    "id": "monthly_report",
+    "name": "流月分析",
+    "description": "詳細流月流日能量預測",
+    "requiredPlanLevel": 3,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 0
+  },
+  {
+    "id": "oracle",
+    "name": "天命擲筊",
+    "description": "基於命格的天命共振擲筊",
+    "requiredPlanLevel": 1,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 10
+  },
+  {
+    "id": "profile",
+    "name": "命格身份證",
+    "description": "八字四柱、五行比例、紫微命盤",
+    "requiredPlanLevel": 1,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 0
+  },
+  {
+    "id": "stats",
+    "name": "擲筊分析",
+    "description": "擲筊歷史統計與能量分析",
+    "requiredPlanLevel": 2,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 0
+  },
+  {
+    "id": "warroom",
+    "name": "每日運勢",
+    "description": "每日能量分析、十神解讀、塔羅流日",
+    "requiredPlanLevel": 1,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 0
+  },
+  {
+    "id": "warroom_dietary",
+    "name": "飲食建議",
+    "description": "五行飲食調補建議",
+    "requiredPlanLevel": 2,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 5
+  },
+  {
+    "id": "warroom_divination",
+    "name": "天命問卜",
+    "description": "AI 命理主題深度分析",
+    "requiredPlanLevel": 2,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 15
+  },
+  {
+    "id": "warroom_outfit",
+    "name": "穿搭手串建議",
+    "description": "每日穿搭顏色與手串推薦",
+    "requiredPlanLevel": 2,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 0
+  },
+  {
+    "id": "warroom_wealth",
+    "name": "財運羅盤",
+    "description": "偏財指數與商業建議",
+    "requiredPlanLevel": 2,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 0
+  },
+  {
+    "id": "weekly",
+    "name": "刮刮樂驗證",
+    "description": "刮刮樂購買記錄與分析",
+    "requiredPlanLevel": 2,
+    "isManaged": 0,
+    "createdAt": "2026-02-25T22:22:21.000Z",
+    "coinCostPerUse": 0
+  }
+]

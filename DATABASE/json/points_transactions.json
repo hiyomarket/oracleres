@@ -1,0 +1,3512 @@
+[
+  {
+    "id": 1,
+    "userId": 3210620,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-02-26T17:31:11.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2,
+    "userId": 540175,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-02-26T18:05:47.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 3,
+    "userId": 690118,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-02-26T18:05:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 4,
+    "userId": 1260042,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-02-26T18:05:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 5,
+    "userId": 1290011,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-02-26T18:05:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 6,
+    "userId": 1290021,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-02-26T18:05:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 7,
+    "userId": 1320007,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-02-26T18:05:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 8,
+    "userId": 1500116,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-02-26T18:05:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 9,
+    "userId": 1590008,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-02-26T18:05:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 10,
+    "userId": 1590141,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-02-26T18:05:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 11,
+    "userId": 660061,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-02-26T18:07:20.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 12,
+    "userId": 660067,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-02-26T18:07:20.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 13,
+    "userId": 690036,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-02-26T18:07:20.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 14,
+    "userId": 690067,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-02-26T18:07:20.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 15,
+    "userId": 750001,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-02-26T18:07:20.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 16,
+    "userId": 810024,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-02-26T18:07:21.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 17,
+    "userId": 1500001,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-02-26T18:07:21.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 18,
+    "userId": 1590249,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-02-26T18:07:21.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 19,
+    "userId": 1800001,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-02-26T18:07:21.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 20,
+    "userId": 2130001,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-02-26T18:07:21.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 21,
+    "userId": 2970001,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-02-26T18:07:21.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 30001,
+    "userId": 1,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-26T19:45:43.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 60001,
+    "userId": 1,
+    "amount": 99990,
+    "type": "admin_set",
+    "description": "管理員調整（set）",
+    "createdAt": "2026-02-26T20:35:49.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 60002,
+    "userId": 3270013,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-26T21:12:46.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 60003,
+    "userId": 1,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-02-26T21:15:47.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 60004,
+    "userId": 3330308,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-26T22:10:43.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 90001,
+    "userId": 3330308,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-02-27T03:09:24.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 120001,
+    "userId": 810024,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-27T05:04:56.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 150001,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-27T06:36:28.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 180001,
+    "userId": 690118,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：財運",
+    "createdAt": "2026-02-27T12:03:14.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 210001,
+    "userId": 1290021,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-27T16:31:07.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 240001,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：財運",
+    "createdAt": "2026-02-27T18:11:00.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 240002,
+    "userId": 540175,
+    "amount": 5140,
+    "type": "admin_set",
+    "description": "管理員調整（set）",
+    "createdAt": "2026-02-27T18:17:40.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 270001,
+    "userId": 3960001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-27T18:52:06.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 300001,
+    "userId": 3270013,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-02-27T21:25:50.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 330001,
+    "userId": 4140001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-27T22:32:44.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 330002,
+    "userId": 4140001,
+    "amount": 140,
+    "type": "admin_set",
+    "description": "管理員調整（set）",
+    "createdAt": "2026-02-27T22:34:12.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 330003,
+    "userId": 1,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-02-27T22:34:54.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 360001,
+    "userId": 4350001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-28T08:28:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 360002,
+    "userId": 4350001,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：財運",
+    "createdAt": "2026-02-28T08:33:04.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 390001,
+    "userId": 4350001,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-02-28T10:56:13.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 390002,
+    "userId": 3960001,
+    "amount": 40,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-02-28T11:29:50.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 420001,
+    "userId": 4440001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-28T12:36:10.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 420002,
+    "userId": 4440014,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-28T12:37:33.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 420003,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-02-28T12:39:03.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 450001,
+    "userId": 1590141,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-28T13:41:20.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 450002,
+    "userId": 1590141,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：財運",
+    "createdAt": "2026-02-28T13:43:44.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 450003,
+    "userId": 1590249,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-28T13:46:26.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 480001,
+    "userId": 3330308,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-02-28T16:11:49.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 510001,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-28T17:55:05.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 540001,
+    "userId": 1,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-02-28T21:35:32.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 540002,
+    "userId": 4830007,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-02-28T21:41:54.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 570001,
+    "userId": 4440001,
+    "amount": 40,
+    "type": "admin_set",
+    "description": "管理員調整（set）",
+    "createdAt": "2026-02-28T23:03:20.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 570002,
+    "userId": 4830007,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-02-28T23:03:27.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 600001,
+    "userId": 3960001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-01T07:15:25.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 630001,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-01T08:17:36.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 660001,
+    "userId": 1590141,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-01T14:22:24.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 690001,
+    "userId": 5580007,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-01T14:39:53.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 690002,
+    "userId": 4350001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-01T14:45:11.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 690003,
+    "userId": 4140001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-01T15:31:15.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 720001,
+    "userId": 750001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-01T16:09:14.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 750001,
+    "userId": 5880001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-01T20:04:39.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 750002,
+    "userId": 5880001,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：愛情",
+    "createdAt": "2026-03-01T20:14:03.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 780001,
+    "userId": 5580007,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-01T21:57:07.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 780002,
+    "userId": 5880001,
+    "amount": 50,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-01T21:57:25.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 810001,
+    "userId": 1,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 5 天）",
+    "createdAt": "2026-03-01T22:10:55.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 810002,
+    "userId": 3270013,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-01T22:11:15.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 840001,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：工作",
+    "createdAt": "2026-03-01T23:32:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 870001,
+    "userId": 750001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-02T04:37:29.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 900001,
+    "userId": 4350001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-02T05:28:04.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 900002,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-02T05:41:31.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930001,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：財運",
+    "createdAt": "2026-03-02T06:27:02.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930002,
+    "userId": 3330308,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-02T06:27:22.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930003,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：工作",
+    "createdAt": "2026-03-02T06:34:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930004,
+    "userId": 660061,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:15.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930005,
+    "userId": 660067,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930006,
+    "userId": 690036,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930007,
+    "userId": 690067,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930008,
+    "userId": 750001,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930009,
+    "userId": 810024,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930010,
+    "userId": 1500001,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930011,
+    "userId": 1590249,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930012,
+    "userId": 1800001,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930013,
+    "userId": 2130001,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930014,
+    "userId": 2970001,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930015,
+    "userId": 3330308,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930016,
+    "userId": 3960001,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930017,
+    "userId": 4140001,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30002）",
+    "createdAt": "2026-03-02T06:37:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930018,
+    "userId": 540175,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-03-02T06:37:25.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930019,
+    "userId": 690118,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-03-02T06:37:25.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930020,
+    "userId": 1260042,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-03-02T06:37:26.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930021,
+    "userId": 1290011,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-03-02T06:37:26.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930022,
+    "userId": 1290021,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-03-02T06:37:26.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930023,
+    "userId": 1320007,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-03-02T06:37:26.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930024,
+    "userId": 1500116,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-03-02T06:37:26.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930025,
+    "userId": 1590008,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-03-02T06:37:26.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930026,
+    "userId": 1590141,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "分組批量積分調整（分組 #30001）",
+    "createdAt": "2026-03-02T06:37:26.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930027,
+    "userId": 5580007,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-02T06:38:05.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930028,
+    "userId": 5880001,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-02T06:38:11.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930029,
+    "userId": 4350001,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-02T06:38:19.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930030,
+    "userId": 4440014,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-02T06:38:37.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930031,
+    "userId": 4830007,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-02T06:38:43.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 930032,
+    "userId": 4440001,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-02T06:38:49.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 960001,
+    "userId": 1500116,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-02T06:49:13.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 960002,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-02T06:50:49.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 960003,
+    "userId": 540175,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：工作",
+    "createdAt": "2026-03-02T06:51:27.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 960004,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：工作",
+    "createdAt": "2026-03-02T06:58:03.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 960005,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：工作",
+    "createdAt": "2026-03-02T06:58:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 960006,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：工作",
+    "createdAt": "2026-03-02T07:00:56.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 960007,
+    "userId": 3330308,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：財運",
+    "createdAt": "2026-03-02T07:16:23.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 990001,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：財運",
+    "createdAt": "2026-03-02T07:46:10.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 990002,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-02T07:48:15.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 990003,
+    "userId": 690067,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-02T07:54:22.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 990004,
+    "userId": 1500001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-02T07:58:08.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1020001,
+    "userId": 6390033,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-02T10:05:32.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1020002,
+    "userId": 6390033,
+    "amount": 150,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-02T10:06:01.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1020003,
+    "userId": 6390033,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：決策",
+    "createdAt": "2026-03-02T10:06:53.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1020004,
+    "userId": 6390033,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：健康",
+    "createdAt": "2026-03-02T10:09:32.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1050001,
+    "userId": 4830007,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-02T19:33:38.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1080001,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 6 天）",
+    "createdAt": "2026-03-02T21:44:11.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1080002,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-02T21:46:51.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1080003,
+    "userId": 3270013,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-02T22:03:29.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1110001,
+    "userId": 1500001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-03T06:56:14.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1110002,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-03T06:58:47.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1140001,
+    "userId": 4830007,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-03T08:33:30.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1170001,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-03T13:20:21.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1200001,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-03T15:54:11.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1200002,
+    "userId": 5880001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-03T16:09:47.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1230001,
+    "userId": 4440001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-03T21:01:23.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1230002,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 7 天）",
+    "createdAt": "2026-03-03T21:07:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1230003,
+    "userId": 3270013,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-03T21:20:07.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1230004,
+    "userId": 1500001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-03T22:30:56.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1230005,
+    "userId": 3270013,
+    "amount": 9950,
+    "type": "admin_set",
+    "description": "管理員調整（set）",
+    "createdAt": "2026-03-03T23:40:51.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1230006,
+    "userId": 3270013,
+    "amount": -1950,
+    "type": "feature_redemption",
+    "description": "兌換【神諭穿搭】30天",
+    "createdAt": "2026-03-03T23:41:35.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1230007,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：工作",
+    "createdAt": "2026-03-04T00:09:24.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1260001,
+    "userId": 660061,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-04T04:10:04.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1260002,
+    "userId": 660061,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：工作",
+    "createdAt": "2026-03-04T04:11:04.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1260003,
+    "userId": 660061,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：財運",
+    "createdAt": "2026-03-04T04:29:00.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1260004,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-04T05:29:37.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1260005,
+    "userId": 1,
+    "amount": -94980,
+    "type": "admin_set",
+    "description": "管理員調整（set）",
+    "createdAt": "2026-03-04T05:37:08.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1260006,
+    "userId": 750001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-04T06:04:40.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1260007,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-04T07:10:03.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1260008,
+    "userId": 3330308,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-04T07:51:49.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1290001,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 5 天）",
+    "createdAt": "2026-03-04T10:12:33.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1290002,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-04T13:36:38.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1290003,
+    "userId": 7740633,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-04T15:45:25.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1290004,
+    "userId": 7740633,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：健康",
+    "createdAt": "2026-03-04T15:55:13.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1290005,
+    "userId": 7740633,
+    "amount": 200,
+    "type": "admin_set",
+    "description": "管理員調整（set）",
+    "createdAt": "2026-03-04T15:58:46.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1290006,
+    "userId": 7740782,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-04T16:22:57.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1290007,
+    "userId": 7740782,
+    "amount": 100,
+    "type": "admin_set",
+    "description": "管理員調整（set）",
+    "createdAt": "2026-03-04T16:41:54.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1290008,
+    "userId": 1800001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-04T17:12:07.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1320001,
+    "userId": 3330308,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-04T21:15:43.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1320002,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 8 天）",
+    "createdAt": "2026-03-04T21:40:20.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1320003,
+    "userId": 3270013,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-04T21:45:54.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1350001,
+    "userId": 660061,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-05T04:39:26.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1380001,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-05T07:34:47.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1380002,
+    "userId": 7860012,
+    "amount": 100,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-05T07:51:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1410001,
+    "userId": 690036,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 6 天）",
+    "createdAt": "2026-03-05T10:03:31.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1410002,
+    "userId": 7890138,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-05T10:52:14.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1410003,
+    "userId": 7890138,
+    "amount": 190,
+    "type": "admin_set",
+    "description": "管理員調整（set）",
+    "createdAt": "2026-03-05T10:53:39.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1440001,
+    "userId": 5880001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-05T18:08:27.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1440002,
+    "userId": 5880001,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：愛情",
+    "createdAt": "2026-03-05T18:16:15.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1470001,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 9 天）",
+    "createdAt": "2026-03-05T21:04:40.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1470002,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-05T21:55:04.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1470003,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 5 天）",
+    "createdAt": "2026-03-05T23:01:28.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1470004,
+    "userId": 540175,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：工作",
+    "createdAt": "2026-03-05T23:01:44.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1470005,
+    "userId": 540175,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：工作",
+    "createdAt": "2026-03-05T23:03:01.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1470006,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：決策",
+    "createdAt": "2026-03-05T23:14:32.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1470007,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：決策",
+    "createdAt": "2026-03-05T23:19:05.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1470008,
+    "userId": 5580007,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-06T00:17:23.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1500001,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-06T03:19:20.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1530001,
+    "userId": 3270013,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 5 天）",
+    "createdAt": "2026-03-06T06:38:30.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1530002,
+    "userId": 3330308,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-06T07:58:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560001,
+    "userId": 1,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：健康",
+    "createdAt": "2026-03-06T16:50:54.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560002,
+    "userId": 5880001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-06T18:59:56.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560003,
+    "userId": 4140001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-06T19:34:53.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560004,
+    "userId": 4440001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-06T21:02:58.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560005,
+    "userId": 4440001,
+    "amount": -10,
+    "type": "spend",
+    "description": "天命問卜：工作",
+    "createdAt": "2026-03-06T21:03:03.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560006,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 10 天）",
+    "createdAt": "2026-03-06T21:30:00.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560007,
+    "userId": 3960001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-07T00:17:53.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560008,
+    "userId": 3270013,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 6 天）",
+    "createdAt": "2026-03-07T02:46:00.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560009,
+    "userId": 1,
+    "amount": -5,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_dietary",
+    "createdAt": "2026-03-07T04:39:13.000Z",
+    "featureId": "warroom_dietary",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560010,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-07T07:07:01.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560011,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-07T07:39:09.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560012,
+    "userId": 1,
+    "amount": -5,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_dietary",
+    "createdAt": "2026-03-07T07:54:41.000Z",
+    "featureId": "warroom_dietary",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560013,
+    "userId": 3330308,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-07T09:04:08.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560014,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-07T09:33:03.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560015,
+    "userId": 7890138,
+    "amount": -30,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-07T10:39:19.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560016,
+    "userId": 5880001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-07T11:47:27.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560017,
+    "userId": 8133001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-07T16:15:22.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560018,
+    "userId": 4140001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-07T16:18:11.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1560019,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 11 天）",
+    "createdAt": "2026-03-07T22:14:18.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1590001,
+    "userId": 5880001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-08T08:19:23.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1620001,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-08T11:54:08.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1620002,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-08T21:28:11.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1620003,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 12 天）",
+    "createdAt": "2026-03-08T23:55:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1620004,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-09T00:57:32.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1650001,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-09T07:11:04.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1650002,
+    "userId": 1500001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-09T07:32:32.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1650003,
+    "userId": 5880001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 5 天）",
+    "createdAt": "2026-03-09T15:08:57.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1680001,
+    "userId": 1290021,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-09T19:00:26.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1680002,
+    "userId": 1,
+    "amount": -30,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-09T19:09:28.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1680003,
+    "userId": 8280081,
+    "amount": 120,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-09T19:29:45.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1680004,
+    "userId": 8280171,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-09T19:37:02.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1680005,
+    "userId": 8280171,
+    "amount": 110,
+    "type": "admin_set",
+    "description": "管理員調整（set）",
+    "createdAt": "2026-03-09T19:53:33.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1680006,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 13 天）",
+    "createdAt": "2026-03-09T20:30:49.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1680007,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-09T21:39:35.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1710001,
+    "userId": 1,
+    "amount": -30,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-10T03:59:37.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1710002,
+    "userId": 1,
+    "amount": -30,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-10T04:00:16.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1710003,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-10T04:34:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1710004,
+    "userId": 3330308,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-10T04:45:30.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1710005,
+    "userId": 8280171,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-10T04:59:55.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1710006,
+    "userId": 8280171,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-10T05:00:46.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1740001,
+    "userId": 750001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-10T07:41:45.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1770001,
+    "userId": 8370004,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-10T13:44:07.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1770002,
+    "userId": 8280171,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-10T13:48:47.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1770003,
+    "userId": 8280171,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-10T13:49:28.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800001,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 14 天）",
+    "createdAt": "2026-03-10T20:53:07.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800002,
+    "userId": 1,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-10T21:27:32.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800003,
+    "userId": 1,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-11T03:56:46.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800004,
+    "userId": 1,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-11T03:58:16.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800005,
+    "userId": 4140001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-11T05:08:37.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800006,
+    "userId": 4830007,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-11T05:18:44.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800007,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-11T05:30:37.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800008,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-11T08:33:51.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800009,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-11T09:51:17.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800010,
+    "userId": 8280171,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-11T14:39:43.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800011,
+    "userId": 8280171,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-11T14:40:20.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800012,
+    "userId": 8400321,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-11T16:47:00.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800013,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-11T17:41:26.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800014,
+    "userId": 8400321,
+    "amount": 60,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-11T19:29:18.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1800015,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 15 天）",
+    "createdAt": "2026-03-11T20:07:02.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1830001,
+    "userId": 8280171,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-12T07:21:21.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1830002,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-12T08:15:22.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1830003,
+    "userId": 540175,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-12T08:17:17.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1830004,
+    "userId": 540175,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-12T08:17:29.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1830005,
+    "userId": 540175,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-12T08:24:56.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1830006,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-12T08:38:10.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1860001,
+    "userId": 5580007,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-12T12:06:45.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1860002,
+    "userId": 1500001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-12T13:23:51.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1860003,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-12T17:59:07.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1860004,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 16 天）",
+    "createdAt": "2026-03-12T20:21:05.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1860005,
+    "userId": 540175,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 5 天）",
+    "createdAt": "2026-03-12T21:35:23.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1890001,
+    "userId": 1,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-13T09:43:53.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 1920001,
+    "userId": 5880001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-13T16:24:21.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1920002,
+    "userId": 1500001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-13T19:25:34.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1920003,
+    "userId": 540175,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 6 天）",
+    "createdAt": "2026-03-13T20:24:44.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1920004,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 17 天）",
+    "createdAt": "2026-03-13T21:07:06.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1950001,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-14T03:01:43.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 1980001,
+    "userId": 1500001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-14T06:27:00.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2010001,
+    "userId": 8280171,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-14T08:50:19.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2010002,
+    "userId": 4140001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-14T11:08:04.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2010003,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-14T11:15:39.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2010004,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-14T11:48:31.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2040001,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 18 天）",
+    "createdAt": "2026-03-14T20:51:58.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2070001,
+    "userId": 540175,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 7 天）",
+    "createdAt": "2026-03-15T04:18:02.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2070002,
+    "userId": 8280171,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-15T04:28:49.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2100001,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-15T12:05:59.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2130001,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-15T16:44:43.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2130002,
+    "userId": 1500001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-15T17:34:29.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2130003,
+    "userId": 4140001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-15T21:23:42.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2130004,
+    "userId": 1,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 19 天）",
+    "createdAt": "2026-03-16T03:58:58.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2130005,
+    "userId": 540175,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 8 天）",
+    "createdAt": "2026-03-16T06:20:46.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2130006,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-16T08:56:24.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2160001,
+    "userId": 540175,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-16T10:39:26.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 2160002,
+    "userId": 540175,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-16T10:40:48.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 2160003,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-16T11:13:01.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2190001,
+    "userId": 4140001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-16T20:51:28.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2190002,
+    "userId": 540175,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 9 天）",
+    "createdAt": "2026-03-16T21:52:50.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2220001,
+    "userId": 1,
+    "amount": 20,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（黃金等級，第 20 天）",
+    "createdAt": "2026-03-17T04:01:02.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2220002,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-17T04:24:45.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2250001,
+    "userId": 8280171,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-17T08:05:14.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2280001,
+    "userId": 2130001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-17T15:51:37.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2310001,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-17T19:37:22.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2340001,
+    "userId": 540175,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 10 天）",
+    "createdAt": "2026-03-17T21:03:51.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2340002,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 5 天）",
+    "createdAt": "2026-03-18T02:24:22.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2340003,
+    "userId": 1,
+    "amount": 20,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（黃金等級，第 21 天）",
+    "createdAt": "2026-03-18T03:55:25.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2340004,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-18T07:45:23.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2340005,
+    "userId": 690067,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-18T07:45:37.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2340006,
+    "userId": 690036,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-18T08:50:13.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 2340007,
+    "userId": 690036,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-18T08:50:47.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 2340008,
+    "userId": 690036,
+    "amount": 150,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-18T08:51:04.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2340009,
+    "userId": 750001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-18T08:58:09.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2340010,
+    "userId": 4140001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-18T09:30:00.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2370001,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 5 天）",
+    "createdAt": "2026-03-18T17:19:12.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2370002,
+    "userId": 4440001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-18T18:20:21.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2370003,
+    "userId": 1500001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-18T19:18:54.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2370004,
+    "userId": 1290011,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 6 天）",
+    "createdAt": "2026-03-18T20:14:28.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2370005,
+    "userId": 1,
+    "amount": 20,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（黃金等級，第 22 天）",
+    "createdAt": "2026-03-18T21:19:02.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2370006,
+    "userId": 540175,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 11 天）",
+    "createdAt": "2026-03-18T22:23:48.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2400001,
+    "userId": 690118,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 6 天）",
+    "createdAt": "2026-03-19T02:08:19.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2400002,
+    "userId": 3330308,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-19T17:19:22.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2400003,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-19T18:20:21.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2400004,
+    "userId": 3270013,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-19T18:53:55.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2400005,
+    "userId": 540175,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 12 天）",
+    "createdAt": "2026-03-19T20:20:30.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2400006,
+    "userId": 1,
+    "amount": 20,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（黃金等級，第 23 天）",
+    "createdAt": "2026-03-19T22:50:15.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2430001,
+    "userId": 4440001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-20T04:21:23.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2460001,
+    "userId": 1290011,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 7 天）",
+    "createdAt": "2026-03-20T06:10:31.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2490001,
+    "userId": 4140001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-20T07:33:38.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2520001,
+    "userId": 750001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-20T07:51:51.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2550001,
+    "userId": 690118,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 7 天）",
+    "createdAt": "2026-03-20T15:49:24.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2550002,
+    "userId": 3270013,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-20T20:07:29.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2550003,
+    "userId": 1,
+    "amount": 20,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（黃金等級，第 24 天）",
+    "createdAt": "2026-03-20T20:21:53.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2550004,
+    "userId": 690067,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-20T20:40:03.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2550005,
+    "userId": 540175,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 13 天）",
+    "createdAt": "2026-03-20T22:17:40.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2580001,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-21T09:11:50.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2580002,
+    "userId": 690118,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 8 天）",
+    "createdAt": "2026-03-21T11:36:56.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2610001,
+    "userId": -30001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-21T14:31:46.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2610002,
+    "userId": -30002,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-21T14:48:12.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2610003,
+    "userId": -30003,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-21T15:08:30.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2610004,
+    "userId": -30005,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-21T15:32:25.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640001,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-22T01:15:02.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640002,
+    "userId": 1,
+    "amount": 20,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（黃金等級，第 25 天）",
+    "createdAt": "2026-03-22T01:31:17.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640003,
+    "userId": 690118,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 9 天）",
+    "createdAt": "2026-03-22T04:32:47.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640004,
+    "userId": 540175,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 14 天）",
+    "createdAt": "2026-03-22T07:02:05.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640005,
+    "userId": 1,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-22T14:04:40.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640006,
+    "userId": 1,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-22T14:04:51.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640007,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-22T16:16:42.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640008,
+    "userId": 1,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-22T16:48:56.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640009,
+    "userId": 1,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-22T17:39:31.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640010,
+    "userId": 1,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-22T18:21:18.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640011,
+    "userId": 1,
+    "amount": 20,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（黃金等級，第 26 天）",
+    "createdAt": "2026-03-22T20:50:22.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640012,
+    "userId": 540175,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 15 天）",
+    "createdAt": "2026-03-22T21:41:36.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640013,
+    "userId": 9423663,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-22T22:21:10.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640014,
+    "userId": 9423663,
+    "amount": 60,
+    "type": "admin_grant",
+    "description": "管理員調整（add）",
+    "createdAt": "2026-03-22T22:22:43.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640015,
+    "userId": 9423663,
+    "amount": 130,
+    "type": "admin_set",
+    "description": "管理員調整（set）",
+    "createdAt": "2026-03-22T22:27:16.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640016,
+    "userId": 9423663,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-22T22:28:47.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640017,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 3 天）",
+    "createdAt": "2026-03-23T14:07:53.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640018,
+    "userId": 4440001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-23T14:26:41.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640019,
+    "userId": 1500001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-23T19:15:45.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640020,
+    "userId": 9426044,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-23T19:17:25.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640021,
+    "userId": 540175,
+    "amount": 15,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（白銀等級，第 16 天）",
+    "createdAt": "2026-03-23T20:04:08.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640022,
+    "userId": 1,
+    "amount": 20,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（黃金等級，第 27 天）",
+    "createdAt": "2026-03-23T20:10:10.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640023,
+    "userId": 1800001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-24T03:18:06.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640024,
+    "userId": 690118,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-24T04:19:13.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640025,
+    "userId": 690067,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-24T09:08:40.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640026,
+    "userId": 4140001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-24T11:32:32.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640027,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-24T11:37:39.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640028,
+    "userId": 3330308,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-24T12:23:02.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640029,
+    "userId": 9435053,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-24T14:58:37.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640030,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 4 天）",
+    "createdAt": "2026-03-24T15:14:39.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640031,
+    "userId": 1,
+    "amount": 20,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（黃金等級，第 28 天）",
+    "createdAt": "2026-03-24T20:20:37.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640032,
+    "userId": 690067,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-24T20:52:23.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640033,
+    "userId": 690036,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 5 天）",
+    "createdAt": "2026-03-25T07:31:03.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640034,
+    "userId": 1290011,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-25T09:03:55.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640035,
+    "userId": 750001,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-25T15:42:08.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640036,
+    "userId": 9468297,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-25T15:49:57.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640037,
+    "userId": 9468290,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-25T15:51:05.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640038,
+    "userId": 8280171,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 1 天）",
+    "createdAt": "2026-03-25T16:43:45.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640039,
+    "userId": 8280171,
+    "amount": -15,
+    "type": "spend",
+    "description": "消耗天命幣：warroom_divination",
+    "createdAt": "2026-03-25T16:43:49.000Z",
+    "featureId": "warroom_divination",
+    "paymentOrderId": null
+  },
+  {
+    "id": 2640040,
+    "userId": 9468290,
+    "amount": 10,
+    "type": "daily_signin",
+    "description": "每日簽到獎勵（青銅等級，第 2 天）",
+    "createdAt": "2026-03-25T20:15:09.000Z",
+    "featureId": null,
+    "paymentOrderId": null
+  }
+]

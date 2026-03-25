@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "world_key": "main",
+    "world_data": {
+      "currentTick": 1728,
+      "dailyElement": "wood",
+      "tickCount": 0,
+      "totalAgents": 0
+    },
+    "updated_at": 1774455888303
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "agent_id": 1,
+    "infinite_stamina": 0,
+    "infinite_ap": 0,
+    "infinite_hp": 0,
+    "infinite_mp": 0,
+    "infinite_gold": 0,
+    "is_banned": 0,
+    "ban_reason": null,
+    "admin_note": null,
+    "last_modified_by": "1",
+    "updated_at": 1774375891844,
+    "created_at": 1774369845865
+  }
+]

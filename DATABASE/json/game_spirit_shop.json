@@ -1,0 +1,62 @@
+[
+  {
+    "id": 2136,
+    "item_key": "I_W077",
+    "display_name": "大靈泉",
+    "description": "【水行】稀有商品",
+    "price_stones": 20,
+    "quantity": 1,
+    "rarity": "rare",
+    "sort_order": 0,
+    "is_on_sale": 1,
+    "created_at": 1774455896721
+  },
+  {
+    "id": 2137,
+    "item_key": "I_M032",
+    "display_name": "煙霧彈",
+    "description": "【金行】稀有商品",
+    "price_stones": 20,
+    "quantity": 1,
+    "rarity": "rare",
+    "sort_order": 1,
+    "is_on_sale": 1,
+    "created_at": 1774455896950
+  },
+  {
+    "id": 2138,
+    "item_key": "I_W017",
+    "display_name": "幻影鐮刀",
+    "description": "【木行】稀有商品",
+    "price_stones": 20,
+    "quantity": 1,
+    "rarity": "rare",
+    "sort_order": 2,
+    "is_on_sale": 1,
+    "created_at": 1774455897200
+  },
+  {
+    "id": 2139,
+    "item_key": "skill-water-001",
+    "display_name": "水靈祭司技能書",
+    "description": "【水行】稀有商品",
+    "price_stones": 20,
+    "quantity": 1,
+    "rarity": "rare",
+    "sort_order": 3,
+    "is_on_sale": 1,
+    "created_at": 1774455897426
+  },
+  {
+    "id": 2140,
+    "item_key": "I_W030",
+    "display_name": "疾風草",
+    "description": "【木行】稀有商品",
+    "price_stones": 20,
+    "quantity": 1,
+    "rarity": "rare",
+    "sort_order": 4,
+    "is_on_sale": 1,
+    "created_at": 1774455897651
+  }
+]

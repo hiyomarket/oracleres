@@ -1,0 +1,1 @@
+ALTER TABLE `custom_bracelets` MODIFY COLUMN `pairingItems` text;

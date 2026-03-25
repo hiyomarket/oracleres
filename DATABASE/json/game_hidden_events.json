@@ -1,0 +1,73 @@
+[
+  {
+    "id": 884,
+    "node_id": "hsinchu-city",
+    "event_type": "hidden_npc",
+    "event_data": {
+      "dialogue": "旅人，我看你骨骼清奇，有緣人才能見到我。我這裡有些特別的東西……",
+      "emoji": "🧙",
+      "name": "神秘行商",
+      "npcId": "mysterious-merchant",
+      "questHint": "聽說城北有一座古廟，裡面封印著上古靈獸……",
+      "reward": {
+        "itemId": "rare-herb-001",
+        "quantity": 1,
+        "type": "item"
+      }
+    },
+    "perception_threshold": 30,
+    "remaining_ticks": 2,
+    "is_discovered": 0,
+    "created_at": 1774454846256,
+    "expires_at": 1774462046256
+  },
+  {
+    "id": 885,
+    "node_id": "matsu-juguang",
+    "event_type": "hidden_shop",
+    "event_data": {
+      "discount": 23,
+      "emoji": "🏪",
+      "items": [
+        {
+          "currency": "gold",
+          "emoji": "📘",
+          "id": "skill-book-003",
+          "name": "初階技能書（水）",
+          "price": 100,
+          "rarity": "uncommon"
+        },
+        {
+          "currency": "gold",
+          "emoji": "💊",
+          "id": "consumable-002",
+          "name": "靈力丹",
+          "price": 40,
+          "rarity": "uncommon"
+        },
+        {
+          "currency": "gold",
+          "emoji": "💍",
+          "id": "equip-ring-001",
+          "name": "靈氣指環",
+          "price": 150,
+          "rarity": "rare"
+        },
+        {
+          "currency": "gold",
+          "emoji": "🌿",
+          "id": "rare-herb-001",
+          "name": "靈魂草",
+          "price": 50,
+          "rarity": "rare"
+        }
+      ],
+      "shopName": "流浪商人"
+    },
+    "perception_threshold": 34,
+    "remaining_ticks": 4,
+    "is_discovered": 0,
+    "created_at": 1774455746575,
+    "expires_at": 1774461746575
+  }
+]

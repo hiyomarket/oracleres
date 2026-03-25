@@ -1,0 +1,1 @@
+ALTER TABLE `user_groups` MODIFY COLUMN `icon` varchar(50) DEFAULT '👥';

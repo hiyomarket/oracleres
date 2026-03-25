@@ -1,0 +1,1 @@
+ALTER TABLE `access_tokens` MODIFY COLUMN `identityType` varchar(50) NOT NULL DEFAULT 'ai_readonly';

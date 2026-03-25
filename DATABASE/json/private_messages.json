@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "bookingId": 30003,
+    "senderId": 1,
+    "content": "📅 新預約請求！希望預約時間：上午04:00 ~ 上午05:00。請老師確認後回覆。",
+    "imageUrl": null,
+    "createdAt": "2026-03-07T08:02:09.000Z",
+    "isRead": 0,
+    "readAt": null
+  },
+  {
+    "id": 2,
+    "bookingId": 30003,
+    "senderId": 1,
+    "content": "好的 我馬上確認",
+    "imageUrl": null,
+    "createdAt": "2026-03-07T08:27:56.000Z",
+    "isRead": 0,
+    "readAt": null
+  },
+  {
+    "id": 3,
+    "bookingId": 30003,
+    "senderId": 1,
+    "content": "✅ 老師已確認您的預約，請依約定完成付款。",
+    "imageUrl": null,
+    "createdAt": "2026-03-07T08:28:11.000Z",
+    "isRead": 0,
+    "readAt": null
+  },
+  {
+    "id": 4,
+    "bookingId": 30004,
+    "senderId": 1,
+    "content": "📅 新預約請求！希望預約時間：上午02:30 ~ 上午04:00。請老師確認後回覆。",
+    "imageUrl": null,
+    "createdAt": "2026-03-07T11:32:01.000Z",
+    "isRead": 0,
+    "readAt": null
+  },
+  {
+    "id": 5,
+    "bookingId": 30001,
+    "senderId": 3270013,
+    "content": "老師您好",
+    "imageUrl": null,
+    "createdAt": "2026-03-07T16:40:52.000Z",
+    "isRead": 1,
+    "readAt": "2026-03-07T16:43:01.000Z"
+  },
+  {
+    "id": 6,
+    "bookingId": 30004,
+    "senderId": 1,
+    "content": "❌ 老師已取消此預約。如有疑問請透過訊息聯繫。",
+    "imageUrl": null,
+    "createdAt": "2026-03-07T23:51:48.000Z",
+    "isRead": 0,
+    "readAt": null
+  },
+  {
+    "id": 7,
+    "bookingId": 30003,
+    "senderId": 1,
+    "content": "❌ 老師已取消此預約。如有疑問請透過訊息聯繫。",
+    "imageUrl": null,
+    "createdAt": "2026-03-07T23:51:52.000Z",
+    "isRead": 0,
+    "readAt": null
+  },
+  {
+    "id": 8,
+    "bookingId": 30001,
+    "senderId": 1,
+    "content": "❌ 老師已取消此預約。如有疑問請透過訊息聯繫。",
+    "imageUrl": null,
+    "createdAt": "2026-03-07T23:51:58.000Z",
+    "isRead": 0,
+    "readAt": null
+  },
+  {
+    "id": 30001,
+    "bookingId": 60001,
+    "senderId": 1,
+    "content": "📅 新預約請求！希望預約時間：上午05:00 ~ 上午06:00。請老師確認後回覆。",
+    "imageUrl": null,
+    "createdAt": "2026-03-12T13:22:00.000Z",
+    "isRead": 0,
+    "readAt": null
+  }
+]

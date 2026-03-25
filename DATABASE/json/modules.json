@@ -1,0 +1,235 @@
+[
+  {
+    "id": "module_calendar",
+    "name": "命理日曆",
+    "description": "個人化命理日曆，標示吉凶時辰",
+    "icon": "📅",
+    "category": "addon",
+    "sortOrder": 1,
+    "containedFeatures": [
+      "calendar"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-26T00:45:07.000Z",
+    "updatedAt": "2026-03-21T10:33:59.000Z",
+    "navPath": "/calendar",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "main"
+  },
+  {
+    "id": "module_casino",
+    "name": "天命娛樂城 (積分兌換)",
+    "description": "WBC 競猜、遊戲點兌換",
+    "icon": "🎲",
+    "category": "core",
+    "sortOrder": 11,
+    "containedFeatures": [],
+    "isActive": 0,
+    "createdAt": "2026-03-03T16:47:27.000Z",
+    "updatedAt": "2026-03-07T01:33:39.000Z",
+    "navPath": "/casino",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "profile"
+  },
+  {
+    "id": "module_diet",
+    "name": "飲食羅盤",
+    "description": "以今日五行能量為你量身打造飲食補運策略",
+    "icon": "🍽️",
+    "category": "addon",
+    "sortOrder": 7,
+    "containedFeatures": [
+      "warroom_dietary"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-26T04:14:02.000Z",
+    "updatedAt": "2026-02-26T18:12:46.000Z",
+    "navPath": "/diet",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "main"
+  },
+  {
+    "id": "module_divination",
+    "name": "天命問卜",
+    "description": null,
+    "icon": "🌠",
+    "category": "addon",
+    "sortOrder": 2,
+    "containedFeatures": [
+      "warroom_divination"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-26T03:08:32.000Z",
+    "updatedAt": "2026-02-26T18:12:46.000Z",
+    "navPath": "/divination",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "main"
+  },
+  {
+    "id": "module_lottery",
+    "name": "補運樂透",
+    "description": "結合八字能量的彩券號碼推薦系統",
+    "icon": "🎰",
+    "category": "addon",
+    "sortOrder": 8,
+    "containedFeatures": [
+      "lottery"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-26T00:45:07.000Z",
+    "updatedAt": "2026-02-26T04:41:21.000Z",
+    "navPath": "/lottery",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "main"
+  },
+  {
+    "id": "module_luck_cycle",
+    "name": "大限流年",
+    "description": null,
+    "icon": "📅",
+    "category": "addon",
+    "sortOrder": 10,
+    "containedFeatures": [
+      "profile"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-26T03:08:32.000Z",
+    "updatedAt": "2026-02-26T04:41:21.000Z",
+    "navPath": "/luck-cycle",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "main"
+  },
+  {
+    "id": "module_oracle",
+    "name": "擲筊問卦",
+    "description": "結合八字能量的智慧擲筊系統",
+    "icon": "☯️",
+    "category": "core",
+    "sortOrder": 4,
+    "containedFeatures": [
+      "oracle"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-26T00:45:06.000Z",
+    "updatedAt": "2026-03-02T21:50:58.000Z",
+    "navPath": "/oracle",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "main"
+  },
+  {
+    "id": "module_outfit",
+    "name": "神諭穿搭",
+    "description": "根據天命能量推薦手串穿搭",
+    "icon": "📿",
+    "category": "addon",
+    "sortOrder": 6,
+    "containedFeatures": [
+      "warroom_outfit"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-26T00:45:07.000Z",
+    "updatedAt": "2026-03-03T10:40:35.000Z",
+    "navPath": "/outfit",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "main"
+  },
+  {
+    "id": "module_profile",
+    "name": "命格解析",
+    "description": "個人八字命格分析、五行屬性、喜忌用神",
+    "icon": "🔮",
+    "category": "core",
+    "sortOrder": 3,
+    "containedFeatures": [
+      "profile"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-26T00:45:06.000Z",
+    "updatedAt": "2026-03-12T21:42:44.000Z",
+    "navPath": "/profile",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "main"
+  },
+  {
+    "id": "module_stats",
+    "name": "【統計】命理統計",
+    "description": "個人擲筊與選號歷史統計分析",
+    "icon": "📈",
+    "category": "addon",
+    "sortOrder": 13,
+    "containedFeatures": [
+      "stats"
+    ],
+    "isActive": 0,
+    "createdAt": "2026-02-26T00:45:08.000Z",
+    "updatedAt": "2026-03-03T23:37:28.000Z",
+    "navPath": "/stats",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "profile"
+  },
+  {
+    "id": "module_warroom",
+    "name": "每日運勢",
+    "description": "每日天命共振分析、時辰能量、農曆日曆",
+    "icon": "☀️",
+    "category": "core",
+    "sortOrder": 5,
+    "containedFeatures": [
+      "warroom",
+      "warroom_divination"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-26T00:45:07.000Z",
+    "updatedAt": "2026-03-02T21:50:58.000Z",
+    "navPath": "/",
+    "isCentral": 1,
+    "parentId": null,
+    "displayLocation": "main"
+  },
+  {
+    "id": "module_wealth",
+    "name": "財運羅盤",
+    "description": "財運方位與時辰分析",
+    "icon": "💰",
+    "category": "addon",
+    "sortOrder": 9,
+    "containedFeatures": [
+      "warroom_wealth"
+    ],
+    "isActive": 1,
+    "createdAt": "2026-02-26T00:45:08.000Z",
+    "updatedAt": "2026-02-27T02:58:24.000Z",
+    "navPath": "/wealth",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "main"
+  },
+  {
+    "id": "module_weekly",
+    "name": "【週報】天命週報",
+    "description": "每週命理能量分析報告",
+    "icon": "📊",
+    "category": "addon",
+    "sortOrder": 12,
+    "containedFeatures": [
+      "weekly"
+    ],
+    "isActive": 0,
+    "createdAt": "2026-02-26T00:45:08.000Z",
+    "updatedAt": "2026-03-03T23:37:26.000Z",
+    "navPath": "/weekly",
+    "isCentral": 0,
+    "parentId": null,
+    "displayLocation": "profile"
+  }
+]
