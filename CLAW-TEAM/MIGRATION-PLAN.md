@@ -125,6 +125,7 @@
 | AWS_ACCESS_KEY_ID | S3 儲存 | 需向 Manus 取回 |
 | AWS_SECRET_ACCESS_KEY | S3 儲存 | 需向 Manus 取回 |
 | LLM API Key | AI 命理功能 | 需確認 |
+| **SSH 密鑰** | **VPS root 存取權限** | **需設定（架站顧問必備）** |
 
 ---
 
