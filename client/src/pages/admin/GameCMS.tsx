@@ -482,6 +482,7 @@ export default function GameCMS() {
             <TabsTrigger value="catalog-monster-skills">🐲 魔物技能</TabsTrigger>
             <TabsTrigger value="catalog-stats">📊 圖鑑統計</TabsTrigger>
             <TabsTrigger value="balance">⚖️ 數值平衡</TabsTrigger>
+            <TabsTrigger value="ai-tools">🤖 AI 工具</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -502,6 +503,7 @@ export default function GameCMS() {
               <TabsContent value="catalog-monster-skills"><MonsterSkillCatalogTab /></TabsContent>
               <TabsContent value="catalog-stats"><CatalogStatsTab /></TabsContent>
               <TabsContent value="balance"><BalanceDashboardTab /></TabsContent>
+              <TabsContent value="ai-tools"><AIToolsTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
@@ -1573,6 +1575,149 @@ function CatalogStatsTab() {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+
+// ─── AI 工具 Tab ──────────────────────────────────────────────────────────────
+function AIToolsTab() {
+  const utils = trpc.useUtils();
+
+  // AI 商店上架
+  const aiRefreshShop = trpc.gameAI.aiRefreshShop.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      utils.gameAdmin.getVirtualShop.invalidate();
+      utils.gameAdmin.getHiddenShopPool.invalidate();
+    },
+    onError: (e) => toast.error(e.message || "AI 商店上架失敗"),
+  });
+
+  // AI 批量生成
+  const aiBatchGenerate = trpc.gameAI.aiBatchGenerate.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      // 刷新對應的圖鑑列表
+      utils.gameCatalog.invalidate();
+    },
+    onError: (e) => toast.error(e.message || "AI 生成失敗"),
+  });
+
+  const catalogTypes = [
+    { key: "monster" as const, label: "魔物", icon: "🐉", color: "#DC143C", desc: "生成 10 隻新魔物（五行均衡、數值平衡）" },
+    { key: "item" as const, label: "道具", icon: "🎒", color: "#2E8B57", desc: "生成 10 種新道具（材料/消耗品/技能書）" },
+    { key: "equipment" as const, label: "裝備", icon: "⚔️", color: "#C9A227", desc: "生成 10 件新裝備（各部位、品質多樣）" },
+    { key: "skill" as const, label: "技能", icon: "✨", color: "#8B5CF6", desc: "生成 10 個新技能（戰鬥/被動/生活）" },
+    { key: "achievement" as const, label: "成就", icon: "🏆", color: "#F59E0B", desc: "生成 10 個新成就（多種條件類型）" },
+  ];
+
+  const isGenerating = aiBatchGenerate.isPending;
+  const isRefreshing = aiRefreshShop.isPending;
+
+  return (
+    <div className="space-y-8">
+      {/* AI 商店自動抓取 */}
+      <div>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
+          🏪 AI 商店自動上架
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          AI 從圖鑑中智慧挑選合適的道具、裝備、技能書上架到商店。一般商店 20 件（common/rare），隱藏商店 10 件（rare/epic/legendary）。
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Button
+            onClick={() => aiRefreshShop.mutate({ shopType: "both" })}
+            disabled={isRefreshing}
+            className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700"
+          >
+            {isRefreshing ? "⏳ AI 分析中..." : "🤖 一鍵上架全部商店"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => aiRefreshShop.mutate({ shopType: "normal" })}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? "⏳..." : "🏪 只刷新一般商店"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => aiRefreshShop.mutate({ shopType: "hidden" })}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? "⏳..." : "🔮 只刷新隱藏商店"}
+          </Button>
+        </div>
+        {aiRefreshShop.data && (
+          <div className="mt-3 p-3 rounded-lg border bg-emerald-50 dark:bg-emerald-950/30 text-sm">
+            <p className="font-medium text-emerald-700 dark:text-emerald-400">
+              ✅ {aiRefreshShop.data.message}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <hr className="border-border" />
+
+      {/* 一鍵 AI 批量新增圖鑑 */}
+      <div>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
+          🧠 一鍵 AI 批量新增圖鑑
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          AI 自動生成 10 筆新資料，確保不重複名稱、不破壞數值平衡、五行分布均衡。
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {catalogTypes.map((ct) => (
+            <div
+              key={ct.key}
+              className="border rounded-xl p-4 hover:shadow-md transition-shadow"
+              style={{ borderColor: ct.color + "40" }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-2xl">{ct.icon}</span>
+                <span className="font-bold" style={{ color: ct.color }}>{ct.label}圖鑑</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">{ct.desc}</p>
+              <Button
+                size="sm"
+                onClick={() => aiBatchGenerate.mutate({ catalogType: ct.key })}
+                disabled={isGenerating}
+                className="w-full"
+                style={{ backgroundColor: ct.color, color: "#fff" }}
+              >
+                {isGenerating ? "⏳ AI 生成中..." : `🤖 一鍵生成 10 個${ct.label}`}
+              </Button>
+            </div>
+          ))}
+        </div>
+        {aiBatchGenerate.data && (
+          <div className="mt-4 p-3 rounded-lg border bg-blue-50 dark:bg-blue-950/30 text-sm">
+            <p className="font-medium text-blue-700 dark:text-blue-400">
+              ✅ {aiBatchGenerate.data.message}
+            </p>
+            {aiBatchGenerate.data.insertedNames.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {aiBatchGenerate.data.insertedNames.map((name, i) => (
+                  <Badge key={i} variant="secondary" className="text-xs">{name}</Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 使用說明 */}
+      <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+        <h4 className="font-semibold mb-2">💡 使用說明</h4>
+        <ul className="space-y-1 list-disc list-inside">
+          <li>AI 商店上架會清空現有自動生成的商品，重新從圖鑑中挑選合適商品</li>
+          <li>一鍵生成每次新增 10 筆，AI 會自動避免重複名稱和破壞平衡的數值</li>
+          <li>生成的數值會被自動限制在合理範圍內（如 HP 30-500、ATK 5-80）</li>
+          <li>建議先生成道具/裝備/技能，再使用 AI 商店上架功能</li>
+          <li>生成後可到各圖鑑 Tab 中查看和編輯詳細資料</li>
+        </ul>
       </div>
     </div>
   );

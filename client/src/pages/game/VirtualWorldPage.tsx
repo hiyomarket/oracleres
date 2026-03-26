@@ -599,11 +599,10 @@ function CharacterPanel({
   const statusBg = agentStatus === "combat" ? "rgba(239,68,68,0.12)" : agentStatus === "idle" ? "rgba(34,197,94,0.12)" : "rgba(245,158,11,0.12)";
   const statusFg = agentStatus === "combat" ? "#ef4444" : agentStatus === "idle" ? "#22c55e" : "#f59e0b";
 
-  // 靈相干預冷卻時間（台灣時間 UTC+8）
-  const todayTW = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
-  const healUsedToday = agent?.lastDivineHealDate === todayTW;
-  const eyeUsedToday = agent?.lastDivineEyeDate === todayTW;
-  const staminaUsedToday = agent?.lastDivineStaminaDate === todayTW;
+  // 靈相干預已取消每日限制，只要有靈力值即可使用
+  const healUsedToday = false;
+  const eyeUsedToday = false;
+  const staminaUsedToday = false;
 
   // GD-002 戰鬥系屬性値
   const combatValues: Record<string, number> = {
@@ -2108,12 +2107,6 @@ export default function VirtualWorldPage() {
   });
   const divineHeal     = trpc.gameWorld.divineHeal.useMutation({
     onSuccess: () => {
-      const todayTW = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
-      // 樂觀更新快取，立即顯示「明日再來」
-      utils.gameWorld.getOrCreateAgent.setData(undefined, (old) => {
-        if (!old?.agent) return old;
-        return { ...old, agent: { ...old.agent, lastDivineHealDate: todayTW } };
-      });
       refetchStatus();
       refetchLog();
       utils.gameWorld.getOrCreateAgent.invalidate();
@@ -2123,11 +2116,6 @@ export default function VirtualWorldPage() {
   });
   const divineEye      = trpc.gameWorld.divineEye.useMutation({
     onSuccess: () => {
-      const todayTW = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
-      utils.gameWorld.getOrCreateAgent.setData(undefined, (old) => {
-        if (!old?.agent) return old;
-        return { ...old, agent: { ...old.agent, lastDivineEyeDate: todayTW } };
-      });
       refetchStatus();
       refetchLog();
       utils.gameWorld.getOrCreateAgent.invalidate();
@@ -2137,11 +2125,6 @@ export default function VirtualWorldPage() {
   });
   const divineStamina  = trpc.gameWorld.divineStamina.useMutation({
     onSuccess: () => {
-      const todayTW = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
-      utils.gameWorld.getOrCreateAgent.setData(undefined, (old) => {
-        if (!old?.agent) return old;
-        return { ...old, agent: { ...old.agent, lastDivineStaminaDate: todayTW } };
-      });
       refetchStatus();
       refetchLog();
       utils.gameWorld.getOrCreateAgent.invalidate();
