@@ -750,7 +750,7 @@ export async function processAgentTick(
     const mpRestore = Math.floor(agent.maxMp * 0.15);
     const newHp = Math.min(agent.maxHp, agent.hp + hpRestore);
     const newMp = Math.min(agent.maxMp, agent.mp + mpRestore);
-    const isFullyHealed = newHp >= agent.maxHp * 0.95;
+    const isFullyHealed = newHp >= agent.maxHp * 0.95 && newMp >= agent.maxMp * 0.95;
 
     // HP 補滿後的狀態轉換邏輯
     let nextStrategy = agent.strategy;

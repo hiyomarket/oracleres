@@ -808,10 +808,10 @@ function CharacterPanel({
         {/* ── 戰鬥面板 ── */}
         {activePanel === "combat" && (
           <div className="space-y-2.5">
-            {/* 生命/魔力/活躍值 */}
+            {/* 生命/魔力/體力 */}
             <StatBar icon="❤️" label="HP"   value={agentHp}      max={agentMaxHp}      color="#ef4444" />
             <StatBar icon="💧" label="MP"   value={agentMp}      max={agentMaxMp}      color="#38bdf8" />
-            <StatBar icon="⚡" label="活躍" value={agentStamina} max={agentMaxStamina} color="#f59e0b" />
+            <StatBar icon="🏃" label="體力" value={agentStamina} max={agentMaxStamina} color="#22c55e" />
               {staminaInfo && agentStamina < agentMaxStamina && (
               <p className="text-xs text-slate-600 text-right">下次恢復：{staminaInfo.nextRegenMin} 分鐘後（+{staminaInfo.regenAmount ?? 30}）</p>
             )}
@@ -844,7 +844,7 @@ function CharacterPanel({
               <p className="text-slate-500 font-bold mb-1">💡 快速操作</p>
               <p>⚔️ 行動策略 → 地圖右下角浮動面板</p>
               <p>✨ 靈相干預 → 地圖右上角浮動面板</p>
-              <p>❤️ HP/MP/活躍 → 地圖左側浮動條</p>
+              <p>❤️ HP/MP/體力 → 地圖左側浮動條</p>
             </div>
           </div>
         )}
@@ -2014,9 +2014,9 @@ export default function VirtualWorldPage() {
   }, [saveWidgetLayout]);
 
   const { data: agentData, isLoading: agentLoading } = trpc.gameWorld.getOrCreateAgent.useQuery(
-    undefined, { enabled: !!user, refetchInterval: 30000 });
+    undefined, { enabled: !!user, refetchInterval: 10000 });
   const { data: statusData, refetch: refetchStatus } = trpc.gameWorld.getAgentStatus.useQuery(
-    undefined, { enabled: !!user && !agentData?.needsNaming, refetchInterval: 30000 });
+    undefined, { enabled: !!user && !agentData?.needsNaming, refetchInterval: 10000 });
   const { data: eventLog, refetch: refetchLog } = trpc.gameWorld.getEventLog.useQuery(
     { limit: 60, eventType: logTab === "all" ? undefined : logTab === "combat" ? "combat" : "rogue" },
     { enabled: !!user && !agentData?.needsNaming, refetchInterval: 8000 });
@@ -2050,6 +2050,10 @@ export default function VirtualWorldPage() {
     onSuccess: (_, vars) => {
       utils.gameWorld.getAgentStatus.invalidate();
       utils.gameWorld.getOrCreateAgent.invalidate();
+      // 策略切換後立即觸發一次 tick，讓新策略立即生效
+      if (tickRunning) {
+        triggerTick.mutate();
+      }
       const s = STRATEGIES.find(x => x.id === vars.strategy);
       if (vars.strategy === "rest") {
         toast.success(`😴 已切換為休息模式`, {
@@ -2189,12 +2193,16 @@ export default function VirtualWorldPage() {
   const setTeleport = trpc.gameWorld.setTeleport.useMutation({
     onSuccess: (data) => {
       setShowTeleport(false);
+      setShowQuickTeleport(false);
       if (data.success) {
+        // 立即觸發一次 tick 讓移動立即完成（不等下一次 tick interval）
+        triggerTick.mutate();
         utils.gameWorld.getOrCreateAgent.invalidate();
         utils.gameWorld.getAgentStatus.invalidate();
         refetchLog();
         // 地圖飛至目標節點
         if (data.targetNode?.id) mapRef.current?.highlightNode(data.targetNode.id);
+        toast.success(`🗺️ 前往 ${data.targetNode?.name ?? "目的地"}`, { duration: 2000 });
       }
     },
     onError: (e) => {
@@ -3104,7 +3112,7 @@ export default function VirtualWorldPage() {
                 {[
                   { icon: "♥", label: "HP", val: agent?.hp ?? 0, max: agent?.maxHp ?? 100, color: "#ef4444" },
                   { icon: "💧", label: "MP", val: agent?.mp ?? 0, max: agent?.maxMp ?? 100, color: "#38bdf8" },
-                  { icon: "⚡", label: "AP", val: agent?.actionPoints ?? 0, max: agent?.maxActionPoints ?? 10, color: "#f59e0b" },
+                  { icon: "✨", label: "靈力", val: agent?.actionPoints ?? 0, max: agent?.maxActionPoints ?? 10, color: "#a78bfa" },
                   { icon: "🏃", label: "體力", val: staminaInfo?.current ?? agent?.stamina ?? 100, max: staminaInfo?.max ?? agent?.maxStamina ?? 100, color: "#22c55e" },
                 ].map((bar, idx) => (
                   <div key={bar.label} className="flex items-center gap-0.5">
@@ -3138,7 +3146,7 @@ export default function VirtualWorldPage() {
                 {[
                   { icon: "♥", label: "HP", val: agent?.hp ?? 0, max: agent?.maxHp ?? 100, color: "#ef4444" },
                   { icon: "💧", label: "MP", val: agent?.mp ?? 0, max: agent?.maxMp ?? 100, color: "#38bdf8" },
-                  { icon: "⚡", label: "AP", val: agent?.actionPoints ?? 0, max: agent?.maxActionPoints ?? 10, color: "#f59e0b" },
+                  { icon: "✨", label: "靈力", val: agent?.actionPoints ?? 0, max: agent?.maxActionPoints ?? 10, color: "#a78bfa" },
                   { icon: "🏃", label: "體力", val: staminaInfo?.current ?? agent?.stamina ?? 100, max: staminaInfo?.max ?? agent?.maxStamina ?? 100, color: "#22c55e" },
                 ].map((bar, idx) => (
                   <div key={bar.label} className="flex items-center gap-1">
@@ -3518,7 +3526,7 @@ export default function VirtualWorldPage() {
                     {[
                       { icon: "♥", val: agent?.hp ?? 0, max: agent?.maxHp ?? 100, color: "#ef4444" },
                       { icon: "💧", val: agent?.mp ?? 0, max: agent?.maxMp ?? 100, color: "#38bdf8" },
-                      { icon: "⚡", val: agent?.actionPoints ?? 0, max: agent?.maxActionPoints ?? 10, color: "#f59e0b" },
+                      { icon: "✨", val: agent?.actionPoints ?? 0, max: agent?.maxActionPoints ?? 10, color: "#a78bfa" },
                       { icon: "🏃", val: staminaInfo?.current ?? agent?.stamina ?? 100, max: staminaInfo?.max ?? agent?.maxStamina ?? 100, color: "#22c55e" },
                     ].map((bar) => (
                       <div key={bar.icon} className="flex items-center gap-0.5">

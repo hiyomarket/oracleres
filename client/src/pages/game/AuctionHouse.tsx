@@ -176,7 +176,7 @@ export default function AuctionHouse() {
 
   const myGold = (statusData as { agent?: { gold?: number } } | undefined)?.agent?.gold ?? 0;
   const myActiveCount = myListingsData?.activeCount ?? 0;
-  const inventory = (invData as { items?: Array<{ id: number; itemId: string; itemName?: string; quantity: number; itemType?: string }> })?.items ?? [];
+  const inventory = (Array.isArray(invData) ? invData : []) as Array<{ id: number; itemId: string; itemName?: string; quantity: number; itemType?: string }>;
 
   // ─── Mutations ───
   const buyMutation = trpc.auction.buyListing.useMutation({

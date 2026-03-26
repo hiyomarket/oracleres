@@ -745,7 +745,10 @@ export const gameWorldRouter = router({
       .from(agentInventory)
       .where(eq(agentInventory.agentId, agents[0].id));
     // 道具名稱映射表（對應 tickEngine 實際產生的道具 ID）
-    const ITEM_NAMES: Record<string, { name: string; rarity: string; emoji: string }> = {
+    // 使用 shared/itemNames 的共用道具名稱表（支援新舊格式）
+    const { getItemInfo: getSharedItemInfo } = await import("../../shared/itemNames");
+    /* 舊版獨立 ITEM_NAMES 已廢棄，改用 shared/itemNames 統一管理 */
+    const ITEM_NAMES_LEGACY: Record<string, { name: string; rarity: string; emoji: string }> = {
       // 木系草藥
       "herb-001":        { name: "青草藥",     rarity: "common",   emoji: "🌿" },
       "herb-002":        { name: "靈芝草",     rarity: "uncommon", emoji: "🍄" },
@@ -866,12 +869,22 @@ export const gameWorldRouter = router({
       "skill-water-001":   { name: "水靈術·初",  rarity: "uncommon", emoji: "📘" },
       "skill-water-002":   { name: "水靈術·進",  rarity: "rare",     emoji: "📘" },
     };
-    return items.map(item => ({
-      ...item,
-      itemName: ITEM_NAMES[item.itemId]?.name ?? item.itemId,
-      rarity: ITEM_NAMES[item.itemId]?.rarity ?? "common",
-      emoji: ITEM_NAMES[item.itemId]?.emoji ?? "📦",
-    }));
+    return items.map(item => {
+      // 優先查 shared/itemNames（含新格式 I_W001 等），再 fallback 到舊版 ITEM_NAMES_LEGACY
+      const sharedInfo = getSharedItemInfo(item.itemId);
+      const isKnown = sharedInfo.name !== item.itemId; // getItemInfo fallback 會返回 itemId 本身
+      if (isKnown) {
+        return { ...item, itemName: sharedInfo.name, rarity: sharedInfo.rarity, emoji: sharedInfo.emoji };
+      }
+      // fallback 到舊版本地映射
+      const legacy = ITEM_NAMES_LEGACY[item.itemId];
+      return {
+        ...item,
+        itemName: legacy?.name ?? item.itemId,
+        rarity: legacy?.rarity ?? "common",
+        emoji: legacy?.emoji ?? "📦",
+      };
+    });
   }),
 
   // ─── 取得節點詳細資訊（怪物/資源/在場冒險者） ───
