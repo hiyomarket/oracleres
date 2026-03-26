@@ -656,6 +656,11 @@ function CharacterPanel({
   // 查詢已學技能列表（從 agent_skills 表）
   const learnedSkillsQuery = trpc.gameWorld.getMyLearnedSkills.useQuery(undefined, { staleTime: 30000 });
   const learnedSkillIds = new Set((learnedSkillsQuery.data ?? []).map(s => s.skillId));
+  // ★ 天命考核技能查詢
+  const questLearnedQuery = trpc.questSkillProgress.myLearnedSkills.useQuery(undefined, { staleTime: 30000 });
+  const equippedQuestSkills = useMemo(() => {
+    return (questLearnedQuery.data ?? []).filter((l: any) => l.isEquipped === 1);
+  }, [questLearnedQuery.data]);
   const cpUtils = trpc.useUtils();
   const installSkillMutation = trpc.gameWorld.installSkill.useMutation({
     onSuccess: () => {
@@ -1360,6 +1365,36 @@ function CharacterPanel({
                   })}
                 </div>
               </div>
+              {/* 天命考核技能槽 */}
+              {equippedQuestSkills.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-xs text-amber-400/80">🔥 天命技能（{equippedQuestSkills.length}）</p>
+                    <a href="/game/quest-skills" className="text-[10px] text-amber-500/60 hover:text-amber-400">管理 →</a>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {equippedQuestSkills.map((qs: any) => {
+                      const qSkill = qs.skill;
+                      const wc = qSkill?.wuxing ? (WX_HEX[qSkill.wuxing] ?? "#f59e0b") : "#f59e0b";
+                      return (
+                        <div key={qs.id} className="px-2.5 py-2 rounded-xl border text-left"
+                          style={{ background: `${wc}10`, borderColor: `${wc}30` }}>
+                          <p className="text-xs mb-0.5" style={{ color: "#f59e0b80" }}>天命 {qs.slotIndex}</p>
+                          {qSkill ? (
+                            <div>
+                              <div className="flex items-center gap-1 mb-0.5">
+                                <span className="text-sm">🔥</span>
+                                <p className="text-xs font-bold" style={{ color: wc }}>{qSkill.name}</p>
+                              </div>
+                              <p className="text-[10px] text-slate-600 leading-tight">威力 {qSkill.powerPercent}% · MP {qSkill.mpCost}</p>
+                            </div>
+                          ) : <p className="text-xs text-slate-700 italic">技能資料載入中</p>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })()}

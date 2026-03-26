@@ -57,6 +57,7 @@ const AdventureAchievements = lazy(() => import("./pages/game/AdventureAchieveme
 const SkillCatalogPage = lazy(() => import("./pages/game/SkillCatalogPage"));
 const PvpHistoryPage = lazy(() => import("./pages/game/PvpHistoryPage"));
 const AuctionHouse = lazy(() => import("./pages/game/AuctionHouse"));
+const QuestSkillPage = lazy(() => import("./pages/game/QuestSkillPage"));
 const ExpertMarket = lazy(() => import("./pages/ExpertMarket"));
 const ExpertDetail = lazy(() => import("./pages/ExpertDetail"));
 const ExpertDashboard = lazy(() => import("./pages/expert/ExpertDashboard"));
@@ -154,6 +155,7 @@ function Router() {
                 <Route path={"/game/skills"} component={SkillCatalogPage} />
                 <Route path={"/game/pvp-history"} component={PvpHistoryPage} />
                 <Route path={"/game/auction"} component={AuctionHouse} />
+                <Route path={"/game/quest-skills"} component={QuestSkillPage} />
                 <Route path={"/404"} component={NotFound} />
                 {/* Final fallback route */}
                 <Route component={NotFound} />
