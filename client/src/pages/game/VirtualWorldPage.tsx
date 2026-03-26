@@ -2273,41 +2273,16 @@ export default function VirtualWorldPage() {
       autoExecRef.current = true;
       triggerTick.mutate();
       tickIntervalRef.current = setInterval(() => {
-        // 每次 Tick 前檢查體力（直接從 statusData 取得，避免引用對象變更問題）
-        const curStaminaInfo = statusData?.staminaInfo as { current?: number } | undefined;
-        const curStamina = curStaminaInfo?.current ?? agent?.stamina ?? 100;
-        const curStrategy = agent?.strategy ?? "explore";
-        // Bug 6 fix: 體力不足時自動暫停 Tick（讀取後台 staminaPerTick 設定）
-        const curStaminaPerTick = (statusData?.staminaInfo as { staminaPerTick?: number } | undefined)?.staminaPerTick ?? 2;
-        const curRegenAmount = (statusData?.staminaInfo as { regenAmount?: number } | undefined)?.regenAmount ?? 30;
-        const curRegenMinutes = (statusData?.staminaInfo as { regenMinutes?: number } | undefined)?.regenMinutes ?? 30;
-        if (curStamina < curStaminaPerTick) {
-          if (tickIntervalRef.current) clearInterval(tickIntervalRef.current);
-          tickIntervalRef.current = null;
-          setTickRunning(false);
-          autoExecRef.current = false;
-          if (curStrategy !== "rest") {
-            setStrategy.mutate({ strategy: "rest" });
-            toast.info("😴 體力不足！自動暫停行動並切換「休息」模式", {
-              description: `體力將每 ${curRegenMinutes} 分鐘自動回復 ${curRegenAmount} 點，回復後可再次開始行動`,
-              duration: 5000,
-            });
-          } else {
-            toast.info("😴 體力不足！行動已暫停", {
-              description: `體力將每 ${curRegenMinutes} 分鐘自動回復 ${curRegenAmount} 點，回復後可再次開始行動`,
-              duration: 5000,
-            });
-          }
-        } else if (combatLocked) {
-          // 戰鬥視窗開啟且動畫進行中，對戰鬥結束前不執行下一個 Tick
-          // (do nothing - wait for combat to finish)
+        // 持續行動邏輯：不再檢查體力停止 Tick，後端會自動切換注靈
+        if (combatLocked) {
+          // 戰鬥視窗開啟且動畫進行中，等待戰鬥結束
         } else {
           triggerTick.mutate();
         }
-      }, 5 * 1000); // 每 5 秒執行一次 Tick
+      }, 10 * 1000); // 每 10 秒執行一次 Tick（配合注靈/休息 10 秒一次）
       setTickRunning(true);
     }
-  }, [tickRunning, triggerTick, statusData, agent?.stamina, agent?.strategy, setStrategy, combatLocked]);
+  }, [tickRunning, triggerTick, combatLocked]);
 
   useEffect(() => {
     return () => { if (tickIntervalRef.current) clearInterval(tickIntervalRef.current); };

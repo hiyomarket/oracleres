@@ -1,6 +1,7 @@
 /**
  * 通用圖鑑新增/編輯 Dialog
- * 支援文字、數字、下拉選單、JSON 欄位、以及自訂 SmartEditor 元件
+ * 支援文字、數字、下拉選單、JSON 欄位、自訂 SmartEditor 元件
+ * 新增：右側即時預覽面板（桌面版並排，手機版摺疊）
  */
 import { useState, useEffect, type ReactNode } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import CatalogPreview from "./CatalogPreview";
 
 export type FieldDef = {
   key: string;
@@ -39,10 +41,13 @@ type Props = {
   fields: FieldDef[];
   initialData?: Record<string, any> | null;
   isLoading?: boolean;
+  /** 圖鑑類型，用於即時預覽 */
+  catalogType?: string;
 };
 
-export default function CatalogFormDialog({ open, onClose, onSubmit, title, fields, initialData, isLoading }: Props) {
+export default function CatalogFormDialog({ open, onClose, onSubmit, title, fields, initialData, isLoading, catalogType }: Props) {
   const [form, setForm] = useState<Record<string, any>>({});
+  const [showPreview, setShowPreview] = useState(true);
 
   useEffect(() => {
     if (open) {
@@ -50,7 +55,6 @@ export default function CatalogFormDialog({ open, onClose, onSubmit, title, fiel
       fields.forEach(f => {
         if (initialData && initialData[f.key] !== undefined) {
           const raw = initialData[f.key];
-          // 自動解析 JSON 字串為物件（供 SmartEditor 使用）
           if ((f.type === "custom" || f.type === "json") && typeof raw === "string" && raw.trim()) {
             try { init[f.key] = JSON.parse(raw); } catch { init[f.key] = raw; }
           } else {
@@ -77,10 +81,8 @@ export default function CatalogFormDialog({ open, onClose, onSubmit, title, fiel
   const handleSubmit = () => {
     const data: Record<string, any> = {};
     fields.forEach(f => {
-      // 跳過以 _ 開頭的虛擬欄位（如 _affixes, _condition）
       if (f.key.startsWith("_")) return;
       let val = form[f.key];
-      // hidden 欄位仍然提交（用於 ConditionEditor 等跨欄位更新）
       if (f.type === "hidden") {
         data[f.key] = val;
         return;
@@ -91,7 +93,6 @@ export default function CatalogFormDialog({ open, onClose, onSubmit, title, fiel
       } else if (f.type === "json" && !f.skipParse) {
         try { val = typeof val === "string" ? JSON.parse(val) : val; } catch { val = f.defaultValue ?? []; }
       }
-      // custom 類型直接傳遞物件值（SmartEditor 已經是結構化資料）
       data[f.key] = val;
     });
     onSubmit(data);
@@ -111,7 +112,6 @@ export default function CatalogFormDialog({ open, onClose, onSubmit, title, fiel
   });
 
   const renderField = (f: FieldDef) => {
-    // 自訂 SmartEditor 渲染
     if (f.type === "hidden") return null;
     if (f.type === "custom" && f.render) {
       return (
@@ -177,27 +177,51 @@ export default function CatalogFormDialog({ open, onClose, onSubmit, title, fiel
     );
   };
 
+  const hasPreview = !!catalogType;
+
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto sm:max-w-2xl max-sm:max-w-[95vw] max-sm:p-3">
+      <DialogContent className={`max-h-[85vh] overflow-y-auto max-sm:max-w-[95vw] max-sm:p-3 ${hasPreview ? "sm:max-w-4xl" : "sm:max-w-2xl"}`}>
         <DialogHeader>
-          <DialogTitle className="text-base">{title}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          {/* Ungrouped fields */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {ungrouped.map(renderField)}
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-base">{title}</DialogTitle>
+            {hasPreview && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+                className="text-[10px] h-6 px-2 text-muted-foreground hover:text-foreground"
+              >
+                {showPreview ? "隱藏預覽" : "顯示預覽"}
+              </Button>
+            )}
           </div>
-          {/* Grouped fields */}
-          {Object.entries(groups).map(([groupName, gFields]) => (
-            <div key={groupName}>
-              <h4 className="text-xs font-bold text-muted-foreground border-b pb-1 mb-2">{groupName}</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {gFields.map(renderField)}
-              </div>
+        </DialogHeader>
+
+        <div className={`flex gap-4 ${hasPreview && showPreview ? "flex-col sm:flex-row" : ""}`}>
+          {/* 左側：表單 */}
+          <div className={`space-y-4 ${hasPreview && showPreview ? "sm:flex-1 sm:min-w-0" : "w-full"}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {ungrouped.map(renderField)}
             </div>
-          ))}
+            {Object.entries(groups).map(([groupName, gFields]) => (
+              <div key={groupName}>
+                <h4 className="text-xs font-bold text-muted-foreground border-b pb-1 mb-2">{groupName}</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {gFields.map(renderField)}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 右側：即時預覽 */}
+          {hasPreview && showPreview && (
+            <div className="sm:w-64 sm:shrink-0 sm:sticky sm:top-0">
+              <CatalogPreview catalogType={catalogType!} formData={form} />
+            </div>
+          )}
         </div>
+
         <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" size="sm" onClick={onClose} className="w-full sm:w-auto">取消</Button>
           <Button size="sm" onClick={handleSubmit} disabled={isLoading} className="w-full sm:w-auto">

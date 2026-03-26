@@ -853,21 +853,38 @@ export async function processAgentTick(
   const currentNode: MapNode | undefined = MAP_NODE_MAP.get(agent.currentNodeId);
   if (!currentNode) return EMPTY;
 
-  // 體力檢查：每次行動消耗 staminaPerTick 點體力（從 game_config 讀取）
-  if (agent.stamina < staminaPerTick) {
-    // 體力不足，跳過行動（等待自然回復）
-    return EMPTY;
-  }
+  // ─── 體力扣除邏輯（策略分流）───
+  // 「休息」和「注靈」不消耗體力，其他三個策略（戰鬥/探索/採集）消耗體力
+  let strategy = agent.strategy;
+  const needsStamina = strategy !== "rest" && strategy !== "infuse";
 
-  // 消耗 staminaPerTick 點體力（所有行動統一扣除）
-  const oldStamina = agent.stamina;
-  const newStaminaAfterTick = Math.max(0, oldStamina - staminaPerTick);
-  await db.update(gameAgents).set({
-    stamina: newStaminaAfterTick,
-    staminaLastRegen: agent.staminaLastRegen ?? Date.now(),
-  }).where(eq(gameAgents.id, agent.id));
-  // 同步更新 agent 的 stamina，確保後續邏輯使用正確的值
-  agent = { ...agent, stamina: newStaminaAfterTick };
+  if (needsStamina) {
+    // 體力檢查：每次行動消耗 staminaPerTick 點體力
+    if (agent.stamina < staminaPerTick) {
+      // 體力不足 → 自動切換為「注靈」模式（持續行動邏輯）
+      await db.update(gameAgents).set({
+        previousStrategy: agent.strategy,
+        strategy: "infuse",
+        updatedAt: Date.now(),
+      }).where(eq(gameAgents.id, agent.id));
+      const strategyLabels: Record<string, string> = { explore: "探索", combat: "戰鬥", gather: "採集", rest: "休息" };
+      const autoSwitchMsg = `【體力耗盡】${agent.agentName ?? "旅人"}體力不足，自動切換為「注靈」模式，吸收節點五行能量中…`;
+      await createEvent(agent.id, "system", autoSwitchMsg, { type: "stamina_depleted_auto_infuse", previousStrategy: agent.strategy }, currentNode.id);
+      // 更新 agent 引用和 strategy 變數，讓後續分支正確走到 infuse
+      agent = { ...agent, previousStrategy: agent.strategy, strategy: "infuse" };
+      strategy = "infuse";
+      // 不 return，讓下方的注靈邏輯繼續執行
+    } else {
+      // 消耗體力
+      const oldStamina = agent.stamina;
+      const newStaminaAfterTick = Math.max(0, oldStamina - staminaPerTick);
+      await db.update(gameAgents).set({
+        stamina: newStaminaAfterTick,
+        staminaLastRegen: agent.staminaLastRegen ?? Date.now(),
+      }).where(eq(gameAgents.id, agent.id));
+      agent = { ...agent, stamina: newStaminaAfterTick };
+    }
+  }
 
   const roll = Math.random();
   let eventsCreated = 0;
@@ -877,7 +894,6 @@ export async function processAgentTick(
 
   // 從全域引擎配置取得動態機率
   const chances = getEventChances();
-  const strategy = agent.strategy;
   const movementMode = agent.movementMode ?? "roaming";
 
   // Roguelike 奇遇（動態機率）
@@ -984,24 +1000,17 @@ export async function processAgentTick(
         previousStrategy: null,
         updatedAt: Date.now(),
       }).where(eq(gameAgents.id, agent.id));
-      const WX_ZH_LOCAL: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
       const strategyLabels: Record<string, string> = { explore: "探索", combat: "戰鬥", gather: "採集", rest: "休息" };
       const switchMsg = `【注靈中斷】${agent.agentName ?? "旅人"}體力已恢復，自動切換回「${strategyLabels[nextStrategy] ?? nextStrategy}」模式。`;
       await createEvent(agent.id, "system", switchMsg, { type: "infuse_auto_switch", newStrategy: nextStrategy }, currentNode.id);
-      // 退還本次消耗的體力（注靈不應消耗體力）
-      await db.update(gameAgents).set({
-        stamina: Math.min(agent.maxStamina, agent.stamina + staminaPerTick),
-      }).where(eq(gameAgents.id, agent.id));
+      // 注靈不消耗體力（已在上層跳過扣除），無需退還
       return { events: 1, levelUps: tickLevelUps, legendaryDrops: tickLegendaryDrops };
     }
 
     const infuseCfg = getInfuseConfig();
     const nodeElement = currentNode.element as WuXing; // 節點屬性
     const failed = Math.random() < infuseCfg.failRate;
-    // 退還本次消耗的體力（注靈不消耗體力）
-    await db.update(gameAgents).set({
-      stamina: Math.min(agent.maxStamina, agent.stamina + staminaPerTick),
-    }).where(eq(gameAgents.id, agent.id));
+    // 注靈不消耗體力（已在上層跳過扣除）
     if (failed) {
       const WX_ZH_LOCAL: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
       const failMsg = `【注靈失敗】${agent.agentName ?? "旅人"}嘗試在「${currentNode.name}」截取${WX_ZH_LOCAL[nodeElement]}五行之力，但天地靈氣流通不畅，本次注靈未能成功。`;

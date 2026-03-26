@@ -1019,10 +1019,8 @@ export const gameWorldRouter = router({
       }).where(eq(gameAgents.id, agent.id));
     }
 
-    // 體力不足，跳過行動
-    if (newStamina < staminaPerTick) {
-      return { processed: 0, events: 0, levelUps: [], legendaryDrops: [], lastCombat: undefined };
-    }
+    // 體力不足時不再跳過，讓 processAgentTick 自動切換為注靈模式
+    // （持續行動邏輯：體力歸零 → 自動注靈 → 體力回復 → 自動切回原策略）
 
     // 取得世界狀態（當日五行元素）
     const worlds = await db.select().from(gameWorld).limit(1);

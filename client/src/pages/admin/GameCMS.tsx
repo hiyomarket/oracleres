@@ -481,6 +481,7 @@ export default function GameCMS() {
             <TabsTrigger value="catalog-achievements">🏆 成就系統</TabsTrigger>
             <TabsTrigger value="catalog-monster-skills">🐲 魔物技能</TabsTrigger>
             <TabsTrigger value="catalog-stats">📊 圖鑑統計</TabsTrigger>
+            <TabsTrigger value="balance">⚖️ 數值平衡</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -500,6 +501,7 @@ export default function GameCMS() {
               <TabsContent value="catalog-achievements"><AchievementCatalogTab /></TabsContent>
               <TabsContent value="catalog-monster-skills"><MonsterSkillCatalogTab /></TabsContent>
               <TabsContent value="catalog-stats"><CatalogStatsTab /></TabsContent>
+              <TabsContent value="balance"><BalanceDashboardTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
@@ -1256,7 +1258,215 @@ function SkillCatalogTab() {
 }
 
 
-// ─── Catalog Stats Tab ────────────────────────────────────────────────────────
+// ─── Balance Dashboard Tab ───────────────────────────────────────────────────────────────────
+function BalanceDashboardTab() {
+  const { data, isLoading, refetch } = trpc.gameCatalog.getBalanceAnalysis.useQuery();
+
+  const SEVERITY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
+    "嚴重": { bg: "bg-red-500/20", text: "text-red-400", label: "嚴重" },
+    "警告": { bg: "bg-amber-500/20", text: "text-amber-400", label: "警告" },
+    "提示": { bg: "bg-blue-500/20", text: "text-blue-400", label: "提示" },
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-12 text-muted-foreground">分析遊戲數值中…</div>;
+  }
+  if (!data) {
+    return <div className="text-center py-12 text-muted-foreground">無法載入平衡分析資料</div>;
+  }
+
+  const scoreColor = data.healthScore >= 80 ? "text-green-400" : data.healthScore >= 50 ? "text-amber-400" : "text-red-400";
+  const scoreLabel = data.healthScore >= 80 ? "良好" : data.healthScore >= 50 ? "需注意" : "失衡";
+  const scoreBg = data.healthScore >= 80 ? "from-green-500/20 to-green-900/10" : data.healthScore >= 50 ? "from-amber-500/20 to-amber-900/10" : "from-red-500/20 to-red-900/10";
+
+  return (
+    <div className="space-y-6">
+      {/* 健康分數卡片 */}
+      <div className={`rounded-2xl border border-white/10 bg-gradient-to-br ${scoreBg} p-6 text-center`}>
+        <div className="text-sm text-muted-foreground mb-2">遊戲數值平衡健康分數</div>
+        <div className={`text-6xl font-black ${scoreColor}`}>{data.healthScore}</div>
+        <div className={`text-lg font-bold mt-1 ${scoreColor}`}>{scoreLabel}</div>
+        <div className="text-xs text-muted-foreground mt-2">
+          異常總數：{data.totalAnomalies} 項
+        </div>
+        <Button variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>
+          重新分析
+        </Button>
+      </div>
+
+      {/* 總覽卡片 */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
+          <div className="text-xs text-muted-foreground">魔物圖鑑</div>
+          <div className="text-2xl font-bold text-amber-400 mt-1">{data.summary.monsters.total}</div>
+          <div className="text-xs mt-1">
+            {data.summary.monsters.anomalies > 0
+              ? <span className="text-red-400">{data.summary.monsters.anomalies} 項異常</span>
+              : <span className="text-green-400">全部正常</span>}
+          </div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
+          <div className="text-xs text-muted-foreground">道具圖鑑</div>
+          <div className="text-2xl font-bold text-amber-400 mt-1">{data.summary.items.total}</div>
+          <div className="text-xs mt-1">
+            {data.summary.items.anomalies > 0
+              ? <span className="text-red-400">{data.summary.items.anomalies} 項異常</span>
+              : <span className="text-green-400">全部正常</span>}
+          </div>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
+          <div className="text-xs text-muted-foreground">裝備圖鑑</div>
+          <div className="text-2xl font-bold text-amber-400 mt-1">{data.summary.equipment.total}</div>
+          <div className="text-xs mt-1">
+            {data.summary.equipment.anomalies > 0
+              ? <span className="text-red-400">{data.summary.equipment.anomalies} 項異常</span>
+              : <span className="text-green-400">全部正常</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* 怪物異常列表 */}
+      {data.monsterAnomalies.length > 0 && (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+            <span>🐉</span> 怪物數值異常 ({data.monsterAnomalies.length})
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/10 text-muted-foreground">
+                  <th className="text-left py-2 px-2">名稱</th>
+                  <th className="text-left py-2 px-2">ID</th>
+                  <th className="text-center py-2 px-2">等級</th>
+                  <th className="text-left py-2 px-2">異常欄位</th>
+                  <th className="text-right py-2 px-2">當前值</th>
+                  <th className="text-right py-2 px-2">同級平均</th>
+                  <th className="text-center py-2 px-2">嚴重度</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.monsterAnomalies.map((a, i) => {
+                  const style = SEVERITY_STYLES[a.severity] ?? SEVERITY_STYLES["提示"];
+                  return (
+                    <tr key={i} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="py-2 px-2 font-medium">{a.name}</td>
+                      <td className="py-2 px-2 text-muted-foreground">{a.monsterId}</td>
+                      <td className="py-2 px-2 text-center">{a.level}</td>
+                      <td className="py-2 px-2">{a.field}</td>
+                      <td className="py-2 px-2 text-right font-bold text-amber-400">{a.value}</td>
+                      <td className="py-2 px-2 text-right text-muted-foreground">{a.avg}</td>
+                      <td className="py-2 px-2 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${style.bg} ${style.text}`}>
+                          {style.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 道具異常列表 */}
+      {data.itemAnomalies.length > 0 && (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+            <span>🎒</span> 道具數值異常 ({data.itemAnomalies.length})
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/10 text-muted-foreground">
+                  <th className="text-left py-2 px-2">名稱</th>
+                  <th className="text-left py-2 px-2">ID</th>
+                  <th className="text-left py-2 px-2">異常類型</th>
+                  <th className="text-right py-2 px-2">當前值</th>
+                  <th className="text-left py-2 px-2">閾值</th>
+                  <th className="text-center py-2 px-2">嚴重度</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.itemAnomalies.map((a, i) => {
+                  const style = SEVERITY_STYLES[a.severity] ?? SEVERITY_STYLES["提示"];
+                  return (
+                    <tr key={i} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="py-2 px-2 font-medium">{a.name}</td>
+                      <td className="py-2 px-2 text-muted-foreground">{a.itemId}</td>
+                      <td className="py-2 px-2">{a.field}</td>
+                      <td className="py-2 px-2 text-right font-bold text-amber-400">{a.value}</td>
+                      <td className="py-2 px-2">{a.threshold}</td>
+                      <td className="py-2 px-2 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${style.bg} ${style.text}`}>
+                          {style.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 裝備異常列表 */}
+      {data.equipAnomalies.length > 0 && (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+            <span>⚔️</span> 裝備數值異常 ({data.equipAnomalies.length})
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/10 text-muted-foreground">
+                  <th className="text-left py-2 px-2">名稱</th>
+                  <th className="text-left py-2 px-2">ID</th>
+                  <th className="text-left py-2 px-2">異常欄位</th>
+                  <th className="text-right py-2 px-2">當前值</th>
+                  <th className="text-right py-2 px-2">同品質平均</th>
+                  <th className="text-center py-2 px-2">嚴重度</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.equipAnomalies.map((a, i) => {
+                  const style = SEVERITY_STYLES[a.severity] ?? SEVERITY_STYLES["提示"];
+                  return (
+                    <tr key={i} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="py-2 px-2 font-medium">{a.name}</td>
+                      <td className="py-2 px-2 text-muted-foreground">{a.equipId}</td>
+                      <td className="py-2 px-2">{a.field}</td>
+                      <td className="py-2 px-2 text-right font-bold text-amber-400">{a.value}</td>
+                      <td className="py-2 px-2 text-right text-muted-foreground">{a.avg}</td>
+                      <td className="py-2 px-2 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${style.bg} ${style.text}`}>
+                          {style.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 全部正常的提示 */}
+      {data.totalAnomalies === 0 && (
+        <div className="rounded-2xl border border-green-500/20 bg-green-500/5 p-8 text-center">
+          <div className="text-4xl mb-3">✅</div>
+          <div className="text-lg font-bold text-green-400">遊戲數值全部平衡</div>
+          <div className="text-sm text-muted-foreground mt-1">所有怪物、道具、裝備的數值均在合理範圍內</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ─── Catalog Stats Tab ────────────────────────────────────────────────────────────────────────
 function CatalogStatsTab() {
   const { data, isLoading } = trpc.gameCatalog.getCatalogStats.useQuery();
 

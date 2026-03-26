@@ -734,6 +734,7 @@ export function MonsterCatalogV2Tab() {
                       <td className="py-2 px-2 text-xs">{m.rarity}</td>
                       <td className="py-2 px-2 space-x-1" onClick={e => e.stopPropagation()}>
                         <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
+                        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                         <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                       </td>
                     </tr>
@@ -754,7 +755,7 @@ export function MonsterCatalogV2Tab() {
       )}
       <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }}
         title={editItem ? `編輯魔物：${editItem.name}` : "新增魔物"} fields={fields} initialData={editItem}
-        onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+        onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} catalogType="monster" />
       <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields}
         onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
         selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
@@ -993,16 +994,16 @@ export function ItemCatalogV2Tab() {
                   <td className="py-2 px-2 text-xs">{m.category}</td><td className="py-2 px-2 text-xs">{m.rarity}</td><td className="py-2 px-2">{m.shopPrice}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
                 </tr>
               ))}</tbody>
-            </table>
-          </div>
+            </table></div>
           <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
         </>
       )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯道具：${editItem.name}` : "新增道具"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯道具：${editItem.name}` : "新增道具"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} catalogType="item" />
       <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
         selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
@@ -1170,6 +1171,7 @@ export function EquipCatalogV2Tab() {
                   <td className="py-2 px-2">{m.attackBonus}</td><td className="py-2 px-2">{m.defenseBonus}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
                 </tr>
@@ -1179,7 +1181,7 @@ export function EquipCatalogV2Tab() {
           <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
         </>
       )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯裝備：${editItem.name}` : "新增裝備"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯裝備：${editItem.name}` : "新增裝備"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} catalogType="equipment" />
       <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
         selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
@@ -1331,6 +1333,7 @@ export function SkillCatalogV2Tab() {
                   <td className="py-2 px-2 text-xs">{m.skillType}</td><td className="py-2 px-2">{m.powerPercent}%</td><td className="py-2 px-2">{m.mpCost}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
                 </tr>
@@ -1340,7 +1343,7 @@ export function SkillCatalogV2Tab() {
           <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
         </>
       )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯技能：${editItem.name}` : "新增技能"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯技能：${editItem.name}` : "新增技能"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} catalogType="skill" />
       <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
         selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
@@ -1483,16 +1486,16 @@ export function AchievementCatalogTab() {
                   <td className="py-2 px-2 text-xs">{m.rarity}</td><td className="py-2 px-2 text-xs">{m.rewardType} x{m.rewardAmount}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.title = `${m.title}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.title}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.title}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
                 </tr>
               ))}</tbody>
-            </table>
-          </div>
+            </table></div>
           <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
         </>
       )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯成就：${editItem.title}` : "新增成就"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯成就：${editItem.title}` : "新增成就"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} catalogType="achievement" />
       <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
         selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
@@ -1628,6 +1631,7 @@ export function MonsterSkillCatalogTab() {
                   <td className="py-2 px-2">{m.mpCost}</td><td className="py-2 px-2">{m.cooldown}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
                 </tr>
@@ -1637,7 +1641,7 @@ export function MonsterSkillCatalogTab() {
           <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
         </>
       )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯魔物技能：${editItem.name}` : "新增魔物技能"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯魔物技能：${editItem.name}` : "新增魔物技能"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} catalogType="monsterSkill" />
       <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
         selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}

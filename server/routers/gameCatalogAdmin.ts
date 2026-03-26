@@ -1108,4 +1108,147 @@ export const gameCatalogAdminRouter = router({
       },
     };
   }),
+
+  // ===== 遊戲數值平衡分析 =====
+  getBalanceAnalysis: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+    // 1. 怪物攻擊力異常檢測（按等級分組，找出偏離平均值 > 2倍標準差的）
+    const monsters = await db.select({
+      id: gameMonsterCatalog.id,
+      name: gameMonsterCatalog.name,
+      monsterId: gameMonsterCatalog.monsterId,
+      level: gameMonsterCatalog.aiLevel,
+      wuxing: gameMonsterCatalog.wuxing,
+      attack: gameMonsterCatalog.baseAttack,
+      defense: gameMonsterCatalog.baseDefense,
+      hp: gameMonsterCatalog.baseHp,
+      dropRate: gameMonsterCatalog.dropRate1,
+    }).from(gameMonsterCatalog);
+
+    // 按等級分組分析
+    const monstersByLevel: Record<number, typeof monsters> = {};
+    for (const m of monsters) {
+      const lvl = m.level ?? 1;
+      if (!monstersByLevel[lvl]) monstersByLevel[lvl] = [];
+      monstersByLevel[lvl].push(m);
+    }
+
+    const monsterAnomalies: Array<{ name: string; monsterId: string; level: number; field: string; value: number; avg: number; severity: string }> = [];
+    for (const [lvl, group] of Object.entries(monstersByLevel)) {
+      if (group.length < 2) continue;
+      for (const field of ["attack", "defense", "hp", "dropRate"] as const) {
+        const vals = group.map((m: any) => Number(m[field]) || 0);
+        const avg = vals.reduce((a: number, b: number) => a + b, 0) / vals.length;
+        const stdDev = Math.sqrt(vals.reduce((a: number, b: number) => a + (b - avg) ** 2, 0) / vals.length);
+        if (stdDev === 0) continue;
+        for (const m of group) {
+          const v = Number(m[field]) || 0;
+          const zScore = Math.abs(v - avg) / stdDev;
+          if (zScore > 2) {
+            monsterAnomalies.push({
+              name: m.name,
+              monsterId: m.monsterId ?? "",
+              level: Number(lvl),
+              field: field === "attack" ? "攻擊力" : field === "defense" ? "防禦力" : field === "hp" ? "血量" : "掉率",
+              value: v,
+              avg: Math.round(avg),
+              severity: zScore > 3 ? "嚴重" : "警告",
+            });
+          }
+        }
+      }
+    }
+
+    // 2. 道具掉率異常檢測
+    const db2 = await getDb();
+    if (!db2) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    const items = await db2.select({
+      id: gameItemCatalog.id,
+      name: gameItemCatalog.name,
+      itemId: gameItemCatalog.itemId,
+      rarity: gameItemCatalog.rarity,
+      shopPrice: gameItemCatalog.shopPrice,
+      dropRate: gameItemCatalog.dropRate,
+    }).from(gameItemCatalog);
+
+    const itemAnomalies: Array<{ name: string; itemId: string; field: string; value: number; threshold: string; severity: string }> = [];
+    for (const item of items) {
+      const dr = Number(item.dropRate) || 0;
+      if (dr > 0 && dr < 1) {
+        itemAnomalies.push({ name: item.name, itemId: item.itemId ?? "", field: "掉率過低", value: dr, threshold: "< 1%", severity: "警告" });
+      }
+      if (dr > 80) {
+        itemAnomalies.push({ name: item.name, itemId: item.itemId ?? "", field: "掉率過高", value: dr, threshold: "> 80%", severity: "警告" });
+      }
+      const price = Number(item.shopPrice) || 0;
+      if (price > 0 && price < 10) {
+        itemAnomalies.push({ name: item.name, itemId: item.itemId ?? "", field: "售價過低", value: price, threshold: "< 10", severity: "提示" });
+      }
+    }
+
+    // 3. 裝備屬性異常檢測
+    const db3 = await getDb();
+    if (!db3) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    const equips = await db3.select({
+      id: gameEquipmentCatalog.id,
+      name: gameEquipmentCatalog.name,
+      equipId: gameEquipmentCatalog.equipId,
+      quality: gameEquipmentCatalog.quality,
+      attackBonus: gameEquipmentCatalog.attackBonus,
+      defenseBonus: gameEquipmentCatalog.defenseBonus,
+      hpBonus: gameEquipmentCatalog.hpBonus,
+      levelReq: gameEquipmentCatalog.levelRequired,
+    }).from(gameEquipmentCatalog);
+
+    const equipAnomalies: Array<{ name: string; equipId: string; field: string; value: number; avg: number; severity: string }> = [];
+    const equipByQuality: Record<string, typeof equips> = {};
+    for (const e of equips) {
+      const q = e.quality ?? "普通";
+      if (!equipByQuality[q]) equipByQuality[q] = [];
+      equipByQuality[q].push(e);
+    }
+    for (const [quality, group] of Object.entries(equipByQuality)) {
+      if (group.length < 2) continue;
+      for (const field of ["attackBonus", "defenseBonus", "hpBonus"] as const) {
+        const vals = group.map((e: any) => Number(e[field]) || 0);
+        const avg = vals.reduce((a: number, b: number) => a + b, 0) / vals.length;
+        const stdDev = Math.sqrt(vals.reduce((a: number, b: number) => a + (b - avg) ** 2, 0) / vals.length);
+        if (stdDev === 0) continue;
+        for (const e of group) {
+          const v = Number(e[field]) || 0;
+          const zScore = Math.abs(v - avg) / stdDev;
+          if (zScore > 2) {
+            equipAnomalies.push({
+              name: e.name,
+              equipId: e.equipId ?? "",
+              field: field === "attackBonus" ? "攻擊加成" : field === "defenseBonus" ? "防禦加成" : "血量加成",
+              value: v,
+              avg: Math.round(avg),
+              severity: zScore > 3 ? "嚴重" : "警告",
+            });
+          }
+        }
+      }
+    }
+
+    // 4. 綜合健康分數
+    const totalAnomalies = monsterAnomalies.length + itemAnomalies.length + equipAnomalies.length;
+    const severeCount = [...monsterAnomalies, ...equipAnomalies].filter(a => a.severity === "嚴重").length;
+    const healthScore = Math.max(0, 100 - severeCount * 10 - (totalAnomalies - severeCount) * 3);
+
+    return {
+      healthScore,
+      totalAnomalies,
+      monsterAnomalies: monsterAnomalies.slice(0, 20),
+      itemAnomalies: itemAnomalies.slice(0, 20),
+      equipAnomalies: equipAnomalies.slice(0, 20),
+      summary: {
+        monsters: { total: monsters.length, anomalies: monsterAnomalies.length },
+        items: { total: items.length, anomalies: itemAnomalies.length },
+        equipment: { total: equips.length, anomalies: equipAnomalies.length },
+      },
+    };
+  }),
 });
