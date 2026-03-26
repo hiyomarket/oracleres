@@ -4265,3 +4265,31 @@
 - [x] 後端 API：鎖定/解鎖商店商品
 - [x] 前端：後台商店管理加入鎖定按鈕（虛界/靈相/隱藏三商店）
 - [x] AI 刷新商店時跳過已鎖定商品
+
+## M3L 戰鬥系統三大優化
+
+### 優化 1：統一怪物數據源（從資料庫讀取）
+- [x] 建立 monsterDataService.ts 從 gameMonsterCatalog + gameMonsterSkillCatalog 讀取怪物數據
+- [x] 加入記憶體快取機制（避免每次 Tick 都查資料庫）
+- [x] 將 resolveCombat 和 processCombatEvent 改為使用資料庫怪物數據
+- [x] 保留 shared/monsters.ts 作為 fallback（資料庫無資料時使用靜態表）
+
+### 優化 2：讓怪物技能真正生效
+- [x] 怪物技能選擇 AI：根據 aiCondition（hpBelow/priority）智慧選擇技能（三級 AI）
+- [x] 怪物攻擊技能：使用 powerPercent 計算實際傷害
+- [x] 怪物治癒技能：HP 低於閾值時使用，回復量依 powerPercent 計算
+- [x] 怪物 Buff/Debuff 技能：透過附加效果系統實現
+- [x] 怪物 MP 系統：根據等級自動計算 baseMp，技能消耗 mpCost
+- [x] 怪物技能冷卻：使用 cooldown 欄位控制冷卻回合數
+
+### 優化 3：實作附加效果系統
+- [x] 中毒（poison）：每回合損失 value 點 HP，持續 duration 回合
+- [x] 灼燒（burn）：每回合損失 value 點 HP，持續 duration 回合
+- [x] 冰凍（freeze）：chance% 機率跳過下一回合
+- [x] 眩暈（stun）：chance% 機率跳過下一回合
+- [x] 減速（slow）：降低速度，可能改變先手順序
+- [x] 玩家和怪物雙方都可觸發附加效果
+
+### 優化 4：修正魔法係數A和冷卻值
+- [x] 魔法係數A根據實際使用技能的屬性計算（非固定主屬性）
+- [x] 玩家技能使用自身 cooldown 值（取代固定 2 回合）

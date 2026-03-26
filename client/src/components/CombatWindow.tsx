@@ -21,15 +21,23 @@ export type CombatRoundData = {
   agentFirst: boolean;
   agentSkillName?: string;
   monsterSkillName?: string;
+  monsterSkillType?: string;
   agentDodged?: boolean;
   monsterDodged?: boolean;
   agentBlocked?: boolean;
   monsterBlocked?: boolean;
   agentHealAmount?: number;
+  monsterHealAmount?: number;
   agentSkillType?: string;
   isCritical?: boolean;
   monsterIsCritical?: boolean;
   description?: string;
+  // M3L: 附加效果資訊
+  statusEffectsApplied?: Array<{ type: string; target: "agent" | "monster"; duration: number }>;
+  dotDamageToAgent?: number;
+  dotDamageToMonster?: number;
+  agentStunned?: boolean;
+  monsterStunned?: boolean;
 };
 
 export type CombatWindowData = {
@@ -49,6 +57,9 @@ export type CombatWindowData = {
   combatKey?: number;
   /** 戰鬥掉落道具列表 */
   lootItems?: string[];
+  // M3L: 怪物技能和附加效果摘要
+  monsterSkillsUsed?: string[];
+  statusEffectsSummary?: string[];
 };
 
 interface CombatWindowProps {
@@ -441,6 +452,48 @@ function RoundCard({ round, agentName, monsterName, index }: { round: CombatRoun
           </div>
         </div>
       )}
+
+      {/* M3L: 怪物治癒顯示 */}
+      {round.monsterSkillType === "heal" && round.monsterHealAmount ? (
+        <div className="flex items-center gap-1.5">
+          <span className="text-red-400 shrink-0 w-10 truncate">{monsterName.slice(0, 4)}</span>
+          <span className="text-green-400">{round.monsterSkillName ?? "治癒"} 回復 +{round.monsterHealAmount} HP</span>
+        </div>
+      ) : null}
+
+      {/* M3L: 附加效果顯示 */}
+      {round.statusEffectsApplied && round.statusEffectsApplied.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-0.5">
+          {round.statusEffectsApplied.map((eff, i) => {
+            const colors: Record<string, string> = {
+              poison: "bg-green-900/40 text-green-300",
+              burn: "bg-orange-900/40 text-orange-300",
+              freeze: "bg-cyan-900/40 text-cyan-300",
+              stun: "bg-yellow-900/40 text-yellow-300",
+              slow: "bg-purple-900/40 text-purple-300",
+            };
+            const names: Record<string, string> = { poison: "中毒", burn: "灼燒", freeze: "冰凍", stun: "眩暈", slow: "減速" };
+            return (
+              <span key={i} className={`px-1 rounded text-[9px] ${colors[eff.type] ?? "bg-slate-800 text-slate-400"}`}>
+                {eff.target === "agent" ? agentName.slice(0, 2) : monsterName.slice(0, 2)} {names[eff.type] ?? eff.type} ({eff.duration}回合)
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      {/* M3L: DoT 傷害顯示 */}
+      {(round.dotDamageToAgent || round.dotDamageToMonster) ? (
+        <div className="text-[9px] text-slate-400 italic">
+          {round.dotDamageToAgent ? <span className="text-orange-400">狀態異常傷害: -{round.dotDamageToAgent} HP</span> : null}
+          {round.dotDamageToAgent && round.dotDamageToMonster ? " | " : ""}
+          {round.dotDamageToMonster ? <span className="text-green-400">{monsterName.slice(0, 4)} 狀態傷害: -{round.dotDamageToMonster} HP</span> : null}
+        </div>
+      ) : null}
+
+      {/* M3L: 眩暈顯示 */}
+      {round.agentStunned && <span className="text-yellow-400 text-[9px]">⚡ 旅人眩暈中，無法行動！</span>}
+      {round.monsterStunned && <span className="text-cyan-400 text-[9px]">❄️ {monsterName.slice(0, 4)} 眩暈中，無法行動！</span>}
 
       {/* HP 狀態 */}
       <div className="flex gap-3 text-[9px] text-slate-500 border-t border-indigo-900/30 pt-0.5">

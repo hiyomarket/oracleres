@@ -25,6 +25,7 @@ import {
   getMonstersForNode,
   type Monster,
 } from "../shared/monsters";
+import { getCombatMonstersForNode, invalidateMonsterCache, type CombatMonster, type MonsterSkillData } from "./monsterDataService";
 
 // ─── 工具函數 ───
 function randInt(min: number, max: number): number {
@@ -277,6 +278,15 @@ function formatMessage(template: string, vars: Record<string, string | number>):
 }
 
 // ─── 戰鬥結算（詳細回合制） ───
+// ─── 附加效果實例（戰鬥中追蹤） ───
+export interface StatusEffect {
+  type: "poison" | "burn" | "freeze" | "stun" | "slow";
+  source: "agent" | "monster";  // 誰施加的
+  remainingTurns: number;        // 剩餘回合數
+  value: number;                 // 每回合傷害值（poison/burn）或速度降低值（slow）
+  chance: number;                // 觸發機率（freeze/stun 用）
+}
+
 export type CombatRound = {
   round: number;
   agentAtk: number;       // 玩家對怪物造成的實際傷害
@@ -287,15 +297,23 @@ export type CombatRound = {
   // 詳細戰鬥資訊
   agentSkillName?: string;    // 玩家使用的技能名稱
   monsterSkillName?: string;  // 怪物使用的技能名稱
+  monsterSkillType?: string;  // M3L: 怪物技能類型
   agentDodged?: boolean;      // 玩家是否閃避了怪物攻擊
   monsterDodged?: boolean;    // 怪物是否閃避了玩家攻擊
   agentBlocked?: boolean;     // 玩家是否格擋（傷害減半）
   monsterBlocked?: boolean;   // 怪物是否格擋
   agentHealAmount?: number;   // 玩家本回合治癒量（治癒技能）
+  monsterHealAmount?: number; // M3L: 怪物本回合治癒量
   agentSkillType?: string;    // 玩家技能類型：attack/heal/buff
   isCritical?: boolean;       // 玩家是否暴擊
   monsterIsCritical?: boolean;// 怪物是否暴擊
   description?: string;       // 回合文字描述
+  // M3L: 附加效果資訊
+  statusEffectsApplied?: Array<{ type: string; target: "agent" | "monster"; duration: number }>;
+  dotDamageToAgent?: number;    // 本回合 DoT 對玩家造成的傷害
+  dotDamageToMonster?: number;  // 本回合 DoT 對怪物造成的傷害
+  agentStunned?: boolean;       // 玩家本回合是否被眩暈/冰凍
+  monsterStunned?: boolean;     // 怪物本回合是否被眩暈/冰凍
 };
 
 // GD-020 補充四：種族剋制對照表
@@ -327,9 +345,13 @@ export type CombatResult = {
   spiritCoeffA: number;
   skillElement: WuXing;
   wuxingBoostDesc: string; // 五行加成說明文字
-  raceBoostDesc: string;   // 種族剋制說明文字
-  raceMultiplier: number;  // 種族剋制倍率（1.0 = 無加成，1.2 = +20%）
+  raceBoostDesc: string;   // 種族剣制說明文字
+  raceMultiplier: number;  // 種族剣制倍率（1.0 = 無加成，1.2 = +20%）
   monsterRace?: string;    // 怪物種族（用於前端顯示）
+  // M3L: 怪物技能和附加效果資訊
+  monsterSkillsUsed?: string[];           // 怪物使用過的技能名稱
+  statusEffectsSummary?: string[];        // 戰鬥中觸發的附加效果摘要
+  monsterMpUsed?: number;                 // 怪物消耗的 MP
 };
 
 export function resolveCombat(
@@ -346,11 +368,11 @@ export function resolveCombat(
     wuxingMetal?: number; wuxingWater?: number;
     skillSlot1?: string | null; // 當前技能槽，用於判斷技能屬性
     agentRace?: string;  // GD-020 補充四：旅人種族（用於種族居制判斷）
-    // 技能資訊（用於詳細戰鬥計算）
-    equippedSkills?: Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number }>;
+    // 技能資訊（用於詳細戰鬥計算），M3L: 加入 wuxing 和 cooldown
+    equippedSkills?: Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number; wuxing?: string; cooldown?: number }>;
     currentMp?: number;
   },
-  monster: Monster
+  monster: Monster | CombatMonster
 ): CombatResult {
   const agentElement = agent.dominantElement as WuXing;
   const monsterElement = monster.element;
@@ -358,9 +380,9 @@ export function resolveCombat(
   const atkMultiplier = calcWuxingMultiplier(agentElement, monsterElement);
   const defMultiplier = calcWuxingMultiplier(monsterElement, agentElement);
 
-  // GD-020 修正一：技能屬性 = 主屬性（如有技能槽資訊可進一步判斷）
-  // 目前放置遊戲中主要使用普攻，技能屬性預設為角色主屬性
-  const skillElement: WuXing = agentElement;
+  // M3L: 技能屬性根據實際使用的技能動態計算（在回合中更新）
+  // 預設為角色主屬性，每回合根據實際使用技能重新計算
+  let skillElement: WuXing = agentElement;
   // 施法者對應屬性數值
   const elementValueMap: Record<WuXing, number> = {
     wood:  agent.wuxingWood  ?? 20,
@@ -429,17 +451,179 @@ export function resolveCombat(
   // 技能冷卻記錄（skillId -> 剩餘冷卻回合數）
   const skillCooldowns: Record<string, number> = {};
 
+  // ─── M3L: 怪物技能系統初始化 ───
+  const combatMonster = monster as CombatMonster;
+  const monsterDbSkills: MonsterSkillData[] = combatMonster.dbSkills ?? [];
+  const monsterMaxHp = monster.hp;
+  let monsterMp = combatMonster.baseMp ?? Math.floor(30 + monster.level * 2);
+  let totalMonsterMpUsed = 0;
+  const monsterSkillCooldowns: Record<string, number> = {};
+  const monsterSkillsUsedNames: string[] = [];
+
+  // ─── M3L: 附加效果追蹤系統 ───
+  const activeEffects: StatusEffect[] = [];
+  const statusEffectsSummary: string[] = [];
+
+  // ─── M3L: 怪物技能 AI 選擇函數 ───
+  function chooseMonsterSkill(): MonsterSkillData | null {
+    if (monsterDbSkills.length === 0) return null;
+    const monsterHpRatio = monsterHp / monsterMaxHp;
+    const aiLevel = combatMonster.aiLevel ?? 1;
+
+    // 過濾可用技能（MP 足夠 + 不在冷卻中）
+    const available = monsterDbSkills.filter(sk =>
+      monsterMp >= sk.mpCost && !(monsterSkillCooldowns[sk.id] > 0)
+    );
+    if (available.length === 0) return null;
+
+    // AI 等級 1：純隨機
+    if (aiLevel <= 1) {
+      return available[Math.floor(Math.random() * available.length)];
+    }
+
+    // AI 等級 2+：根據 aiCondition 智慧選擇
+    // 優先級 1：HP 低於閾值時使用治癒技能
+    if (monsterHpRatio < 0.3) {
+      const healSkills = available.filter(sk => sk.skillType === "heal");
+      if (healSkills.length > 0) return healSkills[0];
+    }
+
+    // 優先級 2：檢查 aiCondition.hpBelow 條件
+    for (const sk of available) {
+      if (sk.aiCondition?.hpBelow && monsterHpRatio * 100 < sk.aiCondition.hpBelow) {
+        return sk;
+      }
+    }
+
+    // 優先級 3：AI 等級 3+ 優先使用剣制玩家屬性的技能
+    if (aiLevel >= 3) {
+      const WUXING_COUNTER_M: Record<string, string> = { "木": "earth", "火": "metal", "土": "water", "金": "wood", "水": "fire",
+        wood: "earth", fire: "metal", earth: "water", metal: "wood", water: "fire" };
+      const counterElement = WUXING_COUNTER_M[agentElement];
+      if (counterElement) {
+        const counterSkills = available.filter(sk => {
+          const skEl = sk.wuxing.toLowerCase();
+          return skEl === counterElement || (
+            (skEl === "木" && counterElement === "wood") ||
+            (skEl === "火" && counterElement === "fire") ||
+            (skEl === "土" && counterElement === "earth") ||
+            (skEl === "金" && counterElement === "metal") ||
+            (skEl === "水" && counterElement === "water")
+          );
+        });
+        if (counterSkills.length > 0 && Math.random() < 0.7) {
+          return counterSkills[0];
+        }
+      }
+    }
+
+    // 優先級 4：按 priority 排序，選擇最高優先級的攻擊技能
+    const attackSkills = available.filter(sk => sk.skillType === "attack");
+    if (attackSkills.length > 0) {
+      attackSkills.sort((a, b) => (b.aiCondition?.priority ?? 0) - (a.aiCondition?.priority ?? 0));
+      // AI 等級 2+：80% 機率選最強，20% 隨機
+      if (aiLevel >= 2 && Math.random() < 0.8) return attackSkills[0];
+      return attackSkills[Math.floor(Math.random() * attackSkills.length)];
+    }
+
+    // Fallback: 隨機選一個
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
+  // ─── M3L: 處理附加效果觸發 ───
+  function tryApplyEffect(
+    effect: { type: string; chance: number; duration?: number; value?: number } | null | undefined,
+    source: "agent" | "monster"
+  ): void {
+    if (!effect) return;
+    const { type, chance, duration = 2, value = 5 } = effect;
+    if (Math.random() * 100 >= chance) return; // 未觸發
+    const validTypes = ["poison", "burn", "freeze", "stun", "slow"];
+    if (!validTypes.includes(type)) return;
+    // 檢查是否已存在同類型效果（不疊加，但刷新持續時間）
+    const target = source === "agent" ? "monster" : "agent";
+    const existing = activeEffects.find(e => e.type === type as any && e.source === source);
+    if (existing) {
+      existing.remainingTurns = Math.max(existing.remainingTurns, duration);
+      return;
+    }
+    activeEffects.push({
+      type: type as StatusEffect["type"],
+      source,
+      remainingTurns: duration,
+      value,
+      chance,
+    });
+    const targetName = target === "agent" ? "旅人" : monster.name;
+    const effectNames: Record<string, string> = { poison: "中毒", burn: "灼燒", freeze: "冰凍", stun: "眩暈", slow: "減速" };
+    statusEffectsSummary.push(`${targetName}被施加了${effectNames[type] ?? type}效果（${duration}回合）`);
+  }
+
+  // ─── M3L: 回合開始時處理 DoT 和狀態效果 ───
+  function processStatusEffects(roundData: CombatRound): { agentStunned: boolean; monsterStunned: boolean } {
+    let agentStunned = false;
+    let monsterStunned = false;
+    let dotToAgent = 0;
+    let dotToMonster = 0;
+
+    for (let i = activeEffects.length - 1; i >= 0; i--) {
+      const eff = activeEffects[i];
+      const target = eff.source === "agent" ? "monster" : "agent";
+
+      if (eff.type === "poison" || eff.type === "burn") {
+        // DoT 傷害
+        if (target === "agent") {
+          dotToAgent += eff.value;
+        } else {
+          dotToMonster += eff.value;
+        }
+      } else if (eff.type === "freeze" || eff.type === "stun") {
+        // 眩暈/冰凍：每回合有機率跳過行動
+        if (Math.random() * 100 < eff.chance) {
+          if (target === "agent") agentStunned = true;
+          else monsterStunned = true;
+        }
+      } else if (eff.type === "slow") {
+        // 減速效果在先手判定時已處理（簡化處理）
+      }
+
+      eff.remainingTurns--;
+      if (eff.remainingTurns <= 0) {
+        activeEffects.splice(i, 1);
+      }
+    }
+
+    // 應用 DoT 傷害
+    if (dotToAgent > 0) {
+      agentHp = Math.max(0, agentHp - dotToAgent);
+      roundData.dotDamageToAgent = dotToAgent;
+    }
+    if (dotToMonster > 0) {
+      monsterHp = Math.max(0, monsterHp - dotToMonster);
+      roundData.dotDamageToMonster = dotToMonster;
+    }
+
+    roundData.agentStunned = agentStunned;
+    roundData.monsterStunned = monsterStunned;
+    return { agentStunned, monsterStunned };
+  }
+
   // ★ 智慧技能判定系統：根據戰場情況智能選擇技能
   // 五行相剋查詢表（用於技能屬性判定）
   const WUXING_COUNTER: Record<string, string> = { wood: "earth", fire: "metal", earth: "water", metal: "wood", water: "fire" };
-  // 技能屬性推斷（根據技能 ID 前綴推斷屬性）
-  function inferSkillElement(skillId: string): WuXing | null {
+  // M3L: 技能屬性推斷（優先使用技能自身 wuxing 欄位，其次根據 ID 前綴）
+  const WUXING_ZH_TO_EN: Record<string, WuXing> = { "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water" };
+  function inferSkillElement(skillId: string, skillWuxing?: string): WuXing | null {
+    // 優先使用技能自身的五行屬性
+    if (skillWuxing) {
+      const mapped = WUXING_ZH_TO_EN[skillWuxing] ?? (skillWuxing as WuXing);
+      if (["wood", "fire", "earth", "metal", "water"].includes(mapped)) return mapped;
+    }
+    if (skillId.startsWith("S_Wt")) return "water";
     if (skillId.startsWith("S_W")) return "wood";
     if (skillId.startsWith("S_F")) return "fire";
     if (skillId.startsWith("S_E")) return "earth";
     if (skillId.startsWith("S_M")) return "metal";
-    if (skillId.startsWith("S_Wt")) return "water";
-    // 舉例式判斷
     const lower = skillId.toLowerCase();
     if (lower.includes("wood") || lower.includes("heal") || lower.includes("regen")) return "wood";
     if (lower.includes("fire") || lower.includes("burst") || lower.includes("blaze")) return "fire";
@@ -456,6 +640,21 @@ export function resolveCombat(
     // 冷卻倒數
     for (const sk of equippedSkills) {
       if (skillCooldowns[sk.id] && skillCooldowns[sk.id] > 0) skillCooldowns[sk.id]--;
+    }
+    // M3L: 怪物技能冷卻倒數
+    for (const skId of Object.keys(monsterSkillCooldowns)) {
+      if (monsterSkillCooldowns[skId] > 0) monsterSkillCooldowns[skId]--;
+    }
+
+    // M3L: 回合開始時處理附加效果（DoT/眩暈/冰凍）
+    const { agentStunned, monsterStunned } = processStatusEffects(roundData);
+    // DoT 可能導致死亡
+    if (agentHp <= 0 || monsterHp <= 0) {
+      roundData.agentHpAfter = agentHp;
+      roundData.monsterHpAfter = monsterHp;
+      roundData.description = agentHp <= 0 ? `第${roundNum}回合：旅人因狀態異常而倒下！` : `第${roundNum}回合：${monster.name}因狀態異常而倒下！`;
+      rounds.push(roundData);
+      break;
     }
 
     // ★ 智慧技能選擇策略：
@@ -484,7 +683,7 @@ export function resolveCombat(
       const counterElement = Object.entries(WUXING_COUNTER).find(([k]) => k === monsterElement)?.[1];
       // 找對應屬性的攻擊技能
       const counterSkills = attackSkills.filter(sk => {
-        const skElement = inferSkillElement(sk.id);
+        const skElement = inferSkillElement(sk.id, sk.wuxing);
         return skElement && WUXING_COUNTER[skElement] === monsterElement;
       });
       if (counterSkills.length > 0) {
@@ -509,10 +708,18 @@ export function resolveCombat(
     if (usingSkill && chosenSkill) {
       agentMp = Math.max(0, agentMp - mpCost);
       totalMpUsed += mpCost;
-      skillCooldowns[chosenSkill.id] = 2; // 冷卻 2 回合
+      skillCooldowns[chosenSkill.id] = chosenSkill.cooldown ?? 2; // M3L: 使用技能自身冷卻值
     } else {
       agentMp = Math.max(0, agentMp - mpCost);
       totalMpUsed += mpCost;
+    }
+
+    // M3L: 動態更新技能屬性和魔法係數 A
+    if (usingSkill && chosenSkill) {
+      const actualSkillElement = inferSkillElement(chosenSkill.id, chosenSkill.wuxing);
+      if (actualSkillElement) {
+        skillElement = actualSkillElement;
+      }
     }
 
     // 治癒技能處理
@@ -524,49 +731,123 @@ export function resolveCombat(
       roundData.agentSkillType = "heal";
       roundData.agentSkillName = skillName;
       roundData.agentAtk = 0;
-      // 治癒回合不攻擊怪物
-      const monsterSkillIdx = Math.floor(Math.random() * Math.max(1, monster.skills.length));
-      const monsterSkillName = monster.skills[monsterSkillIdx] ?? "普通攻擊";
-      const monsterAtk = Math.round(monsterBaseDmg * randFloat(0.8, 1.2));
-      const agentDodged = Math.random() < Math.min(0.3, agent.speed / (agent.speed + monster.speed + 10));
-      const agentBlocked = !agentDodged && Math.random() < 0.15;
-      const monsterIsCritical = !agentDodged && !agentBlocked && Math.random() < 0.1;
-      const actualMonsterAtk = agentDodged ? 0 : agentBlocked ? Math.round(monsterAtk * 0.5) : monsterIsCritical ? Math.round(monsterAtk * 1.5) : monsterAtk;
+      // M3L: 治癒回合不攻擊怪物，但怪物使用真正技能攻擊
+      let monsterSkillName = "普通攻擊";
+      let monsterSkillMultiplier = 1.0;
+      let monsterSkillEffect: { type: string; chance: number; duration?: number; value?: number } | null = null;
+      let monsterSkillType = "attack";
+      if (!monsterStunned) {
+        const mSkill = chooseMonsterSkill();
+        if (mSkill) {
+          monsterSkillName = mSkill.name;
+          monsterSkillMultiplier = mSkill.powerPercent / 100;
+          monsterSkillEffect = mSkill.additionalEffect ?? null;
+          monsterSkillType = mSkill.skillType;
+          monsterMp = Math.max(0, monsterMp - mSkill.mpCost);
+          totalMonsterMpUsed += mSkill.mpCost;
+          monsterSkillCooldowns[mSkill.id] = mSkill.cooldown;
+          if (!monsterSkillsUsedNames.includes(mSkill.name)) monsterSkillsUsedNames.push(mSkill.name);
+        }
+      } else {
+        monsterSkillName = "眩暈中";
+      }
+
+      // 怪物治癒技能處理
+      if (monsterSkillType === "heal" && !monsterStunned) {
+        const mHealAmt = Math.round(monsterMaxHp * 0.15 * monsterSkillMultiplier);
+        monsterHp = Math.min(monsterMaxHp, monsterHp + mHealAmt);
+        roundData.monsterHealAmount = mHealAmt;
+        roundData.monsterSkillName = monsterSkillName;
+        roundData.monsterSkillType = "heal";
+        roundData.monsterAtk = 0;
+        roundData.agentHpAfter = agentHp;
+        roundData.monsterHpAfter = monsterHp;
+        roundData.description = `第${roundNum}回合：${skillName}治癒了 ${healAmount} HP。${monster.name}使用${monsterSkillName}恢復了 ${mHealAmt} HP！`;
+        rounds.push(roundData);
+        continue;
+      }
+
+      const monsterAtk = monsterStunned ? 0 : Math.round(monsterBaseDmg * monsterSkillMultiplier * randFloat(0.8, 1.2));
+      const agentDodged = !monsterStunned && Math.random() < Math.min(0.3, agent.speed / (agent.speed + monster.speed + 10));
+      const agentBlocked = !agentDodged && !monsterStunned && Math.random() < 0.15;
+      const monsterIsCritical = !agentDodged && !agentBlocked && !monsterStunned && Math.random() < 0.1;
+      const actualMonsterAtk = monsterStunned ? 0 : agentDodged ? 0 : agentBlocked ? Math.round(monsterAtk * 0.5) : monsterIsCritical ? Math.round(monsterAtk * 1.5) : monsterAtk;
       agentHp = Math.max(0, agentHp - actualMonsterAtk);
+      // M3L: 怪物攻擊技能可能觸發附加效果
+      if (!monsterStunned && !agentDodged && actualMonsterAtk > 0 && monsterSkillEffect) {
+        tryApplyEffect(monsterSkillEffect, "monster");
+      }
       roundData.monsterAtk = actualMonsterAtk;
       roundData.monsterSkillName = monsterSkillName;
+      roundData.monsterSkillType = monsterSkillType;
       roundData.agentDodged = agentDodged;
       roundData.agentBlocked = agentBlocked;
       roundData.monsterIsCritical = monsterIsCritical;
       roundData.agentHpAfter = agentHp;
       roundData.monsterHpAfter = monsterHp;
       const healDesc = `${skillName}治癒了 ${healAmount} HP`;
-      const defDesc = agentDodged ? `閃避了${monsterSkillName}` : agentBlocked ? `格擋了${monsterSkillName}（傷害減半）` : monsterIsCritical ? `被${monsterSkillName}暴擊！受到 ${actualMonsterAtk} 傷害` : `受到${monsterSkillName}攻擊，受到 ${actualMonsterAtk} 傷害`;
+      const defDesc = monsterStunned ? `${monster.name}眩暈中，無法行動` : agentDodged ? `閃避了${monsterSkillName}` : agentBlocked ? `格擋了${monsterSkillName}（傷害減半）` : monsterIsCritical ? `被${monsterSkillName}暴擊！受到 ${actualMonsterAtk} 傷害` : `受到${monsterSkillName}攻擊，受到 ${actualMonsterAtk} 傷害`;
       roundData.description = `第${roundNum}回合：${healDesc}。${monster.name}${defDesc}`;
       rounds.push(roundData);
       if (agentHp <= 0) break;
       continue;
     }
 
-    // 攻擊回合
-    const rawAgentAtk = Math.round(agentBaseDmg * skillMultiplier * randFloat(0.8, 1.2));
-    const isCritical = Math.random() < 0.1; // 10% 暴擊機率
-    const monsterDodged = Math.random() < Math.min(0.2, monster.speed / (monster.speed + agent.speed + 15));
-    const monsterBlocked = !monsterDodged && Math.random() < 0.1;
-    const agentAtk = monsterDodged ? 0 : monsterBlocked ? Math.round(rawAgentAtk * 0.5) : isCritical ? Math.round(rawAgentAtk * 1.8) : rawAgentAtk;
+    // ─── M3L: 攻擊回合（加入眩暈判定、怪物技能、附加效果） ───
+    // 玩家攻擊（如果沒被眩暈）
+    let rawAgentAtk = 0;
+    let isCritical = false;
+    let monsterDodged = false;
+    let monsterBlocked = false;
+    let agentAtk = 0;
+    if (!agentStunned) {
+      rawAgentAtk = Math.round(agentBaseDmg * skillMultiplier * randFloat(0.8, 1.2));
+      isCritical = Math.random() < 0.1;
+      monsterDodged = Math.random() < Math.min(0.2, monster.speed / (monster.speed + agent.speed + 15));
+      monsterBlocked = !monsterDodged && Math.random() < 0.1;
+      agentAtk = monsterDodged ? 0 : monsterBlocked ? Math.round(rawAgentAtk * 0.5) : isCritical ? Math.round(rawAgentAtk * 1.8) : rawAgentAtk;
+    }
 
-    const monsterSkillIdx = Math.floor(Math.random() * Math.max(1, monster.skills.length));
-    const monsterSkillName = monster.skills[monsterSkillIdx] ?? "普通攻擊";
-    const rawMonsterAtk = Math.round(monsterBaseDmg * randFloat(0.8, 1.2));
-    const agentDodged = Math.random() < Math.min(0.3, agent.speed / (agent.speed + monster.speed + 10));
-    const agentBlocked = !agentDodged && Math.random() < 0.15;
-    const monsterIsCritical = !agentDodged && !agentBlocked && Math.random() < 0.1;
-    const monsterAtk = agentDodged ? 0 : agentBlocked ? Math.round(rawMonsterAtk * 0.5) : monsterIsCritical ? Math.round(rawMonsterAtk * 1.5) : rawMonsterAtk;
+    // M3L: 怪物技能選擇（使用真正的技能系統）
+    let monsterSkillName = "普通攻擊";
+    let monsterSkillMultiplier = 1.0;
+    let monsterSkillEffect: { type: string; chance: number; duration?: number; value?: number } | null = null;
+    let monsterSkillType = "attack";
+    if (!monsterStunned) {
+      const mSkill = chooseMonsterSkill();
+      if (mSkill) {
+        monsterSkillName = mSkill.name;
+        monsterSkillMultiplier = mSkill.powerPercent / 100;
+        monsterSkillEffect = mSkill.additionalEffect ?? null;
+        monsterSkillType = mSkill.skillType;
+        monsterMp = Math.max(0, monsterMp - mSkill.mpCost);
+        totalMonsterMpUsed += mSkill.mpCost;
+        monsterSkillCooldowns[mSkill.id] = mSkill.cooldown;
+        if (!monsterSkillsUsedNames.includes(mSkill.name)) monsterSkillsUsedNames.push(mSkill.name);
+      }
+    } else {
+      monsterSkillName = "眩暈中";
+    }
 
-    roundData.agentSkillName = skillName;
+    // 怪物治癒技能處理
+    if (monsterSkillType === "heal" && !monsterStunned) {
+      const mHealAmt = Math.round(monsterMaxHp * 0.15 * monsterSkillMultiplier);
+      monsterHp = Math.min(monsterMaxHp, monsterHp + mHealAmt);
+      roundData.monsterHealAmount = mHealAmt;
+      roundData.monsterSkillType = "heal";
+    }
+
+    const rawMonsterAtk = (monsterStunned || monsterSkillType === "heal") ? 0 : Math.round(monsterBaseDmg * monsterSkillMultiplier * randFloat(0.8, 1.2));
+    const agentDodged = !monsterStunned && monsterSkillType !== "heal" && Math.random() < Math.min(0.3, agent.speed / (agent.speed + monster.speed + 10));
+    const agentBlocked = !agentDodged && !monsterStunned && monsterSkillType !== "heal" && Math.random() < 0.15;
+    const monsterIsCritical = !agentDodged && !agentBlocked && !monsterStunned && monsterSkillType !== "heal" && Math.random() < 0.1;
+    const monsterAtk = (monsterStunned || monsterSkillType === "heal") ? 0 : agentDodged ? 0 : agentBlocked ? Math.round(rawMonsterAtk * 0.5) : monsterIsCritical ? Math.round(rawMonsterAtk * 1.5) : rawMonsterAtk;
+
+    roundData.agentSkillName = agentStunned ? "眩暈中" : skillName;
     roundData.agentSkillType = skillType;
     roundData.isCritical = isCritical;
     roundData.monsterSkillName = monsterSkillName;
+    roundData.monsterSkillType = monsterSkillType;
     roundData.agentDodged = agentDodged;
     roundData.agentBlocked = agentBlocked;
     roundData.monsterDodged = monsterDodged;
@@ -580,22 +861,30 @@ export function resolveCombat(
       if (monsterHp <= 0) {
         roundData.monsterAtk = 0;
         roundData.agentHpAfter = agentHp;
-        const atkDesc = monsterDodged ? `${monster.name}閃避了${skillName}` : monsterBlocked ? `${monster.name}格擋了${skillName}（傷害減半）` : isCritical ? `${skillName}暴擊！造成 ${agentAtk} 傷害` : `${skillName}造成 ${agentAtk} 傷害`;
+        const atkDesc = agentStunned ? "眩暈中，無法攻擊" : monsterDodged ? `${monster.name}閃避了${skillName}` : monsterBlocked ? `${monster.name}格擋了${skillName}（傷害減半）` : isCritical ? `${skillName}暴擊！造成 ${agentAtk} 傷害` : `${skillName}造成 ${agentAtk} 傷害`;
         roundData.description = `第${roundNum}回合：${atkDesc}，${monster.name}倒下！`;
         rounds.push(roundData);
         break;
+      }
+      // M3L: 怪物攻擊觸發附加效果
+      if (!monsterStunned && !agentDodged && monsterAtk > 0 && monsterSkillEffect) {
+        tryApplyEffect(monsterSkillEffect, "monster");
       }
       roundData.monsterAtk = monsterAtk;
       agentHp = Math.max(0, agentHp - monsterAtk);
       roundData.agentHpAfter = agentHp;
     } else {
+      // M3L: 怪物攻擊觸發附加效果
+      if (!monsterStunned && !agentDodged && monsterAtk > 0 && monsterSkillEffect) {
+        tryApplyEffect(monsterSkillEffect, "monster");
+      }
       roundData.monsterAtk = monsterAtk;
       agentHp = Math.max(0, agentHp - monsterAtk);
       roundData.agentHpAfter = agentHp;
       if (agentHp <= 0) {
         roundData.agentAtk = 0;
         roundData.monsterHpAfter = monsterHp;
-        const defDesc = agentDodged ? `閃避了${monsterSkillName}` : agentBlocked ? `格擋了${monsterSkillName}（傷害減半）` : monsterIsCritical ? `被${monsterSkillName}暴擊！受到 ${monsterAtk} 傷害` : `受到${monsterSkillName}攻擊，受到 ${monsterAtk} 傷害`;
+        const defDesc = monsterStunned ? `${monster.name}眩暈中` : agentDodged ? `閃避了${monsterSkillName}` : agentBlocked ? `格擋了${monsterSkillName}（傷害減半）` : monsterIsCritical ? `被${monsterSkillName}暴擊！受到 ${monsterAtk} 傷害` : `受到${monsterSkillName}攻擊，受到 ${monsterAtk} 傷害`;
         roundData.description = `第${roundNum}回合：${defDesc}，旅人倒下！`;
         rounds.push(roundData);
         break;
@@ -606,9 +895,9 @@ export function resolveCombat(
     }
 
     // 回合描述
-    const atkDesc = monsterDodged ? `${monster.name}閃避了${skillName}` : monsterBlocked ? `${monster.name}格擋了${skillName}（傷害減半）` : isCritical ? `${skillName}暴擊！造成 ${agentAtk} 傷害` : `${skillName}造成 ${agentAtk} 傷害`;
-    const defDesc = agentDodged ? `閃避了${monsterSkillName}` : agentBlocked ? `格擋了${monsterSkillName}（傷害減半）` : monsterIsCritical ? `被${monsterSkillName}暴擊！受到 ${monsterAtk} 傷害` : `受到${monsterSkillName}攻擊，受到 ${monsterAtk} 傷害`;
-    roundData.description = `第${roundNum}回合：${atkDesc}。${monster.name}${defDesc}`;
+    const atkDesc = agentStunned ? "眩暈中，無法攻擊" : monsterDodged ? `${monster.name}閃避了${skillName}` : monsterBlocked ? `${monster.name}格擋了${skillName}（傷害減半）` : isCritical ? `${skillName}暴擊！造成 ${agentAtk} 傷害` : `${skillName}造成 ${agentAtk} 傷害`;
+    const defDesc = monsterStunned ? `${monster.name}眩暈中，無法行動` : monsterSkillType === "heal" ? `${monster.name}使用${monsterSkillName}恢復了 ${roundData.monsterHealAmount ?? 0} HP` : agentDodged ? `閃避了${monsterSkillName}` : agentBlocked ? `格擋了${monsterSkillName}（傷害減半）` : monsterIsCritical ? `被${monsterSkillName}暴擊！受到 ${monsterAtk} 傷害` : `受到${monsterSkillName}攻擊，受到 ${monsterAtk} 傷害`;
+    roundData.description = `第${roundNum}回合：${atkDesc}。${defDesc}`;
     rounds.push(roundData);
   }
 
@@ -648,6 +937,10 @@ export function resolveCombat(
     raceBoostDesc,
     raceMultiplier,
     monsterRace: monsterRaceStr || undefined,
+    // M3L: 怪物技能和附加效果資訊
+    monsterSkillsUsed: monsterSkillsUsedNames.length > 0 ? monsterSkillsUsedNames : undefined,
+    statusEffectsSummary: statusEffectsSummary.length > 0 ? statusEffectsSummary : undefined,
+    monsterMpUsed: totalMonsterMpUsed > 0 ? totalMonsterMpUsed : undefined,
   };
 }
 
@@ -1046,10 +1339,22 @@ async function processCombatEvent(
   const db = await getDb();
   if (!db) return EMPTY;
 
-  const monsters = getMonstersForNode(currentNode.element, currentNode.monsterLevel);
-  if (monsters.length === 0) return EMPTY;
-
-  const monster = pickRandom(monsters);
+  // M3L: 優先從資料庫讀取怪物（含技能），失敗時 fallback 到靜態陣列
+  let monster: Monster | CombatMonster;
+  try {
+    const dbMonsters = await getCombatMonstersForNode(currentNode.element, currentNode.monsterLevel);
+    if (dbMonsters.length > 0) {
+      monster = pickRandom(dbMonsters);
+    } else {
+      const staticMonsters = getMonstersForNode(currentNode.element, currentNode.monsterLevel);
+      if (staticMonsters.length === 0) return EMPTY;
+      monster = pickRandom(staticMonsters);
+    }
+  } catch {
+    const staticMonsters = getMonstersForNode(currentNode.element, currentNode.monsterLevel);
+    if (staticMonsters.length === 0) return EMPTY;
+    monster = pickRandom(staticMonsters);
+  }
 
   // 戰鬥開始訊息
   const startMsg = formatMessage(pickRandom(EVENT_MESSAGES.combat_start), {
@@ -1067,7 +1372,8 @@ async function processCombatEvent(
   );
 
   // 取得玩家已裝備技能資訊（用於詳細戰鬥計算）
-  let equippedSkillsForCombat: Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number }> = [];
+  // M3L: 取得玩家已裝備技能資訊（加入 wuxing 和 cooldown）
+  let equippedSkillsForCombat: Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number; wuxing?: string; cooldown?: number }> = [];
   try {
     const { agentSkills, gameSkillCatalog } = await import("../drizzle/schema");
     const { eq } = await import("drizzle-orm");
@@ -1084,17 +1390,20 @@ async function processCombatEvent(
         skillType: gameSkillCatalog.category,
         damageMultiplier: gameSkillCatalog.powerPercent,
         mpCost: gameSkillCatalog.mpCost,
+        wuxing: gameSkillCatalog.wuxing,
+        cooldown: gameSkillCatalog.cooldown,
       }).from(gameSkillCatalog).where(inArray(gameSkillCatalog.skillId, installedIds));
       equippedSkillsForCombat = skillData.map(s => ({
         id: s.id,
         name: s.name,
-        skillType: s.skillType === "active" ? "attack" : s.skillType,
+        skillType: s.skillType === "active" ? "attack" : (s.skillType === "active_combat" ? "attack" : s.skillType),
         damageMultiplier: s.damageMultiplier ?? 1.0,
         mpCost: s.mpCost ?? 0,
+        wuxing: s.wuxing,
+        cooldown: s.cooldown ?? 2,
       }));
     }
   } catch {
-    // 如果取得技能失敗，使用普攻
     equippedSkillsForCombat = [];
   }
 
