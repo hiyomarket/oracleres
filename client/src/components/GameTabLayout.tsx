@@ -22,6 +22,7 @@ const GAME_TABS: GameTab[] = [
   { id: "world",    path: "/game",              icon: "🌏", label: "虛相世界" },
   { id: "shop",     path: "/game/gameshop",     icon: "🛒", label: "天命商城" },
   { id: "auction",  path: "/game/auction",      icon: "🏛️", label: "拍賣行" },
+  { id: "pets",     path: "/game/pets",         icon: "🐾", label: "寵物" },
   { id: "pvp",      path: "/game/achievements", icon: "⚔️",  label: "排行/PVP" },
   // Bug 3+9 fix: 管理員後台整合為單一按鈕（僅 admin 可見）
   { id: "admin",    path: "/admin/game",        icon: "⚙️", label: "後台管理",  adminOnly: true },

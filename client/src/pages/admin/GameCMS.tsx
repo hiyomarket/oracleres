@@ -500,6 +500,8 @@ export default function GameCMS() {
             <TabsTrigger value="balance">⚖️ 數值平衡</TabsTrigger>
             <TabsTrigger value="ai-tools">🤖 AI 工具</TabsTrigger>
             <TabsTrigger value="quest-skills">🌟 天命考核</TabsTrigger>
+            <TabsTrigger value="pet-catalog">🐾 寵物圖鑑</TabsTrigger>
+            <TabsTrigger value="pet-ai">🧬 寵物 AI</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -522,6 +524,8 @@ export default function GameCMS() {
               <TabsContent value="balance"><BalanceDashboardTab /></TabsContent>
               <TabsContent value="ai-tools"><AIToolsTab /></TabsContent>
               <TabsContent value="quest-skills"><QuestSkillCMSTab /></TabsContent>
+              <TabsContent value="pet-catalog"><PetCatalogTab /></TabsContent>
+              <TabsContent value="pet-ai"><PetAIToolsTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
@@ -1643,7 +1647,351 @@ function CatalogStatsTab() {
 }
 
 
-// ─── AI 工具 Tab ──────────────────────────────────────────────────────────────
+// ─── 寵物圖鑑管理 Tab ──────────────────────────────────────────────────────────
+function PetCatalogTab() {
+  const utils = trpc.useUtils();
+  const { data: catalogData, isLoading } = trpc.gamePet.getPetCatalog.useQuery({});
+  const catalog = catalogData?.items ?? [];
+  const { data: innateSkillsAll = [] } = trpc.gamePet.getInnateSkills.useQuery({ petCatalogId: 0 });
+  const createMut = trpc.gamePet.createPetCatalog.useMutation({
+    onSuccess: () => { utils.gamePet.getPetCatalog.invalidate(); toast.success("寵物已新增"); setOpen(false); },
+    onError: (e) => toast.error(e.message),
+  });
+  const updateMut = trpc.gamePet.updatePetCatalog.useMutation({
+    onSuccess: () => { utils.gamePet.getPetCatalog.invalidate(); toast.success("已更新"); setOpen(false); },
+    onError: (e) => toast.error(e.message),
+  });
+  const deleteMut = trpc.gamePet.deletePetCatalog.useMutation({
+    onSuccess: () => { utils.gamePet.getPetCatalog.invalidate(); toast.success("已刪除"); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [form, setForm] = useState({
+    name: "", description: "", race: "normal" as const, wuxing: "wood" as const, rarity: "common" as const,
+    growthType: "balanced" as const, baseBpConstitution: 20, baseBpStrength: 20, baseBpDefense: 20,
+    baseBpAgility: 20, baseBpMagic: 20, minLevel: 1, maxLevel: 50, baseCaptureRate: 30,
+    imageUrl: "", isActive: 1, sortOrder: 0,
+  });
+  const [filter, setFilter] = useState<{ wuxing?: string; rarity?: string }>({});
+
+  const openCreate = () => { setEditing(null); setForm({ name: "", description: "", race: "normal" as const, wuxing: "wood" as const, rarity: "common" as const, growthType: "balanced" as const, baseBpConstitution: 20, baseBpStrength: 20, baseBpDefense: 20, baseBpAgility: 20, baseBpMagic: 20, minLevel: 1, maxLevel: 50, baseCaptureRate: 30, imageUrl: "", isActive: 1, sortOrder: 0 }); setOpen(true); };
+  const openEdit = (p: any) => { setEditing(p); setForm({ name: p.name, description: p.description ?? "", race: p.race as any, wuxing: p.wuxing as any, rarity: p.rarity as any, growthType: p.growthType as any, baseBpConstitution: p.baseBpConstitution, baseBpStrength: p.baseBpStrength, baseBpDefense: p.baseBpDefense, baseBpAgility: p.baseBpAgility, baseBpMagic: p.baseBpMagic, minLevel: p.minLevel, maxLevel: p.maxLevel, baseCaptureRate: p.baseCaptureRate, imageUrl: p.imageUrl ?? "", isActive: p.isActive, sortOrder: p.sortOrder ?? 0 }); setOpen(true); };
+
+  const filteredCatalog = catalog.filter((p: any) => {
+    if (filter.wuxing && p.wuxing !== filter.wuxing) return false;
+    if (filter.rarity && p.rarity !== filter.rarity) return false;
+    return true;
+  });
+
+  const WUXING_MAP: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+  const RARITY_MAP: Record<string, string> = { common: "普通", rare: "稀有", epic: "史詩", legendary: "傳說" };
+  const RACE_MAP: Record<string, string> = { dragon: "龍族", undead: "不死族", normal: "一般", insect: "蟲族", plant: "植物族", flying: "飛行族" };
+  const GROWTH_MAP: Record<string, string> = { fighter: "力量型", guardian: "防禦型", swift: "敏捷型", mage: "魔法型", balanced: "均衡型" };
+  const RARITY_COLORS: Record<string, string> = { common: "#9ca3af", rare: "#3b82f6", epic: "#a855f7", legendary: "#f59e0b" };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-bold">🐾 寵物圖鑑管理 ({filteredCatalog.length})</h3>
+        <div className="flex gap-2">
+          <Select value={filter.wuxing ?? "all"} onValueChange={v => setFilter(f => ({ ...f, wuxing: v === "all" ? undefined : v }))}>
+            <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部五行</SelectItem>
+              {Object.entries(WUXING_MAP).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filter.rarity ?? "all"} onValueChange={v => setFilter(f => ({ ...f, rarity: v === "all" ? undefined : v }))}>
+            <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部稀有</SelectItem>
+              {Object.entries(RARITY_MAP).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button onClick={openCreate}>+ 新增寵物</Button>
+        </div>
+      </div>
+
+      {isLoading ? <p className="text-muted-foreground">載入中...</p> : (
+        <div className="border rounded-lg overflow-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="border-b bg-muted/50">
+              <th className="px-3 py-2 text-left">ID</th>
+              <th className="px-3 py-2 text-left">名稱</th>
+              <th className="px-3 py-2 text-left">五行</th>
+              <th className="px-3 py-2 text-left">稀有度</th>
+              <th className="px-3 py-2 text-left">種族</th>
+              <th className="px-3 py-2 text-left">成長型</th>
+              <th className="px-3 py-2 text-center">BP 總和</th>
+              <th className="px-3 py-2 text-center">捕捉率</th>
+              <th className="px-3 py-2 text-center">天生技能</th>
+              <th className="px-3 py-2 text-center">操作</th>
+            </tr></thead>
+            <tbody>
+              {filteredCatalog.map((p: any) => {
+                const totalBp = p.baseBpConstitution + p.baseBpStrength + p.baseBpDefense + p.baseBpAgility + p.baseBpMagic;
+                const skillCount = (innateSkillsAll as any[]).filter((s: any) => s.petCatalogId === p.id).length;
+                return (
+                  <tr key={p.id} className="border-b hover:bg-muted/30">
+                    <td className="px-3 py-2">{p.id}</td>
+                    <td className="px-3 py-2 font-medium">
+                      {p.imageUrl && <img src={p.imageUrl} alt="" className="w-6 h-6 inline mr-1 rounded" />}
+                      {p.name}
+                    </td>
+                    <td className="px-3 py-2"><WuxingBadge wuxing={WUXING_MAP[p.wuxing] ?? p.wuxing} /></td>
+                    <td className="px-3 py-2"><Badge style={{ backgroundColor: RARITY_COLORS[p.rarity], color: "#fff" }}>{RARITY_MAP[p.rarity]}</Badge></td>
+                    <td className="px-3 py-2">{RACE_MAP[p.race] ?? p.race}</td>
+                    <td className="px-3 py-2">{GROWTH_MAP[p.growthType] ?? p.growthType}</td>
+                    <td className="px-3 py-2 text-center font-mono">{totalBp}</td>
+                    <td className="px-3 py-2 text-center">{p.baseCaptureRate}%</td>
+                    <td className="px-3 py-2 text-center">{skillCount}/3</td>
+                    <td className="px-3 py-2 text-center">
+                      <div className="flex gap-1 justify-center">
+                        <Button size="sm" variant="outline" onClick={() => openEdit(p)}>編輯</Button>
+                        <Button size="sm" variant="destructive" onClick={() => { if (confirm(`確定刪除「${p.name}」？`)) deleteMut.mutate({ id: p.id }); }}>刪除</Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* 新增/編輯 Dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editing ? "編輯寵物" : "新增寵物"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><label className="text-xs text-muted-foreground">名稱</label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
+            <div><label className="text-xs text-muted-foreground">描述</label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><label className="text-xs text-muted-foreground">五行</label>
+                <Select value={form.wuxing} onValueChange={v => setForm(f => ({ ...f, wuxing: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(WUXING_MAP).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select></div>
+              <div><label className="text-xs text-muted-foreground">稀有度</label>
+                <Select value={form.rarity} onValueChange={v => setForm(f => ({ ...f, rarity: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(RARITY_MAP).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select></div>
+              <div><label className="text-xs text-muted-foreground">種族</label>
+                <Select value={form.race} onValueChange={v => setForm(f => ({ ...f, race: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(RACE_MAP).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select></div>
+              <div><label className="text-xs text-muted-foreground">成長型態</label>
+                <Select value={form.growthType} onValueChange={v => setForm(f => ({ ...f, growthType: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{Object.entries(GROWTH_MAP).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                </Select></div>
+            </div>
+            <div className="grid grid-cols-5 gap-2">
+              {(["baseBpConstitution", "baseBpStrength", "baseBpDefense", "baseBpAgility", "baseBpMagic"] as const).map(k => (
+                <div key={k}><label className="text-xs text-muted-foreground">{k.replace("baseBp", "")}</label>
+                  <Input type="number" value={form[k]} onChange={e => setForm(f => ({ ...f, [k]: Number(e.target.value) }))} /></div>
+              ))}
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div><label className="text-xs text-muted-foreground">最低等級</label><Input type="number" value={form.minLevel} onChange={e => setForm(f => ({ ...f, minLevel: Number(e.target.value) }))} /></div>
+              <div><label className="text-xs text-muted-foreground">最高等級</label><Input type="number" value={form.maxLevel} onChange={e => setForm(f => ({ ...f, maxLevel: Number(e.target.value) }))} /></div>
+              <div><label className="text-xs text-muted-foreground">捕捉率(%)</label><Input type="number" value={form.baseCaptureRate} onChange={e => setForm(f => ({ ...f, baseCaptureRate: Number(e.target.value) }))} /></div>
+            </div>
+            <div><label className="text-xs text-muted-foreground">圖片 URL</label><Input value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} /></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>取消</Button>
+            <Button onClick={() => { if (editing) { updateMut.mutate({ id: editing.id, data: form }); } else { createMut.mutate(form); } }} disabled={createMut.isPending || updateMut.isPending}>
+              {editing ? "更新" : "新增"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ─── 寵物 AI 工具 Tab ──────────────────────────────────────────────────────────
+function PetAIToolsTab() {
+  const utils = trpc.useUtils();
+  const [selectedPetId, setSelectedPetId] = useState("");
+
+  const { data: petCatalog = [] } = trpc.gamePet.getPetCatalog.useQuery({});
+
+  // AI 批量生成寵物
+  const aiBatchGenPets = trpc.gameAI.aiBatchGeneratePets.useMutation({
+    onSuccess: (data) => { toast.success(data.message); utils.gamePet.getPetCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message || "AI 寵物生成失敗"),
+  });
+
+  // AI 為指定寵物生成天生技能
+  const aiGenInnateSkills = trpc.gameAI.aiGeneratePetInnateSkills.useMutation({
+    onSuccess: (data) => { toast.success(data.message); utils.gamePet.getInnateSkills.invalidate(); utils.gamePet.getPetCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message || "AI 技能生成失敗"),
+  });
+
+  // AI 批量補齊天生技能
+  const aiBatchFillSkills = trpc.gameAI.aiBatchFillPetSkills.useMutation({
+    onSuccess: (data) => { toast.success(data.message); utils.gamePet.getInnateSkills.invalidate(); utils.gamePet.getPetCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message || "AI 批量補齊失敗"),
+  });
+
+  // AI 審核全部寵物
+  const aiAuditPets = trpc.gameAI.aiAuditAllPets.useMutation({
+    onSuccess: (data) => { toast.success(data.message); utils.gamePet.getPetCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message || "AI 審核失敗"),
+  });
+
+  const WUXING_MAP: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+  const isGenerating = aiBatchGenPets.isPending;
+
+  return (
+    <div className="space-y-8">
+      {/* 區塊 1：AI 批量生成寵物 */}
+      <div>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">🧬 AI 批量生成寵物</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          AI 自動生成 10 隻新寵物，確保名稱不重複、五行分布均衡、BP 數值符合稀有度規範。
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={() => aiBatchGenPets.mutate({ count: 10 })} disabled={isGenerating} className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700">
+            {isGenerating ? "⏳ AI 生成中..." : "🧬 一鍵生成 10 隻寵物"}
+          </Button>
+          <Button variant="outline" onClick={() => aiBatchGenPets.mutate({ count: 5 })} disabled={isGenerating}>
+            {isGenerating ? "⏳..." : "生成 5 隻"}
+          </Button>
+        </div>
+        {aiBatchGenPets.data && (
+          <div className="mt-3 p-3 rounded-lg border bg-purple-50 dark:bg-purple-950/30 text-sm">
+            <p className="font-medium text-purple-700 dark:text-purple-400">✅ {aiBatchGenPets.data.message}</p>
+            {aiBatchGenPets.data.insertedNames.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {aiBatchGenPets.data.insertedNames.map((name: string, i: number) => (
+                  <Badge key={i} variant="secondary" className="text-xs">{name}</Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <hr className="border-border" />
+
+      {/* 區塊 2：AI 天生技能生成 */}
+      <div>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">🎯 AI 天生技能生成</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          為指定寵物生成天生技能（最多 3 個），或一鍵補齊所有缺少技能的寵物。
+        </p>
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-xs text-muted-foreground mb-1 block">選擇寵物</label>
+            <Select value={selectedPetId} onValueChange={setSelectedPetId}>
+              <SelectTrigger><SelectValue placeholder="選擇一隻寵物..." /></SelectTrigger>
+              <SelectContent className="max-h-60">
+                {(petCatalog as any[]).map((p: any) => (
+                  <SelectItem key={p.id} value={String(p.id)}>
+                    {p.name} ({WUXING_MAP[p.wuxing] ?? p.wuxing}/{p.rarity})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={() => { if (selectedPetId) aiGenInnateSkills.mutate({ petCatalogId: Number(selectedPetId) }); }} disabled={!selectedPetId || aiGenInnateSkills.isPending} className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700">
+            {aiGenInnateSkills.isPending ? "⏳ AI 生成中..." : "🧠 為這隻寵物生成技能"}
+          </Button>
+          <Button variant="outline" onClick={() => aiBatchFillSkills.mutate()} disabled={aiBatchFillSkills.isPending}>
+            {aiBatchFillSkills.isPending ? "⏳ 批量處理中..." : "🔄 一鍵補齊所有寵物技能"}
+          </Button>
+        </div>
+        {aiGenInnateSkills.data && (
+          <div className="mt-3 p-3 rounded-lg border bg-emerald-50 dark:bg-emerald-950/30 text-sm">
+            <p className="font-medium text-emerald-700 dark:text-emerald-400">✅ {aiGenInnateSkills.data.message}</p>
+            {aiGenInnateSkills.data.insertedNames.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {aiGenInnateSkills.data.insertedNames.map((name: string, i: number) => (
+                  <Badge key={i} variant="secondary" className="text-xs">{name}</Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {aiBatchFillSkills.data && (
+          <div className="mt-3 p-3 rounded-lg border bg-teal-50 dark:bg-teal-950/30 text-sm">
+            <p className="font-medium text-teal-700 dark:text-teal-400">✅ {aiBatchFillSkills.data.message}</p>
+            {(aiBatchFillSkills.data as any).results?.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {(aiBatchFillSkills.data as any).results.map((r: any, i: number) => (
+                  <Badge key={i} variant="secondary" className="text-xs">{r.petName} (+{r.skillCount}技能)</Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <hr className="border-border" />
+
+      {/* 區塊 3：AI 審核全部寵物 */}
+      <div>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">⚖️ AI 寵物平衡審核</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          掃描所有寵物圖鑑，檢查 BP 數值、捕捉率、等級範圍是否符合稀有度規範，自動修正可修正的問題。
+        </p>
+        <Button onClick={() => aiAuditPets.mutate()} disabled={aiAuditPets.isPending} className="bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700">
+          {aiAuditPets.isPending ? "⏳ 審核中..." : "🔍 一鍵審核全部寵物"}
+        </Button>
+        {aiAuditPets.data && (
+          <div className="mt-3 p-3 rounded-lg border bg-amber-50 dark:bg-amber-950/20 text-sm">
+            <p className="font-medium text-amber-700 dark:text-amber-400">✅ {aiAuditPets.data.message}</p>
+            {(aiAuditPets.data as any).results?.length > 0 && (
+              <div className="mt-2 max-h-48 overflow-y-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b border-amber-200 dark:border-amber-800">
+                    <th className="text-left py-1 px-1">ID</th>
+                    <th className="text-left py-1 px-1">名稱</th>
+                    <th className="text-left py-1 px-1">問題</th>
+                    <th className="text-center py-1 px-1">已修正</th>
+                  </tr></thead>
+                  <tbody>
+                    {(aiAuditPets.data as any).results.map((r: any) => (
+                      <tr key={r.id} className="border-b border-amber-100 dark:border-amber-900/30">
+                        <td className="py-1 px-1">{r.id}</td>
+                        <td className="py-1 px-1 font-medium">{r.name}</td>
+                        <td className="py-1 px-1 text-red-500">{r.warnings.join("; ")}</td>
+                        <td className="py-1 px-1 text-center">{r.autoFixed ? "✅" : "❌"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <hr className="border-border" />
+
+      {/* 使用說明 */}
+      <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+        <h4 className="font-semibold mb-2">💡 寵物 AI 工具使用說明</h4>
+        <ul className="space-y-1 list-disc list-inside">
+          <li><strong>AI 生成寵物</strong>：每次生成 5-10 隻，AI 自動分配五行、稀有度、BP 數值</li>
+          <li><strong>AI 天生技能</strong>：根據寵物五行和種族特色生成 3 個天生技能（Lv.1/20/50 解鎖）</li>
+          <li><strong>AI 審核</strong>：掃描所有寵物的 BP、捕捉率、等級範圍，自動修正不合規的數值</li>
+          <li>寵物 BP 總和規範：common 60-80, rare 80-100, epic 100-120, legendary 120-150</li>
+          <li>捕捉率規範：common 25-45%, rare 15-30%, epic 8-20%, legendary 3-10%</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// ─── AI 工具 Tab ──────────────────────────────────────────────────────────────────
 function AIToolsTab() {
   const utils = trpc.useUtils();
   const [selectedMonsterId, setSelectedMonsterId] = useState("");

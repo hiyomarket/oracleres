@@ -30,6 +30,7 @@ import { gameAIRouter } from './routers/gameAI';
 import { gameAIBalanceRouter } from './routers/gameAIBalance';
 import { balanceRulesRouter } from './routers/balanceRules';
 import { questSkillRouter } from './routers/questSkill';
+import { gamePetRouter } from './routers/gamePet';
 import { auctionRouter } from './routers/auction';
 import { startTickEngine } from './tickEngine';
 import { startWorldTickEngine } from './worldTickEngine';
@@ -92,6 +93,7 @@ export const appRouter = router({
   questSkillCatalog: questSkillRouter.catalog,
   questSkillStep: questSkillRouter.step,
   questSkillProgress: questSkillRouter.progress,
+  gamePet: gamePetRouter,
   businessHub: businessHubRouter,
   userGroups: userGroupsRouter,
   auth: router({

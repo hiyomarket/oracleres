@@ -21,7 +21,10 @@ import {
   gameNpcCatalog,
   gameQuestSkillCatalog,
   gameQuestSteps,
+  gamePetCatalog,
+  gamePetInnateSkills,
 } from "../../drizzle/schema";
+import { RACE_HP_MULTIPLIER, auditPetCatalog } from "../services/petEngine";
 import { sql, like, eq, desc, asc, inArray } from "drizzle-orm";
 import { auditMonster, auditSkill, auditEquipment, auditItemPrice, auditAndFix } from "../services/aiValueAudit";
 
@@ -1535,4 +1538,430 @@ ${monsterDescriptions}
         message: `AI 成功生成 ${insertedCount} 個 NPC：${insertedNames.join("、")}`,
       };
     }),
+
+  // ═══════════════════════════════════════════════════════════
+  // 寵物系統 AI 生成工具 (GD-019)
+  // ═══════════════════════════════════════════════════════════
+
+  /**
+   * AI 批量生成寵物圖鑑
+   * 每次生成 10 隻寵物，自動校正數值平衡
+   */
+  aiBatchGeneratePets: adminProcedure
+    .input(z.object({
+      count: z.number().min(1).max(10).default(10),
+    }).optional())
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const count = input?.count ?? 10;
+
+      // 取得現有寵物名稱
+      const existing = await db.select({ name: gamePetCatalog.name }).from(gamePetCatalog);
+      const existingNames = existing.map(r => r.name);
+
+      const prompt = `你是一個東方玄幻 MMORPG 遊戲「天命共振」的寵物設計師。遊戲世界觀基於五行（木火土金水）。
+現有 ${existingNames.length} 隻寵物。
+${existingNames.length > 0 ? `\n已有名稱（不可重複）：\n${existingNames.join("、")}` : ""}
+
+請生成 ${count} 隻新寵物，要求：
+- 名稱不可與已有寵物重複，要有東方玄幻風格（如：玉麟獸、紫焰鳥、青蜂靈、魔玉蝶）
+- 五行分布均衡（木火土金水各 2 隻）
+- 稀有度分布：common 4, rare 3, epic 2, legendary 1
+- 種族從以下選擇：dragon(龍族), undead(不死族), normal(一般), insect(蟲族), plant(植物族), flying(飛行族)
+- 成長型態從以下選擇：fighter(力量型), guardian(防禦型), swift(敏捷型), mage(魔法型), balanced(均衡型)
+- 基礎 BP 五維總和應在 60-150 之間，根據稀有度調整：
+  common: 60-80, rare: 80-100, epic: 100-120, legendary: 120-150
+- 捕捉率按稀有度：common 25-45%, rare 15-30%, epic 8-20%, legendary 3-10%
+- 等級範圍合理（minLevel-maxLevel）
+
+回覆 JSON 陣列，每個元素格式：
+{
+  "name": "寵物名稱",
+  "description": "簡短描述（30-80字）",
+  "race": "dragon/undead/normal/insect/plant/flying",
+  "wuxing": "wood/fire/earth/metal/water",
+  "rarity": "common/rare/epic/legendary",
+  "growthType": "fighter/guardian/swift/mage/balanced",
+  "baseBpConstitution": 20,
+  "baseBpStrength": 20,
+  "baseBpDefense": 20,
+  "baseBpAgility": 20,
+  "baseBpMagic": 20,
+  "minLevel": 1,
+  "maxLevel": 50,
+  "baseCaptureRate": 30
+}`;
+
+      let generatedPets: any[] = [];
+      try {
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: "你是遊戲寵物設計 AI，只回覆 JSON 陣列，不加任何 markdown 標記或解釋。確保生成的內容符合遊戲平衡性。" },
+            { role: "user", content: prompt },
+          ],
+        });
+        const content = response.choices?.[0]?.message?.content;
+        if (content && typeof content === "string") {
+          let jsonStr = content.trim();
+          if (jsonStr.startsWith("```")) {
+            jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+          }
+          generatedPets = JSON.parse(jsonStr);
+        }
+      } catch (err) {
+        console.error("[AI PetGenerate] LLM 呼叫失敗:", err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 生成失敗，請稍後再試" });
+      }
+
+      if (!Array.isArray(generatedPets) || generatedPets.length === 0) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 生成結果為空" });
+      }
+
+      // 過濾重複名稱
+      generatedPets = generatedPets.filter(p => p.name && !existingNames.includes(p.name)).slice(0, count);
+
+      let insertedCount = 0;
+      const insertedNames: string[] = [];
+
+      for (const pet of generatedPets) {
+        try {
+          const race = pet.race || "normal";
+          const raceHpMul = RACE_HP_MULTIPLIER[race] ?? 1.0;
+
+          // 自動校正 BP 總值
+          let totalBp = (pet.baseBpConstitution || 20) + (pet.baseBpStrength || 20) + (pet.baseBpDefense || 20) + (pet.baseBpAgility || 20) + (pet.baseBpMagic || 20);
+          const rarityBpRange: Record<string, [number, number]> = {
+            common: [60, 80], rare: [80, 100], epic: [100, 120], legendary: [120, 150],
+          };
+          const bpRange = rarityBpRange[pet.rarity] || [60, 80];
+          let bpScale = 1;
+          if (totalBp < bpRange[0] || totalBp > bpRange[1]) {
+            const targetBp = Math.round((bpRange[0] + bpRange[1]) / 2);
+            bpScale = targetBp / (totalBp || 100);
+          }
+
+          const baseBp = {
+            baseBpConstitution: Math.max(5, Math.round((pet.baseBpConstitution || 20) * bpScale)),
+            baseBpStrength: Math.max(5, Math.round((pet.baseBpStrength || 20) * bpScale)),
+            baseBpDefense: Math.max(5, Math.round((pet.baseBpDefense || 20) * bpScale)),
+            baseBpAgility: Math.max(5, Math.round((pet.baseBpAgility || 20) * bpScale)),
+            baseBpMagic: Math.max(5, Math.round((pet.baseBpMagic || 20) * bpScale)),
+          };
+
+          // 捕捉率校正
+          const captureRanges: Record<string, [number, number]> = {
+            common: [25, 45], rare: [15, 30], epic: [8, 20], legendary: [3, 10],
+          };
+          const cRange = captureRanges[pet.rarity] || [25, 45];
+          let captureRate = pet.baseCaptureRate || Math.round((cRange[0] + cRange[1]) / 2);
+          if (captureRate < cRange[0] || captureRate > cRange[1]) {
+            captureRate = Math.round((cRange[0] + cRange[1]) / 2);
+          }
+
+          await db.insert(gamePetCatalog).values({
+            name: pet.name,
+            description: pet.description || "",
+            race,
+            wuxing: pet.wuxing || "earth",
+            rarity: pet.rarity || "common",
+            growthType: pet.growthType || "balanced",
+            ...baseBp,
+            raceHpMultiplier: raceHpMul,
+            minLevel: Math.max(1, pet.minLevel || 1),
+            maxLevel: Math.min(60, pet.maxLevel || 50),
+            baseCaptureRate: captureRate,
+            isActive: 1,
+            sortOrder: insertedCount,
+          });
+          insertedNames.push(pet.name);
+          existingNames.push(pet.name);
+          insertedCount++;
+        } catch (err) {
+          console.error(`[AI PetGenerate] 插入 ${pet.name} 失敗:`, err);
+        }
+      }
+
+      return {
+        success: true,
+        insertedCount,
+        insertedNames,
+        message: `AI 成功生成 ${insertedCount} 隻寵物：${insertedNames.join("、")}`,
+      };
+    }),
+
+  /**
+   * AI 為寵物生成天生技能
+   */
+  aiGeneratePetInnateSkills: adminProcedure
+    .input(z.object({
+      petCatalogId: z.number().int(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const [pet] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, input.petCatalogId));
+      if (!pet) throw new TRPCError({ code: "NOT_FOUND", message: "寵物不存在" });
+
+      // 檢查是否已有天生技能
+      const existingSkills = await db.select().from(gamePetInnateSkills)
+        .where(eq(gamePetInnateSkills.petCatalogId, input.petCatalogId));
+      if (existingSkills.length >= 3) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "已有 3 個天生技能，無法再生成" });
+      }
+
+      // 取得所有寵物天生技能名稱（避免重複）
+      const allSkills = await db.select({ name: gamePetInnateSkills.name }).from(gamePetInnateSkills);
+      const allSkillNames = allSkills.map(s => s.name);
+
+      const slotsToGenerate = 3 - existingSkills.length;
+      const startSlot = existingSkills.length + 1;
+
+      const response = await invokeLLM({
+        messages: [
+          { role: "system", content: "你是東方玄幻 MMORPG 的寵物技能設計師。回覆純 JSON 陣列，不要加任何說明文字。" },
+          { role: "user", content: `為以下寵物設計 ${slotsToGenerate} 個天生技能：
+
+寵物：${pet.name}
+五行：${pet.wuxing}
+種族：${pet.race}
+稀有度：${pet.rarity}
+成長型態：${pet.growthType}
+描述：${pet.description || "無"}
+
+設計要求：
+- 技能要符合寵物的五行屬性和種族特色
+- 第 1 格（Lv.1 解鎖）：基礎技能，威力 60-100%
+- 第 2 格（Lv.20 解鎖）：中階技能，威力 100-150%
+- 第 3 格（Lv.50 解鎖）：強力技能，威力 150-250%
+- 技能類型：attack(攻擊), heal(治療), buff(增益), debuff(減益), utility(輔助)
+- MP 消耗：3-25，冷却：0-5
+- 名稱不可與已有技能重複
+
+已有技能名稱：${allSkillNames.slice(0, 30).join("、") || "無"}
+
+回覆 JSON 陣列：
+[{
+  "name": "技能名稱",
+  "description": "技能描述",
+  "skillType": "attack/heal/buff/debuff/utility",
+  "wuxing": "${pet.wuxing}",
+  "powerPercent": 100,
+  "mpCost": 5,
+  "cooldown": 2,
+  "unlockLevel": 1,
+  "slotIndex": ${startSlot}
+}]` },
+        ],
+      });
+
+      const content = response.choices?.[0]?.message?.content as string;
+      let skills: any[];
+      try {
+        let jsonStr = content.trim();
+        if (jsonStr.startsWith("```")) {
+          jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+        }
+        const parsed = JSON.parse(jsonStr);
+        skills = Array.isArray(parsed) ? parsed : parsed.skills || parsed.data || [parsed];
+      } catch {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 回覆格式錯誤" });
+      }
+
+      const unlockLevels = [1, 20, 50];
+      let insertedCount = 0;
+      const insertedNames: string[] = [];
+
+      for (let i = 0; i < Math.min(skills.length, slotsToGenerate); i++) {
+        const skill = skills[i];
+        if (!skill.name || allSkillNames.includes(skill.name)) continue;
+        const slotIdx = startSlot + i;
+        try {
+          await db.insert(gamePetInnateSkills).values({
+            petCatalogId: input.petCatalogId,
+            name: skill.name,
+            description: skill.description || "",
+            skillType: skill.skillType || "attack",
+            wuxing: skill.wuxing || pet.wuxing,
+            powerPercent: Math.min(300, Math.max(0, skill.powerPercent || 100)),
+            mpCost: Math.min(50, Math.max(0, skill.mpCost || 5)),
+            cooldown: Math.min(10, Math.max(0, skill.cooldown || 2)),
+            unlockLevel: unlockLevels[slotIdx - 1] || 1,
+            slotIndex: slotIdx,
+            sortOrder: slotIdx,
+          });
+          insertedNames.push(skill.name);
+          allSkillNames.push(skill.name);
+          insertedCount++;
+        } catch (err) {
+          console.error(`[AI PetSkill] 插入 ${skill.name} 失敗:`, err);
+        }
+      }
+
+      return {
+        success: true,
+        insertedCount,
+        insertedNames,
+        message: `為「${pet.name}」生成了 ${insertedCount} 個天生技能：${insertedNames.join("、")}`,
+      };
+    }),
+
+  /**
+   * AI 批量補齊所有缺少天生技能的寵物
+   */
+  aiBatchFillPetSkills: adminProcedure
+    .mutation(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // 找出所有寵物和其技能數量
+      const allPets = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.isActive, 1));
+      const allSkillCounts = await db.select({
+        petCatalogId: gamePetInnateSkills.petCatalogId,
+        count: sql<number>`count(*)`,
+      }).from(gamePetInnateSkills).groupBy(gamePetInnateSkills.petCatalogId);
+
+      const countMap = new Map(allSkillCounts.map(r => [r.petCatalogId, r.count]));
+      const petsNeedingSkills = allPets.filter(p => (countMap.get(p.id) || 0) < 3);
+
+      if (petsNeedingSkills.length === 0) {
+        return { success: true, processed: 0, message: "所有寵物都已有完整天生技能" };
+      }
+
+      // 每次最多處理 5 隻
+      const batch = petsNeedingSkills.slice(0, 5);
+      const allSkills = await db.select({ name: gamePetInnateSkills.name }).from(gamePetInnateSkills);
+      const existingNames = allSkills.map(s => s.name);
+
+      const petDescriptions = batch.map(p => {
+        const existCount = countMap.get(p.id) || 0;
+        return `${p.id}|${p.name}|${p.wuxing}|${p.race}|${p.rarity}|${p.growthType}|已有${existCount}個技能|需要${3 - existCount}個`;
+      }).join("\n");
+
+      const response = await invokeLLM({
+        messages: [
+          { role: "system", content: "你是東方玄幻 MMORPG 的寵物技能設計師。回覆純 JSON 物件，key 為寵物 ID，value 為技能陣列。" },
+          { role: "user", content: `為以下 ${batch.length} 隻寵物補齊天生技能：
+
+格式：ID|名稱|五行|種族|稀有度|成長型|已有數|需要數
+${petDescriptions}
+
+規則：
+- 第 1 格（Lv.1 解鎖）：基礎技能，威力 60-100%
+- 第 2 格（Lv.20 解鎖）：中階技能，威力 100-150%
+- 第 3 格（Lv.50 解鎖）：強力技能，威力 150-250%
+- 技能要符合寵物五行和種族
+- 名稱不可重複
+
+已有技能名稱：${existingNames.slice(0, 30).join("、") || "無"}
+
+回覆 JSON：
+{
+  "1": [{"name":"技能名","skillType":"attack","wuxing":"木","powerPercent":80,"mpCost":5,"cooldown":2,"description":"描述"}],
+  ...
+}` },
+        ],
+        response_format: { type: "json_object" },
+      });
+
+      const content = response.choices?.[0]?.message?.content as string;
+      let skillMap: Record<string, any[]>;
+      try {
+        skillMap = JSON.parse(content);
+      } catch {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 回覆格式錯誤" });
+      }
+
+      const unlockLevels = [1, 20, 50];
+      let totalInserted = 0;
+      const results: { petId: number; petName: string; skillCount: number }[] = [];
+
+      for (const pet of batch) {
+        const skills = skillMap[String(pet.id)];
+        if (!skills || !Array.isArray(skills)) continue;
+
+        const existCount = countMap.get(pet.id) || 0;
+        let inserted = 0;
+
+        for (let i = 0; i < Math.min(skills.length, 3 - existCount); i++) {
+          const skill = skills[i];
+          if (!skill.name || existingNames.includes(skill.name)) continue;
+          const slotIdx = existCount + i + 1;
+          try {
+            await db.insert(gamePetInnateSkills).values({
+              petCatalogId: pet.id,
+              name: skill.name,
+              description: skill.description || "",
+              skillType: skill.skillType || "attack",
+              wuxing: skill.wuxing || pet.wuxing,
+              powerPercent: Math.min(300, Math.max(0, skill.powerPercent || 100)),
+              mpCost: Math.min(50, Math.max(0, skill.mpCost || 5)),
+              cooldown: Math.min(10, Math.max(0, skill.cooldown || 2)),
+              unlockLevel: unlockLevels[slotIdx - 1] || 1,
+              slotIndex: slotIdx,
+              sortOrder: slotIdx,
+            });
+            existingNames.push(skill.name);
+            inserted++;
+            totalInserted++;
+          } catch (err) {
+            console.error(`[AI PetSkillBatch] 插入失敗:`, err);
+          }
+        }
+
+        results.push({ petId: pet.id, petName: pet.name, skillCount: inserted });
+      }
+
+      return {
+        success: true,
+        processed: results.length,
+        totalSkillsCreated: totalInserted,
+        remaining: petsNeedingSkills.length - batch.length,
+        results,
+        message: `已為 ${results.length} 隻寵物生成 ${totalInserted} 個天生技能，剩餘 ${petsNeedingSkills.length - batch.length} 隻待處理`,
+      };
+    }),
+
+  /**
+   * AI 審核全部寵物圖鑑平衡性
+   */
+  aiAuditAllPets: adminProcedure.mutation(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+    const allPets = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.isActive, 1));
+    const results: { id: number; name: string; valid: boolean; warnings: string[]; autoFixed: boolean }[] = [];
+
+    for (const pet of allPets) {
+      const audit = auditPetCatalog(pet);
+      let autoFixed = false;
+
+      // 自動修正可修正的問題
+      if (Object.keys(audit.fixes).length > 0) {
+        await db.update(gamePetCatalog).set(audit.fixes as any).where(eq(gamePetCatalog.id, pet.id));
+        autoFixed = true;
+      }
+
+      results.push({
+        id: pet.id,
+        name: pet.name,
+        valid: audit.valid,
+        warnings: audit.warnings,
+        autoFixed,
+      });
+    }
+
+    const invalidCount = results.filter(r => !r.valid).length;
+    const fixedCount = results.filter(r => r.autoFixed).length;
+
+    return {
+      success: true,
+      total: results.length,
+      invalidCount,
+      fixedCount,
+      results: results.filter(r => !r.valid), // 只回傳有問題的
+      message: `審核完成：${results.length} 隻寵物，${invalidCount} 隻有問題，${fixedCount} 隻已自動修正`,
+    };
+  }),
 });

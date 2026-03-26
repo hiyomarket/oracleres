@@ -1,0 +1,1 @@
+ALTER TABLE `game_agents` ADD `infuse_points_used` int DEFAULT 0 NOT NULL;

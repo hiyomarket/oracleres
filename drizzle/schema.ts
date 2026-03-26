@@ -1753,6 +1753,8 @@ export const gameAgents = mysqlTable("game_agents", {
   /** 靈癒疲勞最後使用日期 */
   lastDivineStaminaDate: varchar("last_divine_stamina_date", { length: 10 }),
   /** 桌機版浮動 Widget 位置記憶（JSON: { widgetId: { x, y } }） */
+  /** 手動注靈已使用點數（上限 = level × 2） */
+  infusePointsUsed: int("infuse_points_used").notNull().default(0),
   /** 玩家自訂頭像（S3 URL） */
   avatarUrl: varchar("avatar_url", { length: 500 }),
   widgetLayout: json("widget_layout").$type<Record<string, { x: number; y: number }>>(),
@@ -3057,3 +3059,167 @@ export const gameLearnedQuestSkills = mysqlTable("game_learned_quest_skills", {
 });
 export type GameLearnedQuestSkill = typeof gameLearnedQuestSkills.$inferSelect;
 export type InsertGameLearnedQuestSkill = typeof gameLearnedQuestSkills.$inferInsert;
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// M7: 寵物系統 (GD-019)
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * 寵物圖鑑（管理員定義的寵物種族模板）
+ * 每種寵物有基礎屬性、種族、屬性、天生技能池
+ */
+export const gamePetCatalog = mysqlTable("game_pet_catalog", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 寵物名稱 */
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 寵物描述 */
+  description: text("description"),
+  /** 種族：dragon/undead/normal/insect/plant/flying */
+  race: varchar("race", { length: 30 }).notNull().default("normal"),
+  /** 五行屬性：wood/fire/earth/metal/water */
+  wuxing: varchar("wuxing", { length: 20 }).notNull().default("earth"),
+  /** 稀有度：common/rare/epic/legendary */
+  rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
+  /** 成長型態：fighter/guardian/swift/mage/balanced */
+  growthType: varchar("growth_type", { length: 20 }).notNull().default("balanced"),
+  /** 基礎 BP 五維（捕捉時的初始分配參考） */
+  baseBpConstitution: int("base_bp_constitution").notNull().default(20),
+  baseBpStrength: int("base_bp_strength").notNull().default(20),
+  baseBpDefense: int("base_bp_defense").notNull().default(20),
+  baseBpAgility: int("base_bp_agility").notNull().default(20),
+  baseBpMagic: int("base_bp_magic").notNull().default(20),
+  /** 種族 HP 倍率（龍×1.3, 不死×1.2, 一般×1.0, 昆蟲×0.9, 植物×0.8, 飛行×1.0） */
+  raceHpMultiplier: float("race_hp_multiplier").notNull().default(1.0),
+  /** 可出現的最低等級 */
+  minLevel: int("min_level").notNull().default(1),
+  /** 可出現的最高等級 */
+  maxLevel: int("max_level").notNull().default(50),
+  /** 捕捉基礎率（0-100，預設 30） */
+  baseCaptureRate: int("base_capture_rate").notNull().default(30),
+  /** 圖片 URL */
+  imageUrl: text("image_url"),
+  /** 是否啟用 */
+  isActive: tinyint("is_active").notNull().default(1),
+  /** 排序 */
+  sortOrder: int("sort_order").notNull().default(0),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GamePetCatalog = typeof gamePetCatalog.$inferSelect;
+export type InsertGamePetCatalog = typeof gamePetCatalog.$inferInsert;
+
+/**
+ * 寵物天生技能池（每種寵物可擁有的天生技能定義）
+ * 天生技能在捕捉時/Lv20/Lv50 自動解鎖，種族固定不可刪除
+ */
+export const gamePetInnateSkills = mysqlTable("game_pet_innate_skills", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 所屬寵物圖鑑 ID */
+  petCatalogId: int("pet_catalog_id").notNull(),
+  /** 技能名稱 */
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 技能描述 */
+  description: text("description"),
+  /** 技能類型：attack/heal/buff/debuff/utility */
+  skillType: varchar("skill_type", { length: 20 }).notNull().default("attack"),
+  /** 五行屬性 */
+  wuxing: varchar("wuxing", { length: 20 }),
+  /** 威力百分比 */
+  powerPercent: int("power_percent").notNull().default(100),
+  /** MP 消耗 */
+  mpCost: int("mp_cost").notNull().default(5),
+  /** 冷卻回合數 */
+  cooldown: int("cooldown").notNull().default(2),
+  /** 解鎖等級（1=捕捉時, 20=Lv20, 50=Lv50） */
+  unlockLevel: int("unlock_level").notNull().default(1),
+  /** 技能欄位置（1-3） */
+  slotIndex: int("slot_index").notNull().default(1),
+  /** 排序 */
+  sortOrder: int("sort_order").notNull().default(0),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GamePetInnateSkill = typeof gamePetInnateSkills.$inferSelect;
+export type InsertGamePetInnateSkill = typeof gamePetInnateSkills.$inferInsert;
+
+/**
+ * 玩家寵物（玩家捕捉到的寵物實例）
+ * 每隻寵物有獨立的等級、BP、技能配置
+ */
+export const gamePlayerPets = mysqlTable("game_player_pets", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 所屬玩家角色 ID */
+  agentId: int("agent_id").notNull(),
+  /** 寵物圖鑑 ID */
+  petCatalogId: int("pet_catalog_id").notNull(),
+  /** 寵物暱稱（玩家可自訂） */
+  nickname: varchar("nickname", { length: 100 }),
+  /** 當前等級 */
+  level: int("level").notNull().default(1),
+  /** 當前經驗值 */
+  exp: int("exp").notNull().default(0),
+  /** 檔位等級：S/A/B/C/D/E */
+  tier: varchar("tier", { length: 5 }).notNull().default("C"),
+  /** BP 五維（當前累積值） */
+  bpConstitution: int("bp_constitution").notNull().default(20),
+  bpStrength: int("bp_strength").notNull().default(20),
+  bpDefense: int("bp_defense").notNull().default(20),
+  bpAgility: int("bp_agility").notNull().default(20),
+  bpMagic: int("bp_magic").notNull().default(20),
+  /** 戰鬥數值（由 BP 推導，快取用） */
+  hp: int("hp").notNull().default(50),
+  maxHp: int("max_hp").notNull().default(50),
+  mp: int("mp").notNull().default(30),
+  maxMp: int("max_mp").notNull().default(30),
+  attack: int("attack").notNull().default(10),
+  defense: int("defense").notNull().default(10),
+  speed: int("speed").notNull().default(10),
+  magicAttack: int("magic_attack").notNull().default(10),
+  /** 成長型態（繼承自圖鑑，但可能因特殊道具改變） */
+  growthType: varchar("growth_type", { length: 20 }).notNull().default("balanced"),
+  /** 是否為出戰寵物 */
+  isActive: tinyint("is_active").notNull().default(0),
+  /** 好感度（0-100） */
+  friendship: int("friendship").notNull().default(0),
+  /** 捕捉時間 */
+  capturedAt: bigint("captured_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GamePlayerPet = typeof gamePlayerPets.$inferSelect;
+export type InsertGamePlayerPet = typeof gamePlayerPets.$inferInsert;
+
+/**
+ * 寵物已學天命技能（玩家寵物學習的可替換技能）
+ * 天命技能在 Lv15/Lv35/Lv60 解鎖格子，14 種可學，可替換可升級
+ */
+export const gamePetLearnedSkills = mysqlTable("game_pet_learned_skills", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 所屬玩家寵物 ID */
+  playerPetId: int("player_pet_id").notNull(),
+  /** 技能名稱 */
+  skillName: varchar("skill_name", { length: 100 }).notNull(),
+  /** 技能類型：attack/heal/buff/debuff/control */
+  skillType: varchar("skill_type", { length: 20 }).notNull().default("attack"),
+  /** 技能子類型（對應 14 種天命技能：combo/counter/crush/poison/fireMagic/iceMagic/windMagic/meteorMagic/sleepMagic/petrifyMagic/confuseMagic/poisonMagic/forgetMagic/healMagic） */
+  skillKey: varchar("skill_key", { length: 50 }).notNull(),
+  /** 五行屬性 */
+  wuxing: varchar("wuxing", { length: 20 }),
+  /** 威力百分比 */
+  powerPercent: int("power_percent").notNull().default(100),
+  /** MP 消耗 */
+  mpCost: int("mp_cost").notNull().default(8),
+  /** 冷卻回合數 */
+  cooldown: int("cooldown").notNull().default(3),
+  /** 技能等級（1-10） */
+  skillLevel: int("skill_level").notNull().default(1),
+  /** 累積使用次數（升級用） */
+  usageCount: int("usage_count").notNull().default(0),
+  /** 技能欄位置（4-6，對應天命技能格） */
+  slotIndex: int("slot_index").notNull().default(4),
+  /** 是否裝備中 */
+  isEquipped: tinyint("is_equipped").notNull().default(1),
+  learnedAt: bigint("learned_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GamePetLearnedSkill = typeof gamePetLearnedSkills.$inferSelect;
+export type InsertGamePetLearnedSkill = typeof gamePetLearnedSkills.$inferInsert;

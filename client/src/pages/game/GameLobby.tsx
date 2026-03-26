@@ -394,6 +394,11 @@ function AchievementWall({ userId }: { userId?: number }) {
             style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}>
             🔥 天命考核
           </a>
+          <a href="/game/pets"
+            className="text-xs px-2.5 py-1 rounded-lg font-medium transition-all hover:opacity-80"
+            style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}>
+            🐾 寵物系統
+          </a>
         </div>
       </div>
 

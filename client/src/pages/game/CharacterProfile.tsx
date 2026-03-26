@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { toast } from "sonner";
 import {
   BODY_BASE_URLS,
   WUXING_THEMES,
@@ -20,6 +21,7 @@ import {
   type CharacterGender,
 } from "@/lib/gameAssets";
 import GameTabLayout from "@/components/GameTabLayout";
+import WuxingInfusePanel from "@/components/WuxingInfusePanel";
 
 // ── 五行中英文對照 ────────────────────────────────────────────
 const ZH_TO_EN_ELEMENT: Record<string, WuxingElement> = {
@@ -344,12 +346,15 @@ export default function CharacterProfile() {
   const { user } = useAuth();
   const [showCard, setShowCard] = useState(true);
   const [activeElement, setActiveElement] = useState<WuxingElement>("wood");
+  const [showInfuse, setShowInfuse] = useState(false);
+
 
   // tRPC queries
   const { data: equippedData } = trpc.gameAvatar.getEquipped.useQuery();
   const { data: todayAura } = trpc.gameAvatar.getTodayAura.useQuery();
   const { data: achievements } = trpc.gameAchievement.getAll.useQuery();
   const { data: unlockedAchievements } = trpc.gameAchievement.getUnlocked.useQuery();
+
 
   // 從 getEquipped 取得日主五行
   useEffect(() => {
@@ -485,10 +490,11 @@ export default function CharacterProfile() {
           { icon: "👗", label: "換裝", path: "/game/avatar" },
           { icon: "🏪", label: "商城", path: "/game/shop" },
           { icon: "⚔️", label: "戰鬥", path: "/game/combat" },
+          { icon: "✨", label: "注靈", path: "" },
         ].map((btn) => (
           <button
             key={btn.label}
-            onClick={() => navigate(btn.path)}
+            onClick={() => btn.path ? navigate(btn.path) : setShowInfuse(true)}
             className="flex flex-col items-center gap-1"
           >
             <div
@@ -569,6 +575,9 @@ export default function CharacterProfile() {
         ))}
       </div>
     </div>
+    {/* ── 五行注靈互動面板 ── */}
+    <WuxingInfusePanel open={showInfuse} onClose={() => setShowInfuse(false)} />
+
     {/* 底部 Tab Bar（疊加在全螢幕之上） */}
     <GameTabLayout activeTab="avatar">
       <></>

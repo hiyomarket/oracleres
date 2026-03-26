@@ -2699,4 +2699,137 @@ export const gameWorldRouter = router({
         })),
       };
     }),
+
+  // ─── M6 手動注靈系統 ───────────────────────────────────────────
+  /** 取得注靈狀態（可用點數、已用點數、代價） */
+  getInfuseStatus: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const [agent] = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+    const maxPoints = agent.level * 2;
+    const usedPoints = agent.infusePointsUsed ?? 0;
+    const remainingPoints = Math.max(0, maxPoints - usedPoints);
+    // 注靈代價：每次 +1 點五行屬性，消耗金幣和靈石
+    // 代價隨已使用點數遞增（前 10 點便宜，之後越來越貴）
+    const costTier = Math.floor(usedPoints / 10);
+    const goldCost = 100 + costTier * 50;  // 100, 150, 200, 250...
+    const stoneCost = 5 + costTier * 3;    // 5, 8, 11, 14...
+    return {
+      level: agent.level,
+      maxPoints,
+      usedPoints,
+      remainingPoints,
+      goldCost,
+      stoneCost,
+      currentWuxing: {
+        wood: agent.wuxingWood,
+        fire: agent.wuxingFire,
+        earth: agent.wuxingEarth,
+        metal: agent.wuxingMetal,
+        water: agent.wuxingWater,
+      },
+      gold: agent.gold,
+    };
+  }),
+
+  /** 手動注靈：消耗金幣+靈石，+1 點指定五行屬性 */
+  manualInfuse: protectedProcedure
+    .input(z.object({
+      element: z.enum(["wood", "fire", "earth", "metal", "water"]),
+      count: z.number().int().min(1).max(10).default(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [agent] = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+
+      const maxPoints = agent.level * 2;
+      const usedPoints = agent.infusePointsUsed ?? 0;
+      const remainingPoints = Math.max(0, maxPoints - usedPoints);
+      const actualCount = Math.min(input.count, remainingPoints);
+      if (actualCount <= 0) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `注靈點數已用盡！目前等級 ${agent.level} 最多可注靈 ${maxPoints} 點。升級後可獲得更多注靈點數。` });
+      }
+
+      // 計算總代價（每點代價隨已使用點數遞增）
+      let totalGold = 0;
+      let totalStones = 0;
+      for (let i = 0; i < actualCount; i++) {
+        const tier = Math.floor((usedPoints + i) / 10);
+        totalGold += 100 + tier * 50;
+        totalStones += 5 + tier * 3;
+      }
+
+      // 檢查金幣
+      if (agent.gold < totalGold) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `金幣不足！需要 ${totalGold} 金幣，目前只有 ${agent.gold}。` });
+      }
+
+      // 檢查靈石
+      const [user] = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1);
+      if (!user || user.gameStones < totalStones) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `靈石不足！需要 ${totalStones} 靈石，目前只有 ${user?.gameStones ?? 0}。` });
+      }
+
+      // 更新五行屬性
+      const wuxingKey = `wuxing${input.element.charAt(0).toUpperCase() + input.element.slice(1)}` as
+        "wuxingWood" | "wuxingFire" | "wuxingEarth" | "wuxingMetal" | "wuxingWater";
+      const currentVal = agent[wuxingKey] as number;
+      const newVal = currentVal + actualCount;
+
+      // 重算戰鬥數值
+      const newWuxing = {
+        wood: agent.wuxingWood,
+        fire: agent.wuxingFire,
+        earth: agent.wuxingEarth,
+        metal: agent.wuxingMetal,
+        water: agent.wuxingWater,
+      };
+      (newWuxing as any)[input.element] = newVal;
+      const newStats = calcStatsFromNatal(newWuxing, agent.level);
+
+      // 扣除金幣和靈石
+      await db.update(gameAgents).set({
+        [wuxingKey]: newVal,
+        infusePointsUsed: usedPoints + actualCount,
+        gold: agent.gold - totalGold,
+        maxHp: newStats.maxHp,
+        maxMp: newStats.maxMp,
+        attack: newStats.attack,
+        defense: newStats.defense,
+        speed: newStats.speed,
+        magicAttack: newStats.magicAttack,
+        updatedAt: Date.now(),
+      }).where(eq(gameAgents.id, agent.id));
+
+      await db.update(users).set({
+        gameStones: user.gameStones - totalStones,
+      }).where(eq(users.id, ctx.user.id));
+
+      // 記錄事件
+      const WX_ZH: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+      const eventMsg = `【手動注靈】${agent.agentName ?? "旅人"}消耗 ${totalGold} 金幣 + ${totalStones} 靈石，成功注入 ${actualCount} 點${WX_ZH[input.element]}五行之力！（${WX_ZH[input.element]}：${currentVal} → ${newVal}）`;
+      await db.insert(agentEvents).values({
+        agentId: agent.id,
+        eventType: "system",
+        message: eventMsg,
+        detail: { type: "manual_infuse", element: input.element, count: actualCount, goldCost: totalGold, stoneCost: totalStones, oldVal: currentVal, newVal },
+        nodeId: agent.currentNodeId,
+        createdAt: Date.now(),
+      });
+
+      return {
+        success: true,
+        element: input.element,
+        count: actualCount,
+        oldVal: currentVal,
+        newVal,
+        goldCost: totalGold,
+        stoneCost: totalStones,
+        remainingPoints: remainingPoints - actualCount,
+        newStats,
+      };
+    }),
 });
