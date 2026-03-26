@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, agent_name, skill_slot1, skill_slot2, skill_slot3, skill_slot4, passive_slot1, passive_slot2, hidden_slot1\nFROM game_agents WHERE user_id = '1' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_name, skill_slot1, skill_slot2, skill_slot3, skill_slot4, passive_slot1, passive_slot2, hidden_slot1\nFROM game_agents WHERE user_id = '1' LIMIT 1;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'skill_slot1' in 'field list'"
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "query": "SELECT skill_id, name, category, wuxing FROM game_skill_catalog \nWHERE (wuxing = '木' AND category = 'active_combat' AND skill_id IN ('S_W001','S_W002','S_W003'))\n   OR (wuxing = '火' AND category = 'active_combat' AND skill_id IN ('S_F001','S_F002','S_F003'))\n   OR (wuxing = '土' AND category = 'active_combat' AND skill_id IN ('S_E001','S_E002','S_E003'))\n   OR (wuxing = '金' AND category = 'active_combat' AND skill_id IN ('S_M001','S_M002','S_M003'))\n   OR (wuxing = '水' AND category = 'active_combat' AND skill_id IN ('S_W057','S_W058','S_W059'))\nORDER BY skill_id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, category, wuxing FROM game_skill_catalog \nWHERE (wuxing = '木' AND category = 'active_combat' AND skill_id IN ('S_W001','S_W002','S_W003'))\n   OR (wuxing = '火' AND category = 'active_combat' AND skill_id IN ('S_F001','S_F002','S_F003'))\n   OR (wuxing = '土' AND category = 'active_combat' AND skill_id IN ('S_E001','S_E002','S_E003'))\n   OR (wuxing = '金' AND category = 'active_combat' AND skill_id IN ('S_M001','S_M002','S_M003'))\n   OR (wuxing = '水' AND category = 'active_combat' AND skill_id IN ('S_W057','S_W058','S_W059'))\nORDER BY skill_id;",
+  "rows": [
+    {
+      "skill_id": "S_E001",
+      "name": "岩石投擲",
+      "category": "active_combat",
+      "wuxing": "土"
+    },
+    {
+      "skill_id": "S_E002",
+      "name": "大地護盾",
+      "category": "active_combat",
+      "wuxing": "土"
+    },
+    {
+      "skill_id": "S_E003",
+      "name": "地震術",
+      "category": "active_combat",
+      "wuxing": "土"
+    },
+    {
+      "skill_id": "S_F001",
+      "name": "火球術",
+      "category": "active_combat",
+      "wuxing": "火"
+    },
+    {
+      "skill_id": "S_F002",
+      "name": "爆炎術",
+      "category": "active_combat",
+      "wuxing": "火"
+    },
+    {
+      "skill_id": "S_F003",
+      "name": "火焰護盾",
+      "category": "active_combat",
+      "wuxing": "火"
+    },
+    {
+      "skill_id": "S_M001",
+      "name": "劍氣斬",
+      "category": "active_combat",
+      "wuxing": "金"
+    },
+    {
+      "skill_id": "S_M002",
+      "name": "連斬",
+      "category": "active_combat",
+      "wuxing": "金"
+    },
+    {
+      "skill_id": "S_M003",
+      "name": "電磁脈衝",
+      "category": "active_combat",
+      "wuxing": "金"
+    },
+    {
+      "skill_id": "S_W001",
+      "name": "藤蔓束縛",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W002",
+      "name": "孢子噴射",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W003",
+      "name": "自然之箭",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W057",
+      "name": "海嘯術",
+      "category": "active_combat",
+      "wuxing": "水"
+    },
+    {
+      "skill_id": "S_W058",
+      "name": "絕對零度",
+      "category": "active_combat",
+      "wuxing": "水"
+    },
+    {
+      "skill_id": "S_W059",
+      "name": "生命之泉",
+      "category": "active_combat",
+      "wuxing": "水"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\tcategory\twuxing\nS_E001\t岩石投擲\tactive_combat\t土\nS_E002\t大地護盾\tactive_combat\t土\nS_E003\t地震術\tactive_combat\t土\nS_F001\t火球術\tactive_combat\t火\nS_F002\t爆炎術\tactive_combat\t火\nS_F003\t火焰護盾\tactive_combat\t火\nS_M001\t劍氣斬\tactive_combat\t金\nS_M002\t連斬\tactive_combat\t金\nS_M003\t電磁脈衝\tactive_combat\t金\nS_W001\t藤蔓束縛\tactive_combat\t木\nS_W002\t孢子噴射\tactive_combat\t木\nS_W003\t自然之箭\tactive_combat\t木\nS_W057\t海嘯術\tactive_combat\t水\nS_W058\t絕對零度\tactive_combat\t水\nS_W059\t生命之泉\tactive_combat\t水\n",
+  "stderr": "",
+  "execution_time_ms": 1478
+}

@@ -1,0 +1,28 @@
+{
+  "query": "SELECT DISTINCT category FROM game_config ORDER BY category;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT DISTINCT category FROM game_config ORDER BY category;",
+  "rows": [
+    {
+      "category": "combat"
+    },
+    {
+      "category": "economy"
+    },
+    {
+      "category": "event"
+    },
+    {
+      "category": "exploration"
+    },
+    {
+      "category": "global"
+    },
+    {
+      "category": "system"
+    }
+  ],
+  "messages": [],
+  "stdout": "category\ncombat\neconomy\nevent\nexploration\nglobal\nsystem\n",
+  "stderr": "",
+  "execution_time_ms": 1570
+}

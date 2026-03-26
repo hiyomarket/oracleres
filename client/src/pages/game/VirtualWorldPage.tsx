@@ -67,23 +67,28 @@ const QUALITY_ZH: Record<string, string> = {
 };
 
 // GD-001 初始技能定義
+// 技能顯示定義（舊格式 + 新格式都支援）
 const SKILL_DEFS: Record<string, { name: string; element: string; type: "active" | "passive"; desc: string; icon: string }> = {
-  "wood-basic-atk":  { name: "木行拳", element: "wood",  type: "active",  desc: "木屬基礎攻擊，造成少量永久傷害", icon: "🌿" },
-  "wood-heal":       { name: "春風愈傈", element: "wood",  type: "active",  desc: "治癒 20% 最大 HP，持續 2 回合", icon: "🌼" },
+  // 舊格式 ID（向後相容）
+  "wood-basic-atk":  { name: "木行拳", element: "wood",  type: "active",  desc: "木屬基礎攻擊", icon: "🌿" },
+  "wood-heal":       { name: "春風愈傈", element: "wood",  type: "active",  desc: "治癒 20% 最大 HP", icon: "🌼" },
   "wood-regen":      { name: "根脆之力", element: "wood",  type: "passive", desc: "戰鬥後自動回血 5%", icon: "🌱" },
-  "fire-basic-atk":  { name: "烈焰拳", element: "fire",  type: "active",  desc: "火屬基礎攻擊，有機率燃燒敵人", icon: "🔥" },
-  "fire-burst":      { name: "爆烎衝波", element: "fire",  type: "active",  desc: "範圍火屬傷害，消耗額外 MP", icon: "💥" },
-  "fire-boost":      { name: "火行催化", element: "fire",  type: "passive", desc: "攻擊力 +10%，造成火屬傷害時额外 +5%", icon: "⭐" },
-  "earth-basic-atk": { name: "山岳拳", element: "earth", type: "active",  desc: "土屬基礎攻擊，有機率活動敢對方", icon: "🪨" },
-  "earth-shield":    { name: "大地護盾", element: "earth", type: "active",  desc: "下一回合對對方傷害免疫 30%", icon: "🛡️" },
-  "earth-tough":     { name: "山岳之體", element: "earth", type: "passive", desc: "防穡力 +15%，死亡時有機率以 1 HP 存活", icon: "💪" },
-  "metal-basic-atk": { name: "利金拳", element: "metal", type: "active",  desc: "金屬基礎攻擊，穿透防穡 10%", icon: "⚡" },
-  "metal-pierce":    { name: "穿雲一擊", element: "metal", type: "active",  desc: "忠实命中，造成基礎攻擊 150% 傷害", icon: "🗡️" },
-  "metal-crit":      { name: "銀月洞察", element: "metal", type: "passive", desc: "有 15% 機率觸發暴擊（傷害 x2）", icon: "🎯" },
-  "water-basic-atk": { name: "水流拳", element: "water", type: "active",  desc: "水屬基礎攻擊，有機率降低敵人速度", icon: "💧" },
-  "water-flow":      { name: "流水貊潏", element: "water", type: "active",  desc: "回復 15% 最大 MP，下回合魔法傷害 +20%", icon: "🌊" },
-  "water-sense":     { name: "流水感知", element: "water", type: "passive", desc: "尋寶力 +10，稀有材料出現率 +5%", icon: "🔮" },
+  "fire-basic-atk":  { name: "烈焰拳", element: "fire",  type: "active",  desc: "火屬基礎攻擊", icon: "🔥" },
+  "fire-burst":      { name: "爆烎衝波", element: "fire",  type: "active",  desc: "範圍火屬傷害", icon: "💥" },
+  "fire-boost":      { name: "火行催化", element: "fire",  type: "passive", desc: "攻擊力 +10%", icon: "⭐" },
+  "earth-basic-atk": { name: "山嶽拳", element: "earth", type: "active",  desc: "土屬基礎攻擊", icon: "🪨" },
+  "earth-shield":    { name: "大地護盾", element: "earth", type: "active",  desc: "傷害免疫 30%", icon: "🛡️" },
+  "earth-tough":     { name: "山嶽之體", element: "earth", type: "passive", desc: "防穡力 +15%", icon: "💪" },
+  "metal-basic-atk": { name: "利金拳", element: "metal", type: "active",  desc: "金屬基礎攻擊", icon: "⚡" },
+  "metal-pierce":    { name: "穿雲一擊", element: "metal", type: "active",  desc: "造成 150% 傷害", icon: "🗡️" },
+  "metal-crit":      { name: "銀月洞察", element: "metal", type: "passive", desc: "15% 暴擊率", icon: "🎯" },
+  "water-basic-atk": { name: "水流拳", element: "water", type: "active",  desc: "水屬基礎攻擊", icon: "💧" },
+  "water-flow":      { name: "流水貊潤", element: "water", type: "active",  desc: "回復 15% MP", icon: "🌊" },
+  "water-sense":     { name: "流水感知", element: "water", type: "passive", desc: "尋寶力 +10", icon: "🔮" },
 };
+// 五行屬性 → 技能圖示映射
+const WX_SKILL_ICON: Record<string, string> = { "木": "🌿", "火": "🔥", "土": "🪨", "金": "⚡", "水": "💧", "wood": "🌿", "fire": "🔥", "earth": "🪨", "metal": "⚡", "water": "💧" };
+const WX_ZH_TO_EN: Record<string, string> = { "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water" };
 // GD-002 三維五行屬性定義
 const COMBAT_ATTRS = [
   { key: "attack",      icon: "🔥", label: "攻擊力",  wx: "fire",   desc: "物理傷害基礎值" },
@@ -624,6 +629,26 @@ function CharacterPanel({
   const [showSkillPicker, setShowSkillPicker] = useState(false);
   const [skillPickerSlot, setSkillPickerSlot] = useState<{ type: "active" | "passive"; index: number; slot: "skillSlot1" | "skillSlot2" | "skillSlot3" | "skillSlot4" | "passiveSlot1" | "passiveSlot2" | "hiddenSlot1" } | null>(null);
   const [skillWuxingFilter, setSkillWuxingFilter] = useState("");
+  // ★ 技能目錄查詢：始終啟用（用於技能槽位顯示 + Picker）
+  const skillCatalogAllQuery = trpc.gameWorld.getSkillCatalogForPlayer.useQuery(
+    undefined, { staleTime: 120000 }
+  );
+  // 建立 skillId → 技能資訊的查找表
+  const skillCatalogMap = useMemo(() => {
+    const map: Record<string, { name: string; element: string; type: "active" | "passive"; desc: string; icon: string }> = {};
+    for (const sk of skillCatalogAllQuery.data ?? []) {
+      const elEn = WX_ZH_TO_EN[sk.wuxing ?? ""] ?? sk.wuxing ?? "";
+      map[sk.skillId] = {
+        name: sk.name,
+        element: elEn,
+        type: sk.category?.includes("passive") ? "passive" : "active",
+        desc: sk.description ?? "",
+        icon: WX_SKILL_ICON[sk.wuxing ?? ""] ?? "\u2728",
+      };
+    }
+    return map;
+  }, [skillCatalogAllQuery.data]);
+  // Picker 用的過濾查詢（可按五行過濾）
   const skillCatalogQuery = trpc.gameWorld.getSkillCatalogForPlayer.useQuery(
     skillWuxingFilter ? { wuxing: skillWuxingFilter } : undefined,
     { enabled: showSkillPicker, staleTime: 60000 }
@@ -1217,7 +1242,7 @@ function CharacterPanel({
                 <div className="grid grid-cols-2 gap-1.5">
                   {Array.from({ length: activeSlotCount }).map((_, i) => {
                     const slotId = activeSlots[i];
-                    const sk = slotId ? SKILL_DEFS[slotId] : null;
+                    const sk = slotId ? (skillCatalogMap[slotId] ?? SKILL_DEFS[slotId] ?? null) : null;
                     const c = sk ? WX_HEX[sk.element] ?? "#888" : "#334155";
                     const slotKey = ACTIVE_SLOT_KEYS[i] ?? "skillSlot1";
                     const isLocked = i >= 4; // 木屬性解鎖的額外槽
@@ -1247,7 +1272,7 @@ function CharacterPanel({
                 <div className="grid grid-cols-2 gap-1.5">
                   {Array.from({ length: passiveSlotCount }).map((_, i) => {
                     const slotId = passiveSlots[i];
-                    const sk = slotId ? SKILL_DEFS[slotId] : null;
+                    const sk = slotId ? (skillCatalogMap[slotId] ?? SKILL_DEFS[slotId] ?? null) : null;
                     const c = sk ? WX_HEX[sk.element] ?? "#888" : "#334155";
                     const isLocked = i >= 2;
                     return (
@@ -3269,12 +3294,7 @@ export default function VirtualWorldPage() {
                   <span>{showDivinePanel ? "▲" : "▼"}</span>
                 </button>
                 {showDivinePanel && (() => {
-                  // Bug 3 fix: 使用與後端相同的 ISO 格式（2026-03-24）比較
-                  const todayStr = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
                   const agentAP = agent?.actionPoints ?? 0;
-                  const healUsedToday = agent?.lastDivineHealDate === todayStr;
-                  const eyeUsedToday  = agent?.lastDivineEyeDate  === todayStr;
-                  const staminaUsedToday = agent?.lastDivineStaminaDate === todayStr;
                   return (
                     <div className="absolute right-0 top-full mt-1 rounded-xl border overflow-hidden"
                       style={{ background: "rgba(6,10,22,0.97)", backdropFilter: "blur(16px)", borderColor: "rgba(167,139,250,0.3)", width: "200px" }}>
@@ -3285,21 +3305,21 @@ export default function VirtualWorldPage() {
                       </div>
                       <div className="p-2 space-y-1.5">
                         {[
-                          { label: "神癒恢復", desc: "恢復50%HP", icon: "💊", color: "#ef4444", used: healUsedToday, fn: () => divineHeal.mutate(), pending: divineHeal.isPending },
-                          { label: "神眼加持", desc: "洞察力+15%", icon: "👁", color: "#38bdf8", used: eyeUsedToday, fn: () => divineEye.mutate(), pending: divineEye.isPending },
-                          { label: "靈癒疲勞", desc: "體力回50", icon: "✨", color: "#a78bfa", used: staminaUsedToday, fn: () => divineStamina.mutate(), pending: divineStamina.isPending },
+                          { label: "神癒恢復", desc: "恢復50%HP", icon: "💊", color: "#ef4444", fn: () => divineHeal.mutate(), pending: divineHeal.isPending },
+                          { label: "神眼加持", desc: "洞察力+15%", icon: "👁", color: "#38bdf8", fn: () => divineEye.mutate(), pending: divineEye.isPending },
+                          { label: "靈癒疲勞", desc: "體力回50", icon: "✨", color: "#a78bfa", fn: () => divineStamina.mutate(), pending: divineStamina.isPending },
                         ].map(item => (
                           <button key={item.label}
                             onClick={item.fn}
-                            disabled={agentAP < 1 || item.pending || item.used}
+                            disabled={agentAP < 1 || item.pending}
                             className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-                            style={{ background: `${item.color}08`, borderColor: `${item.color}${item.used ? "15" : "30"}`, color: item.color }}>
-                            <span className="text-base">{item.pending ? "⏳" : item.used ? "🔒" : item.icon}</span>
+                            style={{ background: `${item.color}08`, borderColor: `${item.color}30`, color: item.color }}>
+                            <span className="text-base">{item.pending ? "⏳" : item.icon}</span>
                             <div className="flex-1 text-left">
                               <p className="text-xs font-bold">{item.label}</p>
-                              <p className="text-[10px]" style={{ color: item.used ? "#475569" : "#64748b" }}>{item.used ? "明日再來" : item.desc}</p>
+                              <p className="text-[10px]" style={{ color: "#64748b" }}>{item.desc}</p>
                             </div>
-                            {!item.used && <span className="text-[9px] text-slate-600">-1靈</span>}
+                            <span className="text-[9px] text-slate-600">-1靈</span>
                           </button>
                         ))}
                       </div>
@@ -3392,12 +3412,7 @@ export default function VirtualWorldPage() {
                   <span>{showDivinePanel ? "▲" : "▼"}</span>
                 </button>
                 {showDivinePanel && (() => {
-                  // Bug 3 fix: 使用與後端相同的 ISO 格式（2026-03-24）比較
-                  const todayStr = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
                   const agentAP = agent?.actionPoints ?? 0;
-                  const healUsedToday = agent?.lastDivineHealDate === todayStr;
-                  const eyeUsedToday  = agent?.lastDivineEyeDate  === todayStr;
-                  const staminaUsedToday = agent?.lastDivineStaminaDate === todayStr;
                   return (
                     <div className="absolute right-0 top-full mt-1 rounded-xl border overflow-hidden"
                       style={{ background: "rgba(6,10,22,0.97)", backdropFilter: "blur(16px)", borderColor: "rgba(167,139,250,0.3)", width: "220px" }}>
@@ -3408,21 +3423,21 @@ export default function VirtualWorldPage() {
                       </div>
                       <div className="p-2 space-y-1.5">
                         {[
-                          { label: "神癒恢復", desc: "恢復50%HP", icon: "💊", color: "#ef4444", used: healUsedToday, fn: () => divineHeal.mutate(), pending: divineHeal.isPending },
-                          { label: "神眼加持", desc: "洞察力+15%", icon: "👁", color: "#38bdf8", used: eyeUsedToday, fn: () => divineEye.mutate(), pending: divineEye.isPending },
-                          { label: "靈癒疲勞", desc: "體力回50", icon: "✨", color: "#a78bfa", used: staminaUsedToday, fn: () => divineStamina.mutate(), pending: divineStamina.isPending },
+                          { label: "神癒恢復", desc: "恢復50%HP", icon: "💊", color: "#ef4444", fn: () => divineHeal.mutate(), pending: divineHeal.isPending },
+                          { label: "神眼加持", desc: "洞察力+15%", icon: "👁", color: "#38bdf8", fn: () => divineEye.mutate(), pending: divineEye.isPending },
+                          { label: "靈癒疲勞", desc: "體力回50", icon: "✨", color: "#a78bfa", fn: () => divineStamina.mutate(), pending: divineStamina.isPending },
                         ].map(item => (
                           <button key={item.label}
                             onClick={item.fn}
-                            disabled={agentAP < 1 || item.pending || item.used}
+                            disabled={agentAP < 1 || item.pending}
                             className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-                            style={{ background: `${item.color}08`, borderColor: `${item.color}${item.used ? "15" : "30"}`, color: item.color }}>
-                            <span className="text-lg">{item.pending ? "⏳" : item.used ? "🔒" : item.icon}</span>
+                            style={{ background: `${item.color}08`, borderColor: `${item.color}30`, color: item.color }}>
+                            <span className="text-lg">{item.pending ? "⏳" : item.icon}</span>
                             <div className="flex-1 text-left">
                               <p className="text-sm font-bold">{item.label}</p>
-                              <p className="text-xs" style={{ color: item.used ? "#475569" : "#64748b" }}>{item.used ? "明日再來" : item.desc}</p>
+                              <p className="text-xs" style={{ color: "#64748b" }}>{item.desc}</p>
                             </div>
-                            {!item.used && <span className="text-xs text-slate-600">-1靈</span>}
+                            <span className="text-xs text-slate-600">-1靈</span>
                           </button>
                         ))}
                       </div>

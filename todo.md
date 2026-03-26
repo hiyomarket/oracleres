@@ -4223,3 +4223,19 @@
 - [x] BUG-7: sellInventoryItem 的 isEquipped 檢查與裝備系統不一致
 - [x] BUG-8: 掉落物 itemType 前綴判斷邊界問題（已確認裝備走獨立路徑）
 - [x] 修復主帳號角色的技能槽位資料不一致（S_F004 重複在 slot2/slot3）
+
+## M3K-4 企劃文件上傳 + 技能安裝 Bug 修復
+
+### 企劃文件
+- [x] 更新惡魔城/世界Boss企劃文件（加入用戶確認的設計決策）
+- [x] 上傳企劃文件到 GitHub repo (hiyomarket/oracleres)
+
+### Bug 修復：技能安裝失敗
+- [x] 深入檢查技能安裝（installSkill / equipSkill）完整流程
+- [x] 修復技能無法安裝的問題（舊格式 ID 遷移 + Picker 過濾修正）
+- [x] 撰寫測試驗證修復（20 項測試全通）
+
+### Bug 修復：靈相干預每日限制仍未解除
+- [x] 檢查前端靈相干預按鈕的鎖定邏輯（手機版+桌機版兩處）
+- [x] 完全移除每日一次的限制（前端 lastDivineHealDate 檢查 + 後端驗證）
+- [x] 後台管理加入靈相干預參數設定（game_config 動態讀取 HP%/AP消耗/體力回復/洞察提升%/冗卻時間）

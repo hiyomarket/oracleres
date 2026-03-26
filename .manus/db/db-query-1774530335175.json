@@ -1,0 +1,130 @@
+{
+  "query": "SELECT skill_id, name, category, wuxing FROM game_skill_catalog LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, category, wuxing FROM game_skill_catalog LIMIT 20;",
+  "rows": [
+    {
+      "skill_id": "S_W001",
+      "name": "藤蔓束縛",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W002",
+      "name": "孢子噴射",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W003",
+      "name": "自然之箭",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W004",
+      "name": "毒霧術",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W005",
+      "name": "森林衝刺",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W006",
+      "name": "生命汲取",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W007",
+      "name": "荊棘護甲",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W008",
+      "name": "古木打擊",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W009",
+      "name": "自然恢復",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W010",
+      "name": "世界樹庇護",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W011",
+      "name": "萬毒侵蝕",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W012",
+      "name": "翡翠龍息",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W013",
+      "name": "天命·森林領域",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W014",
+      "name": "天命·生命之樹",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W015",
+      "name": "天命·萬古神木",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W016",
+      "name": "天命·花神降臨",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W017",
+      "name": "毒刺反擊",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W018",
+      "name": "森林迷陣",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W019",
+      "name": "古樹復甦",
+      "category": "active_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W020",
+      "name": "世界樹之怒",
+      "category": "active_combat",
+      "wuxing": "木"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\tcategory\twuxing\nS_W001\t藤蔓束縛\tactive_combat\t木\nS_W002\t孢子噴射\tactive_combat\t木\nS_W003\t自然之箭\tactive_combat\t木\nS_W004\t毒霧術\tactive_combat\t木\nS_W005\t森林衝刺\tactive_combat\t木\nS_W006\t生命汲取\tactive_combat\t木\nS_W007\t荊棘護甲\tactive_combat\t木\nS_W008\t古木打擊\tactive_combat\t木\nS_W009\t自然恢復\tactive_combat\t木\nS_W010\t世界樹庇護\tactive_combat\t木\nS_W011\t萬毒侵蝕\tactive_combat\t木\nS_W012\t翡翠龍息\tactive_combat\t木\nS_W013\t天命·森林領域\tactive_combat\t木\nS_W014\t天命·生命之樹\tactive_combat\t木\nS_W015\t天命·萬古神木\tactive_combat\t木\nS_W016\t天命·花神降臨\tactive_combat\t木\nS_W017\t毒刺反擊\tactive_combat\t木\nS_W018\t森林迷陣\tactive_combat\t木\nS_W019\t古樹復甦\tactive_combat\t木\nS_W020\t世界樹之怒\tactive_combat\t木\n",
+  "stderr": "",
+  "execution_time_ms": 1517
+}

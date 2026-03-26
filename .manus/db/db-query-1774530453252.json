@@ -1,0 +1,16 @@
+{
+  "query": "SELECT skill_id, name, category, wuxing FROM game_skill_catalog \nWHERE name IN ('木行拳', '春風愈傈', '根脆之力', '烈焰拳', '爆烎衝波', '火行催化', '山岳拳', '大地護盾', '山岳之體', '利金拳', '穿雲一擊', '銀月洞察', '水流拳', '流水貊潏', '流水感知');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, category, wuxing FROM game_skill_catalog \nWHERE name IN ('木行拳', '春風愈傈', '根脆之力', '烈焰拳', '爆烎衝波', '火行催化', '山岳拳', '大地護盾', '山岳之體', '利金拳', '穿雲一擊', '銀月洞察', '水流拳', '流水貊潏', '流水感知');",
+  "rows": [
+    {
+      "skill_id": "S_E002",
+      "name": "大地護盾",
+      "category": "active_combat",
+      "wuxing": "土"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\tcategory\twuxing\nS_E002\t大地護盾\tactive_combat\t土\n",
+  "stderr": "",
+  "execution_time_ms": 1501
+}

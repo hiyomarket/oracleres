@@ -1,0 +1,130 @@
+{
+  "query": "SELECT skill_id, name, category, wuxing FROM game_skill_catalog WHERE category LIKE '%passive%' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, category, wuxing FROM game_skill_catalog WHERE category LIKE '%passive%' LIMIT 20;",
+  "rows": [
+    {
+      "skill_id": "S_W021",
+      "name": "木之親和",
+      "category": "passive_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W022",
+      "name": "自然恢復力",
+      "category": "passive_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W023",
+      "name": "毒素精通",
+      "category": "passive_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W024",
+      "name": "生命力旺盛",
+      "category": "passive_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W025",
+      "name": "木系抗性",
+      "category": "passive_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W026",
+      "name": "荊棘皮膚",
+      "category": "passive_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W027",
+      "name": "毒免疫",
+      "category": "passive_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W028",
+      "name": "森林之子",
+      "category": "passive_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W029",
+      "name": "吸血藤蔓",
+      "category": "passive_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_W030",
+      "name": "天命·木靈庇護",
+      "category": "passive_combat",
+      "wuxing": "木"
+    },
+    {
+      "skill_id": "S_F009",
+      "name": "火之親和",
+      "category": "passive_combat",
+      "wuxing": "火"
+    },
+    {
+      "skill_id": "S_F010",
+      "name": "燃燒精通",
+      "category": "passive_combat",
+      "wuxing": "火"
+    },
+    {
+      "skill_id": "S_F011",
+      "name": "天命·火靈庇護",
+      "category": "passive_combat",
+      "wuxing": "火"
+    },
+    {
+      "skill_id": "S_E007",
+      "name": "土之親和",
+      "category": "passive_combat",
+      "wuxing": "土"
+    },
+    {
+      "skill_id": "S_E008",
+      "name": "鐵壁防禦",
+      "category": "passive_combat",
+      "wuxing": "土"
+    },
+    {
+      "skill_id": "S_E009",
+      "name": "天命·土靈庇護",
+      "category": "passive_combat",
+      "wuxing": "土"
+    },
+    {
+      "skill_id": "S_M006",
+      "name": "金之親和",
+      "category": "passive_combat",
+      "wuxing": "金"
+    },
+    {
+      "skill_id": "S_M007",
+      "name": "暴擊精通",
+      "category": "passive_combat",
+      "wuxing": "金"
+    },
+    {
+      "skill_id": "S_M008",
+      "name": "天命·金靈庇護",
+      "category": "passive_combat",
+      "wuxing": "金"
+    },
+    {
+      "skill_id": "S_W063",
+      "name": "水之親和",
+      "category": "passive_combat",
+      "wuxing": "水"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\tcategory\twuxing\nS_W021\t木之親和\tpassive_combat\t木\nS_W022\t自然恢復力\tpassive_combat\t木\nS_W023\t毒素精通\tpassive_combat\t木\nS_W024\t生命力旺盛\tpassive_combat\t木\nS_W025\t木系抗性\tpassive_combat\t木\nS_W026\t荊棘皮膚\tpassive_combat\t木\nS_W027\t毒免疫\tpassive_combat\t木\nS_W028\t森林之子\tpassive_combat\t木\nS_W029\t吸血藤蔓\tpassive_combat\t木\nS_W030\t天命·木靈庇護\tpassive_combat\t木\nS_F009\t火之親和\tpassive_combat\t火\nS_F010\t燃燒精通\tpassive_combat\t火\nS_F011\t天命·火靈庇護\tpassive_combat\t火\nS_E007\t土之親和\tpassive_combat\t土\nS_E008\t鐵壁防禦\tpassive_combat\t土\nS_E009\t天命·土靈庇護\tpassive_combat\t土\nS_M006\t金之親和\tpassive_combat\t金\nS_M007\t暴擊精通\tpassive_combat\t金\nS_M008\t天命·金靈庇護\tpassive_combat\t金\nS_W063\t水之親和\tpassive_combat\t水\n",
+  "stderr": "",
+  "execution_time_ms": 1519
+}

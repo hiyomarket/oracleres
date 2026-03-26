@@ -1,0 +1,28 @@
+{
+  "query": "SELECT as2.id, as2.skill_id, as2.installed_slot, as2.awake_tier, gsc.name, gsc.category, gsc.wuxing\nFROM agent_skills as2\nLEFT JOIN game_skill_catalog gsc ON as2.skill_id = gsc.skill_id\nWHERE as2.agent_id = (SELECT id FROM game_agents WHERE user_id = '1' LIMIT 1)\nORDER BY as2.skill_id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT as2.id, as2.skill_id, as2.installed_slot, as2.awake_tier, gsc.name, gsc.category, gsc.wuxing\nFROM agent_skills as2\nLEFT JOIN game_skill_catalog gsc ON as2.skill_id = gsc.skill_id\nWHERE as2.agent_id = (SELECT id FROM game_agents WHERE user_id = '1' LIMIT 1)\nORDER BY as2.skill_id;",
+  "rows": [
+    {
+      "id": "4",
+      "skill_id": "S_F004",
+      "installed_slot": "skillSlot3",
+      "awake_tier": "0",
+      "name": "狂暴之焰",
+      "category": "active_combat",
+      "wuxing": "火"
+    },
+    {
+      "id": "3",
+      "skill_id": "S_W005",
+      "installed_slot": "skillSlot2",
+      "awake_tier": "0",
+      "name": "森林衝刺",
+      "category": "active_combat",
+      "wuxing": "木"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tskill_id\tinstalled_slot\tawake_tier\tname\tcategory\twuxing\n4\tS_F004\tskillSlot3\t0\t狂暴之焰\tactive_combat\t火\n3\tS_W005\tskillSlot2\t0\t森林衝刺\tactive_combat\t木\n",
+  "stderr": "",
+  "execution_time_ms": 1559
+}

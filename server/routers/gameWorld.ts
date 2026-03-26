@@ -43,16 +43,29 @@ function calcStatsFromNatal(natalStats: {
     hitRate: Math.min(100, Math.max(10, Math.round(10 + natalStats.metal * 1.2))),
   };
 }
-// ─── 根據主屬性取得初始技能 ───
+// ─── 根據主屬性取得初始技能（使用技能目錄 ID） ───
+// 舊格式 → 新格式映射表（用於資料遷移）
+const OLD_TO_NEW_SKILL_MAP: Record<string, string> = {
+  "wood-basic-atk": "S_W001", "wood-heal": "S_W009", "wood-regen": "S_W021",
+  "fire-basic-atk": "S_F001", "fire-burst": "S_F002", "fire-boost": "S_F009",
+  "earth-basic-atk": "S_E001", "earth-shield": "S_E002", "earth-tough": "S_E007",
+  "metal-basic-atk": "S_M001", "metal-pierce": "S_M002", "metal-crit": "S_M006",
+  "water-basic-atk": "S_W057", "water-flow": "S_W059", "water-sense": "S_W063",
+};
 function getInitialSkills(dominant: WuXing): { slot1: string; slot2: string; passive1: string } {
   const INITIAL_SKILLS: Record<WuXing, { slot1: string; slot2: string; passive1: string }> = {
-    wood: { slot1: "wood-basic-atk", slot2: "wood-heal", passive1: "wood-regen" },
-    fire: { slot1: "fire-basic-atk", slot2: "fire-burst", passive1: "fire-boost" },
-    earth: { slot1: "earth-basic-atk", slot2: "earth-shield", passive1: "earth-tough" },
-    metal: { slot1: "metal-basic-atk", slot2: "metal-pierce", passive1: "metal-crit" },
-    water: { slot1: "water-basic-atk", slot2: "water-flow", passive1: "water-sense" },
+    wood:  { slot1: "S_W001", slot2: "S_W009", passive1: "S_W021" },
+    fire:  { slot1: "S_F001", slot2: "S_F002", passive1: "S_F009" },
+    earth: { slot1: "S_E001", slot2: "S_E002", passive1: "S_E007" },
+    metal: { slot1: "S_M001", slot2: "S_M002", passive1: "S_M006" },
+    water: { slot1: "S_W057", slot2: "S_W059", passive1: "S_W063" },
   };
   return INITIAL_SKILLS[dominant];
+}
+/** 將舊格式技能 ID 轉換為新格式，若已是新格式則原樣返回 */
+function migrateSkillId(id: string | null | undefined): string | null {
+  if (!id) return null;
+  return OLD_TO_NEW_SKILL_MAP[id] ?? id;
 }
 
 // ─── 取得或建立玩家角色 ───
@@ -70,6 +83,18 @@ export const gameWorldRouter = router({
 
       if (existing[0]) {
         const ag = existing[0];
+
+        // ★ 舊格式技能 ID 自動遷移：將 "wood-basic-atk" 等舊 ID 轉為 "S_W001" 等新 ID
+        const migratedSlot1 = migrateSkillId(ag.skillSlot1);
+        const migratedSlot2 = migrateSkillId(ag.skillSlot2);
+        const migratedSlot3 = migrateSkillId(ag.skillSlot3);
+        const migratedSlot4 = migrateSkillId(ag.skillSlot4);
+        const migratedPassive1 = migrateSkillId(ag.passiveSlot1);
+        const migratedPassive2 = migrateSkillId(ag.passiveSlot2);
+        const needsMigration = migratedSlot1 !== ag.skillSlot1 || migratedSlot2 !== ag.skillSlot2 ||
+          migratedSlot3 !== ag.skillSlot3 || migratedSlot4 !== ag.skillSlot4 ||
+          migratedPassive1 !== ag.passiveSlot1 || migratedPassive2 !== ag.passiveSlot2;
+
         // 若生活技能仍是預設值 20 但五行值已正確，自動同步
         if (ag.gatherPower === 20 && ag.wuxingWood !== 20) {
           const lifeStats = calcStatsFromNatal({
@@ -86,15 +111,32 @@ export const gameWorldRouter = router({
             healPower: lifeStats.healPower,
             magicAttack: lifeStats.magicAttack,
             hitRate: lifeStats.hitRate,
-            skillSlot1: ag.skillSlot1 ?? initSkills.slot1,
-            skillSlot2: ag.skillSlot2 ?? initSkills.slot2,
-            passiveSlot1: ag.passiveSlot1 ?? initSkills.passive1,
+            skillSlot1: migratedSlot1 ?? initSkills.slot1,
+            skillSlot2: migratedSlot2 ?? initSkills.slot2,
+            passiveSlot1: migratedPassive1 ?? initSkills.passive1,
             updatedAt: Date.now(),
           }).where(eq(gameAgents.id, ag.id));
           const updated = await db.select().from(gameAgents)
             .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
           return { agent: updated[0], isNew: false, needsNaming: !ag.isNamed };
         }
+
+        // ★ 如果有舊格式技能需要遷移，更新資料庫
+        if (needsMigration) {
+          await db.update(gameAgents).set({
+            skillSlot1: migratedSlot1,
+            skillSlot2: migratedSlot2,
+            skillSlot3: migratedSlot3,
+            skillSlot4: migratedSlot4,
+            passiveSlot1: migratedPassive1,
+            passiveSlot2: migratedPassive2,
+            updatedAt: Date.now(),
+          }).where(eq(gameAgents.id, ag.id));
+          const updated = await db.select().from(gameAgents)
+            .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+          return { agent: updated[0], isNew: false, needsNaming: !ag.isNamed };
+        }
+
         return {
           agent: ag,
           isNew: false,
@@ -357,24 +399,27 @@ export const gameWorldRouter = router({
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
 
-    const agents = await db
-      .select()
-      .from(gameAgents)
-      .where(eq(gameAgents.userId, String(ctx.user.id)))
-      .limit(1);
+    // 從 game_config 讀取靈相干預參數
+    const cfgRows = await db.select({ configKey: gameConfig.configKey, configValue: gameConfig.configValue })
+      .from(gameConfig)
+      .where(and(eq(gameConfig.isActive, 1), sql`${gameConfig.configKey} IN ('divine_heal_hp_percent','divine_heal_ap_cost','divine_cooldown_seconds')`));
+    const cfg: Record<string, string> = {};
+    cfgRows.forEach(r => { cfg[r.configKey] = r.configValue; });
+    const healPercent = Number(cfg.divine_heal_hp_percent ?? "50");
+    const apCost = Number(cfg.divine_heal_ap_cost ?? "1");
 
+    const agents = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
     const agent = agents[0];
     if (!agent) throw new Error("角色不存在");
-    if (agent.actionPoints < 1) throw new Error("靈力值不足（需要 1 點）");
-    // 已取消每日限制，只要有靈力值即可使用
+    if (agent.actionPoints < apCost) throw new Error(`靈力值不足（需要 ${apCost} 點）`);
 
-    const healAmount = Math.floor(agent.maxHp * 0.5);
+    const healAmount = Math.floor(agent.maxHp * (healPercent / 100));
     const newHp = Math.min(agent.maxHp, agent.hp + healAmount);
     const now = Date.now();
 
     await db.update(gameAgents).set({
       hp: newHp,
-      actionPoints: agent.actionPoints - 1,
+      actionPoints: agent.actionPoints - apCost,
       status: "idle",
       updatedAt: now,
     }).where(eq(gameAgents.id, agent.id));
@@ -382,8 +427,8 @@ export const gameWorldRouter = router({
     await db.insert(agentEvents).values({
       agentId: agent.id,
       eventType: "system",
-      message: `⚡ 神明降下神蹟，${agent.agentName ?? "旅人"} 恢復了 ${healAmount} 點 HP！（消耗 1 靈力值）`,
-      detail: { type: "divine_heal", healAmount, actionPointsUsed: 1 },
+      message: `⚡ 神明降下神蹟，${agent.agentName ?? "旅人"} 恢復了 ${healAmount} 點 HP！（消耗 ${apCost} 靈力值）`,
+      detail: { type: "divine_heal", healAmount, actionPointsUsed: apCost },
       nodeId: agent.currentNodeId,
       createdAt: now,
     });
@@ -394,23 +439,32 @@ export const gameWorldRouter = router({
   divineEye: protectedProcedure.mutation(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
+
+    const cfgRows = await db.select({ configKey: gameConfig.configKey, configValue: gameConfig.configValue })
+      .from(gameConfig)
+      .where(and(eq(gameConfig.isActive, 1), sql`${gameConfig.configKey} IN ('divine_eye_boost_percent','divine_eye_ap_cost')`));
+    const cfg: Record<string, string> = {};
+    cfgRows.forEach(r => { cfg[r.configKey] = r.configValue; });
+    const boostPercent = Number(cfg.divine_eye_boost_percent ?? "15");
+    const apCost = Number(cfg.divine_eye_ap_cost ?? "1");
+
     const agents = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
     const agent = agents[0];
     if (!agent) throw new Error("角色不存在");
-    if (agent.actionPoints < 1) throw new Error("靈力值不足（需要 1 點）");
-    // 已取消每日限制，只要有靈力值即可使用
+    if (agent.actionPoints < apCost) throw new Error(`靈力值不足（需要 ${apCost} 點）`);
+
     const now = Date.now();
-    const newTreasure = Math.min(1000, Math.round((agent.treasureHunting ?? 20) * 1.15));
+    const newTreasure = Math.min(1000, Math.round((agent.treasureHunting ?? 20) * (1 + boostPercent / 100)));
     await db.update(gameAgents).set({
       treasureHunting: newTreasure,
-      actionPoints: agent.actionPoints - 1,
+      actionPoints: agent.actionPoints - apCost,
       updatedAt: now,
     }).where(eq(gameAgents.id, agent.id));
     await db.insert(agentEvents).values({
       agentId: agent.id,
       eventType: "system",
-      message: `👁 神眼加持降臨，${agent.agentName ?? "旅人"} 的洞察力提升至 ${newTreasure}！（消耗 1 靈力值）`,
-      detail: { type: "divine_eye", newTreasure, actionPointsUsed: 1 },
+      message: `👁 神眼加持降臨，${agent.agentName ?? "旅人"} 的洞察力提升至 ${newTreasure}！（消耗 ${apCost} 靈力值）`,
+      detail: { type: "divine_eye", newTreasure, actionPointsUsed: apCost },
       nodeId: agent.currentNodeId,
       createdAt: now,
     });
@@ -420,23 +474,32 @@ export const gameWorldRouter = router({
   divineStamina: protectedProcedure.mutation(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new Error("Database unavailable");
+
+    const cfgRows = await db.select({ configKey: gameConfig.configKey, configValue: gameConfig.configValue })
+      .from(gameConfig)
+      .where(and(eq(gameConfig.isActive, 1), sql`${gameConfig.configKey} IN ('divine_stamina_restore','divine_stamina_ap_cost')`));
+    const cfg: Record<string, string> = {};
+    cfgRows.forEach(r => { cfg[r.configKey] = r.configValue; });
+    const staminaRestore = Number(cfg.divine_stamina_restore ?? "50");
+    const apCost = Number(cfg.divine_stamina_ap_cost ?? "1");
+
     const agents = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
     const agent = agents[0];
     if (!agent) throw new Error("角色不存在");
-    if (agent.actionPoints < 1) throw new Error("靈力值不足（需要 1 點）");
-    // 已取消每日限制，只要有靈力值即可使用
+    if (agent.actionPoints < apCost) throw new Error(`靈力值不足（需要 ${apCost} 點）`);
+
     const now = Date.now();
-    const newStamina = Math.max(agent.stamina ?? 0, 50);
+    const newStamina = Math.max(agent.stamina ?? 0, staminaRestore);
     await db.update(gameAgents).set({
       stamina: newStamina,
-      actionPoints: agent.actionPoints - 1,
+      actionPoints: agent.actionPoints - apCost,
       updatedAt: now,
     }).where(eq(gameAgents.id, agent.id));
     await db.insert(agentEvents).values({
       agentId: agent.id,
       eventType: "system",
-      message: `✨ 靈癒疲勞，${agent.agentName ?? "旅人"} 的體力恢復至 ${newStamina}！（消耗 1 靈力值）`,
-      detail: { type: "divine_stamina", newStamina, actionPointsUsed: 1 },
+      message: `✨ 靈癒疲勞，${agent.agentName ?? "旅人"} 的體力恢復至 ${newStamina}！（消耗 ${apCost} 靈力值）`,
+      detail: { type: "divine_stamina", newStamina, actionPointsUsed: apCost },
       nodeId: agent.currentNodeId,
       createdAt: now,
     });
@@ -1529,13 +1592,21 @@ export const gameWorldRouter = router({
       if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
       const agent = agents[0];
 
-      // 驗證玩家是否擁有該技能（初始技能免驗證）
-      const isInitialSkill = [
-        agent.skillSlot1, agent.skillSlot2, agent.passiveSlot1,
-        agent.skillSlot3, agent.skillSlot4, agent.passiveSlot2,
-      ].includes(input.skillId);
+      // 驗證玩家是否擁有該技能：檢查 agentSkills 表 + 初始技能列表 + 當前槽位
+      const currentSlotSkills = [
+        agent.skillSlot1, agent.skillSlot2, agent.skillSlot3, agent.skillSlot4,
+        agent.passiveSlot1, agent.passiveSlot2,
+      ].filter(Boolean);
+      const isInSlot = currentSlotSkills.includes(input.skillId);
+      // 檢查是否為任何屬性的初始技能
+      const allInitialSkillIds = new Set(
+        (["wood", "fire", "earth", "metal", "water"] as WuXing[]).flatMap(e => {
+          const s = getInitialSkills(e); return [s.slot1, s.slot2, s.passive1];
+        })
+      );
+      const isInitialSkill = allInitialSkillIds.has(input.skillId);
 
-      if (!isInitialSkill) {
+      if (!isInSlot && !isInitialSkill) {
         // 檢查 agent_skills 表
         const owned = await db.select().from(agentSkills)
           .where(and(eq(agentSkills.agentId, agent.id), eq(agentSkills.skillId, input.skillId)))
