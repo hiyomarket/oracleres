@@ -1,0 +1,130 @@
+{
+  "query": "SELECT id, item_key, display_name, currency_type, price, rarity FROM game_hidden_shop_pool WHERE is_active = 1 ORDER BY price DESC LIMIT 15",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, item_key, display_name, currency_type, price, rarity FROM game_hidden_shop_pool WHERE is_active = 1 ORDER BY price DESC LIMIT 15",
+  "rows": [
+    {
+      "id": "25",
+      "item_key": "skill-wood-002",
+      "display_name": "青龍技能書",
+      "currency_type": "coins",
+      "price": "800",
+      "rarity": "epic"
+    },
+    {
+      "id": "34",
+      "item_key": "skill-metal-002",
+      "display_name": "白虎技能書",
+      "currency_type": "coins",
+      "price": "800",
+      "rarity": "epic"
+    },
+    {
+      "id": "20",
+      "item_key": "I_W020",
+      "display_name": "鐵木熊皮",
+      "currency_type": "coins",
+      "price": "800",
+      "rarity": "epic"
+    },
+    {
+      "id": "32",
+      "item_key": "I_M041",
+      "display_name": "立秋紀念徽章",
+      "currency_type": "coins",
+      "price": "800",
+      "rarity": "epic"
+    },
+    {
+      "id": "35",
+      "item_key": "I_W084",
+      "display_name": "人魚之歌",
+      "currency_type": "coins",
+      "price": "800",
+      "rarity": "epic"
+    },
+    {
+      "id": "31",
+      "item_key": "skill-earth-002",
+      "display_name": "黃龍技能書",
+      "currency_type": "coins",
+      "price": "800",
+      "rarity": "epic"
+    },
+    {
+      "id": "37",
+      "item_key": "skill-water-002",
+      "display_name": "玄武技能書",
+      "currency_type": "coins",
+      "price": "800",
+      "rarity": "epic"
+    },
+    {
+      "id": "29",
+      "item_key": "I_E041",
+      "display_name": "秋分紀念徽章",
+      "currency_type": "coins",
+      "price": "800",
+      "rarity": "epic"
+    },
+    {
+      "id": "28",
+      "item_key": "skill-fire-002",
+      "display_name": "朱雀技能書",
+      "currency_type": "coins",
+      "price": "800",
+      "rarity": "epic"
+    },
+    {
+      "id": "27",
+      "item_key": "E_F017",
+      "display_name": "太陽神劍",
+      "currency_type": "stones",
+      "price": "300",
+      "rarity": "legendary"
+    },
+    {
+      "id": "33",
+      "item_key": "E_M017",
+      "display_name": "天命龍槍",
+      "currency_type": "stones",
+      "price": "300",
+      "rarity": "legendary"
+    },
+    {
+      "id": "30",
+      "item_key": "E_E017",
+      "display_name": "泰坦巨斧",
+      "currency_type": "stones",
+      "price": "300",
+      "rarity": "legendary"
+    },
+    {
+      "id": "23",
+      "item_key": "E_W017",
+      "display_name": "木靈王之劍",
+      "currency_type": "stones",
+      "price": "300",
+      "rarity": "legendary"
+    },
+    {
+      "id": "24",
+      "item_key": "E_W021",
+      "display_name": "萬古神木甲",
+      "currency_type": "stones",
+      "price": "300",
+      "rarity": "legendary"
+    },
+    {
+      "id": "26",
+      "item_key": "I_F034",
+      "display_name": "鳳凰之血",
+      "currency_type": "stones",
+      "price": "300",
+      "rarity": "legendary"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\titem_key\tdisplay_name\tcurrency_type\tprice\trarity\n25\tskill-wood-002\t青龍技能書\tcoins\t800\tepic\n34\tskill-metal-002\t白虎技能書\tcoins\t800\tepic\n20\tI_W020\t鐵木熊皮\tcoins\t800\tepic\n32\tI_M041\t立秋紀念徽章\tcoins\t800\tepic\n35\tI_W084\t人魚之歌\tcoins\t800\tepic\n31\tskill-earth-002\t黃龍技能書\tcoins\t800\tepic\n37\tskill-water-002\t玄武技能書\tcoins\t800\tepic\n29\tI_E041\t秋分紀念徽章\tcoins\t800\tepic\n28\tskill-fire-002\t朱雀技能書\tcoins\t800\tepic\n27\tE_F017\t太陽神劍\tstones\t300\tlegendary\n33\tE_M017\t天命龍槍\tstones\t300\tlegendary\n30\tE_E017\t泰坦巨斧\tstones\t300\tlegendary\n23\tE_W017\t木靈王之劍\tstones\t300\tlegendary\n24\tE_W021\t萬古神木甲\tstones\t300\tlegendary\n26\tI_F034\t鳳凰之血\tstones\t300\tlegendary\n",
+  "stderr": "",
+  "execution_time_ms": 1535
+}

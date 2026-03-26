@@ -582,4 +582,31 @@ export const gameAIBalanceRouter = router({
           : `已修正 ${changes.length} 項天命考核技能數值`,
       };
     }),
+
+  /**
+   * 大平衡：一鍵校準所有系統（怪物/怪物技能/人物技能/裝備/商店價格）
+   */
+  runFullBalance: adminProcedure
+    .input(z.object({
+      dryRun: z.boolean().default(true),
+    }))
+    .mutation(async ({ input }) => {
+      const { runFullBalance: doBalance } = await import("../scripts/runBalance");
+      if (input.dryRun) {
+        // 預覽模式：只回報會改多少筆
+        return {
+          success: true,
+          dryRun: true,
+          message: "大平衡預覽模式：請確認後以 dryRun=false 執行",
+          note: "將校準：怪物HP/ATK/DEF/SPD、怪物技能威力/MP/CD、人物技能威力/MP/CD/價格、裝備數值、商店價格",
+        };
+      }
+      const result = await doBalance();
+      return {
+        success: true,
+        dryRun: false,
+        ...result,
+        message: `大平衡完成：怪物${result.monstersUpdated} 怪技${result.monsterSkillsUpdated} 人技${result.playerSkillsUpdated} 裝備${result.equipmentsUpdated}+${result.equipTemplatesUpdated} 商店${result.shopVirtualUpdated}+${result.shopSpiritUpdated}+${result.shopHiddenUpdated}`,
+      };
+    }),
 });

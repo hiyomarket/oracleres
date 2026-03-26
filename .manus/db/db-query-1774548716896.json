@@ -1,0 +1,50 @@
+{
+  "query": "SELECT rarity, tier, COUNT(*) as cnt, AVG(hp_bonus) as avg_hp, AVG(attack_bonus) as avg_atk, AVG(defense_bonus) as avg_def FROM game_equipment_catalog WHERE is_active = 1 GROUP BY rarity, tier ORDER BY avg_atk DESC",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT rarity, tier, COUNT(*) as cnt, AVG(hp_bonus) as avg_hp, AVG(attack_bonus) as avg_atk, AVG(defense_bonus) as avg_def FROM game_equipment_catalog WHERE is_active = 1 GROUP BY rarity, tier ORDER BY avg_atk DESC",
+  "rows": [
+    {
+      "rarity": "epic",
+      "tier": "高階",
+      "cnt": "3",
+      "avg_hp": "41.6667",
+      "avg_atk": "15.0000",
+      "avg_def": "11.0000"
+    },
+    {
+      "rarity": "legendary",
+      "tier": "傳說",
+      "cnt": "6",
+      "avg_hp": "16.6667",
+      "avg_atk": "3.0000",
+      "avg_def": "4.1667"
+    },
+    {
+      "rarity": "rare",
+      "tier": "中階",
+      "cnt": "10",
+      "avg_hp": "4.5000",
+      "avg_atk": "2.0000",
+      "avg_def": "1.4000"
+    },
+    {
+      "rarity": "common",
+      "tier": "初階",
+      "cnt": "16",
+      "avg_hp": "0.6250",
+      "avg_atk": "0.5000",
+      "avg_def": "0.1250"
+    },
+    {
+      "rarity": "legendary",
+      "tier": "高階",
+      "cnt": "13",
+      "avg_hp": "0.0000",
+      "avg_atk": "0.0000",
+      "avg_def": "0.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "rarity\ttier\tcnt\tavg_hp\tavg_atk\tavg_def\nepic\t高階\t3\t41.6667\t15.0000\t11.0000\nlegendary\t傳說\t6\t16.6667\t3.0000\t4.1667\nrare\t中階\t10\t4.5000\t2.0000\t1.4000\ncommon\t初階\t16\t0.6250\t0.5000\t0.1250\nlegendary\t高階\t13\t0.0000\t0.0000\t0.0000\n",
+  "stderr": "",
+  "execution_time_ms": 1539
+}

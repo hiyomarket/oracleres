@@ -1,0 +1,38 @@
+{
+  "query": "SELECT rarity, COUNT(*) as cnt, AVG(shop_price) as avg_price, MIN(shop_price) as min_price, MAX(shop_price) as max_price FROM game_item_catalog WHERE is_active = 1 AND shop_price > 0 GROUP BY rarity",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT rarity, COUNT(*) as cnt, AVG(shop_price) as avg_price, MIN(shop_price) as min_price, MAX(shop_price) as max_price FROM game_item_catalog WHERE is_active = 1 AND shop_price > 0 GROUP BY rarity",
+  "rows": [
+    {
+      "rarity": "epic",
+      "cnt": "1",
+      "avg_price": "1200.0000",
+      "min_price": "1200",
+      "max_price": "1200"
+    },
+    {
+      "rarity": "legendary",
+      "cnt": "1",
+      "avg_price": "8000.0000",
+      "min_price": "8000",
+      "max_price": "8000"
+    },
+    {
+      "rarity": "common",
+      "cnt": "15",
+      "avg_price": "18.6667",
+      "min_price": "10",
+      "max_price": "90"
+    },
+    {
+      "rarity": "rare",
+      "cnt": "3",
+      "avg_price": "360.0000",
+      "min_price": "250",
+      "max_price": "480"
+    }
+  ],
+  "messages": [],
+  "stdout": "rarity\tcnt\tavg_price\tmin_price\tmax_price\nepic\t1\t1200.0000\t1200\t1200\nlegendary\t1\t8000.0000\t8000\t8000\ncommon\t15\t18.6667\t10\t90\nrare\t3\t360.0000\t250\t480\n",
+  "stderr": "",
+  "execution_time_ms": 1578
+}

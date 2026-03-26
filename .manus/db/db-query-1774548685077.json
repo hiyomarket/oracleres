@@ -1,0 +1,90 @@
+{
+  "query": "SELECT 'spirit' as shop, id, item_key, display_name, price_stones as price, rarity FROM game_spirit_shop WHERE is_on_sale = 1 ORDER BY price_stones DESC LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT 'spirit' as shop, id, item_key, display_name, price_stones as price, rarity FROM game_spirit_shop WHERE is_on_sale = 1 ORDER BY price_stones DESC LIMIT 10",
+  "rows": [
+    {
+      "shop": "spirit",
+      "id": "5743",
+      "item_key": "skill-metal-002",
+      "display_name": "白虎技能書",
+      "price": "80",
+      "rarity": "epic"
+    },
+    {
+      "shop": "spirit",
+      "id": "5737",
+      "item_key": "skill-earth-002",
+      "display_name": "黃龍技能書",
+      "price": "80",
+      "rarity": "epic"
+    },
+    {
+      "shop": "spirit",
+      "id": "5730",
+      "item_key": "I_W084",
+      "display_name": "人魚之歌",
+      "price": "80",
+      "rarity": "epic"
+    },
+    {
+      "shop": "spirit",
+      "id": "5736",
+      "item_key": "I_W033",
+      "display_name": "復甦之風",
+      "price": "80",
+      "rarity": "epic"
+    },
+    {
+      "shop": "spirit",
+      "id": "5727",
+      "item_key": "skill-fire-002",
+      "display_name": "朱雀技能書",
+      "price": "80",
+      "rarity": "epic"
+    },
+    {
+      "shop": "spirit",
+      "id": "5726",
+      "item_key": "skill-metal-002",
+      "display_name": "白虎技能書",
+      "price": "80",
+      "rarity": "epic"
+    },
+    {
+      "shop": "spirit",
+      "id": "5741",
+      "item_key": "skill-wood-002",
+      "display_name": "青龍技能書",
+      "price": "80",
+      "rarity": "epic"
+    },
+    {
+      "shop": "spirit",
+      "id": "5728",
+      "item_key": "skill-water-002",
+      "display_name": "玄武技能書",
+      "price": "80",
+      "rarity": "epic"
+    },
+    {
+      "shop": "spirit",
+      "id": "5734",
+      "item_key": "I_Wt001",
+      "display_name": "寒冰靈珠",
+      "price": "20",
+      "rarity": "rare"
+    },
+    {
+      "shop": "spirit",
+      "id": "5735",
+      "item_key": "I_W101",
+      "display_name": "青木靈髓",
+      "price": "20",
+      "rarity": "rare"
+    }
+  ],
+  "messages": [],
+  "stdout": "shop\tid\titem_key\tdisplay_name\tprice\trarity\nspirit\t5743\tskill-metal-002\t白虎技能書\t80\tepic\nspirit\t5737\tskill-earth-002\t黃龍技能書\t80\tepic\nspirit\t5730\tI_W084\t人魚之歌\t80\tepic\nspirit\t5736\tI_W033\t復甦之風\t80\tepic\nspirit\t5727\tskill-fire-002\t朱雀技能書\t80\tepic\nspirit\t5726\tskill-metal-002\t白虎技能書\t80\tepic\nspirit\t5741\tskill-wood-002\t青龍技能書\t80\tepic\nspirit\t5728\tskill-water-002\t玄武技能書\t80\tepic\nspirit\t5734\tI_Wt001\t寒冰靈珠\t20\trare\nspirit\t5735\tI_W101\t青木靈髓\t20\trare\n",
+  "stderr": "",
+  "execution_time_ms": 1552
+}

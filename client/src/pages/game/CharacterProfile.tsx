@@ -140,7 +140,17 @@ interface NatalStats {
   def: number;
   spd: number;
   mp: number;
+  matk?: number;
 }
+
+// 五行屬性對應戰鬥屬性的中文名
+const WUXING_STAT_MAP = [
+  { key: "wood", zh: "木", stat: "體力", color: "#4ade80", icon: "🌿" },
+  { key: "fire", zh: "火", stat: "力量", color: "#f87171", icon: "🔥" },
+  { key: "earth", zh: "土", stat: "強度", color: "#fbbf24", icon: "⛰️" },
+  { key: "metal", zh: "金", stat: "速度", color: "#e5e7eb", icon: "⚔️" },
+  { key: "water", zh: "水", stat: "魔法", color: "#60a5fa", icon: "🌊" },
+] as const;
 
 interface InfoCardProps {
   userName: string;
@@ -154,12 +164,16 @@ interface InfoCardProps {
   accentColor: string;
   textColor: string;
   natalStats: NatalStats;
+  gameWuxing?: { wood: number; fire: number; earth: number; metal: number; water: number };
+  gameLevel?: number;
+  gameDominantElement?: string;
   onClose: () => void;
 }
 
 function InfoCard({
   userName, level, gameCoins, gameStones, auraScore,
-  unlockedCount, totalAchievements, element, accentColor, textColor, natalStats, onClose,
+  unlockedCount, totalAchievements, element, accentColor, textColor, natalStats,
+  gameWuxing, gameLevel, gameDominantElement, onClose,
 }: InfoCardProps) {
   const theme = WUXING_THEMES[element];
 
@@ -238,33 +252,67 @@ function InfoCard({
         </div>
       </div>
 
-      {/* 五行能力値（八字命格連動） */}
-      <div className="mb-4">
-        <div className="text-gray-400 text-xs mb-2">命格能力値（八字五行連動）</div>
-        <div className="grid grid-cols-5 gap-1.5">
-          {[
-            { label: "HP", value: natalStats.hp, max: 500, color: "#4ade80", icon: "木" },
-            { label: "攻", value: natalStats.atk, max: 100, color: "#f87171", icon: "火" },
-            { label: "防", value: natalStats.def, max: 100, color: "#fbbf24", icon: "土" },
-            { label: "速", value: natalStats.spd, max: 100, color: "#e5e7eb", icon: "金" },
-            { label: "MP", value: natalStats.mp, max: 300, color: "#60a5fa", icon: "水" },
-          ].map((stat) => (
-            <div key={stat.label} className="flex flex-col items-center gap-1">
-              <div className="text-xs" style={{ color: stat.color }}>{stat.icon}</div>
-              <div
-                className="w-full rounded-full overflow-hidden"
-                style={{ height: "40px", background: "rgba(255,255,255,0.05)", position: "relative" }}
-              >
-                <div
-                  className="absolute bottom-0 left-0 right-0 rounded-full transition-all duration-700"
-                  style={{
-                    height: `${Math.min(100, (stat.value / stat.max) * 100)}%`,
-                    background: `linear-gradient(to top, ${stat.color}, ${stat.color}60)`,
-                  }}
-                />
+      {/* 五行屬性値（V2: 遊戲角色實際五行屬性） */}
+      {gameWuxing && (
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-gray-400 text-xs">五行屬性 <span className="text-gray-600">Lv.{gameLevel ?? 1}</span></div>
+            {gameDominantElement && (
+              <div className="text-xs px-1.5 py-0.5 rounded" style={{ background: `${accentColor}20`, color: accentColor }}>
+                主屬性：{WUXING_STAT_MAP.find(w => w.key === gameDominantElement)?.zh ?? "木"}
               </div>
-              <div className="text-white text-xs font-bold">{stat.label}</div>
-              <div className="text-gray-500" style={{ fontSize: "10px" }}>{stat.value}</div>
+            )}
+          </div>
+          <div className="grid grid-cols-5 gap-1.5">
+            {WUXING_STAT_MAP.map((w) => {
+              const val = gameWuxing[w.key as keyof typeof gameWuxing] ?? 20;
+              const maxVal = 150; // Lv60 主屬性約 138
+              const isDominant = w.key === gameDominantElement;
+              return (
+                <div key={w.key} className="flex flex-col items-center gap-0.5">
+                  <div className="text-xs" style={{ color: w.color }}>{w.icon}</div>
+                  <div
+                    className="w-full rounded-full overflow-hidden"
+                    style={{ height: "36px", background: "rgba(255,255,255,0.05)", position: "relative", border: isDominant ? `1px solid ${w.color}60` : "none" }}
+                  >
+                    <div
+                      className="absolute bottom-0 left-0 right-0 rounded-full transition-all duration-700"
+                      style={{
+                        height: `${Math.min(100, (val / maxVal) * 100)}%`,
+                        background: `linear-gradient(to top, ${w.color}, ${w.color}40)`,
+                      }}
+                    />
+                  </div>
+                  <div className="text-white text-xs font-bold">{w.zh}</div>
+                  <div className="text-gray-500" style={{ fontSize: "10px" }}>{val.toFixed(0)}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 戰鬥數值（由五行屬性推導） */}
+      <div className="mb-4">
+        <div className="text-gray-400 text-xs mb-2">戰鬥能力</div>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { label: "HP", value: natalStats.hp, color: "#4ade80", desc: "木→體力" },
+            { label: "ATK", value: natalStats.atk, color: "#f87171", desc: "火→力量" },
+            { label: "DEF", value: natalStats.def, color: "#fbbf24", desc: "土→強度" },
+            { label: "SPD", value: natalStats.spd, color: "#e5e7eb", desc: "金→速度" },
+            { label: "MP", value: natalStats.mp, color: "#60a5fa", desc: "水→魔力" },
+            { label: "MATK", value: natalStats.matk ?? 0, color: "#818cf8", desc: "水→魔攻" },
+          ].map((stat) => (
+            <div key={stat.label} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.05)" }}>
+              <div className="w-1 h-6 rounded-full" style={{ background: stat.color }} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="text-white text-xs font-semibold">{stat.label}</span>
+                  <span className="text-white text-xs font-bold">{stat.value}</span>
+                </div>
+                <div className="text-gray-600" style={{ fontSize: "9px" }}>{stat.desc}</div>
+              </div>
             </div>
           ))}
         </div>
@@ -315,7 +363,11 @@ export default function CharacterProfile() {
   const gender: CharacterGender = (equippedData?.userGender === "male" ? "male" : "female") as CharacterGender;
 
   // 五行能力値（從 getEquipped 回傳的 natalStats）
-  const natalStats = equippedData?.natalStats ?? { hp: 100, atk: 20, def: 20, spd: 20, mp: 60 };
+  const natalStats = equippedData?.natalStats ?? { hp: 100, atk: 20, def: 20, spd: 20, mp: 60, matk: 20 };
+  // V2: 遊戲角色的五行屬性和等級
+  const gameWuxing = equippedData?.gameWuxing;
+  const gameLevel = equippedData?.gameLevel;
+  const gameDominantElement = equippedData?.gameDominantElement;
 
   const theme = WUXING_THEMES[activeElement];
   const particles = useParticles(20, theme.particleColor);
@@ -495,6 +547,9 @@ export default function CharacterProfile() {
           accentColor={theme.accentColor}
           textColor={theme.textColor}
           natalStats={natalStats}
+          gameWuxing={gameWuxing}
+          gameLevel={gameLevel}
+          gameDominantElement={gameDominantElement}
           onClose={() => setShowCard(false)}
         />
       </div>

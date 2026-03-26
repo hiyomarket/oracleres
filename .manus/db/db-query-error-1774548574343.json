@@ -1,0 +1,8 @@
+{
+  "query": "SELECT COUNT(*) as total, category, MIN(damage_multiplier) as min_dmg, MAX(damage_multiplier) as max_dmg, AVG(damage_multiplier) as avg_dmg, MIN(mp_cost) as min_mp, MAX(mp_cost) as max_mp, AVG(mp_cost) as avg_mp FROM game_skill_catalog WHERE is_active = 1 GROUP BY category",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total, category, MIN(damage_multiplier) as min_dmg, MAX(damage_multiplier) as max_dmg, AVG(damage_multiplier) as avg_dmg, MIN(mp_cost) as min_mp, MAX(mp_cost) as max_mp, AVG(mp_cost) as avg_mp FROM game_skill_catalog WHERE is_active = 1 GROUP BY category",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'damage_multiplier' in 'where clause'"
+  ]
+}

@@ -20,10 +20,10 @@ import { storagePut } from "../storage";
 import type { WuXing } from "../../shared/types";
 
 // ─── GD-020 補充二：從命格資料計算角色初始屬性（使用統一公式） ───
+// V2: 五行主導版 — 五行屬性佔 70%+，等級只是輔助加成
 function calcStatsFromNatal(natalStats: {
   wood: number; fire: number; earth: number; metal: number; water: number;
 }, level: number = 1) {
-  // 使用 tickEngine 的統一公式：HP = 100 + Lv×10 + 木×3.0，以此類推
   const base = calcCharacterStats(natalStats, level);
   return {
     maxHp: base.hp,
@@ -31,16 +31,16 @@ function calcStatsFromNatal(natalStats: {
     attack: base.atk,
     defense: base.def,
     speed: base.spd,
+    magicAttack: base.matk,
     // GD-002 生活系屬性（五行比例 → 生活技能，10 + 比例*1.5，最低10最高100）
     gatherPower: Math.min(100, Math.max(10, Math.round(10 + natalStats.wood * 1.5))),
     forgePower: Math.min(100, Math.max(10, Math.round(10 + natalStats.fire * 1.5))),
     carryWeight: Math.min(100, Math.max(10, Math.round(10 + natalStats.earth * 1.5))),
     refinePower: Math.min(100, Math.max(10, Math.round(10 + natalStats.metal * 1.5))),
     treasureHunting: Math.min(100, Math.max(10, Math.round(10 + natalStats.water * 1.5))),
-    // GD-002 戰鬥系額外屬性
-    healPower: Math.min(100, Math.max(10, Math.round(10 + natalStats.wood * 1.2))),
-    magicAttack: Math.min(100, Math.max(10, Math.round(10 + natalStats.water * 1.2))),
-    hitRate: Math.min(100, Math.max(10, Math.round(10 + natalStats.metal * 1.2))),
+    // V2: 戰鬥系額外屬性改由 calcCharacterStatsV2 計算
+    healPower: base.hp > 0 ? Math.min(200, Math.floor(natalStats.wood * 1.5 + level * 0.5)) : 10,
+    hitRate: Math.min(200, Math.floor(natalStats.metal * 1.2 + level * 0.3)),
   };
 }
 // ─── 根據主屬性取得初始技能（使用技能目錄 ID） ───

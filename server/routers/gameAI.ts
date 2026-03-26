@@ -23,6 +23,7 @@ import {
   gameQuestSteps,
 } from "../../drizzle/schema";
 import { sql, like, eq, desc, asc, inArray } from "drizzle-orm";
+import { auditMonster, auditSkill, auditEquipment, auditItemPrice, auditAndFix } from "../services/aiValueAudit";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
@@ -391,7 +392,11 @@ ${existingNamesStr}
 請生成 10 隻新魔物，要求：
 - 名稱不可與已有魔物重複，要有東方玄幻風格
 - 五行分布均衡（木火土金水各 2 隻）
-- 數值不能破壞平衡（HP 範圍 30-500, ATK 範圍 5-80, DEF 範圍 2-50, SPD 範圍 3-30）
+- 數值必須符合平衡公式（以等級範圍中間值查HP基準表，再乘以種族倍率和稀有度倍率）：
+  HP基準表：Lv1=80, Lv5=170, Lv10=420, Lv15=1020, Lv20=1800, Lv25=2750, Lv30=3850, Lv40=6800, Lv50=11500
+  種族 HP 倍率：龍種系×1.3, 亡魂系/不死系×1.2, 天命系×1.15, 妖化系×1.1, 人型系/金屬系/靈獸系×1.0, 水生系×0.95, 蟲類系×0.9, 植物系×0.8
+  稀有度倍率：common×1.0, rare×1.3, elite×1.6, epic×2.0, legendary×3.0
+  ATK = HP × 0.10~0.18（根據定位）, DEF = HP × 0.08~0.20, SPD = 8~42（根據等級和定位）
 - 稀有度分布：common 4, rare 3, epic 2, legendary 1
 - 等級範圍合理（1-5, 5-10, 10-20, 20-30, 30-50）
 - 種族從以下選擇：靈獸系/亡魂系/金屬系/人型系/植物系/水生系/妖化系/龍種系/蟲類系/天命系
@@ -424,7 +429,11 @@ ${existingNamesStr}
 - 五行分布均衡（木火土金水各 2 種）
 - 分類多樣：material_basic（基礎材料）、material_drop（掉落材料）、consumable（消耗品）、skillbook（技能書）、equipment_material（裝備材料）
 - 稀有度分布：common 4, rare 3, epic 2, legendary 1
-- 售價合理：common 20-100, rare 100-500, epic 500-2000, legendary 2000-10000
+- 售價必須符合價格基準表（價值排序：技能書 > 裝備 > 消耗品 > 材料）：
+  材料：common 10, rare 50, epic 300, legendary 1500
+  消耗品：common 20, rare 100, epic 500, legendary 2000
+  裝備：common 100, rare 500, epic 3000, legendary 15000
+  技能書：common 200, rare 800, epic 5000, legendary 25000
 
 回覆 JSON 陣列，每個元素格式：
 {
@@ -447,8 +456,12 @@ ${existingNamesStr}
 - 五行分布均衡（木火土金水各 2 件）
 - 部位多樣：weapon/helmet/armor/shoes/accessory/offhand
 - 品質分布：white 2, green 3, blue 2, purple 2, orange 1
-- 數值不能破壞平衡（ATK 0-30, DEF 0-25, HP 0-100, SPD 0-15）
-- 等級需求合理（1-50）
+- 數值必須符合裝備階級基準（武器偏 ATK，護甲偏 DEF/HP，鞋子偏 SPD）：
+  初階：HP 10-30, ATK 3-8, DEF 2-6, SPD 1-3, 售價 50-200, Lv需求 1
+  中階：HP 30-80, ATK 8-20, DEF 6-15, SPD 2-5, 售價 300-800, Lv需求 10
+  高階：HP 80-200, ATK 20-50, DEF 15-40, SPD 3-8, 售價 1500-5000, Lv需求 25
+  傳說：HP 200-500, ATK 50-120, DEF 40-100, SPD 5-12, 售價 10000-50000, Lv需求 40
+- 部位修正倍率：武器 ATK×2.0, 護甲 DEF×2.0/HP×1.5, 鞋子 SPD×2.5, 頭盔 DEF×1.5
 
 回覆 JSON 陣列，每個元素格式：
 {
@@ -475,8 +488,13 @@ ${existingNamesStr}
 - 五行分布均衡（木火土金水各 2 個）
 - 類別多樣：active_combat（主動戰鬥）、passive_combat（被動戰鬥）、life_gather（生活採集）
 - 稀有度分布：common 4, rare 3, epic 2, legendary 1
-- 威力不能破壞平衡（common: 80-120%, rare: 100-160%, epic: 140-200%, legendary: 180-250%）
-- MP 消耗合理（0-50）
+- 威力必須符合階級基準（價值排序：技能書 > 裝備 > 消耗品 > 材料）：
+  初階：威力 80-120%, MP 5-12, CD 0-1, 售價 100-300 金幣
+  中階：威力 120-180%, MP 12-22, CD 1-2, 售價 500-1500 金幣
+  高階：威力 180-280%, MP 20-35, CD 2-3, 售價 2000-5000 金幣
+  傳說：威力 280-400%, MP 30-50, CD 3-5, 售價 8000-20000 金幣
+  天命：威力 350-500%, MP 40-65, CD 4-6, 售價 15000-50000 金幣
+- 技能類型修正：heal 威力×0.7/MP×1.2, buff 威力×0.5/MP×0.8, debuff 威力×0.6/MP×0.9
 
 回覆 JSON 陣列，每個元素格式：
 {
@@ -568,6 +586,13 @@ ${existingNamesStr}
       for (const item of generatedItems) {
         try {
           if (catalogType === "monster") {
+            // AI 審核：自動校正怪物數值
+            const { fixed: fm } = auditAndFix({
+              baseHp: item.baseHp || 100, baseAttack: item.baseAttack || 15,
+              baseDefense: item.baseDefense || 8, baseSpeed: item.baseSpeed || 10,
+              levelRange: item.levelRange || "1-5", race: item.race || "靈獸系",
+              rarity: item.rarity || "common",
+            }, auditMonster);
             const wuxing = item.wuxing || "木";
             const monsterId = await generateNextId(db, gameMonsterCatalog, gameMonsterCatalog.monsterId, "M", wuxing);
             await db.insert(gameMonsterCatalog).values({
@@ -576,10 +601,10 @@ ${existingNamesStr}
               wuxing,
               levelRange: item.levelRange || "1-5",
               rarity: item.rarity || "common",
-              baseHp: Math.min(500, Math.max(30, item.baseHp || 100)),
-              baseAttack: Math.min(80, Math.max(5, item.baseAttack || 15)),
-              baseDefense: Math.min(50, Math.max(2, item.baseDefense || 8)),
-              baseSpeed: Math.min(30, Math.max(3, item.baseSpeed || 10)),
+              baseHp: fm.baseHp,
+              baseAttack: fm.baseAttack,
+              baseDefense: fm.baseDefense,
+              baseSpeed: fm.baseSpeed,
               baseAccuracy: Math.min(100, Math.max(50, item.baseAccuracy || 80)),
               baseMagicAttack: Math.min(60, Math.max(3, item.baseMagicAttack || 10)),
               race: item.race || "",
@@ -593,6 +618,12 @@ ${existingNamesStr}
             insertedNames.push(item.name);
             insertedCount++;
           } else if (catalogType === "item") {
+            // AI 審核：自動校正道具價格
+            const { fixed: fi } = auditAndFix({
+              category: item.category || "material_basic",
+              rarity: item.rarity || "common",
+              shopPrice: item.shopPrice || 0,
+            }, auditItemPrice);
             const wuxing = item.wuxing || "木";
             const itemId = await generateNextId(db, gameItemCatalog, gameItemCatalog.itemId, "I", wuxing);
             await db.insert(gameItemCatalog).values({
@@ -602,7 +633,7 @@ ${existingNamesStr}
               category: item.category || "material_basic",
               rarity: item.rarity || "common",
               stackLimit: item.stackLimit || 99,
-              shopPrice: Math.min(10000, Math.max(0, item.shopPrice || 0)),
+              shopPrice: fi.shopPrice,
               source: item.source || "",
               effect: item.effect || "",
               isActive: 1,
@@ -611,6 +642,13 @@ ${existingNamesStr}
             insertedNames.push(item.name);
             insertedCount++;
           } else if (catalogType === "equipment") {
+            // AI 審核：自動校正裝備數值
+            const { fixed: fe } = auditAndFix({
+              hpBonus: item.hpBonus || 0, attackBonus: item.attackBonus || 0,
+              defenseBonus: item.defenseBonus || 0, speedBonus: item.speedBonus || 0,
+              tier: item.tier || "初階", slot: item.slot || "weapon",
+              rarity: item.rarity || "common",
+            }, auditEquipment);
             const wuxing = item.wuxing || "木";
             const equipId = await generateNextId(db, gameEquipmentCatalog, gameEquipmentCatalog.equipId, "E", wuxing);
             await db.insert(gameEquipmentCatalog).values({
@@ -621,10 +659,10 @@ ${existingNamesStr}
               tier: item.tier || "初階",
               quality: item.quality || "white",
               levelRequired: Math.min(60, Math.max(1, item.levelRequired || 1)),
-              hpBonus: Math.min(100, Math.max(0, item.hpBonus || 0)),
-              attackBonus: Math.min(30, Math.max(0, item.attackBonus || 0)),
-              defenseBonus: Math.min(25, Math.max(0, item.defenseBonus || 0)),
-              speedBonus: Math.min(15, Math.max(0, item.speedBonus || 0)),
+              hpBonus: fe.hpBonus,
+              attackBonus: fe.attackBonus,
+              defenseBonus: fe.defenseBonus,
+              speedBonus: fe.speedBonus,
               specialEffect: item.specialEffect || "",
               rarity: item.rarity || "common",
               isActive: 1,
@@ -633,6 +671,13 @@ ${existingNamesStr}
             insertedNames.push(item.name);
             insertedCount++;
           } else if (catalogType === "skill") {
+            // AI 審核：自動校正技能數值和價格
+            const { fixed: fs } = auditAndFix({
+              powerPercent: item.powerPercent || 100, mpCost: item.mpCost || 0,
+              cooldown: item.cooldown || 0, shopPrice: item.shopPrice || 0,
+              tier: item.tier || "初階", rarity: item.rarity || "common",
+              skillType: item.skillType || "attack",
+            }, auditSkill);
             const wuxing = item.wuxing || "木";
             const skillId = await generateNextId(db, gameSkillCatalog, gameSkillCatalog.skillId, "S", wuxing);
             await db.insert(gameSkillCatalog).values({
@@ -642,12 +687,12 @@ ${existingNamesStr}
               category: item.category || "active_combat",
               rarity: item.rarity || "common",
               tier: item.tier || "初階",
-              mpCost: Math.min(50, Math.max(0, item.mpCost || 0)),
-              cooldown: Math.min(10, Math.max(0, item.cooldown || 0)),
-              powerPercent: Math.min(250, Math.max(50, item.powerPercent || 100)),
+              mpCost: fs.mpCost,
+              cooldown: fs.cooldown,
+              powerPercent: fs.powerPercent,
               learnLevel: Math.min(60, Math.max(1, item.learnLevel || 1)),
               acquireType: item.acquireType || "shop",
-              shopPrice: Math.min(10000, Math.max(0, item.shopPrice || 0)),
+              shopPrice: fs.shopPrice,
               description: item.description || "",
               skillType: item.skillType || "attack",
               isActive: 1,

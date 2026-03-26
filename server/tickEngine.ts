@@ -13,6 +13,7 @@ import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, 
 import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs, getInfuseConfig } from "./gameEngineConfig";
 import { eq, and, sql } from "drizzle-orm";
+import { calcCharacterStatsV2, calcLevelUpWuxingGrowth, type WuXingElement } from "./services/balanceFormulas";
 import {
   MAP_NODES,
   MAP_NODE_MAP,
@@ -38,17 +39,18 @@ function randFloat(min: number, max: number): number {
 
 // ─── GD-020 補充二：命盤五行比例 → 屬性數值統一換算公式 ───
 // 此函數為全系統唯一標準，CharacterProfile、tickEngine、routers 均應使用此公式
+// V2: 五行主導版 — 五行屬性佔 70%+，等級只是輔助加成
 export function calcCharacterStats(natalStats: {
   wood: number; fire: number; earth: number; metal: number; water: number;
 }, level: number = 1) {
-  const { wood, fire, earth, metal, water } = natalStats;
+  const v2 = calcCharacterStatsV2(natalStats, level);
   return {
-    hp:   Math.floor(100 + level * 10 + wood  * 3.0),
-    atk:  Math.floor(10  + level * 2  + fire  * 1.5),
-    def:  Math.floor(10  + level * 1.5 + earth * 1.5),
-    spd:  Math.floor(5   + level * 0.5 + metal * 0.8),
-    matk: Math.floor(10  + level * 2   + water * 1.5),
-    mp:   Math.floor(50  + level * 5   + water * 1.5),
+    hp:   v2.hp,
+    atk:  v2.atk,
+    def:  v2.def,
+    spd:  v2.spd,
+    matk: v2.matk,
+    mp:   v2.mp,
   };
 }
 
@@ -1490,26 +1492,55 @@ async function processCombatEvent(
   let newTotalKills = agent.totalKills + (result.won ? 1 : 0);
 
   // 升級判斷（GD-018：等級只是地圖通行證，上限 60）
+  // V2: 升級時自動增加五行屬性（木=體力/火=力量/土=強度/金=速度/水=魔法）
   const combatLevelUps: TickResult["levelUps"] = [];
+  let accWuxingWood = agent.wuxingWood;
+  let accWuxingFire = agent.wuxingFire;
+  let accWuxingEarth = agent.wuxingEarth;
+  let accWuxingMetal = agent.wuxingMetal;
+  let accWuxingWater = agent.wuxingWater;
+  const dominantEl = (agent.dominantElement ?? "wood") as WuXingElement;
+
   while (newExp >= newExpToNext && newLevel < 60) {
     newExp -= newExpToNext;
     newLevel++;
     newExpToNext = calcExpToNext(newLevel);
+
+    // ── 五行屬性自動成長（每級 +5 點，按主屬性分配）──
+    const growth = calcLevelUpWuxingGrowth(dominantEl, 1);
+    accWuxingWood  = parseFloat((accWuxingWood  + growth.wood).toFixed(2));
+    accWuxingFire  = parseFloat((accWuxingFire  + growth.fire).toFixed(2));
+    accWuxingEarth = parseFloat((accWuxingEarth + growth.earth).toFixed(2));
+    accWuxingMetal = parseFloat((accWuxingMetal + growth.metal).toFixed(2));
+    accWuxingWater = parseFloat((accWuxingWater + growth.water).toFixed(2));
+
+    const WX_ZH_LOCAL: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+    const growthDesc = Object.entries(growth)
+      .filter(([, v]) => v > 0)
+      .map(([k, v]) => `${WX_ZH_LOCAL[k]}+${v}`)
+      .join("、");
+
     const lvupMsg = formatMessage(pickRandom(EVENT_MESSAGES.levelup), {
       name: agent.agentName ?? "旅人",
       level: newLevel,
-    });
-    await createEvent(agent.id, "system", lvupMsg, { type: "levelup", level: newLevel }, currentNode.id);
+    }) + `（五行成長：${growthDesc}）`;
+    await createEvent(agent.id, "system", lvupMsg, {
+      type: "levelup",
+      level: newLevel,
+      wuxingGrowth: growth,
+      newWuxing: { wood: accWuxingWood, fire: accWuxingFire, earth: accWuxingEarth, metal: accWuxingMetal, water: accWuxingWater },
+    }, currentNode.id);
     combatLevelUps.push({ agentId: agent.id, agentName: agent.agentName ?? "旅人", newLevel, agentElement: agent.dominantElement ?? "wood" });
   }
 
   // 升級後重新計算基礎屬性（maxHp/maxMp/attack/defense/speed）
+  // V2: 使用升級後的五行屬性值計算
   const newStats = calcCharacterStats({
-    wood: agent.wuxingWood,
-    fire: agent.wuxingFire,
-    earth: agent.wuxingEarth,
-    metal: agent.wuxingMetal,
-    water: agent.wuxingWater,
+    wood: accWuxingWood,
+    fire: accWuxingFire,
+    earth: accWuxingEarth,
+    metal: accWuxingMetal,
+    water: accWuxingWater,
   }, newLevel);
   const newMaxHp = newStats.hp;
   const newMaxMp = newStats.mp;
@@ -1538,6 +1569,13 @@ async function processCombatEvent(
     attack: newStats.atk,
     defense: newStats.def,
     speed: newStats.spd,
+    magicAttack: newStats.matk,
+    // V2: 升級後更新五行屬性
+    wuxingWood: accWuxingWood,
+    wuxingFire: accWuxingFire,
+    wuxingEarth: accWuxingEarth,
+    wuxingMetal: accWuxingMetal,
+    wuxingWater: accWuxingWater,
     exp: newExp,
     level: newLevel,
     gold: newGold,
@@ -2064,14 +2102,38 @@ export async function refreshShopItems(db: Awaited<ReturnType<typeof getDb>>): P
     return shuffled.slice(0, Math.min(count, shuffled.length));
   }
 
-  // 計算道具基礎售價
-  function calcPrice(rarity: string, currency: "coins" | "stones"): number {
+  // 計算道具基礎售價（v2.0 大平衡基準表）
+  function calcPrice(rarity: string, category: string, currency: "coins" | "stones"): number {
+    // 價值排序：技能書 > 裝備 > 消耗品 > 材料
     if (currency === "coins") {
-      const base: Record<string, number> = { common: 50, rare: 200, epic: 800, legendary: 3000 };
-      return base[rarity] ?? 100;
+      if (category === "skill_book") {
+        const base: Record<string, number> = { common: 200, rare: 800, epic: 5000, legendary: 25000 };
+        return base[rarity] ?? 200;
+      } else if (category === "equipment") {
+        const base: Record<string, number> = { common: 100, rare: 500, epic: 3000, legendary: 15000 };
+        return base[rarity] ?? 100;
+      } else if (category === "consumable" || category === "potion") {
+        const base: Record<string, number> = { common: 20, rare: 100, epic: 500, legendary: 2000 };
+        return base[rarity] ?? 20;
+      } else {
+        // 材料和其他
+        const base: Record<string, number> = { common: 10, rare: 50, epic: 300, legendary: 1500 };
+        return base[rarity] ?? 10;
+      }
     } else {
-      const base: Record<string, number> = { common: 5, rare: 20, epic: 80, legendary: 300 };
-      return base[rarity] ?? 20;
+      if (category === "skill_book") {
+        const base: Record<string, number> = { common: 0, rare: 30, epic: 150, legendary: 500 };
+        return base[rarity] ?? 30;
+      } else if (category === "equipment") {
+        const base: Record<string, number> = { common: 0, rare: 20, epic: 100, legendary: 350 };
+        return base[rarity] ?? 20;
+      } else if (category === "consumable" || category === "potion") {
+        const base: Record<string, number> = { common: 0, rare: 5, epic: 30, legendary: 80 };
+        return base[rarity] ?? 5;
+      } else {
+        const base: Record<string, number> = { common: 0, rare: 3, epic: 20, legendary: 50 };
+        return base[rarity] ?? 3;
+      }
     }
   }
 
@@ -2087,7 +2149,7 @@ export async function refreshShopItems(db: Awaited<ReturnType<typeof getDb>>): P
         itemKey: item.itemId,
         displayName: item.name,
         description: `【${item.wuxing}行】${item.category === "consumable" ? "消耗品" : item.category === "skill_book" ? "技能書" : "材料"}`,
-        priceCoins: calcPrice(item.rarity, "coins"),
+        priceCoins: calcPrice(item.rarity, item.category, "coins"),
         quantity: 1,
         stock: -1,
         nodeId: "",
@@ -2109,7 +2171,7 @@ export async function refreshShopItems(db: Awaited<ReturnType<typeof getDb>>): P
         itemKey: item.itemId,
         displayName: item.name,
         description: `【${item.wuxing}行】稀有商品`,
-        priceStones: calcPrice(item.rarity, "stones"),
+        priceStones: calcPrice(item.rarity, item.category, "stones"),
         quantity: 1,
         rarity: (item.rarity === "common" ? "common" : item.rarity === "rare" ? "rare" : item.rarity === "epic" ? "epic" : "legendary") as "common" | "rare" | "epic" | "legendary",
         sortOrder: i,

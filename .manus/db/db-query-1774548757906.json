@@ -1,0 +1,55 @@
+{
+  "query": "SELECT tier, rarity, COUNT(*) as cnt, AVG(power_percent) as avg_pow, AVG(mp_cost) as avg_mp, AVG(cooldown) as avg_cd, AVG(shop_price) as avg_price FROM game_skill_catalog WHERE is_active = 1 GROUP BY tier, rarity",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT tier, rarity, COUNT(*) as cnt, AVG(power_percent) as avg_pow, AVG(mp_cost) as avg_mp, AVG(cooldown) as avg_cd, AVG(shop_price) as avg_price FROM game_skill_catalog WHERE is_active = 1 GROUP BY tier, rarity",
+  "rows": [
+    {
+      "tier": "初階",
+      "rarity": "common",
+      "cnt": "32",
+      "avg_pow": "100.0000",
+      "avg_mp": "5.2500",
+      "avg_cd": "0.0000",
+      "avg_price": "0.0000"
+    },
+    {
+      "tier": "天命",
+      "rarity": "common",
+      "cnt": "24",
+      "avg_pow": "100.0000",
+      "avg_mp": "4.5000",
+      "avg_cd": "0.0000",
+      "avg_price": "0.0000"
+    },
+    {
+      "tier": "傳說",
+      "rarity": "common",
+      "cnt": "8",
+      "avg_pow": "100.0000",
+      "avg_mp": "9.0000",
+      "avg_cd": "0.0000",
+      "avg_price": "0.0000"
+    },
+    {
+      "tier": "高階",
+      "rarity": "common",
+      "cnt": "19",
+      "avg_pow": "100.0000",
+      "avg_mp": "6.3158",
+      "avg_cd": "0.0000",
+      "avg_price": "0.0000"
+    },
+    {
+      "tier": "中階",
+      "rarity": "common",
+      "cnt": "26",
+      "avg_pow": "100.0000",
+      "avg_mp": "5.0769",
+      "avg_cd": "0.0000",
+      "avg_price": "0.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "tier\trarity\tcnt\tavg_pow\tavg_mp\tavg_cd\tavg_price\n初階\tcommon\t32\t100.0000\t5.2500\t0.0000\t0.0000\n天命\tcommon\t24\t100.0000\t4.5000\t0.0000\t0.0000\n傳說\tcommon\t8\t100.0000\t9.0000\t0.0000\t0.0000\n高階\tcommon\t19\t100.0000\t6.3158\t0.0000\t0.0000\n中階\tcommon\t26\t100.0000\t5.0769\t0.0000\t0.0000\n",
+  "stderr": "",
+  "execution_time_ms": 1519
+}

@@ -16,7 +16,8 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { users, gameWardrobe, gameDailyAura, gameItems } from "../../drizzle/schema";
+import { users, gameWardrobe, gameDailyAura, gameItems, gameAgents } from "../../drizzle/schema";
+import { calcCharacterStats } from "../tickEngine";
 import { generateDailyQuest, checkQuestCompletion, QUEST_REWARD } from "../utils/questEngine";
 import {
   calculateEnvironmentElements,
@@ -276,15 +277,31 @@ export const gameAvatarRouter = router({
           )
         );
 
-      // 五行能力値：木=HP、火=攻擊、土=防御、金=速度、水=MP
-      const nr = profile.natalElementRatio;
-      const natalStats = {
-        hp: Math.round((nr["木"] ?? 0.2) * 500),
-        atk: Math.round((nr["火"] ?? 0.2) * 100),
-        def: Math.round((nr["土"] ?? 0.2) * 100),
-        spd: Math.round((nr["金"] ?? 0.2) * 100),
-        mp: Math.round((nr["水"] ?? 0.2) * 300),
-      };
+      // 五行能力値：先嘗試從遊戲角色取實際戰鬥數值，否則用命格比例推算
+      let natalStats = { hp: 100, atk: 20, def: 20, spd: 20, mp: 60, matk: 20 };
+      let gameWuxing = { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 };
+      let gameLevel = 1;
+      let gameDominantElement = "wood";
+      try {
+        const [agent] = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+        if (agent) {
+          gameWuxing = { wood: agent.wuxingWood, fire: agent.wuxingFire, earth: agent.wuxingEarth, metal: agent.wuxingMetal, water: agent.wuxingWater };
+          gameLevel = agent.level;
+          gameDominantElement = agent.dominantElement;
+          const stats = calcCharacterStats(gameWuxing, gameLevel);
+          natalStats = { hp: stats.hp, atk: stats.atk, def: stats.def, spd: stats.spd, mp: stats.mp, matk: stats.matk };
+        } else {
+          const nr = profile.natalElementRatio;
+          natalStats = {
+            hp: Math.round((nr["木"] ?? 0.2) * 500),
+            atk: Math.round((nr["火"] ?? 0.2) * 100),
+            def: Math.round((nr["土"] ?? 0.2) * 100),
+            spd: Math.round((nr["金"] ?? 0.2) * 100),
+            mp: Math.round((nr["水"] ?? 0.2) * 300),
+            matk: Math.round((nr["水"] ?? 0.2) * 100),
+          };
+        }
+      } catch { /* fallback to natal ratio */ }
 
       // 若 game_items 尚無對應五行的初始道具，回傳預設示範服裝
       if (newEquipped.length === 0) {
@@ -306,6 +323,9 @@ export const gameAvatarRouter = router({
           dayMasterElementEn: dayMasterEn,
           userGender,
           natalStats,
+          gameWuxing,
+          gameLevel,
+          gameDominantElement,
         };
       }
 
@@ -316,6 +336,9 @@ export const gameAvatarRouter = router({
         dayMasterElementEn: dayMasterEn,
         userGender,
         natalStats,
+        gameWuxing,
+        gameLevel,
+        gameDominantElement,
       };
     }
 
@@ -325,13 +348,28 @@ export const gameAvatarRouter = router({
     const revisitProfile = await getUserProfileForEngine(ctx.user.id);
     const revisitGender = revisitProfile.gender === "male" ? "male" : "female";
     const revisitNr = revisitProfile.natalElementRatio;
-    const revisitStats = {
+    // V2: 嘗試從遊戲角色取實際戰鬥數值
+    let revisitStats = {
       hp: Math.round((revisitNr["木"] ?? 0.2) * 500),
       atk: Math.round((revisitNr["火"] ?? 0.2) * 100),
       def: Math.round((revisitNr["土"] ?? 0.2) * 100),
       spd: Math.round((revisitNr["金"] ?? 0.2) * 100),
       mp: Math.round((revisitNr["水"] ?? 0.2) * 300),
+      matk: Math.round((revisitNr["水"] ?? 0.2) * 100),
     };
+    let revisitGameWuxing = { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 };
+    let revisitGameLevel = 1;
+    let revisitDominantElement = "wood";
+    try {
+      const [agent] = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (agent) {
+        revisitGameWuxing = { wood: agent.wuxingWood, fire: agent.wuxingFire, earth: agent.wuxingEarth, metal: agent.wuxingMetal, water: agent.wuxingWater };
+        revisitGameLevel = agent.level;
+        revisitDominantElement = agent.dominantElement;
+        const stats = calcCharacterStats(revisitGameWuxing, revisitGameLevel);
+        revisitStats = { hp: stats.hp, atk: stats.atk, def: stats.def, spd: stats.spd, mp: stats.mp, matk: stats.matk };
+      }
+    } catch { /* fallback */ }
     return {
       items: equipped.map((item) => ({ ...item, isDefault: false })),
       isFirstTime: false,
@@ -339,6 +377,9 @@ export const gameAvatarRouter = router({
       dayMasterElementEn: WUXING_ZH_TO_EN[revisitProfile.dayMasterElement] ?? null,
       userGender: revisitGender,
       natalStats: revisitStats,
+      gameWuxing: revisitGameWuxing,
+      gameLevel: revisitGameLevel,
+      gameDominantElement: revisitDominantElement,
     };
   }),
 

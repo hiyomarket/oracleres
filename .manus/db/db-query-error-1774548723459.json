@@ -1,0 +1,8 @@
+{
+  "query": "SELECT COUNT(*) as cnt, rarity, AVG(base_power) as avg_pow, MIN(base_power) as min_pow, MAX(base_power) as max_pow, AVG(mp_cost) as avg_mp, AVG(cooldown) as avg_cd FROM game_monster_skill_catalog WHERE is_active = 1 GROUP BY rarity",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as cnt, rarity, AVG(base_power) as avg_pow, MIN(base_power) as min_pow, MAX(base_power) as max_pow, AVG(mp_cost) as avg_mp, AVG(cooldown) as avg_cd FROM game_monster_skill_catalog WHERE is_active = 1 GROUP BY rarity",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'base_power' in 'where clause'"
+  ]
+}

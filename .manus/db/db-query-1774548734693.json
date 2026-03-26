@@ -1,0 +1,55 @@
+{
+  "query": "SELECT COUNT(*) as cnt, rarity, AVG(power_percent) as avg_pow, MIN(power_percent) as min_pow, MAX(power_percent) as max_pow, AVG(mp_cost) as avg_mp, AVG(cooldown) as avg_cd FROM game_monster_skill_catalog WHERE is_active = 1 GROUP BY rarity",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as cnt, rarity, AVG(power_percent) as avg_pow, MIN(power_percent) as min_pow, MAX(power_percent) as max_pow, AVG(mp_cost) as avg_mp, AVG(cooldown) as avg_cd FROM game_monster_skill_catalog WHERE is_active = 1 GROUP BY rarity",
+  "rows": [
+    {
+      "cnt": "18",
+      "rarity": "common",
+      "avg_pow": "101.1111",
+      "min_pow": "85",
+      "max_pow": "120",
+      "avg_mp": "6.6111",
+      "avg_cd": "0.5556"
+    },
+    {
+      "cnt": "9",
+      "rarity": "elite",
+      "avg_pow": "91.1111",
+      "min_pow": "60",
+      "max_pow": "130",
+      "avg_mp": "10.0000",
+      "avg_cd": "2.0000"
+    },
+    {
+      "cnt": "40",
+      "rarity": "rare",
+      "avg_pow": "112.0000",
+      "min_pow": "90",
+      "max_pow": "150",
+      "avg_mp": "12.8750",
+      "avg_cd": "2.4250"
+    },
+    {
+      "cnt": "17",
+      "rarity": "legendary",
+      "avg_pow": "175.2941",
+      "min_pow": "150",
+      "max_pow": "220",
+      "avg_mp": "29.7059",
+      "avg_cd": "5.0000"
+    },
+    {
+      "cnt": "12",
+      "rarity": "epic",
+      "avg_pow": "141.6667",
+      "min_pow": "120",
+      "max_pow": "200",
+      "avg_mp": "25.0000",
+      "avg_cd": "3.2500"
+    }
+  ],
+  "messages": [],
+  "stdout": "cnt\trarity\tavg_pow\tmin_pow\tmax_pow\tavg_mp\tavg_cd\n18\tcommon\t101.1111\t85\t120\t6.6111\t0.5556\n9\telite\t91.1111\t60\t130\t10.0000\t2.0000\n40\trare\t112.0000\t90\t150\t12.8750\t2.4250\n17\tlegendary\t175.2941\t150\t220\t29.7059\t5.0000\n12\tepic\t141.6667\t120\t200\t25.0000\t3.2500\n",
+  "stderr": "",
+  "execution_time_ms": 1567
+}

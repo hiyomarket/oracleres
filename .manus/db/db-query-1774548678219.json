@@ -1,0 +1,150 @@
+{
+  "query": "SELECT id, item_key, display_name, price_coins, quantity FROM game_virtual_shop WHERE is_on_sale = 1 ORDER BY price_coins DESC LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, item_key, display_name, price_coins, quantity FROM game_virtual_shop WHERE is_on_sale = 1 ORDER BY price_coins DESC LIMIT 20",
+  "rows": [
+    {
+      "id": "11520",
+      "item_key": "I_W101",
+      "display_name": "青木靈髓",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11531",
+      "item_key": "I_W019",
+      "display_name": "森猿獠牙",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11509",
+      "item_key": "I_M027",
+      "display_name": "疾風藥劑",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11519",
+      "item_key": "I_W079",
+      "display_name": "淨化之水",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11525",
+      "item_key": "I_W030",
+      "display_name": "疾風草",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11536",
+      "item_key": "I_W031",
+      "display_name": "劇毒塗劑",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11516",
+      "item_key": "I_W028",
+      "display_name": "森林精華",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11541",
+      "item_key": "I_W016",
+      "display_name": "消化液",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11511",
+      "item_key": "skill-earth-001",
+      "display_name": "山嶽巨靈技能書",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11543",
+      "item_key": "skill-wood-001",
+      "display_name": "翠羽鳳凰技能書",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11515",
+      "item_key": "I_E026",
+      "display_name": "鐵甲藥劑",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11521",
+      "item_key": "skill-fire-001",
+      "display_name": "炎魔將軍技能書",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11545",
+      "item_key": "I_W031",
+      "display_name": "劇毒塗劑",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11513",
+      "item_key": "I_F027",
+      "display_name": "狂暴藥水",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11524",
+      "item_key": "I_F028",
+      "display_name": "烈焰炸彈",
+      "price_coins": "200",
+      "quantity": "1"
+    },
+    {
+      "id": "11528",
+      "item_key": "I_M001",
+      "display_name": "金屬零件",
+      "price_coins": "50",
+      "quantity": "1"
+    },
+    {
+      "id": "11527",
+      "item_key": "item-1774520293022-0",
+      "display_name": "測試道具_M3E_1774520293021",
+      "price_coins": "50",
+      "quantity": "1"
+    },
+    {
+      "id": "11526",
+      "item_key": "I_W012",
+      "display_name": "毒液腺",
+      "price_coins": "50",
+      "quantity": "1"
+    },
+    {
+      "id": "11518",
+      "item_key": "I_W007",
+      "display_name": "帶刺荊棘",
+      "price_coins": "50",
+      "quantity": "1"
+    },
+    {
+      "id": "11517",
+      "item_key": "I_W001",
+      "display_name": "靈草",
+      "price_coins": "50",
+      "quantity": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\titem_key\tdisplay_name\tprice_coins\tquantity\n11520\tI_W101\t青木靈髓\t200\t1\n11531\tI_W019\t森猿獠牙\t200\t1\n11509\tI_M027\t疾風藥劑\t200\t1\n11519\tI_W079\t淨化之水\t200\t1\n11525\tI_W030\t疾風草\t200\t1\n11536\tI_W031\t劇毒塗劑\t200\t1\n11516\tI_W028\t森林精華\t200\t1\n11541\tI_W016\t消化液\t200\t1\n11511\tskill-earth-001\t山嶽巨靈技能書\t200\t1\n11543\tskill-wood-001\t翠羽鳳凰技能書\t200\t1\n11515\tI_E026\t鐵甲藥劑\t200\t1\n11521\tskill-fire-001\t炎魔將軍技能書\t200\t1\n11545\tI_W031\t劇毒塗劑\t200\t1\n11513\tI_F027\t狂暴藥水\t200\t1\n11524\tI_F028\t烈焰炸彈\t200\t1\n11528\tI_M001\t金屬零件\t50\t1\n11527\titem-1774520293022-0\t測試道具_M3E_1774520293021\t50\t1\n11526\tI_W012\t毒液腺\t50\t1\n11518\tI_W007\t帶刺荊棘\t50\t1\n11517\tI_W001\t靈草\t50\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1582
+}

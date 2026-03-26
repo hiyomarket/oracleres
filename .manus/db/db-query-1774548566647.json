@@ -1,0 +1,70 @@
+{
+  "query": "SELECT COUNT(*) as total, rarity, MIN(base_hp) as min_hp, MAX(base_hp) as max_hp, AVG(base_hp) as avg_hp, MIN(base_attack) as min_atk, MAX(base_attack) as max_atk, AVG(base_attack) as avg_atk, MIN(base_defense) as min_def, MAX(base_defense) as max_def FROM game_monster_catalog WHERE is_active = 1 GROUP BY rarity ORDER BY avg_hp",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total, rarity, MIN(base_hp) as min_hp, MAX(base_hp) as max_hp, AVG(base_hp) as avg_hp, MIN(base_attack) as min_atk, MAX(base_attack) as max_atk, AVG(base_attack) as avg_atk, MIN(base_defense) as min_def, MAX(base_defense) as max_def FROM game_monster_catalog WHERE is_active = 1 GROUP BY rarity ORDER BY avg_hp",
+  "rows": [
+    {
+      "total": "58",
+      "rarity": "common",
+      "min_hp": "32",
+      "max_hp": "120",
+      "avg_hp": "100.1724",
+      "min_atk": "5",
+      "max_atk": "20",
+      "avg_atk": "14.3793",
+      "min_def": "3",
+      "max_def": "12"
+    },
+    {
+      "total": "58",
+      "rarity": "rare",
+      "min_hp": "100",
+      "max_hp": "250",
+      "avg_hp": "233.2759",
+      "min_atk": "15",
+      "max_atk": "40",
+      "avg_atk": "33.8276",
+      "min_def": "8",
+      "max_def": "25"
+    },
+    {
+      "total": "3",
+      "rarity": "elite",
+      "min_hp": "350",
+      "max_hp": "350",
+      "avg_hp": "350.0000",
+      "min_atk": "48",
+      "max_atk": "55",
+      "avg_atk": "51.6667",
+      "min_def": "35",
+      "max_def": "35"
+    },
+    {
+      "total": "15",
+      "rarity": "epic",
+      "min_hp": "400",
+      "max_hp": "400",
+      "avg_hp": "400.0000",
+      "min_atk": "50",
+      "max_atk": "65",
+      "avg_atk": "64.0000",
+      "min_def": "35",
+      "max_def": "40"
+    },
+    {
+      "total": "10",
+      "rarity": "legendary",
+      "min_hp": "50000",
+      "max_hp": "50000",
+      "avg_hp": "50000.0000",
+      "min_atk": "80",
+      "max_atk": "80",
+      "avg_atk": "80.0000",
+      "min_def": "50",
+      "max_def": "50"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\trarity\tmin_hp\tmax_hp\tavg_hp\tmin_atk\tmax_atk\tavg_atk\tmin_def\tmax_def\n58\tcommon\t32\t120\t100.1724\t5\t20\t14.3793\t3\t12\n58\trare\t100\t250\t233.2759\t15\t40\t33.8276\t8\t25\n3\telite\t350\t350\t350.0000\t48\t55\t51.6667\t35\t35\n15\tepic\t400\t400\t400.0000\t50\t65\t64.0000\t35\t40\n10\tlegendary\t50000\t50000\t50000.0000\t80\t80\t80.0000\t50\t50\n",
+  "stderr": "",
+  "execution_time_ms": 1496
+}
