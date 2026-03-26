@@ -806,4 +806,165 @@ export const gameCatalogAdminRouter = router({
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     return db.select().from(gameMonsterSkillCatalog).orderBy(asc(gameMonsterSkillCatalog.id));
   }),
+
+  // ===== 批量匯入 =====
+  bulkImportMonsters: adminProcedure
+    .input(z.object({ items: z.array(z.record(z.string(), z.any())).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      let imported = 0;
+      for (const item of input.items) {
+        try {
+          const wuxingCode = WUXING_CODE[item.wuxing] ?? "W";
+          const prefix = `M_${wuxingCode}`;
+          const existing = await db.select({ monsterId: gameMonsterCatalog.monsterId }).from(gameMonsterCatalog)
+            .where(like(gameMonsterCatalog.monsterId, `${prefix}%`)).orderBy(desc(gameMonsterCatalog.id)).limit(1);
+          const lastNum = existing[0] ? parseInt(existing[0].monsterId.replace(prefix, "")) || 0 : 0;
+          const monsterId = `${prefix}${String(lastNum + 1).padStart(3, "0")}`;
+          await db.insert(gameMonsterCatalog).values({
+            monsterId, name: item.name ?? "未命名", wuxing: item.wuxing ?? "木",
+            levelRange: item.levelRange ?? "1-5", rarity: item.rarity ?? "common",
+            baseHp: item.baseHp ?? 100, baseAttack: item.baseAttack ?? 10,
+            baseDefense: item.baseDefense ?? 5, baseSpeed: item.baseSpeed ?? 5,
+            baseAccuracy: item.baseAccuracy ?? 80, baseMagicAttack: item.baseMagicAttack ?? 8,
+            ...(item.resistWood !== undefined && { resistWood: item.resistWood }),
+            ...(item.resistFire !== undefined && { resistFire: item.resistFire }),
+            ...(item.resistEarth !== undefined && { resistEarth: item.resistEarth }),
+            ...(item.resistMetal !== undefined && { resistMetal: item.resistMetal }),
+            ...(item.resistWater !== undefined && { resistWater: item.resistWater }),
+            ...(item.growthRate !== undefined && { growthRate: item.growthRate }),
+            ...(item.aiLevel !== undefined && { aiLevel: item.aiLevel }),
+            ...(item.destinyClue !== undefined && { destinyClue: item.destinyClue }),
+            ...(item.imageUrl !== undefined && { imageUrl: item.imageUrl }),
+            isActive: item.isActive ?? 1,
+            createdAt: Date.now(),
+          });
+          imported++;
+        } catch (e) { console.error("[BulkImport] Monster error:", e); }
+      }
+      return { imported, total: input.items.length };
+    }),
+
+  bulkImportItems: adminProcedure
+    .input(z.object({ items: z.array(z.record(z.string(), z.any())).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      let imported = 0;
+      for (const item of input.items) {
+        try {
+          await db.insert(gameItemCatalog).values({
+            itemId: item.itemId ?? `item-${Date.now()}-${imported}`,
+            name: item.name ?? "未命名", wuxing: item.wuxing ?? "木",
+            category: item.category ?? "material_basic", rarity: item.rarity ?? "common",
+            effect: item.effect ?? item.description ?? "",
+            shopPrice: item.shopPrice ?? item.sellPrice ?? 0,
+            stackLimit: item.stackLimit ?? 99, isActive: item.isActive ?? 1,
+            createdAt: Date.now(),
+          });
+          imported++;
+        } catch (e) { console.error("[BulkImport] Item error:", e); }
+      }
+      return { imported, total: input.items.length };
+    }),
+
+  bulkImportEquipments: adminProcedure
+    .input(z.object({ items: z.array(z.record(z.string(), z.any())).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      let imported = 0;
+      for (const item of input.items) {
+        try {
+          await db.insert(gameEquipmentCatalog).values({
+            equipId: item.equipId ?? `equip-${Date.now()}-${imported}`,
+            name: item.name ?? "未命名", wuxing: item.wuxing ?? "木",
+            slot: item.slot ?? "weapon", quality: item.quality ?? "common",
+            attackBonus: item.attackBonus ?? item.baseAttack ?? 0,
+            defenseBonus: item.defenseBonus ?? item.baseDefense ?? 0,
+            speedBonus: item.speedBonus ?? item.baseSpeed ?? 0,
+            specialEffect: item.specialEffect ?? item.description ?? "",
+            isActive: item.isActive ?? 1,
+            createdAt: Date.now(),
+          });
+          imported++;
+        } catch (e) { console.error("[BulkImport] Equipment error:", e); }
+      }
+      return { imported, total: input.items.length };
+    }),
+
+  bulkImportSkills: adminProcedure
+    .input(z.object({ items: z.array(z.record(z.string(), z.any())).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      let imported = 0;
+      for (const item of input.items) {
+        try {
+          await db.insert(gameSkillCatalog).values({
+            skillId: item.skillId ?? `skill-${Date.now()}-${imported}`,
+            name: item.name ?? "未命名", wuxing: item.wuxing ?? "木",
+            category: item.category ?? "active_combat", tier: item.tier ?? "basic",
+            description: item.description ?? "", mpCost: item.mpCost ?? 0,
+            cooldown: item.cooldown ?? 0, isActive: item.isActive ?? 1,
+            createdAt: Date.now(),
+          });
+          imported++;
+        } catch (e) { console.error("[BulkImport] Skill error:", e); }
+      }
+      return { imported, total: input.items.length };
+    }),
+
+  bulkImportAchievements: adminProcedure
+    .input(z.object({ items: z.array(z.record(z.string(), z.any())).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      let imported = 0;
+      for (const item of input.items) {
+        try {
+          await db.insert(gameAchievements).values({
+            achId: item.achId ?? `ACH_${String(Date.now()).slice(-6)}`,
+            title: item.title ?? item.name ?? "未命名",
+            description: item.description ?? "",
+            category: item.category ?? "combat",
+            rarity: item.rarity ?? item.tier ?? "common",
+            conditionType: item.conditionType ?? "login_days",
+            conditionValue: item.conditionValue ?? 1,
+            rewardType: item.rewardType ?? "coins",
+            rewardAmount: item.rewardAmount ?? 100,
+            isActive: item.isActive ?? 1,
+          });
+          imported++;
+        } catch (e) { console.error("[BulkImport] Achievement error:", e); }
+      }
+      return { imported, total: input.items.length };
+    }),
+
+  bulkImportMonsterSkills: adminProcedure
+    .input(z.object({ items: z.array(z.record(z.string(), z.any())).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      let imported = 0;
+      for (const item of input.items) {
+        try {
+          await db.insert(gameMonsterSkillCatalog).values({
+            monsterSkillId: item.monsterSkillId ?? `mskill-${Date.now()}-${imported}`,
+            name: item.name ?? "未命名", wuxing: item.wuxing ?? "木",
+            skillType: item.skillType ?? "attack",
+            powerPercent: item.powerPercent ?? 100,
+            mpCost: item.mpCost ?? 0,
+            cooldown: item.cooldown ?? 0,
+            accuracyMod: item.accuracyMod ?? 100,
+            description: item.description ?? "",
+            isActive: item.isActive ?? 1,
+            createdAt: Date.now(),
+          });
+          imported++;
+        } catch (e) { console.error("[BulkImport] MonsterSkill error:", e); }
+      }
+      return { imported, total: input.items.length };
+    }),
 });

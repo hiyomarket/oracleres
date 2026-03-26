@@ -813,11 +813,15 @@ export async function processAgentTick(
     return EMPTY;
   }
 
-  // 消耗 staminaPerTick 點體力
+  // 消耗 staminaPerTick 點體力（所有行動統一扣除）
+  const oldStamina = agent.stamina;
+  const newStaminaAfterTick = Math.max(0, oldStamina - staminaPerTick);
   await db.update(gameAgents).set({
-    stamina: Math.max(0, agent.stamina - staminaPerTick),
+    stamina: newStaminaAfterTick,
     staminaLastRegen: agent.staminaLastRegen ?? Date.now(),
   }).where(eq(gameAgents.id, agent.id));
+  // 同步更新 agent 的 stamina，確保後續邏輯使用正確的值
+  agent = { ...agent, stamina: newStaminaAfterTick };
 
   const roll = Math.random();
   let eventsCreated = 0;

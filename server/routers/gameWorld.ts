@@ -1262,6 +1262,25 @@ export const gameWorldRouter = router({
       return { success: true, skillId, skillName };
     }),
 
+  // ─── 查詢已學技能列表 ───
+  getMyLearnedSkills: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agents[0]) return [];
+      const skills = await db.select().from(agentSkills)
+        .where(eq(agentSkills.agentId, agents[0].id));
+      return skills.map(s => ({
+        id: s.id,
+        skillId: s.skillId,
+        awakeTier: s.awakeTier,
+        useCount: s.useCount,
+        installedSlot: s.installedSlot,
+      }));
+    }),
+
   // ─── 使用消耗道具 ───
   useItem: protectedProcedure
     .input(z.object({ inventoryId: z.number().int().positive() }))

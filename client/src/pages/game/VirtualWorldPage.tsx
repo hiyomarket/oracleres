@@ -628,6 +628,9 @@ function CharacterPanel({
     skillWuxingFilter ? { wuxing: skillWuxingFilter } : undefined,
     { enabled: showSkillPicker, staleTime: 60000 }
   );
+  // 查詢已學技能列表（從 agent_skills 表）
+  const learnedSkillsQuery = trpc.gameWorld.getMyLearnedSkills.useQuery(undefined, { staleTime: 30000 });
+  const learnedSkillIds = new Set((learnedSkillsQuery.data ?? []).map(s => s.skillId));
   const cpUtils = trpc.useUtils();
   const installSkillMutation = trpc.gameWorld.installSkill.useMutation({
     onSuccess: () => {
@@ -665,9 +668,10 @@ function CharacterPanel({
   });
   const learnSkillMutation = trpc.gameWorld.learnSkillFromBook.useMutation({
     onSuccess: (data) => {
-      toast.success(`成功習得技能「${data.skillId}」！可在技能面板裝備使用`);
+      toast.success(`成功習得技能「${data.skillName}」！可在技能面板裝備使用`);
       invQuery.refetch();
       cpUtils.gameWorld.getOrCreateAgent.invalidate();
+      cpUtils.gameWorld.getMyLearnedSkills.invalidate();
     },
     onError: (e) => toast.error("學習失敗：" + e.message),
   });
@@ -1157,8 +1161,10 @@ function CharacterPanel({
           // 技能槽門檻說明
           const nextActiveThreshold = activeSlotCount < 8 ? [4,60,100,150,200].find(t => t > woodVal) : null;
           const nextPassiveThreshold = passiveSlotCount < 5 ? [2,80,150,200].find(t => t > woodVal) : null;
-          // 技能圖鑑只顯示自己擁有的技能（從背包中的 skill_book）
+          // 技能圖鑑顯示擁有的技能（背包 skill_book + 已學技能 + 已安裝技能）
           const ownedSkillIds = new Set(invItems.filter(i => i.itemType === "skill_book").map(i => i.itemId));
+          // 加入已學技能（從 agent_skills 表）
+          learnedSkillIds.forEach(id => ownedSkillIds.add(id));
           // 也加入已安裝的技能
           [...activeSlots, ...passiveSlots].forEach(s => { if (s) ownedSkillIds.add(s); });
           return (
@@ -1289,6 +1295,8 @@ function CharacterPanel({
                 const pickerOwnedIds = new Set(invItems.filter(i => i.itemType === "skill_book").map(i => i.itemId));
                 const agentSlots = [agent?.skillSlot1, agent?.skillSlot2, agent?.skillSlot3, agent?.skillSlot4, agent?.passiveSlot1, agent?.passiveSlot2];
                 agentSlots.forEach(s => { if (s) pickerOwnedIds.add(s); });
+                // 加入已學技能（從 agent_skills 表）
+                learnedSkillIds.forEach(id => pickerOwnedIds.add(id));
                 const filteredSkills = (skillCatalogQuery.data ?? []).filter(sk => {
                   const typeOk = skillPickerSlot.type === "active"
                     ? sk.category === "active_combat"

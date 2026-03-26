@@ -2,7 +2,7 @@
  * 六大圖鑑管理 Tab 組件（含進階篩選 + CSV/JSON 匯出 + 分頁 + 批量操作）
  * MonsterCatalogV2Tab / ItemCatalogV2Tab / EquipCatalogV2Tab / SkillCatalogV2Tab / AchievementCatalogTab / MonsterSkillCatalogTab
  */
-import { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -153,13 +153,15 @@ function BatchToolbar({ selectedCount, onBatchDelete, onBatchEdit, onClearSelect
   );
 }
 
-// ===== 批量編輯 Dialog =====
-function BatchEditDialog({ open, onClose, fields, onSubmit, isLoading, selectedCount }: {
+// ===== 批量編輯 Dialog（含預覽步驟） =====
+function BatchEditDialog({ open, onClose, fields, onSubmit, isLoading, selectedCount, selectedItems }: {
   open: boolean; onClose: () => void; fields: { key: string; label: string; type: string; options?: { value: string; label: string }[] }[];
   onSubmit: (data: Record<string, any>) => void; isLoading: boolean; selectedCount: number;
+  selectedItems?: any[]; // 用於預覽變更
 }) {
   const [editData, setEditData] = useState<Record<string, any>>({});
   const [enabledFields, setEnabledFields] = useState<Set<string>>(new Set());
+  const [step, setStep] = useState<"edit" | "preview">("edit");
 
   const toggleField = (key: string) => {
     const next = new Set(enabledFields);
@@ -168,50 +170,244 @@ function BatchEditDialog({ open, onClose, fields, onSubmit, isLoading, selectedC
     setEnabledFields(next);
   };
 
-  const handleSubmit = () => {
+  const getFieldLabel = (key: string) => fields.find(f => f.key === key)?.label ?? key;
+  const getOptionLabel = (key: string, val: string) => {
+    const f = fields.find(f => f.key === key);
+    return f?.options?.find(o => o.value === val)?.label ?? val;
+  };
+
+  const pendingChanges = useMemo(() => {
     const data: Record<string, any> = {};
     Array.from(enabledFields).forEach(key => {
-      if (editData[key] !== undefined) data[key] = editData[key];
+      if (editData[key] !== undefined && editData[key] !== "") data[key] = editData[key];
     });
-    if (Object.keys(data).length === 0) { toast.error("請至少勾選一個欄位"); return; }
-    onSubmit(data);
+    return data;
+  }, [enabledFields, editData]);
+
+  const handleGoPreview = () => {
+    if (Object.keys(pendingChanges).length === 0) { toast.error("請至少勾選一個欄位並填入新值"); return; }
+    setStep("preview");
+  };
+
+  const handleConfirm = () => {
+    onSubmit(pendingChanges);
+  };
+
+  const handleClose = () => {
+    onClose(); setEditData({}); setEnabledFields(new Set()); setStep("edit");
   };
 
   return (
-    <Dialog open={open} onOpenChange={v => { if (!v) { onClose(); setEditData({}); setEnabledFields(new Set()); } }}>
-      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={v => { if (!v) handleClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>批量編輯（{selectedCount} 筆）</DialogTitle>
-          <p className="text-xs text-muted-foreground mt-1">勾選要修改的欄位，僅修改已勾選的欄位</p>
+          <DialogTitle>
+            {step === "edit" ? `批量編輯（${selectedCount} 筆）` : `預覽變更（${selectedCount} 筆）`}
+          </DialogTitle>
+          <p className="text-xs text-muted-foreground mt-1">
+            {step === "edit" ? "勾選要修改的欄位，僅修改已勾選的欄位" : "請確認以下變更內容，確認後將套用到所有選取的項目"}
+          </p>
+        </DialogHeader>
+
+        {step === "edit" ? (
+          <div className="space-y-3 py-2">
+            {fields.map(f => (
+              <div key={f.key} className="flex items-center gap-3">
+                <input type="checkbox" checked={enabledFields.has(f.key)} onChange={() => toggleField(f.key)} className="rounded" />
+                <label className="text-sm w-24 shrink-0">{f.label}</label>
+                {f.type === "select" && f.options ? (
+                  <select disabled={!enabledFields.has(f.key)} value={editData[f.key] ?? ""}
+                    onChange={e => setEditData({ ...editData, [f.key]: e.target.value })}
+                    className="h-8 text-sm rounded border bg-background px-2 flex-1 disabled:opacity-40">
+                    <option value="">-- 選擇 --</option>
+                    {f.options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                ) : f.type === "number" ? (
+                  <Input type="number" disabled={!enabledFields.has(f.key)} value={editData[f.key] ?? ""}
+                    onChange={e => setEditData({ ...editData, [f.key]: Number(e.target.value) })}
+                    className="h-8 text-sm flex-1 disabled:opacity-40" />
+                ) : (
+                  <Input disabled={!enabledFields.has(f.key)} value={editData[f.key] ?? ""}
+                    onChange={e => setEditData({ ...editData, [f.key]: e.target.value })}
+                    className="h-8 text-sm flex-1 disabled:opacity-40" />
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4 py-2">
+            {/* 變更摘要 */}
+            <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+              <p className="text-sm font-semibold mb-2">變更摘要</p>
+              <div className="space-y-1">
+                {Object.entries(pendingChanges).map(([key, val]) => (
+                  <div key={key} className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground w-24">{getFieldLabel(key)}</span>
+                    <span className="text-primary font-medium">→ {fields.find(f => f.key === key)?.options ? getOptionLabel(key, String(val)) : String(val)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* 受影響項目預覽 */}
+            {selectedItems && selectedItems.length > 0 && (
+              <div>
+                <p className="text-sm font-semibold mb-2">受影響的項目（前 {Math.min(selectedItems.length, 10)} 筆）</p>
+                <div className="overflow-x-auto max-h-48 overflow-y-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b text-muted-foreground">
+                        <th className="text-left py-1 px-2">#</th>
+                        <th className="text-left py-1 px-2">名稱</th>
+                        {Object.keys(pendingChanges).map(key => (
+                          <th key={key} className="text-left py-1 px-2">{getFieldLabel(key)}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedItems.slice(0, 10).map((item, idx) => (
+                        <tr key={idx} className="border-b">
+                          <td className="py-1 px-2 text-muted-foreground">{idx + 1}</td>
+                          <td className="py-1 px-2 font-medium">{item.name ?? item.monsterId ?? item.itemId ?? item.equipId ?? item.skillId ?? "-"}</td>
+                          {Object.entries(pendingChanges).map(([key, newVal]) => (
+                            <td key={key} className="py-1 px-2">
+                              <span className="text-muted-foreground line-through mr-1">{item[key] ?? "-"}</span>
+                              <span className="text-primary font-medium">→ {fields.find(f => f.key === key)?.options ? getOptionLabel(key, String(newVal)) : String(newVal)}</span>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {selectedItems.length > 10 && (
+                  <p className="text-xs text-muted-foreground mt-1">…及其他 {selectedItems.length - 10} 筆</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        <DialogFooter>
+          {step === "edit" ? (
+            <>
+              <Button variant="outline" onClick={handleClose}>取消</Button>
+              <Button onClick={handleGoPreview} disabled={enabledFields.size === 0}>下一步：預覽變更</Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => setStep("edit")}>返回修改</Button>
+              <Button onClick={handleConfirm} disabled={isLoading} variant="destructive">
+                {isLoading ? "更新中…" : `確認套用到 ${selectedCount} 筆`}
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ===== CSV/JSON 匯入 Dialog =====
+function ImportDialog({ open, onClose, onImport, isLoading, catalogName }: {
+  open: boolean; onClose: () => void;
+  onImport: (items: any[]) => void; isLoading: boolean; catalogName: string;
+}) {
+  const [importData, setImportData] = useState<any[]>([]);
+  const [parseError, setParseError] = useState("");
+  const [fileName, setFileName] = useState("");
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+    setParseError("");
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const text = ev.target?.result as string;
+        if (file.name.endsWith(".json")) {
+          const parsed = JSON.parse(text);
+          const arr = Array.isArray(parsed) ? parsed : [parsed];
+          setImportData(arr);
+        } else if (file.name.endsWith(".csv")) {
+          const lines = text.split("\n").filter(l => l.trim());
+          if (lines.length < 2) { setParseError("CSV 至少需要標題行 + 1 筆資料"); return; }
+          const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
+          const items = lines.slice(1).map(line => {
+            const vals = line.split(",").map(v => v.trim().replace(/^"|"$/g, ""));
+            const obj: Record<string, any> = {};
+            headers.forEach((h, i) => {
+              const v = vals[i] ?? "";
+              if (v === "") return;
+              const num = Number(v);
+              obj[h] = !isNaN(num) && v !== "" ? num : v;
+            });
+            return obj;
+          });
+          setImportData(items);
+        } else {
+          setParseError("僅支援 .csv 和 .json 檔案");
+        }
+      } catch (err) {
+        setParseError(`解析失敗：${(err as Error).message}`);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleClose = () => {
+    onClose(); setImportData([]); setParseError(""); setFileName("");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) handleClose(); }}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>匯入{catalogName}</DialogTitle>
+          <p className="text-xs text-muted-foreground mt-1">上傳 CSV 或 JSON 檔案，每次最多 500 筆。CSV 標題行需對應欄位名稱。</p>
         </DialogHeader>
         <div className="space-y-3 py-2">
-          {fields.map(f => (
-            <div key={f.key} className="flex items-center gap-3">
-              <input type="checkbox" checked={enabledFields.has(f.key)} onChange={() => toggleField(f.key)} className="rounded" />
-              <label className="text-sm w-24 shrink-0">{f.label}</label>
-              {f.type === "select" && f.options ? (
-                <select disabled={!enabledFields.has(f.key)} value={editData[f.key] ?? ""}
-                  onChange={e => setEditData({ ...editData, [f.key]: e.target.value })}
-                  className="h-8 text-sm rounded border bg-background px-2 flex-1 disabled:opacity-40">
-                  <option value="">-- 選擇 --</option>
-                  {f.options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              ) : f.type === "number" ? (
-                <Input type="number" disabled={!enabledFields.has(f.key)} value={editData[f.key] ?? ""}
-                  onChange={e => setEditData({ ...editData, [f.key]: Number(e.target.value) })}
-                  className="h-8 text-sm flex-1 disabled:opacity-40" />
-              ) : (
-                <Input disabled={!enabledFields.has(f.key)} value={editData[f.key] ?? ""}
-                  onChange={e => setEditData({ ...editData, [f.key]: e.target.value })}
-                  className="h-8 text-sm flex-1 disabled:opacity-40" />
-              )}
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 px-4 py-2 bg-muted rounded-lg cursor-pointer hover:bg-muted/80 transition-colors">
+              <span className="text-sm">選擇檔案</span>
+              <input type="file" accept=".csv,.json" onChange={handleFile} className="hidden" />
+            </label>
+            {fileName && <span className="text-sm text-muted-foreground">{fileName}</span>}
+          </div>
+          {parseError && <p className="text-sm text-destructive">{parseError}</p>}
+          {importData.length > 0 && (
+            <div>
+              <p className="text-sm font-semibold mb-2">預覽（共 {importData.length} 筆，顯示前 5 筆）</p>
+              <div className="overflow-x-auto max-h-48 overflow-y-auto">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b text-muted-foreground">
+                      {Object.keys(importData[0]).slice(0, 8).map(k => (
+                        <th key={k} className="text-left py-1 px-2">{k}</th>
+                      ))}
+                      {Object.keys(importData[0]).length > 8 && <th className="text-left py-1 px-2">…</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {importData.slice(0, 5).map((item, idx) => (
+                      <tr key={idx} className="border-b">
+                        {Object.values(item).slice(0, 8).map((v, i) => (
+                          <td key={i} className="py-1 px-2 max-w-[120px] truncate">{String(v ?? "")}</td>
+                        ))}
+                        {Object.keys(item).length > 8 && <td className="py-1 px-2 text-muted-foreground">…</td>}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {importData.length > 5 && <p className="text-xs text-muted-foreground mt-1">…及其他 {importData.length - 5} 筆</p>}
             </div>
-          ))}
+          )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => { onClose(); setEditData({}); setEnabledFields(new Set()); }}>取消</Button>
-          <Button onClick={handleSubmit} disabled={isLoading || enabledFields.size === 0}>
-            {isLoading ? "更新中…" : `套用到 ${selectedCount} 筆`}
+          <Button variant="outline" onClick={handleClose}>取消</Button>
+          <Button onClick={() => onImport(importData)} disabled={isLoading || importData.length === 0}>
+            {isLoading ? "匯入中…" : `匯入 ${importData.length} 筆`}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -243,6 +439,8 @@ export function MonsterCatalogV2Tab() {
   const [editItem, setEditItem] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [batchEditOpen, setBatchEditOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const queryInput = useMemo(() => ({
     search: search || undefined,
@@ -276,6 +474,10 @@ export function MonsterCatalogV2Tab() {
   const batchUpdateMut = trpc.gameCatalog.batchUpdateMonsters.useMutation({
     onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); },
     onError: (e) => toast.error(`${e.message}`),
+  });
+  const bulkImportMut = trpc.gameCatalog.bulkImportMonsters.useMutation({
+    onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆魔物`); setImportOpen(false); refetch(); },
+    onError: (e) => toast.error(`匯入失敗：${e.message}`),
   });
 
   const skillOpts = (monsterSkills ?? []).map((s: any) => ({ value: s.monsterSkillId, label: `${s.monsterSkillId} ${s.name}（${s.wuxing}）` }));
@@ -382,6 +584,7 @@ export function MonsterCatalogV2Tab() {
         </div>
         <div className="flex gap-2 items-center">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增魔物</Button>
         </div>
       </div>
@@ -434,22 +637,31 @@ export function MonsterCatalogV2Tab() {
               </thead>
               <tbody>
                 {items.map((m: any) => (
-                  <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
-                    <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
-                    <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.monsterId}</td>
-                    <td className="py-2 px-2 font-medium">{m.name}</td>
-                    <td className="py-2 px-2 text-xs">{m.wuxing}</td>
-                    <td className="py-2 px-2 text-xs">{m.levelRange}</td>
-                    <td className="py-2 px-2">{m.baseHp}</td>
-                    <td className="py-2 px-2">{m.baseAttack}</td>
-                    <td className="py-2 px-2">{m.baseDefense}</td>
-                    <td className="py-2 px-2">{m.baseSpeed}</td>
-                    <td className="py-2 px-2 text-xs">{m.rarity}</td>
-                    <td className="py-2 px-2 space-x-1">
-                      <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
-                      <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
-                    </td>
-                  </tr>
+                  <React.Fragment key={m.id}>
+                    <tr className={`border-b hover:bg-muted/30 cursor-pointer ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`} onClick={() => setExpandedId(expandedId === m.id ? null : m.id)}>
+                      <td className="py-2 px-2" onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
+                      <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.monsterId}</td>
+                      <td className="py-2 px-2 font-medium">{m.name}</td>
+                      <td className="py-2 px-2 text-xs">{m.wuxing}</td>
+                      <td className="py-2 px-2 text-xs">{m.levelRange}</td>
+                      <td className="py-2 px-2">{m.baseHp}</td>
+                      <td className="py-2 px-2">{m.baseAttack}</td>
+                      <td className="py-2 px-2">{m.baseDefense}</td>
+                      <td className="py-2 px-2">{m.baseSpeed}</td>
+                      <td className="py-2 px-2 text-xs">{m.rarity}</td>
+                      <td className="py-2 px-2 space-x-1" onClick={e => e.stopPropagation()}>
+                        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
+                        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
+                      </td>
+                    </tr>
+                    {expandedId === m.id && (
+                      <tr className="bg-muted/20">
+                        <td colSpan={11} className="p-4">
+                          <MonsterDetailCard monster={m} skillOpts={skillOpts} itemOpts={itemOpts} />
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
@@ -461,7 +673,98 @@ export function MonsterCatalogV2Tab() {
         title={editItem ? `編輯魔物：${editItem.name}` : "新增魔物"} fields={fields} initialData={editItem}
         onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
       <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields}
-        onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
+        onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
+        selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
+      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
+        isLoading={bulkImportMut.isPending} catalogName="魔物圖鑑" />
+    </div>
+  );
+}
+
+// ===== 魔物詳細檢視卡片 =====
+function MonsterDetailCard({ monster: m, skillOpts, itemOpts }: { monster: any; skillOpts: { value: string; label: string }[]; itemOpts: { value: string; label: string }[] }) {
+  const getSkillName = (id: string) => skillOpts.find(s => s.value === id)?.label ?? id ?? "-";
+  const getItemName = (id: string) => itemOpts.find(i => i.value === id)?.label ?? id ?? "-";
+  const dropGold = typeof m.dropGold === "object" && m.dropGold ? m.dropGold : null;
+  const spawnNodes = Array.isArray(m.spawnNodes) ? m.spawnNodes : [];
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* 基礎屬性 */}
+      <div className="space-y-2">
+        <h4 className="text-sm font-semibold border-b pb-1">📊 基礎屬性</h4>
+        <div className="grid grid-cols-2 gap-1 text-xs">
+          <span className="text-muted-foreground">HP</span><span className="font-medium">{m.baseHp}</span>
+          <span className="text-muted-foreground">攻擊</span><span className="font-medium">{m.baseAttack}</span>
+          <span className="text-muted-foreground">防禦</span><span className="font-medium">{m.baseDefense}</span>
+          <span className="text-muted-foreground">速度</span><span className="font-medium">{m.baseSpeed}</span>
+          <span className="text-muted-foreground">命中力</span><span className="font-medium">{m.baseAccuracy ?? "-"}</span>
+          <span className="text-muted-foreground">魔法攻擊</span><span className="font-medium">{m.baseMagicAttack ?? "-"}</span>
+          <span className="text-muted-foreground">成長率</span><span className="font-medium">{m.growthRate ?? "-"}</span>
+          <span className="text-muted-foreground">AI等級</span><span className="font-medium">{m.aiLevel ?? "-"}</span>
+          <span className="text-muted-foreground">捕獲率</span><span className="font-medium">{m.catchRate != null ? `${(m.catchRate * 100).toFixed(0)}%` : "-"}</span>
+        </div>
+        <h4 className="text-sm font-semibold border-b pb-1 mt-3">🛡️ 抗性</h4>
+        <div className="grid grid-cols-2 gap-1 text-xs">
+          <span className="text-muted-foreground">🌿 抗木</span><span>{m.resistWood ?? 0}%</span>
+          <span className="text-muted-foreground">🔥 抗火</span><span>{m.resistFire ?? 0}%</span>
+          <span className="text-muted-foreground">🪨 抗土</span><span>{m.resistEarth ?? 0}%</span>
+          <span className="text-muted-foreground">⚔️ 抗金</span><span>{m.resistMetal ?? 0}%</span>
+          <span className="text-muted-foreground">💧 抗水</span><span>{m.resistWater ?? 0}%</span>
+          <span className="text-muted-foreground">被剋加成</span><span>{m.counterBonus ?? 50}%</span>
+        </div>
+      </div>
+
+      {/* 技能 */}
+      <div className="space-y-2">
+        <h4 className="text-sm font-semibold border-b pb-1">⚡ 魔物技能</h4>
+        <div className="space-y-1 text-xs">
+          {m.skillId1 && <div className="p-1.5 bg-background rounded border">🔹 {getSkillName(m.skillId1)}</div>}
+          {m.skillId2 && <div className="p-1.5 bg-background rounded border">🔹 {getSkillName(m.skillId2)}</div>}
+          {m.skillId3 && <div className="p-1.5 bg-background rounded border">🔹 {getSkillName(m.skillId3)}</div>}
+          {!m.skillId1 && !m.skillId2 && !m.skillId3 && <span className="text-muted-foreground">無技能</span>}
+        </div>
+        {m.destinyClue && (
+          <>
+            <h4 className="text-sm font-semibold border-b pb-1 mt-3">🔮 天命線索</h4>
+            <p className="text-xs text-muted-foreground">{m.destinyClue}</p>
+          </>
+        )}
+        {spawnNodes.length > 0 && (
+          <>
+            <h4 className="text-sm font-semibold border-b pb-1 mt-3">📍 出沒節點</h4>
+            <div className="flex flex-wrap gap-1">
+              {spawnNodes.map((n: string, i: number) => <span key={i} className="text-xs px-2 py-0.5 bg-background rounded border">{n}</span>)}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* 掉落系統 */}
+      <div className="space-y-2">
+        <h4 className="text-sm font-semibold border-b pb-1">💰 掉落系統</h4>
+        <div className="space-y-1 text-xs">
+          {[1,2,3,4,5].map(i => {
+            const itemId = m[`dropItem${i}`];
+            const rate = m[`dropRate${i}`];
+            if (!itemId) return null;
+            return <div key={i} className="flex justify-between p-1.5 bg-background rounded border"><span>{getItemName(itemId)}</span><span className="text-primary font-medium">{rate}%</span></div>;
+          })}
+          {m.legendaryDrop && (
+            <div className="flex justify-between p-1.5 bg-yellow-500/10 rounded border border-yellow-500/30">
+              <span>🌟 {getItemName(m.legendaryDrop)}</span><span className="text-yellow-600 font-medium">{m.legendaryDropRate}%</span>
+            </div>
+          )}
+          {dropGold && <div className="flex justify-between p-1.5 bg-background rounded border"><span>🪙 金幣</span><span>{dropGold.min}-{dropGold.max}</span></div>}
+          {!m.dropItem1 && !m.legendaryDrop && !dropGold && <span className="text-muted-foreground">無掉落物</span>}
+        </div>
+        {m.imageUrl && (
+          <>
+            <h4 className="text-sm font-semibold border-b pb-1 mt-3">🖼️ 圖片</h4>
+            <img src={m.imageUrl} alt={m.name} className="w-24 h-24 object-cover rounded border" />
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -492,6 +795,7 @@ export function ItemCatalogV2Tab() {
   const [editItem, setEditItem] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [batchEditOpen, setBatchEditOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const queryInput = useMemo(() => ({
     search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
@@ -507,6 +811,7 @@ export function ItemCatalogV2Tab() {
   const deleteMut = trpc.gameCatalog.deleteItemCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
   const batchDeleteMut = trpc.gameCatalog.batchDeleteItems.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
   const batchUpdateMut = trpc.gameCatalog.batchUpdateItems.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const bulkImportMut = trpc.gameCatalog.bulkImportItems.useMutation({ onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆道具`); setImportOpen(false); refetch(); }, onError: (e) => toast.error(`匯入失敗：${e.message}`) });
 
   const monsterOpts = (allMonsters ?? []).map((m: any) => ({ value: m.monsterId, label: `${m.monsterId} ${m.name}（${m.wuxing}）` }));
 
@@ -565,6 +870,7 @@ export function ItemCatalogV2Tab() {
         <div><h2 className="text-lg font-semibold">🎒 道具圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 I_W001）</p></div>
         <div className="flex gap-2 items-center">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增道具</Button>
         </div>
       </div>
@@ -610,7 +916,10 @@ export function ItemCatalogV2Tab() {
         </>
       )}
       <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯道具：${editItem.name}` : "新增道具"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
-      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
+      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
+        selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
+      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
+        isLoading={bulkImportMut.isPending} catalogName="道具圖鑑" />
     </div>
   );
 }
@@ -644,6 +953,7 @@ export function EquipCatalogV2Tab() {
   const [editItem, setEditItem] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [batchEditOpen, setBatchEditOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const queryInput = useMemo(() => ({
     search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
@@ -659,6 +969,7 @@ export function EquipCatalogV2Tab() {
   const deleteMut = trpc.gameCatalog.deleteEquipCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
   const batchDeleteMut = trpc.gameCatalog.batchDeleteEquips.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
   const batchUpdateMut = trpc.gameCatalog.batchUpdateEquips.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const bulkImportMut = trpc.gameCatalog.bulkImportEquipments.useMutation({ onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆裝備`); setImportOpen(false); refetch(); }, onError: (e) => toast.error(`匯入失敗：${e.message}`) });
 
   const fields: FieldDef[] = [
     { key: "name", label: "名稱", type: "text", required: true },
@@ -719,6 +1030,7 @@ export function EquipCatalogV2Tab() {
         <div><h2 className="text-lg font-semibold">⚔️ 裝備圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 E_W001）</p></div>
         <div className="flex gap-2 items-center">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增裝備</Button>
         </div>
       </div>
@@ -764,7 +1076,10 @@ export function EquipCatalogV2Tab() {
         </>
       )}
       <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯裝備：${editItem.name}` : "新增裝備"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
-      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
+      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
+        selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
+      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
+        isLoading={bulkImportMut.isPending} catalogName="裝備圖鑑" />
     </div>
   );
 }
@@ -802,6 +1117,7 @@ export function SkillCatalogV2Tab() {
   const [editItem, setEditItem] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [batchEditOpen, setBatchEditOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const queryInput = useMemo(() => ({
     search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
@@ -817,6 +1133,7 @@ export function SkillCatalogV2Tab() {
   const deleteMut = trpc.gameCatalog.deleteSkillCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
   const batchDeleteMut = trpc.gameCatalog.batchDeleteSkills.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
   const batchUpdateMut = trpc.gameCatalog.batchUpdateSkills.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const bulkImportMut = trpc.gameCatalog.bulkImportSkills.useMutation({ onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆技能`); setImportOpen(false); refetch(); }, onError: (e) => toast.error(`匯入失敗：${e.message}`) });
 
   const monsterOpts = (allMonsters ?? []).map((m: any) => ({ value: m.monsterId, label: `${m.monsterId} ${m.name}` }));
 
@@ -873,6 +1190,7 @@ export function SkillCatalogV2Tab() {
         <div><h2 className="text-lg font-semibold">✨ 技能圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 S_W001）</p></div>
         <div className="flex gap-2 items-center">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增技能</Button>
         </div>
       </div>
@@ -917,7 +1235,10 @@ export function SkillCatalogV2Tab() {
         </>
       )}
       <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯技能：${editItem.name}` : "新增技能"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
-      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
+      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
+        selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
+      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
+        isLoading={bulkImportMut.isPending} catalogName="技能圖鑑" />
     </div>
   );
 }
@@ -948,6 +1269,7 @@ export function AchievementCatalogTab() {
   const [editItem, setEditItem] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [batchEditOpen, setBatchEditOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const queryInput = useMemo(() => ({
     search: search || undefined, category: category || undefined, rarity: rarity || undefined, page, pageSize,
@@ -961,6 +1283,7 @@ export function AchievementCatalogTab() {
   const deleteMut = trpc.gameCatalog.deleteAchievementCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
   const batchDeleteMut = trpc.gameCatalog.batchDeleteAchievements.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
   const batchUpdateMut = trpc.gameCatalog.batchUpdateAchievements.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const bulkImportMut = trpc.gameCatalog.bulkImportAchievements.useMutation({ onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆成就`); setImportOpen(false); refetch(); }, onError: (e) => toast.error(`匯入失敗：${e.message}`) });
 
   const fields: FieldDef[] = [
     { key: "title", label: "名稱", type: "text", required: true },
@@ -1011,6 +1334,7 @@ export function AchievementCatalogTab() {
         <div><h2 className="text-lg font-semibold">🏆 成就系統（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 ACH_001）</p></div>
         <div className="flex gap-2 items-center">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增成就</Button>
         </div>
       </div>
@@ -1051,7 +1375,10 @@ export function AchievementCatalogTab() {
         </>
       )}
       <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯成就：${editItem.title}` : "新增成就"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
-      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
+      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
+        selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
+      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
+        isLoading={bulkImportMut.isPending} catalogName="成就系統" />
     </div>
   );
 }
@@ -1078,6 +1405,7 @@ export function MonsterSkillCatalogTab() {
   const [editItem, setEditItem] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [batchEditOpen, setBatchEditOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const queryInput = useMemo(() => ({
     search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
@@ -1092,6 +1420,7 @@ export function MonsterSkillCatalogTab() {
   const deleteMut = trpc.gameCatalog.deleteMonsterSkill.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
   const batchDeleteMut = trpc.gameCatalog.batchDeleteMonsterSkills.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
   const batchUpdateMut = trpc.gameCatalog.batchUpdateMonsterSkills.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const bulkImportMut = trpc.gameCatalog.bulkImportMonsterSkills.useMutation({ onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆魔物技能`); setImportOpen(false); refetch(); }, onError: (e) => toast.error(`匯入失敗：${e.message}`) });
 
   const fields: FieldDef[] = [
     { key: "name", label: "名稱", type: "text", required: true },
@@ -1142,6 +1471,7 @@ export function MonsterSkillCatalogTab() {
         <div><h2 className="text-lg font-semibold">🐲 魔物技能圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 SK_M001）</p></div>
         <div className="flex gap-2 items-center">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
+          <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增魔物技能</Button>
         </div>
       </div>
@@ -1186,7 +1516,10 @@ export function MonsterSkillCatalogTab() {
         </>
       )}
       <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯魔物技能：${editItem.name}` : "新增魔物技能"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
-      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
+      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
+        selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
+      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
+        isLoading={bulkImportMut.isPending} catalogName="魔物技能圖鑑" />
     </div>
   );
 }

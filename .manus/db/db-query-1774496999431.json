@@ -1,0 +1,18 @@
+{
+  "query": "SELECT DISTINCT item_id, item_type FROM agent_inventory WHERE item_type = 'skill_book' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT DISTINCT item_id, item_type FROM agent_inventory WHERE item_type = 'skill_book' LIMIT 20;",
+  "rows": [
+    {
+      "item_id": "skill-wood-001",
+      "item_type": "skill_book"
+    },
+    {
+      "item_id": "skill-earth-001",
+      "item_type": "skill_book"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\titem_type\nskill-wood-001\tskill_book\nskill-earth-001\tskill_book\n",
+  "stderr": "",
+  "execution_time_ms": 1508
+}

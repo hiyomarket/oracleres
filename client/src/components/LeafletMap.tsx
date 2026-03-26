@@ -622,46 +622,69 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
         const coords = NODE_COORDS[nodeId];
         if (!coords) return;
         const isSelf = nodeId === currentNodeId;
-        // 偏移一點，避免完全疊在節點 marker 上
-        const offsetLat = isSelf ? 0.018 : 0.015;
-        const offsetLng = isSelf ? 0.025 : 0.022;
+        const offsetLat = isSelf ? 0.022 : 0.018;
+        const offsetLng = isSelf ? 0.03 : 0.025;
         const count = players.length;
         const firstEl = players[0]?.element ?? "water";
         const dotColor = elColors[firstEl] ?? "#94a3b8";
+        const avatarSize = 40;
 
+        // 生成頭像 HTML（最多顯示 3 個頭像）
+        const avatarHtmlList = players.slice(0, 3).map((p, idx) => {
+          const elC = elColors[p.element] ?? "#94a3b8";
+          const offset = idx * 18; // 橫向偏移重疊
+          if (p.avatarUrl) {
+            return `<div style="
+              position:absolute;left:${offset}px;top:0;
+              width:${avatarSize}px;height:${avatarSize}px;border-radius:50%;
+              border:3px solid ${elC};overflow:hidden;
+              box-shadow:0 0 12px 4px ${elC}66;
+              background:rgba(6,10,22,0.8);z-index:${10-idx};
+            "><img src="${p.avatarUrl}" style="width:100%;height:100%;object-fit:cover;" /></div>`;
+          }
+          // 無頭像時顯示名字首字
+          const initial = (p.agentName ?? "旅")[0];
+          return `<div style="
+            position:absolute;left:${offset}px;top:0;
+            width:${avatarSize}px;height:${avatarSize}px;border-radius:50%;
+            border:3px solid ${elC};
+            box-shadow:0 0 12px 4px ${elC}66;
+            background:radial-gradient(circle at 30% 30%, ${elC}40, rgba(6,10,22,0.9));
+            display:flex;align-items:center;justify-content:center;
+            font-size:16px;font-weight:700;color:${elC};
+            font-family:'Noto Serif TC',serif;z-index:${10-idx};
+          ">${initial}</div>`;
+        }).join("");
+
+        const totalWidth = avatarSize + Math.min(players.length - 1, 2) * 18;
         const dotHtml = `
-          <div style="position:relative;">
-            <div style="
-              width:${count > 1 ? 20 : 14}px;
-              height:${count > 1 ? 20 : 14}px;
-              border-radius:50%;
-              background:${dotColor};
-              border:2px solid rgba(255,255,255,0.85);
-              box-shadow:0 0 8px 3px ${dotColor}88;
+          <div style="position:relative;width:${totalWidth}px;height:${avatarSize + 20}px;">
+            ${avatarHtmlList}
+            ${count > 3 ? `<div style="
+              position:absolute;left:${3 * 18}px;top:0;
+              width:${avatarSize}px;height:${avatarSize}px;border-radius:50%;
+              border:3px solid ${dotColor};
+              background:rgba(6,10,22,0.85);
               display:flex;align-items:center;justify-content:center;
-              font-size:8px;font-weight:700;color:#fff;
-            ">${count > 1 ? count : ""}</div>
-            ${count > 1 ? `<div style="
-              position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
-              background:rgba(6,10,22,0.85);border:1px solid ${dotColor}66;
-              border-radius:4px;padding:1px 4px;
-              font-size:8px;color:${dotColor};white-space:nowrap;
+              font-size:14px;font-weight:700;color:${dotColor};
+              z-index:7;
+            ">+${count - 3}</div>` : ""}
+            <div style="
+              position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+              background:rgba(6,10,22,0.9);border:1px solid ${dotColor}66;
+              border-radius:6px;padding:2px 6px;
+              font-size:10px;color:${dotColor};white-space:nowrap;
               font-family:'Noto Serif TC',serif;
-            ">${players.slice(0,2).map(p=>p.agentName).join("·")}${count>2?"…":""}</div>` : `<div style="
-              position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
-              background:rgba(6,10,22,0.85);border:1px solid ${dotColor}66;
-              border-radius:4px;padding:1px 4px;
-              font-size:8px;color:${dotColor};white-space:nowrap;
-              font-family:'Noto Serif TC',serif;
-            ">${players[0]?.agentName ?? ""}</div>`}
+              box-shadow:0 2px 8px rgba(0,0,0,0.5);
+            ">${count > 1 ? players.slice(0,2).map(p=>p.agentName).join("·") + (count>2?"…":"") : players[0]?.agentName ?? ""}</div>
           </div>
         `;
 
         const icon = L.divIcon({
           className: "",
           html: dotHtml,
-          iconSize: [count > 1 ? 20 : 14, 34],
-          iconAnchor: [count > 1 ? 10 : 7, count > 1 ? 10 : 7],
+          iconSize: [totalWidth + 10, avatarSize + 22],
+          iconAnchor: [(totalWidth + 10) / 2, avatarSize / 2],
         });
 
         const m = L.marker(

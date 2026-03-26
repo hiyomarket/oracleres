@@ -1,0 +1,28 @@
+{
+  "query": "SELECT * FROM agent_skills LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT * FROM agent_skills LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "agent_id": "1",
+      "skill_id": "S_E003",
+      "awake_tier": "0",
+      "use_count": "0",
+      "installed_slot": "NULL",
+      "acquired_at": "2026-03-24 17:37:43"
+    },
+    {
+      "id": "2",
+      "agent_id": "9",
+      "skill_id": "S_W005",
+      "awake_tier": "0",
+      "use_count": "0",
+      "installed_slot": "NULL",
+      "acquired_at": "2026-03-25 08:32:35"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_id\tskill_id\tawake_tier\tuse_count\tinstalled_slot\tacquired_at\n1\t1\tS_E003\t0\t0\tNULL\t2026-03-24 17:37:43\n2\t9\tS_W005\t0\t0\tNULL\t2026-03-25 08:32:35\n",
+  "stderr": "",
+  "execution_time_ms": 1535
+}

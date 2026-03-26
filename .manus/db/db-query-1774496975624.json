@@ -1,0 +1,50 @@
+{
+  "query": "SELECT skill_id, name FROM game_skill_catalog WHERE skill_id IN ('S_W005','S_W012','S_F004','S_F006','S_E003','S_E005','S_M003','S_M004','S_W057','S_W060');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name FROM game_skill_catalog WHERE skill_id IN ('S_W005','S_W012','S_F004','S_F006','S_E003','S_E005','S_M003','S_M004','S_W057','S_W060');",
+  "rows": [
+    {
+      "skill_id": "S_W005",
+      "name": "森林衝刺"
+    },
+    {
+      "skill_id": "S_W012",
+      "name": "翡翠龍息"
+    },
+    {
+      "skill_id": "S_F004",
+      "name": "狂暴之焰"
+    },
+    {
+      "skill_id": "S_F006",
+      "name": "鳳凰涅槃"
+    },
+    {
+      "skill_id": "S_E003",
+      "name": "地震術"
+    },
+    {
+      "skill_id": "S_E005",
+      "name": "大地崩裂"
+    },
+    {
+      "skill_id": "S_M003",
+      "name": "電磁脈衝"
+    },
+    {
+      "skill_id": "S_M004",
+      "name": "萬劍歸宗"
+    },
+    {
+      "skill_id": "S_W057",
+      "name": "海嘯術"
+    },
+    {
+      "skill_id": "S_W060",
+      "name": "海神之怒"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\nS_W005\t森林衝刺\nS_W012\t翡翠龍息\nS_F004\t狂暴之焰\nS_F006\t鳳凰涅槃\nS_E003\t地震術\nS_E005\t大地崩裂\nS_M003\t電磁脈衝\nS_M004\t萬劍歸宗\nS_W057\t海嘯術\nS_W060\t海神之怒\n",
+  "stderr": "",
+  "execution_time_ms": 1610
+}
