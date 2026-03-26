@@ -324,17 +324,26 @@ export const gameWorldRouter = router({
        .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new Error("Database unavailable");
+
+      // 查詢當前角色狀態
+      const [agent] = await db.select()
+        .from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agent) throw new Error("角色不存在");
+
+      // ★ 注靈限制：只有體力為 0 時才能切換到注靈
+      if (input.strategy === "infuse" && agent.stamina > 0) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "注靈只能在體力為 0 時執行！請先耗盡體力再嘗試。" });
+      }
+
       const updateData: Record<string, unknown> = { strategy: input.strategy, updatedAt: Date.now() };
       if (input.movementMode) updateData.movementMode = input.movementMode;
-      // 切換到 rest 時，記錄前一個策略以便回滿後自動切回
-      if (input.strategy === "rest") {
-        const [agent] = await db.select({ strategy: gameAgents.strategy })
-          .from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
-        if (agent && agent.strategy !== "rest") {
+      // 切換到 rest 或 infuse 時，記錄前一個策略以便自動切回
+      if (input.strategy === "rest" || input.strategy === "infuse") {
+        if (agent.strategy !== "rest" && agent.strategy !== "infuse") {
           updateData.previousStrategy = agent.strategy;
         }
       } else {
-        // 主動切換非 rest 策略時，清除 previousStrategy
+        // 主動切換非 rest/infuse 策略時，清除 previousStrategy
         updateData.previousStrategy = null;
       }
       await db
@@ -648,7 +657,7 @@ export const gameWorldRouter = router({
       const challenger = challengerRows[0];
       if (!challenger) throw new TRPCError({ code: "NOT_FOUND", message: "挑戰者角色不存在" });
 
-      // 戰鬥計算（模擬 5 回合）
+      // 戰鬥計算（模擬 5 回合，含五行相剋加成）
       const cAtk = challenger.attack + Math.floor(challenger.level * 2);
       const cDef = challenger.defense;
       const cHp = challenger.maxHp;
@@ -658,22 +667,46 @@ export const gameWorldRouter = router({
       const dHp = defender.maxHp;
       const dSpd = defender.speed;
 
+      // ★ 五行相剋機制：木剋土、火剋金、土剋水、金剋木、水剋火
+      const WUXING_COUNTER_PVP: Record<string, string> = { wood: "earth", fire: "metal", earth: "water", metal: "wood", water: "fire" };
+      const WX_ZH_PVP: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+      const cElement = (challenger.dominantElement ?? "wood") as string;
+      const dElement = (defender.dominantElement ?? "wood") as string;
+
+      // 計算五行相剋倍率
+      let cWuxingMultiplier = 1.0; // 挑戰者對防御者的倍率
+      let dWuxingMultiplier = 1.0; // 防御者對挑戰者的倍率
+      let wuxingDesc = "";
+      if (WUXING_COUNTER_PVP[cElement] === dElement) {
+        cWuxingMultiplier = 1.2; // 挑戰者剋制防御者，傷害 +20%
+        wuxingDesc = `${WX_ZH_PVP[cElement] ?? cElement}剋${WX_ZH_PVP[dElement] ?? dElement}！${challenger.agentName ?? "旅人"}傷害+20%`;
+      } else if (WUXING_COUNTER_PVP[dElement] === cElement) {
+        dWuxingMultiplier = 1.2; // 防御者剋制挑戰者，傷害 +20%
+        wuxingDesc = `${WX_ZH_PVP[dElement] ?? dElement}剋${WX_ZH_PVP[cElement] ?? cElement}！${defender.agentName ?? "旅人"}傷害+20%`;
+      }
+
       let cHpCur = cHp, dHpCur = dHp;
       const battleLog: string[] = [];
+      if (wuxingDesc) battleLog.push(`✨ 五行相剋：${wuxingDesc}`);
+
       for (let round = 1; round <= 5; round++) {
         // 速度高者先攻
         const first = cSpd >= dSpd ? "challenger" : "defender";
         const second = first === "challenger" ? "defender" : "challenger";
         for (const who of [first, second]) {
           if (who === "challenger") {
-            const dmg = Math.max(1, cAtk - Math.floor(dDef * 0.5) + Math.floor(Math.random() * 5));
+            const rawDmg = Math.max(1, cAtk - Math.floor(dDef * 0.5) + Math.floor(Math.random() * 5));
+            const dmg = Math.round(rawDmg * cWuxingMultiplier);
             dHpCur -= dmg;
-            battleLog.push(`第${round}回合：${challenger.agentName ?? "旅人"} 攻擊 ${dmg} 點`);
+            const wuxingTag = cWuxingMultiplier > 1 ? ` 【剋制+${Math.round((cWuxingMultiplier - 1) * 100)}%】` : "";
+            battleLog.push(`第${round}回合：${challenger.agentName ?? "旅人"} 攻擊 ${dmg} 點${wuxingTag}`);
             if (dHpCur <= 0) { battleLog.push(`${defender.agentName ?? "旅人"} 戰敗！`); break; }
           } else {
-            const dmg = Math.max(1, dAtk - Math.floor(cDef * 0.5) + Math.floor(Math.random() * 5));
+            const rawDmg = Math.max(1, dAtk - Math.floor(cDef * 0.5) + Math.floor(Math.random() * 5));
+            const dmg = Math.round(rawDmg * dWuxingMultiplier);
             cHpCur -= dmg;
-            battleLog.push(`第${round}回合：${defender.agentName ?? "旅人"} 攻擊 ${dmg} 點`);
+            const wuxingTag = dWuxingMultiplier > 1 ? ` 【剋制+${Math.round((dWuxingMultiplier - 1) * 100)}%】` : "";
+            battleLog.push(`第${round}回合：${defender.agentName ?? "旅人"} 攻擊 ${dmg} 點${wuxingTag}`);
             if (cHpCur <= 0) { battleLog.push(`${challenger.agentName ?? "旅人"} 戰敗！`); break; }
           }
         }

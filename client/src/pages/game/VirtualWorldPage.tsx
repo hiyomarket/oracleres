@@ -623,7 +623,7 @@ function CharacterPanel({
   };
 
   const [showSkillPicker, setShowSkillPicker] = useState(false);
-  const [skillPickerSlot, setSkillPickerSlot] = useState<{ type: "active" | "passive"; index: number; slot: "skillSlot1" | "skillSlot2" | "passiveSlot1" } | null>(null);
+  const [skillPickerSlot, setSkillPickerSlot] = useState<{ type: "active" | "passive"; index: number; slot: "skillSlot1" | "skillSlot2" | "skillSlot3" | "skillSlot4" | "passiveSlot1" | "passiveSlot2" | "hiddenSlot1" } | null>(null);
   const [skillWuxingFilter, setSkillWuxingFilter] = useState("");
   const skillCatalogQuery = trpc.gameWorld.getSkillCatalogForPlayer.useQuery(
     skillWuxingFilter ? { wuxing: skillWuxingFilter } : undefined,
@@ -1189,6 +1189,7 @@ function CharacterPanel({
           const hiddenSlotCount = woodVal >= 200 ? 3 : woodVal >= 120 ? 2 : 1;
           const ACTIVE_SLOT_KEYS = ["skillSlot1", "skillSlot2", "skillSlot3", "skillSlot4"] as const;
           const PASSIVE_SLOT_KEYS = ["passiveSlot1", "passiveSlot2"] as const;
+          type AllSlotKey = typeof ACTIVE_SLOT_KEYS[number] | typeof PASSIVE_SLOT_KEYS[number] | "hiddenSlot1";
           const activeSlots = ACTIVE_SLOT_KEYS.map(k => (agent as any)?.[k] as string | undefined);
           const passiveSlots = PASSIVE_SLOT_KEYS.map(k => (agent as any)?.[k] as string | undefined);
           // 技能槽門檻說明
@@ -1219,11 +1220,11 @@ function CharacterPanel({
                     const slotId = activeSlots[i];
                     const sk = slotId ? SKILL_DEFS[slotId] : null;
                     const c = sk ? WX_HEX[sk.element] ?? "#888" : "#334155";
-                    const slotKey = (ACTIVE_SLOT_KEYS[i] ?? "skillSlot1") as "skillSlot1" | "skillSlot2" | "passiveSlot1";
+                    const slotKey = ACTIVE_SLOT_KEYS[i] ?? "skillSlot1";
                     const isLocked = i >= 4; // 木屬性解鎖的額外槽
                     return (
                       <button key={i}
-                        onClick={() => { setSkillPickerSlot({ type: "active", index: i, slot: slotKey }); setShowSkillPicker(true); }}
+                        onClick={() => { setSkillPickerSlot({ type: "active", index: i, slot: slotKey as AllSlotKey }); setShowSkillPicker(true); }}
                         className="px-2.5 py-2 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
                         style={{ background: sk ? `${c}10` : isLocked ? "rgba(34,197,94,0.04)" : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : isLocked ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)" }}>
                         <p className="text-xs mb-0.5" style={{ color: isLocked ? "#22c55e80" : "#64748b" }}>主動 {i + 1}{isLocked ? " 🌲" : ""}</p>
@@ -1252,7 +1253,7 @@ function CharacterPanel({
                     const isLocked = i >= 2;
                     return (
                       <button key={i}
-                        onClick={() => { setSkillPickerSlot({ type: "passive", index: i, slot: "passiveSlot1" }); setShowSkillPicker(true); }}
+                        onClick={() => { setSkillPickerSlot({ type: "passive", index: i, slot: (PASSIVE_SLOT_KEYS[i] ?? "passiveSlot1") as AllSlotKey }); setShowSkillPicker(true); }}
                         className="px-2.5 py-2 rounded-xl border text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
                         style={{ background: sk ? `${c}10` : isLocked ? "rgba(34,197,94,0.04)" : "rgba(255,255,255,0.02)", borderColor: sk ? `${c}30` : isLocked ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)" }}>
                         <p className="text-xs mb-0.5" style={{ color: isLocked ? "#22c55e80" : "#64748b" }}>被動 {i + 1}{isLocked ? " 🌲" : ""}</p>

@@ -429,6 +429,26 @@ export function resolveCombat(
   // 技能冷卻記錄（skillId -> 剩餘冷卻回合數）
   const skillCooldowns: Record<string, number> = {};
 
+  // ★ 智慧技能判定系統：根據戰場情況智能選擇技能
+  // 五行相剋查詢表（用於技能屬性判定）
+  const WUXING_COUNTER: Record<string, string> = { wood: "earth", fire: "metal", earth: "water", metal: "wood", water: "fire" };
+  // 技能屬性推斷（根據技能 ID 前綴推斷屬性）
+  function inferSkillElement(skillId: string): WuXing | null {
+    if (skillId.startsWith("S_W")) return "wood";
+    if (skillId.startsWith("S_F")) return "fire";
+    if (skillId.startsWith("S_E")) return "earth";
+    if (skillId.startsWith("S_M")) return "metal";
+    if (skillId.startsWith("S_Wt")) return "water";
+    // 舉例式判斷
+    const lower = skillId.toLowerCase();
+    if (lower.includes("wood") || lower.includes("heal") || lower.includes("regen")) return "wood";
+    if (lower.includes("fire") || lower.includes("burst") || lower.includes("blaze")) return "fire";
+    if (lower.includes("earth") || lower.includes("shield") || lower.includes("rock")) return "earth";
+    if (lower.includes("metal") || lower.includes("pierce") || lower.includes("blade")) return "metal";
+    if (lower.includes("water") || lower.includes("flow") || lower.includes("ice")) return "water";
+    return null;
+  }
+
   while (agentHp > 0 && monsterHp > 0 && rounds.length < 10) {
     const roundNum = rounds.length + 1;
     const roundData: CombatRound = { round: roundNum, agentAtk: 0, monsterAtk: 0, agentHpAfter: agentHp, monsterHpAfter: monsterHp, agentFirst };
@@ -438,22 +458,48 @@ export function resolveCombat(
       if (skillCooldowns[sk.id] && skillCooldowns[sk.id] > 0) skillCooldowns[sk.id]--;
     }
 
-    // 玩家選擇技能：優先使用治癒技能（HP < 40%），其次使用攻擊技能
+    // ★ 智慧技能選擇策略：
+    // 1. HP < 30% → 優先使用治癒技能（生存優先）
+    // 2. HP < 50% 且有治癒技能 → 50% 機率使用治癒（50% 攻擊
+    // 3. 有剋制怪物屬性的技能 → 優先使用（五行相剋）
+    // 4. 其他情況 → 按傷害倍率選擇最強攻擊技能
+    // 5. 沒有可用技能 → 普通攻擊
     let chosenSkill: typeof equippedSkills[0] | null = null;
-    const isLowHp = agentHp < agent.maxHp * 0.4;
-    // 尋找可用的治癒技能
-    if (isLowHp) {
-      chosenSkill = equippedSkills.find(sk =>
-        sk.skillType === "heal" && agentMp >= sk.mpCost && !(skillCooldowns[sk.id] > 0)
-      ) ?? null;
+    const hpRatio = agentHp / agent.maxHp;
+    const availableSkills = equippedSkills.filter(sk => agentMp >= sk.mpCost && !(skillCooldowns[sk.id] > 0));
+    const healSkills = availableSkills.filter(sk => sk.skillType === "heal");
+    const attackSkills = availableSkills.filter(sk => sk.skillType === "attack");
+
+    // 策略 1：生存危機（HP < 30%）→ 強制治癒
+    if (hpRatio < 0.3 && healSkills.length > 0) {
+      chosenSkill = healSkills[0];
     }
-    // 如果沒有治癒技能，選擇攻擊技能
-    if (!chosenSkill) {
-      chosenSkill = equippedSkills.find(sk =>
-        sk.skillType === "attack" && agentMp >= sk.mpCost && !(skillCooldowns[sk.id] > 0)
-      ) ?? null;
+    // 策略 2：HP 偏低（30%~50%）→ 50% 機率治癒
+    else if (hpRatio < 0.5 && healSkills.length > 0 && Math.random() < 0.5) {
+      chosenSkill = healSkills[0];
     }
-    // 沒有可用技能則普攻
+    // 策略 3：五行相剋判定 → 優先使用剋制怪物屬性的技能
+    else if (attackSkills.length > 0) {
+      // 找出剋制怪物屬性的技能
+      const counterElement = Object.entries(WUXING_COUNTER).find(([k]) => k === monsterElement)?.[1];
+      // 找對應屬性的攻擊技能
+      const counterSkills = attackSkills.filter(sk => {
+        const skElement = inferSkillElement(sk.id);
+        return skElement && WUXING_COUNTER[skElement] === monsterElement;
+      });
+      if (counterSkills.length > 0) {
+        // 有剋制技能，80% 機率使用（20% 機率隨機選擇其他技能）
+        chosenSkill = Math.random() < 0.8 ? counterSkills[0] : attackSkills[Math.floor(Math.random() * attackSkills.length)];
+      } else {
+        // 沒有剋制技能，按傷害倍率選擇最強的
+        chosenSkill = attackSkills.sort((a, b) => (b.damageMultiplier ?? 1) - (a.damageMultiplier ?? 1))[0];
+      }
+    }
+    // 策略 4：只有治癒技能且 HP < 70% → 使用治癒
+    else if (healSkills.length > 0 && hpRatio < 0.7) {
+      chosenSkill = healSkills[0];
+    }
+    // 策略 5：沒有可用技能 → 普攻
     const usingSkill = chosenSkill !== null;
     const skillMultiplier = usingSkill ? (chosenSkill!.damageMultiplier ?? 1.0) : 1.0;
     const skillType = usingSkill ? chosenSkill!.skillType : "attack";
@@ -926,11 +972,36 @@ export async function processAgentTick(
     await db.update(gameAgents).set({ status: "resting", updatedAt: Date.now() }).where(eq(gameAgents.id, agent.id));
   }
   // ─── 注靈策略 ───
-  // 注靈：依當前節點屬性，截取五行能量，20%機率失敗
+  // 注靈：不消耗體力，依當前節點屬性截取五行能量，20%機率失敗
+  // ★ 注靈只有在體力為 0 時才能執行；一旦體力回復（>0），自動切回上一個動作
   else if (strategy === "infuse") {
+    // 體力回復檢查：體力 > 0 時自動切回 previousStrategy
+    if (agent.stamina > 0) {
+      const prevStrategy = agent.previousStrategy ?? "explore";
+      const nextStrategy = prevStrategy !== "infuse" ? prevStrategy : "explore";
+      await db.update(gameAgents).set({
+        strategy: nextStrategy,
+        previousStrategy: null,
+        updatedAt: Date.now(),
+      }).where(eq(gameAgents.id, agent.id));
+      const WX_ZH_LOCAL: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+      const strategyLabels: Record<string, string> = { explore: "探索", combat: "戰鬥", gather: "採集", rest: "休息" };
+      const switchMsg = `【注靈中斷】${agent.agentName ?? "旅人"}體力已恢復，自動切換回「${strategyLabels[nextStrategy] ?? nextStrategy}」模式。`;
+      await createEvent(agent.id, "system", switchMsg, { type: "infuse_auto_switch", newStrategy: nextStrategy }, currentNode.id);
+      // 退還本次消耗的體力（注靈不應消耗體力）
+      await db.update(gameAgents).set({
+        stamina: Math.min(agent.maxStamina, agent.stamina + staminaPerTick),
+      }).where(eq(gameAgents.id, agent.id));
+      return { events: 1, levelUps: tickLevelUps, legendaryDrops: tickLegendaryDrops };
+    }
+
     const infuseCfg = getInfuseConfig();
     const nodeElement = currentNode.element as WuXing; // 節點屬性
     const failed = Math.random() < infuseCfg.failRate;
+    // 退還本次消耗的體力（注靈不消耗體力）
+    await db.update(gameAgents).set({
+      stamina: Math.min(agent.maxStamina, agent.stamina + staminaPerTick),
+    }).where(eq(gameAgents.id, agent.id));
     if (failed) {
       const WX_ZH_LOCAL: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
       const failMsg = `【注靈失敗】${agent.agentName ?? "旅人"}嘗試在「${currentNode.name}」截取${WX_ZH_LOCAL[nodeElement]}五行之力，但天地靈氣流通不畅，本次注靈未能成功。`;

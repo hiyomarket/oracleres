@@ -170,9 +170,29 @@ export function CombatWindow({ data, onClose, enabled = true }: CombatWindowProp
 
   const displayAgentName = data.agentName || "旅人";
 
-  // 戰鬥中鎖定：動畫進行時不允許關閉
+  // 戰鬥中可以強制退出（跳過動畫）
   const handleClose = () => {
-    if (isAnimating) return; // 戰鬥中鎖定
+    if (isAnimating) {
+      // 強制結束動畫
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setIsAnimating(false);
+      setVisibleRounds(data?.rounds ?? []);
+      setShowResult(true);
+      return;
+    }
+    onClose();
+  };
+
+  // 強制退出戰鬥（直接關閉視窗，切回盾牌模式）
+  const handleForceExit = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsAnimating(false);
     onClose();
   };
 
@@ -221,14 +241,25 @@ export function CombatWindow({ data, onClose, enabled = true }: CombatWindowProp
               )}
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            disabled={isAnimating}
-            className={`text-lg leading-none transition-colors ${isAnimating ? "text-slate-600 cursor-not-allowed" : "text-slate-400 hover:text-white"}`}
-            title={isAnimating ? "戰鬥進行中，請等待結束" : "關閉"}
-          >
-            {isAnimating ? "⏳" : "✕"}
-          </button>
+          <div className="flex items-center gap-2">
+            {isAnimating && (
+              <button
+                onClick={handleForceExit}
+                className="px-2 py-1 rounded-lg text-[10px] font-bold transition-all hover:scale-105 active:scale-95"
+                style={{ background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.4)" }}
+                title="立即退出戰鬥畫面"
+              >
+                🛡️ 退出戰鬥
+              </button>
+            )}
+            <button
+              onClick={handleClose}
+              className={`text-lg leading-none transition-colors ${isAnimating ? "text-slate-400 hover:text-white" : "text-slate-400 hover:text-white"}`}
+              title={isAnimating ? "跳過動畫查看結果" : "關閉"}
+            >
+              {isAnimating ? "⏩" : "✕"}
+            </button>
+          </div>
         </div>
 
         {/* HP 條 */}

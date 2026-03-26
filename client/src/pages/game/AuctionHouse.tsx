@@ -476,24 +476,28 @@ export default function AuctionHouse() {
               {inventory.length === 0 ? (
                 <p className="text-sm text-slate-500">背包中沒有可上架的道具</p>
               ) : (
-                <div className="flex flex-col gap-1.5 max-h-48 overflow-y-auto">
+                <div className="flex flex-col gap-2 max-h-[320px] overflow-y-auto pr-1" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(245,158,11,0.3) transparent" }}>
                   {inventory.map(item => (
                     <button
                       key={item.id}
                       onClick={() => { setSelectedInvId(item.id); setListQty(1); }}
-                      className="flex items-center gap-2 p-2 rounded-lg text-left transition-all"
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all shrink-0"
                       style={{
                         background: selectedInvId === item.id ? "rgba(245,158,11,0.15)" : "rgba(0,0,0,0.3)",
                         border: `1px solid ${selectedInvId === item.id ? "rgba(245,158,11,0.5)" : "rgba(255,255,255,0.08)"}`,
+                        minHeight: "52px",
                       }}
                     >
-                      <span className="text-lg">📦</span>
-                      <div className="flex-1">
-                        <div className="text-sm" style={{ color: selectedInvId === item.id ? "#fbbf24" : "#e2e8f0" }}>
+                      <span className="text-2xl">📦</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate" style={{ color: selectedInvId === item.id ? "#fbbf24" : "#e2e8f0" }}>
                           {item.itemName ?? item.itemId}
                         </div>
-                        <div className="text-xs text-slate-500">數量：{item.quantity}</div>
+                        <div className="text-xs mt-0.5" style={{ color: "#64748b" }}>數量：{item.quantity}</div>
                       </div>
+                      {selectedInvId === item.id && (
+                        <span className="text-amber-400 text-sm">✔</span>
+                      )}
                     </button>
                   ))}
                 </div>

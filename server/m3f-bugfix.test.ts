@@ -98,13 +98,18 @@ describe("M3F Bug Fixes", () => {
       expect(result).toHaveProperty("success", true);
     });
 
-    it("setStrategy should accept all five strategies", async () => {
+    it("setStrategy should accept all five strategies (infuse requires stamina=0)", async () => {
       await caller.gameWorld.getOrCreateAgent();
-      const strategies = ["combat", "explore", "gather", "infuse", "rest"] as const;
-      for (const s of strategies) {
+      // 非注靈策略應該都能成功
+      const normalStrategies = ["combat", "explore", "gather", "rest"] as const;
+      for (const s of normalStrategies) {
         const result = await caller.gameWorld.setStrategy({ strategy: s });
         expect(result.success).toBe(true);
       }
+      // 注靈策略在體力 > 0 時應該拋出錯誤
+      await expect(
+        caller.gameWorld.setStrategy({ strategy: "infuse" })
+      ).rejects.toThrow("注靈只能在體力為 0 時執行");
     });
   });
 });
