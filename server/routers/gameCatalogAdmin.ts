@@ -809,11 +809,28 @@ export const gameCatalogAdminRouter = router({
 
   // ===== 批量匯入 =====
   bulkImportMonsters: adminProcedure
-    .input(z.object({ items: z.array(z.record(z.string(), z.any())).min(1).max(500) }))
+    .input(z.object({
+      items: z.array(z.record(z.string(), z.any())).min(1).max(500),
+      autoLinkSkills: z.boolean().optional().default(true),
+    }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // 預載所有魔物技能（用於自動關聯）
+      let allMonsterSkills: { monsterSkillId: string; wuxing: string; skillType: string; rarity: string }[] = [];
+      if (input.autoLinkSkills) {
+        const skills = await db.select({
+          monsterSkillId: gameMonsterSkillCatalog.monsterSkillId,
+          wuxing: gameMonsterSkillCatalog.wuxing,
+          skillType: gameMonsterSkillCatalog.skillType,
+          rarity: gameMonsterSkillCatalog.rarity,
+        }).from(gameMonsterSkillCatalog).where(eq(gameMonsterSkillCatalog.isActive, 1));
+        allMonsterSkills = skills;
+      }
+
       let imported = 0;
+      let skillsLinked = 0;
       for (const item of input.items) {
         try {
           const wuxingCode = WUXING_CODE[item.wuxing] ?? "W";
@@ -822,12 +839,49 @@ export const gameCatalogAdminRouter = router({
             .where(like(gameMonsterCatalog.monsterId, `${prefix}%`)).orderBy(desc(gameMonsterCatalog.id)).limit(1);
           const lastNum = existing[0] ? parseInt(existing[0].monsterId.replace(prefix, "")) || 0 : 0;
           const monsterId = `${prefix}${String(lastNum + 1).padStart(3, "0")}`;
+
+          // 自動關聯技能：根據五行屬性 + 稀有度配置技能
+          let skillId1 = item.skillId1 ?? "";
+          let skillId2 = item.skillId2 ?? "";
+          let skillId3 = item.skillId3 ?? "";
+          if (input.autoLinkSkills && !skillId1 && allMonsterSkills.length > 0) {
+            const monsterWuxing = item.wuxing ?? "木";
+            const monsterRarity = item.rarity ?? "common";
+            // 策略：同五行技能優先，再補充其他五行
+            const sameElement = allMonsterSkills.filter(s => s.wuxing === monsterWuxing);
+            const otherElement = allMonsterSkills.filter(s => s.wuxing !== monsterWuxing);
+            // 根據稀有度決定技能數量：common=1, rare=2, elite/boss/legendary=3
+            const skillCount = monsterRarity === "common" ? 1 : monsterRarity === "rare" ? 2 : 3;
+            const picked: string[] = [];
+            // 優先選同五行 attack 技能
+            const sameAttack = sameElement.filter(s => s.skillType === "attack");
+            if (sameAttack.length > 0) picked.push(sameAttack[Math.floor(Math.random() * sameAttack.length)].monsterSkillId);
+            // 補充同五行其他技能
+            const sameOther = sameElement.filter(s => !picked.includes(s.monsterSkillId));
+            while (picked.length < skillCount && sameOther.length > 0) {
+              const idx = Math.floor(Math.random() * sameOther.length);
+              picked.push(sameOther[idx].monsterSkillId);
+              sameOther.splice(idx, 1);
+            }
+            // 仍不夠則從其他五行補充
+            while (picked.length < skillCount && otherElement.length > 0) {
+              const idx = Math.floor(Math.random() * otherElement.length);
+              picked.push(otherElement[idx].monsterSkillId);
+              otherElement.splice(idx, 1);
+            }
+            skillId1 = picked[0] ?? "";
+            skillId2 = picked[1] ?? "";
+            skillId3 = picked[2] ?? "";
+            if (picked.length > 0) skillsLinked += picked.length;
+          }
+
           await db.insert(gameMonsterCatalog).values({
             monsterId, name: item.name ?? "未命名", wuxing: item.wuxing ?? "木",
             levelRange: item.levelRange ?? "1-5", rarity: item.rarity ?? "common",
             baseHp: item.baseHp ?? 100, baseAttack: item.baseAttack ?? 10,
             baseDefense: item.baseDefense ?? 5, baseSpeed: item.baseSpeed ?? 5,
             baseAccuracy: item.baseAccuracy ?? 80, baseMagicAttack: item.baseMagicAttack ?? 8,
+            skillId1, skillId2, skillId3,
             ...(item.resistWood !== undefined && { resistWood: item.resistWood }),
             ...(item.resistFire !== undefined && { resistFire: item.resistFire }),
             ...(item.resistEarth !== undefined && { resistEarth: item.resistEarth }),
@@ -843,7 +897,7 @@ export const gameCatalogAdminRouter = router({
           imported++;
         } catch (e) { console.error("[BulkImport] Monster error:", e); }
       }
-      return { imported, total: input.items.length };
+      return { imported, total: input.items.length, skillsLinked };
     }),
 
   bulkImportItems: adminProcedure
@@ -967,4 +1021,91 @@ export const gameCatalogAdminRouter = router({
       }
       return { imported, total: input.items.length };
     }),
+
+  // ═══════════════════════════════════════════════════════════════
+  // 圖鑑統計儀表板 API
+  // ═══════════════════════════════════════════════════════════════
+  getCatalogStats: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+    // 怪物統計
+    const monsterTotal = await db.select({ count: sql<number>`count(*)` }).from(gameMonsterCatalog);
+    const monsterByWuxing = await db.select({
+      wuxing: gameMonsterCatalog.wuxing,
+      count: sql<number>`count(*)`,
+    }).from(gameMonsterCatalog).groupBy(gameMonsterCatalog.wuxing);
+    const monsterByRarity = await db.select({
+      rarity: gameMonsterCatalog.rarity,
+      count: sql<number>`count(*)`,
+    }).from(gameMonsterCatalog).groupBy(gameMonsterCatalog.rarity);
+
+    // 道具統計
+    const itemTotal = await db.select({ count: sql<number>`count(*)` }).from(gameItemCatalog);
+    const itemByWuxing = await db.select({
+      wuxing: gameItemCatalog.wuxing,
+      count: sql<number>`count(*)`,
+    }).from(gameItemCatalog).groupBy(gameItemCatalog.wuxing);
+    const itemByRarity = await db.select({
+      rarity: gameItemCatalog.rarity,
+      count: sql<number>`count(*)`,
+    }).from(gameItemCatalog).groupBy(gameItemCatalog.rarity);
+
+    // 裝備統計
+    const equipTotal = await db.select({ count: sql<number>`count(*)` }).from(gameEquipmentCatalog);
+    const equipByWuxing = await db.select({
+      wuxing: gameEquipmentCatalog.wuxing,
+      count: sql<number>`count(*)`,
+    }).from(gameEquipmentCatalog).groupBy(gameEquipmentCatalog.wuxing);
+    const equipByRarity = await db.select({
+      rarity: gameEquipmentCatalog.rarity,
+      count: sql<number>`count(*)`,
+    }).from(gameEquipmentCatalog).groupBy(gameEquipmentCatalog.rarity);
+
+    // 技能統計
+    const skillTotal = await db.select({ count: sql<number>`count(*)` }).from(gameSkillCatalog);
+    const skillByWuxing = await db.select({
+      wuxing: gameSkillCatalog.wuxing,
+      count: sql<number>`count(*)`,
+    }).from(gameSkillCatalog).groupBy(gameSkillCatalog.wuxing);
+
+    // 成就統計
+    const achieveTotal = await db.select({ count: sql<number>`count(*)` }).from(gameAchievements);
+
+    // 魔物技能統計
+    const monsterSkillTotal = await db.select({ count: sql<number>`count(*)` }).from(gameMonsterSkillCatalog);
+    const monsterSkillByWuxing = await db.select({
+      wuxing: gameMonsterSkillCatalog.wuxing,
+      count: sql<number>`count(*)`,
+    }).from(gameMonsterSkillCatalog).groupBy(gameMonsterSkillCatalog.wuxing);
+
+    return {
+      monsters: {
+        total: monsterTotal[0]?.count ?? 0,
+        byWuxing: monsterByWuxing,
+        byRarity: monsterByRarity,
+      },
+      items: {
+        total: itemTotal[0]?.count ?? 0,
+        byWuxing: itemByWuxing,
+        byRarity: itemByRarity,
+      },
+      equipment: {
+        total: equipTotal[0]?.count ?? 0,
+        byWuxing: equipByWuxing,
+        byRarity: equipByRarity,
+      },
+      skills: {
+        total: skillTotal[0]?.count ?? 0,
+        byWuxing: skillByWuxing,
+      },
+      achievements: {
+        total: achieveTotal[0]?.count ?? 0,
+      },
+      monsterSkills: {
+        total: monsterSkillTotal[0]?.count ?? 0,
+        byWuxing: monsterSkillByWuxing,
+      },
+    };
+  }),
 });

@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE pvp_challenges ADD COLUMN IF NOT EXISTS `status` enum('pending','accepted','declined','timeout','completed') NOT NULL DEFAULT 'completed' AFTER `defender_name`;\nALTER TABLE pvp_challenges ADD COLUMN IF NOT EXISTS `exp_reward_challenger` int NOT NULL DEFAULT 0 AFTER `gold_reward`;\nALTER TABLE pvp_challenges ADD COLUMN IF NOT EXISTS `exp_reward_defender` int NOT NULL DEFAULT 0 AFTER `exp_reward_challenger`;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nALTER TABLE pvp_challenges ADD COLUMN IF NOT EXISTS `status` enum('pending','accepted','declined','timeout','completed') NOT NULL DEFAULT 'completed' AFTER `defender_name`;\nALTER TABLE pvp_challenges ADD COLUMN IF NOT EXISTS `exp_reward_challenger` int NOT NULL DEFAULT 0 AFTER `gold_reward`;\nALTER TABLE pvp_challenges ADD COLUMN IF NOT EXISTS `exp_reward_defender` int NOT NULL DEFAULT 0 AFTER `exp_reward_challenger`;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2617
+}

@@ -651,6 +651,13 @@ export function SharedNav({ currentPage }: SharedNavProps) {
     onError: () => toast.error("通知發送失敗，請稍後再試。"),
   });
 
+  // 取得玩家命盤主元素（用於過場動畫個人化）
+  const { data: agentStatusData } = trpc.gameWorld.getAgentStatus.useQuery(undefined, {
+    staleTime: 120000,
+    enabled: !!user,
+  });
+  const playerElement = agentStatusData?.agent?.dominantElement ?? "metal";
+
   // 取得用戶完整資訊（包含 planName）
   const { data: meData } = trpc.auth.me.useQuery(undefined, { staleTime: 60000 });
 
@@ -970,6 +977,7 @@ export function SharedNav({ currentPage }: SharedNavProps) {
               active={showTransition}
               targetPath="/game"
               onCancel={() => setShowTransition(false)}
+              dominantElement={playerElement}
             />
             {/* 通知鈴鐺 */}
             {user && <NotificationBell />}

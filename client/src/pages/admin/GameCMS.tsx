@@ -480,6 +480,7 @@ export default function GameCMS() {
             <TabsTrigger value="catalog-skills">✨ 技能圖鑑</TabsTrigger>
             <TabsTrigger value="catalog-achievements">🏆 成就系統</TabsTrigger>
             <TabsTrigger value="catalog-monster-skills">🐲 魔物技能</TabsTrigger>
+            <TabsTrigger value="catalog-stats">📊 圖鑑統計</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -498,6 +499,7 @@ export default function GameCMS() {
               <TabsContent value="catalog-skills"><SkillCatalogV2Tab /></TabsContent>
               <TabsContent value="catalog-achievements"><AchievementCatalogTab /></TabsContent>
               <TabsContent value="catalog-monster-skills"><MonsterSkillCatalogTab /></TabsContent>
+              <TabsContent value="catalog-stats"><CatalogStatsTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
@@ -1249,6 +1251,119 @@ function SkillCatalogTab() {
           </table>
         </div>
       )}
+    </div>
+  );
+}
+
+
+// ─── Catalog Stats Tab ────────────────────────────────────────────────────────
+function CatalogStatsTab() {
+  const { data, isLoading } = trpc.gameCatalog.getCatalogStats.useQuery();
+
+  const WUXING_EMOJI: Record<string, string> = { "木": "🌿", "火": "🔥", "土": "🏔️", "金": "⚔️", "水": "💧" };
+  const WUXING_COLORS_BAR: Record<string, string> = {
+    "木": "#22c55e", "火": "#ef4444", "土": "#eab308", "金": "#94a3b8", "水": "#3b82f6",
+  };
+  const RARITY_COLORS: Record<string, string> = {
+    common: "#94a3b8", rare: "#3b82f6", elite: "#a855f7", boss: "#ef4444", legendary: "#f59e0b", epic: "#a855f7",
+  };
+  const RARITY_LABELS: Record<string, string> = {
+    common: "普通", rare: "稀有", elite: "精英", boss: "首領", legendary: "傳說", epic: "史詩",
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-12 text-muted-foreground">載入統計資料中…</div>;
+  }
+  if (!data) {
+    return <div className="text-center py-12 text-muted-foreground">無法載入統計資料</div>;
+  }
+
+  const catalogs = [
+    { key: "monsters", label: "🐉 魔物圖鑑", total: data.monsters.total, byWuxing: data.monsters.byWuxing, byRarity: data.monsters.byRarity },
+    { key: "items", label: "🎒 道具圖鑑", total: data.items.total, byWuxing: data.items.byWuxing, byRarity: data.items.byRarity },
+    { key: "equipment", label: "⚔️ 裝備圖鑑", total: data.equipment.total, byWuxing: data.equipment.byWuxing, byRarity: data.equipment.byRarity },
+    { key: "skills", label: "✨ 技能圖鑑", total: data.skills.total, byWuxing: data.skills.byWuxing, byRarity: undefined },
+    { key: "monsterSkills", label: "🐲 魔物技能", total: data.monsterSkills.total, byWuxing: data.monsterSkills.byWuxing, byRarity: undefined },
+    { key: "achievements", label: "🏆 成就系統", total: data.achievements.total, byWuxing: undefined, byRarity: undefined },
+  ];
+
+  const grandTotal = catalogs.reduce((sum, c) => sum + c.total, 0);
+
+  return (
+    <div className="space-y-6">
+      {/* 總覽卡片 */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {catalogs.map((c) => (
+          <div key={c.key} className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-center">
+            <div className="text-2xl font-black text-amber-400">{c.total}</div>
+            <div className="text-xs text-muted-foreground mt-1">{c.label}</div>
+          </div>
+        ))}
+      </div>
+      <div className="text-center text-sm text-muted-foreground">
+        圖鑑總資料量：<span className="text-amber-400 font-bold">{grandTotal}</span> 筆
+      </div>
+
+      {/* 各圖鑑詳細統計 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {catalogs.filter(c => c.byWuxing).map((catalog) => (
+          <div key={catalog.key} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <h3 className="text-sm font-bold mb-3">{catalog.label} — 五行分布</h3>
+            <div className="space-y-2">
+              {(catalog.byWuxing ?? []).map((item: { wuxing: string; count: number }) => {
+                const maxCount = Math.max(...(catalog.byWuxing ?? []).map((w: { count: number }) => w.count), 1);
+                const pct = (item.count / maxCount) * 100;
+                return (
+                  <div key={item.wuxing} className="flex items-center gap-2">
+                    <span className="w-8 text-center text-sm">{WUXING_EMOJI[item.wuxing] ?? "?"}</span>
+                    <span className="w-8 text-xs text-muted-foreground">{item.wuxing}</span>
+                    <div className="flex-1 h-5 bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${pct}%`, backgroundColor: WUXING_COLORS_BAR[item.wuxing] ?? "#888" }}
+                      />
+                    </div>
+                    <span className="w-8 text-right text-xs font-bold" style={{ color: WUXING_COLORS_BAR[item.wuxing] ?? "#888" }}>
+                      {item.count}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 稀有度分布 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {catalogs.filter(c => c.byRarity && (c.byRarity as { rarity: string; count: number }[]).length > 0).map((catalog) => (
+          <div key={catalog.key + "-rarity"} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <h3 className="text-sm font-bold mb-3">{catalog.label} — 稀有度分布</h3>
+            <div className="space-y-2">
+              {(catalog.byRarity as { rarity: string; count: number }[] ?? []).map((item) => {
+                const maxCount = Math.max(...(catalog.byRarity as { rarity: string; count: number }[]).map(r => r.count), 1);
+                const pct = (item.count / maxCount) * 100;
+                return (
+                  <div key={item.rarity} className="flex items-center gap-2">
+                    <span className="w-12 text-xs" style={{ color: RARITY_COLORS[item.rarity] ?? "#888" }}>
+                      {RARITY_LABELS[item.rarity] ?? item.rarity}
+                    </span>
+                    <div className="flex-1 h-5 bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${pct}%`, backgroundColor: RARITY_COLORS[item.rarity] ?? "#888" }}
+                      />
+                    </div>
+                    <span className="w-8 text-right text-xs font-bold" style={{ color: RARITY_COLORS[item.rarity] ?? "#888" }}>
+                      {item.count}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

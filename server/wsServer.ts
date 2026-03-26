@@ -22,6 +22,9 @@ export type WsMessageType =
   | "world_event"
   | "achievement"
   | "pvp_result"
+  | "pvp_challenge"       // PVP 挑戰請求（發送給被挑戰者）
+  | "pvp_challenge_response" // PVP 挑戰回應（接受/拒絕/逾時）
+  | "pvp_challenge_cancelled" // PVP 挑戰取消（逾時自動取消）
   | "live_feed"       // 全服即時動態（升級/成就/傳說掉落/PvP勝利/週冠軍）
   | "achievement_unlock" // 專屬成就解鎖通知（僅發送給解鎖者）
   | "ping"

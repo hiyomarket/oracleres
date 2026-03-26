@@ -2487,12 +2487,18 @@ export const pvpChallenges = mysqlTable("pvp_challenges", {
   defenderAgentId: int("defender_agent_id").notNull(),
   /** 被挑戰者名稱 */
   defenderName: varchar("defender_name", { length: 50 }).notNull(),
+  /** 挑戰狀態：pending=等待回應 / accepted=已接受 / declined=已拒絕 / timeout=逾時 / completed=已完成 */
+  status: mysqlEnum("status", ["pending", "accepted", "declined", "timeout", "completed"]).notNull().default("completed"),
   /** 結果（challenger_win / defender_win / draw） */
   result: mysqlEnum("result", ["challenger_win", "defender_win", "draw"]).notNull(),
   /** 戰鬥詳情 JSON */
   battleLog: json("battle_log"),
   /** 挑戰者獲得的金幣獎勵 */
   goldReward: int("gold_reward").notNull().default(0),
+  /** 挑戰者獲得的經驗獎勵 */
+  expRewardChallenger: int("exp_reward_challenger").notNull().default(0),
+  /** 被挑戰者獲得的經驗獎勵 */
+  expRewardDefender: int("exp_reward_defender").notNull().default(0),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
 export type PvpChallenge = typeof pvpChallenges.$inferSelect;

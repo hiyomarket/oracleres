@@ -21,6 +21,7 @@ import { CombatWindow, useCombatWindowSettings } from "@/components/CombatWindow
 import type { CombatWindowData } from "@/components/CombatWindow";
 import { GlobalChat } from "@/components/GlobalChat";
 import ItemDetailModal from "@/components/ItemDetailModal";
+import { PvpChallengeButton, PvpIncomingChallenge, PlayerInfoCard } from "@/components/PvpChallengeSystem";
 
 /// ─── 經驗升級公式（和後端 tickEngine.ts 相同） ───
 function calcExpToNextFn(level: number): number {
@@ -2338,6 +2339,73 @@ export default function VirtualWorldPage() {
           setAchievementEffect({ name: payload.name, icon: payload.icon, desc: payload.desc });
           setTimeout(() => setAchievementEffect(null), 5000);
         }
+      } else if (msg.type === "pvp_challenge") {
+        // 收到 PVP 挑戰請求
+        const payload = msg.payload as {
+          challengeId: number;
+          challengerAgentId: number;
+          challengerName: string;
+          challengerLevel?: number;
+          challengerElement?: string;
+        };
+        setPvpIncoming({
+          challengeId: payload.challengeId,
+          challengerName: payload.challengerName,
+          challengerLevel: payload.challengerLevel,
+          challengerElement: payload.challengerElement,
+        });
+      } else if (msg.type === "pvp_challenge_cancelled") {
+        // PVP 挑戰逾時或取消
+        setPvpIncoming(null);
+        const payload = msg.payload as { reason?: string; defenderName?: string; challengerName?: string };
+        if (payload.reason === "timeout") {
+          toast.info("挑戰已逾時", { duration: 2000 });
+        }
+      } else if (msg.type === "pvp_challenge_response") {
+        // 收到對方的挑戰回應（挑戰者端）
+        const payload = msg.payload as {
+          accepted: boolean;
+          challengeId?: number;
+          result?: string;
+          battleLog?: string[];
+          challengerName?: string;
+          defenderName?: string;
+          goldReward?: number;
+          expChallenger?: number;
+          expDefender?: number;
+        };
+        if (payload.accepted && payload.result) {
+          const isWin = payload.result === "challenger_win";
+          toast[isWin ? "success" : "info"](
+            isWin ? `⚔️ 你擊敗了 ${payload.defenderName}！+${payload.expChallenger ?? 0} EXP` :
+            payload.result === "draw" ? `⚔️ 與 ${payload.defenderName} 戰成平手` :
+            `⚔️ 被 ${payload.defenderName} 擊敗，+${payload.expChallenger ?? 0} EXP`,
+            { duration: 4000 }
+          );
+          utils.gameWorld.getAgentStatus.invalidate();
+          utils.gameWorld.getPvpHistory.invalidate();
+          utils.gameWorld.getMyPvpStats.invalidate();
+        } else if (!payload.accepted) {
+          toast.info(`${payload.defenderName ?? "對方"} 拒絕了你的挑戰`, { duration: 2000 });
+        }
+      } else if (msg.type === "pvp_result") {
+        // 被挑戰者收到戰鬥結果
+        const payload = msg.payload as {
+          result?: string;
+          challengerName?: string;
+          defenderName?: string;
+          expDefender?: number;
+        };
+        const isWin = payload.result === "defender_win";
+        toast[isWin ? "success" : "info"](
+          isWin ? `⚔️ 你擊敗了 ${payload.challengerName}！+${payload.expDefender ?? 0} EXP` :
+          payload.result === "draw" ? `⚔️ 與 ${payload.challengerName} 戰成平手` :
+          `⚔️ 被 ${payload.challengerName} 擊敗，+${payload.expDefender ?? 0} EXP`,
+          { duration: 4000 }
+        );
+        utils.gameWorld.getAgentStatus.invalidate();
+        utils.gameWorld.getPvpHistory.invalidate();
+        utils.gameWorld.getMyPvpStats.invalidate();
       }
     },
     enabled: !!agent?.id,
@@ -2349,6 +2417,14 @@ export default function VirtualWorldPage() {
   const [showQuickTeleport, setShowQuickTeleport] = useState(false);
   const [selectedTeleportNode, setSelectedTeleportNode] = useState<string | null>(null);
   const [showHiddenShopModal, setShowHiddenShopModal] = useState(false);
+  // PVP 挑戰系統 state
+  const [pvpIncoming, setPvpIncoming] = useState<{
+    challengeId: number;
+    challengerName: string;
+    challengerLevel?: number;
+    challengerElement?: string;
+  } | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<typeof nearbyPlayers[number] | null>(null);
   const [dismissedBroadcasts, setDismissedBroadcasts] = useState<Set<number>>(new Set());
 
   // 全服廣播輪詢（20 秒一次）
@@ -2962,15 +3038,15 @@ export default function VirtualWorldPage() {
                 />
               )}
 
-              {/* 在線玩家浮動面板：地圖右下角 */}
+              {/* 在線玩家浮動面板：地圖右下角（含 PVP 挑戰按鈕） */}
               {nearbyPlayers.length > 0 && (
                 <div
                   className="absolute z-[390] flex flex-col"
                   style={{
                     bottom: "72px",
                     right: "56px",
-                    maxWidth: "160px",
-                    background: "rgba(6,10,22,0.88)",
+                    maxWidth: "200px",
+                    background: "rgba(6,10,22,0.92)",
                     backdropFilter: "blur(10px)",
                     border: "1px solid rgba(245,158,11,0.25)",
                     borderRadius: "10px",
@@ -2983,26 +3059,50 @@ export default function VirtualWorldPage() {
                     <span className="text-amber-300 text-xs font-semibold">在線旅人</span>
                     <span className="text-xs text-slate-500 ml-auto">{nearbyPlayers.length}</span>
                   </div>
-                  <div className="flex flex-col gap-1 max-h-32 overflow-y-auto">
-                    {nearbyPlayers.slice(0, 8).map(p => {
+                  <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
+                    {nearbyPlayers.slice(0, 10).map(p => {
                       const elColors: Record<string, string> = { wood: "#22c55e", fire: "#ef4444", earth: "#eab308", metal: "#94a3b8", water: "#3b82f6" };
                       const elC = elColors[p.element] ?? "#94a3b8";
                       const isSameNode = p.nodeId === currentNodeId;
                       return (
-                        <div key={p.id} className="flex items-center gap-1.5">
-                          <div
-                            className="w-1.5 h-1.5 rounded-full shrink-0"
-                            style={{ background: isSameNode ? "#22c55e" : elC }}
-                          />
-                          <span className="text-[10px] truncate" style={{ color: isSameNode ? "#86efac" : "#94a3b8" }}>
+                        <div key={p.id} className="flex items-center gap-1.5 group">
+                          {/* 點擊頭像查看角色資訊 */}
+                          <button
+                            className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[8px] transition-all hover:scale-110"
+                            style={{
+                              background: `${elC}30`,
+                              border: `1px solid ${elC}60`,
+                              cursor: "pointer",
+                            }}
+                            onClick={(e) => { e.stopPropagation(); setSelectedPlayer(p); }}
+                            title={`查看 ${p.agentName} 的資訊`}
+                          >
+                            {p.avatarUrl ? (
+                              <img src={p.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                            ) : (
+                              <span>{({ wood: "🌿", fire: "🔥", earth: "⛰️", metal: "⚔️", water: "💧" } as Record<string, string>)[p.element ?? "metal"] ?? "👤"}</span>
+                            )}
+                          </button>
+                          <span
+                            className="text-[10px] truncate cursor-pointer hover:underline"
+                            style={{ color: isSameNode ? "#86efac" : "#94a3b8" }}
+                            onClick={() => setSelectedPlayer(p)}
+                          >
                             {p.agentName}
                           </span>
-                          {isSameNode && <span className="text-[9px] text-green-500 ml-auto shrink-0">此地</span>}
+                          <span className="text-[8px] text-slate-600 ml-auto">Lv.{p.level}</span>
+                          {isSameNode && <span className="text-[8px] text-green-500 shrink-0">此地</span>}
+                          {/* PVP 挑戰按鈕 */}
+                          <PvpChallengeButton
+                            targetAgentId={p.id}
+                            targetName={p.agentName}
+                            myAgentId={agent?.id}
+                          />
                         </div>
                       );
                     })}
-                    {nearbyPlayers.length > 8 && (
-                      <div className="text-[9px] text-slate-600 text-center mt-1">+{nearbyPlayers.length - 8} 位旅人</div>
+                    {nearbyPlayers.length > 10 && (
+                      <div className="text-[9px] text-slate-600 text-center mt-1">+{nearbyPlayers.length - 10} 位旅人</div>
                     )}
                   </div>
                 </div>
@@ -3602,6 +3702,25 @@ export default function VirtualWorldPage() {
           </div>
         </div>
       </div>
+      {/* PVP 挑戰彈窗：被挑戰時顯示 */}
+      {pvpIncoming && (
+        <PvpIncomingChallenge
+          challengeId={pvpIncoming.challengeId}
+          challengerName={pvpIncoming.challengerName}
+          challengerLevel={pvpIncoming.challengerLevel}
+          challengerElement={pvpIncoming.challengerElement}
+          onDismiss={() => setPvpIncoming(null)}
+        />
+      )}
+
+      {/* 玩家資訊卡片：點擊頭像時顯示 */}
+      {selectedPlayer && (
+        <PlayerInfoCard
+          player={selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+          myAgentId={agent?.id}
+        />
+      )}
     </GameTabLayout>
   );
 }

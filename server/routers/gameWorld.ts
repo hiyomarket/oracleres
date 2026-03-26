@@ -490,48 +490,388 @@ export const gameWorldRouter = router({
 
   // ─── 取得全服世界狀態 ───
   // ─── PvP 挑戰 ───
-  challengePvp: protectedProcedure
+  // ═══════════════════════════════════════════════════════════════
+  // PVP 挑戰系統 v2（即時挑戰 + 應戰 + 倒數 + 冷卻 + 經驗獎勵）
+  // ═══════════════════════════════════════════════════════════════
+
+  /** 發起 PVP 挑戰（創建 pending 記錄，透過 WS 通知被挑戰者） */
+  sendPvpChallenge: protectedProcedure
     .input(z.object({ defenderAgentId: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
-      // 取得挑戰者角色
       const challengerRows = await db.select().from(gameAgents)
         .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
       const challenger = challengerRows[0];
       if (!challenger) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
       if (!challenger.isNamed) throw new TRPCError({ code: "BAD_REQUEST", message: "請先命名角色" });
 
-      // 取得被挑戰者角色
       const defenderRows = await db.select().from(gameAgents)
         .where(eq(gameAgents.id, input.defenderAgentId)).limit(1);
       const defender = defenderRows[0];
       if (!defender) throw new TRPCError({ code: "NOT_FOUND", message: "對手角色不存在" });
       if (challenger.id === defender.id) throw new TRPCError({ code: "BAD_REQUEST", message: "不能挑戰自己" });
 
-      // 簡易戰鬥計算：依據攻防速度計算輸贏
+      // 檢查 1 小時冷卻：同一對玩家 1 小時內不能重複挑戰
+      const ONE_HOUR = 60 * 60 * 1000;
+      const recentPvp = await db.select({ id: pvpChallenges.id }).from(pvpChallenges)
+        .where(and(
+          gt(pvpChallenges.createdAt, Date.now() - ONE_HOUR),
+          sql`(
+            (${pvpChallenges.challengerAgentId} = ${challenger.id} AND ${pvpChallenges.defenderAgentId} = ${defender.id})
+            OR
+            (${pvpChallenges.challengerAgentId} = ${defender.id} AND ${pvpChallenges.defenderAgentId} = ${challenger.id})
+          )`,
+          sql`${pvpChallenges.status} IN ('completed', 'accepted', 'pending')`
+        ))
+        .limit(1);
+      if (recentPvp.length > 0) {
+        throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "您與該玩家在 1 小時內已有對戰記錄，請稍後再試" });
+      }
+
+      // 檢查是否有其他 pending 挑戰
+      const pendingChallenges = await db.select({ id: pvpChallenges.id }).from(pvpChallenges)
+        .where(and(
+          eq(pvpChallenges.status, "pending"),
+          sql`(${pvpChallenges.challengerAgentId} = ${challenger.id} OR ${pvpChallenges.defenderAgentId} = ${challenger.id})`
+        ))
+        .limit(1);
+      if (pendingChallenges.length > 0) {
+        throw new TRPCError({ code: "CONFLICT", message: "您已有進行中的挑戰，請等待結束" });
+      }
+
+      // 創建 pending 挑戰記錄
+      const [inserted] = await db.insert(pvpChallenges).values({
+        challengerAgentId: challenger.id,
+        challengerName: challenger.agentName ?? "旅人",
+        defenderAgentId: defender.id,
+        defenderName: defender.agentName ?? "旅人",
+        status: "pending",
+        result: "draw", // 暫時預設，完成後更新
+        goldReward: 0,
+        expRewardChallenger: 0,
+        expRewardDefender: 0,
+        createdAt: Date.now(),
+      });
+      const challengeId = inserted.insertId;
+
+      // 透過 WS 通知被挑戰者
+      try {
+        sendToAgent(defender.id, {
+          type: "pvp_challenge" as const,
+          payload: {
+            challengeId: Number(challengeId),
+            challengerAgentId: challenger.id,
+            challengerName: challenger.agentName ?? "旅人",
+            challengerLevel: challenger.level,
+            challengerElement: challenger.dominantElement ?? "metal",
+            challengerAvatarUrl: challenger.avatarUrl ?? "",
+          },
+        });
+      } catch { /* WS 失敗不影響流程 */ }
+
+      // 5 秒後自動逾時
+      setTimeout(async () => {
+        try {
+          const db2 = await getDb();
+          if (!db2) return;
+          const rows = await db2.select().from(pvpChallenges)
+            .where(and(eq(pvpChallenges.id, Number(challengeId)), eq(pvpChallenges.status, "pending")))
+            .limit(1);
+          if (rows[0]) {
+            await db2.update(pvpChallenges)
+              .set({ status: "timeout" })
+              .where(eq(pvpChallenges.id, Number(challengeId)));
+            // 通知雙方逾時
+            sendToAgent(challenger.id, {
+              type: "pvp_challenge_cancelled" as const,
+              payload: { challengeId: Number(challengeId), reason: "timeout", defenderName: defender.agentName ?? "旅人" },
+            });
+            sendToAgent(defender.id, {
+              type: "pvp_challenge_cancelled" as const,
+              payload: { challengeId: Number(challengeId), reason: "timeout", challengerName: challenger.agentName ?? "旅人" },
+            });
+          }
+        } catch (e) { console.error("[PvP] timeout handler error:", e); }
+      }, 5000);
+
+      return {
+        challengeId: Number(challengeId),
+        defenderName: defender.agentName ?? "旅人",
+        defenderLevel: defender.level,
+        defenderElement: defender.dominantElement ?? "metal",
+      };
+    }),
+
+  /** 回應 PVP 挑戰（接受或拒絕） */
+  respondPvpChallenge: protectedProcedure
+    .input(z.object({
+      challengeId: z.number(),
+      accept: z.boolean(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // 取得挑戰記錄
+      const challengeRows = await db.select().from(pvpChallenges)
+        .where(eq(pvpChallenges.id, input.challengeId)).limit(1);
+      const challenge = challengeRows[0];
+      if (!challenge) throw new TRPCError({ code: "NOT_FOUND", message: "挑戰記錄不存在" });
+      if (challenge.status !== "pending") throw new TRPCError({ code: "BAD_REQUEST", message: "挑戰已結束或已回應" });
+
+      // 驗證是被挑戰者
+      const defenderRows = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const defender = defenderRows[0];
+      if (!defender || defender.id !== challenge.defenderAgentId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "您不是被挑戰者" });
+      }
+
+      if (!input.accept) {
+        // 拒絕挑戰
+        await db.update(pvpChallenges)
+          .set({ status: "declined" })
+          .where(eq(pvpChallenges.id, input.challengeId));
+        // 通知挑戰者
+        sendToAgent(challenge.challengerAgentId, {
+          type: "pvp_challenge_response" as const,
+          payload: { challengeId: input.challengeId, accepted: false, defenderName: defender.agentName ?? "旅人" },
+        });
+        return { accepted: false, result: null };
+      }
+
+      // 接受挑戰 → 執行戰鬥
+      const challengerRows = await db.select().from(gameAgents)
+        .where(eq(gameAgents.id, challenge.challengerAgentId)).limit(1);
+      const challenger = challengerRows[0];
+      if (!challenger) throw new TRPCError({ code: "NOT_FOUND", message: "挑戰者角色不存在" });
+
+      // 戰鬥計算（模擬 5 回合）
       const cAtk = challenger.attack + Math.floor(challenger.level * 2);
       const cDef = challenger.defense;
       const cHp = challenger.maxHp;
       const cSpd = challenger.speed;
-
       const dAtk = defender.attack + Math.floor(defender.level * 2);
       const dDef = defender.defense;
       const dHp = defender.maxHp;
       const dSpd = defender.speed;
 
-      // 模擬 5 回合戰鬥
       let cHpCur = cHp, dHpCur = dHp;
       const battleLog: string[] = [];
       for (let round = 1; round <= 5; round++) {
-        // 挑戰者攻擊
+        // 速度高者先攻
+        const first = cSpd >= dSpd ? "challenger" : "defender";
+        const second = first === "challenger" ? "defender" : "challenger";
+        for (const who of [first, second]) {
+          if (who === "challenger") {
+            const dmg = Math.max(1, cAtk - Math.floor(dDef * 0.5) + Math.floor(Math.random() * 5));
+            dHpCur -= dmg;
+            battleLog.push(`第${round}回合：${challenger.agentName ?? "旅人"} 攻擊 ${dmg} 點`);
+            if (dHpCur <= 0) { battleLog.push(`${defender.agentName ?? "旅人"} 戰敗！`); break; }
+          } else {
+            const dmg = Math.max(1, dAtk - Math.floor(cDef * 0.5) + Math.floor(Math.random() * 5));
+            cHpCur -= dmg;
+            battleLog.push(`第${round}回合：${defender.agentName ?? "旅人"} 攻擊 ${dmg} 點`);
+            if (cHpCur <= 0) { battleLog.push(`${challenger.agentName ?? "旅人"} 戰敗！`); break; }
+          }
+        }
+        if (cHpCur <= 0 || dHpCur <= 0) break;
+      }
+
+      // 判定結果
+      let result: "challenger_win" | "defender_win" | "draw";
+      if (cHpCur > dHpCur) result = "challenger_win";
+      else if (dHpCur > cHpCur) result = "defender_win";
+      else result = "draw";
+
+      // 經驗獎勵（輸贏都有，勝者多）
+      const baseExp = 15;
+      const levelDiffBonus = Math.abs(challenger.level - defender.level) * 2;
+      let expChallenger = baseExp + levelDiffBonus;
+      let expDefender = baseExp + levelDiffBonus;
+      if (result === "challenger_win") {
+        expChallenger = Math.floor(expChallenger * 1.5);
+      } else if (result === "defender_win") {
+        expDefender = Math.floor(expDefender * 1.5);
+      }
+
+      // 金幣獎勵（僅勝者）
+      const goldReward = result === "challenger_win"
+        ? Math.floor(50 + defender.level * 10)
+        : result === "defender_win"
+          ? Math.floor(50 + challenger.level * 10)
+          : 10;
+
+      // 更新雙方經驗和金幣
+      await db.update(gameAgents).set({
+        exp: challenger.exp + expChallenger,
+        gold: result === "challenger_win" ? challenger.gold + goldReward : challenger.gold,
+        updatedAt: Date.now(),
+      }).where(eq(gameAgents.id, challenger.id));
+      await db.update(gameAgents).set({
+        exp: defender.exp + expDefender,
+        gold: result === "defender_win" ? defender.gold + goldReward : defender.gold,
+        updatedAt: Date.now(),
+      }).where(eq(gameAgents.id, defender.id));
+
+      // 更新挑戰記錄
+      await db.update(pvpChallenges).set({
+        status: "completed",
+        result,
+        battleLog,
+        goldReward,
+        expRewardChallenger: expChallenger,
+        expRewardDefender: expDefender,
+      }).where(eq(pvpChallenges.id, input.challengeId));
+
+      // 更新 PvP 戰績統計
+      try {
+        await updatePvpStats(challenger.id, defender.id, result);
+      } catch (e) {
+        console.error("[PvP] updatePvpStats error:", e);
+      }
+
+      // WS 通知雙方戰鬥結果
+      const pvpResultPayload = {
+        challengeId: input.challengeId,
+        challengerName: challenger.agentName ?? "旅人",
+        defenderName: defender.agentName ?? "旅人",
+        result,
+        battleLog,
+        goldReward,
+        expChallenger,
+        expDefender,
+      };
+      try {
+        sendToAgent(challenger.id, { type: "pvp_challenge_response" as const, payload: { ...pvpResultPayload, accepted: true } });
+        sendToAgent(defender.id, { type: "pvp_result" as const, payload: pvpResultPayload });
+      } catch { /* 忽略 */ }
+
+      // live_feed 廣播
+      const winnerName = result === "challenger_win" ? challenger.agentName : result === "defender_win" ? defender.agentName : null;
+      if (winnerName) {
+        try {
+          broadcastPvpWin({
+            agentId: result === "challenger_win" ? challenger.id : defender.id,
+            agentName: winnerName ?? "旅人",
+            agentElement: (result === "challenger_win" ? challenger.dominantElement : defender.dominantElement) ?? "wood",
+            agentLevel: result === "challenger_win" ? challenger.level : defender.level,
+            defenderName: result === "challenger_win" ? (defender.agentName ?? "旅人") : (challenger.agentName ?? "旅人"),
+          });
+        } catch { }
+      }
+
+      return {
+        accepted: true,
+        result,
+        battleLog,
+        goldReward,
+        expChallenger,
+        expDefender,
+        challengerName: challenger.agentName ?? "旅人",
+        defenderName: defender.agentName ?? "旅人",
+      };
+    }),
+
+  /** 查詢與某玩家的 PVP 冷卻狀態 */
+  getPvpCooldown: protectedProcedure
+    .input(z.object({ targetAgentId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return { onCooldown: false, remainingMs: 0 };
+
+      const agentRows = await db.select({ id: gameAgents.id })
+        .from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agentRows[0]) return { onCooldown: false, remainingMs: 0 };
+      const myId = agentRows[0].id;
+
+      const ONE_HOUR = 60 * 60 * 1000;
+      const cutoff = Date.now() - ONE_HOUR;
+      const recent = await db.select({ createdAt: pvpChallenges.createdAt }).from(pvpChallenges)
+        .where(and(
+          gt(pvpChallenges.createdAt, cutoff),
+          sql`(
+            (${pvpChallenges.challengerAgentId} = ${myId} AND ${pvpChallenges.defenderAgentId} = ${input.targetAgentId})
+            OR
+            (${pvpChallenges.challengerAgentId} = ${input.targetAgentId} AND ${pvpChallenges.defenderAgentId} = ${myId})
+          )`,
+          sql`${pvpChallenges.status} IN ('completed', 'accepted', 'pending')`
+        ))
+        .orderBy(desc(pvpChallenges.createdAt))
+        .limit(1);
+
+      if (recent.length > 0) {
+        const remainingMs = Math.max(0, (recent[0].createdAt + ONE_HOUR) - Date.now());
+        return { onCooldown: true, remainingMs };
+      }
+      return { onCooldown: false, remainingMs: 0 };
+    }),
+
+  /** 查詢當前是否有待處理的 PVP 挑戰 */
+  getPendingPvpChallenge: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) return null;
+
+    const agentRows = await db.select({ id: gameAgents.id })
+      .from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    if (!agentRows[0]) return null;
+    const myId = agentRows[0].id;
+
+    const pending = await db.select().from(pvpChallenges)
+      .where(and(
+        eq(pvpChallenges.status, "pending"),
+        eq(pvpChallenges.defenderAgentId, myId),
+        gt(pvpChallenges.createdAt, Date.now() - 10000) // 只查 10 秒內的
+      ))
+      .orderBy(desc(pvpChallenges.createdAt))
+      .limit(1);
+
+    if (!pending[0]) return null;
+    return {
+      challengeId: pending[0].id,
+      challengerAgentId: pending[0].challengerAgentId,
+      challengerName: pending[0].challengerName,
+      createdAt: pending[0].createdAt,
+    };
+  }),
+
+  /** 舊版相容：直接 PVP（對 NPC 或舊流程） */
+  challengePvp: protectedProcedure
+    .input(z.object({ defenderAgentId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      const challengerRows = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const challenger = challengerRows[0];
+      if (!challenger) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      if (!challenger.isNamed) throw new TRPCError({ code: "BAD_REQUEST", message: "請先命名角色" });
+
+      const defenderRows = await db.select().from(gameAgents)
+        .where(eq(gameAgents.id, input.defenderAgentId)).limit(1);
+      const defender = defenderRows[0];
+      if (!defender) throw new TRPCError({ code: "NOT_FOUND", message: "對手角色不存在" });
+      if (challenger.id === defender.id) throw new TRPCError({ code: "BAD_REQUEST", message: "不能挑戰自己" });
+
+      const cAtk = challenger.attack + Math.floor(challenger.level * 2);
+      const cDef = challenger.defense;
+      const cHp = challenger.maxHp;
+      const cSpd = challenger.speed;
+      const dAtk = defender.attack + Math.floor(defender.level * 2);
+      const dDef = defender.defense;
+      const dHp = defender.maxHp;
+      const dSpd = defender.speed;
+
+      let cHpCur = cHp, dHpCur = dHp;
+      const battleLog: string[] = [];
+      for (let round = 1; round <= 5; round++) {
         const cDmg = Math.max(1, cAtk - Math.floor(dDef * 0.5) + Math.floor(Math.random() * 5));
         dHpCur -= cDmg;
         battleLog.push(`第${round}回合：${challenger.agentName ?? "旅人"} 攻擊 ${cDmg} 點`);
         if (dHpCur <= 0) { battleLog.push(`${defender.agentName ?? "旅人"} 戰敗！`); break; }
-
-        // 被挑戰者攻擊（速度高者先攻）
         if (dSpd >= cSpd) {
           const dDmg = Math.max(1, dAtk - Math.floor(cDef * 0.5) + Math.floor(Math.random() * 5));
           cHpCur -= dDmg;
@@ -540,74 +880,53 @@ export const gameWorldRouter = router({
         }
       }
 
-      // 判定輸贏
       let result: "challenger_win" | "defender_win" | "draw";
       if (cHpCur > dHpCur) result = "challenger_win";
       else if (dHpCur > cHpCur) result = "defender_win";
       else result = "draw";
 
-      // 勝者經驗奖勵
+      const baseExp = 15;
+      const expChallenger = result === "challenger_win" ? Math.floor(baseExp * 1.5) : baseExp;
+      const expDefender = result === "defender_win" ? Math.floor(baseExp * 1.5) : baseExp;
       const goldReward = result === "challenger_win" ? Math.floor(50 + defender.level * 10) : 10;
+
       if (result === "challenger_win") {
         await db.update(gameAgents)
-          .set({ gold: challenger.gold + goldReward, exp: challenger.exp + Math.floor(defender.level * 5), updatedAt: Date.now() })
+          .set({ gold: challenger.gold + goldReward, exp: challenger.exp + expChallenger, updatedAt: Date.now() })
           .where(eq(gameAgents.id, challenger.id));
       }
+      await db.update(gameAgents).set({
+        exp: defender.exp + expDefender, updatedAt: Date.now(),
+      }).where(eq(gameAgents.id, defender.id));
 
-      // 儲存戰鬥記錄
       await db.insert(pvpChallenges).values({
         challengerAgentId: challenger.id,
         challengerName: challenger.agentName ?? "旅人",
         defenderAgentId: defender.id,
         defenderName: defender.agentName ?? "旅人",
+        status: "completed",
         result,
         battleLog,
         goldReward,
+        expRewardChallenger: expChallenger,
+        expRewardDefender: expDefender,
         createdAt: Date.now(),
       });
 
-      // 更新 PvP 戰績統計並觸發成就檢查
-      try {
-        await updatePvpStats(challenger.id, defender.id, result);
-      } catch (e) {
-        console.error("[PvP] updatePvpStats error:", e);
-      }
+      try { await updatePvpStats(challenger.id, defender.id, result); } catch (e) { console.error("[PvP] updatePvpStats error:", e); }
 
-      // WS 廣播 PvP 結果
       try {
-        const pvpMsg = {
-          type: "pvp_result" as const,
-          payload: {
-            challengerName: challenger.agentName ?? "旅人",
-            defenderName: defender.agentName ?? "旅人",
-            result,
-          },
-        };
+        const pvpMsg = { type: "pvp_result" as const, payload: { challengerName: challenger.agentName ?? "旅人", defenderName: defender.agentName ?? "旅人", result } };
         sendToAgent(challenger.id, pvpMsg);
         sendToAgent(defender.id, pvpMsg);
-      } catch {
-        // 忽略
-      }
-      // live_feed 廣播：PvP 勝利
+      } catch { }
       if (result === "challenger_win") {
         try {
-          broadcastPvpWin({
-            agentId: challenger.id,
-            agentName: challenger.agentName ?? "旅人",
-            agentElement: challenger.dominantElement ?? "wood",
-            agentLevel: challenger.level,
-            defenderName: defender.agentName ?? "旅人",
-          });
+          broadcastPvpWin({ agentId: challenger.id, agentName: challenger.agentName ?? "旅人", agentElement: challenger.dominantElement ?? "wood", agentLevel: challenger.level, defenderName: defender.agentName ?? "旅人" });
         } catch { }
       }
 
-      return {
-        result,
-        battleLog,
-        goldReward,
-        challengerName: challenger.agentName ?? "旅人",
-        defenderName: defender.agentName ?? "旅人",
-      };
+      return { result, battleLog, goldReward, expChallenger, expDefender, challengerName: challenger.agentName ?? "旅人", defenderName: defender.agentName ?? "旅人" };
     }),
 
   // ─── 取得 PvP 戰鬥歷史 ───
@@ -2132,6 +2451,10 @@ export const gameWorldRouter = router({
           dominantElement: gameAgents.dominantElement,
           avatarUrl: gameAgents.avatarUrl,
           level: gameAgents.level,
+          hp: gameAgents.hp,
+          maxHp: gameAgents.maxHp,
+          status: gameAgents.status,
+          strategy: gameAgents.strategy,
         })
         .from(gameAgents)
         .where(sql`${gameAgents.userId} != ${myUserId} AND ${gameAgents.updatedAt} > ${onlineThreshold} AND ${gameAgents.agentName} IS NOT NULL`)
@@ -2152,6 +2475,10 @@ export const gameWorldRouter = router({
           element: p.dominantElement,
           avatarUrl: p.avatarUrl,
           level: p.level,
+          hp: p.hp,
+          maxHp: p.maxHp,
+          status: p.status,
+          strategy: p.strategy,
         })),
       };
     }),
