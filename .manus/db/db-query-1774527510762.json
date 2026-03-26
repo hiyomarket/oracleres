@@ -1,0 +1,18 @@
+{
+  "query": "SELECT item_type, COUNT(*) as cnt FROM agent_inventory WHERE agent_id = 8 GROUP BY item_type;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_type, COUNT(*) as cnt FROM agent_inventory WHERE agent_id = 8 GROUP BY item_type;",
+  "rows": [
+    {
+      "item_type": "material",
+      "cnt": "27"
+    },
+    {
+      "item_type": "consumable",
+      "cnt": "5"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_type\tcnt\nmaterial\t27\nconsumable\t5\n",
+  "stderr": "",
+  "execution_time_ms": 1578
+}

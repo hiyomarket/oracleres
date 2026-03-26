@@ -1,0 +1,40 @@
+{
+  "query": "SELECT as2.id, as2.agent_id, as2.skill_id, as2.awake_tier, as2.use_count, as2.installed_slot, as2.acquired_at, gsc.name, gsc.wuxing, gsc.category, gsc.tier, gsc.mp_cost, gsc.skill_type FROM agent_skills as2 INNER JOIN game_skill_catalog gsc ON as2.skill_id = gsc.skill_id WHERE as2.agent_id = 8;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT as2.id, as2.agent_id, as2.skill_id, as2.awake_tier, as2.use_count, as2.installed_slot, as2.acquired_at, gsc.name, gsc.wuxing, gsc.category, gsc.tier, gsc.mp_cost, gsc.skill_type FROM agent_skills as2 INNER JOIN game_skill_catalog gsc ON as2.skill_id = gsc.skill_id WHERE as2.agent_id = 8;",
+  "rows": [
+    {
+      "id": "3",
+      "agent_id": "8",
+      "skill_id": "S_W005",
+      "awake_tier": "0",
+      "use_count": "0",
+      "installed_slot": "skillSlot3",
+      "acquired_at": "2026-03-26 09:05:14",
+      "name": "森林衝刺",
+      "wuxing": "木",
+      "category": "active_combat",
+      "tier": "中階",
+      "mp_cost": "20",
+      "skill_type": "attack"
+    },
+    {
+      "id": "4",
+      "agent_id": "8",
+      "skill_id": "S_F004",
+      "awake_tier": "0",
+      "use_count": "0",
+      "installed_slot": "skillSlot3",
+      "acquired_at": "2026-03-26 10:52:18",
+      "name": "狂暴之焰",
+      "wuxing": "火",
+      "category": "active_combat",
+      "tier": "中階",
+      "mp_cost": "25",
+      "skill_type": "buff"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_id\tskill_id\tawake_tier\tuse_count\tinstalled_slot\tacquired_at\tname\twuxing\tcategory\ttier\tmp_cost\tskill_type\n3\t8\tS_W005\t0\t0\tskillSlot3\t2026-03-26 09:05:14\t森林衝刺\t木\tactive_combat\t中階\t20\tattack\n4\t8\tS_F004\t0\t0\tskillSlot3\t2026-03-26 10:52:18\t狂暴之焰\t火\tactive_combat\t中階\t25\tbuff\n",
+  "stderr": "",
+  "execution_time_ms": 1560
+}

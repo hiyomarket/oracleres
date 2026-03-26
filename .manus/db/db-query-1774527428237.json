@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, agent_name, level, dominant_element, hp, max_hp, mp, max_mp, attack, defense, speed, magic_attack, gold, stamina, max_stamina, equipped_weapon, equipped_head, equipped_body, equipped_feet, equipped_ring_a, equipped_ring_b, equipped_necklace, equipped_amulet, equipped_offhand, equipped_hands FROM game_agents WHERE user_id = (SELECT id FROM users WHERE name LIKE '%祐震%' OR name LIKE '%主帳號%' LIMIT 1) LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_name, level, dominant_element, hp, max_hp, mp, max_mp, attack, defense, speed, magic_attack, gold, stamina, max_stamina, equipped_weapon, equipped_head, equipped_body, equipped_feet, equipped_ring_a, equipped_ring_b, equipped_necklace, equipped_amulet, equipped_offhand, equipped_hands FROM game_agents WHERE user_id = (SELECT id FROM users WHERE name LIKE '%祐震%' OR name LIKE '%主帳號%' LIMIT 1) LIMIT 1;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1613
+}

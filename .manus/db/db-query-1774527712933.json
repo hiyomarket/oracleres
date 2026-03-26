@@ -1,0 +1,80 @@
+{
+  "query": "SELECT equip_id, name, slot, wuxing, rarity FROM game_equipment_catalog LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT equip_id, name, slot, wuxing, rarity FROM game_equipment_catalog LIMIT 10;",
+  "rows": [
+    {
+      "equip_id": "E_W001",
+      "name": "木劍",
+      "slot": "weapon",
+      "wuxing": "木",
+      "rarity": "common"
+    },
+    {
+      "equip_id": "E_W002",
+      "name": "藤蔓弓",
+      "slot": "weapon",
+      "wuxing": "木",
+      "rarity": "common"
+    },
+    {
+      "equip_id": "E_W003",
+      "name": "樹皮帽",
+      "slot": "helmet",
+      "wuxing": "木",
+      "rarity": "common"
+    },
+    {
+      "equip_id": "E_W004",
+      "name": "粗布衣",
+      "slot": "armor",
+      "wuxing": "木",
+      "rarity": "common"
+    },
+    {
+      "equip_id": "E_W005",
+      "name": "草鞋",
+      "slot": "shoes",
+      "wuxing": "木",
+      "rarity": "common"
+    },
+    {
+      "equip_id": "E_W006",
+      "name": "綠葉護符",
+      "slot": "accessory",
+      "wuxing": "木",
+      "rarity": "common"
+    },
+    {
+      "equip_id": "E_W007",
+      "name": "古木長弓",
+      "slot": "weapon",
+      "wuxing": "木",
+      "rarity": "rare"
+    },
+    {
+      "equip_id": "E_W008",
+      "name": "毒牙匕首",
+      "slot": "weapon",
+      "wuxing": "木",
+      "rarity": "rare"
+    },
+    {
+      "equip_id": "E_W009",
+      "name": "荊棘頭冠",
+      "slot": "helmet",
+      "wuxing": "木",
+      "rarity": "rare"
+    },
+    {
+      "equip_id": "E_W010",
+      "name": "森猿皮甲",
+      "slot": "armor",
+      "wuxing": "木",
+      "rarity": "rare"
+    }
+  ],
+  "messages": [],
+  "stdout": "equip_id\tname\tslot\twuxing\trarity\nE_W001\t木劍\tweapon\t木\tcommon\nE_W002\t藤蔓弓\tweapon\t木\tcommon\nE_W003\t樹皮帽\thelmet\t木\tcommon\nE_W004\t粗布衣\tarmor\t木\tcommon\nE_W005\t草鞋\tshoes\t木\tcommon\nE_W006\t綠葉護符\taccessory\t木\tcommon\nE_W007\t古木長弓\tweapon\t木\trare\nE_W008\t毒牙匕首\tweapon\t木\trare\nE_W009\t荊棘頭冠\thelmet\t木\trare\nE_W010\t森猿皮甲\tarmor\t木\trare\n",
+  "stderr": "",
+  "execution_time_ms": 1520
+}

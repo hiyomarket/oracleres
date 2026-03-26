@@ -1,0 +1,37 @@
+{
+  "query": "SELECT id, agent_name, level, dominant_element, hp, max_hp, mp, max_mp, attack, defense, speed, magic_attack, gold, stamina, max_stamina, equipped_weapon, equipped_head, equipped_body, equipped_feet, equipped_ring_a, equipped_ring_b, equipped_necklace, equipped_amulet, equipped_offhand, equipped_hands FROM game_agents WHERE user_id = '1' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_name, level, dominant_element, hp, max_hp, mp, max_mp, attack, defense, speed, magic_attack, gold, stamina, max_stamina, equipped_weapon, equipped_head, equipped_body, equipped_feet, equipped_ring_a, equipped_ring_b, equipped_necklace, equipped_amulet, equipped_offhand, equipped_hands FROM game_agents WHERE user_id = '1' LIMIT 1;",
+  "rows": [
+    {
+      "id": "8",
+      "agent_name": "凜冬月",
+      "level": "11",
+      "dominant_element": "wood",
+      "hp": "319",
+      "max_hp": "330",
+      "mp": "95",
+      "max_mp": "153",
+      "attack": "44",
+      "defense": "50",
+      "speed": "14",
+      "magic_attack": "48",
+      "gold": "2003",
+      "stamina": "95",
+      "max_stamina": "100",
+      "equipped_weapon": "NULL",
+      "equipped_head": "NULL",
+      "equipped_body": "NULL",
+      "equipped_feet": "NULL",
+      "equipped_ring_a": "NULL",
+      "equipped_ring_b": "NULL",
+      "equipped_necklace": "NULL",
+      "equipped_amulet": "NULL",
+      "equipped_offhand": "NULL",
+      "equipped_hands": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_name\tlevel\tdominant_element\thp\tmax_hp\tmp\tmax_mp\tattack\tdefense\tspeed\tmagic_attack\tgold\tstamina\tmax_stamina\tequipped_weapon\tequipped_head\tequipped_body\tequipped_feet\tequipped_ring_a\tequipped_ring_b\tequipped_necklace\tequipped_amulet\tequipped_offhand\tequipped_hands\n8\t凜冬月\t11\twood\t319\t330\t95\t153\t44\t50\t14\t48\t2003\t95\t100\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1523
+}

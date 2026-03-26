@@ -1,0 +1,18 @@
+{
+  "query": "SELECT skill_slot_1, skill_slot_2, skill_slot_3, skill_slot_4, passive_slot_1, passive_slot_2 FROM game_agents WHERE id = 8;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_slot_1, skill_slot_2, skill_slot_3, skill_slot_4, passive_slot_1, passive_slot_2 FROM game_agents WHERE id = 8;",
+  "rows": [
+    {
+      "skill_slot_1": "wood-basic-atk",
+      "skill_slot_2": "S_F004",
+      "skill_slot_3": "S_F004",
+      "skill_slot_4": "S_W005",
+      "passive_slot_1": "wood-regen",
+      "passive_slot_2": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_slot_1\tskill_slot_2\tskill_slot_3\tskill_slot_4\tpassive_slot_1\tpassive_slot_2\nwood-basic-atk\tS_F004\tS_F004\tS_W005\twood-regen\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1553
+}

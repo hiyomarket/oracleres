@@ -1543,15 +1543,35 @@ export const gameWorldRouter = router({
         if (!owned[0]) {
           throw new TRPCError({ code: "FORBIDDEN", message: "尚未習得此技能，請先使用技能書學習" });
         }
-        // 同步裝備槽位記錄
-        await db.update(agentSkills)
-          .set({ installedSlot: input.slot })
-          .where(and(eq(agentSkills.agentId, agent.id), eq(agentSkills.skillId, input.skillId)));
       }
 
+      // BUG-1 FIX: 找出目前佔據目標槽位的舊技能，清除其 agentSkills.installedSlot
+      const oldSkillId = (agent as any)[input.slot] as string | null;
+      if (oldSkillId && oldSkillId !== input.skillId) {
+        await db.update(agentSkills)
+          .set({ installedSlot: null })
+          .where(and(eq(agentSkills.agentId, agent.id), eq(agentSkills.skillId, oldSkillId)));
+      }
+
+      // BUG-1 FIX: 如果新技能之前安裝在其他槽位，先清除舊槽位
+      const ALL_SKILL_SLOTS = ["skillSlot1", "skillSlot2", "skillSlot3", "skillSlot4", "passiveSlot1", "passiveSlot2", "hiddenSlot1"] as const;
+      const updateFields: Record<string, any> = { [input.slot]: input.skillId, updatedAt: Date.now() };
+      for (const slotKey of ALL_SKILL_SLOTS) {
+        if (slotKey !== input.slot && (agent as any)[slotKey] === input.skillId) {
+          updateFields[slotKey] = null; // 清除舊槽位
+        }
+      }
+
+      // 更新 gameAgents 的槽位
       await db.update(gameAgents)
-        .set({ [input.slot]: input.skillId })
+        .set(updateFields)
         .where(eq(gameAgents.id, agent.id));
+
+      // 同步更新 agentSkills.installedSlot
+      await db.update(agentSkills)
+        .set({ installedSlot: input.slot })
+        .where(and(eq(agentSkills.agentId, agent.id), eq(agentSkills.skillId, input.skillId)));
+
       return { success: true };
     }),
 
@@ -1723,6 +1743,27 @@ export const gameWorldRouter = router({
       };
       const dbField = SLOT_MAP[equip.slot] ?? "equippedWeapon";
       await db.update(gameAgents).set({ [dbField]: input.action === "equip" ? input.equipId : null, updatedAt: Date.now() }).where(eq(gameAgents.id, agent.id));
+      // BUG-5 FIX: 同步更新 agentInventory 的 isEquipped 狀態
+      const AGENT_FIELD_TO_INV_SLOT: Record<string, string> = {
+        equippedWeapon: "weapon", equippedOffhand: "offhand",
+        equippedHead: "helmet", equippedBody: "armor",
+        equippedHands: "gloves", equippedFeet: "boots",
+        equippedRingA: "ring1", equippedRingB: "ring2",
+        equippedNecklace: "accessory1", equippedAmulet: "accessory2",
+      };
+      const invSlot = AGENT_FIELD_TO_INV_SLOT[dbField] ?? equip.slot;
+      if (input.action === "equip") {
+        // 先卸下同槽位的舊裝備
+        await db.update(agentInventory).set({ isEquipped: 0, equippedSlot: null, updatedAt: Date.now() })
+          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.isEquipped, 1), eq(agentInventory.equippedSlot, invSlot)));
+        // 標記新裝備
+        await db.update(agentInventory).set({ isEquipped: 1, equippedSlot: invSlot, updatedAt: Date.now() })
+          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, input.equipId)));
+      } else {
+        // 卸下裝備
+        await db.update(agentInventory).set({ isEquipped: 0, equippedSlot: null, updatedAt: Date.now() })
+          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, input.equipId)));
+      }
       await db.insert(agentEvents).values({
         agentId: agent.id, eventType: "system",
         detail: { equipId: input.equipId, equipName: equip.name, action: input.action },
@@ -2061,10 +2102,32 @@ export const gameWorldRouter = router({
             equipBonuses.mp   += eq_tmpl.mpBonus   ?? 0;
           }
         }
-        // 裝備加成屬性記錄到 detail（將來可擴展到 gameAgents 裝備加成欄位）
+          // BUG-6 FIX: 實際寫入裝備加成到角色屬性
         console.log("[equipDroppedItem] equip bonuses:", equipBonuses);
       }
-      return { success: true, slot: input.slot, itemId: invItem.itemId };
+      // BUG-5 FIX: 同步更新 gameAgents 的裝備欄位
+      const SLOT_TO_AGENT_FIELD: Record<string, string> = {
+        weapon: "equippedWeapon", armor: "equippedBody",
+        helmet: "equippedHead", boots: "equippedFeet",
+        accessory1: "equippedRingA", accessory2: "equippedRingB",
+        ring1: "equippedRingA", ring2: "equippedRingB",
+      };
+      const agentField = SLOT_TO_AGENT_FIELD[input.slot];
+      if (agentField) {
+        await db.update(gameAgents)
+          .set({ [agentField]: invItem.itemId, updatedAt: Date.now() })
+          .where(eq(gameAgents.id, agent.id));
+      }
+      // 記錄事件
+      const { getItemInfo } = await import("../../shared/itemNames");
+      const itemInfo = getItemInfo(invItem.itemId);
+      await db.insert(agentEvents).values({
+        agentId: agent.id, eventType: "system",
+        detail: { inventoryId: input.inventoryId, slot: input.slot, itemId: invItem.itemId },
+        message: `裝備了「${itemInfo.name}」到${input.slot}槽位`,
+        createdAt: Date.now(),
+      });
+      return { success: true, slot: input.slot, itemId: invItem.itemId, itemName: itemInfo.name };
     }),
 
   // ─── GD-021 P1：取得低保計數器 ───
@@ -2408,6 +2471,17 @@ export const gameWorldRouter = router({
         .limit(1);
       if (!invItem) throw new TRPCError({ code: "NOT_FOUND", message: "道具不存在" });
       if (invItem.isEquipped) throw new TRPCError({ code: "BAD_REQUEST", message: "裝備中的裝備無法販售" });
+      // BUG-7 FIX: 也檢查 gameAgents 的裝備欄位（防止兩套裝備系統不同步）
+      if (invItem.itemType === "equipment") {
+        const equippedIds = [
+          agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
+          agent.equippedBody, agent.equippedHands, agent.equippedFeet,
+          agent.equippedRingA, agent.equippedRingB, agent.equippedNecklace, agent.equippedAmulet,
+        ].filter(Boolean);
+        if (equippedIds.includes(invItem.itemId)) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "裝備中的裝備無法販售，請先卸下" });
+        }
+      }
       const sellQty = Math.min(input.quantity, invItem.quantity);
       if (sellQty <= 0) throw new TRPCError({ code: "BAD_REQUEST", message: "數量不足" });
       // 計算販售價格（依稀有度定價，乘以後台折扣率）

@@ -196,7 +196,16 @@ export const gameSkillSystemRouter = router({
         ));
       if (!skill) throw new TRPCError({ code: "NOT_FOUND", message: "技能未習得" });
 
+      // 取得角色資料
+      const [agent] = await db.select().from(gameAgents)
+        .where(eq(gameAgents.id, input.agentId)).limit(1);
+      if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+
+      const ALL_SKILL_SLOTS = ["skillSlot1", "skillSlot2", "skillSlot3", "skillSlot4", "passiveSlot1", "passiveSlot2", "hiddenSlot1"] as const;
+      const validSlots = new Set<string>(ALL_SKILL_SLOTS);
+
       if (input.slot !== null) {
+        // 清除目標槽位的舊技能
         await db.update(agentSkills)
           .set({ installedSlot: null })
           .where(and(
@@ -205,12 +214,34 @@ export const gameSkillSystemRouter = router({
           ));
       }
 
+      // 更新當前技能的 installedSlot
       await db.update(agentSkills)
         .set({ installedSlot: input.slot })
         .where(and(
           eq(agentSkills.agentId, input.agentId),
           eq(agentSkills.skillId, input.skillId)
         ));
+
+      // BUG-2/3 FIX: 同步更新 gameAgents 的槽位欄位
+      if (input.slot !== null && validSlots.has(input.slot)) {
+        // 先清除技能在其他槽位的記錄
+        const updateFields: Record<string, any> = { [input.slot]: input.skillId, updatedAt: Date.now() };
+        for (const slotKey of ALL_SKILL_SLOTS) {
+          if (slotKey !== input.slot && (agent as any)[slotKey] === input.skillId) {
+            updateFields[slotKey] = null;
+          }
+        }
+        await db.update(gameAgents).set(updateFields).where(eq(gameAgents.id, input.agentId));
+      } else if (input.slot === null) {
+        // 卸下技能：清除 gameAgents 中該技能的槽位
+        const updateFields: Record<string, any> = { updatedAt: Date.now() };
+        for (const slotKey of ALL_SKILL_SLOTS) {
+          if ((agent as any)[slotKey] === input.skillId) {
+            updateFields[slotKey] = null;
+          }
+        }
+        await db.update(gameAgents).set(updateFields).where(eq(gameAgents.id, input.agentId));
+      }
 
       return { success: true };
     }),

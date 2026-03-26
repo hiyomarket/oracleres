@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE game_agents SET skill_slot_2 = NULL, skill_slot_3 = 'S_F004', skill_slot_4 = 'S_W005' WHERE id = 8; UPDATE agent_skills SET installed_slot = 'skillSlot3' WHERE agent_id = 8 AND skill_id = 'S_F004'; UPDATE agent_skills SET installed_slot = 'skillSlot4' WHERE agent_id = 8 AND skill_id = 'S_W005';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute UPDATE game_agents SET skill_slot_2 = NULL, skill_slot_3 = 'S_F004', skill_slot_4 = 'S_W005' WHERE id = 8; UPDATE agent_skills SET installed_slot = 'skillSlot3' WHERE agent_id = 8 AND skill_id = 'S_F004'; UPDATE agent_skills SET installed_slot = 'skillSlot4' WHERE agent_id = 8 AND skill_id = 'S_W005';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2058
+}

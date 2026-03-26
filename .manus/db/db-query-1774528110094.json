@@ -1,0 +1,22 @@
+{
+  "query": "SELECT id, agent_id, skill_id, installed_slot FROM agent_skills WHERE agent_id = 8;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_id, skill_id, installed_slot FROM agent_skills WHERE agent_id = 8;",
+  "rows": [
+    {
+      "id": "3",
+      "agent_id": "8",
+      "skill_id": "S_W005",
+      "installed_slot": "skillSlot3"
+    },
+    {
+      "id": "4",
+      "agent_id": "8",
+      "skill_id": "S_F004",
+      "installed_slot": "skillSlot3"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_id\tskill_id\tinstalled_slot\n3\t8\tS_W005\tskillSlot3\n4\t8\tS_F004\tskillSlot3\n",
+  "stderr": "",
+  "execution_time_ms": 1583
+}

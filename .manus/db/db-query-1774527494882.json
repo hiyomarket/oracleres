@@ -1,0 +1,9 @@
+{
+  "query": "SELECT sb.id, sb.agent_id, sb.skill_id, sb.quantity, sb.obtained_at, gsc.name FROM skill_books sb INNER JOIN game_skill_catalog gsc ON sb.skill_id = gsc.skill_id WHERE sb.agent_id = 8;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT sb.id, sb.agent_id, sb.skill_id, sb.quantity, sb.obtained_at, gsc.name FROM skill_books sb INNER JOIN game_skill_catalog gsc ON sb.skill_id = gsc.skill_id WHERE sb.agent_id = 8;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1615
+}

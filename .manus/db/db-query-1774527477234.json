@@ -1,0 +1,330 @@
+{
+  "query": "SELECT id, agent_id, item_id, item_type, quantity, is_equipped, equipped_slot, updated_at FROM agent_inventory WHERE agent_id = 8 ORDER BY item_type, item_id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_id, item_id, item_type, quantity, is_equipped, equipped_slot, updated_at FROM agent_inventory WHERE agent_id = 8 ORDER BY item_type, item_id;",
+  "rows": [
+    {
+      "id": "136",
+      "agent_id": "8",
+      "item_id": "food-earth-001",
+      "item_type": "material",
+      "quantity": "7",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774527473261"
+    },
+    {
+      "id": "141",
+      "agent_id": "8",
+      "item_id": "herb-001",
+      "item_type": "material",
+      "quantity": "12",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774502422558"
+    },
+    {
+      "id": "137",
+      "agent_id": "8",
+      "item_id": "herb-002",
+      "item_type": "material",
+      "quantity": "17",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774502427626"
+    },
+    {
+      "id": "144",
+      "agent_id": "8",
+      "item_id": "herb-earth-001",
+      "item_type": "material",
+      "quantity": "2",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774526024811"
+    },
+    {
+      "id": "223",
+      "agent_id": "8",
+      "item_id": "herb-fire-001",
+      "item_type": "material",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774522143850"
+    },
+    {
+      "id": "150",
+      "agent_id": "8",
+      "item_id": "herb-water-001",
+      "item_type": "material",
+      "quantity": "7",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774521546988"
+    },
+    {
+      "id": "143",
+      "agent_id": "8",
+      "item_id": "mat-earth-001",
+      "item_type": "material",
+      "quantity": "15",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774526623208"
+    },
+    {
+      "id": "131",
+      "agent_id": "8",
+      "item_id": "mat-earth-002",
+      "item_type": "material",
+      "quantity": "17",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774526643314"
+    },
+    {
+      "id": "145",
+      "agent_id": "8",
+      "item_id": "mat-earth-003",
+      "item_type": "material",
+      "quantity": "5",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774526633263"
+    },
+    {
+      "id": "212",
+      "agent_id": "8",
+      "item_id": "mat-fire-001",
+      "item_type": "material",
+      "quantity": "2",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774521711557"
+    },
+    {
+      "id": "159",
+      "agent_id": "8",
+      "item_id": "mat-fire-002",
+      "item_type": "material",
+      "quantity": "2",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774502343309"
+    },
+    {
+      "id": "151",
+      "agent_id": "8",
+      "item_id": "mat-fire-003",
+      "item_type": "material",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774399954616"
+    },
+    {
+      "id": "222",
+      "agent_id": "8",
+      "item_id": "mat-fire-004",
+      "item_type": "material",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774521697507"
+    },
+    {
+      "id": "221",
+      "agent_id": "8",
+      "item_id": "mat-fire-005",
+      "item_type": "material",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774521641623"
+    },
+    {
+      "id": "132",
+      "agent_id": "8",
+      "item_id": "mat-metal-001",
+      "item_type": "material",
+      "quantity": "27",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774524183640"
+    },
+    {
+      "id": "133",
+      "agent_id": "8",
+      "item_id": "mat-metal-002",
+      "item_type": "material",
+      "quantity": "46",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774524123638"
+    },
+    {
+      "id": "135",
+      "agent_id": "8",
+      "item_id": "mat-metal-003",
+      "item_type": "material",
+      "quantity": "40",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774524053606"
+    },
+    {
+      "id": "134",
+      "agent_id": "8",
+      "item_id": "mat-metal-004",
+      "item_type": "material",
+      "quantity": "7",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774524064589"
+    },
+    {
+      "id": "216",
+      "agent_id": "8",
+      "item_id": "mat-water-001",
+      "item_type": "material",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774521521848"
+    },
+    {
+      "id": "149",
+      "agent_id": "8",
+      "item_id": "mat-water-002",
+      "item_type": "material",
+      "quantity": "5",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774521546960"
+    },
+    {
+      "id": "148",
+      "agent_id": "8",
+      "item_id": "mat-water-003",
+      "item_type": "material",
+      "quantity": "9",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774521621604"
+    },
+    {
+      "id": "217",
+      "agent_id": "8",
+      "item_id": "mat-water-004",
+      "item_type": "material",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774521536952"
+    },
+    {
+      "id": "218",
+      "agent_id": "8",
+      "item_id": "mat-water-005",
+      "item_type": "material",
+      "quantity": "2",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774521552064"
+    },
+    {
+      "id": "140",
+      "agent_id": "8",
+      "item_id": "mat-wood-001",
+      "item_type": "material",
+      "quantity": "12",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774502457536"
+    },
+    {
+      "id": "139",
+      "agent_id": "8",
+      "item_id": "mat-wood-002",
+      "item_type": "material",
+      "quantity": "10",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774496991315"
+    },
+    {
+      "id": "138",
+      "agent_id": "8",
+      "item_id": "mat-wood-003",
+      "item_type": "material",
+      "quantity": "3",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774414586278"
+    },
+    {
+      "id": "224",
+      "agent_id": "8",
+      "item_id": "skill-wood-001",
+      "item_type": "material",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774522327244"
+    },
+    {
+      "id": "220",
+      "agent_id": "8",
+      "item_id": "elixir-stamina",
+      "item_type": "consumable",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774524117918"
+    },
+    {
+      "id": "142",
+      "agent_id": "8",
+      "item_id": "food-001",
+      "item_type": "consumable",
+      "quantity": "6",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774414581304"
+    },
+    {
+      "id": "215",
+      "agent_id": "8",
+      "item_id": "I_F028",
+      "item_type": "consumable",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774519670599"
+    },
+    {
+      "id": "158",
+      "agent_id": "8",
+      "item_id": "I_M027",
+      "item_type": "consumable",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774411505844"
+    },
+    {
+      "id": "157",
+      "agent_id": "8",
+      "item_id": "I_W030",
+      "item_type": "consumable",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL",
+      "updated_at": "1774411501842"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_id\titem_id\titem_type\tquantity\tis_equipped\tequipped_slot\tupdated_at\n136\t8\tfood-earth-001\tmaterial\t7\t0\tNULL\t1774527473261\n141\t8\therb-001\tmaterial\t12\t0\tNULL\t1774502422558\n137\t8\therb-002\tmaterial\t17\t0\tNULL\t1774502427626\n144\t8\therb-earth-001\tmaterial\t2\t0\tNULL\t1774526024811\n223\t8\therb-fire-001\tmaterial\t1\t0\tNULL\t1774522143850\n150\t8\therb-water-001\tmaterial\t7\t0\tNULL\t1774521546988\n143\t8\tmat-earth-001\tmaterial\t15\t0\tNULL\t1774526623208\n131\t8\tmat-earth-002\tmaterial\t17\t0\tNULL\t1774526643314\n145\t8\tmat-earth-003\tmaterial\t5\t0\tNULL\t1774526633263\n212\t8\tmat-fire-001\tmaterial\t2\t0\tNULL\t1774521711557\n159\t8\tmat-fire-002\tmaterial\t2\t0\tNULL\t1774502343309\n151\t8\tmat-fire-003\tmaterial\t1\t0\tNULL\t1774399954616\n222\t8\tmat-fire-004\tmaterial\t1\t0\tNULL\t1774521697507\n221\t8\tmat-fire-005\tmaterial\t1\t0\tNULL\t1774521641623\n132\t8\tmat-metal-001\tmaterial\t27\t0\tNULL\t1774524183640\n133\t8\tmat-metal-002\tmaterial\t46\t0\tNULL\t1774524123638\n135\t8\tmat-metal-003\tmaterial\t40\t0\tNULL\t1774524053606\n134\t8\tmat-metal-004\tmaterial\t7\t0\tNULL\t1774524064589\n216\t8\tmat-water-001\tmaterial\t1\t0\tNULL\t1774521521848\n149\t8\tmat-water-002\tmaterial\t5\t0\tNULL\t1774521546960\n148\t8\tmat-water-003\tmaterial\t9\t0\tNULL\t1774521621604\n217\t8\tmat-water-004\tmaterial\t1\t0\tNULL\t1774521536952\n218\t8\tmat-water-005\tmaterial\t2\t0\tNULL\t1774521552064\n140\t8\tmat-wood-001\tmaterial\t12\t0\tNULL\t1774502457536\n139\t8\tmat-wood-002\tmaterial\t10\t0\tNULL\t1774496991315\n138\t8\tmat-wood-003\tmaterial\t3\t0\tNULL\t1774414586278\n224\t8\tskill-wood-001\tmaterial\t1\t0\tNULL\t1774522327244\n220\t8\telixir-stamina\tconsumable\t1\t0\tNULL\t1774524117918\n142\t8\tfood-001\tconsumable\t6\t0\tNULL\t1774414581304\n215\t8\tI_F028\tconsumable\t1\t0\tNULL\t1774519670599\n158\t8\tI_M027\tconsumable\t1\t0\tNULL\t1774411505844\n157\t8\tI_W030\tconsumable\t1\t0\tNULL\t1774411501842\n",
+  "stderr": "",
+  "execution_time_ms": 1595
+}

@@ -4196,3 +4196,30 @@
 - [x] 後端 API：AI 批量新增技能書（一次 10 筆）
 - [x] 後端 API：AI 批量新增成就（一次 10 筆）
 - [x] 前端：各圖鑑管理頁加入「AI 一鍵新增 10 筆」按鈕
+
+## M3K-3 技能系統 + 道具裝備系統完整測試
+
+### 技能系統測試
+- [x] 技能掛載（equipSkill）：將技能裝備到技能欄位
+- [x] 技能啟用：確認掛載後技能在戰鬥中正確觸發
+- [x] 技能卸下（unequipSkill）：從技能欄位移除技能
+- [x] 技能欄位限制：確認最多可掛載的技能數量
+- [x] 被動技能掛載/卸下
+
+### 道具裝備系統測試
+- [x] 裝備穿戴：將裝備從背包裝備到角色身上
+- [x] 裝備卸下：將裝備從角色身上卸下到背包
+- [x] 道具販售：在商店中販售背包道具
+- [x] 道具掉落：確認戰鬥掉落道具正確進入背包
+- [x] 裝備數值加成：確認裝備後角色屬性正確增加
+
+### Bug 修復記錄
+- [x] BUG-1: installSkill 安裝新技能時不清除被替換技能的 installedSlot
+- [x] BUG-2: installSkill 和 equipSkill 兩套系統不同步
+- [x] BUG-3: equipSkill 只更新 agentSkills 不更新 gameAgents 槽位
+- [x] BUG-4: SkillCatalogPage 裝備按鈕硬編碼只能裝到 skillSlot1
+- [x] BUG-5: equipItem 和 equipDroppedItem 兩套裝備系統不同步
+- [x] BUG-6: equipDroppedItem 計算裝備加成但未寫入角色屬性
+- [x] BUG-7: sellInventoryItem 的 isEquipped 檢查與裝備系統不一致
+- [x] BUG-8: 掉落物 itemType 前綴判斷邊界問題（已確認裝備走獨立路徑）
+- [x] 修復主帳號角色的技能槽位資料不一致（S_F004 重複在 slot2/slot3）

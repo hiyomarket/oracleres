@@ -424,26 +424,43 @@ export default function SkillCatalogPage() {
 
                 {/* 裝備按鈕 */}
                 {selectedSkillData.unlocked && agentId && (
-                  <div className="flex gap-2">
+                  <div className="space-y-2">
                     {selectedAgentSkill?.installedSlot ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 border-red-700 text-red-400 hover:bg-red-950"
-                        onClick={() => equipSkill.mutate({ agentId, skillId: selectedSkillData.id, slot: null })}
-                        disabled={equipSkill.isPending}
-                      >
-                        卸下技能
-                      </Button>
+                      <div className="flex gap-2">
+                        <Badge className="bg-purple-900/50 text-purple-300 border-purple-700">
+                          已裝備於 {selectedAgentSkill.installedSlot.replace("skillSlot", "主動槽").replace("passiveSlot", "被動槽").replace("hiddenSlot", "隱藏槽")}
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 border-red-700 text-red-400 hover:bg-red-950"
+                          onClick={() => equipSkill.mutate({ agentId, skillId: selectedSkillData.id, slot: null })}
+                          disabled={equipSkill.isPending}
+                        >
+                          卸下技能
+                        </Button>
+                      </div>
                     ) : (
-                      <Button
-                        size="sm"
-                        className="flex-1 bg-purple-700 hover:bg-purple-600"
-                        onClick={() => equipSkill.mutate({ agentId, skillId: selectedSkillData.id, slot: "skillSlot1" })}
-                        disabled={equipSkill.isPending}
-                      >
-                        裝備技能
-                      </Button>
+                      <div>
+                        <p className="text-xs text-gray-400 mb-1.5">選擇安裝槽位：</p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {(selectedSkillData.category === "active_combat"
+                            ? ["skillSlot1", "skillSlot2", "skillSlot3", "skillSlot4"] as const
+                            : ["passiveSlot1", "passiveSlot2"] as const
+                          ).map((slot, i) => (
+                            <Button
+                              key={slot}
+                              size="sm"
+                              variant="outline"
+                              className="text-xs border-purple-700 text-purple-300 hover:bg-purple-950"
+                              onClick={() => equipSkill.mutate({ agentId, skillId: selectedSkillData.id, slot })}
+                              disabled={equipSkill.isPending}
+                            >
+                              {selectedSkillData.category === "active_combat" ? `主動槽 ${i + 1}` : `被動槽 ${i + 1}`}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 )}

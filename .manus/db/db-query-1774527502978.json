@@ -1,0 +1,9 @@
+{
+  "query": "SELECT DISTINCT item_id, item_type FROM agent_inventory WHERE agent_id = 8 AND (item_id LIKE 'equip%' OR item_type IN ('equipment', 'weapon'));",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT DISTINCT item_id, item_type FROM agent_inventory WHERE agent_id = 8 AND (item_id LIKE 'equip%' OR item_type IN ('equipment', 'weapon'));",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1520
+}

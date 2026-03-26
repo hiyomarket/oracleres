@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, name, role FROM users ORDER BY id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, role FROM users ORDER BY id LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "photographer WilliamWei",
+      "role": "admin"
+    },
+    {
+      "id": "540175",
+      "name": "庭瑀 胡",
+      "role": "user"
+    },
+    {
+      "id": "660061",
+      "name": "justffff",
+      "role": "user"
+    },
+    {
+      "id": "660067",
+      "name": "bee77426",
+      "role": "user"
+    },
+    {
+      "id": "690036",
+      "name": "禮揚 陳",
+      "role": "user"
+    },
+    {
+      "id": "690067",
+      "name": "學成 呂",
+      "role": "user"
+    },
+    {
+      "id": "690118",
+      "name": "金育 蘇",
+      "role": "user"
+    },
+    {
+      "id": "750001",
+      "name": "弘達 張",
+      "role": "user"
+    },
+    {
+      "id": "810024",
+      "name": "靜茹 王",
+      "role": "user"
+    },
+    {
+      "id": "1260042",
+      "name": "心怡 蘇",
+      "role": "user"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trole\n1\tphotographer WilliamWei\tadmin\n540175\t庭瑀 胡\tuser\n660061\tjustffff\tuser\n660067\tbee77426\tuser\n690036\t禮揚 陳\tuser\n690067\t學成 呂\tuser\n690118\t金育 蘇\tuser\n750001\t弘達 張\tuser\n810024\t靜茹 王\tuser\n1260042\t心怡 蘇\tuser\n",
+  "stderr": "",
+  "execution_time_ms": 1539
+}

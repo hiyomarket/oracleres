@@ -1,0 +1,52 @@
+{
+  "query": "SELECT id, name, slot, element, tier FROM equipment_templates LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, slot, element, tier FROM equipment_templates LIMIT 10;",
+  "rows": [
+    {
+      "id": "E_W001",
+      "name": "葉刃短劍",
+      "slot": "weapon",
+      "element": "wood",
+      "tier": "basic"
+    },
+    {
+      "id": "E_W002",
+      "name": "藤甲護胸",
+      "slot": "armor",
+      "element": "wood",
+      "tier": "basic"
+    },
+    {
+      "id": "E_W003",
+      "name": "木紋頭盔",
+      "slot": "helmet",
+      "element": "wood",
+      "tier": "basic"
+    },
+    {
+      "id": "E_W004",
+      "name": "草木靴",
+      "slot": "boots",
+      "element": "wood",
+      "tier": "basic"
+    },
+    {
+      "id": "E_W005",
+      "name": "青木腕環",
+      "slot": "accessory",
+      "element": "wood",
+      "tier": "basic"
+    },
+    {
+      "id": "E_W006",
+      "name": "綠葉護符",
+      "slot": "accessory",
+      "element": "wood",
+      "tier": "basic"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tslot\telement\ttier\nE_W001\t葉刃短劍\tweapon\twood\tbasic\nE_W002\t藤甲護胸\tarmor\twood\tbasic\nE_W003\t木紋頭盔\thelmet\twood\tbasic\nE_W004\t草木靴\tboots\twood\tbasic\nE_W005\t青木腕環\taccessory\twood\tbasic\nE_W006\t綠葉護符\taccessory\twood\tbasic\n",
+  "stderr": "",
+  "execution_time_ms": 1618
+}
