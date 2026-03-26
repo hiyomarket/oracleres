@@ -689,8 +689,42 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
 
         const m = L.marker(
           [coords[0] + offsetLat, coords[1] + offsetLng],
-          { icon, interactive: false, zIndexOffset: 200 }
+          { icon, interactive: true, zIndexOffset: 200 }
         ).addTo(map);
+
+        // 點擊頭像彈出角色資訊面板
+        const popupContent = players.map(p => {
+          const elC = elColors[p.element] ?? "#94a3b8";
+          const elName: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+          const avatarHtml = p.avatarUrl
+            ? `<img src="${p.avatarUrl}" style="width:48px;height:48px;border-radius:50%;border:3px solid ${elC};object-fit:cover;" />`
+            : `<div style="width:48px;height:48px;border-radius:50%;border:3px solid ${elC};background:radial-gradient(circle at 30% 30%, ${elC}40, rgba(6,10,22,0.9));display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:${elC};font-family:'Noto Serif TC',serif;">${(p.agentName ?? "旅")[0]}</div>`;
+          return `
+            <div style="display:flex;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,0.08);">
+              ${avatarHtml}
+              <div style="flex:1;">
+                <div style="font-size:14px;font-weight:700;color:#e2e8f0;font-family:'Noto Serif TC',serif;">${p.agentName}</div>
+                <div style="display:flex;gap:8px;margin-top:4px;">
+                  <span style="font-size:11px;color:${elC};background:${elC}15;border:1px solid ${elC}30;padding:1px 6px;border-radius:4px;">${elName[p.element] ?? p.element}屬性</span>
+                  <span style="font-size:11px;color:#94a3b8;background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2);padding:1px 6px;border-radius:4px;">Lv.${p.level}</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        m.bindPopup(`
+          <div style="min-width:180px;max-width:260px;background:rgba(8,12,25,0.98);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px;font-family:'Noto Serif TC',serif;">
+            <div style="font-size:11px;color:#64748b;text-align:center;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:4px;">📍 在此區域的旅人 (${count})</div>
+            ${popupContent}
+          </div>
+        `, {
+          className: "player-info-popup",
+          closeButton: true,
+          maxWidth: 280,
+          offset: [0, -10],
+        });
+
         playerMarkersRef.current.push(m);
       });
     });
@@ -777,6 +811,29 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
         }
         .oracle-popup .leaflet-popup-tip-container {
           display: none !important;
+        }
+        .player-info-popup .leaflet-popup-content-wrapper {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          border-radius: 12px !important;
+        }
+        .player-info-popup .leaflet-popup-content {
+          margin: 0 !important;
+        }
+        .player-info-popup .leaflet-popup-tip {
+          background: rgba(8,12,25,0.98) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+        }
+        .player-info-popup .leaflet-popup-close-button {
+          color: #64748b !important;
+          font-size: 18px !important;
+          top: 6px !important;
+          right: 8px !important;
+        }
+        .player-info-popup .leaflet-popup-close-button:hover {
+          color: #e2e8f0 !important;
         }
         @keyframes pulse {
           0%, 100% { transform: scale(1); opacity: 0.5; }

@@ -308,6 +308,48 @@ function BatchEditDialog({ open, onClose, fields, onSubmit, isLoading, selectedC
 }
 
 // ===== CSV/JSON 匯入 Dialog =====
+// 各圖鑑的 CSV 模板定義
+const CSV_TEMPLATES: Record<string, { headers: string[]; example: string[] }> = {
+  "魔物圖鑑": {
+    headers: ["monsterId", "name", "element", "rarity", "level", "hp", "attack", "defense", "speed", "magicAttack", "description", "dropItem", "dropGold", "expReward"],
+    example: ["M_W001", "木靈鼠", "木", "common", "1", "50", "8", "3", "5", "2", "森林中常見的小型魔物", "herb-001", "10", "5"],
+  },
+  "道具圖鑑": {
+    headers: ["itemId", "name", "element", "rarity", "itemType", "effect", "shopPrice", "stackable"],
+    example: ["I_W001", "回春草", "木", "common", "consumable", "恢復 50 HP", "100", "1"],
+  },
+  "裝備圖鑑": {
+    headers: ["equipId", "name", "element", "rarity", "slot", "attackBonus", "defenseBonus", "speedBonus", "quality", "description"],
+    example: ["E_W001", "翠玉木劍", "木", "rare", "weapon", "15", "0", "3", "fine", "以翠玉打造的木屬性劍"],
+  },
+  "技能圖鑑": {
+    headers: ["skillId", "name", "element", "rarity", "category", "skillType", "mpCost", "cooldown", "baseDamage", "description"],
+    example: ["S_W001", "翠葉斬", "木", "common", "attack", "active", "10", "1", "25", "以銳利的木葉攻擊敵人"],
+  },
+  "成就圖鑑": {
+    headers: ["title", "description", "category", "rarity", "rewardPoints", "isActive"],
+    example: ["初出茅廠", "完成第一次戰鬥", "combat", "common", "10", "1"],
+  },
+  "魔物技能圖鑑": {
+    headers: ["skillId", "name", "element", "skillType", "baseDamage", "mpCost", "cooldown", "description"],
+    example: ["MS_W001", "木屬性撞擊", "木", "physical", "20", "0", "1", "用身體撞擊敵人"],
+  },
+};
+
+function downloadCsvTemplate(catalogName: string) {
+  const tpl = CSV_TEMPLATES[catalogName];
+  if (!tpl) return;
+  const bom = "\uFEFF"; // UTF-8 BOM for Excel
+  const csv = bom + tpl.headers.join(",") + "\n" + tpl.example.join(",") + "\n";
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${catalogName}_匯入範本.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function ImportDialog({ open, onClose, onImport, isLoading, catalogName }: {
   open: boolean; onClose: () => void;
   onImport: (items: any[]) => void; isLoading: boolean; catalogName: string;
@@ -367,13 +409,24 @@ function ImportDialog({ open, onClose, onImport, isLoading, catalogName }: {
           <p className="text-xs text-muted-foreground mt-1">上傳 CSV 或 JSON 檔案，每次最多 500 筆。CSV 標題行需對應欄位名稱。</p>
         </DialogHeader>
         <div className="space-y-3 py-2">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <label className="flex items-center gap-2 px-4 py-2 bg-muted rounded-lg cursor-pointer hover:bg-muted/80 transition-colors">
               <span className="text-sm">選擇檔案</span>
               <input type="file" accept=".csv,.json" onChange={handleFile} className="hidden" />
             </label>
             {fileName && <span className="text-sm text-muted-foreground">{fileName}</span>}
+            {CSV_TEMPLATES[catalogName] && (
+              <Button variant="outline" size="sm" onClick={() => downloadCsvTemplate(catalogName)} className="gap-1">
+                ⬇️ 下載 CSV 範本
+              </Button>
+            )}
           </div>
+          {CSV_TEMPLATES[catalogName] && (
+            <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+              <p className="font-semibold mb-1">欄位說明：</p>
+              <code className="text-[10px] break-all">{CSV_TEMPLATES[catalogName].headers.join(", ")}</code>
+            </div>
+          )}
           {parseError && <p className="text-sm text-destructive">{parseError}</p>}
           {importData.length > 0 && (
             <div>

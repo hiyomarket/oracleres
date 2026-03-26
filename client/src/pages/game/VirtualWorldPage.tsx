@@ -666,12 +666,20 @@ function CharacterPanel({
     },
     onError: (e) => toast.error("使用失敗：" + e.message),
   });
+  const [skillLearnEffect, setSkillLearnEffect] = useState<{ name: string; show: boolean } | null>(null);
   const learnSkillMutation = trpc.gameWorld.learnSkillFromBook.useMutation({
     onSuccess: (data) => {
-      toast.success(`成功習得技能「${data.skillName}」！可在技能面板裝備使用`);
+      // 顯示學習成功特效
+      setSkillLearnEffect({ name: data.skillName, show: true });
+      toast.success(`✨ 成功習得技能「${data.skillName}」！`);
       invQuery.refetch();
       cpUtils.gameWorld.getOrCreateAgent.invalidate();
       cpUtils.gameWorld.getMyLearnedSkills.invalidate();
+      // 1.5 秒後自動跳轉到技能面板
+      setTimeout(() => {
+        setActivePanel("skill");
+        setSkillLearnEffect(null);
+      }, 1800);
     },
     onError: (e) => toast.error("學習失敗：" + e.message),
   });
@@ -687,8 +695,32 @@ function CharacterPanel({
 
   return (
     <>
+    {/* 技能學習成功特效覆蓋層 */}
+    {skillLearnEffect?.show && (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none" style={{ animation: 'fadeIn 0.3s ease-out' }}>
+        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at center, rgba(255,200,50,0.15) 0%, transparent 70%)' }} />
+        <div className="relative flex flex-col items-center gap-4" style={{ animation: 'skillLearnBounce 0.6s ease-out' }}>
+          <div className="text-6xl" style={{ filter: 'drop-shadow(0 0 20px rgba(255,200,50,0.8))', animation: 'skillLearnSpin 1s ease-out' }}>✨</div>
+          <div className="text-2xl font-bold text-center" style={{ color: '#ffd700', textShadow: '0 0 20px rgba(255,200,50,0.6)', animation: 'skillLearnFadeUp 0.8s ease-out 0.3s both' }}>
+            習得新技能！
+          </div>
+          <div className="text-xl font-semibold text-center px-6 py-2 rounded-xl" style={{ background: 'rgba(255,200,50,0.15)', border: '1px solid rgba(255,200,50,0.3)', color: '#ffeaa7', animation: 'skillLearnFadeUp 0.8s ease-out 0.5s both' }}>
+            「{skillLearnEffect.name}」
+          </div>
+          <div className="text-sm opacity-60 mt-2" style={{ color: '#ffeaa7', animation: 'skillLearnFadeUp 0.8s ease-out 0.8s both' }}>
+            即將跳轉至技能面板...
+          </div>
+        </div>
+      </div>
+    )}
+    <style>{`
+      @keyframes skillLearnBounce { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+      @keyframes skillLearnSpin { 0% { transform: rotate(0deg) scale(0.5); } 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg) scale(1); } }
+      @keyframes skillLearnFadeUp { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+      @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+    `}</style>
     <div className="flex flex-col overflow-hidden flex-1">
-      {/* 旅人頭部：手機版底部抜屉模式下隱藏 */}
+      {/* 旅人頭部：手機版底部拜屋模式下隱藏 */}
       {!mobileMode && (
         <div className="px-4 py-3 flex items-center gap-3 shrink-0"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "linear-gradient(135deg, rgba(8,12,25,0.99) 0%, rgba(15,20,40,0.99) 100%)" }}>
