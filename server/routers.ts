@@ -29,6 +29,7 @@ import { gameSkillSystemRouter } from './routers/gameSkillSystem';
 import { gameAIRouter } from './routers/gameAI';
 import { gameAIBalanceRouter } from './routers/gameAIBalance';
 import { balanceRulesRouter } from './routers/balanceRules';
+import { questSkillRouter } from './routers/questSkill';
 import { auctionRouter } from './routers/auction';
 import { startTickEngine } from './tickEngine';
 import { startWorldTickEngine } from './worldTickEngine';
@@ -87,6 +88,10 @@ export const appRouter = router({
   gameAI: gameAIRouter,
   gameAIBalance: gameAIBalanceRouter,
   balanceRules: balanceRulesRouter,
+  questSkillNpc: questSkillRouter.npc,
+  questSkillCatalog: questSkillRouter.catalog,
+  questSkillStep: questSkillRouter.step,
+  questSkillProgress: questSkillRouter.progress,
   businessHub: businessHubRouter,
   userGroups: userGroupsRouter,
   auth: router({

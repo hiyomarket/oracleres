@@ -126,6 +126,28 @@ export const DEFAULT_BALANCE_RULES: BalanceRuleEntry[] = [
   { catalogType: "skill", rarity: "legendary", field: "cd",    minValue: 2,   maxValue: 5 },
   { catalogType: "skill", rarity: "legendary", field: "price", minValue: 2000, maxValue: 10000 },
 
+  // ── 天命考核技能 ──
+  { catalogType: "questSkill", rarity: "common",    field: "power", minValue: 80,  maxValue: 140 },
+  { catalogType: "questSkill", rarity: "common",    field: "mp",    minValue: 5,   maxValue: 15 },
+  { catalogType: "questSkill", rarity: "common",    field: "cd",    minValue: 1,   maxValue: 3 },
+  { catalogType: "questSkill", rarity: "common",    field: "gold",  minValue: 300, maxValue: 800 },
+  { catalogType: "questSkill", rarity: "common",    field: "soul",  minValue: 100, maxValue: 200 },
+  { catalogType: "questSkill", rarity: "rare",      field: "power", minValue: 100, maxValue: 200 },
+  { catalogType: "questSkill", rarity: "rare",      field: "mp",    minValue: 8,   maxValue: 25 },
+  { catalogType: "questSkill", rarity: "rare",      field: "cd",    minValue: 2,   maxValue: 5 },
+  { catalogType: "questSkill", rarity: "rare",      field: "gold",  minValue: 500, maxValue: 1500 },
+  { catalogType: "questSkill", rarity: "rare",      field: "soul",  minValue: 200, maxValue: 400 },
+  { catalogType: "questSkill", rarity: "epic",      field: "power", minValue: 150, maxValue: 300 },
+  { catalogType: "questSkill", rarity: "epic",      field: "mp",    minValue: 12,  maxValue: 35 },
+  { catalogType: "questSkill", rarity: "epic",      field: "cd",    minValue: 3,   maxValue: 7 },
+  { catalogType: "questSkill", rarity: "epic",      field: "gold",  minValue: 1000, maxValue: 3000 },
+  { catalogType: "questSkill", rarity: "epic",      field: "soul",  minValue: 300, maxValue: 500 },
+  { catalogType: "questSkill", rarity: "legendary", field: "power", minValue: 200, maxValue: 500 },
+  { catalogType: "questSkill", rarity: "legendary", field: "mp",    minValue: 15,  maxValue: 50 },
+  { catalogType: "questSkill", rarity: "legendary", field: "cd",    minValue: 4,   maxValue: 10 },
+  { catalogType: "questSkill", rarity: "legendary", field: "gold",  minValue: 2000, maxValue: 5000 },
+  { catalogType: "questSkill", rarity: "legendary", field: "soul",  minValue: 400, maxValue: 800 },
+
   // ── 成就 ──
   { catalogType: "achievement", rarity: "common",    field: "coins",  minValue: 10,  maxValue: 80 },
   { catalogType: "achievement", rarity: "common",    field: "stones", minValue: 1,   maxValue: 5 },

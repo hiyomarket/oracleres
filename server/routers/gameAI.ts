@@ -18,8 +18,11 @@ import {
   gameSpiritShop,
   gameHiddenShopPool,
   gameMonsterSkillCatalog,
+  gameNpcCatalog,
+  gameQuestSkillCatalog,
+  gameQuestSteps,
 } from "../../drizzle/schema";
-import { sql, like, eq, desc } from "drizzle-orm";
+import { sql, like, eq, desc, asc, inArray } from "drizzle-orm";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
@@ -1029,5 +1032,462 @@ ${monsterDescriptions}
       }
 
       throw new TRPCError({ code: "BAD_REQUEST", message: "不支援的圖鑑類型" });
+    }),
+
+  // ═══════════════════════════════════════════════════════════════
+  // 天命考核技能 AI 生成系統
+  // ═══════════════════════════════════════════════════════════════
+
+  /**
+   * AI 批量生成天命考核技能（含 NPC + 任務步驟）
+   * 一次生成完整的技能任務鏈：技能 + NPC + 3 步驟
+   */
+  aiGenerateQuestSkill: adminProcedure
+    .input(z.object({
+      category: z.enum(["physical", "magic", "status", "support", "special", "production"]),
+      count: z.number().min(1).max(5).default(1),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const { category, count } = input;
+
+      // 取得現有技能名稱（避免重複）
+      const existingSkills = await db.select({ name: gameQuestSkillCatalog.name, code: gameQuestSkillCatalog.code }).from(gameQuestSkillCatalog);
+      const existingNames = existingSkills.map(s => s.name);
+      const existingCodes = existingSkills.map(s => s.code);
+
+      // 取得現有 NPC 名稱
+      const existingNpcs = await db.select({ name: gameNpcCatalog.name }).from(gameNpcCatalog);
+      const existingNpcNames = existingNpcs.map(n => n.name);
+
+      const categoryLabels: Record<string, string> = {
+        physical: "物理戰鬥系",
+        magic: "魔法攻擊系",
+        status: "狀態控制系",
+        support: "戰鬥輔助系",
+        special: "特殊功能系",
+        production: "生產系",
+      };
+      const categoryPrefix: Record<string, string> = {
+        physical: "P", magic: "M", status: "S", support: "A", special: "X", production: "C",
+      };
+      const categorySkillTypes: Record<string, string[]> = {
+        physical: ["attack"],
+        magic: ["attack"],
+        status: ["debuff"],
+        support: ["heal", "buff"],
+        special: ["attack", "utility"],
+        production: ["production"],
+      };
+
+      const prompt = `你是東方玄幻 MMORPG「墟界」的技能任務鏈設計師。
+遊戲世界觀基於五行（木火土金水），技能透過完成 NPC 給予的任務鏈來習得。
+
+現有技能代碼：${existingCodes.join("、") || "無"}
+現有技能名稱（不可重複）：${existingNames.join("、") || "無"}
+現有 NPC 名稱（不可重複）：${existingNpcNames.join("、") || "無"}
+
+請為「${categoryLabels[category]}」分類生成 ${count} 個完整的技能任務鏈，每個包含：
+1. 技能定義（名稱、數值、效果）
+2. 教導技能的 NPC（名稱、身份、地點）
+3. 3 個任務步驟（邂逅→挑戰→最終試煉）
+
+設計要求：
+- 技能代碼格式：${categoryPrefix[category]}+數字（如 ${categoryPrefix[category]}9, ${categoryPrefix[category]}10），不可與已有代碼重複
+- 技能名稱要有東方玄幻風格，不可與已有名稱重複
+- NPC 名稱要有特色，不可與已有 NPC 重複
+- 數值平衡：powerPercent（${category === "physical" ? "100-350" : category === "magic" ? "30-200" : category === "status" ? "0-50" : category === "support" ? "80-200" : category === "special" ? "100-500" : "0-50"}）
+- MP 消耗：${category === "production" ? "0" : "8-30"}
+- 冷卻回合：${category === "production" ? "0" : "2-10"}
+- 稀有度分布：rare 或 epic
+- 任務步驟要有連貫的劇情和遞進的難度
+- 習得代價要合理（金幣 500-3000，魂晶 200-500，可含道具）
+
+回覆 JSON 陣列：
+[{
+  "skill": {
+    "code": "${categoryPrefix[category]}9",
+    "name": "技能名稱",
+    "questTitle": "任務鏈副標題",
+    "category": "${category}",
+    "skillType": "${categorySkillTypes[category]?.[0] || "attack"}",
+    "description": "技能效果描述",
+    "wuxing": "木/火/土/金/水",
+    "powerPercent": 150,
+    "mpCost": 15,
+    "cooldown": 4,
+    "rarity": "rare/epic",
+    "additionalEffect": {"type": "poison", "chance": 20, "value": 5, "duration": 3} 或 null,
+    "specialMechanic": {"hitCount": [2,5]} 或 null,
+    "learnCost": {"gold": 1500, "soulCrystal": 300, "items": [{"name": "道具名", "count": 3}]},
+    "prerequisites": {"skills": [], "level": 5} 或 null
+  },
+  "npc": {
+    "code": "npc_xxx",
+    "name": "NPC名稱",
+    "title": "NPC身份/稱號",
+    "location": "所在地點",
+    "region": "初界/中界",
+    "description": "NPC背景描述"
+  },
+  "steps": [
+    {
+      "stepNumber": 1,
+      "title": "步驟一標題",
+      "dialogue": "NPC 對話文本",
+      "objective": "任務目標描述",
+      "location": "任務地點",
+      "objectives": {"type": "kill", "targets": [{"name": "怪物名", "count": 5}]},
+      "rewards": {"exp": 100, "gold": 200}
+    },
+    {
+      "stepNumber": 2,
+      "title": "步驟二標題",
+      "dialogue": "NPC 對話文本",
+      "objective": "任務目標描述",
+      "location": "任務地點",
+      "objectives": {"type": "collect", "targets": [{"name": "材料名", "count": 3}]},
+      "rewards": {"exp": 200, "gold": 300}
+    },
+    {
+      "stepNumber": 3,
+      "title": "步驟三標題（最終試煉）",
+      "dialogue": "NPC 對話文本",
+      "objective": "最終試煉描述",
+      "location": "試煉地點",
+      "objectives": {"type": "boss", "boss": {"name": "BOSS名", "hp": 500, "stars": 3}},
+      "rewards": {"exp": 500, "gold": 500}
+    }
+  ]
+}]`;
+
+      let generated: any[];
+      try {
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: "你是遊戲設計 AI，只回覆 JSON 陣列，不加任何 markdown 標記或解釋。確保生成的內容符合遊戲平衡性和劇情一致性。" },
+            { role: "user", content: prompt },
+          ],
+        });
+        const content = response.choices?.[0]?.message?.content;
+        if (!content || typeof content !== "string") throw new Error("AI 回覆為空");
+        let jsonStr = content.trim();
+        if (jsonStr.startsWith("```")) {
+          jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+        }
+        const parsed = JSON.parse(jsonStr);
+        generated = Array.isArray(parsed) ? parsed : parsed.data || parsed.skills || [parsed];
+      } catch (err) {
+        console.error("[AI QuestSkill Generate] LLM 呼叫失敗:", err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 生成失敗，請稍後再試" });
+      }
+
+      if (!Array.isArray(generated) || generated.length === 0) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 生成結果為空" });
+      }
+
+      const results: { skillName: string; npcName: string; stepsCount: number }[] = [];
+
+      for (const item of generated.slice(0, count)) {
+        try {
+          const skill = item.skill;
+          const npc = item.npc;
+          const steps = item.steps;
+
+          if (!skill?.name || !skill?.code) continue;
+          if (existingNames.includes(skill.name)) continue;
+          if (existingCodes.includes(skill.code)) continue;
+
+          // 1. 插入 NPC
+          let npcId: number | undefined;
+          if (npc?.name && !existingNpcNames.includes(npc.name)) {
+            const now = Date.now();
+            const [npcResult] = await db.insert(gameNpcCatalog).values({
+              code: npc.code || `npc_${skill.code.toLowerCase()}`,
+              name: npc.name,
+              title: npc.title || "",
+              location: npc.location || "",
+              region: npc.region || "初界",
+              description: npc.description || "",
+              isHidden: 0,
+              sortOrder: 0,
+              createdAt: now,
+              updatedAt: now,
+            });
+            npcId = npcResult.insertId;
+            existingNpcNames.push(npc.name);
+          }
+
+          // 2. 插入技能
+          const now = Date.now();
+          const [skillResult] = await db.insert(gameQuestSkillCatalog).values({
+            code: skill.code,
+            name: skill.name,
+            questTitle: skill.questTitle || "",
+            category,
+            skillType: skill.skillType || "attack",
+            description: skill.description || "",
+            wuxing: skill.wuxing || "無",
+            powerPercent: Math.min(500, Math.max(0, skill.powerPercent ?? 100)),
+            mpCost: Math.min(50, Math.max(0, skill.mpCost ?? 10)),
+            cooldown: Math.min(10, Math.max(0, skill.cooldown ?? 3)),
+            maxLevel: 10,
+            levelUpBonus: 10,
+            additionalEffect: skill.additionalEffect || null,
+            specialMechanic: skill.specialMechanic || null,
+            learnCost: skill.learnCost || null,
+            prerequisites: skill.prerequisites || null,
+            npcId: npcId ?? null,
+            rarity: skill.rarity || "rare",
+            sortOrder: 0,
+            createdAt: now,
+            updatedAt: now,
+          });
+          const newSkillId = skillResult.insertId;
+          existingNames.push(skill.name);
+          existingCodes.push(skill.code);
+
+          // 3. 插入任務步驟
+          let stepsInserted = 0;
+          if (Array.isArray(steps)) {
+            for (const step of steps.slice(0, 3)) {
+              await db.insert(gameQuestSteps).values({
+                skillId: newSkillId,
+                stepNumber: step.stepNumber ?? (stepsInserted + 1),
+                title: step.title || `步驟 ${stepsInserted + 1}`,
+                dialogue: step.dialogue || "",
+                objective: step.objective || "",
+                location: step.location || "",
+                objectives: step.objectives || null,
+                rewards: step.rewards || null,
+                specialNote: step.specialNote || null,
+                npcId: step.npcId ?? npcId ?? null,
+                sortOrder: stepsInserted,
+                createdAt: now,
+                updatedAt: now,
+              });
+              stepsInserted++;
+            }
+          }
+
+          results.push({
+            skillName: skill.name,
+            npcName: npc?.name || "（無 NPC）",
+            stepsCount: stepsInserted,
+          });
+        } catch (err) {
+          console.error("[AI QuestSkill Generate] 插入失敗:", err);
+        }
+      }
+
+      return {
+        success: true,
+        generatedCount: results.length,
+        results,
+        message: `AI 成功生成 ${results.length} 個天命考核技能任務鏈`,
+      };
+    }),
+
+  /**
+   * AI 為已有的天命考核技能生成任務步驟
+   * （針對已有技能但缺少步驟的情況）
+   */
+  aiGenerateQuestSteps: adminProcedure
+    .input(z.object({
+      skillId: z.number(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // 取得技能資料
+      const [skill] = await db.select().from(gameQuestSkillCatalog)
+        .where(eq(gameQuestSkillCatalog.id, input.skillId));
+      if (!skill) throw new TRPCError({ code: "NOT_FOUND", message: "找不到該技能" });
+
+      // 檢查是否已有步驟
+      const existingSteps = await db.select().from(gameQuestSteps)
+        .where(eq(gameQuestSteps.skillId, input.skillId));
+      if (existingSteps.length >= 3) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "此技能已有 3 個以上步驟" });
+      }
+
+      // 取得 NPC 資料
+      let npcName = "神秘導師";
+      let npcLocation = "未知之地";
+      if (skill.npcId) {
+        const [npc] = await db.select().from(gameNpcCatalog)
+          .where(eq(gameNpcCatalog.id, skill.npcId));
+        if (npc) {
+          npcName = npc.name;
+          npcLocation = npc.location || "未知之地";
+        }
+      }
+
+      const categoryLabels: Record<string, string> = {
+        physical: "物理戰鬥", magic: "魔法攻擊", status: "狀態控制",
+        support: "戰鬥輔助", special: "特殊功能", production: "生產",
+      };
+
+      const response = await invokeLLM({
+        messages: [
+          { role: "system", content: "你是東方玄幻 MMORPG 的任務設計師。回覆純 JSON 陣列，不要加任何說明文字。" },
+          { role: "user", content: `為以下天命考核技能設計 3 個任務步驟：
+
+技能：${skill.name}（${skill.code}）
+分類：${categoryLabels[skill.category] || skill.category}
+效果：${skill.description || "無描述"}
+五行：${skill.wuxing}
+稀有度：${skill.rarity}
+教導 NPC：${npcName}（位於 ${npcLocation}）
+
+設計要求：
+- 步驟 1：邂逅/接觸（與 NPC 對話、了解技能背景）
+- 步驟 2：修煉/收集（完成特定挑戰或收集材料）
+- 步驟 3：最終試煉（擊敗 BOSS 或完成高難度挑戰）
+- 每個步驟要有連貫的劇情
+- 對話要有角色個性
+- 獎勵遞增（經驗 100→200→500，金幣 200→300→500）
+
+回覆 JSON 陣列：
+[{
+  "stepNumber": 1,
+  "title": "步驟標題",
+  "dialogue": "NPC 對話文本（至少 50 字）",
+  "objective": "任務目標描述",
+  "location": "任務地點",
+  "objectives": {"type": "kill/collect/boss/challenge", "targets": [{"name": "目標名", "count": 5}]},
+  "rewards": {"exp": 100, "gold": 200}
+}]` },
+        ],
+      });
+
+      const content = response.choices?.[0]?.message?.content as string;
+      let steps: any[];
+      try {
+        let jsonStr = content.trim();
+        if (jsonStr.startsWith("```")) {
+          jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+        }
+        const parsed = JSON.parse(jsonStr);
+        steps = Array.isArray(parsed) ? parsed : parsed.steps || parsed.data || [parsed];
+      } catch {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 回覆格式錯誤" });
+      }
+
+      const now = Date.now();
+      let insertedCount = 0;
+      for (const step of steps.slice(0, 3)) {
+        await db.insert(gameQuestSteps).values({
+          skillId: input.skillId,
+          stepNumber: step.stepNumber ?? (insertedCount + 1),
+          title: step.title || `步驟 ${insertedCount + 1}`,
+          dialogue: step.dialogue || "",
+          objective: step.objective || "",
+          location: step.location || npcLocation,
+          objectives: step.objectives || null,
+          rewards: step.rewards || null,
+          specialNote: step.specialNote || null,
+          npcId: skill.npcId ?? null,
+          sortOrder: insertedCount,
+          createdAt: now,
+          updatedAt: now,
+        });
+        insertedCount++;
+      }
+
+      return {
+        success: true,
+        insertedCount,
+        message: `已為「${skill.name}」生成 ${insertedCount} 個任務步驟`,
+      };
+    }),
+
+  /**
+   * AI 批量生成 NPC
+   */
+  aiGenerateQuestNpcs: adminProcedure
+    .input(z.object({
+      count: z.number().min(1).max(10).default(5),
+      region: z.enum(["初界", "中界", "高界"]).default("初界"),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const existingNpcs = await db.select({ name: gameNpcCatalog.name }).from(gameNpcCatalog);
+      const existingNames = existingNpcs.map(n => n.name);
+
+      const response = await invokeLLM({
+        messages: [
+          { role: "system", content: "你是東方玄幻 MMORPG 的 NPC 設計師。回覆純 JSON 陣列，不要加任何說明文字。" },
+          { role: "user", content: `為「墟界」遊戲的${input.region}設計 ${input.count} 個新 NPC，要求：
+
+- 名稱不可與已有 NPC 重複：${existingNames.join("、") || "無"}
+- 每個 NPC 要有獨特的身份和背景故事
+- 地點要在${input.region}的不同區域
+- NPC 類型多樣：武術大師、魔法導師、煉金師、隱士、商人等
+- 名稱風格：東方玄幻 + 西方奇幻混合
+
+回覆 JSON 陣列：
+[{
+  "code": "npc_xxx",
+  "name": "NPC 名稱",
+  "title": "NPC 身份/稱號",
+  "location": "所在地點（如 迷霧城・戰士公會大廳）",
+  "region": "${input.region}",
+  "description": "NPC 背景描述（至少 30 字）"
+}]` },
+        ],
+      });
+
+      const content = response.choices?.[0]?.message?.content as string;
+      let npcs: any[];
+      try {
+        let jsonStr = content.trim();
+        if (jsonStr.startsWith("```")) {
+          jsonStr = jsonStr.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+        }
+        const parsed = JSON.parse(jsonStr);
+        npcs = Array.isArray(parsed) ? parsed : parsed.npcs || parsed.data || [parsed];
+      } catch {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 回覆格式錯誤" });
+      }
+
+      const now = Date.now();
+      let insertedCount = 0;
+      const insertedNames: string[] = [];
+
+      for (const npc of npcs.slice(0, input.count)) {
+        if (!npc.name || existingNames.includes(npc.name)) continue;
+        try {
+          await db.insert(gameNpcCatalog).values({
+            code: npc.code || `npc_${Date.now()}_${insertedCount}`,
+            name: npc.name,
+            title: npc.title || "",
+            location: npc.location || "",
+            region: npc.region || input.region,
+            description: npc.description || "",
+            isHidden: 0,
+            sortOrder: insertedCount,
+            createdAt: now,
+            updatedAt: now,
+          });
+          insertedNames.push(npc.name);
+          existingNames.push(npc.name);
+          insertedCount++;
+        } catch (err) {
+          console.error("[AI NPC Generate] 插入失敗:", err);
+        }
+      }
+
+      return {
+        success: true,
+        insertedCount,
+        insertedNames,
+        message: `AI 成功生成 ${insertedCount} 個 NPC：${insertedNames.join("、")}`,
+      };
     }),
 });

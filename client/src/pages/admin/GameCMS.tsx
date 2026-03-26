@@ -499,6 +499,7 @@ export default function GameCMS() {
             <TabsTrigger value="catalog-stats">📊 圖鑑統計</TabsTrigger>
             <TabsTrigger value="balance">⚖️ 數值平衡</TabsTrigger>
             <TabsTrigger value="ai-tools">🤖 AI 工具</TabsTrigger>
+            <TabsTrigger value="quest-skills">🌟 天命考核</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -520,6 +521,7 @@ export default function GameCMS() {
               <TabsContent value="catalog-stats"><CatalogStatsTab /></TabsContent>
               <TabsContent value="balance"><BalanceDashboardTab /></TabsContent>
               <TabsContent value="ai-tools"><AIToolsTab /></TabsContent>
+              <TabsContent value="quest-skills"><QuestSkillCMSTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
@@ -1314,6 +1316,7 @@ function SkillCatalogTab() {
 
 // ─── Balance Dashboard Tab ───────────────────────────────────────────────────────────────────
 import BalanceRulesEditor from "@/components/admin/BalanceRulesEditor";
+import { QuestSkillCMSTab } from "@/components/admin/QuestSkillCMS";
 
 function BalanceDashboardTab() {
   const { data, isLoading, refetch } = trpc.gameCatalog.getBalanceAnalysis.useQuery();
@@ -1671,6 +1674,18 @@ function AIToolsTab() {
     onError: (e) => toast.error(e.message || "AI 批量補齊失敗"),
   });
 
+  // AI 天命考核技能生成
+  const aiGenQuestSkill = trpc.gameAI.aiGenerateQuestSkill.useMutation({
+    onSuccess: (data) => { toast.success(data.message); utils.questSkillNpc.invalidate(); },
+    onError: (e) => toast.error(e.message || "AI 天命考核技能生成失敗"),
+  });
+
+  // AI 天命考核技能平衡
+  const balanceQuestSkills = trpc.gameAIBalance.balanceQuestSkills.useMutation({
+    onSuccess: (data) => { setBalanceResults(prev => ({ ...prev, questSkills: data })); data.dryRun ? toast.success(`預覽：發現 ${data.totalChanges} 項需修正`) : toast.success(data.message); utils.questSkillNpc.invalidate(); },
+    onError: (e) => toast.error(e.message),
+  });
+
   // === AI 平衡 Mutations ===
   const balanceMonsters = trpc.gameAIBalance.balanceMonsters.useMutation({
     onSuccess: (data) => { setBalanceResults(prev => ({ ...prev, monsters: data })); data.dryRun ? toast.success(`預覽：發現 ${data.totalChanges} 項需修正`) : toast.success(data.message); utils.gameCatalog.invalidate(); },
@@ -1718,11 +1733,12 @@ function AIToolsTab() {
     { key: "equipment", label: "裝備", icon: "⚔️", color: "#C9A227", desc: "ATK/DEF/HP/SPD加成", mutate: balanceEquipment },
     { key: "skills", label: "人物技能", icon: "✨", color: "#8B5CF6", desc: "威力%/MP/冷卻/售價", mutate: balanceSkills },
     { key: "achievements", label: "成就", icon: "🏆", color: "#F59E0B", desc: "獎勵數量校準", mutate: balanceAchievements },
+    { key: "questSkills", label: "天命考核技能", icon: "🌟", color: "#EC4899", desc: "威力/MP/冷卻/金幣/魂晶", mutate: balanceQuestSkills },
   ];
 
   const isGenerating = aiBatchGenerate.isPending;
   const isRefreshing = aiRefreshShop.isPending;
-  const isAnyBalancing = balanceMonsters.isPending || balanceMonsterSkills.isPending || balanceItems.isPending || balanceEquipment.isPending || balanceSkills.isPending || balanceAchievements.isPending || balanceAll.isPending;
+  const isAnyBalancing = balanceMonsters.isPending || balanceMonsterSkills.isPending || balanceItems.isPending || balanceEquipment.isPending || balanceSkills.isPending || balanceAchievements.isPending || balanceQuestSkills.isPending || balanceAll.isPending;
 
   // 平衡結果顯示元件
   const BalanceResultPanel = ({ data }: { data: any }) => {
@@ -1873,6 +1889,59 @@ function AIToolsTab() {
               <div className="mt-2 flex flex-wrap gap-1">
                 {(aiBatchFillSkills.data as any).results.map((r: any, i: number) => (
                   <Badge key={i} variant="secondary" className="text-xs">{r.monsterName} (+{r.skillCount}技能)</Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <hr className="border-border" />
+
+      {/* === 區塊 3.5：AI 天命考核技能生成 === */}
+      <div>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">🌟 AI 天命考核技能生成</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          AI 根據遊戲世界觀和五行屬性，自動生成天命考核專屬技能。按技能類型分類生成，稀有度由 AI 自動分配。
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {(["physical", "magic", "status", "support", "special", "production"] as const).map((cat) => {
+            const catConfig: Record<string, { label: string; color: string; icon: string; desc: string }> = {
+              physical: { label: "物理", color: "#DC143C", icon: "⚔️", desc: "近戰攻擊、力量技" },
+              magic: { label: "法術", color: "#8B5CF6", icon: "✨", desc: "元素攻擊、五行術法" },
+              status: { label: "狀態", color: "#F59E0B", icon: "💠", desc: "增益/減益、狀態變化" },
+              support: { label: "輔助", color: "#10B981", icon: "💚", desc: "治療、防禦、強化" },
+              special: { label: "特殊", color: "#EC4899", icon: "🌟", desc: "絕招、天命專屬" },
+              production: { label: "生產", color: "#6366F1", icon: "🔨", desc: "製作、採集、煉化" },
+            };
+            const cfg = catConfig[cat];
+            return (
+              <div key={cat} className="border rounded-xl p-4 hover:shadow-md transition-shadow" style={{ borderColor: cfg.color + "40" }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">{cfg.icon}</span>
+                  <span className="font-bold" style={{ color: cfg.color }}>{cfg.label}技能</span>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">{cfg.desc}</p>
+                <Button
+                  size="sm"
+                  onClick={() => aiGenQuestSkill.mutate({ count: 3, category: cat })}
+                  disabled={aiGenQuestSkill.isPending}
+                  className="w-full"
+                  style={{ backgroundColor: cfg.color, color: "#fff" }}
+                >
+                  {aiGenQuestSkill.isPending ? "⏳ AI 生成中..." : `🧠 生成 3 個${cfg.label}技能`}
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+        {aiGenQuestSkill.data && (
+          <div className="mt-4 p-3 rounded-lg border bg-pink-50 dark:bg-pink-950/30 text-sm">
+            <p className="font-medium text-pink-700 dark:text-pink-400">✅ {aiGenQuestSkill.data.message}</p>
+            {(aiGenQuestSkill.data as any).generatedNames?.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {(aiGenQuestSkill.data as any).generatedNames.map((name: string, i: number) => (
+                  <Badge key={i} variant="secondary" className="text-xs">{name}</Badge>
                 ))}
               </div>
             )}

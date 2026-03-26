@@ -2868,3 +2868,192 @@ export const gameBalanceRules = mysqlTable("game_balance_rules", {
 });
 export type GameBalanceRule = typeof gameBalanceRules.$inferSelect;
 export type InsertGameBalanceRule = typeof gameBalanceRules.$inferInsert;
+
+
+// ═══════════════════════════════════════════════════════════════════════
+// 天命考核 ── 技能任務鏈系統（M3O）
+// ═══════════════════════════════════════════════════════════════════════
+
+/**
+ * NPC 圖鑑
+ * 管理所有任務鏈相關的 NPC（技能導師、工匠、商人等）
+ */
+export const gameNpcCatalog = mysqlTable("game_npc_catalog", {
+  id: int("id").autoincrement().primaryKey(),
+  /** NPC 唯一代碼（如 npc_xila, npc_hans） */
+  code: varchar("code", { length: 50 }).notNull(),
+  /** NPC 名稱 */
+  name: varchar("name", { length: 100 }).notNull(),
+  /** NPC 稱號/身份（如「傳奇刺客 / 連擊之師」） */
+  title: varchar("title", { length: 200 }),
+  /** 所在地點名稱（如「迷霧城・戰士公會大廳」） */
+  location: varchar("location", { length: 200 }),
+  /** 地圖座標 X */
+  posX: int("pos_x").default(0),
+  /** 地圖座標 Y */
+  posY: int("pos_y").default(0),
+  /** 所屬區域（初界/中界/高界） */
+  region: varchar("region", { length: 30 }).default("初界"),
+  /** NPC 頭像圖片 URL */
+  avatarUrl: text("avatar_url"),
+  /** NPC 描述/背景故事 */
+  description: text("description"),
+  /** 是否為隱藏 NPC（需要特殊條件才能看到） */
+  isHidden: tinyint("is_hidden").notNull().default(0),
+  /** 排序權重 */
+  sortOrder: int("sort_order").notNull().default(0),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameNpcCatalog = typeof gameNpcCatalog.$inferSelect;
+export type InsertGameNpcCatalog = typeof gameNpcCatalog.$inferInsert;
+
+/**
+ * 天命考核技能圖鑑
+ * 定義所有可透過任務鏈習得的技能（32 種）
+ * 這些技能習得後可掛到主技能欄，在戰鬥中使用
+ */
+export const gameQuestSkillCatalog = mysqlTable("game_quest_skill_catalog", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 技能代碼（如 P1, M2, S3, A4, X1, C1） */
+  code: varchar("code", { length: 10 }).notNull(),
+  /** 技能名稱（如「連擊」「火焰魔法」） */
+  name: varchar("name", { length: 100 }).notNull(),
+  /** 任務鏈副標題（如「碎影雙刃・連環之路」） */
+  questTitle: varchar("quest_title", { length: 200 }),
+  /** 技能分類：physical / magic / status / support / special / production */
+  category: varchar("category", { length: 20 }).notNull(),
+  /** 技能子類型（用於戰鬥引擎判定）：
+   * attack = 攻擊, heal = 治癒, buff = 增益, debuff = 減益,
+   * passive = 被動, utility = 功能, production = 生產 */
+  skillType: varchar("skill_type", { length: 20 }).notNull().default("attack"),
+  /** 技能描述/效果說明 */
+  description: text("description"),
+  /** 五行屬性（金/木/水/火/土/無） */
+  wuxing: varchar("wuxing", { length: 10 }).default("無"),
+  /** 傷害/效果百分比（如 180 = 180% 物理傷害） */
+  powerPercent: int("power_percent").notNull().default(100),
+  /** MP 消耗 */
+  mpCost: int("mp_cost").notNull().default(10),
+  /** 冷卻回合數 */
+  cooldown: int("cooldown").notNull().default(3),
+  /** 技能等級上限 */
+  maxLevel: int("max_level").notNull().default(10),
+  /** 每升一級增加的效果百分比 */
+  levelUpBonus: int("level_up_bonus").notNull().default(10),
+  /** 附加效果 JSON（與怪物技能相同格式）
+   * { type: "poison"|"burn"|"freeze"|"stun"|"slow"|"sleep"|"petrify"|"confuse"|"drunk"|"forget"|"defDown"|"spdDown",
+   *   chance: number, value: number, duration: number } */
+  additionalEffect: json("additional_effect"),
+  /** 特殊機制 JSON（連擊次數、命中率修正、範圍等）
+   * { hitCount?: [min, max], accuracyMod?: number, range?: number, aoe?: string,
+   *   selfDamage?: boolean, skipNextTurn?: boolean, isPassive?: boolean } */
+  specialMechanic: json("special_mechanic"),
+  /** 習得代價 JSON { gold?: number, soulCrystal?: number, items?: [{name, count}], reputation?: {area, amount} } */
+  learnCost: json("learn_cost"),
+  /** 前置條件 JSON { skills?: [string], level?: number, special?: string } */
+  prerequisites: json("prerequisites"),
+  /** 教導此技能的 NPC ID（關聯 gameNpcCatalog） */
+  npcId: int("npc_id"),
+  /** 稀有度（用於平衡系統）：common / rare / epic / legendary */
+  rarity: varchar("rarity", { length: 20 }).notNull().default("rare"),
+  /** 圖示 URL */
+  iconUrl: text("icon_url"),
+  /** 排序權重 */
+  sortOrder: int("sort_order").notNull().default(0),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameQuestSkillCatalog = typeof gameQuestSkillCatalog.$inferSelect;
+export type InsertGameQuestSkillCatalog = typeof gameQuestSkillCatalog.$inferInsert;
+
+/**
+ * 技能任務鏈步驟
+ * 每個技能有 3~4 個步驟 + 最終確認
+ */
+export const gameQuestSteps = mysqlTable("game_quest_steps", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 關聯的技能 ID（gameQuestSkillCatalog） */
+  skillId: int("skill_id").notNull(),
+  /** 步驟序號（1, 2, 3, 4...；最終確認 = 99） */
+  stepNumber: int("step_number").notNull(),
+  /** 步驟標題（如「邂逅傳奇刺客」） */
+  title: varchar("title", { length: 200 }).notNull(),
+  /** NPC 對話文本 */
+  dialogue: text("dialogue"),
+  /** 任務目標描述 */
+  objective: text("objective"),
+  /** 任務地點 */
+  location: varchar("location", { length: 200 }),
+  /** 任務目標 JSON（結構化）
+   * { type: "kill"|"collect"|"boss"|"challenge"|"deliver"|"survive"|"craft",
+   *   targets?: [{name, count, dropRate?}],
+   *   boss?: {name, hp, stars, traits?, drops?},
+   *   conditions?: string[],
+   *   timeLimit?: number } */
+  objectives: json("objectives"),
+  /** 步驟獎勵 JSON { exp?: number, gold?: number, silver?: number, items?: [{name, count}], titles?: string[] } */
+  rewards: json("rewards"),
+  /** 步驟特殊機制說明 */
+  specialNote: text("special_note"),
+  /** 涉及的 NPC ID（可能與主 NPC 不同，如 P6 Step2 的漢斯） */
+  npcId: int("npc_id"),
+  /** 排序權重 */
+  sortOrder: int("sort_order").notNull().default(0),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameQuestStep = typeof gameQuestSteps.$inferSelect;
+export type InsertGameQuestStep = typeof gameQuestSteps.$inferInsert;
+
+/**
+ * 玩家任務鏈進度追蹤
+ * 記錄每個玩家在每個技能任務鏈的進度
+ */
+export const gameQuestProgress = mysqlTable("game_quest_progress", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 玩家的代理人 ID（關聯 gameAgents） */
+  agentId: int("agent_id").notNull(),
+  /** 技能 ID（關聯 gameQuestSkillCatalog） */
+  skillId: int("skill_id").notNull(),
+  /** 當前步驟序號（0=未開始, 1~4=進行中, 99=最終確認, 100=已完成） */
+  currentStep: int("current_step").notNull().default(0),
+  /** 當前步驟的子進度 JSON（如 { killed: 10, required: 15 }） */
+  stepProgress: json("step_progress"),
+  /** 狀態：not_started / in_progress / ready_to_confirm / completed */
+  status: varchar("status", { length: 20 }).notNull().default("not_started"),
+  /** 開始時間 */
+  startedAt: bigint("started_at", { mode: "number" }),
+  /** 完成時間 */
+  completedAt: bigint("completed_at", { mode: "number" }),
+  /** 習得的技能等級（完成後從 1 開始） */
+  skillLevel: int("skill_level").notNull().default(0),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameQuestProgress = typeof gameQuestProgress.$inferSelect;
+export type InsertGameQuestProgress = typeof gameQuestProgress.$inferInsert;
+
+/**
+ * 玩家已習得的天命考核技能
+ * 習得後可裝備到主技能欄（與現有 agentSkills 共用技能欄位）
+ */
+export const gameLearnedQuestSkills = mysqlTable("game_learned_quest_skills", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 玩家的代理人 ID */
+  agentId: int("agent_id").notNull(),
+  /** 技能 ID（關聯 gameQuestSkillCatalog） */
+  skillId: int("skill_id").notNull(),
+  /** 當前技能等級 */
+  level: int("level").notNull().default(1),
+  /** 技能經驗值（用於升級） */
+  exp: int("exp").notNull().default(0),
+  /** 是否已裝備到技能欄 */
+  isEquipped: tinyint("is_equipped").notNull().default(0),
+  /** 裝備的技能欄位置（1~6，0=未裝備） */
+  slotIndex: int("slot_index").notNull().default(0),
+  /** 習得時間 */
+  learnedAt: bigint("learned_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameLearnedQuestSkill = typeof gameLearnedQuestSkills.$inferSelect;
+export type InsertGameLearnedQuestSkill = typeof gameLearnedQuestSkills.$inferInsert;

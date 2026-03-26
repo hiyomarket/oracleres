@@ -9,7 +9,7 @@ import { checkAchievements, seedAchievements } from "./achievementEngine";
 import { broadcastToAll, sendToAgent } from "./wsServer";
 import { broadcastLevelUp, broadcastLegendaryDrop, broadcastAchievementUnlock } from "./liveFeedBroadcast";
 import { calcSkillCombo, updateHiddenSkillTracker } from "./skillComboEngine";
-import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates, gameRogueEvents, gameVirtualShop, gameSpiritShop, gameItemCatalog } from "../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates, gameRogueEvents, gameVirtualShop, gameSpiritShop, gameItemCatalog, gameLearnedQuestSkills, gameQuestSkillCatalog } from "../drizzle/schema";
 import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs, getInfuseConfig } from "./gameEngineConfig";
 import { eq, and, sql } from "drizzle-orm";
@@ -1405,6 +1405,53 @@ async function processCombatEvent(
     }
   } catch {
     equippedSkillsForCombat = [];
+  }
+
+  // M3O: 載入天命考核技能（已裝備的）並合併到戰鬥技能列表
+  try {
+    const { inArray } = await import("drizzle-orm");
+    const equippedQuestSkills = await db
+      .select({
+        skillId: gameLearnedQuestSkills.skillId,
+        slotIndex: gameLearnedQuestSkills.slotIndex,
+      })
+      .from(gameLearnedQuestSkills)
+      .where(and(
+        eq(gameLearnedQuestSkills.agentId, agent.id),
+        eq(gameLearnedQuestSkills.isEquipped, 1),
+      ));
+    const questSkillIds = equippedQuestSkills.map(s => s.skillId);
+    if (questSkillIds.length > 0) {
+      const questSkillData = await db.select({
+        id: gameQuestSkillCatalog.id,
+        name: gameQuestSkillCatalog.name,
+        category: gameQuestSkillCatalog.category,
+        skillType: gameQuestSkillCatalog.skillType,
+        powerPercent: gameQuestSkillCatalog.powerPercent,
+        mpCost: gameQuestSkillCatalog.mpCost,
+        cooldown: gameQuestSkillCatalog.cooldown,
+        wuxing: gameQuestSkillCatalog.wuxing,
+      }).from(gameQuestSkillCatalog).where(inArray(gameQuestSkillCatalog.id, questSkillIds));
+      for (const qs of questSkillData) {
+        // 將天命考核技能轉換為戰鬥技能格式
+        const mappedType = qs.skillType === "attack" ? "attack" :
+          qs.skillType === "heal" ? "heal" :
+          qs.skillType === "buff" ? "buff" :
+          qs.skillType === "debuff" ? "attack" : // debuff 當作攻擊處理
+          qs.skillType === "utility" ? "buff" : "attack";
+        equippedSkillsForCombat.push({
+          id: `quest_${qs.id}`,
+          name: `[天命] ${qs.name}`,
+          skillType: mappedType,
+          damageMultiplier: (qs.powerPercent ?? 100) / 100,
+          mpCost: qs.mpCost ?? 0,
+          wuxing: qs.wuxing ?? undefined,
+          cooldown: qs.cooldown ?? 3,
+        });
+      }
+    }
+  } catch {
+    // 天命考核技能載入失敗不影響戰鬥
   }
 
   // 結算戰鬥

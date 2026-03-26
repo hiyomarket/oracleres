@@ -20,6 +20,7 @@ import {
   gameSkillCatalog,
   gameAchievements,
   gameMonsterSkillCatalog,
+  gameQuestSkillCatalog,
 } from "../../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
 import { loadBalanceRulesGrouped } from "./balanceRules";
@@ -497,7 +498,88 @@ export const gameAIBalanceRouter = router({
         totalChanges,
         summary,
         allChanges,
-        message: `全圖鑑平衡掃描完成：共掃描 ${totalScanned} 項，發現 ${totalChanges} 項需修正`,
+        message: `全圖鑑平衡掌描完成：共掌描 ${totalScanned} 項，發現 ${totalChanges} 項需修正`,
+      };
+    }),
+
+  // ─── 8. 天命考核技能平衡 ───
+  balanceQuestSkills: adminProcedure
+    .input(z.object({ dryRun: z.boolean().default(true) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const skills = await db.select().from(gameQuestSkillCatalog);
+      const changes: BalanceChange[] = [];
+
+      const allRules = await loadBalanceRulesGrouped();
+      const qsRules = allRules["questSkill"] ?? {};
+
+      for (const s of skills) {
+        const fixes: Partial<Record<string, any>> = {};
+        const powerR = getRange(qsRules, s.rarity, "power");
+        const mpR = getRange(qsRules, s.rarity, "mp");
+        const cdR = getRange(qsRules, s.rarity, "cd");
+        const goldR = getRange(qsRules, s.rarity, "gold");
+        const soulR = getRange(qsRules, s.rarity, "soul");
+
+        // 檢查威力
+        if (s.skillType !== "passive" && s.skillType !== "production" && isOutOfRange(s.powerPercent, powerR)) {
+          const nv = clamp(s.powerPercent, powerR[0], powerR[1]);
+          changes.push({ id: s.id, name: s.name, field: "威力%", oldValue: s.powerPercent, newValue: nv, reason: `${s.rarity} 威力應在 ${powerR[0]}-${powerR[1]}%` });
+          fixes.powerPercent = nv;
+        }
+        // 檢查 MP
+        if (isOutOfRange(s.mpCost, mpR)) {
+          const nv = clamp(s.mpCost, mpR[0], mpR[1]);
+          changes.push({ id: s.id, name: s.name, field: "MP消耗", oldValue: s.mpCost, newValue: nv, reason: `${s.rarity} MP 應在 ${mpR[0]}-${mpR[1]}` });
+          fixes.mpCost = nv;
+        }
+        // 檢查冷卻
+        if (isOutOfRange(s.cooldown, cdR)) {
+          const nv = clamp(s.cooldown, cdR[0], cdR[1]);
+          changes.push({ id: s.id, name: s.name, field: "冷卻", oldValue: s.cooldown, newValue: nv, reason: `${s.rarity} CD 應在 ${cdR[0]}-${cdR[1]}` });
+          fixes.cooldown = nv;
+        }
+        // 檢查習得代價（金幣 + 魂晶）
+        const learnCost = s.learnCost as any;
+        if (learnCost && typeof learnCost === "object") {
+          const gold = learnCost.gold ?? 0;
+          const soul = learnCost.soulCrystal ?? 0;
+          let costChanged = false;
+          const newCost = { ...learnCost };
+
+          if (gold > 0 && isOutOfRange(gold, goldR)) {
+            const nv = clamp(gold, goldR[0], goldR[1]);
+            changes.push({ id: s.id, name: s.name, field: "金幣代價", oldValue: gold, newValue: nv, reason: `${s.rarity} 金幣應在 ${goldR[0]}-${goldR[1]}` });
+            newCost.gold = nv;
+            costChanged = true;
+          }
+          if (soul > 0 && isOutOfRange(soul, soulR)) {
+            const nv = clamp(soul, soulR[0], soulR[1]);
+            changes.push({ id: s.id, name: s.name, field: "魂晶代價", oldValue: soul, newValue: nv, reason: `${s.rarity} 魂晶應在 ${soulR[0]}-${soulR[1]}` });
+            newCost.soulCrystal = nv;
+            costChanged = true;
+          }
+          if (costChanged) {
+            fixes.learnCost = newCost;
+          }
+        }
+
+        if (!input.dryRun && Object.keys(fixes).length > 0) {
+          await db.update(gameQuestSkillCatalog).set({ ...fixes, updatedAt: Date.now() }).where(eq(gameQuestSkillCatalog.id, s.id));
+        }
+      }
+
+      return {
+        success: true,
+        dryRun: input.dryRun,
+        totalScanned: skills.length,
+        totalChanges: changes.length,
+        changes,
+        message: input.dryRun
+          ? `預覽模式：掌描 ${skills.length} 個天命考核技能，發現 ${changes.length} 項數值需修正`
+          : `已修正 ${changes.length} 項天命考核技能數值`,
       };
     }),
 });
