@@ -1313,6 +1313,8 @@ function SkillCatalogTab() {
 
 
 // ─── Balance Dashboard Tab ───────────────────────────────────────────────────────────────────
+import BalanceRulesEditor from "@/components/admin/BalanceRulesEditor";
+
 function BalanceDashboardTab() {
   const { data, isLoading, refetch } = trpc.gameCatalog.getBalanceAnalysis.useQuery();
 
@@ -1515,6 +1517,11 @@ function BalanceDashboardTab() {
           <div className="text-sm text-muted-foreground mt-1">所有怪物、道具、裝備的數值均在合理範圍內</div>
         </div>
       )}
+
+      {/* 平衡規則自訂編輯器 */}
+      <div className="mt-8 pt-6 border-t border-white/10">
+        <BalanceRulesEditor />
+      </div>
     </div>
   );
 }

@@ -2842,3 +2842,29 @@ export const gameMonsterSkillCatalog = mysqlTable("game_monster_skill_catalog", 
 });
 export type GameMonsterSkillCatalog = typeof gameMonsterSkillCatalog.$inferSelect;
 export type InsertGameMonsterSkillCatalog = typeof gameMonsterSkillCatalog.$inferInsert;
+
+
+/**
+ * 平衡規則自訂表
+ * 管理員可自訂各圖鑑各稀有度的數值範圍上下限
+ * catalogType: monster / monsterSkill / item / equipment / skill / achievement
+ * rarity: 對應各圖鑑的稀有度或品質（如 common, rare, epic, legendary, white, green, blue, purple, orange, red）
+ * field: 對應各圖鑑的數值欄位（如 hp, atk, def, spd, power, mp, cd, price, coins, stones, aiLevel）
+ */
+export const gameBalanceRules = mysqlTable("game_balance_rules", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 圖鑑類型 */
+  catalogType: varchar("catalog_type", { length: 30 }).notNull(),
+  /** 稀有度/品質 */
+  rarity: varchar("rarity", { length: 30 }).notNull(),
+  /** 數值欄位名稱 */
+  field: varchar("field", { length: 30 }).notNull(),
+  /** 最小值 */
+  minValue: float("min_value").notNull(),
+  /** 最大值 */
+  maxValue: float("max_value").notNull(),
+  /** 更新時間 */
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameBalanceRule = typeof gameBalanceRules.$inferSelect;
+export type InsertGameBalanceRule = typeof gameBalanceRules.$inferInsert;

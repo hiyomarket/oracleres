@@ -22,6 +22,7 @@ import {
   gameMonsterSkillCatalog,
 } from "../../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
+import { loadBalanceRulesGrouped } from "./balanceRules";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
@@ -31,60 +32,21 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// 平衡基準值定義
+// 平衡基準值：從資料庫自訂規則載入（fallback 預設值）
 // ═══════════════════════════════════════════════════════════════
 
-/** 怪物數值基準（按稀有度） */
-const MONSTER_BALANCE: Record<string, { hp: [number, number]; atk: [number, number]; def: [number, number]; spd: [number, number]; aiLevel: number }> = {
-  common:    { hp: [30, 120],   atk: [5, 20],   def: [2, 12],  spd: [3, 12],  aiLevel: 1 },
-  rare:      { hp: [80, 250],   atk: [15, 40],  def: [8, 25],  spd: [5, 18],  aiLevel: 2 },
-  elite:     { hp: [150, 350],  atk: [25, 55],  def: [15, 35], spd: [8, 22],  aiLevel: 2 },
-  epic:      { hp: [200, 400],  atk: [30, 65],  def: [18, 40], spd: [10, 25], aiLevel: 3 },
-  boss:      { hp: [300, 500],  atk: [40, 80],  def: [25, 50], spd: [12, 28], aiLevel: 3 },
-  legendary: { hp: [350, 500],  atk: [50, 80],  def: [30, 50], spd: [15, 30], aiLevel: 3 },
-};
+type RangeMap = Record<string, Record<string, [number, number]>>;
 
-/** 怪物技能數值基準（按稀有度） */
-const MONSTER_SKILL_BALANCE: Record<string, { power: [number, number]; mp: [number, number]; cd: [number, number] }> = {
-  common:    { power: [60, 130],  mp: [0, 10],  cd: [0, 2] },
-  rare:      { power: [90, 160],  mp: [3, 15],  cd: [0, 3] },
-  epic:      { power: [120, 210], mp: [5, 25],  cd: [1, 4] },
-  legendary: { power: [150, 260], mp: [8, 30],  cd: [1, 5] },
-};
+/** 從分組規則中取得 [min, max]，找不到回傳 fallback */
+function getRange(grouped: RangeMap, rarity: string, field: string, fallback: [number, number] = [0, 9999]): [number, number] {
+  return grouped?.[rarity]?.[field] ?? fallback;
+}
 
-/** 道具售價基準（按稀有度） */
-const ITEM_PRICE_BALANCE: Record<string, [number, number]> = {
-  common:    [10, 150],
-  rare:      [80, 600],
-  epic:      [400, 2500],
-  legendary: [1500, 10000],
-};
-
-/** 裝備數值基準（按品質） */
-const EQUIP_BALANCE: Record<string, { atk: [number, number]; def: [number, number]; hp: [number, number]; spd: [number, number] }> = {
-  white:  { atk: [0, 8],   def: [0, 6],   hp: [0, 30],   spd: [0, 4] },
-  green:  { atk: [3, 15],  def: [2, 12],  hp: [5, 50],   spd: [0, 8] },
-  blue:   { atk: [8, 22],  def: [5, 18],  hp: [15, 75],  spd: [2, 12] },
-  purple: { atk: [12, 28], def: [8, 22],  hp: [25, 90],  spd: [3, 14] },
-  orange: { atk: [18, 35], def: [12, 28], hp: [40, 110], spd: [5, 16] },
-  red:    { atk: [25, 40], def: [18, 35], hp: [60, 130], spd: [8, 20] },
-};
-
-/** 人物技能數值基準（按稀有度） */
-const SKILL_BALANCE: Record<string, { power: [number, number]; mp: [number, number]; cd: [number, number]; price: [number, number] }> = {
-  common:    { power: [70, 130],  mp: [0, 12],  cd: [0, 2], price: [50, 300] },
-  rare:      { power: [100, 170], mp: [5, 20],  cd: [1, 3], price: [200, 800] },
-  epic:      { power: [140, 220], mp: [10, 35], cd: [1, 4], price: [500, 3000] },
-  legendary: { power: [180, 280], mp: [15, 50], cd: [2, 5], price: [2000, 10000] },
-};
-
-/** 成就獎勵基準（按稀有度） */
-const ACHIEVEMENT_BALANCE: Record<string, { coins: [number, number]; stones: [number, number] }> = {
-  common:    { coins: [10, 80],    stones: [1, 5] },
-  rare:      { coins: [50, 250],   stones: [5, 20] },
-  epic:      { coins: [200, 800],  stones: [15, 50] },
-  legendary: { coins: [500, 2000], stones: [30, 100] },
-};
+/** 從分組規則中取得 aiLevel（用 minValue 作為固定值） */
+function getAiLevel(grouped: RangeMap, rarity: string): number {
+  const r = grouped?.[rarity]?.aiLevel;
+  return r ? r[0] : 1;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // 工具函數
@@ -120,37 +82,42 @@ export const gameAIBalanceRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
+      const allRules = await loadBalanceRulesGrouped();
+      const monsterRules = allRules["monster"] ?? {};
       const monsters = await db.select().from(gameMonsterCatalog).where(sql`is_active = 1`);
       const changes: BalanceChange[] = [];
 
       for (const m of monsters) {
-        const ref = MONSTER_BALANCE[m.rarity] ?? MONSTER_BALANCE.common;
         const fixes: Partial<Record<string, number>> = {};
+        const hpR = getRange(monsterRules, m.rarity, "hp");
+        const atkR = getRange(monsterRules, m.rarity, "atk");
+        const defR = getRange(monsterRules, m.rarity, "def");
+        const spdR = getRange(monsterRules, m.rarity, "spd");
+        const expectedAi = getAiLevel(monsterRules, m.rarity);
 
-        if (isOutOfRange(m.baseHp, ref.hp)) {
-          const nv = clamp(m.baseHp, ref.hp[0], ref.hp[1]);
-          changes.push({ id: m.id, name: m.name, field: "HP", oldValue: m.baseHp, newValue: nv, reason: `${m.rarity} HP 應在 ${ref.hp[0]}-${ref.hp[1]}` });
+        if (isOutOfRange(m.baseHp, hpR)) {
+          const nv = clamp(m.baseHp, hpR[0], hpR[1]);
+          changes.push({ id: m.id, name: m.name, field: "HP", oldValue: m.baseHp, newValue: nv, reason: `${m.rarity} HP 應在 ${hpR[0]}-${hpR[1]}` });
           fixes.baseHp = nv;
         }
-        if (isOutOfRange(m.baseAttack, ref.atk)) {
-          const nv = clamp(m.baseAttack, ref.atk[0], ref.atk[1]);
-          changes.push({ id: m.id, name: m.name, field: "攻擊", oldValue: m.baseAttack, newValue: nv, reason: `${m.rarity} ATK 應在 ${ref.atk[0]}-${ref.atk[1]}` });
+        if (isOutOfRange(m.baseAttack, atkR)) {
+          const nv = clamp(m.baseAttack, atkR[0], atkR[1]);
+          changes.push({ id: m.id, name: m.name, field: "攻擊", oldValue: m.baseAttack, newValue: nv, reason: `${m.rarity} ATK 應在 ${atkR[0]}-${atkR[1]}` });
           fixes.baseAttack = nv;
         }
-        if (isOutOfRange(m.baseDefense, ref.def)) {
-          const nv = clamp(m.baseDefense, ref.def[0], ref.def[1]);
-          changes.push({ id: m.id, name: m.name, field: "防禦", oldValue: m.baseDefense, newValue: nv, reason: `${m.rarity} DEF 應在 ${ref.def[0]}-${ref.def[1]}` });
+        if (isOutOfRange(m.baseDefense, defR)) {
+          const nv = clamp(m.baseDefense, defR[0], defR[1]);
+          changes.push({ id: m.id, name: m.name, field: "防禦", oldValue: m.baseDefense, newValue: nv, reason: `${m.rarity} DEF 應在 ${defR[0]}-${defR[1]}` });
           fixes.baseDefense = nv;
         }
-        if (isOutOfRange(m.baseSpeed, ref.spd)) {
-          const nv = clamp(m.baseSpeed, ref.spd[0], ref.spd[1]);
-          changes.push({ id: m.id, name: m.name, field: "速度", oldValue: m.baseSpeed, newValue: nv, reason: `${m.rarity} SPD 應在 ${ref.spd[0]}-${ref.spd[1]}` });
+        if (isOutOfRange(m.baseSpeed, spdR)) {
+          const nv = clamp(m.baseSpeed, spdR[0], spdR[1]);
+          changes.push({ id: m.id, name: m.name, field: "速度", oldValue: m.baseSpeed, newValue: nv, reason: `${m.rarity} SPD 應在 ${spdR[0]}-${spdR[1]}` });
           fixes.baseSpeed = nv;
         }
-        // AI 等級分配
-        if (m.aiLevel !== ref.aiLevel) {
-          changes.push({ id: m.id, name: m.name, field: "AI等級", oldValue: m.aiLevel, newValue: ref.aiLevel, reason: `${m.rarity} AI 等級應為 ${ref.aiLevel}` });
-          fixes.aiLevel = ref.aiLevel;
+        if (m.aiLevel !== expectedAi) {
+          changes.push({ id: m.id, name: m.name, field: "AI等級", oldValue: m.aiLevel, newValue: expectedAi, reason: `${m.rarity} AI 等級應為 ${expectedAi}` });
+          fixes.aiLevel = expectedAi;
         }
 
         if (!input.dryRun && Object.keys(fixes).length > 0) {
@@ -180,23 +147,27 @@ export const gameAIBalanceRouter = router({
       const skills = await db.select().from(gameMonsterSkillCatalog);
       const changes: BalanceChange[] = [];
 
+      const allRules = await loadBalanceRulesGrouped();
+      const msRules = allRules["monsterSkill"] ?? {};
       for (const s of skills) {
-        const ref = MONSTER_SKILL_BALANCE[s.rarity] ?? MONSTER_SKILL_BALANCE.common;
         const fixes: Partial<Record<string, number>> = {};
+        const powerR = getRange(msRules, s.rarity, "power");
+        const mpR = getRange(msRules, s.rarity, "mp");
+        const cdR = getRange(msRules, s.rarity, "cd");
 
-        if (isOutOfRange(s.powerPercent, ref.power)) {
-          const nv = clamp(s.powerPercent, ref.power[0], ref.power[1]);
-          changes.push({ id: s.id, name: s.name, field: "威力%", oldValue: s.powerPercent, newValue: nv, reason: `${s.rarity} 威力應在 ${ref.power[0]}-${ref.power[1]}%` });
+        if (isOutOfRange(s.powerPercent, powerR)) {
+          const nv = clamp(s.powerPercent, powerR[0], powerR[1]);
+          changes.push({ id: s.id, name: s.name, field: "威力%", oldValue: s.powerPercent, newValue: nv, reason: `${s.rarity} 威力應在 ${powerR[0]}-${powerR[1]}%` });
           fixes.powerPercent = nv;
         }
-        if (isOutOfRange(s.mpCost, ref.mp)) {
-          const nv = clamp(s.mpCost, ref.mp[0], ref.mp[1]);
-          changes.push({ id: s.id, name: s.name, field: "MP消耗", oldValue: s.mpCost, newValue: nv, reason: `${s.rarity} MP 應在 ${ref.mp[0]}-${ref.mp[1]}` });
+        if (isOutOfRange(s.mpCost, mpR)) {
+          const nv = clamp(s.mpCost, mpR[0], mpR[1]);
+          changes.push({ id: s.id, name: s.name, field: "MP消耗", oldValue: s.mpCost, newValue: nv, reason: `${s.rarity} MP 應在 ${mpR[0]}-${mpR[1]}` });
           fixes.mpCost = nv;
         }
-        if (isOutOfRange(s.cooldown, ref.cd)) {
-          const nv = clamp(s.cooldown, ref.cd[0], ref.cd[1]);
-          changes.push({ id: s.id, name: s.name, field: "冷卻", oldValue: s.cooldown, newValue: nv, reason: `${s.rarity} CD 應在 ${ref.cd[0]}-${ref.cd[1]}` });
+        if (isOutOfRange(s.cooldown, cdR)) {
+          const nv = clamp(s.cooldown, cdR[0], cdR[1]);
+          changes.push({ id: s.id, name: s.name, field: "冷卻", oldValue: s.cooldown, newValue: nv, reason: `${s.rarity} CD 應在 ${cdR[0]}-${cdR[1]}` });
           fixes.cooldown = nv;
         }
 
@@ -227,15 +198,16 @@ export const gameAIBalanceRouter = router({
       const items = await db.select().from(gameItemCatalog).where(sql`is_active = 1`);
       const changes: BalanceChange[] = [];
 
+      const allRules = await loadBalanceRulesGrouped();
+      const itemRules = allRules["item"] ?? {};
       for (const item of items) {
-        const ref = ITEM_PRICE_BALANCE[item.rarity] ?? ITEM_PRICE_BALANCE.common;
-        // 只檢查有售價的道具（shopPrice > 0 或 category 不是 quest/treasure）
+        const priceR = getRange(itemRules, item.rarity, "price");
         if (item.category === "quest" || item.category === "treasure") continue;
-        if (item.shopPrice === 0) continue; // 不檢查免費道具
+        if (item.shopPrice === 0) continue;
 
-        if (isOutOfRange(item.shopPrice, ref)) {
-          const nv = clamp(item.shopPrice, ref[0], ref[1]);
-          changes.push({ id: item.id, name: item.name, field: "售價", oldValue: item.shopPrice, newValue: nv, reason: `${item.rarity} 售價應在 ${ref[0]}-${ref[1]}` });
+        if (isOutOfRange(item.shopPrice, priceR)) {
+          const nv = clamp(item.shopPrice, priceR[0], priceR[1]);
+          changes.push({ id: item.id, name: item.name, field: "售價", oldValue: item.shopPrice, newValue: nv, reason: `${item.rarity} 售價應在 ${priceR[0]}-${priceR[1]}` });
           if (!input.dryRun) {
             await db.update(gameItemCatalog).set({ shopPrice: nv }).where(eq(gameItemCatalog.id, item.id));
           }
@@ -264,28 +236,33 @@ export const gameAIBalanceRouter = router({
       const equips = await db.select().from(gameEquipmentCatalog).where(sql`is_active = 1`);
       const changes: BalanceChange[] = [];
 
+      const allRules = await loadBalanceRulesGrouped();
+      const eqRules = allRules["equipment"] ?? {};
       for (const e of equips) {
-        const ref = EQUIP_BALANCE[e.quality] ?? EQUIP_BALANCE.white;
         const fixes: Partial<Record<string, number>> = {};
+        const atkR = getRange(eqRules, e.quality, "atk");
+        const defR = getRange(eqRules, e.quality, "def");
+        const hpR = getRange(eqRules, e.quality, "hp");
+        const spdR = getRange(eqRules, e.quality, "spd");
 
-        if (isOutOfRange(e.attackBonus, ref.atk)) {
-          const nv = clamp(e.attackBonus, ref.atk[0], ref.atk[1]);
-          changes.push({ id: e.id, name: e.name, field: "攻擊加成", oldValue: e.attackBonus, newValue: nv, reason: `${e.quality} 品質 ATK 應在 ${ref.atk[0]}-${ref.atk[1]}` });
+        if (isOutOfRange(e.attackBonus, atkR)) {
+          const nv = clamp(e.attackBonus, atkR[0], atkR[1]);
+          changes.push({ id: e.id, name: e.name, field: "攻擊加成", oldValue: e.attackBonus, newValue: nv, reason: `${e.quality} 品質 ATK 應在 ${atkR[0]}-${atkR[1]}` });
           fixes.attackBonus = nv;
         }
-        if (isOutOfRange(e.defenseBonus, ref.def)) {
-          const nv = clamp(e.defenseBonus, ref.def[0], ref.def[1]);
-          changes.push({ id: e.id, name: e.name, field: "防禦加成", oldValue: e.defenseBonus, newValue: nv, reason: `${e.quality} 品質 DEF 應在 ${ref.def[0]}-${ref.def[1]}` });
+        if (isOutOfRange(e.defenseBonus, defR)) {
+          const nv = clamp(e.defenseBonus, defR[0], defR[1]);
+          changes.push({ id: e.id, name: e.name, field: "防禦加成", oldValue: e.defenseBonus, newValue: nv, reason: `${e.quality} 品質 DEF 應在 ${defR[0]}-${defR[1]}` });
           fixes.defenseBonus = nv;
         }
-        if (isOutOfRange(e.hpBonus, ref.hp)) {
-          const nv = clamp(e.hpBonus, ref.hp[0], ref.hp[1]);
-          changes.push({ id: e.id, name: e.name, field: "HP加成", oldValue: e.hpBonus, newValue: nv, reason: `${e.quality} 品質 HP 應在 ${ref.hp[0]}-${ref.hp[1]}` });
+        if (isOutOfRange(e.hpBonus, hpR)) {
+          const nv = clamp(e.hpBonus, hpR[0], hpR[1]);
+          changes.push({ id: e.id, name: e.name, field: "HP加成", oldValue: e.hpBonus, newValue: nv, reason: `${e.quality} 品質 HP 應在 ${hpR[0]}-${hpR[1]}` });
           fixes.hpBonus = nv;
         }
-        if (isOutOfRange(e.speedBonus, ref.spd)) {
-          const nv = clamp(e.speedBonus, ref.spd[0], ref.spd[1]);
-          changes.push({ id: e.id, name: e.name, field: "速度加成", oldValue: e.speedBonus, newValue: nv, reason: `${e.quality} 品質 SPD 應在 ${ref.spd[0]}-${ref.spd[1]}` });
+        if (isOutOfRange(e.speedBonus, spdR)) {
+          const nv = clamp(e.speedBonus, spdR[0], spdR[1]);
+          changes.push({ id: e.id, name: e.name, field: "速度加成", oldValue: e.speedBonus, newValue: nv, reason: `${e.quality} 品質 SPD 應在 ${spdR[0]}-${spdR[1]}` });
           fixes.speedBonus = nv;
         }
 
@@ -316,30 +293,33 @@ export const gameAIBalanceRouter = router({
       const skills = await db.select().from(gameSkillCatalog).where(sql`is_active = 1`);
       const changes: BalanceChange[] = [];
 
+      const allRules = await loadBalanceRulesGrouped();
+      const skRules = allRules["skill"] ?? {};
       for (const s of skills) {
-        const ref = SKILL_BALANCE[s.rarity] ?? SKILL_BALANCE.common;
         const fixes: Partial<Record<string, number>> = {};
+        const powerR = getRange(skRules, s.rarity, "power");
+        const mpR = getRange(skRules, s.rarity, "mp");
+        const cdR = getRange(skRules, s.rarity, "cd");
+        const priceR = getRange(skRules, s.rarity, "price");
 
-        // 被動技能不檢查威力
-        if (s.skillType !== "passive" && isOutOfRange(s.powerPercent, ref.power)) {
-          const nv = clamp(s.powerPercent, ref.power[0], ref.power[1]);
-          changes.push({ id: s.id, name: s.name, field: "威力%", oldValue: s.powerPercent, newValue: nv, reason: `${s.rarity} 威力應在 ${ref.power[0]}-${ref.power[1]}%` });
+        if (s.skillType !== "passive" && isOutOfRange(s.powerPercent, powerR)) {
+          const nv = clamp(s.powerPercent, powerR[0], powerR[1]);
+          changes.push({ id: s.id, name: s.name, field: "威力%", oldValue: s.powerPercent, newValue: nv, reason: `${s.rarity} 威力應在 ${powerR[0]}-${powerR[1]}%` });
           fixes.powerPercent = nv;
         }
-        if (isOutOfRange(s.mpCost, ref.mp)) {
-          const nv = clamp(s.mpCost, ref.mp[0], ref.mp[1]);
-          changes.push({ id: s.id, name: s.name, field: "MP消耗", oldValue: s.mpCost, newValue: nv, reason: `${s.rarity} MP 應在 ${ref.mp[0]}-${ref.mp[1]}` });
+        if (isOutOfRange(s.mpCost, mpR)) {
+          const nv = clamp(s.mpCost, mpR[0], mpR[1]);
+          changes.push({ id: s.id, name: s.name, field: "MP消耗", oldValue: s.mpCost, newValue: nv, reason: `${s.rarity} MP 應在 ${mpR[0]}-${mpR[1]}` });
           fixes.mpCost = nv;
         }
-        if (isOutOfRange(s.cooldown, ref.cd)) {
-          const nv = clamp(s.cooldown, ref.cd[0], ref.cd[1]);
-          changes.push({ id: s.id, name: s.name, field: "冷卻", oldValue: s.cooldown, newValue: nv, reason: `${s.rarity} CD 應在 ${ref.cd[0]}-${ref.cd[1]}` });
+        if (isOutOfRange(s.cooldown, cdR)) {
+          const nv = clamp(s.cooldown, cdR[0], cdR[1]);
+          changes.push({ id: s.id, name: s.name, field: "冷卻", oldValue: s.cooldown, newValue: nv, reason: `${s.rarity} CD 應在 ${cdR[0]}-${cdR[1]}` });
           fixes.cooldown = nv;
         }
-        // 商店售價（只檢查 acquireType=shop 的技能）
-        if (s.acquireType === "shop" && s.shopPrice > 0 && isOutOfRange(s.shopPrice, ref.price)) {
-          const nv = clamp(s.shopPrice, ref.price[0], ref.price[1]);
-          changes.push({ id: s.id, name: s.name, field: "售價", oldValue: s.shopPrice, newValue: nv, reason: `${s.rarity} 售價應在 ${ref.price[0]}-${ref.price[1]}` });
+        if (s.acquireType === "shop" && s.shopPrice > 0 && isOutOfRange(s.shopPrice, priceR)) {
+          const nv = clamp(s.shopPrice, priceR[0], priceR[1]);
+          changes.push({ id: s.id, name: s.name, field: "售價", oldValue: s.shopPrice, newValue: nv, reason: `${s.rarity} 售價應在 ${priceR[0]}-${priceR[1]}` });
           fixes.shopPrice = nv;
         }
 
@@ -370,9 +350,11 @@ export const gameAIBalanceRouter = router({
       const achs = await db.select().from(gameAchievements).where(sql`is_active = 1`);
       const changes: BalanceChange[] = [];
 
+      const allRules = await loadBalanceRulesGrouped();
+      const achRules = allRules["achievement"] ?? {};
       for (const a of achs) {
-        const ref = ACHIEVEMENT_BALANCE[a.rarity] ?? ACHIEVEMENT_BALANCE.common;
-        const rewardRange = a.rewardType === "stones" ? ref.stones : ref.coins;
+        const rewardField = a.rewardType === "stones" ? "stones" : "coins";
+        const rewardRange = getRange(achRules, a.rarity, rewardField);
 
         if (isOutOfRange(a.rewardAmount, rewardRange)) {
           const nv = clamp(a.rewardAmount, rewardRange[0], rewardRange[1]);
@@ -409,7 +391,15 @@ export const gameAIBalanceRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      // 收集所有圖鑑的平衡結果
+      // 載入自訂規則
+      const allRules = await loadBalanceRulesGrouped();
+      const monRules = allRules["monster"] ?? {};
+      const msRules = allRules["monsterSkill"] ?? {};
+      const itemRules = allRules["item"] ?? {};
+      const eqRules = allRules["equipment"] ?? {};
+      const skRules = allRules["skill"] ?? {};
+      const achRules = allRules["achievement"] ?? {};
+
       const allChanges: Record<string, BalanceChange[]> = {};
       const summary: { catalog: string; scanned: number; changes: number }[] = [];
 
@@ -417,12 +407,16 @@ export const gameAIBalanceRouter = router({
       const monsters = await db.select().from(gameMonsterCatalog).where(sql`is_active = 1`);
       const monsterChanges: BalanceChange[] = [];
       for (const m of monsters) {
-        const ref = MONSTER_BALANCE[m.rarity] ?? MONSTER_BALANCE.common;
-        if (isOutOfRange(m.baseHp, ref.hp)) monsterChanges.push({ id: m.id, name: m.name, field: "HP", oldValue: m.baseHp, newValue: clamp(m.baseHp, ref.hp[0], ref.hp[1]), reason: `${m.rarity}` });
-        if (isOutOfRange(m.baseAttack, ref.atk)) monsterChanges.push({ id: m.id, name: m.name, field: "ATK", oldValue: m.baseAttack, newValue: clamp(m.baseAttack, ref.atk[0], ref.atk[1]), reason: `${m.rarity}` });
-        if (isOutOfRange(m.baseDefense, ref.def)) monsterChanges.push({ id: m.id, name: m.name, field: "DEF", oldValue: m.baseDefense, newValue: clamp(m.baseDefense, ref.def[0], ref.def[1]), reason: `${m.rarity}` });
-        if (isOutOfRange(m.baseSpeed, ref.spd)) monsterChanges.push({ id: m.id, name: m.name, field: "SPD", oldValue: m.baseSpeed, newValue: clamp(m.baseSpeed, ref.spd[0], ref.spd[1]), reason: `${m.rarity}` });
-        if (m.aiLevel !== ref.aiLevel) monsterChanges.push({ id: m.id, name: m.name, field: "AI等級", oldValue: m.aiLevel, newValue: ref.aiLevel, reason: `${m.rarity}` });
+        const hpR = getRange(monRules, m.rarity, "hp");
+        const atkR = getRange(monRules, m.rarity, "atk");
+        const defR = getRange(monRules, m.rarity, "def");
+        const spdR = getRange(monRules, m.rarity, "spd");
+        const expectedAi = getAiLevel(monRules, m.rarity);
+        if (isOutOfRange(m.baseHp, hpR)) monsterChanges.push({ id: m.id, name: m.name, field: "HP", oldValue: m.baseHp, newValue: clamp(m.baseHp, hpR[0], hpR[1]), reason: `${m.rarity}` });
+        if (isOutOfRange(m.baseAttack, atkR)) monsterChanges.push({ id: m.id, name: m.name, field: "ATK", oldValue: m.baseAttack, newValue: clamp(m.baseAttack, atkR[0], atkR[1]), reason: `${m.rarity}` });
+        if (isOutOfRange(m.baseDefense, defR)) monsterChanges.push({ id: m.id, name: m.name, field: "DEF", oldValue: m.baseDefense, newValue: clamp(m.baseDefense, defR[0], defR[1]), reason: `${m.rarity}` });
+        if (isOutOfRange(m.baseSpeed, spdR)) monsterChanges.push({ id: m.id, name: m.name, field: "SPD", oldValue: m.baseSpeed, newValue: clamp(m.baseSpeed, spdR[0], spdR[1]), reason: `${m.rarity}` });
+        if (m.aiLevel !== expectedAi) monsterChanges.push({ id: m.id, name: m.name, field: "AI等級", oldValue: m.aiLevel, newValue: expectedAi, reason: `${m.rarity}` });
       }
       allChanges["怪物"] = monsterChanges;
       summary.push({ catalog: "怪物", scanned: monsters.length, changes: monsterChanges.length });
@@ -431,10 +425,12 @@ export const gameAIBalanceRouter = router({
       const mSkills = await db.select().from(gameMonsterSkillCatalog);
       const mSkillChanges: BalanceChange[] = [];
       for (const s of mSkills) {
-        const ref = MONSTER_SKILL_BALANCE[s.rarity] ?? MONSTER_SKILL_BALANCE.common;
-        if (isOutOfRange(s.powerPercent, ref.power)) mSkillChanges.push({ id: s.id, name: s.name, field: "威力%", oldValue: s.powerPercent, newValue: clamp(s.powerPercent, ref.power[0], ref.power[1]), reason: `${s.rarity}` });
-        if (isOutOfRange(s.mpCost, ref.mp)) mSkillChanges.push({ id: s.id, name: s.name, field: "MP", oldValue: s.mpCost, newValue: clamp(s.mpCost, ref.mp[0], ref.mp[1]), reason: `${s.rarity}` });
-        if (isOutOfRange(s.cooldown, ref.cd)) mSkillChanges.push({ id: s.id, name: s.name, field: "CD", oldValue: s.cooldown, newValue: clamp(s.cooldown, ref.cd[0], ref.cd[1]), reason: `${s.rarity}` });
+        const powerR = getRange(msRules, s.rarity, "power");
+        const mpR = getRange(msRules, s.rarity, "mp");
+        const cdR = getRange(msRules, s.rarity, "cd");
+        if (isOutOfRange(s.powerPercent, powerR)) mSkillChanges.push({ id: s.id, name: s.name, field: "威力%", oldValue: s.powerPercent, newValue: clamp(s.powerPercent, powerR[0], powerR[1]), reason: `${s.rarity}` });
+        if (isOutOfRange(s.mpCost, mpR)) mSkillChanges.push({ id: s.id, name: s.name, field: "MP", oldValue: s.mpCost, newValue: clamp(s.mpCost, mpR[0], mpR[1]), reason: `${s.rarity}` });
+        if (isOutOfRange(s.cooldown, cdR)) mSkillChanges.push({ id: s.id, name: s.name, field: "CD", oldValue: s.cooldown, newValue: clamp(s.cooldown, cdR[0], cdR[1]), reason: `${s.rarity}` });
       }
       allChanges["怪物技能"] = mSkillChanges;
       summary.push({ catalog: "怪物技能", scanned: mSkills.length, changes: mSkillChanges.length });
@@ -444,8 +440,8 @@ export const gameAIBalanceRouter = router({
       const itemChanges: BalanceChange[] = [];
       for (const item of items) {
         if (item.category === "quest" || item.category === "treasure" || item.shopPrice === 0) continue;
-        const ref = ITEM_PRICE_BALANCE[item.rarity] ?? ITEM_PRICE_BALANCE.common;
-        if (isOutOfRange(item.shopPrice, ref)) itemChanges.push({ id: item.id, name: item.name, field: "售價", oldValue: item.shopPrice, newValue: clamp(item.shopPrice, ref[0], ref[1]), reason: `${item.rarity}` });
+        const priceR = getRange(itemRules, item.rarity, "price");
+        if (isOutOfRange(item.shopPrice, priceR)) itemChanges.push({ id: item.id, name: item.name, field: "售價", oldValue: item.shopPrice, newValue: clamp(item.shopPrice, priceR[0], priceR[1]), reason: `${item.rarity}` });
       }
       allChanges["道具"] = itemChanges;
       summary.push({ catalog: "道具", scanned: items.length, changes: itemChanges.length });
@@ -454,11 +450,14 @@ export const gameAIBalanceRouter = router({
       const equips = await db.select().from(gameEquipmentCatalog).where(sql`is_active = 1`);
       const equipChanges: BalanceChange[] = [];
       for (const e of equips) {
-        const ref = EQUIP_BALANCE[e.quality] ?? EQUIP_BALANCE.white;
-        if (isOutOfRange(e.attackBonus, ref.atk)) equipChanges.push({ id: e.id, name: e.name, field: "ATK", oldValue: e.attackBonus, newValue: clamp(e.attackBonus, ref.atk[0], ref.atk[1]), reason: `${e.quality}` });
-        if (isOutOfRange(e.defenseBonus, ref.def)) equipChanges.push({ id: e.id, name: e.name, field: "DEF", oldValue: e.defenseBonus, newValue: clamp(e.defenseBonus, ref.def[0], ref.def[1]), reason: `${e.quality}` });
-        if (isOutOfRange(e.hpBonus, ref.hp)) equipChanges.push({ id: e.id, name: e.name, field: "HP", oldValue: e.hpBonus, newValue: clamp(e.hpBonus, ref.hp[0], ref.hp[1]), reason: `${e.quality}` });
-        if (isOutOfRange(e.speedBonus, ref.spd)) equipChanges.push({ id: e.id, name: e.name, field: "SPD", oldValue: e.speedBonus, newValue: clamp(e.speedBonus, ref.spd[0], ref.spd[1]), reason: `${e.quality}` });
+        const atkR = getRange(eqRules, e.quality, "atk");
+        const defR = getRange(eqRules, e.quality, "def");
+        const hpR = getRange(eqRules, e.quality, "hp");
+        const spdR = getRange(eqRules, e.quality, "spd");
+        if (isOutOfRange(e.attackBonus, atkR)) equipChanges.push({ id: e.id, name: e.name, field: "ATK", oldValue: e.attackBonus, newValue: clamp(e.attackBonus, atkR[0], atkR[1]), reason: `${e.quality}` });
+        if (isOutOfRange(e.defenseBonus, defR)) equipChanges.push({ id: e.id, name: e.name, field: "DEF", oldValue: e.defenseBonus, newValue: clamp(e.defenseBonus, defR[0], defR[1]), reason: `${e.quality}` });
+        if (isOutOfRange(e.hpBonus, hpR)) equipChanges.push({ id: e.id, name: e.name, field: "HP", oldValue: e.hpBonus, newValue: clamp(e.hpBonus, hpR[0], hpR[1]), reason: `${e.quality}` });
+        if (isOutOfRange(e.speedBonus, spdR)) equipChanges.push({ id: e.id, name: e.name, field: "SPD", oldValue: e.speedBonus, newValue: clamp(e.speedBonus, spdR[0], spdR[1]), reason: `${e.quality}` });
       }
       allChanges["裝備"] = equipChanges;
       summary.push({ catalog: "裝備", scanned: equips.length, changes: equipChanges.length });
@@ -467,10 +466,12 @@ export const gameAIBalanceRouter = router({
       const skills = await db.select().from(gameSkillCatalog).where(sql`is_active = 1`);
       const skillChanges: BalanceChange[] = [];
       for (const s of skills) {
-        const ref = SKILL_BALANCE[s.rarity] ?? SKILL_BALANCE.common;
-        if (s.skillType !== "passive" && isOutOfRange(s.powerPercent, ref.power)) skillChanges.push({ id: s.id, name: s.name, field: "威力%", oldValue: s.powerPercent, newValue: clamp(s.powerPercent, ref.power[0], ref.power[1]), reason: `${s.rarity}` });
-        if (isOutOfRange(s.mpCost, ref.mp)) skillChanges.push({ id: s.id, name: s.name, field: "MP", oldValue: s.mpCost, newValue: clamp(s.mpCost, ref.mp[0], ref.mp[1]), reason: `${s.rarity}` });
-        if (isOutOfRange(s.cooldown, ref.cd)) skillChanges.push({ id: s.id, name: s.name, field: "CD", oldValue: s.cooldown, newValue: clamp(s.cooldown, ref.cd[0], ref.cd[1]), reason: `${s.rarity}` });
+        const powerR = getRange(skRules, s.rarity, "power");
+        const mpR = getRange(skRules, s.rarity, "mp");
+        const cdR = getRange(skRules, s.rarity, "cd");
+        if (s.skillType !== "passive" && isOutOfRange(s.powerPercent, powerR)) skillChanges.push({ id: s.id, name: s.name, field: "威力%", oldValue: s.powerPercent, newValue: clamp(s.powerPercent, powerR[0], powerR[1]), reason: `${s.rarity}` });
+        if (isOutOfRange(s.mpCost, mpR)) skillChanges.push({ id: s.id, name: s.name, field: "MP", oldValue: s.mpCost, newValue: clamp(s.mpCost, mpR[0], mpR[1]), reason: `${s.rarity}` });
+        if (isOutOfRange(s.cooldown, cdR)) skillChanges.push({ id: s.id, name: s.name, field: "CD", oldValue: s.cooldown, newValue: clamp(s.cooldown, cdR[0], cdR[1]), reason: `${s.rarity}` });
       }
       allChanges["人物技能"] = skillChanges;
       summary.push({ catalog: "人物技能", scanned: skills.length, changes: skillChanges.length });
@@ -479,8 +480,8 @@ export const gameAIBalanceRouter = router({
       const achs = await db.select().from(gameAchievements).where(sql`is_active = 1`);
       const achChanges: BalanceChange[] = [];
       for (const a of achs) {
-        const ref = ACHIEVEMENT_BALANCE[a.rarity] ?? ACHIEVEMENT_BALANCE.common;
-        const rewardRange = a.rewardType === "stones" ? ref.stones : ref.coins;
+        const rewardField = a.rewardType === "stones" ? "stones" : "coins";
+        const rewardRange = getRange(achRules, a.rarity, rewardField);
         if (isOutOfRange(a.rewardAmount, rewardRange)) achChanges.push({ id: a.id, name: a.title, field: `獎勵(${a.rewardType})`, oldValue: a.rewardAmount, newValue: clamp(a.rewardAmount, rewardRange[0], rewardRange[1]), reason: `${a.rarity}` });
       }
       allChanges["成就"] = achChanges;

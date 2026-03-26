@@ -28,6 +28,7 @@ import { gameWorldRouter } from './routers/gameWorld';
 import { gameSkillSystemRouter } from './routers/gameSkillSystem';
 import { gameAIRouter } from './routers/gameAI';
 import { gameAIBalanceRouter } from './routers/gameAIBalance';
+import { balanceRulesRouter } from './routers/balanceRules';
 import { auctionRouter } from './routers/auction';
 import { startTickEngine } from './tickEngine';
 import { startWorldTickEngine } from './worldTickEngine';
@@ -85,6 +86,7 @@ export const appRouter = router({
   gameSkill: gameSkillSystemRouter,
   gameAI: gameAIRouter,
   gameAIBalance: gameAIBalanceRouter,
+  balanceRules: balanceRulesRouter,
   businessHub: businessHubRouter,
   userGroups: userGroupsRouter,
   auth: router({

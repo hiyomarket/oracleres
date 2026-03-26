@@ -2571,6 +2571,19 @@ export default function VirtualWorldPage() {
       onLogClick={() => setShowLog(v => !v)}
       onTeleportClick={() => setShowTeleport(true)}
       logCount={eventLog?.length ?? 0}
+      strategyOptions={STRATEGIES.map(s => ({ id: s.id, icon: s.icon, label: s.label }))}
+      currentStrategy={agent?.strategy ?? "explore"}
+      onStrategyChange={(id) => setStrategy.mutate({ strategy: id as "explore" | "combat" | "gather" | "rest" | "infuse" })}
+      movementMode={(agent?.movementMode as "roaming" | "stationary") ?? "roaming"}
+      onMovementModeChange={(mode) => setStrategy.mutate({ strategy: (agent?.strategy ?? "explore") as "explore" | "combat" | "gather" | "rest" | "infuse", movementMode: mode })}
+      elementColor={ec}
+      divineOptions={[
+        { label: "神癒恢復", desc: "恢復50%HP", icon: "💊", color: "#ef4444", fn: () => divineHeal.mutate(), pending: divineHeal.isPending },
+        { label: "神眼加持", desc: "洞察力+15%", icon: "👁", color: "#38bdf8", fn: () => divineEye.mutate(), pending: divineEye.isPending },
+        { label: "靈癒疲勞", desc: "體力回50", icon: "✨", color: "#a78bfa", fn: () => divineStamina.mutate(), pending: divineStamina.isPending },
+      ]}
+      divineAP={agent?.actionPoints ?? 0}
+      divineMaxAP={agent?.maxActionPoints ?? 10}
     >
       {/* Tick 進度條 */}
       {tickProgress > 0 && (
@@ -3326,115 +3339,7 @@ export default function VirtualWorldPage() {
                 ))}
               </DraggableWidget>
 
-              {/* ── 靈相干預浮動面板（手機版：右上角固定，不受角色面板影響） ── */}
-              <div className="absolute right-2 top-2 z-[450] lg:hidden">
-                <button
-                  onClick={() => setShowDivinePanel(v => !v)}
-                  className="flex items-center gap-1 px-2 py-1.5 rounded-xl border text-xs font-bold transition-all hover:scale-105 active:scale-95"
-                  style={{
-                    background: showDivinePanel ? "rgba(167,139,250,0.2)" : "rgba(6,10,22,0.92)",
-                    backdropFilter: "blur(10px)",
-                    borderColor: showDivinePanel ? "rgba(167,139,250,0.7)" : "rgba(167,139,250,0.4)",
-                    color: "#a78bfa",
-                    boxShadow: "0 0 10px rgba(167,139,250,0.3)",
-                  }}>
-                  <span>✨</span>
-                  <span>靈相</span>
-                  <span>{showDivinePanel ? "▲" : "▼"}</span>
-                </button>
-                {showDivinePanel && (() => {
-                  const agentAP = agent?.actionPoints ?? 0;
-                  return (
-                    <div className="absolute right-0 top-full mt-1 rounded-xl border overflow-hidden"
-                      style={{ background: "rgba(6,10,22,0.97)", backdropFilter: "blur(16px)", borderColor: "rgba(167,139,250,0.3)", width: "200px" }}>
-                      <div className="px-3 py-2 border-b flex items-center justify-between"
-                        style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                        <span className="text-xs font-bold text-purple-300">靈相干預</span>
-                        <span className="text-xs text-slate-500">靈力 {agentAP}/{agent?.maxActionPoints ?? 10}</span>
-                      </div>
-                      <div className="p-2 space-y-1.5">
-                        {[
-                          { label: "神癒恢復", desc: "恢復50%HP", icon: "💊", color: "#ef4444", fn: () => divineHeal.mutate(), pending: divineHeal.isPending },
-                          { label: "神眼加持", desc: "洞察力+15%", icon: "👁", color: "#38bdf8", fn: () => divineEye.mutate(), pending: divineEye.isPending },
-                          { label: "靈癒疲勞", desc: "體力回50", icon: "✨", color: "#a78bfa", fn: () => divineStamina.mutate(), pending: divineStamina.isPending },
-                        ].map(item => (
-                          <button key={item.label}
-                            onClick={item.fn}
-                            disabled={agentAP < 1 || item.pending}
-                            className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg border transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
-                            style={{ background: `${item.color}08`, borderColor: `${item.color}30`, color: item.color }}>
-                            <span className="text-base">{item.pending ? "⏳" : item.icon}</span>
-                            <div className="flex-1 text-left">
-                              <p className="text-xs font-bold">{item.label}</p>
-                              <p className="text-[10px]" style={{ color: "#64748b" }}>{item.desc}</p>
-                            </div>
-                            <span className="text-[9px] text-slate-600">-1靈</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* ── 行動策略浮動面板（手機版：右上角固定，靈相下方） ── */}
-              <div className="absolute right-2 z-[445] lg:hidden"
-                style={{ top: "52px" }}>
-                <button
-                  onClick={() => setShowStrategyPanel(v => !v)}
-                  className="flex items-center gap-1 px-2 py-1.5 rounded-xl border text-xs font-bold transition-all hover:scale-105 active:scale-95"
-                  style={{
-                    background: showStrategyPanel ? `${ec}20` : "rgba(6,10,22,0.92)",
-                    backdropFilter: "blur(10px)",
-                    borderColor: showStrategyPanel ? `${ec}70` : `${ec}40`,
-                    color: ec,
-                    boxShadow: `0 0 10px ${ec}30`,
-                  }}>
-                  <span>⚔️</span>
-                  <span>{STRATEGIES.find(s => s.id === (agent?.strategy ?? "explore"))?.label ?? "探索"}</span>
-                  <span>{showStrategyPanel ? "▲" : "▼"}</span>
-                </button>
-                {showStrategyPanel && (
-                  <div className="absolute right-0 top-full mt-1 rounded-xl border overflow-hidden"
-                    style={{ background: "rgba(6,10,22,0.97)", backdropFilter: "blur(16px)", borderColor: `${ec}30`, width: "180px" }}>
-                    <div className="px-3 py-2 border-b"
-                      style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                      <span className="text-xs font-bold" style={{ color: ec }}>行動策略</span>
-                    </div>
-                    <div className="p-2 grid grid-cols-2 gap-1.5">
-                      {STRATEGIES.map(s => (
-                        <button key={s.id}
-                          onClick={() => { setStrategy.mutate({ strategy: s.id }); setShowStrategyPanel(false); }}
-                          className="flex flex-col items-center gap-1 py-2.5 rounded-lg text-xs border transition-all hover:scale-105 active:scale-95"
-                          style={{
-                            background: (agent?.strategy ?? "explore") === s.id ? `${ec}18` : "rgba(255,255,255,0.03)",
-                            borderColor: (agent?.strategy ?? "explore") === s.id ? `${ec}55` : "rgba(255,255,255,0.08)",
-                            color: (agent?.strategy ?? "explore") === s.id ? ec : "rgba(148,163,184,0.6)",
-                          }}>
-                          <span className="text-lg leading-none">{s.icon}</span>
-                          <span className="text-[10px]">{s.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {/* 漫遊/定點切換 */}
-                    <div className="px-2 pb-2">
-                      <div className="flex rounded-lg overflow-hidden border" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                        {(["roaming", "stationary"] as const).map(mode => (
-                          <button key={mode}
-                            onClick={() => setStrategy.mutate({ strategy: (agent?.strategy ?? "explore") as "explore" | "gather" | "rest" | "combat" | "infuse", movementMode: mode })}
-                            className="flex-1 py-1.5 text-[10px] font-bold transition-all"
-                            style={{
-                              background: (agent?.movementMode ?? "roaming") === mode ? `${ec}25` : "transparent",
-                              color: (agent?.movementMode ?? "roaming") === mode ? ec : "rgba(148,163,184,0.5)",
-                            }}>
-                            {mode === "roaming" ? "🚶 漫遊" : "📌 定點"}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* M3N: 靈相干預和行動策略浮動按鈕已移至底部 GameTabLayout Tab Bar */}
 
               {/* ── 靈相干預浮動面板（桌機版：可拖拉） ── */}
               <DraggableWidget

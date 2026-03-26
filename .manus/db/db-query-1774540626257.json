@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `game_balance_rules` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `catalog_type` varchar(30) NOT NULL,\n  `rarity` varchar(30) NOT NULL,\n  `field` varchar(30) NOT NULL,\n  `min_value` float NOT NULL,\n  `max_value` float NOT NULL,\n  `updated_at` bigint NOT NULL,\n  CONSTRAINT `game_balance_rules_id` PRIMARY KEY(`id`),\n  UNIQUE KEY `uq_catalog_rarity_field` (`catalog_type`, `rarity`, `field`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute CREATE TABLE IF NOT EXISTS `game_balance_rules` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `catalog_type` varchar(30) NOT NULL,\n  `rarity` varchar(30) NOT NULL,\n  `field` varchar(30) NOT NULL,\n  `min_value` float NOT NULL,\n  `max_value` float NOT NULL,\n  `updated_at` bigint NOT NULL,\n  CONSTRAINT `game_balance_rules_id` PRIMARY KEY(`id`),\n  UNIQUE KEY `uq_catalog_rarity_field` (`catalog_type`, `rarity`, `field`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1680
+}
