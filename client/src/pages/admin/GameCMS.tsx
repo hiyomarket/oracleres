@@ -1637,129 +1637,173 @@ function CatalogStatsTab() {
 function AIToolsTab() {
   const utils = trpc.useUtils();
   const [selectedMonsterId, setSelectedMonsterId] = useState("");
+  const [balanceResults, setBalanceResults] = useState<Record<string, any>>({});
+  const [activeBalanceTab, setActiveBalanceTab] = useState("all");
 
   // AI 商店上架
   const aiRefreshShop = trpc.gameAI.aiRefreshShop.useMutation({
-    onSuccess: (data) => {
-      toast.success(data.message);
-      utils.gameAdmin.getVirtualShop.invalidate();
-      utils.gameAdmin.getHiddenShopPool.invalidate();
-    },
+    onSuccess: (data) => { toast.success(data.message); utils.gameAdmin.getVirtualShop.invalidate(); utils.gameAdmin.getHiddenShopPool.invalidate(); },
     onError: (e) => toast.error(e.message || "AI 商店上架失敗"),
   });
 
   // AI 批量生成
   const aiBatchGenerate = trpc.gameAI.aiBatchGenerate.useMutation({
-    onSuccess: (data) => {
-      toast.success(data.message);
-      utils.gameCatalog.invalidate();
-    },
+    onSuccess: (data) => { toast.success(data.message); utils.gameCatalog.invalidate(); },
     onError: (e) => toast.error(e.message || "AI 生成失敗"),
   });
 
   // AI 怪物技能生成
   const aiGenMonsterSkills = trpc.gameAI.aiGenerateMonsterSkills.useMutation({
-    onSuccess: (data) => {
-      toast.success(data.message);
-      utils.gameCatalog.invalidate();
-    },
+    onSuccess: (data) => { toast.success(data.message); utils.gameCatalog.invalidate(); },
     onError: (e) => toast.error(e.message || "AI 怪物技能生成失敗"),
   });
 
   // AI 批量補齊怪物技能
   const aiBatchFillSkills = trpc.gameAI.aiBatchFillMonsterSkills.useMutation({
-    onSuccess: (data) => {
-      toast.success(data.message);
-      utils.gameCatalog.invalidate();
-    },
+    onSuccess: (data) => { toast.success(data.message); utils.gameCatalog.invalidate(); },
     onError: (e) => toast.error(e.message || "AI 批量補齊失敗"),
   });
 
-  // 取得怪物列表（用於選擇器）
+  // === AI 平衡 Mutations ===
+  const balanceMonsters = trpc.gameAIBalance.balanceMonsters.useMutation({
+    onSuccess: (data) => { setBalanceResults(prev => ({ ...prev, monsters: data })); data.dryRun ? toast.success(`預覽：發現 ${data.totalChanges} 項需修正`) : toast.success(data.message); utils.gameCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const balanceMonsterSkills = trpc.gameAIBalance.balanceMonsterSkills.useMutation({
+    onSuccess: (data) => { setBalanceResults(prev => ({ ...prev, monsterSkills: data })); data.dryRun ? toast.success(`預覽：發現 ${data.totalChanges} 項需修正`) : toast.success(data.message); utils.gameCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const balanceItems = trpc.gameAIBalance.balanceItems.useMutation({
+    onSuccess: (data) => { setBalanceResults(prev => ({ ...prev, items: data })); data.dryRun ? toast.success(`預覽：發現 ${data.totalChanges} 項需修正`) : toast.success(data.message); utils.gameCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const balanceEquipment = trpc.gameAIBalance.balanceEquipment.useMutation({
+    onSuccess: (data) => { setBalanceResults(prev => ({ ...prev, equipment: data })); data.dryRun ? toast.success(`預覽：發現 ${data.totalChanges} 項需修正`) : toast.success(data.message); utils.gameCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const balanceSkills = trpc.gameAIBalance.balanceSkills.useMutation({
+    onSuccess: (data) => { setBalanceResults(prev => ({ ...prev, skills: data })); data.dryRun ? toast.success(`預覽：發現 ${data.totalChanges} 項需修正`) : toast.success(data.message); utils.gameCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const balanceAchievements = trpc.gameAIBalance.balanceAchievements.useMutation({
+    onSuccess: (data) => { setBalanceResults(prev => ({ ...prev, achievements: data })); data.dryRun ? toast.success(`預覽：發現 ${data.totalChanges} 項需修正`) : toast.success(data.message); utils.gameCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const balanceAll = trpc.gameAIBalance.balanceAll.useMutation({
+    onSuccess: (data) => { setBalanceResults(prev => ({ ...prev, all: data })); toast.success(data.message); },
+    onError: (e) => toast.error(e.message),
+  });
+
   const { data: monsterList = [] } = trpc.gameAdmin.getMonsterCatalog.useQuery({});
 
   const catalogTypes = [
-    { key: "monster" as const, label: "魔物", icon: "🐉", color: "#DC143C", desc: "生成 10 隻新魔物（五行均衡、數值平衡）" },
-    { key: "item" as const, label: "道具", icon: "🎒", color: "#2E8B57", desc: "生成 10 種新道具（材料/消耗品/技能書）" },
-    { key: "equipment" as const, label: "裝備", icon: "⚔️", color: "#C9A227", desc: "生成 10 件新裝備（各部位、品質多樣）" },
-    { key: "skill" as const, label: "技能", icon: "✨", color: "#8B5CF6", desc: "生成 10 個新技能（戰鬥/被動/生活）" },
-    { key: "achievement" as const, label: "成就", icon: "🏆", color: "#F59E0B", desc: "生成 10 個新成就（多種條件類型）" },
+    { key: "monster" as const, label: "魔物", icon: "🐉", color: "#DC143C", desc: "生成 10 隻新魔物" },
+    { key: "item" as const, label: "道具", icon: "🎒", color: "#2E8B57", desc: "生成 10 種新道具" },
+    { key: "equipment" as const, label: "裝備", icon: "⚔️", color: "#C9A227", desc: "生成 10 件新裝備" },
+    { key: "skill" as const, label: "技能", icon: "✨", color: "#8B5CF6", desc: "生成 10 個新技能" },
+    { key: "achievement" as const, label: "成就", icon: "🏆", color: "#F59E0B", desc: "生成 10 個新成就" },
+  ];
+
+  const balanceCatalogs = [
+    { key: "monsters", label: "怪物", icon: "🐉", color: "#DC143C", desc: "HP/ATK/DEF/SPD + AI等級", mutate: balanceMonsters },
+    { key: "monsterSkills", label: "怪物技能", icon: "💥", color: "#FF6347", desc: "威力%/MP/冷卻", mutate: balanceMonsterSkills },
+    { key: "items", label: "道具", icon: "🎒", color: "#2E8B57", desc: "售價校準", mutate: balanceItems },
+    { key: "equipment", label: "裝備", icon: "⚔️", color: "#C9A227", desc: "ATK/DEF/HP/SPD加成", mutate: balanceEquipment },
+    { key: "skills", label: "人物技能", icon: "✨", color: "#8B5CF6", desc: "威力%/MP/冷卻/售價", mutate: balanceSkills },
+    { key: "achievements", label: "成就", icon: "🏆", color: "#F59E0B", desc: "獎勵數量校準", mutate: balanceAchievements },
   ];
 
   const isGenerating = aiBatchGenerate.isPending;
   const isRefreshing = aiRefreshShop.isPending;
+  const isAnyBalancing = balanceMonsters.isPending || balanceMonsterSkills.isPending || balanceItems.isPending || balanceEquipment.isPending || balanceSkills.isPending || balanceAchievements.isPending || balanceAll.isPending;
+
+  // 平衡結果顯示元件
+  const BalanceResultPanel = ({ data }: { data: any }) => {
+    if (!data) return null;
+    const changes = data.changes || [];
+    return (
+      <div className="mt-3 p-3 rounded-lg border bg-amber-50 dark:bg-amber-950/20 text-sm">
+        <div className="flex items-center justify-between mb-2">
+          <p className="font-medium text-amber-700 dark:text-amber-400">
+            {data.dryRun ? "🔍 預覽模式" : "✅ 已執行"}：掃描 {data.totalScanned} 項，{data.totalChanges} 項需修正
+          </p>
+        </div>
+        {changes.length > 0 && (
+          <div className="max-h-48 overflow-y-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-amber-200 dark:border-amber-800">
+                  <th className="text-left py-1 px-1">名稱</th>
+                  <th className="text-left py-1 px-1">欄位</th>
+                  <th className="text-right py-1 px-1">原值</th>
+                  <th className="text-center py-1 px-1">→</th>
+                  <th className="text-right py-1 px-1">新值</th>
+                  <th className="text-left py-1 px-1">原因</th>
+                </tr>
+              </thead>
+              <tbody>
+                {changes.slice(0, 50).map((c: any, i: number) => (
+                  <tr key={i} className="border-b border-amber-100 dark:border-amber-900/30">
+                    <td className="py-1 px-1 font-medium">{c.name}</td>
+                    <td className="py-1 px-1 text-muted-foreground">{c.field}</td>
+                    <td className="py-1 px-1 text-right text-red-500">{c.oldValue}</td>
+                    <td className="py-1 px-1 text-center">→</td>
+                    <td className="py-1 px-1 text-right text-green-500">{c.newValue}</td>
+                    <td className="py-1 px-1 text-muted-foreground">{c.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {changes.length > 50 && <p className="text-xs text-muted-foreground mt-1">…及其他 {changes.length - 50} 項</p>}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-8">
-      {/* AI 商店自動抓取 */}
+      {/* === 區塊 1：AI 商店自動上架 === */}
       <div>
-        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
-          🏪 AI 商店自動上架
-        </h3>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">🏪 AI 商店自動上架</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          AI 從圖鑑中智慧挑選合適的道具、裝備、技能書上架到商店。一般商店 20 件（common/rare），隱藏商店 10 件（rare/epic/legendary）。
+          AI 從圖鑑中智慧挑選合適的道具、裝備、技能書上架到商店。已鎖定商品不會被覆蓋。
         </p>
         <div className="flex flex-wrap gap-3">
-          <Button
-            onClick={() => aiRefreshShop.mutate({ shopType: "both" })}
-            disabled={isRefreshing}
-            className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700"
-          >
+          <Button onClick={() => aiRefreshShop.mutate({ shopType: "both" })} disabled={isRefreshing} className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-700 hover:to-teal-700">
             {isRefreshing ? "⏳ AI 分析中..." : "🤖 一鍵上架全部商店"}
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => aiRefreshShop.mutate({ shopType: "normal" })}
-            disabled={isRefreshing}
-          >
+          <Button variant="outline" onClick={() => aiRefreshShop.mutate({ shopType: "normal" })} disabled={isRefreshing}>
             {isRefreshing ? "⏳..." : "🏪 只刷新一般商店"}
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => aiRefreshShop.mutate({ shopType: "hidden" })}
-            disabled={isRefreshing}
-          >
+          <Button variant="outline" onClick={() => aiRefreshShop.mutate({ shopType: "hidden" })} disabled={isRefreshing}>
             {isRefreshing ? "⏳..." : "🔮 只刷新隱藏商店"}
           </Button>
         </div>
         {aiRefreshShop.data && (
           <div className="mt-3 p-3 rounded-lg border bg-emerald-50 dark:bg-emerald-950/30 text-sm">
-            <p className="font-medium text-emerald-700 dark:text-emerald-400">
-              ✅ {aiRefreshShop.data.message}
-            </p>
+            <p className="font-medium text-emerald-700 dark:text-emerald-400">✅ {aiRefreshShop.data.message}</p>
           </div>
         )}
       </div>
 
       <hr className="border-border" />
 
-      {/* 一鍵 AI 批量新增圖鑑 */}
+      {/* === 區塊 2：AI 批量生成圖鑑 === */}
       <div>
-        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
-          🧠 一鍵 AI 批量新增圖鑑
-        </h3>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">🧠 AI 批量生成圖鑑</h3>
         <p className="text-sm text-muted-foreground mb-4">
           AI 自動生成 10 筆新資料，確保不重複名稱、不破壞數值平衡、五行分布均衡。
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {catalogTypes.map((ct) => (
-            <div
-              key={ct.key}
-              className="border rounded-xl p-4 hover:shadow-md transition-shadow"
-              style={{ borderColor: ct.color + "40" }}
-            >
+            <div key={ct.key} className="border rounded-xl p-4 hover:shadow-md transition-shadow" style={{ borderColor: ct.color + "40" }}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-2xl">{ct.icon}</span>
                 <span className="font-bold" style={{ color: ct.color }}>{ct.label}圖鑑</span>
               </div>
               <p className="text-xs text-muted-foreground mb-3">{ct.desc}</p>
-              <Button
-                size="sm"
-                onClick={() => aiBatchGenerate.mutate({ catalogType: ct.key })}
-                disabled={isGenerating}
-                className="w-full"
-                style={{ backgroundColor: ct.color, color: "#fff" }}
-              >
+              <Button size="sm" onClick={() => aiBatchGenerate.mutate({ catalogType: ct.key })} disabled={isGenerating} className="w-full" style={{ backgroundColor: ct.color, color: "#fff" }}>
                 {isGenerating ? "⏳ AI 生成中..." : `🤖 一鍵生成 10 個${ct.label}`}
               </Button>
             </div>
@@ -1767,9 +1811,7 @@ function AIToolsTab() {
         </div>
         {aiBatchGenerate.data && (
           <div className="mt-4 p-3 rounded-lg border bg-blue-50 dark:bg-blue-950/30 text-sm">
-            <p className="font-medium text-blue-700 dark:text-blue-400">
-              ✅ {aiBatchGenerate.data.message}
-            </p>
+            <p className="font-medium text-blue-700 dark:text-blue-400">✅ {aiBatchGenerate.data.message}</p>
             {aiBatchGenerate.data.insertedNames.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">
                 {aiBatchGenerate.data.insertedNames.map((name, i) => (
@@ -1783,13 +1825,11 @@ function AIToolsTab() {
 
       <hr className="border-border" />
 
-      {/* AI 怪物技能生成 */}
+      {/* === 區塊 3：AI 怪物技能生成 === */}
       <div>
-        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
-          🐉 AI 怪物技能生成
-        </h3>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">🐉 AI 怪物技能生成</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          為指定怪物 AI 自動生成專屬技能（根據五行/種族/稀有度設計），或一鍵補齊所有缺少技能的怪物。
+          為指定怪物生成專屬技能，或一鍵補齊所有缺少技能的怪物。技能現在真正影響戰鬥！
         </p>
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[200px]">
@@ -1806,44 +1846,26 @@ function AIToolsTab() {
               </SelectContent>
             </Select>
           </div>
-          <Button
-            onClick={() => { if (selectedMonsterId) aiGenMonsterSkills.mutate({ monsterId: selectedMonsterId }); }}
-            disabled={!selectedMonsterId || aiGenMonsterSkills.isPending}
-            className="bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700"
-          >
+          <Button onClick={() => { if (selectedMonsterId) aiGenMonsterSkills.mutate({ monsterId: selectedMonsterId }); }} disabled={!selectedMonsterId || aiGenMonsterSkills.isPending} className="bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700">
             {aiGenMonsterSkills.isPending ? "⏳ AI 生成中..." : "🧠 為這隻怪物生成技能"}
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => aiBatchFillSkills.mutate()}
-            disabled={aiBatchFillSkills.isPending}
-          >
+          <Button variant="outline" onClick={() => aiBatchFillSkills.mutate()} disabled={aiBatchFillSkills.isPending}>
             {aiBatchFillSkills.isPending ? "⏳ 批量處理中..." : "🔄 一鍵補齊所有怪物技能"}
           </Button>
         </div>
         {aiGenMonsterSkills.data && (
           <div className="mt-3 p-3 rounded-lg border bg-red-50 dark:bg-red-950/30 text-sm">
-            <p className="font-medium text-red-700 dark:text-red-400">
-              ✅ {aiGenMonsterSkills.data.message}
-            </p>
-            {aiGenMonsterSkills.data.skillIds.length > 0 && (
-              <div className="mt-1 text-xs text-muted-foreground">
-                技能 ID: {aiGenMonsterSkills.data.skillIds.join(", ")}
-              </div>
-            )}
+            <p className="font-medium text-red-700 dark:text-red-400">✅ {aiGenMonsterSkills.data.message}</p>
+            {aiGenMonsterSkills.data.skillIds.length > 0 && <p className="mt-1 text-xs text-muted-foreground">技能 ID: {aiGenMonsterSkills.data.skillIds.join(", ")}</p>}
           </div>
         )}
         {aiBatchFillSkills.data && (
           <div className="mt-3 p-3 rounded-lg border bg-orange-50 dark:bg-orange-950/30 text-sm">
-            <p className="font-medium text-orange-700 dark:text-orange-400">
-              ✅ {aiBatchFillSkills.data.message}
-            </p>
+            <p className="font-medium text-orange-700 dark:text-orange-400">✅ {aiBatchFillSkills.data.message}</p>
             {(aiBatchFillSkills.data as any).results?.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">
                 {(aiBatchFillSkills.data as any).results.map((r: any, i: number) => (
-                  <Badge key={i} variant="secondary" className="text-xs">
-                    {r.monsterName} (+{r.skillCount}技能)
-                  </Badge>
+                  <Badge key={i} variant="secondary" className="text-xs">{r.monsterName} (+{r.skillCount}技能)</Badge>
                 ))}
               </div>
             )}
@@ -1851,17 +1873,79 @@ function AIToolsTab() {
         )}
       </div>
 
+      <hr className="border-border" />
+
+      {/* === 區塊 4：AI 全圖鑑平衡系統 === */}
+      <div>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">⚖️ AI 全圖鑑平衡系統</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          AI 掃描所有圖鑑數值，找出異常值並自動修正。先「預覽」查看修正報告，確認後再「執行」寫入資料庫。
+        </p>
+
+        {/* 一鍵全圖鑑平衡 */}
+        <div className="mb-4 p-4 rounded-xl border-2 border-dashed border-indigo-300 dark:border-indigo-700 bg-indigo-50/50 dark:bg-indigo-950/20">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <p className="font-bold text-indigo-700 dark:text-indigo-300">🌐 一鍵全圖鑑平衡掃描</p>
+              <p className="text-xs text-muted-foreground">同時掃描六個圖鑑，產生統一報告</p>
+            </div>
+            <Button onClick={() => balanceAll.mutate({ dryRun: true })} disabled={isAnyBalancing} className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700">
+              {balanceAll.isPending ? "⏳ 掃描中..." : "🔍 一鍵全圖鑑預覽"}
+            </Button>
+          </div>
+          {balanceResults.all && (
+            <div className="mt-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
+                {balanceResults.all.summary?.map((s: any) => (
+                  <div key={s.catalog} className="rounded-lg px-3 py-2 text-center" style={{ background: s.changes > 0 ? "rgba(239,68,68,0.1)" : "rgba(34,197,94,0.1)", border: `1px solid ${s.changes > 0 ? "rgba(239,68,68,0.3)" : "rgba(34,197,94,0.3)"}` }}>
+                    <p className="text-xs text-muted-foreground">{s.catalog}</p>
+                    <p className={`font-bold text-sm ${s.changes > 0 ? "text-red-500" : "text-green-500"}`}>
+                      {s.changes > 0 ? `${s.changes} 項異常` : "✅ 平衡"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">共 {s.scanned} 項</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">總計：掃描 {balanceResults.all.totalScanned} 項，{balanceResults.all.totalChanges} 項需修正</p>
+            </div>
+          )}
+        </div>
+
+        {/* 單圖鑑平衡 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {balanceCatalogs.map((bc) => (
+            <div key={bc.key} className="border rounded-xl p-4 hover:shadow-md transition-shadow" style={{ borderColor: bc.color + "40" }}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-2xl">{bc.icon}</span>
+                <span className="font-bold" style={{ color: bc.color }}>{bc.label}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">校準：{bc.desc}</p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => bc.mutate.mutate({ dryRun: true })} disabled={isAnyBalancing} className="flex-1">
+                  {bc.mutate.isPending ? "⏳..." : "🔍 預覽"}
+                </Button>
+                <Button size="sm" onClick={() => { if (confirm(`確定要執行 ${bc.label} 平衡修正？此操作會寫入資料庫。`)) bc.mutate.mutate({ dryRun: false }); }} disabled={isAnyBalancing} className="flex-1" style={{ backgroundColor: bc.color, color: "#fff" }}>
+                  {bc.mutate.isPending ? "⏳..." : "✅ 執行"}
+                </Button>
+              </div>
+              <BalanceResultPanel data={balanceResults[bc.key]} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <hr className="border-border" />
+
       {/* 使用說明 */}
       <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
         <h4 className="font-semibold mb-2">💡 使用說明</h4>
         <ul className="space-y-1 list-disc list-inside">
-          <li>AI 商店上架會清空現有「未鎖定」的商品，重新從圖鑑中挑選合適商品（已鎖定商品不會被覆蓋）</li>
-          <li>一鍵生成每次新增 10 筆，AI 會自動避免重複名稱和破壞平衡的數值</li>
-          <li>生成的數值會被自動限制在合理範圍內（如 HP 30-500、ATK 5-80）</li>
-          <li>怪物技能生成會根據怪物的五行/種族/稀有度自動設計專屬技能</li>
-          <li>各圖鑑列表中的「複製」按鈕可快速複製一筆資料作為編輯基礎</li>
-          <li>建議先生成道具/裝備/技能，再使用 AI 商店上架功能</li>
-          <li>商店中「已鎖定」的商品不會被 AI 刷新覆蓋，可在商店 Tab 中設定</li>
+          <li><strong>AI 生成</strong>：每次新增 10 筆，AI 自動避免重複名稱和破壞平衡的數值</li>
+          <li><strong>AI 平衡</strong>：根據稀有度/品質/等級定義合理數值區間，超出範圍的自動修正</li>
+          <li>平衡操作建議先「預覽」查看修正報告，確認無誤後再「執行」</li>
+          <li>怪物技能現在真正影響戰鬥：使用 powerPercent 計算傷害、MP 消耗、冷卻、附加效果</li>
+          <li>怪物 AI 等級會根據稀有度自動分配（common=1, rare/elite=2, boss/legendary=3）</li>
+          <li>商店中「已鎖定」的商品不會被 AI 刷新覆蓋</li>
         </ul>
       </div>
     </div>

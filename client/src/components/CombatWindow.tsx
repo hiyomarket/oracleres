@@ -360,6 +360,99 @@ export function CombatWindow({ data, onClose, enabled = true }: CombatWindowProp
               </div>
             )}
 
+            {/* M3M: 戰鬥回放摘要 */}
+            {(() => {
+              // 統計技能使用次數
+              const agentSkills: Record<string, number> = {};
+              const monsterSkills: Record<string, number> = {};
+              const statusEffects: Record<string, number> = {};
+              let totalDotToAgent = 0;
+              let totalDotToMonster = 0;
+              let agentStunCount = 0;
+              let monsterStunCount = 0;
+              let totalAgentHeal = 0;
+              let totalMonsterHeal = 0;
+
+              for (const r of data.rounds) {
+                if (r.agentSkillName) agentSkills[r.agentSkillName] = (agentSkills[r.agentSkillName] || 0) + 1;
+                if (r.monsterSkillName) monsterSkills[r.monsterSkillName] = (monsterSkills[r.monsterSkillName] || 0) + 1;
+                if (r.statusEffectsApplied) {
+                  for (const e of r.statusEffectsApplied) {
+                    const label = `${e.type}→${e.target === "agent" ? "你" : data.monsterName}`;
+                    statusEffects[label] = (statusEffects[label] || 0) + 1;
+                  }
+                }
+                if (r.dotDamageToAgent) totalDotToAgent += r.dotDamageToAgent;
+                if (r.dotDamageToMonster) totalDotToMonster += r.dotDamageToMonster;
+                if (r.agentStunned) agentStunCount++;
+                if (r.monsterStunned) monsterStunCount++;
+                if (r.agentHealAmount) totalAgentHeal += r.agentHealAmount;
+                if (r.monsterHealAmount) totalMonsterHeal += r.monsterHealAmount;
+              }
+
+              const hasSkillData = Object.keys(agentSkills).length > 0 || Object.keys(monsterSkills).length > 0;
+              const hasStatusData = Object.keys(statusEffects).length > 0 || totalDotToAgent > 0 || totalDotToMonster > 0;
+
+              if (!hasSkillData && !hasStatusData) return null;
+
+              const STATUS_LABELS: Record<string, string> = {
+                poison: "🟢 中毒", burn: "🔥 灼燒", freeze: "🧊 冰凍", stun: "💫 眩暈", slow: "🐌 減速",
+              };
+
+              return (
+                <div className="mb-2 rounded-lg p-2" style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}>
+                  <p className="text-[10px] text-indigo-300 font-bold mb-1.5">📊 戰鬥摘要</p>
+
+                  {/* 技能使用統計 */}
+                  {hasSkillData && (
+                    <div className="grid grid-cols-2 gap-1.5 mb-1.5">
+                      <div>
+                        <p className="text-[9px] text-cyan-400/70 mb-0.5">你的技能</p>
+                        {Object.entries(agentSkills).map(([name, count]) => (
+                          <p key={name} className="text-[10px] text-cyan-300/80">• {name} ×{count}</p>
+                        ))}
+                        {Object.keys(agentSkills).length === 0 && <p className="text-[10px] text-slate-500">無</p>}
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-red-400/70 mb-0.5">{data.monsterName}的技能</p>
+                        {Object.entries(monsterSkills).map(([name, count]) => (
+                          <p key={name} className="text-[10px] text-red-300/80">• {name} ×{count}</p>
+                        ))}
+                        {Object.keys(monsterSkills).length === 0 && <p className="text-[10px] text-slate-500">無</p>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 附加效果統計 */}
+                  {hasStatusData && (
+                    <div className="border-t border-indigo-900/30 pt-1">
+                      <p className="text-[9px] text-purple-400/70 mb-0.5">附加效果觸發</p>
+                      <div className="flex flex-wrap gap-1">
+                        {Object.entries(statusEffects).map(([label, count]) => {
+                          const [type] = label.split("→");
+                          return (
+                            <span key={label} className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: "rgba(168,85,247,0.15)", color: "#c4b5fd" }}>
+                              {STATUS_LABELS[type] || type}→{label.split("→")[1]} ×{count}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      {(totalDotToAgent > 0 || totalDotToMonster > 0 || agentStunCount > 0 || monsterStunCount > 0 || totalAgentHeal > 0 || totalMonsterHeal > 0) && (
+                        <div className="flex flex-wrap gap-2 mt-1 text-[10px] text-slate-400">
+                          {totalDotToAgent > 0 && <span>持續傷害(你)：{totalDotToAgent}</span>}
+                          {totalDotToMonster > 0 && <span>持續傷害(怪)：{totalDotToMonster}</span>}
+                          {agentStunCount > 0 && <span>你被控制：{agentStunCount}回合</span>}
+                          {monsterStunCount > 0 && <span>怪被控制：{monsterStunCount}回合</span>}
+                          {totalAgentHeal > 0 && <span>你治癒：{totalAgentHeal}</span>}
+                          {totalMonsterHeal > 0 && <span>怪治癒：{totalMonsterHeal}</span>}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             <button
               onClick={handleClose}
               className="w-full py-2 rounded-lg text-sm font-medium transition-colors"
