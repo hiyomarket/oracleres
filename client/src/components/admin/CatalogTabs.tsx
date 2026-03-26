@@ -1,11 +1,12 @@
 /**
- * 六大圖鑑管理 Tab 組件（含進階篩選 + CSV/JSON 匯出）
+ * 六大圖鑑管理 Tab 組件（含進階篩選 + CSV/JSON 匯出 + 分頁 + 批量操作）
  * MonsterCatalogV2Tab / ItemCatalogV2Tab / EquipCatalogV2Tab / SkillCatalogV2Tab / AchievementCatalogTab / MonsterSkillCatalogTab
  */
 import { useState, useCallback, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import CatalogFormDialog, { type FieldDef } from "./CatalogFormDialog";
 
@@ -27,6 +28,8 @@ const RARITY_OPTS = [
 
 const WUXING_FILTER = [{ value: "", label: "全部" }, ...WUXING_OPTS];
 const RARITY_FILTER = [{ value: "", label: "全部稀有度" }, ...RARITY_OPTS];
+
+const PAGE_SIZE_OPTIONS = [20, 50, 100, 200];
 
 // ===== 共用匯出工具 =====
 function exportToCSV(data: any[], filename: string) {
@@ -61,7 +64,7 @@ function exportToJSON(data: any[], filename: string) {
   toast.success(`已匯出 ${data.length} 筆 JSON`);
 }
 
-// ===== 共用篩選器 UI 組件 =====
+// ===== 共用 UI 組件 =====
 function FilterPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick}
@@ -84,6 +87,146 @@ function ExportButtons({ onCSV, onJSON }: { onCSV: () => void; onJSON: () => voi
   );
 }
 
+// ===== 分頁控制器 =====
+function Pagination({ page, pageSize, total, onPageChange, onPageSizeChange }: {
+  page: number; pageSize: number; total: number;
+  onPageChange: (p: number) => void; onPageSizeChange: (s: number) => void;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const startItem = (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, total);
+
+  // 生成頁碼按鈕
+  const pageButtons = useMemo(() => {
+    const pages: (number | "...")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push("...");
+      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
+      if (page < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  }, [page, totalPages]);
+
+  return (
+    <div className="flex items-center justify-between mt-4 pt-3 border-t">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span>共 {total} 筆</span>
+        <span>·</span>
+        <span>第 {startItem}-{endItem} 筆</span>
+        <span>·</span>
+        <select value={pageSize} onChange={e => onPageSizeChange(Number(e.target.value))}
+          className="h-6 text-xs rounded border bg-background px-1">
+          {PAGE_SIZE_OPTIONS.map(s => <option key={s} value={s}>每頁 {s} 筆</option>)}
+        </select>
+      </div>
+      <div className="flex items-center gap-1">
+        <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>上一頁</Button>
+        {pageButtons.map((p, i) =>
+          p === "..." ? <span key={`dot-${i}`} className="px-1 text-xs text-muted-foreground">…</span> : (
+            <Button key={p} size="sm" variant={p === page ? "default" : "outline"} className="h-7 w-7 px-0 text-xs" onClick={() => onPageChange(p as number)}>{p}</Button>
+          )
+        )}
+        <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>下一頁</Button>
+      </div>
+    </div>
+  );
+}
+
+// ===== 批量操作工具列 =====
+function BatchToolbar({ selectedCount, onBatchDelete, onBatchEdit, onClearSelection, isDeleting }: {
+  selectedCount: number; onBatchDelete: () => void; onBatchEdit: () => void; onClearSelection: () => void; isDeleting: boolean;
+}) {
+  if (selectedCount === 0) return null;
+  return (
+    <div className="flex items-center gap-3 mb-3 p-2 bg-primary/10 border border-primary/30 rounded-lg">
+      <span className="text-sm font-medium text-primary">已選取 {selectedCount} 筆</span>
+      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onBatchEdit}>批量編輯</Button>
+      <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={onBatchDelete} disabled={isDeleting}>
+        {isDeleting ? "刪除中…" : "批量刪除"}
+      </Button>
+      <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onClearSelection}>取消選取</Button>
+    </div>
+  );
+}
+
+// ===== 批量編輯 Dialog =====
+function BatchEditDialog({ open, onClose, fields, onSubmit, isLoading, selectedCount }: {
+  open: boolean; onClose: () => void; fields: { key: string; label: string; type: string; options?: { value: string; label: string }[] }[];
+  onSubmit: (data: Record<string, any>) => void; isLoading: boolean; selectedCount: number;
+}) {
+  const [editData, setEditData] = useState<Record<string, any>>({});
+  const [enabledFields, setEnabledFields] = useState<Set<string>>(new Set());
+
+  const toggleField = (key: string) => {
+    const next = new Set(enabledFields);
+    if (next.has(key)) { next.delete(key); const d = { ...editData }; delete d[key]; setEditData(d); }
+    else next.add(key);
+    setEnabledFields(next);
+  };
+
+  const handleSubmit = () => {
+    const data: Record<string, any> = {};
+    Array.from(enabledFields).forEach(key => {
+      if (editData[key] !== undefined) data[key] = editData[key];
+    });
+    if (Object.keys(data).length === 0) { toast.error("請至少勾選一個欄位"); return; }
+    onSubmit(data);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) { onClose(); setEditData({}); setEnabledFields(new Set()); } }}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>批量編輯（{selectedCount} 筆）</DialogTitle>
+          <p className="text-xs text-muted-foreground mt-1">勾選要修改的欄位，僅修改已勾選的欄位</p>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          {fields.map(f => (
+            <div key={f.key} className="flex items-center gap-3">
+              <input type="checkbox" checked={enabledFields.has(f.key)} onChange={() => toggleField(f.key)} className="rounded" />
+              <label className="text-sm w-24 shrink-0">{f.label}</label>
+              {f.type === "select" && f.options ? (
+                <select disabled={!enabledFields.has(f.key)} value={editData[f.key] ?? ""}
+                  onChange={e => setEditData({ ...editData, [f.key]: e.target.value })}
+                  className="h-8 text-sm rounded border bg-background px-2 flex-1 disabled:opacity-40">
+                  <option value="">-- 選擇 --</option>
+                  {f.options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              ) : f.type === "number" ? (
+                <Input type="number" disabled={!enabledFields.has(f.key)} value={editData[f.key] ?? ""}
+                  onChange={e => setEditData({ ...editData, [f.key]: Number(e.target.value) })}
+                  className="h-8 text-sm flex-1 disabled:opacity-40" />
+              ) : (
+                <Input disabled={!enabledFields.has(f.key)} value={editData[f.key] ?? ""}
+                  onChange={e => setEditData({ ...editData, [f.key]: e.target.value })}
+                  className="h-8 text-sm flex-1 disabled:opacity-40" />
+              )}
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => { onClose(); setEditData({}); setEnabledFields(new Set()); }}>取消</Button>
+          <Button onClick={handleSubmit} disabled={isLoading || enabledFields.size === 0}>
+            {isLoading ? "更新中…" : `套用到 ${selectedCount} 筆`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ===== 勾選 checkbox 表頭 =====
+function SelectAllCheckbox({ checked, indeterminate, onChange }: { checked: boolean; indeterminate: boolean; onChange: () => void }) {
+  return (
+    <input type="checkbox" checked={checked} ref={el => { if (el) el.indeterminate = indeterminate; }}
+      onChange={onChange} className="rounded" />
+  );
+}
+
 // ════════════════════════════════════════════════════════════════
 // 1. 魔物圖鑑 V2
 // ════════════════════════════════════════════════════════════════
@@ -94,8 +237,12 @@ export function MonsterCatalogV2Tab() {
   const [rarity, setRarity] = useState("");
   const [levelMin, setLevelMin] = useState("");
   const [levelMax, setLevelMax] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchEditOpen, setBatchEditOpen] = useState(false);
 
   const queryInput = useMemo(() => ({
     search: search || undefined,
@@ -103,13 +250,12 @@ export function MonsterCatalogV2Tab() {
     rarity: rarity || undefined,
     levelMin: levelMin ? parseInt(levelMin) : undefined,
     levelMax: levelMax ? parseInt(levelMax) : undefined,
-    page: 1, pageSize: 200,
-  }), [search, wuxing, rarity, levelMin, levelMax]);
+    page, pageSize,
+  }), [search, wuxing, rarity, levelMin, levelMax, page, pageSize]);
 
   const { data, isLoading, refetch } = trpc.gameCatalog.getMonsterCatalog.useQuery(queryInput);
   const { data: monsterSkills } = trpc.gameCatalog.getAllMonsterSkills.useQuery();
   const { data: allItems } = trpc.gameCatalog.getAllItems.useQuery();
-  const { data: exportData } = trpc.gameCatalog.exportMonsterCatalog.useQuery(undefined, { enabled: false });
   const exportQuery = trpc.gameCatalog.exportMonsterCatalog.useQuery(undefined, { enabled: false });
 
   const createMut = trpc.gameCatalog.createMonsterCatalog.useMutation({
@@ -122,6 +268,14 @@ export function MonsterCatalogV2Tab() {
   });
   const deleteMut = trpc.gameCatalog.deleteMonsterCatalog.useMutation({
     onSuccess: () => { toast.success("已刪除"); refetch(); },
+  });
+  const batchDeleteMut = trpc.gameCatalog.batchDeleteMonsters.useMutation({
+    onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
+  });
+  const batchUpdateMut = trpc.gameCatalog.batchUpdateMonsters.useMutation({
+    onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); },
+    onError: (e) => toast.error(`${e.message}`),
   });
 
   const skillOpts = (monsterSkills ?? []).map((s: any) => ({ value: s.monsterSkillId, label: `${s.monsterSkillId} ${s.name}（${s.wuxing}）` }));
@@ -169,6 +323,16 @@ export function MonsterCatalogV2Tab() {
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
+  const batchEditFields = [
+    { key: "wuxing", label: "五行", type: "select", options: WUXING_OPTS },
+    { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
+    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
+    { key: "baseHp", label: "HP", type: "number" },
+    { key: "baseAttack", label: "攻擊", type: "number" },
+    { key: "baseDefense", label: "防禦", type: "number" },
+    { key: "growthRate", label: "成長率", type: "number" },
+  ];
+
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
     if (data.isActive !== undefined) data.isActive = Number(data.isActive);
@@ -185,12 +349,35 @@ export function MonsterCatalogV2Tab() {
   }, [exportQuery]);
 
   const items = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const allSelected = items.length > 0 && items.every((m: any) => selectedIds.has(m.id));
+  const someSelected = items.some((m: any) => selectedIds.has(m.id));
+
+  const toggleAll = () => {
+    if (allSelected) setSelectedIds(new Set());
+    else setSelectedIds(new Set(items.map((m: any) => m.id)));
+  };
+  const toggleOne = (id: number) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const handleBatchDelete = () => {
+    if (!confirm(`確定要刪除選取的 ${selectedIds.size} 筆魔物？此操作無法復原！`)) return;
+    batchDeleteMut.mutate({ ids: Array.from(selectedIds) });
+  };
+
+  const handleBatchEdit = (data: Record<string, any>) => {
+    if (data.isActive !== undefined) data.isActive = Number(data.isActive);
+    batchUpdateMut.mutate({ ids: Array.from(selectedIds), data });
+  };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold">🐉 魔物圖鑑（{data?.total ?? 0}）</h2>
+          <h2 className="text-lg font-semibold">🐉 魔物圖鑑（{total}）</h2>
           <p className="text-xs text-muted-foreground">新增時自動生成 ID（如 M_W001）</p>
         </div>
         <div className="flex gap-2 items-center">
@@ -198,78 +385,83 @@ export function MonsterCatalogV2Tab() {
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增魔物</Button>
         </div>
       </div>
-      {/* 篩選列 */}
       <FilterBar>
         <div className="flex gap-1 flex-wrap">
           {WUXING_FILTER.map(w => (
-            <FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => setWuxing(w.value)} />
+            <FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => { setWuxing(w.value); setPage(1); }} />
           ))}
         </div>
         <div className="flex gap-1 flex-wrap">
           {RARITY_FILTER.map(r => (
-            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
+            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => { setRarity(r.value); setPage(1); }} />
           ))}
         </div>
       </FilterBar>
       <FilterBar>
         <span className="text-xs text-muted-foreground">等級：</span>
-        <Input type="number" placeholder="最低" value={levelMin} onChange={e => setLevelMin(e.target.value)} className="w-20 h-7 text-xs" />
+        <Input type="number" placeholder="最低" value={levelMin} onChange={e => { setLevelMin(e.target.value); setPage(1); }} className="w-20 h-7 text-xs" />
         <span className="text-xs text-muted-foreground">~</span>
-        <Input type="number" placeholder="最高" value={levelMax} onChange={e => setLevelMax(e.target.value)} className="w-20 h-7 text-xs" />
+        <Input type="number" placeholder="最高" value={levelMax} onChange={e => { setLevelMax(e.target.value); setPage(1); }} className="w-20 h-7 text-xs" />
         <div className="flex gap-2 ml-auto">
           <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
-          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
+            onKeyDown={e => { if (e.key === "Enter") { setSearch(searchInput); setPage(1); } }} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => { setSearch(searchInput); setPage(1); }}>搜尋</Button>
           {(search || wuxing || rarity || levelMin || levelMax) && (
-            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setLevelMin(""); setLevelMax(""); }}>清除全部</Button>
+            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setLevelMin(""); setLevelMax(""); setPage(1); }}>清除全部</Button>
           )}
         </div>
       </FilterBar>
+      <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)}
+        onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="border-b text-muted-foreground text-xs">
-                <th className="text-left py-2 px-2">ID</th>
-                <th className="text-left py-2 px-2">名稱</th>
-                <th className="text-left py-2 px-2">五行</th>
-                <th className="text-left py-2 px-2">等級</th>
-                <th className="text-left py-2 px-2">HP</th>
-                <th className="text-left py-2 px-2">攻</th>
-                <th className="text-left py-2 px-2">防</th>
-                <th className="text-left py-2 px-2">速</th>
-                <th className="text-left py-2 px-2">稀有度</th>
-                <th className="text-left py-2 px-2">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((m: any) => (
-                <tr key={m.id} className="border-b hover:bg-muted/30">
-                  <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.monsterId}</td>
-                  <td className="py-2 px-2 font-medium">{m.name}</td>
-                  <td className="py-2 px-2 text-xs">{m.wuxing}</td>
-                  <td className="py-2 px-2 text-xs">{m.levelRange}</td>
-                  <td className="py-2 px-2">{m.baseHp}</td>
-                  <td className="py-2 px-2">{m.baseAttack}</td>
-                  <td className="py-2 px-2">{m.baseDefense}</td>
-                  <td className="py-2 px-2">{m.baseSpeed}</td>
-                  <td className="py-2 px-2 text-xs">{m.rarity}</td>
-                  <td className="py-2 px-2 space-x-1">
-                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
-                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
-                  </td>
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="border-b text-muted-foreground text-xs">
+                  <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
+                  <th className="text-left py-2 px-2">ID</th>
+                  <th className="text-left py-2 px-2">名稱</th>
+                  <th className="text-left py-2 px-2">五行</th>
+                  <th className="text-left py-2 px-2">等級</th>
+                  <th className="text-left py-2 px-2">HP</th>
+                  <th className="text-left py-2 px-2">攻</th>
+                  <th className="text-left py-2 px-2">防</th>
+                  <th className="text-left py-2 px-2">速</th>
+                  <th className="text-left py-2 px-2">稀有度</th>
+                  <th className="text-left py-2 px-2">操作</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {items.map((m: any) => (
+                  <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
+                    <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
+                    <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.monsterId}</td>
+                    <td className="py-2 px-2 font-medium">{m.name}</td>
+                    <td className="py-2 px-2 text-xs">{m.wuxing}</td>
+                    <td className="py-2 px-2 text-xs">{m.levelRange}</td>
+                    <td className="py-2 px-2">{m.baseHp}</td>
+                    <td className="py-2 px-2">{m.baseAttack}</td>
+                    <td className="py-2 px-2">{m.baseDefense}</td>
+                    <td className="py-2 px-2">{m.baseSpeed}</td>
+                    <td className="py-2 px-2 text-xs">{m.rarity}</td>
+                    <td className="py-2 px-2 space-x-1">
+                      <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
+                      <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
+        </>
       )}
-      <CatalogFormDialog
-        open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }}
-        title={editItem ? `編輯魔物：${editItem.name}` : "新增魔物"}
-        fields={fields} initialData={editItem}
-        onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending}
-      />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }}
+        title={editItem ? `編輯魔物：${editItem.name}` : "新增魔物"} fields={fields} initialData={editItem}
+        onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields}
+        onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
     </div>
   );
 }
@@ -294,32 +486,27 @@ export function ItemCatalogV2Tab() {
   const [wuxing, setWuxing] = useState("");
   const [rarity, setRarity] = useState("");
   const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchEditOpen, setBatchEditOpen] = useState(false);
 
   const queryInput = useMemo(() => ({
-    search: search || undefined,
-    wuxing: wuxing || undefined,
-    rarity: rarity || undefined,
-    category: category || undefined,
-    page: 1, pageSize: 200,
-  }), [search, wuxing, rarity, category]);
+    search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
+    category: category || undefined, page, pageSize,
+  }), [search, wuxing, rarity, category, page, pageSize]);
 
   const { data, isLoading, refetch } = trpc.gameCatalog.getItemCatalog.useQuery(queryInput);
   const { data: allMonsters } = trpc.gameCatalog.getAllMonsters.useQuery();
   const exportQuery = trpc.gameCatalog.exportItemCatalog.useQuery(undefined, { enabled: false });
 
-  const createMut = trpc.gameCatalog.createItemCatalog.useMutation({
-    onSuccess: (r) => { toast.success(`建立成功 (${r.itemId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
-  });
-  const updateMut = trpc.gameCatalog.updateItemCatalog.useMutation({
-    onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
-  });
-  const deleteMut = trpc.gameCatalog.deleteItemCatalog.useMutation({
-    onSuccess: () => { toast.success("已刪除"); refetch(); },
-  });
+  const createMut = trpc.gameCatalog.createItemCatalog.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.itemId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const updateMut = trpc.gameCatalog.updateItemCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const deleteMut = trpc.gameCatalog.deleteItemCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
+  const batchDeleteMut = trpc.gameCatalog.batchDeleteItems.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const batchUpdateMut = trpc.gameCatalog.batchUpdateItems.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
 
   const monsterOpts = (allMonsters ?? []).map((m: any) => ({ value: m.monsterId, label: `${m.monsterId} ${m.name}（${m.wuxing}）` }));
 
@@ -344,97 +531,86 @@ export function ItemCatalogV2Tab() {
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
+  const batchEditFields = [
+    { key: "wuxing", label: "五行", type: "select", options: WUXING_OPTS },
+    { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
+    { key: "category", label: "分類", type: "select", options: ITEM_CAT_OPTS },
+    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
+    { key: "shopPrice", label: "商店售價", type: "number" },
+  ];
+
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
     ["inNormalShop", "inSpiritShop", "inSecretShop", "isMonsterDrop", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
-    if (editItem) updateMut.mutate({ id: editItem.id, data });
-    else createMut.mutate(data);
+    if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
   const handleExport = useCallback(async (format: "csv" | "json") => {
     const result = await exportQuery.refetch();
-    if (result.data) {
-      if (format === "csv") exportToCSV(result.data, "item_catalog");
-      else exportToJSON(result.data, "item_catalog");
-    }
+    if (result.data) { if (format === "csv") exportToCSV(result.data, "item_catalog"); else exportToJSON(result.data, "item_catalog"); }
   }, [exportQuery]);
 
   const items = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const allSelected = items.length > 0 && items.every((m: any) => selectedIds.has(m.id));
+  const someSelected = items.some((m: any) => selectedIds.has(m.id));
+  const toggleAll = () => { if (allSelected) setSelectedIds(new Set()); else setSelectedIds(new Set(items.map((m: any) => m.id))); };
+  const toggleOne = (id: number) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
+  const handleBatchDelete = () => { if (!confirm(`確定要刪除選取的 ${selectedIds.size} 筆道具？`)) return; batchDeleteMut.mutate({ ids: Array.from(selectedIds) }); };
+  const handleBatchEdit = (data: Record<string, any>) => { if (data.isActive !== undefined) data.isActive = Number(data.isActive); batchUpdateMut.mutate({ ids: Array.from(selectedIds), data }); };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg font-semibold">🎒 道具圖鑑（{data?.total ?? 0}）</h2>
-          <p className="text-xs text-muted-foreground">自動生成 ID（如 I_W001）</p>
-        </div>
+        <div><h2 className="text-lg font-semibold">🎒 道具圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 I_W001）</p></div>
         <div className="flex gap-2 items-center">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增道具</Button>
         </div>
       </div>
       <FilterBar>
-        <div className="flex gap-1 flex-wrap">
-          {WUXING_FILTER.map(w => (
-            <FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => setWuxing(w.value)} />
-          ))}
-        </div>
-        <div className="flex gap-1 flex-wrap">
-          {RARITY_FILTER.map(r => (
-            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
-          ))}
-        </div>
+        <div className="flex gap-1 flex-wrap">{WUXING_FILTER.map(w => (<FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => { setWuxing(w.value); setPage(1); }} />))}</div>
+        <div className="flex gap-1 flex-wrap">{RARITY_FILTER.map(r => (<FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => { setRarity(r.value); setPage(1); }} />))}</div>
       </FilterBar>
       <FilterBar>
-        <select value={category} onChange={e => setCategory(e.target.value)}
-          className="h-7 text-xs rounded border bg-background px-2">
+        <select value={category} onChange={e => { setCategory(e.target.value); setPage(1); }} className="h-7 text-xs rounded border bg-background px-2">
           {ITEM_CAT_FILTER.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
         </select>
         <div className="flex gap-2 ml-auto">
-          <Input placeholder="搜尋…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
-          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
-          {(search || wuxing || rarity || category) && (
-            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setCategory(""); }}>清除全部</Button>
-          )}
+          <Input placeholder="搜尋…" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { setSearch(searchInput); setPage(1); } }} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => { setSearch(searchInput); setPage(1); }}>搜尋</Button>
+          {(search || wuxing || rarity || category) && (<Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setCategory(""); setPage(1); }}>清除全部</Button>)}
         </div>
       </FilterBar>
+      <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="border-b text-muted-foreground text-xs">
-                <th className="text-left py-2 px-2">ID</th>
-                <th className="text-left py-2 px-2">名稱</th>
-                <th className="text-left py-2 px-2">五行</th>
-                <th className="text-left py-2 px-2">分類</th>
-                <th className="text-left py-2 px-2">稀有度</th>
-                <th className="text-left py-2 px-2">售價</th>
-                <th className="text-left py-2 px-2">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((m: any) => (
-                <tr key={m.id} className="border-b hover:bg-muted/30">
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead><tr className="border-b text-muted-foreground text-xs">
+                <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
+                <th className="text-left py-2 px-2">ID</th><th className="text-left py-2 px-2">名稱</th><th className="text-left py-2 px-2">五行</th>
+                <th className="text-left py-2 px-2">分類</th><th className="text-left py-2 px-2">稀有度</th><th className="text-left py-2 px-2">售價</th><th className="text-left py-2 px-2">操作</th>
+              </tr></thead>
+              <tbody>{items.map((m: any) => (
+                <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
+                  <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.itemId}</td>
-                  <td className="py-2 px-2 font-medium">{m.name}</td>
-                  <td className="py-2 px-2 text-xs">{m.wuxing}</td>
-                  <td className="py-2 px-2 text-xs">{m.category}</td>
-                  <td className="py-2 px-2 text-xs">{m.rarity}</td>
-                  <td className="py-2 px-2">{m.shopPrice}</td>
+                  <td className="py-2 px-2 font-medium">{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
+                  <td className="py-2 px-2 text-xs">{m.category}</td><td className="py-2 px-2 text-xs">{m.rarity}</td><td className="py-2 px-2">{m.shopPrice}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))}</tbody>
+            </table>
+          </div>
+          <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
+        </>
       )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }}
-        title={editItem ? `編輯道具：${editItem.name}` : "新增道具"} fields={fields} initialData={editItem}
-        onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯道具：${editItem.name}` : "新增道具"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
     </div>
   );
 }
@@ -462,33 +638,27 @@ export function EquipCatalogV2Tab() {
   const [rarity, setRarity] = useState("");
   const [slot, setSlot] = useState("");
   const [quality, setQuality] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchEditOpen, setBatchEditOpen] = useState(false);
 
   const queryInput = useMemo(() => ({
-    search: search || undefined,
-    wuxing: wuxing || undefined,
-    rarity: rarity || undefined,
-    slot: slot || undefined,
-    quality: quality || undefined,
-    page: 1, pageSize: 200,
-  }), [search, wuxing, rarity, slot, quality]);
+    search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
+    slot: slot || undefined, quality: quality || undefined, page, pageSize,
+  }), [search, wuxing, rarity, slot, quality, page, pageSize]);
 
   const { data, isLoading, refetch } = trpc.gameCatalog.getEquipCatalog.useQuery(queryInput);
   const { data: allItems } = trpc.gameCatalog.getAllItems.useQuery();
   const exportQuery = trpc.gameCatalog.exportEquipCatalog.useQuery(undefined, { enabled: false });
 
-  const createMut = trpc.gameCatalog.createEquipCatalog.useMutation({
-    onSuccess: (r) => { toast.success(`建立成功 (${r.equipId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
-  });
-  const updateMut = trpc.gameCatalog.updateEquipCatalog.useMutation({
-    onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
-  });
-  const deleteMut = trpc.gameCatalog.deleteEquipCatalog.useMutation({
-    onSuccess: () => { toast.success("已刪除"); refetch(); },
-  });
+  const createMut = trpc.gameCatalog.createEquipCatalog.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.equipId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const updateMut = trpc.gameCatalog.updateEquipCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const deleteMut = trpc.gameCatalog.deleteEquipCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
+  const batchDeleteMut = trpc.gameCatalog.batchDeleteEquips.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const batchUpdateMut = trpc.gameCatalog.batchUpdateEquips.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
 
   const fields: FieldDef[] = [
     { key: "name", label: "名稱", type: "text", required: true },
@@ -515,103 +685,86 @@ export function EquipCatalogV2Tab() {
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
+  const batchEditFields = [
+    { key: "wuxing", label: "五行", type: "select", options: WUXING_OPTS },
+    { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
+    { key: "slot", label: "部位", type: "select", options: SLOT_OPTS },
+    { key: "quality", label: "品質", type: "select", options: QUALITY_OPTS },
+    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
+  ];
+
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
     if (data.isActive !== undefined) data.isActive = Number(data.isActive);
-    if (editItem) updateMut.mutate({ id: editItem.id, data });
-    else createMut.mutate(data);
+    if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
   const handleExport = useCallback(async (format: "csv" | "json") => {
     const result = await exportQuery.refetch();
-    if (result.data) {
-      if (format === "csv") exportToCSV(result.data, "equip_catalog");
-      else exportToJSON(result.data, "equip_catalog");
-    }
+    if (result.data) { if (format === "csv") exportToCSV(result.data, "equip_catalog"); else exportToJSON(result.data, "equip_catalog"); }
   }, [exportQuery]);
 
   const items = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const allSelected = items.length > 0 && items.every((m: any) => selectedIds.has(m.id));
+  const someSelected = items.some((m: any) => selectedIds.has(m.id));
+  const toggleAll = () => { if (allSelected) setSelectedIds(new Set()); else setSelectedIds(new Set(items.map((m: any) => m.id))); };
+  const toggleOne = (id: number) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
+  const handleBatchDelete = () => { if (!confirm(`確定要刪除選取的 ${selectedIds.size} 筆裝備？`)) return; batchDeleteMut.mutate({ ids: Array.from(selectedIds) }); };
+  const handleBatchEdit = (data: Record<string, any>) => { if (data.isActive !== undefined) data.isActive = Number(data.isActive); batchUpdateMut.mutate({ ids: Array.from(selectedIds), data }); };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg font-semibold">⚔️ 裝備圖鑑（{data?.total ?? 0}）</h2>
-          <p className="text-xs text-muted-foreground">自動生成 ID（如 E_W001）</p>
-        </div>
+        <div><h2 className="text-lg font-semibold">⚔️ 裝備圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 E_W001）</p></div>
         <div className="flex gap-2 items-center">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增裝備</Button>
         </div>
       </div>
       <FilterBar>
-        <div className="flex gap-1 flex-wrap">
-          {WUXING_FILTER.map(w => (
-            <FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => setWuxing(w.value)} />
-          ))}
-        </div>
-        <div className="flex gap-1 flex-wrap">
-          {RARITY_FILTER.map(r => (
-            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
-          ))}
-        </div>
+        <div className="flex gap-1 flex-wrap">{WUXING_FILTER.map(w => (<FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => { setWuxing(w.value); setPage(1); }} />))}</div>
+        <div className="flex gap-1 flex-wrap">{RARITY_FILTER.map(r => (<FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => { setRarity(r.value); setPage(1); }} />))}</div>
       </FilterBar>
       <FilterBar>
-        <select value={slot} onChange={e => setSlot(e.target.value)}
-          className="h-7 text-xs rounded border bg-background px-2">
-          {SLOT_FILTER.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-        </select>
-        <select value={quality} onChange={e => setQuality(e.target.value)}
-          className="h-7 text-xs rounded border bg-background px-2">
-          {QUALITY_FILTER.map(q => <option key={q.value} value={q.value}>{q.label}</option>)}
-        </select>
+        <select value={slot} onChange={e => { setSlot(e.target.value); setPage(1); }} className="h-7 text-xs rounded border bg-background px-2">{SLOT_FILTER.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}</select>
+        <select value={quality} onChange={e => { setQuality(e.target.value); setPage(1); }} className="h-7 text-xs rounded border bg-background px-2">{QUALITY_FILTER.map(q => <option key={q.value} value={q.value}>{q.label}</option>)}</select>
         <div className="flex gap-2 ml-auto">
-          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
-          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
-          {(search || wuxing || rarity || slot || quality) && (
-            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setSlot(""); setQuality(""); }}>清除全部</Button>
-          )}
+          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { setSearch(searchInput); setPage(1); } }} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => { setSearch(searchInput); setPage(1); }}>搜尋</Button>
+          {(search || wuxing || rarity || slot || quality) && (<Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setSlot(""); setQuality(""); setPage(1); }}>清除全部</Button>)}
         </div>
       </FilterBar>
+      <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="border-b text-muted-foreground text-xs">
-                <th className="text-left py-2 px-2">ID</th>
-                <th className="text-left py-2 px-2">名稱</th>
-                <th className="text-left py-2 px-2">五行</th>
-                <th className="text-left py-2 px-2">部位</th>
-                <th className="text-left py-2 px-2">品質</th>
-                <th className="text-left py-2 px-2">攻擊</th>
-                <th className="text-left py-2 px-2">防禦</th>
-                <th className="text-left py-2 px-2">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((m: any) => (
-                <tr key={m.id} className="border-b hover:bg-muted/30">
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead><tr className="border-b text-muted-foreground text-xs">
+                <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
+                <th className="text-left py-2 px-2">ID</th><th className="text-left py-2 px-2">名稱</th><th className="text-left py-2 px-2">五行</th>
+                <th className="text-left py-2 px-2">部位</th><th className="text-left py-2 px-2">品質</th><th className="text-left py-2 px-2">攻擊</th><th className="text-left py-2 px-2">防禦</th><th className="text-left py-2 px-2">操作</th>
+              </tr></thead>
+              <tbody>{items.map((m: any) => (
+                <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
+                  <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.equipId}</td>
-                  <td className="py-2 px-2 font-medium">{m.name}</td>
-                  <td className="py-2 px-2 text-xs">{m.wuxing}</td>
-                  <td className="py-2 px-2 text-xs">{m.slot}</td>
-                  <td className="py-2 px-2 text-xs">{m.quality}</td>
-                  <td className="py-2 px-2">{m.attackBonus}</td>
-                  <td className="py-2 px-2">{m.defenseBonus}</td>
+                  <td className="py-2 px-2 font-medium">{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
+                  <td className="py-2 px-2 text-xs">{m.slot}</td><td className="py-2 px-2 text-xs">{m.quality}</td>
+                  <td className="py-2 px-2">{m.attackBonus}</td><td className="py-2 px-2">{m.defenseBonus}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))}</tbody>
+            </table>
+          </div>
+          <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
+        </>
       )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }}
-        title={editItem ? `編輯裝備：${editItem.name}` : "新增裝備"} fields={fields} initialData={editItem}
-        onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯裝備：${editItem.name}` : "新增裝備"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
     </div>
   );
 }
@@ -643,33 +796,27 @@ export function SkillCatalogV2Tab() {
   const [rarity, setRarity] = useState("");
   const [category, setCategory] = useState("");
   const [skillType, setSkillType] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchEditOpen, setBatchEditOpen] = useState(false);
 
   const queryInput = useMemo(() => ({
-    search: search || undefined,
-    wuxing: wuxing || undefined,
-    rarity: rarity || undefined,
-    category: category || undefined,
-    skillType: skillType || undefined,
-    page: 1, pageSize: 200,
-  }), [search, wuxing, rarity, category, skillType]);
+    search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
+    category: category || undefined, skillType: skillType || undefined, page, pageSize,
+  }), [search, wuxing, rarity, category, skillType, page, pageSize]);
 
   const { data, isLoading, refetch } = trpc.gameCatalog.getSkillCatalog.useQuery(queryInput);
   const { data: allMonsters } = trpc.gameCatalog.getAllMonsters.useQuery();
   const exportQuery = trpc.gameCatalog.exportSkillCatalog.useQuery(undefined, { enabled: false });
 
-  const createMut = trpc.gameCatalog.createSkillCatalog.useMutation({
-    onSuccess: (r) => { toast.success(`建立成功 (${r.skillId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
-  });
-  const updateMut = trpc.gameCatalog.updateSkillCatalog.useMutation({
-    onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
-  });
-  const deleteMut = trpc.gameCatalog.deleteSkillCatalog.useMutation({
-    onSuccess: () => { toast.success("已刪除"); refetch(); },
-  });
+  const createMut = trpc.gameCatalog.createSkillCatalog.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.skillId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const updateMut = trpc.gameCatalog.updateSkillCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const deleteMut = trpc.gameCatalog.deleteSkillCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
+  const batchDeleteMut = trpc.gameCatalog.batchDeleteSkills.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const batchUpdateMut = trpc.gameCatalog.batchUpdateSkills.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
 
   const monsterOpts = (allMonsters ?? []).map((m: any) => ({ value: m.monsterId, label: `${m.monsterId} ${m.name}` }));
 
@@ -692,101 +839,85 @@ export function SkillCatalogV2Tab() {
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
+  const batchEditFields = [
+    { key: "wuxing", label: "五行", type: "select", options: WUXING_OPTS },
+    { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
+    { key: "category", label: "分類", type: "select", options: SKILL_CAT_OPTS },
+    { key: "skillType", label: "技能類型", type: "select", options: SKILL_TYPE_OPTS },
+    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
+  ];
+
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
     if (data.isActive !== undefined) data.isActive = Number(data.isActive);
-    if (editItem) updateMut.mutate({ id: editItem.id, data });
-    else createMut.mutate(data);
+    if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
   const handleExport = useCallback(async (format: "csv" | "json") => {
     const result = await exportQuery.refetch();
-    if (result.data) {
-      if (format === "csv") exportToCSV(result.data, "skill_catalog");
-      else exportToJSON(result.data, "skill_catalog");
-    }
+    if (result.data) { if (format === "csv") exportToCSV(result.data, "skill_catalog"); else exportToJSON(result.data, "skill_catalog"); }
   }, [exportQuery]);
 
   const items = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const allSelected = items.length > 0 && items.every((m: any) => selectedIds.has(m.id));
+  const someSelected = items.some((m: any) => selectedIds.has(m.id));
+  const toggleAll = () => { if (allSelected) setSelectedIds(new Set()); else setSelectedIds(new Set(items.map((m: any) => m.id))); };
+  const toggleOne = (id: number) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
+  const handleBatchDelete = () => { if (!confirm(`確定要刪除選取的 ${selectedIds.size} 筆技能？`)) return; batchDeleteMut.mutate({ ids: Array.from(selectedIds) }); };
+  const handleBatchEdit = (data: Record<string, any>) => { if (data.isActive !== undefined) data.isActive = Number(data.isActive); batchUpdateMut.mutate({ ids: Array.from(selectedIds), data }); };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg font-semibold">✨ 技能圖鑑（{data?.total ?? 0}）</h2>
-          <p className="text-xs text-muted-foreground">自動生成 ID（如 S_W001）</p>
-        </div>
+        <div><h2 className="text-lg font-semibold">✨ 技能圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 S_W001）</p></div>
         <div className="flex gap-2 items-center">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增技能</Button>
         </div>
       </div>
       <FilterBar>
-        <div className="flex gap-1 flex-wrap">
-          {WUXING_FILTER.map(w => (
-            <FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => setWuxing(w.value)} />
-          ))}
-        </div>
-        <div className="flex gap-1 flex-wrap">
-          {RARITY_FILTER.map(r => (
-            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
-          ))}
-        </div>
+        <div className="flex gap-1 flex-wrap">{WUXING_FILTER.map(w => (<FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => { setWuxing(w.value); setPage(1); }} />))}</div>
+        <div className="flex gap-1 flex-wrap">{RARITY_FILTER.map(r => (<FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => { setRarity(r.value); setPage(1); }} />))}</div>
       </FilterBar>
       <FilterBar>
-        <select value={category} onChange={e => setCategory(e.target.value)}
-          className="h-7 text-xs rounded border bg-background px-2">
-          {SKILL_CAT_FILTER.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-        </select>
-        <select value={skillType} onChange={e => setSkillType(e.target.value)}
-          className="h-7 text-xs rounded border bg-background px-2">
-          {SKILL_TYPE_FILTER.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-        </select>
+        <select value={category} onChange={e => { setCategory(e.target.value); setPage(1); }} className="h-7 text-xs rounded border bg-background px-2">{SKILL_CAT_FILTER.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select>
+        <select value={skillType} onChange={e => { setSkillType(e.target.value); setPage(1); }} className="h-7 text-xs rounded border bg-background px-2">{SKILL_TYPE_FILTER.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
         <div className="flex gap-2 ml-auto">
-          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
-          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
-          {(search || wuxing || rarity || category || skillType) && (
-            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setCategory(""); setSkillType(""); }}>清除全部</Button>
-          )}
+          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { setSearch(searchInput); setPage(1); } }} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => { setSearch(searchInput); setPage(1); }}>搜尋</Button>
+          {(search || wuxing || rarity || category || skillType) && (<Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setCategory(""); setSkillType(""); setPage(1); }}>清除全部</Button>)}
         </div>
       </FilterBar>
+      <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="border-b text-muted-foreground text-xs">
-                <th className="text-left py-2 px-2">ID</th>
-                <th className="text-left py-2 px-2">名稱</th>
-                <th className="text-left py-2 px-2">五行</th>
-                <th className="text-left py-2 px-2">類型</th>
-                <th className="text-left py-2 px-2">威力%</th>
-                <th className="text-left py-2 px-2">MP</th>
-                <th className="text-left py-2 px-2">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((m: any) => (
-                <tr key={m.id} className="border-b hover:bg-muted/30">
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead><tr className="border-b text-muted-foreground text-xs">
+                <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
+                <th className="text-left py-2 px-2">ID</th><th className="text-left py-2 px-2">名稱</th><th className="text-left py-2 px-2">五行</th>
+                <th className="text-left py-2 px-2">類型</th><th className="text-left py-2 px-2">威力%</th><th className="text-left py-2 px-2">MP</th><th className="text-left py-2 px-2">操作</th>
+              </tr></thead>
+              <tbody>{items.map((m: any) => (
+                <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
+                  <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.skillId}</td>
-                  <td className="py-2 px-2 font-medium">{m.name}</td>
-                  <td className="py-2 px-2 text-xs">{m.wuxing}</td>
-                  <td className="py-2 px-2 text-xs">{m.skillType}</td>
-                  <td className="py-2 px-2">{m.powerPercent}%</td>
-                  <td className="py-2 px-2">{m.mpCost}</td>
+                  <td className="py-2 px-2 font-medium">{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
+                  <td className="py-2 px-2 text-xs">{m.skillType}</td><td className="py-2 px-2">{m.powerPercent}%</td><td className="py-2 px-2">{m.mpCost}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))}</tbody>
+            </table>
+          </div>
+          <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
+        </>
       )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }}
-        title={editItem ? `編輯技能：${editItem.name}` : "新增技能"} fields={fields} initialData={editItem}
-        onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯技能：${editItem.name}` : "新增技能"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
     </div>
   );
 }
@@ -811,30 +942,25 @@ export function AchievementCatalogTab() {
   const [searchInput, setSearchInput] = useState("");
   const [category, setCategory] = useState("");
   const [rarity, setRarity] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchEditOpen, setBatchEditOpen] = useState(false);
 
   const queryInput = useMemo(() => ({
-    search: search || undefined,
-    category: category || undefined,
-    rarity: rarity || undefined,
-    page: 1, pageSize: 200,
-  }), [search, category, rarity]);
+    search: search || undefined, category: category || undefined, rarity: rarity || undefined, page, pageSize,
+  }), [search, category, rarity, page, pageSize]);
 
   const { data, isLoading, refetch } = trpc.gameCatalog.getAchievementCatalog.useQuery(queryInput);
   const exportQuery = trpc.gameCatalog.exportAchievementCatalog.useQuery(undefined, { enabled: false });
 
-  const createMut = trpc.gameCatalog.createAchievement.useMutation({
-    onSuccess: (r) => { toast.success(`建立成功 (${r.achId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
-  });
-  const updateMut = trpc.gameCatalog.updateAchievementCatalog.useMutation({
-    onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
-  });
-  const deleteMut = trpc.gameCatalog.deleteAchievementCatalog.useMutation({
-    onSuccess: () => { toast.success("已刪除"); refetch(); },
-  });
+  const createMut = trpc.gameCatalog.createAchievement.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.achId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const updateMut = trpc.gameCatalog.updateAchievementCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const deleteMut = trpc.gameCatalog.deleteAchievementCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
+  const batchDeleteMut = trpc.gameCatalog.batchDeleteAchievements.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const batchUpdateMut = trpc.gameCatalog.batchUpdateAchievements.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
 
   const fields: FieldDef[] = [
     { key: "title", label: "名稱", type: "text", required: true },
@@ -853,87 +979,79 @@ export function AchievementCatalogTab() {
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
+  const batchEditFields = [
+    { key: "category", label: "分類", type: "select", options: ACH_CAT_OPTS },
+    { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
+    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
+    { key: "rewardAmount", label: "獎勵數量", type: "number" },
+  ];
+
   const handleSubmit = (data: any) => {
     if (data.isActive !== undefined) data.isActive = Number(data.isActive);
-    if (editItem) updateMut.mutate({ id: editItem.id, data });
-    else createMut.mutate(data);
+    if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
   const handleExport = useCallback(async (format: "csv" | "json") => {
     const result = await exportQuery.refetch();
-    if (result.data) {
-      if (format === "csv") exportToCSV(result.data, "achievement_catalog");
-      else exportToJSON(result.data, "achievement_catalog");
-    }
+    if (result.data) { if (format === "csv") exportToCSV(result.data, "achievement_catalog"); else exportToJSON(result.data, "achievement_catalog"); }
   }, [exportQuery]);
 
   const items = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const allSelected = items.length > 0 && items.every((m: any) => selectedIds.has(m.id));
+  const someSelected = items.some((m: any) => selectedIds.has(m.id));
+  const toggleAll = () => { if (allSelected) setSelectedIds(new Set()); else setSelectedIds(new Set(items.map((m: any) => m.id))); };
+  const toggleOne = (id: number) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
+  const handleBatchDelete = () => { if (!confirm(`確定要刪除選取的 ${selectedIds.size} 筆成就？`)) return; batchDeleteMut.mutate({ ids: Array.from(selectedIds) }); };
+  const handleBatchEdit = (data: Record<string, any>) => { if (data.isActive !== undefined) data.isActive = Number(data.isActive); batchUpdateMut.mutate({ ids: Array.from(selectedIds), data }); };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg font-semibold">🏆 成就系統（{data?.total ?? 0}）</h2>
-          <p className="text-xs text-muted-foreground">自動生成 ID（如 ACH_001）</p>
-        </div>
+        <div><h2 className="text-lg font-semibold">🏆 成就系統（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 ACH_001）</p></div>
         <div className="flex gap-2 items-center">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增成就</Button>
         </div>
       </div>
       <FilterBar>
-        <select value={category} onChange={e => setCategory(e.target.value)}
-          className="h-7 text-xs rounded border bg-background px-2">
-          {ACH_CAT_FILTER.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-        </select>
-        <div className="flex gap-1 flex-wrap">
-          {RARITY_FILTER.map(r => (
-            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
-          ))}
-        </div>
+        <select value={category} onChange={e => { setCategory(e.target.value); setPage(1); }} className="h-7 text-xs rounded border bg-background px-2">{ACH_CAT_FILTER.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select>
+        <div className="flex gap-1 flex-wrap">{RARITY_FILTER.map(r => (<FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => { setRarity(r.value); setPage(1); }} />))}</div>
         <div className="flex gap-2 ml-auto">
-          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
-          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
-          {(search || category || rarity) && (
-            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setCategory(""); setRarity(""); }}>清除全部</Button>
-          )}
+          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { setSearch(searchInput); setPage(1); } }} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => { setSearch(searchInput); setPage(1); }}>搜尋</Button>
+          {(search || category || rarity) && (<Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setCategory(""); setRarity(""); setPage(1); }}>清除全部</Button>)}
         </div>
       </FilterBar>
+      <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="border-b text-muted-foreground text-xs">
-                <th className="text-left py-2 px-2">ID</th>
-                <th className="text-left py-2 px-2">名稱</th>
-                <th className="text-left py-2 px-2">分類</th>
-                <th className="text-left py-2 px-2">稀有度</th>
-                <th className="text-left py-2 px-2">獎勵</th>
-                <th className="text-left py-2 px-2">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((m: any) => (
-                <tr key={m.id} className="border-b hover:bg-muted/30">
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead><tr className="border-b text-muted-foreground text-xs">
+                <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
+                <th className="text-left py-2 px-2">ID</th><th className="text-left py-2 px-2">名稱</th><th className="text-left py-2 px-2">分類</th>
+                <th className="text-left py-2 px-2">稀有度</th><th className="text-left py-2 px-2">獎勵</th><th className="text-left py-2 px-2">操作</th>
+              </tr></thead>
+              <tbody>{items.map((m: any) => (
+                <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
+                  <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.achId}</td>
-                  <td className="py-2 px-2 font-medium">{m.title}</td>
-                  <td className="py-2 px-2 text-xs">{m.category}</td>
-                  <td className="py-2 px-2 text-xs">{m.rarity}</td>
-                  <td className="py-2 px-2 text-xs">{m.rewardType} x{m.rewardAmount}</td>
+                  <td className="py-2 px-2 font-medium">{m.title}</td><td className="py-2 px-2 text-xs">{m.category}</td>
+                  <td className="py-2 px-2 text-xs">{m.rarity}</td><td className="py-2 px-2 text-xs">{m.rewardType} x{m.rewardAmount}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.title}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))}</tbody>
+            </table>
+          </div>
+          <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
+        </>
       )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }}
-        title={editItem ? `編輯成就：${editItem.title}` : "新增成就"} fields={fields} initialData={editItem}
-        onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯成就：${editItem.title}` : "新增成就"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
     </div>
   );
 }
@@ -954,31 +1072,26 @@ export function MonsterSkillCatalogTab() {
   const [wuxing, setWuxing] = useState("");
   const [rarity, setRarity] = useState("");
   const [skillType, setSkillType] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   const [formOpen, setFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [batchEditOpen, setBatchEditOpen] = useState(false);
 
   const queryInput = useMemo(() => ({
-    search: search || undefined,
-    wuxing: wuxing || undefined,
-    rarity: rarity || undefined,
-    skillType: skillType || undefined,
-    page: 1, pageSize: 200,
-  }), [search, wuxing, rarity, skillType]);
+    search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
+    skillType: skillType || undefined, page, pageSize,
+  }), [search, wuxing, rarity, skillType, page, pageSize]);
 
   const { data, isLoading, refetch } = trpc.gameCatalog.getMonsterSkillCatalog.useQuery(queryInput);
   const exportQuery = trpc.gameCatalog.exportMonsterSkillCatalog.useQuery(undefined, { enabled: false });
 
-  const createMut = trpc.gameCatalog.createMonsterSkill.useMutation({
-    onSuccess: (r) => { toast.success(`建立成功 (${r.monsterSkillId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
-  });
-  const updateMut = trpc.gameCatalog.updateMonsterSkill.useMutation({
-    onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
-  });
-  const deleteMut = trpc.gameCatalog.deleteMonsterSkill.useMutation({
-    onSuccess: () => { toast.success("已刪除"); refetch(); },
-  });
+  const createMut = trpc.gameCatalog.createMonsterSkill.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.monsterSkillId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const updateMut = trpc.gameCatalog.updateMonsterSkill.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const deleteMut = trpc.gameCatalog.deleteMonsterSkill.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
+  const batchDeleteMut = trpc.gameCatalog.batchDeleteMonsterSkills.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const batchUpdateMut = trpc.gameCatalog.batchUpdateMonsterSkills.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
 
   const fields: FieldDef[] = [
     { key: "name", label: "名稱", type: "text", required: true },
@@ -995,98 +1108,85 @@ export function MonsterSkillCatalogTab() {
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
+  const batchEditFields = [
+    { key: "wuxing", label: "五行", type: "select", options: WUXING_OPTS },
+    { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
+    { key: "skillType", label: "類型", type: "select", options: MS_TYPE_OPTS },
+    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
+    { key: "powerPercent", label: "威力%", type: "number" },
+    { key: "mpCost", label: "MP消耗", type: "number" },
+  ];
+
   const handleSubmit = (data: any) => {
     if (data.isActive !== undefined) data.isActive = Number(data.isActive);
-    if (editItem) updateMut.mutate({ id: editItem.id, data });
-    else createMut.mutate(data);
+    if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
   const handleExport = useCallback(async (format: "csv" | "json") => {
     const result = await exportQuery.refetch();
-    if (result.data) {
-      if (format === "csv") exportToCSV(result.data, "monster_skill_catalog");
-      else exportToJSON(result.data, "monster_skill_catalog");
-    }
+    if (result.data) { if (format === "csv") exportToCSV(result.data, "monster_skill_catalog"); else exportToJSON(result.data, "monster_skill_catalog"); }
   }, [exportQuery]);
 
   const items = data?.items ?? [];
+  const total = data?.total ?? 0;
+  const allSelected = items.length > 0 && items.every((m: any) => selectedIds.has(m.id));
+  const someSelected = items.some((m: any) => selectedIds.has(m.id));
+  const toggleAll = () => { if (allSelected) setSelectedIds(new Set()); else setSelectedIds(new Set(items.map((m: any) => m.id))); };
+  const toggleOne = (id: number) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
+  const handleBatchDelete = () => { if (!confirm(`確定要刪除選取的 ${selectedIds.size} 筆魔物技能？`)) return; batchDeleteMut.mutate({ ids: Array.from(selectedIds) }); };
+  const handleBatchEdit = (data: Record<string, any>) => { if (data.isActive !== undefined) data.isActive = Number(data.isActive); batchUpdateMut.mutate({ ids: Array.from(selectedIds), data }); };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg font-semibold">🐲 魔物技能圖鑑（{data?.total ?? 0}）</h2>
-          <p className="text-xs text-muted-foreground">自動生成 ID（如 SK_M001）</p>
-        </div>
+        <div><h2 className="text-lg font-semibold">🐲 魔物技能圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 SK_M001）</p></div>
         <div className="flex gap-2 items-center">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增魔物技能</Button>
         </div>
       </div>
       <FilterBar>
-        <div className="flex gap-1 flex-wrap">
-          {WUXING_FILTER.map(w => (
-            <FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => setWuxing(w.value)} />
-          ))}
-        </div>
-        <div className="flex gap-1 flex-wrap">
-          {RARITY_FILTER.map(r => (
-            <FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => setRarity(r.value)} />
-          ))}
-        </div>
+        <div className="flex gap-1 flex-wrap">{WUXING_FILTER.map(w => (<FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => { setWuxing(w.value); setPage(1); }} />))}</div>
+        <div className="flex gap-1 flex-wrap">{RARITY_FILTER.map(r => (<FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => { setRarity(r.value); setPage(1); }} />))}</div>
       </FilterBar>
       <FilterBar>
-        <select value={skillType} onChange={e => setSkillType(e.target.value)}
-          className="h-7 text-xs rounded border bg-background px-2">
-          {MS_TYPE_FILTER.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-        </select>
+        <select value={skillType} onChange={e => { setSkillType(e.target.value); setPage(1); }} className="h-7 text-xs rounded border bg-background px-2">{MS_TYPE_FILTER.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
         <div className="flex gap-2 ml-auto">
-          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && setSearch(searchInput)} className="w-40 h-7 text-xs" />
-          <Button size="sm" variant="outline" className="h-7" onClick={() => setSearch(searchInput)}>搜尋</Button>
-          {(search || wuxing || rarity || skillType) && (
-            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setSkillType(""); }}>清除全部</Button>
-          )}
+          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { setSearch(searchInput); setPage(1); } }} className="w-40 h-7 text-xs" />
+          <Button size="sm" variant="outline" className="h-7" onClick={() => { setSearch(searchInput); setPage(1); }}>搜尋</Button>
+          {(search || wuxing || rarity || skillType) && (<Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setSkillType(""); setPage(1); }}>清除全部</Button>)}
         </div>
       </FilterBar>
+      <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="border-b text-muted-foreground text-xs">
-                <th className="text-left py-2 px-2">ID</th>
-                <th className="text-left py-2 px-2">名稱</th>
-                <th className="text-left py-2 px-2">五行</th>
-                <th className="text-left py-2 px-2">類型</th>
-                <th className="text-left py-2 px-2">威力%</th>
-                <th className="text-left py-2 px-2">MP</th>
-                <th className="text-left py-2 px-2">冷卻</th>
-                <th className="text-left py-2 px-2">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((m: any) => (
-                <tr key={m.id} className="border-b hover:bg-muted/30">
+        <>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead><tr className="border-b text-muted-foreground text-xs">
+                <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
+                <th className="text-left py-2 px-2">ID</th><th className="text-left py-2 px-2">名稱</th><th className="text-left py-2 px-2">五行</th>
+                <th className="text-left py-2 px-2">類型</th><th className="text-left py-2 px-2">威力%</th><th className="text-left py-2 px-2">MP</th><th className="text-left py-2 px-2">冷卻</th><th className="text-left py-2 px-2">操作</th>
+              </tr></thead>
+              <tbody>{items.map((m: any) => (
+                <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
+                  <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.monsterSkillId}</td>
-                  <td className="py-2 px-2 font-medium">{m.name}</td>
-                  <td className="py-2 px-2 text-xs">{m.wuxing}</td>
-                  <td className="py-2 px-2 text-xs">{m.skillType}</td>
-                  <td className="py-2 px-2">{m.powerPercent}%</td>
-                  <td className="py-2 px-2">{m.mpCost}</td>
-                  <td className="py-2 px-2">{m.cooldown}</td>
+                  <td className="py-2 px-2 font-medium">{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
+                  <td className="py-2 px-2 text-xs">{m.skillType}</td><td className="py-2 px-2">{m.powerPercent}%</td>
+                  <td className="py-2 px-2">{m.mpCost}</td><td className="py-2 px-2">{m.cooldown}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              ))}</tbody>
+            </table>
+          </div>
+          <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
+        </>
       )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }}
-        title={editItem ? `編輯魔物技能：${editItem.name}` : "新增魔物技能"} fields={fields} initialData={editItem}
-        onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯魔物技能：${editItem.name}` : "新增魔物技能"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} />
+      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size} />
     </div>
   );
 }

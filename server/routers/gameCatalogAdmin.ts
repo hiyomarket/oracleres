@@ -594,6 +594,121 @@ export const gameCatalogAdminRouter = router({
     }),
 
   // ════════════════════════════════════════════════════════════════
+  // 批量刪除 API
+  // ════════════════════════════════════════════════════════════════
+  batchDeleteMonsters: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const { ids } = input;
+      await db.delete(gameMonsterCatalog).where(sql`${gameMonsterCatalog.id} IN (${sql.join(ids.map(id => sql`${id}`), sql`, `)})`);
+      return { deleted: ids.length };
+    }),
+
+  batchDeleteItems: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.delete(gameItemCatalog).where(sql`${gameItemCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      return { deleted: input.ids.length };
+    }),
+
+  batchDeleteEquips: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.delete(gameEquipmentCatalog).where(sql`${gameEquipmentCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      return { deleted: input.ids.length };
+    }),
+
+  batchDeleteSkills: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.delete(gameSkillCatalog).where(sql`${gameSkillCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      return { deleted: input.ids.length };
+    }),
+
+  batchDeleteAchievements: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.delete(gameAchievements).where(sql`${gameAchievements.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      return { deleted: input.ids.length };
+    }),
+
+  batchDeleteMonsterSkills: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.delete(gameMonsterSkillCatalog).where(sql`${gameMonsterSkillCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      return { deleted: input.ids.length };
+    }),
+
+  // ════════════════════════════════════════════════════════════════
+  // 批量編輯 API
+  // ════════════════════════════════════════════════════════════════
+  batchUpdateMonsters: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500), data: monsterCatalogInput.partial() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameMonsterCatalog).set(input.data as any).where(sql`${gameMonsterCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      return { updated: input.ids.length };
+    }),
+
+  batchUpdateItems: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500), data: itemCatalogInput.partial() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameItemCatalog).set(input.data as any).where(sql`${gameItemCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      return { updated: input.ids.length };
+    }),
+
+  batchUpdateEquips: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500), data: equipCatalogInput.partial() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameEquipmentCatalog).set(input.data as any).where(sql`${gameEquipmentCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      return { updated: input.ids.length };
+    }),
+
+  batchUpdateSkills: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500), data: skillCatalogInput.partial() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameSkillCatalog).set(input.data as any).where(sql`${gameSkillCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      return { updated: input.ids.length };
+    }),
+
+  batchUpdateAchievements: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500), data: achievementInput.partial() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameAchievements).set(input.data as any).where(sql`${gameAchievements.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      return { updated: input.ids.length };
+    }),
+
+  batchUpdateMonsterSkills: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500), data: monsterSkillInput.partial() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameMonsterSkillCatalog).set(input.data as any).where(sql`${gameMonsterSkillCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      return { updated: input.ids.length };
+    }),
+
+  // ════════════════════════════════════════════════════════════════
   // 連動查詢（供下拉選單使用）
   // ════════════════════════════════════════════════════════════════
   

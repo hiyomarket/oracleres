@@ -1,0 +1,30 @@
+{
+  "query": "SELECT COUNT(*) as total, wuxing FROM game_monster_catalog GROUP BY wuxing ORDER BY wuxing;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total, wuxing FROM game_monster_catalog GROUP BY wuxing ORDER BY wuxing;",
+  "rows": [
+    {
+      "total": "21",
+      "wuxing": "土"
+    },
+    {
+      "total": "20",
+      "wuxing": "木"
+    },
+    {
+      "total": "30",
+      "wuxing": "水"
+    },
+    {
+      "total": "24",
+      "wuxing": "火"
+    },
+    {
+      "total": "20",
+      "wuxing": "金"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\twuxing\n21\t土\n20\t木\n30\t水\n24\t火\n20\t金\n",
+  "stderr": "",
+  "execution_time_ms": 1632
+}
