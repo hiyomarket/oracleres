@@ -9,6 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import CatalogFormDialog, { type FieldDef } from "./CatalogFormDialog";
+import {
+  RewardEditor,
+  ConditionEditor,
+  SkillEffectEditor,
+  AiConditionEditor,
+  ResistEditor,
+  AffixEditor,
+  MaterialEditor,
+  UseEffectEditor,
+  GatherEditor,
+  HiddenTriggerEditor,
+  SpawnNodeEditor,
+} from "./SmartEditors";
 
 // ===== 共用常數 =====
 const WUXING_OPTS = [
@@ -75,7 +88,7 @@ function FilterPill({ label, active, onClick }: { label: string; active: boolean
 }
 
 function FilterBar({ children }: { children: React.ReactNode }) {
-  return <div className="flex gap-2 mb-4 flex-wrap items-center">{children}</div>;
+  return <div className="flex gap-2 mb-4 flex-wrap items-center max-sm:gap-1">{children}</div>;
 }
 
 function ExportButtons({ onCSV, onJSON }: { onCSV: () => void; onJSON: () => void }) {
@@ -568,10 +581,27 @@ export function MonsterCatalogV2Tab() {
     { key: "dropRate4", label: "掉落率4%", type: "number", defaultValue: 0, group: "掉落系統" },
     { key: "dropItem5", label: "掉落物5", type: "linkedSelect", linkedOptions: itemOpts, defaultValue: "", group: "掉落系統" },
     { key: "dropRate5", label: "掉落率5%", type: "number", defaultValue: 0, group: "掉落系統" },
-    { key: "dropGold", label: "掉落金幣 {min,max}", type: "json", defaultValue: { min: 5, max: 15 }, group: "掉落系統", placeholder: '{"min":5,"max":15}' },
+    { key: "dropGold", label: "掉落金幣", type: "custom", defaultValue: { min: 5, max: 15 }, group: "掉落系統", skipParse: true,
+      render: (val, onChange) => {
+        const g = (typeof val === "object" && val) ? val : { min: 5, max: 15 };
+        return (
+          <div className="space-y-1 col-span-2">
+            <label className="text-xs font-medium">掉落金幣範圍</label>
+            <div className="flex gap-2 items-center">
+              <input type="number" value={g.min ?? 0} onChange={e => onChange({ ...g, min: Number(e.target.value) })} className="h-8 w-24 text-xs rounded border bg-background px-2" placeholder="最小" />
+              <span className="text-xs text-muted-foreground">～</span>
+              <input type="number" value={g.max ?? 0} onChange={e => onChange({ ...g, max: Number(e.target.value) })} className="h-8 w-24 text-xs rounded border bg-background px-2" placeholder="最大" />
+              <span className="text-xs text-muted-foreground">金幣</span>
+            </div>
+          </div>
+        );
+      }
+    },
     { key: "legendaryDrop", label: "傳說掉落", type: "linkedSelect", linkedOptions: itemOpts, defaultValue: "", group: "掉落系統" },
     { key: "legendaryDropRate", label: "傳說掉落率%", type: "number", defaultValue: 0, group: "掉落系統" },
-    { key: "spawnNodes", label: "出沒節點 (JSON陣列)", type: "json", defaultValue: [], group: "其他", placeholder: '["node_1","node_2"]' },
+    { key: "spawnNodes", label: "出沒節點", type: "custom", defaultValue: [], group: "其他", skipParse: true,
+      render: (val, onChange) => <SpawnNodeEditor value={val ?? []} onChange={onChange} />
+    },
     { key: "destinyClue", label: "天命線索", type: "textarea", group: "其他" },
     { key: "imageUrl", label: "圖片URL", type: "text", group: "其他" },
     { key: "catchRate", label: "捕獲率 (0-1)", type: "number", defaultValue: 0.1, step: 0.01, min: 0, max: 1, group: "其他" },
@@ -630,12 +660,12 @@ export function MonsterCatalogV2Tab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
         <div>
           <h2 className="text-lg font-semibold">🐉 魔物圖鑑（{total}）</h2>
           <p className="text-xs text-muted-foreground">新增時自動生成 ID（如 M_W001）</p>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增魔物</Button>
@@ -671,21 +701,21 @@ export function MonsterCatalogV2Tab() {
         onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <table className="w-full text-sm border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b text-muted-foreground text-xs">
                   <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
-                  <th className="text-left py-2 px-2">ID</th>
-                  <th className="text-left py-2 px-2">名稱</th>
-                  <th className="text-left py-2 px-2">五行</th>
-                  <th className="text-left py-2 px-2">等級</th>
-                  <th className="text-left py-2 px-2">HP</th>
-                  <th className="text-left py-2 px-2">攻</th>
-                  <th className="text-left py-2 px-2">防</th>
-                  <th className="text-left py-2 px-2">速</th>
-                  <th className="text-left py-2 px-2">稀有度</th>
-                  <th className="text-left py-2 px-2">操作</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">ID</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">名稱</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">等級</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">HP</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">攻</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">防</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">速</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">稀有度</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
                 </tr>
               </thead>
               <tbody>
@@ -881,8 +911,12 @@ export function ItemCatalogV2Tab() {
     { key: "isMonsterDrop", label: "怪物掉落", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "掉落來源" },
     { key: "dropMonsterId", label: "掉落怪物", type: "linkedSelect", linkedOptions: monsterOpts, defaultValue: "", group: "掉落來源" },
     { key: "dropRate", label: "掉落率%", type: "number", defaultValue: 0, group: "掉落來源" },
-    { key: "gatherLocations", label: "採集地點", type: "json", defaultValue: [], group: "採集", placeholder: '[{"nodeId":"n1","nodeName":"翠竹林","rate":30}]' },
-    { key: "useEffect", label: "使用效果", type: "json", defaultValue: null, group: "效果", placeholder: '{"type":"heal","value":50,"description":"回復50HP"}' },
+    { key: "gatherLocations", label: "採集地點", type: "custom", defaultValue: [], group: "採集", skipParse: true,
+      render: (val, onChange) => <GatherEditor value={val ?? []} onChange={onChange} />
+    },
+    { key: "useEffect", label: "使用效果", type: "custom", defaultValue: null, group: "效果", skipParse: true,
+      render: (val, onChange) => <UseEffectEditor value={val} onChange={onChange} />
+    },
     { key: "source", label: "來源說明", type: "text", group: "其他" },
     { key: "effect", label: "效果說明", type: "textarea", group: "其他" },
     { key: "imageUrl", label: "圖片URL", type: "text", group: "其他" },
@@ -919,9 +953,9 @@ export function ItemCatalogV2Tab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
         <div><h2 className="text-lg font-semibold">🎒 道具圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 I_W001）</p></div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增道具</Button>
@@ -944,12 +978,12 @@ export function ItemCatalogV2Tab() {
       <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <table className="w-full text-sm border-collapse min-w-[550px]">
               <thead><tr className="border-b text-muted-foreground text-xs">
                 <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
-                <th className="text-left py-2 px-2">ID</th><th className="text-left py-2 px-2">名稱</th><th className="text-left py-2 px-2">五行</th>
-                <th className="text-left py-2 px-2">分類</th><th className="text-left py-2 px-2">稀有度</th><th className="text-left py-2 px-2">售價</th><th className="text-left py-2 px-2">操作</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">ID</th><th className="text-left py-2 px-2 whitespace-nowrap">名稱</th><th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">分類</th><th className="text-left py-2 px-2 whitespace-nowrap">稀有度</th><th className="text-left py-2 px-2 whitespace-nowrap">售價</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
               </tr></thead>
               <tbody>{items.map((m: any) => (
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
@@ -1036,13 +1070,30 @@ export function EquipCatalogV2Tab() {
     { key: "attackBonus", label: "攻擊加成", type: "number", defaultValue: 0, group: "屬性加成" },
     { key: "defenseBonus", label: "防禦加成", type: "number", defaultValue: 0, group: "屬性加成" },
     { key: "speedBonus", label: "速度加成", type: "number", defaultValue: 0, group: "屬性加成" },
-    { key: "resistBonus", label: "抗性加成", type: "json", defaultValue: { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }, group: "屬性加成", placeholder: '{"wood":0,"fire":0,"earth":0,"metal":0,"water":0}' },
-    { key: "affix1", label: "詞條1", type: "json", defaultValue: null, group: "詞條", placeholder: '{"name":"鋒利","type":"attack","value":5,"description":"+5攻擊"}' },
-    { key: "affix2", label: "詞條2", type: "json", defaultValue: null, group: "詞條" },
-    { key: "affix3", label: "詞條3", type: "json", defaultValue: null, group: "詞條" },
-    { key: "affix4", label: "詞條4", type: "json", defaultValue: null, group: "詞條" },
-    { key: "affix5", label: "詞條5", type: "json", defaultValue: null, group: "詞條" },
-    { key: "craftMaterialsList", label: "製作材料", type: "json", defaultValue: [], group: "製作", placeholder: '[{"itemId":"I_W001","name":"翠竹","quantity":5}]' },
+    { key: "resistBonus", label: "抗性加成", type: "custom", defaultValue: { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }, group: "屬性加成", skipParse: true,
+      render: (val, onChange) => <ResistEditor value={val ?? { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }} onChange={onChange} />
+    },
+    { key: "_affixes", label: "裝備詞條", type: "custom", defaultValue: null, group: "詞條", skipParse: true,
+      render: (_val, _onChange, formData, setFormData) => {
+        const affixes = [1,2,3,4,5].map(i => formData?.[`affix${i}`] ?? null);
+        return <AffixEditor affixes={affixes} onChange={(newAffixes) => {
+          const update: any = {};
+          newAffixes.forEach((a, i) => { update[`affix${i+1}`] = a; });
+          setFormData?.((prev: any) => ({ ...prev, ...update }));
+        }} />;
+      }
+    },
+    { key: "affix1", label: "", type: "hidden", defaultValue: null },
+    { key: "affix2", label: "", type: "hidden", defaultValue: null },
+    { key: "affix3", label: "", type: "hidden", defaultValue: null },
+    { key: "affix4", label: "", type: "hidden", defaultValue: null },
+    { key: "affix5", label: "", type: "hidden", defaultValue: null },
+    { key: "craftMaterialsList", label: "製作材料", type: "custom", defaultValue: [], group: "製作", skipParse: true,
+      render: (val, onChange) => {
+        const itemOpts = (allItems ?? []).map((it: any) => ({ value: it.itemId, label: `${it.itemId} ${it.name}` }));
+        return <MaterialEditor value={val ?? []} onChange={onChange} itemOptions={itemOpts} />;
+      }
+    },
     { key: "setId", label: "套裝ID", type: "text", defaultValue: "", group: "製作" },
     { key: "specialEffect", label: "特殊效果", type: "textarea", group: "其他" },
     { key: "imageUrl", label: "圖片URL", type: "text", group: "其他" },
@@ -1079,9 +1130,9 @@ export function EquipCatalogV2Tab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
         <div><h2 className="text-lg font-semibold">⚔️ 裝備圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 E_W001）</p></div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增裝備</Button>
@@ -1103,12 +1154,12 @@ export function EquipCatalogV2Tab() {
       <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <table className="w-full text-sm border-collapse min-w-[600px]">
               <thead><tr className="border-b text-muted-foreground text-xs">
                 <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
-                <th className="text-left py-2 px-2">ID</th><th className="text-left py-2 px-2">名稱</th><th className="text-left py-2 px-2">五行</th>
-                <th className="text-left py-2 px-2">部位</th><th className="text-left py-2 px-2">品質</th><th className="text-left py-2 px-2">攻擊</th><th className="text-left py-2 px-2">防禦</th><th className="text-left py-2 px-2">操作</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">ID</th><th className="text-left py-2 px-2 whitespace-nowrap">名稱</th><th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">部位</th><th className="text-left py-2 px-2 whitespace-nowrap">品質</th><th className="text-left py-2 px-2 whitespace-nowrap">攻擊</th><th className="text-left py-2 px-2 whitespace-nowrap">防禦</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
               </tr></thead>
               <tbody>{items.map((m: any) => (
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
@@ -1204,7 +1255,9 @@ export function SkillCatalogV2Tab() {
     { key: "acquireType", label: "獲取方式", type: "select", options: ACQUIRE_TYPE_OPTS, defaultValue: "shop", group: "獲取" },
     { key: "shopPrice", label: "商店售價", type: "number", defaultValue: 0, group: "獲取" },
     { key: "dropMonsterId", label: "掉落怪物", type: "linkedSelect", linkedOptions: monsterOpts, defaultValue: "", group: "獲取" },
-    { key: "hiddenTrigger", label: "隱藏觸發條件", type: "textarea", group: "獲取" },
+    { key: "hiddenTrigger", label: "隱藏觸發條件", type: "custom", defaultValue: [], group: "獲取", skipParse: true,
+      render: (val, onChange) => <HiddenTriggerEditor value={val ?? []} onChange={onChange} />
+    },
     { key: "description", label: "效果說明", type: "textarea", group: "其他" },
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
@@ -1239,9 +1292,9 @@ export function SkillCatalogV2Tab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
         <div><h2 className="text-lg font-semibold">✨ 技能圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 S_W001）</p></div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增技能</Button>
@@ -1263,12 +1316,12 @@ export function SkillCatalogV2Tab() {
       <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <table className="w-full text-sm border-collapse min-w-[550px]">
               <thead><tr className="border-b text-muted-foreground text-xs">
                 <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
-                <th className="text-left py-2 px-2">ID</th><th className="text-left py-2 px-2">名稱</th><th className="text-left py-2 px-2">五行</th>
-                <th className="text-left py-2 px-2">類型</th><th className="text-left py-2 px-2">威力%</th><th className="text-left py-2 px-2">MP</th><th className="text-left py-2 px-2">操作</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">ID</th><th className="text-left py-2 px-2 whitespace-nowrap">名稱</th><th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">類型</th><th className="text-left py-2 px-2 whitespace-nowrap">威力%</th><th className="text-left py-2 px-2 whitespace-nowrap">MP</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
               </tr></thead>
               <tbody>{items.map((m: any) => (
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
@@ -1343,12 +1396,24 @@ export function AchievementCatalogTab() {
     { key: "category", label: "分類", type: "select", required: true, options: ACH_CAT_OPTS },
     { key: "description", label: "說明", type: "textarea", required: true },
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS, defaultValue: "common" },
-    { key: "conditionType", label: "條件類型", type: "text", required: true, placeholder: "如 kill_count, explore_count" },
-    { key: "conditionValue", label: "條件值", type: "number", defaultValue: 1, group: "條件" },
-    { key: "conditionParams", label: "條件參數", type: "json", defaultValue: {}, group: "條件", placeholder: '{"monsterId":"M_W001"}' },
+    { key: "_condition", label: "達成條件", type: "custom", defaultValue: null, group: "條件", skipParse: true,
+      render: (_val, _onChange, formData, setFormData) => {
+        return <ConditionEditor
+          conditionType={formData?.conditionType ?? ""}
+          conditionValue={formData?.conditionValue ?? 1}
+          conditionParams={formData?.conditionParams ?? {}}
+          onChange={(field: string, val: any) => setFormData?.((prev: any) => ({ ...prev, [field]: val }))}
+        />;
+      }
+    },
+    { key: "conditionType", label: "", type: "hidden", defaultValue: "" },
+    { key: "conditionValue", label: "", type: "hidden", defaultValue: 1 },
+    { key: "conditionParams", label: "", type: "hidden", defaultValue: {} },
     { key: "rewardType", label: "獎勵類型", type: "select", options: REWARD_TYPE_OPTS, group: "獎勵" },
     { key: "rewardAmount", label: "獎勵數量", type: "number", defaultValue: 0, group: "獎勵" },
-    { key: "rewardContent", label: "獎勵內容", type: "json", defaultValue: [], group: "獎勵", placeholder: '[{"type":"item","itemId":"I_W001","amount":1}]' },
+    { key: "rewardContent", label: "獎勵內容", type: "custom", defaultValue: [], group: "獎勵", skipParse: true,
+      render: (val, onChange) => <RewardEditor value={val ?? []} onChange={onChange} />
+    },
     { key: "titleReward", label: "稱號獎勵", type: "text", group: "獎勵" },
     { key: "glowEffect", label: "光效代碼", type: "text", group: "獎勵" },
     { key: "iconUrl", label: "徽章圖片", type: "text", group: "其他" },
@@ -1383,9 +1448,9 @@ export function AchievementCatalogTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
         <div><h2 className="text-lg font-semibold">🏆 成就系統（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 ACH_001）</p></div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增成就</Button>
@@ -1403,12 +1468,12 @@ export function AchievementCatalogTab() {
       <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <table className="w-full text-sm border-collapse min-w-[500px]">
               <thead><tr className="border-b text-muted-foreground text-xs">
                 <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
-                <th className="text-left py-2 px-2">ID</th><th className="text-left py-2 px-2">名稱</th><th className="text-left py-2 px-2">分類</th>
-                <th className="text-left py-2 px-2">稀有度</th><th className="text-left py-2 px-2">獎勵</th><th className="text-left py-2 px-2">操作</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">ID</th><th className="text-left py-2 px-2 whitespace-nowrap">名稱</th><th className="text-left py-2 px-2 whitespace-nowrap">分類</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">稀有度</th><th className="text-left py-2 px-2 whitespace-nowrap">獎勵</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
               </tr></thead>
               <tbody>{items.map((m: any) => (
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
@@ -1484,8 +1549,12 @@ export function MonsterSkillCatalogTab() {
     { key: "mpCost", label: "MP消耗", type: "number", defaultValue: 0, group: "數值" },
     { key: "cooldown", label: "冷卻(回合)", type: "number", defaultValue: 0, group: "數值" },
     { key: "accuracyMod", label: "命中修正%", type: "number", defaultValue: 100, group: "數值" },
-    { key: "additionalEffect", label: "附加效果", type: "json", defaultValue: null, group: "效果", placeholder: '{"type":"burn","chance":20,"duration":3,"value":5}' },
-    { key: "aiCondition", label: "AI觸發條件", type: "json", defaultValue: null, group: "效果", placeholder: '{"hpBelow":30,"priority":2}' },
+    { key: "additionalEffect", label: "附加效果", type: "custom", defaultValue: null, group: "效果", skipParse: true,
+      render: (val, onChange) => <SkillEffectEditor value={val} onChange={onChange} />
+    },
+    { key: "aiCondition", label: "AI觸發條件", type: "custom", defaultValue: null, group: "效果", skipParse: true,
+      render: (val, onChange) => <AiConditionEditor value={val} onChange={onChange} />
+    },
     { key: "description", label: "說明", type: "textarea", group: "其他" },
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
@@ -1520,9 +1589,9 @@ export function MonsterSkillCatalogTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
         <div><h2 className="text-lg font-semibold">🐲 魔物技能圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 SK_M001）</p></div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
           <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增魔物技能</Button>
@@ -1543,12 +1612,12 @@ export function MonsterSkillCatalogTab() {
       <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
+          <div className="overflow-x-auto -mx-2 px-2">
+            <table className="w-full text-sm border-collapse min-w-[600px]">
               <thead><tr className="border-b text-muted-foreground text-xs">
                 <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
-                <th className="text-left py-2 px-2">ID</th><th className="text-left py-2 px-2">名稱</th><th className="text-left py-2 px-2">五行</th>
-                <th className="text-left py-2 px-2">類型</th><th className="text-left py-2 px-2">威力%</th><th className="text-left py-2 px-2">MP</th><th className="text-left py-2 px-2">冷卻</th><th className="text-left py-2 px-2">操作</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">ID</th><th className="text-left py-2 px-2 whitespace-nowrap">名稱</th><th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">類型</th><th className="text-left py-2 px-2 whitespace-nowrap">威力%</th><th className="text-left py-2 px-2 whitespace-nowrap">MP</th><th className="text-left py-2 px-2 whitespace-nowrap">冷卻</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
               </tr></thead>
               <tbody>{items.map((m: any) => (
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>

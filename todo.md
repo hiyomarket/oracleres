@@ -4085,3 +4085,55 @@
 - [x] 加入「🛡️ 退出戰鬥」按鈕（動畫進行中可強制退出）
 - [x] 加入「⏩」跳過動畫按鈕（直接顯示戰鬥結果）
 - [x] 測試：28 項 M3I 測試全部通過，764 項總測試全通過
+
+## M3J 後台 CMS 全面 UX 重構
+
+### 統一表單元件（SmartEditors.tsx）
+- [x] RewardEditor 獎勵編輯器（下拉選單+數值，最多5組）
+- [x] ConditionEditor 條件編輯器（10種條件類型，自動生成參數表單）
+- [x] SkillEffectEditor 技能效果編輯器（最多3組）
+- [x] AiConditionEditor AI觸發條件編輯器（5種條件）
+- [x] ResistEditor 五行抗性編輯器
+- [x] AffixEditor 裝備詞條編輯器（最多5條）
+- [x] MaterialEditor 製作材料編輯器
+- [x] UseEffectEditor 使用效果編輯器（8種效果）
+- [x] GatherEditor 採集地點編輯器
+- [x] HiddenTriggerEditor 隱藏觸發條件編輯器（6種觸發）
+- [x] SpawnNodeEditor 出沒節點編輯器
+
+### 怪物圖鑑表單重構
+- [x] dropGold 改為數值輸入
+- [x] spawnNodes 改為 SpawnNodeEditor
+
+### 技能圖鑑表單重構
+- [x] hiddenTrigger 改為 HiddenTriggerEditor
+
+### 裝備圖鑑表單重構
+- [x] resistBonus 改為 ResistEditor
+- [x] affix1-5 改為 AffixEditor
+- [x] craftMaterialsList 改為 MaterialEditor
+
+### 道具圖鑑表單重構
+- [x] gatherLocations 改為 GatherEditor
+- [x] useEffect 改為 UseEffectEditor
+
+### 成就/魔物技能表單重構
+- [x] conditionType 改為下拉選單（10種條件類型）
+- [x] conditionParams 改為 ConditionEditor
+- [x] rewardContent 改為 RewardEditor
+- [x] additionalEffect 改為 SkillEffectEditor
+- [x] aiCondition 改為 AiConditionEditor
+
+### 手機版排版修正
+- [x] CatalogFormDialog 手機版寬度優化（95vw + p-3）
+- [x] 各圖鑑表格加入最小寬度（500-700px）+ 橫向捲動
+- [x] 按鈕區域改為堆疊式佈局
+- [x] 表格欄位 whitespace-nowrap 防止換行壓縮
+
+### 中文字顯示修正
+- [x] 字體回退鏈加入系統中文字體（PingFang TC, Microsoft JhengHei, Heiti TC）
+- [x] index.html 預載入 Google Fonts（preconnect + stylesheet）
+
+### 前後端串接驗證
+- [x] hidden 欄位提交修復（ConditionEditor 跨欄位更新）
+- [x] 787 項測試全部通過，零回歸問題

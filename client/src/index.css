@@ -118,7 +118,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Noto Serif TC', 'Noto Sans TC', serif;
+    font-family: 'Noto Serif TC', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Heiti TC', serif;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Noto Serif TC', serif;
