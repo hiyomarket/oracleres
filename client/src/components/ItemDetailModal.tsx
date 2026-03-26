@@ -1,7 +1,10 @@
 /**
  * ItemDetailModal.tsx — 道具詳細說明彈窗
  * 點擊背包或拍賣行的道具卡片時彈出，顯示五行屬性、效果數值、使用說明
+ * 裝備類道具會顯示裝備比較面板
  */
+
+import { trpc } from "@/lib/trpc";
 
 // ─── 道具詳細資料庫（靜態，對應 getInventory 的 ITEM_NAMES key）───
 export interface ItemDetail {
@@ -345,6 +348,94 @@ interface ItemDetailModalProps {
   onClose: () => void;
 }
 
+// ─── 裝備比較面板子組件 ───
+function EquipComparePanel({ equipId }: { equipId: string }) {
+  const { data, isLoading } = trpc.gameWorld.getEquipCompare.useQuery({ equipId }, { staleTime: 10000 });
+  if (isLoading) return <div className="py-3 text-center text-xs text-slate-600">載入裝備比較中…</div>;
+  if (!data) return null;
+
+  const TIER_COLOR: Record<string, string> = { "傳說": "#f59e0b", "高階": "#a78bfa", "中階": "#38bdf8", "初階": "#94a3b8" };
+  const WX_COLOR: Record<string, string> = { "木": "#22c55e", "火": "#ef4444", "土": "#eab308", "金": "#94a3b8", "水": "#3b82f6" };
+
+  const renderEquipCard = (equip: any, label: string) => {
+    if (!equip) return (
+      <div className="flex-1 rounded-xl p-3 text-center" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <p className="text-[10px] text-slate-600 mb-1">{label}</p>
+        <p className="text-xs text-slate-700">空槽位</p>
+      </div>
+    );
+    const tc = TIER_COLOR[equip.tier] ?? "#94a3b8";
+    return (
+      <div className="flex-1 rounded-xl p-3" style={{ background: `${tc}08`, border: `1px solid ${tc}25` }}>
+        <p className="text-[10px] text-slate-600 mb-1">{label}</p>
+        <p className="text-xs font-bold truncate" style={{ color: tc }}>{equip.name}</p>
+        <div className="flex gap-1 mt-1 flex-wrap">
+          <span className="text-[9px] px-1 py-0.5 rounded" style={{ background: `${tc}20`, color: tc }}>{equip.tier}</span>
+          {equip.wuxing && <span className="text-[9px] px-1 py-0.5 rounded" style={{ background: `${WX_COLOR[equip.wuxing] ?? "#94a3b8"}20`, color: WX_COLOR[equip.wuxing] ?? "#94a3b8" }}>{equip.wuxing}</span>}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      <p className="text-[11px] font-bold mb-2" style={{ color: "#64748b", letterSpacing: "0.05em" }}>
+        ── 裝備比較 ──
+      </p>
+      {/* 兩張裝備卡片 */}
+      <div className="flex gap-2 mb-3">
+        {renderEquipCard(data.currentEquip, "當前裝備")}
+        <div className="flex items-center text-slate-600 text-lg shrink-0">→</div>
+        {renderEquipCard(data.newEquip, "新裝備")}
+      </div>
+      {/* 屬性差異 */}
+      <div className="space-y-1">
+        {data.comparison.map((c: any) => (
+          <div key={c.stat} className="flex items-center justify-between px-3 py-1.5 rounded-lg"
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <span className="text-xs text-slate-500">{c.label}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-600">{c.currentVal}</span>
+              <span className="text-xs text-slate-700">→</span>
+              <span className="text-xs font-bold" style={{ color: c.diff > 0 ? "#22c55e" : c.diff < 0 ? "#ef4444" : "#64748b" }}>{c.newVal}</span>
+              {c.diff !== 0 && (
+                <span className="text-[10px] font-bold px-1 py-0.5 rounded" style={{
+                  background: c.diff > 0 ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
+                  color: c.diff > 0 ? "#22c55e" : "#ef4444",
+                }}>{c.diff > 0 ? "+" : ""}{c.diff}</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      {/* 總評 */}
+      <div className="mt-2 px-3 py-2 rounded-lg text-center" style={{
+        background: data.isUpgrade ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
+        border: `1px solid ${data.isUpgrade ? "rgba(34,197,94,0.2)" : "rgba(239,68,68,0.2)"}`,
+      }}>
+        <span className="text-xs font-bold" style={{ color: data.isUpgrade ? "#22c55e" : "#ef4444" }}>
+          {data.isUpgrade ? "⬆️ 總體提升" : data.comparison.every((c: any) => c.diff === 0) ? "↔️ 屬性相同" : "⬇️ 總體下降"}
+        </span>
+      </div>
+      {/* 特殊效果比較 */}
+      {(data.newEquip.specialEffect || data.currentEquip?.specialEffect) && (
+        <div className="mt-2 space-y-1">
+          {data.currentEquip?.specialEffect && (
+            <div className="px-3 py-1.5 rounded-lg text-xs" style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)" }}>
+              <span className="text-slate-600">失去：</span> <span style={{ color: "#ef4444" }}>{data.currentEquip.specialEffect}</span>
+            </div>
+          )}
+          {data.newEquip.specialEffect && (
+            <div className="px-3 py-1.5 rounded-lg text-xs" style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}>
+              <span className="text-slate-600">獲得：</span> <span style={{ color: "#22c55e" }}>{data.newEquip.specialEffect}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ItemDetailModal({ itemId, itemName, emoji, rarity, onClose }: ItemDetailModalProps) {
   if (!itemId) return null;
 
@@ -354,6 +445,8 @@ export default function ItemDetailModal({ itemId, itemName, emoji, rarity, onClo
   const el = detail ? ELEMENT_INFO[detail.element] : ELEMENT_INFO.none;
   const displayName = detail?.name ?? itemName ?? itemId;
   const displayEmoji = detail?.emoji ?? emoji ?? "📦";
+  // 判斷是否為裝備類道具（equipId 格式為 E_ 開頭，或在裝備圖鑑中）
+  const isEquipment = itemId?.startsWith("E_") || detail?.itemType === "equipment";
 
   return (
     <div
@@ -464,6 +557,9 @@ export default function ItemDetailModal({ itemId, itemName, emoji, rarity, onClo
               </div>
             </div>
           )}
+
+          {/* 裝備比較面板 */}
+          {isEquipment && <EquipComparePanel equipId={itemId} />}
 
           {/* 使用說明 */}
           {detail?.useTip && (

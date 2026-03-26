@@ -1794,6 +1794,56 @@ export const gameWorldRouter = router({
       return rows.map(r => ({ ...r, isEquipped: equippedIds.includes(r.equipId) }));
     }),
 
+  // ─── 裝備比較 ───
+  getEquipCompare: protectedProcedure
+    .input(z.object({ equipId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const agents = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const agent = agents[0];
+      // 查詢目標裝備
+      const [newEquip] = await db.select().from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.equipId, input.equipId)).limit(1);
+      if (!newEquip) throw new TRPCError({ code: "NOT_FOUND", message: "裝備不存在" });
+      // 找出同槽位當前裝備
+      const SLOT_MAP: Record<string, string> = {
+        weapon: "equippedWeapon", offhand: "equippedOffhand",
+        helmet: "equippedHead", armor: "equippedBody",
+        gloves: "equippedHands", shoes: "equippedFeet",
+        ringA: "equippedRingA", ringB: "equippedRingB",
+        necklace: "equippedNecklace", amulet: "equippedAmulet",
+      };
+      const dbField = SLOT_MAP[newEquip.slot] ?? "equippedWeapon";
+      const currentEquipId = (agent as any)[dbField] as string | null;
+      let currentEquip = null;
+      if (currentEquipId) {
+        const [ce] = await db.select().from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.equipId, currentEquipId)).limit(1);
+        currentEquip = ce ?? null;
+      }
+      // 計算屬性差異
+      const stats = ["hpBonus", "attackBonus", "defenseBonus", "speedBonus"] as const;
+      const statLabels: Record<string, string> = { hpBonus: "HP", attackBonus: "攻擊", defenseBonus: "防禦", speedBonus: "速度" };
+      const comparison = stats.map(s => ({
+        stat: s,
+        label: statLabels[s],
+        newVal: newEquip[s] ?? 0,
+        currentVal: currentEquip ? (currentEquip[s] ?? 0) : 0,
+        diff: (newEquip[s] ?? 0) - (currentEquip ? (currentEquip[s] ?? 0) : 0),
+      }));
+      // 詞條比較
+      const getAffixes = (e: any) => {
+        if (!e) return [];
+        return [e.affix1, e.affix2, e.affix3, e.affix4, e.affix5].filter(Boolean);
+      };
+      return {
+        newEquip: { equipId: newEquip.equipId, name: newEquip.name, wuxing: newEquip.wuxing, slot: newEquip.slot, tier: newEquip.tier, quality: newEquip.quality, levelRequired: newEquip.levelRequired, hpBonus: newEquip.hpBonus, attackBonus: newEquip.attackBonus, defenseBonus: newEquip.defenseBonus, speedBonus: newEquip.speedBonus, specialEffect: newEquip.specialEffect, affixes: getAffixes(newEquip) },
+        currentEquip: currentEquip ? { equipId: currentEquip.equipId, name: currentEquip.name, wuxing: currentEquip.wuxing, slot: currentEquip.slot, tier: currentEquip.tier, quality: currentEquip.quality, levelRequired: currentEquip.levelRequired, hpBonus: currentEquip.hpBonus, attackBonus: currentEquip.attackBonus, defenseBonus: currentEquip.defenseBonus, speedBonus: currentEquip.speedBonus, specialEffect: currentEquip.specialEffect, affixes: getAffixes(currentEquip) } : null,
+        comparison,
+        isUpgrade: comparison.reduce((sum, c) => sum + c.diff, 0) > 0,
+      };
+    }),
+
   // ─── 裝備/卸下裝備 ───
   equipItem: protectedProcedure
     .input(z.object({ equipId: z.string(), action: z.enum(["equip", "unequip"]) }))

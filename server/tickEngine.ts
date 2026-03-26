@@ -1722,8 +1722,8 @@ export async function refreshShopItems(db: Awaited<ReturnType<typeof getDb>>): P
   // ─── 刷新一般商店（金幣）───
   if (coinPool.length > 0) {
     const coinItems = pickRandom(coinPool, 20);
-    // 清空舊商品（只清除自動生成的，保留 admin 手動添加的）
-    await db.delete(gameVirtualShop).where(sql`node_id = '' OR node_id IS NULL`);
+    // 清空舊商品（只清除自動生成且未鎖定的，保留 admin 手動添加的和已鎖定的）
+    await db.delete(gameVirtualShop).where(sql`(node_id = '' OR node_id IS NULL) AND is_locked = 0`);
     // 插入新商品
     for (let i = 0; i < coinItems.length; i++) {
       const item = coinItems[i];
@@ -1744,8 +1744,8 @@ export async function refreshShopItems(db: Awaited<ReturnType<typeof getDb>>): P
   // ─── 刷新靈相商店（靈石）───
   if (stonePool.length > 0) {
     const stoneItems = pickRandom(stonePool, 10);
-    // 清空舊商品
-    await db.delete(gameSpiritShop).where(sql`1=1`);
+    // 清空舊商品（保留已鎖定的）
+    await db.delete(gameSpiritShop).where(sql`is_locked = 0`);
     // 插入新商品
     for (let i = 0; i < stoneItems.length; i++) {
       const item = stoneItems[i];

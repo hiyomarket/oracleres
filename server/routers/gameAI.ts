@@ -17,6 +17,7 @@ import {
   gameVirtualShop,
   gameSpiritShop,
   gameHiddenShopPool,
+  gameMonsterSkillCatalog,
 } from "../../drizzle/schema";
 import { sql, like, eq, desc } from "drizzle-orm";
 
@@ -70,6 +71,23 @@ async function generateAchievementId(db: any): Promise<string> {
     if (isNaN(nextNum)) nextNum = 1;
   }
   return `ACH_${String(nextNum).padStart(3, "0")}`;
+}
+
+// ===== 魔物技能 ID 生成器 =====
+async function generateNextMonsterSkillId(db: any): Promise<string> {
+  const rows = await db
+    .select({ id: gameMonsterSkillCatalog.monsterSkillId })
+    .from(gameMonsterSkillCatalog)
+    .where(like(gameMonsterSkillCatalog.monsterSkillId, "SK_M%"))
+    .orderBy(desc(gameMonsterSkillCatalog.monsterSkillId))
+    .limit(1);
+  let nextNum = 1;
+  if (rows.length > 0) {
+    const numPart = rows[0].id.replace("SK_M", "");
+    nextNum = parseInt(numPart, 10) + 1;
+    if (isNaN(nextNum)) nextNum = 1;
+  }
+  return `SK_M${String(nextNum).padStart(3, "0")}`;
 }
 
 // ===== AI 商店自動抓取 =====
@@ -668,5 +686,348 @@ ${existingNamesStr}
         insertedNames,
         message: `AI 成功生成 ${insertedCount} 個${typeLabels[catalogType]}：${insertedNames.join("、")}`,
       };
+    }),
+
+  // ═══════════════════════════════════════════════════════════════
+  // 魔物技能 AI 生成系統
+  // ═══════════════════════════════════════════════════════════════
+
+  /**
+   * AI 為單隻魔物生成技能組合
+   */
+  aiGenerateMonsterSkills: adminProcedure
+    .input(z.object({
+      monsterId: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // 取得魔物資料
+      const [monster] = await db.select().from(gameMonsterCatalog)
+        .where(eq(gameMonsterCatalog.monsterId, input.monsterId));
+      if (!monster) throw new TRPCError({ code: "NOT_FOUND", message: "找不到該魔物" });
+
+      // 取得現有魔物技能名稱（避免重複）
+      const existingSkills = await db.select({ name: gameMonsterSkillCatalog.name }).from(gameMonsterSkillCatalog);
+      const existingNames = existingSkills.map(s => s.name);
+
+      // 決定技能數量：common=1, rare=2, epic=2-3, boss/legendary=3
+      const skillCount = monster.rarity === "common" ? 1 
+        : monster.rarity === "rare" ? 2 
+        : monster.rarity === "epic" ? 3 
+        : 3;
+
+      const response = await invokeLLM({
+        messages: [
+          { role: "system", content: "你是東方玄幻 MMORPG 的魔物技能設計師。回覆純 JSON 陣列，不要加任何說明文字。" },
+          { role: "user", content: `為以下魔物設計 ${skillCount} 個專屬技能：
+
+魔物：${monster.name}
+五行：${monster.wuxing}
+稀有度：${monster.rarity}
+等級範圍：${monster.levelRange}
+種族：${monster.race || "未知"}
+HP：${monster.baseHp}, ATK：${monster.baseAttack}, DEF：${monster.baseDefense}
+描述：${monster.description || "無"}
+
+設計要求：
+- 技能要符合魔物的五行屬性和種族特色
+- 至少有 1 個攻擊技能
+- 稀有度越高，技能越強但要合理（powerPercent: common 80-120, rare 100-150, epic 120-200, legendary 150-250）
+- MP 消耗要合理（0-30）
+- 冷卻回合數 0-3
+- 可以有附加效果（中毒、灼燒、減速、眩暈等）
+
+已有技能名稱（不可重複）：${existingNames.slice(0, 50).join("、") || "無"}
+
+回覆 JSON 陣列：
+[{
+  "name": "技能名稱",
+  "wuxing": "${monster.wuxing}",
+  "skillType": "attack/heal/buff/debuff/special/passive",
+  "rarity": "common/rare/epic/legendary",
+  "powerPercent": 100,
+  "mpCost": 5,
+  "cooldown": 0,
+  "accuracyMod": 100,
+  "additionalEffect": {"type": "poison", "chance": 20, "duration": 3, "value": 5} 或 null,
+  "aiCondition": {"hpBelow": 50, "priority": 1} 或 null,
+  "description": "技能描述"
+}]` },
+        ],
+        response_format: { type: "json_object" },
+      });
+
+      const content = response.choices?.[0]?.message?.content as string;
+      let skills: any[];
+      try {
+        const parsed = JSON.parse(content);
+        skills = Array.isArray(parsed) ? parsed : parsed.skills || parsed.data || [parsed];
+      } catch {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 回覆格式錯誤" });
+      }
+
+      const insertedSkillIds: string[] = [];
+      for (const skill of skills.slice(0, 3)) {
+        if (!skill.name || existingNames.includes(skill.name)) continue;
+        // 生成技能 ID
+        const nextId = await generateNextMonsterSkillId(db);
+        await db.insert(gameMonsterSkillCatalog).values({
+          monsterSkillId: nextId,
+          name: skill.name,
+          wuxing: skill.wuxing || monster.wuxing,
+          skillType: skill.skillType || "attack",
+          rarity: skill.rarity || "common",
+          powerPercent: skill.powerPercent ?? 100,
+          mpCost: skill.mpCost ?? 5,
+          cooldown: skill.cooldown ?? 0,
+          accuracyMod: skill.accuracyMod ?? 100,
+          additionalEffect: skill.additionalEffect || null,
+          aiCondition: skill.aiCondition || null,
+          description: skill.description || "",
+        });
+        insertedSkillIds.push(nextId);
+        existingNames.push(skill.name);
+      }
+
+      // 更新魔物的技能槽位
+      const updateData: any = {};
+      if (insertedSkillIds[0]) updateData.skillId1 = insertedSkillIds[0];
+      if (insertedSkillIds[1]) updateData.skillId2 = insertedSkillIds[1];
+      if (insertedSkillIds[2]) updateData.skillId3 = insertedSkillIds[2];
+      if (Object.keys(updateData).length > 0) {
+        await db.update(gameMonsterCatalog).set(updateData)
+          .where(eq(gameMonsterCatalog.monsterId, input.monsterId));
+      }
+
+      return {
+        success: true,
+        skillIds: insertedSkillIds,
+        message: `為「${monster.name}」生成了 ${insertedSkillIds.length} 個技能`,
+      };
+    }),
+
+  /**
+   * AI 批量補齊所有缺少技能的魔物
+   */
+  aiBatchFillMonsterSkills: adminProcedure
+    .mutation(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // 找出所有缺少技能的魔物
+      const monstersWithoutSkills = await db.select()
+        .from(gameMonsterCatalog)
+        .where(sql`(${gameMonsterCatalog.skillId1} IS NULL OR ${gameMonsterCatalog.skillId1} = '')`);
+
+      if (monstersWithoutSkills.length === 0) {
+        return { success: true, processed: 0, message: "所有魔物都已有技能" };
+      }
+
+      // 取得現有技能名稱
+      const existingSkills = await db.select({ name: gameMonsterSkillCatalog.name }).from(gameMonsterSkillCatalog);
+      const existingNames = existingSkills.map(s => s.name);
+
+      // 批量生成（每次最多處理 10 隻）
+      const batch = monstersWithoutSkills.slice(0, 10);
+      const monsterDescriptions = batch.map(m => 
+        `${m.monsterId}|${m.name}|${m.wuxing}|${m.rarity}|${m.race || "未知"}|HP${m.baseHp}/ATK${m.baseAttack}/DEF${m.baseDefense}|${m.description || "無描述"}`
+      ).join("\n");
+
+      const response = await invokeLLM({
+        messages: [
+          { role: "system", content: "你是東方玄幻 MMORPG 的魔物技能設計師。回覆純 JSON 物件，key 為魔物 ID，value 為技能陣列。" },
+          { role: "user", content: `為以下 ${batch.length} 隻魔物各設計技能：
+
+格式：ID|名稱|五行|稀有度|種族|數值|描述
+${monsterDescriptions}
+
+規則：
+- common 魔物 1 個技能，rare 2 個，epic/boss/legendary 3 個
+- 技能要符合魔物五行和種族
+- powerPercent: common 80-120, rare 100-150, epic 120-200, legendary 150-250
+- 每隻至少 1 個攻擊技能
+- 名稱不可重複，也不可與已有技能重複
+
+已有技能名稱：${existingNames.slice(0, 30).join("、") || "無"}
+
+回覆 JSON：
+{
+  "M_W001": [{"name":"技能名","wuxing":"木","skillType":"attack","rarity":"common","powerPercent":100,"mpCost":5,"cooldown":0,"accuracyMod":100,"additionalEffect":null,"aiCondition":null,"description":"描述"}],
+  ...
+}` },
+        ],
+        response_format: { type: "json_object" },
+      });
+
+      const content = response.choices?.[0]?.message?.content as string;
+      let skillMap: Record<string, any[]>;
+      try {
+        skillMap = JSON.parse(content);
+      } catch {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 回覆格式錯誤" });
+      }
+
+      let totalInserted = 0;
+      const results: { monsterId: string; monsterName: string; skillCount: number }[] = [];
+
+      for (const monster of batch) {
+        const skills = skillMap[monster.monsterId];
+        if (!skills || !Array.isArray(skills)) continue;
+
+        const insertedIds: string[] = [];
+        for (const skill of skills.slice(0, 3)) {
+          if (!skill.name || existingNames.includes(skill.name)) continue;
+          const nextId = await generateNextMonsterSkillId(db);
+          try {
+            await db.insert(gameMonsterSkillCatalog).values({
+              monsterSkillId: nextId,
+              name: skill.name,
+              wuxing: skill.wuxing || monster.wuxing,
+              skillType: skill.skillType || "attack",
+              rarity: skill.rarity || "common",
+              powerPercent: skill.powerPercent ?? 100,
+              mpCost: skill.mpCost ?? 5,
+              cooldown: skill.cooldown ?? 0,
+              accuracyMod: skill.accuracyMod ?? 100,
+              additionalEffect: skill.additionalEffect || null,
+              aiCondition: skill.aiCondition || null,
+              description: skill.description || "",
+            });
+            insertedIds.push(nextId);
+            existingNames.push(skill.name);
+            totalInserted++;
+          } catch (err) {
+            console.error(`[AI MonsterSkill] 插入失敗:`, err);
+          }
+        }
+
+        // 更新魔物技能槽位
+        if (insertedIds.length > 0) {
+          const updateData: any = {};
+          if (insertedIds[0]) updateData.skillId1 = insertedIds[0];
+          if (insertedIds[1]) updateData.skillId2 = insertedIds[1];
+          if (insertedIds[2]) updateData.skillId3 = insertedIds[2];
+          await db.update(gameMonsterCatalog).set(updateData)
+            .where(eq(gameMonsterCatalog.monsterId, monster.monsterId));
+        }
+
+        results.push({ monsterId: monster.monsterId, monsterName: monster.name, skillCount: insertedIds.length });
+      }
+
+      return {
+        success: true,
+        processed: results.length,
+        totalSkillsCreated: totalInserted,
+        remaining: monstersWithoutSkills.length - batch.length,
+        results,
+        message: `已為 ${results.length} 隻魔物生成 ${totalInserted} 個技能，剩餘 ${monstersWithoutSkills.length - batch.length} 隻待處理`,
+      };
+    }),
+
+  // ═══════════════════════════════════════════════════════════════
+  // 圖鑑資料批量複製
+  // ═══════════════════════════════════════════════════════════════
+
+  /**
+   * 複製圖鑑資料（自動加後綴避免重複）
+   */
+  duplicateCatalogItem: adminProcedure
+    .input(z.object({
+      catalogType: z.enum(["monster", "item", "equipment", "skill", "achievement", "monsterSkill"]),
+      id: z.number().int(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const { catalogType, id } = input;
+
+      if (catalogType === "monster") {
+        const [original] = await db.select().from(gameMonsterCatalog).where(eq(gameMonsterCatalog.id, id));
+        if (!original) throw new TRPCError({ code: "NOT_FOUND" });
+        const newId = await generateNextId(db, gameMonsterCatalog, gameMonsterCatalog.monsterId, "M", original.wuxing);
+        const { id: _id, monsterId: _mid, createdAt: _ca, ...rest } = original;
+        await db.insert(gameMonsterCatalog).values({
+          ...rest,
+          monsterId: newId,
+          name: `${original.name}（複製）`,
+          createdAt: Date.now(),
+        });
+        return { success: true, newId, message: `已複製魔物「${original.name}」` };
+      }
+
+      if (catalogType === "item") {
+        const [original] = await db.select().from(gameItemCatalog).where(eq(gameItemCatalog.id, id));
+        if (!original) throw new TRPCError({ code: "NOT_FOUND" });
+        const newId = await generateNextId(db, gameItemCatalog, gameItemCatalog.itemId, "I", original.wuxing);
+        const { id: _id, itemId: _iid, createdAt: _ca, ...rest } = original;
+        await db.insert(gameItemCatalog).values({
+          ...rest,
+          itemId: newId,
+          name: `${original.name}（複製）`,
+          createdAt: Date.now(),
+        });
+        return { success: true, newId, message: `已複製道具「${original.name}」` };
+      }
+
+      if (catalogType === "equipment") {
+        const [original] = await db.select().from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.id, id));
+        if (!original) throw new TRPCError({ code: "NOT_FOUND" });
+        const newId = await generateNextId(db, gameEquipmentCatalog, gameEquipmentCatalog.equipId, "E", original.wuxing);
+        const { id: _id, equipId: _eid, createdAt: _ca, ...rest } = original;
+        await db.insert(gameEquipmentCatalog).values({
+          ...rest,
+          equipId: newId,
+          name: `${original.name}（複製）`,
+          createdAt: Date.now(),
+        });
+        return { success: true, newId, message: `已複製裝備「${original.name}」` };
+      }
+
+      if (catalogType === "skill") {
+        const [original] = await db.select().from(gameSkillCatalog).where(eq(gameSkillCatalog.id, id));
+        if (!original) throw new TRPCError({ code: "NOT_FOUND" });
+        const newId = await generateNextId(db, gameSkillCatalog, gameSkillCatalog.skillId, "S", original.wuxing);
+        const { id: _id, skillId: _sid, createdAt: _ca, ...rest } = original;
+        await db.insert(gameSkillCatalog).values({
+          ...rest,
+          skillId: newId,
+          name: `${original.name}（複製）`,
+          createdAt: Date.now(),
+        });
+        return { success: true, newId, message: `已複製技能「${original.name}」` };
+      }
+
+      if (catalogType === "achievement") {
+        const [original] = await db.select().from(gameAchievements).where(eq(gameAchievements.id, id));
+        if (!original) throw new TRPCError({ code: "NOT_FOUND" });
+        const newAchId = await generateAchievementId(db);
+        const { id: _id, achId: _aid, createdAt: _ca, ...rest } = original;
+        await db.insert(gameAchievements).values({
+          ...rest,
+          achId: newAchId,
+          title: `${original.title}（複製）`,
+          createdAt: new Date(),
+        });
+        return { success: true, newId: newAchId, message: `已複製成就「${original.title}」` };
+      }
+
+      if (catalogType === "monsterSkill") {
+        const [original] = await db.select().from(gameMonsterSkillCatalog).where(eq(gameMonsterSkillCatalog.id, id));
+        if (!original) throw new TRPCError({ code: "NOT_FOUND" });
+        const newId = await generateNextMonsterSkillId(db);
+        const { id: _id, monsterSkillId: _msid, createdAt: _ca, ...rest } = original;
+        await db.insert(gameMonsterSkillCatalog).values({
+          ...rest,
+          monsterSkillId: newId,
+          name: `${original.name}（複製）`,
+          createdAt: Date.now(),
+        });
+        return { success: true, newId, message: `已複製魔物技能「${original.name}」` };
+      }
+
+      throw new TRPCError({ code: "BAD_REQUEST", message: "不支援的圖鑑類型" });
     }),
 });

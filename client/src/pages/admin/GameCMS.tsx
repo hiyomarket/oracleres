@@ -24,6 +24,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import { MonsterPreview, ItemPreview, SkillPreview, AchievementPreview } from "@/components/CatalogPreview";
 
 const WUXING_OPTIONS = ["木", "火", "土", "金", "水"] as const;
 const WUXING_COLORS: Record<string, string> = {
@@ -122,22 +123,27 @@ function MonstersTab() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>{editing ? "編輯怪物" : "新增怪物"}</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <Input placeholder="名稱" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-            <Select value={form.wuxing} onValueChange={(v) => setForm(f => ({ ...f, wuxing: v as any }))}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{WUXING_OPTIONS.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}</SelectContent>
-            </Select>
-            <div className="grid grid-cols-2 gap-2">
-              <Input type="number" placeholder="HP" value={form.baseHp} onChange={e => setForm(f => ({ ...f, baseHp: +e.target.value }))} />
-              <Input type="number" placeholder="攻擊" value={form.baseAttack} onChange={e => setForm(f => ({ ...f, baseAttack: +e.target.value }))} />
-              <Input type="number" placeholder="防禦" value={form.baseDefense} onChange={e => setForm(f => ({ ...f, baseDefense: +e.target.value }))} />
-              <Input type="number" placeholder="速度" value={form.baseSpeed} onChange={e => setForm(f => ({ ...f, baseSpeed: +e.target.value }))} />
+          <div className="flex gap-4">
+            <div className="flex-1 space-y-3">
+              <Input placeholder="名稱" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              <Select value={form.wuxing} onValueChange={(v) => setForm(f => ({ ...f, wuxing: v as any }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{WUXING_OPTIONS.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}</SelectContent>
+              </Select>
+              <div className="grid grid-cols-2 gap-2">
+                <Input type="number" placeholder="HP" value={form.baseHp} onChange={e => setForm(f => ({ ...f, baseHp: +e.target.value }))} />
+                <Input type="number" placeholder="攻擊" value={form.baseAttack} onChange={e => setForm(f => ({ ...f, baseAttack: +e.target.value }))} />
+                <Input type="number" placeholder="防禦" value={form.baseDefense} onChange={e => setForm(f => ({ ...f, baseDefense: +e.target.value }))} />
+                <Input type="number" placeholder="速度" value={form.baseSpeed} onChange={e => setForm(f => ({ ...f, baseSpeed: +e.target.value }))} />
+              </div>
+              <Input type="number" step="0.01" min="0" max="1" placeholder="捕捉率 (0-1)" value={form.catchRate} onChange={e => setForm(f => ({ ...f, catchRate: +e.target.value }))} />
+              <Input placeholder="圖片 URL（可留空）" value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} />
             </div>
-            <Input type="number" step="0.01" min="0" max="1" placeholder="捕捉率 (0-1)" value={form.catchRate} onChange={e => setForm(f => ({ ...f, catchRate: +e.target.value }))} />
-            <Input placeholder="圖片 URL（可留空）" value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} />
+            <div className="w-[240px] shrink-0 hidden md:block">
+              <MonsterPreview data={form} />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>取消</Button>
@@ -205,29 +211,34 @@ function SkillsTab() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>新增技能</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <Input placeholder="技能名稱" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-            <Textarea placeholder="技能描述（可留空）" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
-            <div className="grid grid-cols-2 gap-2">
-              <Select value={form.wuxing} onValueChange={(v) => setForm(f => ({ ...f, wuxing: v as any }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{WUXING_OPTIONS.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}</SelectContent>
-              </Select>
-              <Select value={form.skillType} onValueChange={(v) => setForm(f => ({ ...f, skillType: v as any }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="attack">攻擊</SelectItem>
-                  <SelectItem value="heal">治療</SelectItem>
-                  <SelectItem value="buff">增益</SelectItem>
-                  <SelectItem value="debuff">減益</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="flex gap-4">
+            <div className="flex-1 space-y-3">
+              <Input placeholder="技能名稱" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              <Textarea placeholder="技能描述（可留空）" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={form.wuxing} onValueChange={(v) => setForm(f => ({ ...f, wuxing: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{WUXING_OPTIONS.map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}</SelectContent>
+                </Select>
+                <Select value={form.skillType} onValueChange={(v) => setForm(f => ({ ...f, skillType: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="attack">攻擊</SelectItem>
+                    <SelectItem value="heal">治療</SelectItem>
+                    <SelectItem value="buff">增益</SelectItem>
+                    <SelectItem value="debuff">減益</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Input type="number" placeholder="MP 消耗" value={form.mpCost} onChange={e => setForm(f => ({ ...f, mpCost: +e.target.value }))} />
+                <Input type="number" step="0.1" placeholder="傷害倍率" value={form.damageMultiplier} onChange={e => setForm(f => ({ ...f, damageMultiplier: +e.target.value }))} />
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Input type="number" placeholder="MP 消耗" value={form.mpCost} onChange={e => setForm(f => ({ ...f, mpCost: +e.target.value }))} />
-              <Input type="number" step="0.1" placeholder="傷害倍率" value={form.damageMultiplier} onChange={e => setForm(f => ({ ...f, damageMultiplier: +e.target.value }))} />
+            <div className="w-[240px] shrink-0 hidden md:block">
+              <SkillPreview data={{ name: form.name, wuxing: form.wuxing, category: "active", basePower: Math.round((form.damageMultiplier ?? 1) * 100), mpCost: form.mpCost, description: form.description }} />
             </div>
           </div>
           <DialogFooter>
@@ -306,38 +317,43 @@ function AchievementsTab() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>新增成就</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <Select value={form.category} onValueChange={(v) => setForm(f => ({ ...f, category: v as any }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="avatar">靈相</SelectItem>
-                  <SelectItem value="explore">探索</SelectItem>
-                  <SelectItem value="combat">戰鬥</SelectItem>
-                  <SelectItem value="oracle">問卜</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input placeholder="成就名稱" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+          <div className="flex gap-4">
+            <div className="flex-1 space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={form.category} onValueChange={(v) => setForm(f => ({ ...f, category: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="avatar">靈相</SelectItem>
+                    <SelectItem value="explore">探索</SelectItem>
+                    <SelectItem value="combat">戰鬥</SelectItem>
+                    <SelectItem value="oracle">問卜</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input placeholder="成就名稱" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+              </div>
+              <Textarea placeholder="成就描述" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+              <div className="grid grid-cols-2 gap-2">
+                <Input placeholder="條件類型（如 buy_items）" value={form.conditionType} onChange={e => setForm(f => ({ ...f, conditionType: e.target.value }))} />
+                <Input type="number" placeholder="條件數值" value={form.conditionValue} onChange={e => setForm(f => ({ ...f, conditionValue: +e.target.value }))} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={form.rewardType} onValueChange={(v) => setForm(f => ({ ...f, rewardType: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="stones">靈石</SelectItem>
+                    <SelectItem value="coins">天命幣</SelectItem>
+                    <SelectItem value="title">稱號</SelectItem>
+                    <SelectItem value="item">道具</SelectItem>
+                    <SelectItem value="frame">頭像框</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input type="number" placeholder="獎勵數量" value={form.rewardAmount} onChange={e => setForm(f => ({ ...f, rewardAmount: +e.target.value }))} />
+              </div>
             </div>
-            <Textarea placeholder="成就描述" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
-            <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="條件類型（如 buy_items）" value={form.conditionType} onChange={e => setForm(f => ({ ...f, conditionType: e.target.value }))} />
-              <Input type="number" placeholder="條件數值" value={form.conditionValue} onChange={e => setForm(f => ({ ...f, conditionValue: +e.target.value }))} />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Select value={form.rewardType} onValueChange={(v) => setForm(f => ({ ...f, rewardType: v as any }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="stones">靈石</SelectItem>
-                  <SelectItem value="coins">天命幣</SelectItem>
-                  <SelectItem value="title">稱號</SelectItem>
-                  <SelectItem value="item">道具</SelectItem>
-                  <SelectItem value="frame">頭像框</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input type="number" placeholder="獎勵數量" value={form.rewardAmount} onChange={e => setForm(f => ({ ...f, rewardAmount: +e.target.value }))} />
+            <div className="w-[240px] shrink-0 hidden md:block">
+              <AchievementPreview data={{ name: form.title, description: form.description, category: form.category, tier: "bronze", rewardGold: form.rewardType === "coins" ? form.rewardAmount : 0, rewardExp: 0 }} />
             </div>
           </div>
           <DialogFooter>
@@ -651,6 +667,10 @@ function VirtualShopTab() {
     onSuccess: () => { utils.gameAdmin.getVirtualShop.invalidate(); toast.success("已更新"); },
     onError: (e) => toast.error(e.message),
   });
+  const toggleLockMutation = trpc.gameAdmin.toggleVirtualShopLock.useMutation({
+    onSuccess: () => { utils.gameAdmin.getVirtualShop.invalidate(); toast.success("鎖定狀態已更新"); },
+    onError: (e) => toast.error(e.message),
+  });
 
   const [open, setOpen] = useState(false);
   const defaultForm = { itemKey: "", displayName: "", description: "", priceCoins: 100, quantity: 1, stock: -1, nodeId: "", sortOrder: 0, isOnSale: 1 as number };
@@ -678,12 +698,13 @@ function VirtualShopTab() {
                 <th className="text-left py-2 px-2">庫存</th>
                 <th className="text-left py-2 px-2">節點</th>
                 <th className="text-left py-2 px-2">狀態</th>
+                <th className="text-left py-2 px-2">鎖定</th>
                 <th className="text-left py-2 px-2">操作</th>
               </tr>
             </thead>
             <tbody>
               {shopItems.map((item: any) => (
-                <tr key={item.id} className="border-b hover:bg-muted/30">
+                <tr key={item.id} className={`border-b hover:bg-muted/30 ${item.isLocked ? 'bg-amber-500/10' : ''}`}>
                   <td className="py-2 px-2 text-muted-foreground">{item.id}</td>
                   <td className="py-2 px-2 font-medium">{item.displayName}</td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{item.itemKey}</td>
@@ -693,6 +714,13 @@ function VirtualShopTab() {
                   <td className="py-2 px-2 text-xs">{item.nodeId || "全圖"}</td>
                   <td className="py-2 px-2">
                     <Badge variant={item.isOnSale ? "default" : "outline"}>{item.isOnSale ? "上架" : "下架"}</Badge>
+                  </td>
+                  <td className="py-2 px-2">
+                    <Button size="sm" variant={item.isLocked ? "default" : "outline"}
+                      className={item.isLocked ? 'bg-amber-600 hover:bg-amber-700 text-white' : ''}
+                      onClick={() => toggleLockMutation.mutate({ id: item.id, isLocked: item.isLocked ? 0 : 1 })}>
+                      {item.isLocked ? '🔒 已鎖' : '🔓 未鎖'}
+                    </Button>
                   </td>
                   <td className="py-2 px-2 flex gap-1">
                     <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: item.id, data: { isOnSale: item.isOnSale ? 0 : 1 } })}>
@@ -752,6 +780,10 @@ function SpiritShopTab() {
     onSuccess: () => { utils.gameAdmin.getSpiritShop.invalidate(); toast.success("已更新"); },
     onError: (e) => toast.error(e.message),
   });
+  const toggleLockMutation = trpc.gameAdmin.toggleSpiritShopLock.useMutation({
+    onSuccess: () => { utils.gameAdmin.getSpiritShop.invalidate(); toast.success("鎖定狀態已更新"); },
+    onError: (e) => toast.error(e.message),
+  });
 
   const [open, setOpen] = useState(false);
   const defaultForm = { itemKey: "", displayName: "", description: "", priceStones: 50, quantity: 1, rarity: "rare" as "common" | "rare" | "epic" | "legendary", sortOrder: 0, isOnSale: 1 as number };
@@ -779,12 +811,13 @@ function SpiritShopTab() {
                 <th className="text-left py-2 px-2">靈石</th>
                 <th className="text-left py-2 px-2">稀有度</th>
                 <th className="text-left py-2 px-2">狀態</th>
+                <th className="text-left py-2 px-2">鎖定</th>
                 <th className="text-left py-2 px-2">操作</th>
               </tr>
             </thead>
             <tbody>
               {shopItems.map((item: any) => (
-                <tr key={item.id} className="border-b hover:bg-muted/30">
+                <tr key={item.id} className={`border-b hover:bg-muted/30 ${item.isLocked ? 'bg-amber-500/10' : ''}`}>
                   <td className="py-2 px-2 text-muted-foreground">{item.id}</td>
                   <td className="py-2 px-2 font-medium">{item.displayName}</td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{item.itemKey}</td>
@@ -796,6 +829,13 @@ function SpiritShopTab() {
                   </td>
                   <td className="py-2 px-2">
                     <Badge variant={item.isOnSale ? "default" : "outline"}>{item.isOnSale ? "上架" : "下架"}</Badge>
+                  </td>
+                  <td className="py-2 px-2">
+                    <Button size="sm" variant={item.isLocked ? "default" : "outline"}
+                      className={item.isLocked ? 'bg-amber-600 hover:bg-amber-700 text-white' : ''}
+                      onClick={() => toggleLockMutation.mutate({ id: item.id, isLocked: item.isLocked ? 0 : 1 })}>
+                      {item.isLocked ? '🔒 已鎖' : '🔓 未鎖'}
+                    </Button>
                   </td>
                   <td className="py-2 px-2 flex gap-1">
                     <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: item.id, data: { isOnSale: item.isOnSale ? 0 : 1 } })}>
@@ -855,6 +895,10 @@ function HiddenShopTab() {
     onSuccess: () => { utils.gameAdmin.getHiddenShopPool.invalidate(); toast.success("已刪除"); },
     onError: (e) => toast.error(e.message),
   });
+  const toggleLockMutation = trpc.gameAdmin.toggleHiddenShopLock.useMutation({
+    onSuccess: () => { utils.gameAdmin.getHiddenShopPool.invalidate(); toast.success("鎖定狀態已更新"); },
+    onError: (e) => toast.error(e.message),
+  });
 
   const [open, setOpen] = useState(false);
   const defaultForm = { itemKey: "", displayName: "", description: "", currencyType: "coins" as "coins" | "stones", price: 200, quantity: 1, weight: 10, rarity: "rare" as "common" | "rare" | "epic" | "legendary", isActive: 1 as number };
@@ -883,12 +927,13 @@ function HiddenShopTab() {
                 <th className="text-left py-2 px-2">稀有度</th>
                 <th className="text-left py-2 px-2">權重</th>
                 <th className="text-left py-2 px-2">狀態</th>
+                <th className="text-left py-2 px-2">鎖定</th>
                 <th className="text-left py-2 px-2">操作</th>
               </tr>
             </thead>
             <tbody>
               {poolItems.map((item: any) => (
-                <tr key={item.id} className="border-b hover:bg-muted/30">
+                <tr key={item.id} className={`border-b hover:bg-muted/30 ${item.isLocked ? 'bg-amber-500/10' : ''}`}>
                   <td className="py-2 px-2 text-muted-foreground">{item.id}</td>
                   <td className="py-2 px-2 font-medium">{item.displayName}</td>
                   <td className="py-2 px-2 text-xs">{item.currencyType === "coins" ? "🪙 遊戲幣" : "💎 靈石"}</td>
@@ -901,6 +946,13 @@ function HiddenShopTab() {
                   <td className="py-2 px-2">{item.weight}</td>
                   <td className="py-2 px-2">
                     <Badge variant={item.isActive ? "default" : "outline"}>{item.isActive ? "啟用" : "停用"}</Badge>
+                  </td>
+                  <td className="py-2 px-2">
+                    <Button size="sm" variant={item.isLocked ? "default" : "outline"}
+                      className={item.isLocked ? 'bg-amber-600 hover:bg-amber-700 text-white' : ''}
+                      onClick={() => toggleLockMutation.mutate({ id: item.id, isLocked: item.isLocked ? 0 : 1 })}>
+                      {item.isLocked ? '🔒 已鎖' : '🔓 未鎖'}
+                    </Button>
                   </td>
                   <td className="py-2 px-2">
                     <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate({ id: item.id })}>刪除</Button>
@@ -1584,6 +1636,7 @@ function CatalogStatsTab() {
 // ─── AI 工具 Tab ──────────────────────────────────────────────────────────────
 function AIToolsTab() {
   const utils = trpc.useUtils();
+  const [selectedMonsterId, setSelectedMonsterId] = useState("");
 
   // AI 商店上架
   const aiRefreshShop = trpc.gameAI.aiRefreshShop.useMutation({
@@ -1599,11 +1652,31 @@ function AIToolsTab() {
   const aiBatchGenerate = trpc.gameAI.aiBatchGenerate.useMutation({
     onSuccess: (data) => {
       toast.success(data.message);
-      // 刷新對應的圖鑑列表
       utils.gameCatalog.invalidate();
     },
     onError: (e) => toast.error(e.message || "AI 生成失敗"),
   });
+
+  // AI 怪物技能生成
+  const aiGenMonsterSkills = trpc.gameAI.aiGenerateMonsterSkills.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      utils.gameCatalog.invalidate();
+    },
+    onError: (e) => toast.error(e.message || "AI 怪物技能生成失敗"),
+  });
+
+  // AI 批量補齊怪物技能
+  const aiBatchFillSkills = trpc.gameAI.aiBatchFillMonsterSkills.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      utils.gameCatalog.invalidate();
+    },
+    onError: (e) => toast.error(e.message || "AI 批量補齊失敗"),
+  });
+
+  // 取得怪物列表（用於選擇器）
+  const { data: monsterList = [] } = trpc.gameAdmin.getMonsterCatalog.useQuery({});
 
   const catalogTypes = [
     { key: "monster" as const, label: "魔物", icon: "🐉", color: "#DC143C", desc: "生成 10 隻新魔物（五行均衡、數值平衡）" },
@@ -1708,15 +1781,87 @@ function AIToolsTab() {
         )}
       </div>
 
+      <hr className="border-border" />
+
+      {/* AI 怪物技能生成 */}
+      <div>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
+          🐉 AI 怪物技能生成
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          為指定怪物 AI 自動生成專屬技能（根據五行/種族/稀有度設計），或一鍵補齊所有缺少技能的怪物。
+        </p>
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-xs text-muted-foreground mb-1 block">選擇怪物</label>
+            <Select value={selectedMonsterId} onValueChange={setSelectedMonsterId}>
+              <SelectTrigger><SelectValue placeholder="選擇一隻怪物..." /></SelectTrigger>
+              <SelectContent className="max-h-60">
+                {monsterList.map((m: any) => (
+                  <SelectItem key={m.monsterId} value={m.monsterId}>
+                    {m.monsterId} - {m.name} ({m.wuxing}/{m.rarity})
+                    {m.skillId1 ? ' ✅' : ' ❌缺技能'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            onClick={() => { if (selectedMonsterId) aiGenMonsterSkills.mutate({ monsterId: selectedMonsterId }); }}
+            disabled={!selectedMonsterId || aiGenMonsterSkills.isPending}
+            className="bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700"
+          >
+            {aiGenMonsterSkills.isPending ? "⏳ AI 生成中..." : "🧠 為這隻怪物生成技能"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => aiBatchFillSkills.mutate()}
+            disabled={aiBatchFillSkills.isPending}
+          >
+            {aiBatchFillSkills.isPending ? "⏳ 批量處理中..." : "🔄 一鍵補齊所有怪物技能"}
+          </Button>
+        </div>
+        {aiGenMonsterSkills.data && (
+          <div className="mt-3 p-3 rounded-lg border bg-red-50 dark:bg-red-950/30 text-sm">
+            <p className="font-medium text-red-700 dark:text-red-400">
+              ✅ {aiGenMonsterSkills.data.message}
+            </p>
+            {aiGenMonsterSkills.data.skillIds.length > 0 && (
+              <div className="mt-1 text-xs text-muted-foreground">
+                技能 ID: {aiGenMonsterSkills.data.skillIds.join(", ")}
+              </div>
+            )}
+          </div>
+        )}
+        {aiBatchFillSkills.data && (
+          <div className="mt-3 p-3 rounded-lg border bg-orange-50 dark:bg-orange-950/30 text-sm">
+            <p className="font-medium text-orange-700 dark:text-orange-400">
+              ✅ {aiBatchFillSkills.data.message}
+            </p>
+            {(aiBatchFillSkills.data as any).results?.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {(aiBatchFillSkills.data as any).results.map((r: any, i: number) => (
+                  <Badge key={i} variant="secondary" className="text-xs">
+                    {r.monsterName} (+{r.skillCount}技能)
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* 使用說明 */}
       <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
         <h4 className="font-semibold mb-2">💡 使用說明</h4>
         <ul className="space-y-1 list-disc list-inside">
-          <li>AI 商店上架會清空現有自動生成的商品，重新從圖鑑中挑選合適商品</li>
+          <li>AI 商店上架會清空現有「未鎖定」的商品，重新從圖鑑中挑選合適商品（已鎖定商品不會被覆蓋）</li>
           <li>一鍵生成每次新增 10 筆，AI 會自動避免重複名稱和破壞平衡的數值</li>
           <li>生成的數值會被自動限制在合理範圍內（如 HP 30-500、ATK 5-80）</li>
+          <li>怪物技能生成會根據怪物的五行/種族/稀有度自動設計專屬技能</li>
+          <li>各圖鑑列表中的「複製」按鈕可快速複製一筆資料作為編輯基礎</li>
           <li>建議先生成道具/裝備/技能，再使用 AI 商店上架功能</li>
-          <li>生成後可到各圖鑑 Tab 中查看和編輯詳細資料</li>
+          <li>商店中「已鎖定」的商品不會被 AI 刷新覆蓋，可在商店 Tab 中設定</li>
         </ul>
       </div>
     </div>

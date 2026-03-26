@@ -1,0 +1,31 @@
+{
+  "query": "SELECT COUNT(*) as total_skills FROM game_monster_skill_catalog;\nSELECT COUNT(*) as total_monsters FROM game_monster_catalog WHERE is_active = 1;\nSELECT COUNT(*) as monsters_without_skills FROM game_monster_catalog WHERE is_active = 1 AND (skill_id_1 IS NULL OR skill_id_1 = '') AND (skill_id_2 IS NULL OR skill_id_2 = '') AND (skill_id_3 IS NULL OR skill_id_3 = '');\nSELECT COUNT(*) as monsters_with_skills FROM game_monster_catalog WHERE is_active = 1 AND skill_id_1 IS NOT NULL AND skill_id_1 != '';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total_skills FROM game_monster_skill_catalog;\nSELECT COUNT(*) as total_monsters FROM game_monster_catalog WHERE is_active = 1;\nSELECT COUNT(*) as monsters_without_skills FROM game_monster_catalog WHERE is_active = 1 AND (skill_id_1 IS NULL OR skill_id_1 = '') AND (skill_id_2 IS NULL OR skill_id_2 = '') AND (skill_id_3 IS NULL OR skill_id_3 = '');\nSELECT COUNT(*) as monsters_with_skills FROM game_monster_catalog WHERE is_active = 1 AND skill_id_1 IS NOT NULL AND skill_id_1 != '';",
+  "rows": [
+    {
+      "total_skills": "0"
+    },
+    {
+      "total_skills": "total_monsters"
+    },
+    {
+      "total_skills": "144"
+    },
+    {
+      "total_skills": "monsters_without_skills"
+    },
+    {
+      "total_skills": "51"
+    },
+    {
+      "total_skills": "monsters_with_skills"
+    },
+    {
+      "total_skills": "93"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_skills\n0\ntotal_monsters\n144\nmonsters_without_skills\n51\nmonsters_with_skills\n93\n",
+  "stderr": "",
+  "execution_time_ms": 2919
+}

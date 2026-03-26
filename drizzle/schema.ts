@@ -1928,6 +1928,8 @@ export const gameVirtualShop = mysqlTable("game_virtual_shop", {
   sortOrder: int("sort_order").notNull().default(0),
   /** 是否上架 */
   isOnSale: tinyint("is_on_sale").notNull().default(1),
+  /** 是否鎖定（鎖定後 AI 刷新不會覆蓋） */
+  isLocked: tinyint("is_locked").notNull().default(0),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
 export type GameVirtualShopItem = typeof gameVirtualShop.$inferSelect;
@@ -1955,6 +1957,8 @@ export const gameSpiritShop = mysqlTable("game_spirit_shop", {
   sortOrder: int("sort_order").notNull().default(0),
   /** 是否上架 */
   isOnSale: tinyint("is_on_sale").notNull().default(1),
+  /** 是否鎖定（鎖定後 AI 刷新不會覆蓋） */
+  isLocked: tinyint("is_locked").notNull().default(0),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
 export type GameSpiritShopItem = typeof gameSpiritShop.$inferSelect;
@@ -1984,6 +1988,8 @@ export const gameHiddenShopPool = mysqlTable("game_hidden_shop_pool", {
   rarity: mysqlEnum("rarity", ["common", "rare", "epic", "legendary"]).notNull().default("rare"),
   /** 是否啟用 */
   isActive: tinyint("is_active").notNull().default(1),
+  /** 是否鎖定（鎖定後 AI 刷新不會覆蓋） */
+  isLocked: tinyint("is_locked").notNull().default(0),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
 export type GameHiddenShopItem = typeof gameHiddenShopPool.$inferSelect;

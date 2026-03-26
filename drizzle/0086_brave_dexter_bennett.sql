@@ -1,0 +1,1 @@
+ALTER TABLE `game_hidden_shop_pool` ADD `is_locked` tinyint DEFAULT 0 NOT NULL;

@@ -673,6 +673,11 @@ function CharacterPanel({
   const [showEquipShop, setShowEquipShop] = useState(false);
   const [equipShopWuxing, setEquipShopWuxing] = useState("");
   const [equipShopSlot, setEquipShopSlot] = useState("");
+  const [compareEquipId, setCompareEquipId] = useState<string | null>(null);
+  const compareQuery = trpc.gameWorld.getEquipCompare.useQuery(
+    { equipId: compareEquipId! },
+    { enabled: !!compareEquipId, staleTime: 30000 }
+  );
   const equipCatalogQuery = trpc.gameWorld.getEquipmentCatalog.useQuery(
     { wuxing: equipShopWuxing || undefined, slot: equipShopSlot || undefined },
     { enabled: showEquipShop, staleTime: 60000 }
@@ -1182,16 +1187,60 @@ function CharacterPanel({
                             {equip.specialEffect && <p className="text-[10px] text-amber-400/80 mt-0.5 leading-tight">✨ {equip.specialEffect}</p>}
                             <p className="text-[10px] text-slate-600 mt-0.5">需等級 Lv.{equip.levelRequired}</p>
                           </div>
-                          <button
-                            onClick={() => equipItemMutation.mutate({ equipId: equip.equipId, action: equip.isEquipped ? 'unequip' : 'equip' })}
-                            disabled={equipItemMutation.isPending}
-                            className="shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95"
-                            style={{
-                              background: equip.isEquipped ? 'rgba(239,68,68,0.15)' : `${wc}20`,
-                              color: equip.isEquipped ? '#ef4444' : wc,
-                              border: `1px solid ${equip.isEquipped ? 'rgba(239,68,68,0.3)' : `${wc}40`}`,
-                            }}>{equip.isEquipped ? '卸下' : '裝備'}</button>
+                          <div className="flex flex-col gap-1 shrink-0">
+                            <button
+                              onClick={() => setCompareEquipId(compareEquipId === equip.equipId ? null : equip.equipId)}
+                              className="px-2 py-1 rounded-lg text-[10px] font-bold transition-all active:scale-95"
+                              style={{
+                                background: compareEquipId === equip.equipId ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.04)',
+                                color: compareEquipId === equip.equipId ? '#a855f7' : '#94a3b8',
+                                border: `1px solid ${compareEquipId === equip.equipId ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                              }}>⚖️ 比較</button>
+                            <button
+                              onClick={() => equipItemMutation.mutate({ equipId: equip.equipId, action: equip.isEquipped ? 'unequip' : 'equip' })}
+                              disabled={equipItemMutation.isPending}
+                              className="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95"
+                              style={{
+                                background: equip.isEquipped ? 'rgba(239,68,68,0.15)' : `${wc}20`,
+                                color: equip.isEquipped ? '#ef4444' : wc,
+                                border: `1px solid ${equip.isEquipped ? 'rgba(239,68,68,0.3)' : `${wc}40`}`,
+                              }}>{equip.isEquipped ? '卸下' : '裝備'}</button>
+                          </div>
                         </div>
+                        {/* 裝備比較面板 */}
+                        {compareEquipId === equip.equipId && compareQuery.data && (
+                          <div className="mt-2 p-2.5 rounded-lg border" style={{ background: 'rgba(168,85,247,0.06)', borderColor: 'rgba(168,85,247,0.2)' }}>
+                            <p className="text-[10px] font-bold text-purple-400 mb-1.5">⚖️ 裝備比較</p>
+                            <div className="grid grid-cols-3 gap-1 text-center text-[10px] mb-1">
+                              <div className="text-slate-500">屬性</div>
+                              <div className="text-slate-400 font-bold">{compareQuery.data.currentEquip ? compareQuery.data.currentEquip.name : '（無）'}</div>
+                              <div className="font-bold" style={{ color: wc }}>{compareQuery.data.newEquip.name}</div>
+                            </div>
+                            {compareQuery.data.comparison.map((c: any) => (
+                              <div key={c.stat} className="grid grid-cols-3 gap-1 text-center text-[10px] py-0.5 border-t border-slate-800/40">
+                                <div className="text-slate-500">{c.label}</div>
+                                <div className="text-slate-400">{c.currentVal}</div>
+                                <div className="flex items-center justify-center gap-1">
+                                  <span style={{ color: wc }}>{c.newVal}</span>
+                                  {c.diff !== 0 && (
+                                    <span className="font-bold" style={{ color: c.diff > 0 ? '#22c55e' : '#ef4444' }}>
+                                      {c.diff > 0 ? `+${c.diff}` : c.diff}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                            {compareQuery.data.isUpgrade && (
+                              <p className="text-[10px] text-green-400 mt-1.5 text-center font-bold">✨ 整體提升！建議更換</p>
+                            )}
+                            {!compareQuery.data.isUpgrade && compareQuery.data.currentEquip && (
+                              <p className="text-[10px] text-amber-400 mt-1.5 text-center">⚠️ 整體下降，請謹慎更換</p>
+                            )}
+                          </div>
+                        )}
+                        {compareEquipId === equip.equipId && compareQuery.isLoading && (
+                          <div className="mt-2 p-2 text-center text-[10px] text-slate-500">載入比較中…</div>
+                        )}
                       </div>
                     );
                   })}

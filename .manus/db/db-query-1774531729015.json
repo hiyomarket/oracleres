@@ -1,0 +1,55 @@
+{
+  "query": "SELECT monster_id, name, wuxing, rarity, skill_id_1, skill_id_2, skill_id_3 FROM game_monster_catalog WHERE is_active = 1 AND skill_id_1 != '' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id, name, wuxing, rarity, skill_id_1, skill_id_2, skill_id_3 FROM game_monster_catalog WHERE is_active = 1 AND skill_id_1 != '' LIMIT 5;",
+  "rows": [
+    {
+      "monster_id": "M_W001",
+      "name": "葉刃狐",
+      "wuxing": "木",
+      "rarity": "common",
+      "skill_id_1": "SK_M001",
+      "skill_id_2": "",
+      "skill_id_3": ""
+    },
+    {
+      "monster_id": "M_W002",
+      "name": "藤蔓蜘蛛",
+      "wuxing": "木",
+      "rarity": "common",
+      "skill_id_1": "SK_M003",
+      "skill_id_2": "SK_M002",
+      "skill_id_3": ""
+    },
+    {
+      "monster_id": "M_W003",
+      "name": "綠芽史萊姆",
+      "wuxing": "木",
+      "rarity": "common",
+      "skill_id_1": "SK_M004",
+      "skill_id_2": "",
+      "skill_id_3": ""
+    },
+    {
+      "monster_id": "M_W004",
+      "name": "刺刺蝟",
+      "wuxing": "木",
+      "rarity": "common",
+      "skill_id_1": "SK_M005",
+      "skill_id_2": "",
+      "skill_id_3": ""
+    },
+    {
+      "monster_id": "M_W005",
+      "name": "孢子菇",
+      "wuxing": "木",
+      "rarity": "common",
+      "skill_id_1": "SK_M006",
+      "skill_id_2": "",
+      "skill_id_3": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_id\tname\twuxing\trarity\tskill_id_1\tskill_id_2\tskill_id_3\nM_W001\t葉刃狐\t木\tcommon\tSK_M001\t\t\nM_W002\t藤蔓蜘蛛\t木\tcommon\tSK_M003\tSK_M002\t\nM_W003\t綠芽史萊姆\t木\tcommon\tSK_M004\t\t\nM_W004\t刺刺蝟\t木\tcommon\tSK_M005\t\t\nM_W005\t孢子菇\t木\tcommon\tSK_M006\t\t\n",
+  "stderr": "",
+  "execution_time_ms": 1573
+}

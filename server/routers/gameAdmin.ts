@@ -479,11 +479,20 @@ export const gameAdminRouter = router({
       nodeId: z.string().optional(),
       sortOrder: z.number().int().optional(),
       isOnSale: z.number().int().optional(),
+      isLocked: z.number().int().optional(),
     }) }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       await db.update(gameVirtualShop).set(input.data).where(eq(gameVirtualShop.id, input.id));
+      return { success: true };
+    }),
+  toggleVirtualShopLock: adminProcedure
+    .input(z.object({ id: z.number().int(), isLocked: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameVirtualShop).set({ isLocked: input.isLocked }).where(eq(gameVirtualShop.id, input.id));
       return { success: true };
     }),
   deleteVirtualShopItem: adminProcedure.input(z.object({ id: z.number().int() })).mutation(async ({ input }) => {
@@ -525,11 +534,20 @@ export const gameAdminRouter = router({
       rarity: z.enum(["common", "rare", "epic", "legendary"]).optional(),
       sortOrder: z.number().int().optional(),
       isOnSale: z.number().int().optional(),
+      isLocked: z.number().int().optional(),
     }) }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       await db.update(gameSpiritShop).set(input.data).where(eq(gameSpiritShop.id, input.id));
+      return { success: true };
+    }),
+  toggleSpiritShopLock: adminProcedure
+    .input(z.object({ id: z.number().int(), isLocked: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameSpiritShop).set({ isLocked: input.isLocked }).where(eq(gameSpiritShop.id, input.id));
       return { success: true };
     }),
   deleteSpiritShopItem: adminProcedure.input(z.object({ id: z.number().int() })).mutation(async ({ input }) => {
@@ -586,6 +604,14 @@ export const gameAdminRouter = router({
     await db.delete(gameHiddenShopPool).where(eq(gameHiddenShopPool.id, input.id));
     return { success: true };
   }),
+  toggleHiddenShopLock: adminProcedure
+    .input(z.object({ id: z.number().int(), isLocked: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(gameHiddenShopPool).set({ isLocked: input.isLocked }).where(eq(gameHiddenShopPool.id, input.id));
+      return { success: true };
+    }),
 
   // ─── 圖鑑管理（GD-011~016 資料庫）────────────────────────────
   getMonsterCatalog: adminProcedure
