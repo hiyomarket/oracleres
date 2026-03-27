@@ -25,6 +25,7 @@ const GAME_TABS: GameTab[] = [
   { id: "pets",     path: "/game/pets",         icon: "🐾", label: "寵物" },
   { id: "quests",   path: "/game/quest-skills", icon: "📖", label: "天命考核" },
   { id: "pvp",      path: "/game/achievements", icon: "🏆",  label: "排行/成就" },
+  { id: "guide",    path: "/game/guide",        icon: "📖", label: "指南" },
   // Bug 3+9 fix: 管理員後台整合為單一按鈕（僅 admin 可見）
   { id: "admin",    path: "/admin/game",        icon: "⚙️", label: "後台管理",  adminOnly: true },
 ];
@@ -120,6 +121,7 @@ export default function GameTabLayout({
     if (location.startsWith("/game/auction")) return "auction";
     if (location.startsWith("/game/achievements")) return "pvp";
     if (location.startsWith("/game/pvp")) return "pvp";
+    if (location.startsWith("/game/guide")) return "guide";
     if (location.startsWith("/admin")) return "admin";
     return "world";
   })();

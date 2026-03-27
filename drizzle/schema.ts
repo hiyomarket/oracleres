@@ -3541,3 +3541,42 @@ export const gamePetBpHistory = mysqlTable("game_pet_bp_history", {
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
 export type GamePetBpHistory = typeof gamePetBpHistory.$inferSelect;
+
+
+/**
+ * 遊戲規則指南章節
+ * 後台 CMS 可管理的遊戲說明書章節
+ */
+export const gameGuide = mysqlTable("game_guide", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 章節 icon（emoji 或文字） */
+  icon: varchar("icon", { length: 20 }).notNull().default("📖"),
+  /** 章節標題 */
+  title: varchar("title", { length: 200 }).notNull(),
+  /** 章節內容（Markdown 格式） */
+  content: text("content").notNull(),
+  /** 排序權重（數字越小越前面） */
+  sortOrder: int("sort_order").notNull().default(0),
+  /** 是否啟用（停用的章節不會顯示給玩家） */
+  enabled: tinyint("enabled").notNull().default(1),
+  /** 章節分類標籤（可選，用於前端分組） */
+  category: varchar("category", { length: 50 }).default("general"),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameGuide = typeof gameGuide.$inferSelect;
+export type InsertGameGuide = typeof gameGuide.$inferInsert;
+
+/**
+ * 遊戲指南全域設定
+ * 控制指南頁面的標題、icon、副標題等
+ */
+export const gameGuideConfig = mysqlTable("game_guide_config", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 設定鍵名 */
+  configKey: varchar("config_key", { length: 100 }).notNull(),
+  /** 設定值 */
+  configValue: text("config_value").notNull(),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameGuideConfig = typeof gameGuideConfig.$inferSelect;

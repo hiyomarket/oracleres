@@ -680,6 +680,13 @@
       "when": 1774585543938,
       "tag": "0096_tired_gambit",
       "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "5",
+      "when": 1774593332459,
+      "tag": "0097_flat_firebird",
+      "breakpoints": true
     }
   ]
 }

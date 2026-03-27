@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { MonsterCatalogV2Tab, ItemCatalogV2Tab, EquipCatalogV2Tab, SkillCatalogV2Tab, AchievementCatalogTab, MonsterSkillCatalogTab } from "@/components/admin/CatalogTabs";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -504,6 +504,7 @@ export default function GameCMS() {
             <TabsTrigger value="pet-ai">🧬 寵物 AI</TabsTrigger>
             <TabsTrigger value="ai-shop-layout">🏪 AI 商店佈局</TabsTrigger>
             <TabsTrigger value="value-engine">💎 價值引擎</TabsTrigger>
+            <TabsTrigger value="game-guide">📖 遊戲指南</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -530,6 +531,7 @@ export default function GameCMS() {
               <TabsContent value="pet-ai"><PetAIToolsTab /></TabsContent>
               <TabsContent value="ai-shop-layout"><AIShopLayoutTab /></TabsContent>
               <TabsContent value="value-engine"><ValueEngineTab /></TabsContent>
+              <TabsContent value="game-guide"><GameGuideTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
@@ -3330,6 +3332,328 @@ function ValueEngineTab() {
           <p className="text-xs text-muted-foreground">提示：每次點擊會為最多 10 件缺少圖片的物品生成圖片，可多次點擊直到所有物品都有圖片。也可以在各圖鑑的操作欄中點擊 🎨 按鈕單獨生成。</p>
         </div>
       )}
+    </div>
+  );
+}
+
+
+// ─── 遊戲指南管理 Tab ───
+function GameGuideTab() {
+  const utils = trpc.useUtils();
+  const sections = trpc.gameGuide.getAllSections.useQuery();
+  const config = trpc.gameGuide.getConfig.useQuery();
+  const updateConfig = trpc.gameGuide.updateConfig.useMutation({
+    onSuccess: () => { utils.gameGuide.getConfig.invalidate(); toast.success("全域設定已更新"); },
+  });
+  const createSection = trpc.gameGuide.createSection.useMutation({
+    onSuccess: () => { utils.gameGuide.getAllSections.invalidate(); toast.success("章節已新增"); setEditingSection(null); },
+  });
+  const updateSection = trpc.gameGuide.updateSection.useMutation({
+    onSuccess: () => { utils.gameGuide.getAllSections.invalidate(); toast.success("章節已更新"); setEditingSection(null); },
+  });
+  const deleteSection = trpc.gameGuide.deleteSection.useMutation({
+    onSuccess: () => { utils.gameGuide.getAllSections.invalidate(); toast.success("章節已刪除"); },
+  });
+  const reorderSections = trpc.gameGuide.reorderSections.useMutation({
+    onSuccess: () => { utils.gameGuide.getAllSections.invalidate(); toast.success("排序已更新"); },
+  });
+  const aiGenerate = trpc.gameGuide.aiGenerateGuide.useMutation({
+    onSuccess: (data) => { utils.gameGuide.getAllSections.invalidate(); toast.success(`AI 已生成 ${data.count} 個章節`); },
+    onError: (err) => { toast.error(`AI 生成失敗：${err.message}`); },
+  });
+
+  const [editingSection, setEditingSection] = useState<any>(null);
+  const [showNewForm, setShowNewForm] = useState(false);
+  const [newIcon, setNewIcon] = useState("📖");
+  const [newTitle, setNewTitle] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [newCategory, setNewCategory] = useState("general");
+  const [editIcon, setEditIcon] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+
+  // 全域設定
+  const [cfgTabIcon, setCfgTabIcon] = useState("");
+  const [cfgTabLabel, setCfgTabLabel] = useState("");
+  const [cfgPageTitle, setCfgPageTitle] = useState("");
+  const [cfgPageSubtitle, setCfgPageSubtitle] = useState("");
+  const [cfgDirty, setCfgDirty] = useState(false);
+
+  // 初始化全域設定
+  const cfgData = config.data;
+  React.useEffect(() => {
+    if (cfgData) {
+      setCfgTabIcon(cfgData.tabIcon || "📖");
+      setCfgTabLabel(cfgData.tabLabel || "指南");
+      setCfgPageTitle(cfgData.pageTitle || "冒險者指南");
+      setCfgPageSubtitle(cfgData.pageSubtitle || "歡迎來到天命共振的世界！這份指南將帶你了解所有遊戲機制。");
+      setCfgDirty(false);
+    }
+  }, [cfgData]);
+
+  const handleSaveConfig = () => {
+    updateConfig.mutate({
+      tabIcon: cfgTabIcon,
+      tabLabel: cfgTabLabel,
+      pageTitle: cfgPageTitle,
+      pageSubtitle: cfgPageSubtitle,
+    });
+    setCfgDirty(false);
+  };
+
+  const handleCreateSection = () => {
+    if (!newTitle.trim()) { toast.error("請輸入章節標題"); return; }
+    createSection.mutate({
+      icon: newIcon,
+      title: newTitle,
+      content: newContent,
+      category: newCategory,
+      sortOrder: (sections.data?.length ?? 0) * 10,
+    });
+    setShowNewForm(false);
+    setNewIcon("📖"); setNewTitle(""); setNewContent(""); setNewCategory("general");
+  };
+
+  const handleStartEdit = (s: any) => {
+    setEditingSection(s);
+    setEditIcon(s.icon);
+    setEditTitle(s.title);
+    setEditContent(s.content);
+    setEditCategory(s.category || "general");
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingSection) return;
+    updateSection.mutate({
+      id: editingSection.id,
+      icon: editIcon,
+      title: editTitle,
+      content: editContent,
+      category: editCategory,
+    });
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (!sections.data || index <= 0) return;
+    const items = [...sections.data];
+    const orders = items.map((s, i) => ({ id: s.id, sortOrder: i * 10 }));
+    // 交換
+    const temp = orders[index].sortOrder;
+    orders[index].sortOrder = orders[index - 1].sortOrder;
+    orders[index - 1].sortOrder = temp;
+    reorderSections.mutate({ orders });
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (!sections.data || index >= sections.data.length - 1) return;
+    const items = [...sections.data];
+    const orders = items.map((s, i) => ({ id: s.id, sortOrder: i * 10 }));
+    const temp = orders[index].sortOrder;
+    orders[index].sortOrder = orders[index + 1].sortOrder;
+    orders[index + 1].sortOrder = temp;
+    reorderSections.mutate({ orders });
+  };
+
+  const CATEGORY_OPTIONS = [
+    { value: "basic", label: "基礎入門" },
+    { value: "combat", label: "戰鬥系統" },
+    { value: "growth", label: "成長養成" },
+    { value: "social", label: "社交交易" },
+    { value: "advanced", label: "進階技巧" },
+    { value: "general", label: "一般" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* 頂部操作列 */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h3 className="text-lg font-bold">📖 遊戲規則指南管理</h3>
+          <p className="text-sm text-muted-foreground">管理遊戲規則指南的章節內容，玩家可在底部「指南」Tab 中查看。</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowNewForm(true)}
+          >
+            ➕ 新增章節
+          </Button>
+          <Button
+            size="sm"
+            className="bg-gradient-to-r from-violet-600 to-blue-600 text-white"
+            disabled={aiGenerate.isPending}
+            onClick={() => {
+              if (sections.data && sections.data.length > 0) {
+                if (!confirm("一鍵生成將覆蓋所有現有章節，確定要繼續嗎？")) return;
+              }
+              aiGenerate.mutate();
+            }}
+          >
+            {aiGenerate.isPending ? "🤖 AI 生成中..." : "🤖 一鍵 AI 生成規則"}
+          </Button>
+        </div>
+      </div>
+
+      {/* 全域設定區 */}
+      <div className="p-4 rounded-xl border bg-card space-y-4">
+        <h4 className="font-semibold text-sm">⚙️ 全域設定（底端功能表 & 頁面標題）</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <label className="text-xs text-muted-foreground">Tab Icon</label>
+            <Input value={cfgTabIcon} onChange={e => { setCfgTabIcon(e.target.value); setCfgDirty(true); }} placeholder="📖" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">Tab 標籤</label>
+            <Input value={cfgTabLabel} onChange={e => { setCfgTabLabel(e.target.value); setCfgDirty(true); }} placeholder="指南" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">頁面標題</label>
+            <Input value={cfgPageTitle} onChange={e => { setCfgPageTitle(e.target.value); setCfgDirty(true); }} placeholder="冒險者指南" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">頁面副標題</label>
+            <Input value={cfgPageSubtitle} onChange={e => { setCfgPageSubtitle(e.target.value); setCfgDirty(true); }} placeholder="歡迎來到天命共振..." />
+          </div>
+        </div>
+        {cfgDirty && (
+          <Button size="sm" onClick={handleSaveConfig} disabled={updateConfig.isPending}>
+            {updateConfig.isPending ? "儲存中..." : "💾 儲存設定"}
+          </Button>
+        )}
+      </div>
+
+      {/* 新增章節表單 */}
+      {showNewForm && (
+        <div className="p-4 rounded-xl border-2 border-dashed border-primary/30 bg-card space-y-3">
+          <h4 className="font-semibold text-sm">➕ 新增章節</h4>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground">Icon</label>
+              <Input value={newIcon} onChange={e => setNewIcon(e.target.value)} placeholder="📖" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">標題</label>
+              <Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="章節標題" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">分類</label>
+              <Select value={newCategory} onValueChange={setNewCategory}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORY_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground">內容（Markdown 格式）</label>
+            <Textarea value={newContent} onChange={e => setNewContent(e.target.value)} rows={8} placeholder="使用 Markdown 格式撰寫章節內容..." />
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleCreateSection} disabled={createSection.isPending}>
+              {createSection.isPending ? "新增中..." : "✅ 確認新增"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setShowNewForm(false)}>取消</Button>
+          </div>
+        </div>
+      )}
+
+      {/* 章節列表 */}
+      <div className="space-y-2">
+        <h4 className="font-semibold text-sm">📋 章節列表（{sections.data?.length ?? 0} 個）</h4>
+        {sections.isLoading && <p className="text-sm text-muted-foreground">載入中...</p>}
+        {sections.data?.map((s, idx) => (
+          <div key={s.id} className={`p-3 rounded-lg border ${s.enabled ? "bg-card" : "bg-muted/30 opacity-60"} flex items-start gap-3`}>
+            {/* 排序按鈕 */}
+            <div className="flex flex-col gap-0.5 shrink-0">
+              <button
+                className="text-xs px-1 py-0.5 rounded hover:bg-accent disabled:opacity-30"
+                disabled={idx === 0}
+                onClick={() => handleMoveUp(idx)}
+              >▲</button>
+              <button
+                className="text-xs px-1 py-0.5 rounded hover:bg-accent disabled:opacity-30"
+                disabled={idx === (sections.data?.length ?? 0) - 1}
+                onClick={() => handleMoveDown(idx)}
+              >▼</button>
+            </div>
+
+            {/* 內容 */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-lg">{s.icon}</span>
+                <span className="font-semibold text-sm">{s.title}</span>
+                <Badge variant="outline" className="text-[10px]">{s.category}</Badge>
+                {!s.enabled && <Badge variant="secondary" className="text-[10px]">已停用</Badge>}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.content.substring(0, 120)}...</p>
+            </div>
+
+            {/* 操作按鈕 */}
+            <div className="flex gap-1 shrink-0">
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => handleStartEdit(s)}>✏️</Button>
+              <Button
+                size="sm" variant="ghost" className="h-7 px-2 text-xs"
+                onClick={() => updateSection.mutate({ id: s.id, enabled: !s.enabled })}
+              >
+                {s.enabled ? "🔒" : "🔓"}
+              </Button>
+              <Button
+                size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive"
+                onClick={() => { if (confirm(`確定刪除「${s.title}」？`)) deleteSection.mutate({ id: s.id }); }}
+              >🗑️</Button>
+            </div>
+          </div>
+        ))}
+        {sections.data?.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="text-3xl mb-2">📭</p>
+            <p className="text-sm">尚無任何章節，點擊「一鍵 AI 生成規則」快速建立完整指南！</p>
+          </div>
+        )}
+      </div>
+
+      {/* 編輯章節 Dialog */}
+      <Dialog open={!!editingSection} onOpenChange={(open) => { if (!open) setEditingSection(null); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>✏️ 編輯章節</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground">Icon</label>
+                <Input value={editIcon} onChange={e => setEditIcon(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">標題</label>
+                <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">分類</label>
+                <Select value={editCategory} onValueChange={setEditCategory}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">內容（Markdown 格式）</label>
+              <Textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows={16} className="font-mono text-sm" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingSection(null)}>取消</Button>
+            <Button onClick={handleSaveEdit} disabled={updateSection.isPending}>
+              {updateSection.isPending ? "儲存中..." : "💾 儲存"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
