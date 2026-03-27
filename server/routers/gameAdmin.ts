@@ -41,6 +41,7 @@ import {
   resetEngineConfig,
 } from "../gameEngineConfig";
 import { restartTickEngine } from "../tickEngine";
+import { getAfkTickStatus, restartAfkTickEngine } from "../afkTickEngine";
 import {
   processWorldTick,
   getWorldEventConfig,
@@ -975,6 +976,13 @@ export const gameAdminRouter = router({
       infuseMaxGain: z.number().min(0.01).max(10).optional(),
       infuseFailRate: z.number().min(0).max(0.99).optional(),
       infuseMaxWuxing: z.number().min(10).max(9999).optional(),
+      // 戰鬥經驗倍率配置
+      rewardMultIdle: z.number().min(0).max(5).optional(),
+      rewardMultClosed: z.number().min(0).max(5).optional(),
+      rewardMultOpen: z.number().min(0).max(5).optional(),
+      // 掛機循環配置
+      afkTickIntervalMs: z.number().int().min(5000).max(120000).optional(),
+      afkTickEnabled: z.boolean().optional(),
     }))
     .mutation(({ input, ctx }) => {
       const { tickIntervalMs, ...rest } = input;
@@ -983,6 +991,10 @@ export const gameAdminRouter = router({
       if (tickIntervalMs !== undefined) {
         restartTickEngine();
       }
+      // 如果調整了掛機循環配置，重啟掛機引擎
+      if (input.afkTickIntervalMs !== undefined || input.afkTickEnabled !== undefined) {
+        restartAfkTickEngine();
+      }
       return updated;
     }),
 
@@ -990,7 +1002,19 @@ export const gameAdminRouter = router({
   resetEngineConfig: adminProcedure.mutation(({ ctx }) => {
     const reset = resetEngineConfig(String(ctx.user.id));
     restartTickEngine();
+    restartAfkTickEngine();
     return reset;
+  }),
+
+  /** 取得掛機循環引擎狀態 */
+  getAfkTickStatus: adminProcedure.query(() => {
+    return getAfkTickStatus();
+  }),
+
+  /** 手動重啟掛機循環引擎 */
+  restartAfkTickEngine: adminProcedure.mutation(() => {
+    restartAfkTickEngine();
+    return getAfkTickStatus();
   }),
 
   // ─────────────────────────────────────────────────────────────────────────────

@@ -1328,6 +1328,8 @@ import { QuestSkillCMSTab } from "@/components/admin/QuestSkillCMS";
 
 function BalanceDashboardTab() {
   const { data, isLoading, refetch } = trpc.gameCatalog.getBalanceAnalysis.useQuery();
+  const previewAll = trpc.valueRebalance.previewAll.useQuery(undefined, { enabled: false });
+  const [valuePreview, setValuePreview] = useState<any>(null);
 
   const SEVERITY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
     "嚴重": { bg: "bg-red-500/20", text: "text-red-400", label: "嚴重" },
@@ -1528,6 +1530,68 @@ function BalanceDashboardTab() {
           <div className="text-sm text-muted-foreground mt-1">所有怪物、道具、裝備的數值均在合理範圍內</div>
         </div>
       )}
+
+      {/* 價值引擎快速概覽 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold flex items-center gap-2">
+            <span>💎</span> 價值引擎快速概覽
+          </h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => previewAll.refetch().then(r => r.data && setValuePreview(r.data))}
+            disabled={previewAll.isFetching}
+          >
+            {previewAll.isFetching ? "⚙️ 分析中..." : "🔍 執行價值評估"}
+          </Button>
+        </div>
+        {!valuePreview ? (
+          <p className="text-xs text-muted-foreground">點擊上方按鈕執行 ValueEngine 全圖鑑價值評估，查看 S/A/B/C/D 品質分布。完整功能請前往「💎 價值引擎」分頁。</p>
+        ) : (
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-xs text-muted-foreground">道具</p>
+                <p className="text-lg font-bold text-amber-400">{valuePreview.summary.items}</p>
+              </div>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-xs text-muted-foreground">裝備</p>
+                <p className="text-lg font-bold text-amber-400">{valuePreview.summary.equipment}</p>
+              </div>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-xs text-muted-foreground">技能</p>
+                <p className="text-lg font-bold text-amber-400">{valuePreview.summary.skills}</p>
+              </div>
+            </div>
+            {/* 品質分布統計 */}
+            {(() => {
+              const allItems = [
+                ...(valuePreview.items || []).map((i: any) => ({ ...i, _type: "道具" })),
+                ...(valuePreview.equipment || []).map((i: any) => ({ ...i, _type: "裝備" })),
+                ...(valuePreview.skills || []).map((i: any) => ({ ...i, _type: "技能" })),
+              ];
+              const gradeCount: Record<string, number> = { S: 0, A: 0, B: 0, C: 0, D: 0 };
+              for (const item of allItems) {
+                const g = item.qualityGrade || "C";
+                gradeCount[g] = (gradeCount[g] || 0) + 1;
+              }
+              const gradeColors: Record<string, string> = { S: "#EF4444", A: "#F97316", B: "#EAB308", C: "#22C55E", D: "#6B7280" };
+              return (
+                <div className="flex gap-2 justify-center">
+                  {Object.entries(gradeCount).map(([g, count]) => (
+                    <div key={g} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/30">
+                      <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: gradeColors[g] }}>{g}</span>
+                      <span className="text-sm font-bold">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+            <p className="text-[10px] text-muted-foreground text-center">品質分布：S(前10%) A(10~30%) B(30~60%) C(60~85%) D(後15%)</p>
+          </div>
+        )}
+      </div>
 
       {/* 平衡規則自訂編輯器 */}
       <div className="mt-8 pt-6 border-t border-white/10">
@@ -2944,6 +3008,13 @@ function ValueEngineTab() {
           className={activeSection === "drops" ? "bg-gradient-to-r from-amber-600 to-orange-600 text-white" : ""}
         >
           🎯 怪物掉落分配
+        </Button>
+        <Button
+          variant={activeSection === "images" ? "default" : "outline"}
+          onClick={() => setActiveSection("images")}
+          className={activeSection === "images" ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white" : ""}
+        >
+          🎨 批量 AI 生圖
         </Button>
       </div>
 

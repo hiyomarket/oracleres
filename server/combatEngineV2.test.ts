@@ -431,8 +431,8 @@ describe("快速結算演算法", () => {
     expect(REWARD_MULTIPLIERS.idle).toBe(0.33);
   });
 
-  it("玩家開窗模式獎勵倍率為 1.2", () => {
-    expect(REWARD_MULTIPLIERS.player_open).toBe(1.2);
+  it("玩家開窗模式獎勵倍率為 1.5", () => {
+    expect(REWARD_MULTIPLIERS.player_open).toBe(1.5);
   });
 
   it("玩家關窗模式獎勵倍率為 1.0", () => {

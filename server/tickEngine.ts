@@ -1304,10 +1304,14 @@ export async function processAgentTick(
   }
   // ─── 注靈策略 ───
   // 注靈：不消耗體力，依當前節點屬性截取五行能量，20%機率失敗
-  // ★ 注靈只有在體力為 0 時才能執行；一旦體力回復（>0），自動切回上一個動作
+  // ★ 區分「手動注靈」和「自動注靈」：
+  //   - 自動注靈（體力耗盡後自動切換，previousStrategy 有值）：體力回復後自動切回
+  //   - 手動注靈（玩家主動選擇，previousStrategy 為 null）：不會被體力回復中斷
   else if (strategy === "infuse") {
-    // 體力回復檢查：體力 > 0 時自動切回 previousStrategy
-    if (agent.stamina > 0) {
+    // 只有「自動注靈」（previousStrategy 有值）才會在體力回復後自動切回
+    // 「手動注靈」（previousStrategy 為 null）持續注靈不中斷
+    const isAutoInfuse = agent.previousStrategy !== null && agent.previousStrategy !== undefined;
+    if (isAutoInfuse && agent.stamina > 0) {
       const prevStrategy = agent.previousStrategy ?? "explore";
       const nextStrategy = prevStrategy !== "infuse" ? prevStrategy : "explore";
       await db.update(gameAgents).set({
@@ -1318,7 +1322,6 @@ export async function processAgentTick(
       const strategyLabels: Record<string, string> = { explore: "探索", combat: "戰鬥", gather: "採集", rest: "休息" };
       const switchMsg = `【注靈中斷】${agent.agentName ?? "旅人"}體力已恢復，自動切換回「${strategyLabels[nextStrategy] ?? nextStrategy}」模式。`;
       await createEvent(agent.id, "system", switchMsg, { type: "infuse_auto_switch", newStrategy: nextStrategy }, currentNode.id);
-      // 注靈不消耗體力（已在上層跳過扣除），無需退還
       return { events: 1, levelUps: tickLevelUps, legendaryDrops: tickLegendaryDrops };
     }
 

@@ -913,6 +913,12 @@ function EngineControlTab() {
   const [localCfg, setLocalCfg] = useState<Record<string, string | boolean>>({});
   const [isDirty, setIsDirty] = useState(false);
 
+  const { data: afkStatus, refetch: refetchAfk } = trpc.gameAdmin.getAfkTickStatus.useQuery();
+  const restartAfk = trpc.gameAdmin.restartAfkTickEngine.useMutation({
+    onSuccess: () => { toast.success("✅ 掛機循環引擎已重啟"); refetchAfk(); },
+    onError: (e) => toast.error("重啟失敗：" + e.message),
+  });
+
   // 從伺服器載入初始値
   useEffect(() => {
     if (cfg) {
@@ -930,6 +936,11 @@ function EngineControlTab() {
         infuseMaxGain: String((cfg as any).infuseMaxGain ?? 0.5),
         infuseFailRate: String((cfg as any).infuseFailRate ?? 0.2),
         infuseMaxWuxing: String((cfg as any).infuseMaxWuxing ?? 100),
+        rewardMultIdle: String((cfg as any).rewardMultIdle ?? 0.33),
+        rewardMultClosed: String((cfg as any).rewardMultClosed ?? 1.0),
+        rewardMultOpen: String((cfg as any).rewardMultOpen ?? 1.5),
+        afkTickIntervalMs: String((cfg as any).afkTickIntervalMs ?? 15000),
+        afkTickEnabled: (cfg as any).afkTickEnabled ?? true,
       });
       setIsDirty(false);
     }
@@ -973,6 +984,13 @@ function EngineControlTab() {
       infuseMaxGain: parseFloat(String(localCfg.infuseMaxGain)) || undefined,
       infuseFailRate: parseFloat(String(localCfg.infuseFailRate)) || undefined,
       infuseMaxWuxing: parseFloat(String(localCfg.infuseMaxWuxing)) || undefined,
+      // 戰鬥經驗倍率
+      rewardMultIdle: parseFloat(String(localCfg.rewardMultIdle)) || undefined,
+      rewardMultClosed: parseFloat(String(localCfg.rewardMultClosed)) || undefined,
+      rewardMultOpen: parseFloat(String(localCfg.rewardMultOpen)) || undefined,
+      // 掛機循環
+      afkTickIntervalMs: parseInt(String(localCfg.afkTickIntervalMs)) || undefined,
+      afkTickEnabled: typeof localCfg.afkTickEnabled === 'boolean' ? localCfg.afkTickEnabled : undefined,
     });
   };
 
@@ -1102,6 +1120,91 @@ function EngineControlTab() {
         </CardContent>
       </Card>
 
+      {/* 戰鬥經驗倍率配置 */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">⚔️ 戰鬥經驗倍率配置</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { key: "rewardMultIdle", label: "💤 掛機模式 (idle)", desc: "伺服器自動掛機時的經驗倍率", min: 0, max: 3, step: 0.01 },
+              { key: "rewardMultClosed", label: "📱 關閉戰鬥視窗 (closed)", desc: "玩家在線但未打開戰鬥畫面", min: 0, max: 5, step: 0.1 },
+              { key: "rewardMultOpen", label: "👁️ 打開戰鬥視窗 (open)", desc: "玩家主動觀看戰鬥過程", min: 0, max: 5, step: 0.1 },
+            ].map(f => (
+              <div key={f.key}>
+                <p className="text-xs font-medium mb-1">{f.label}</p>
+                <p className="text-[10px] text-muted-foreground mb-1.5">{f.desc}</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min={f.min} max={f.max} step={f.step}
+                    value={parseFloat(String(localCfg[f.key] ?? 1))}
+                    onChange={e => handleChange(f.key, e.target.value)}
+                    className="flex-1 accent-red-500"
+                  />
+                  <span className="text-sm font-bold tabular-nums w-12 text-right">
+                    {parseFloat(String(localCfg[f.key] ?? 1)).toFixed(2)}x
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            戰鬥結算時根據玩家狀態套用不同倍率。idle = 伺服器自動掛機，closed = 玩家在線但未看戰鬥，open = 玩家正在觀看戰鬥。
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* 掛機循環引擎配置 */}
+      <Card className={!localCfg.afkTickEnabled ? "border-amber-500/40" : ""}>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">🔄 掛機循環引擎 (AFK Tick)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs font-medium">啟用伺服器端掛機循環</p>
+              <p className="text-[10px] text-muted-foreground">關閉後玩家離線將不會自動執行行動</p>
+            </div>
+            <Switch
+              checked={Boolean(localCfg.afkTickEnabled)}
+              onCheckedChange={v => handleChange("afkTickEnabled", v)}
+            />
+          </div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex-1">
+              <p className="text-xs font-medium mb-1">循環間隔</p>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  value={String(localCfg.afkTickIntervalMs ?? "15000")}
+                  onChange={e => handleChange("afkTickIntervalMs", e.target.value)}
+                  min={5000} max={120000} step={1000}
+                  className="h-8 text-sm"
+                />
+                <span className="text-sm text-muted-foreground shrink-0">
+                  = {(parseInt(String(localCfg.afkTickIntervalMs ?? 15000)) / 1000).toFixed(0)} 秒
+                </span>
+              </div>
+            </div>
+          </div>
+          {afkStatus && (
+            <div className="flex items-center gap-3 text-xs">
+              <div className={`w-2 h-2 rounded-full ${afkStatus.running ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
+              <span className="text-muted-foreground">
+                引擎狀態：{afkStatus.running ? "運行中" : "已停止"}
+                {" | "}間隔：{(afkStatus.intervalMs / 1000).toFixed(0)} 秒
+                {" | "}{afkStatus.enabled ? "已啟用" : "已停用"}
+              </span>
+              <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => restartAfk.mutate()} disabled={restartAfk.isPending}>
+                {restartAfk.isPending ? "重啟中…" : "手動重啟"}
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* 注靈指令配置 */}
       <Card>
         <CardHeader className="pb-2">
@@ -1209,6 +1312,18 @@ function EngineControlTab() {
               <div className="p-2 rounded bg-muted/30">
                 <p className="text-muted-foreground">戰鬥/採集/奇遇</p>
                 <p className="font-bold mt-0.5">{(cfg.combatChance*100).toFixed(0)}% / {(cfg.gatherChance*100).toFixed(0)}% / {(cfg.rogueChance*100).toFixed(0)}%</p>
+              </div>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-muted-foreground">戰鬥經驗倍率</p>
+                <p className="font-bold mt-0.5">
+                  💤{(cfg as any).rewardMultIdle ?? 0.33}x / 📱{(cfg as any).rewardMultClosed ?? 1.0}x / 👁️{(cfg as any).rewardMultOpen ?? 1.5}x
+                </p>
+              </div>
+              <div className="p-2 rounded bg-muted/30">
+                <p className="text-muted-foreground">AFK 循環</p>
+                <p className="font-bold mt-0.5" style={{ color: (cfg as any).afkTickEnabled ? "#22c55e" : "#ef4444" }}>
+                  {(cfg as any).afkTickEnabled ? `運行中 (${((cfg as any).afkTickIntervalMs ?? 15000) / 1000}s)` : "已停用"}
+                </p>
               </div>
             </div>
             <p className="text-[10px] text-muted-foreground mt-2">

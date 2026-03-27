@@ -36,6 +36,18 @@ export interface GameEngineConfig {
   infuseFailRate: number;
   /** 注靈五行值上限（預設 100） */
   infuseMaxWuxing: number;
+  // ─── 戰鬥經驗倍率配置 ───
+  /** 掛機模式經驗倍率（預設 0.33） */
+  rewardMultIdle: number;
+  /** 關閉戰鬥視窗經驗倍率（預設 1.0） */
+  rewardMultClosed: number;
+  /** 打開戰鬥視窗經驗倍率（預設 1.5） */
+  rewardMultOpen: number;
+  // ─── 伺服器端掛機循環配置 ───
+  /** 掛機循環間隔（毫秒，預設 15000 = 15秒） */
+  afkTickIntervalMs: number;
+  /** 是否啟用伺服器端掛機循環 */
+  afkTickEnabled: boolean;
 }
 
 // ─── 預設值 ───
@@ -56,6 +68,13 @@ const DEFAULT_CONFIG: GameEngineConfig = {
   infuseMaxGain: 0.5,
   infuseFailRate: 0.2,
   infuseMaxWuxing: 100,
+  // 戰鬥經驗倍率預設值
+  rewardMultIdle: 0.33,
+  rewardMultClosed: 1.0,
+  rewardMultOpen: 1.5,
+  // 掛機循環預設值
+  afkTickIntervalMs: 15_000,
+  afkTickEnabled: true,
 };
 
 // ─── 單例記憶體狀態 ───
@@ -112,6 +131,23 @@ export function getMultipliers(): { exp: number; gold: number; drop: number } {
     exp: _config.expMultiplier,
     gold: _config.goldMultiplier,
     drop: _config.dropMultiplier,
+  };
+}
+
+/** 取得戰鬥經驗倍率配置 */
+export function getRewardMultipliers(): { idle: number; player_closed: number; player_open: number } {
+  return {
+    idle: _config.rewardMultIdle,
+    player_closed: _config.rewardMultClosed,
+    player_open: _config.rewardMultOpen,
+  };
+}
+
+/** 取得掛機循環配置 */
+export function getAfkTickConfig(): { intervalMs: number; enabled: boolean } {
+  return {
+    intervalMs: _config.afkTickIntervalMs,
+    enabled: _config.afkTickEnabled,
   };
 }
 

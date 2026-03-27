@@ -16,6 +16,7 @@
 import type { WuXing } from "../../shared/types";
 import { calcWuxingMultiplier } from "../../shared/mapNodes";
 import { DESTINY_SKILLS, DESTINY_AWAKENING_EFFECTS, getDestinySkillPower } from "./petEngine";
+import { getRewardMultipliers } from "../gameEngineConfig";
 
 // ═══════════════════════════════════════════════════════════════
 // 類型定義
@@ -127,11 +128,24 @@ export interface BattleResult {
   monsterHpPercent?: number;
 }
 
-/** 獎勵倍率表 */
+/** 獎勵倍率表（idle/player_closed/player_open 從後台配置讀取） */
+export function getRewardMultiplierForMode(mode: BattleMode): number {
+  const dynamic = getRewardMultipliers();
+  const table: Record<BattleMode, number> = {
+    idle: dynamic.idle,
+    player_closed: dynamic.player_closed,
+    player_open: dynamic.player_open,
+    pvp: 0,
+    map_mob: 1.5,
+    boss: 2.0,
+  };
+  return table[mode] ?? 1.0;
+}
+/** @deprecated 使用 getRewardMultiplierForMode() 代替 */
 export const REWARD_MULTIPLIERS: Record<BattleMode, number> = {
   idle: 0.33,
   player_closed: 1.0,
-  player_open: 1.2,
+  player_open: 1.5,
   pvp: 0,
   map_mob: 1.5,
   boss: 2.0,
@@ -791,7 +805,7 @@ export function simulateBattle(
   maxRounds: number = 20,
 ): BattleResult {
   const logs: BattleLogEntry[] = [];
-  const rewardMultiplier = REWARD_MULTIPLIERS[mode] ?? 1.0;
+  const rewardMultiplier = getRewardMultiplierForMode(mode);
   const petDestinySkillUsage: Record<string, number> = {};
 
   for (let round = 1; round <= maxRounds; round++) {

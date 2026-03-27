@@ -37,6 +37,7 @@ import { gameBattleRouter } from './routers/gameBattle';
 import { auctionRouter } from './routers/auction';
 import { startTickEngine } from './tickEngine';
 import { startWorldTickEngine } from './worldTickEngine';
+import { startAfkTickEngine } from './afkTickEngine';
 
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
@@ -3564,3 +3565,5 @@ export { accountRouter };
 startTickEngine();
 // 啟動世界 Tick 引擎（每 30 分鐘）
 startWorldTickEngine();
+// 啟動伺服器端掛機循環引擎（每 15 秒）
+startAfkTickEngine();

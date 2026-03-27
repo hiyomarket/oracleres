@@ -379,11 +379,15 @@ export const gameWorldRouter = router({
 
       const updateData: Record<string, unknown> = { strategy: input.strategy, updatedAt: Date.now() };
       if (input.movementMode) updateData.movementMode = input.movementMode;
-      // 切換到 rest 或 infuse 時，記錄前一個策略以便自動切回
-      if (input.strategy === "rest" || input.strategy === "infuse") {
+      // 切換到 rest 時，記錄前一個策略以便自動切回
+      if (input.strategy === "rest") {
         if (agent.strategy !== "rest" && agent.strategy !== "infuse") {
           updateData.previousStrategy = agent.strategy;
         }
+      } else if (input.strategy === "infuse") {
+        // ★ 手動選擇注靈：previousStrategy 設為 null，表示「手動注靈」
+        // 這樣 processAgentTick 中的注靈分支就不會因體力回復而自動切回
+        updateData.previousStrategy = null;
       } else {
         // 主動切換非 rest/infuse 策略時，清除 previousStrategy
         updateData.previousStrategy = null;
