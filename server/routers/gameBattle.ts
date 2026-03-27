@@ -851,10 +851,69 @@ export const gameBattleRouter = router({
       .where(and(eq(gameIdleSessions.agentId, agent.id), eq(gameIdleSessions.isSettled, 0)));
     if (!session) throw new TRPCError({ code: "NOT_FOUND", message: "沒有進行中的掛機" });
 
-    // 結算
+    const now = Date.now();
+    const elapsed = Math.min(now - session.startedAt, session.maxDuration);
+    const elapsedHours = elapsed / 3600000; // 毫秒轉小時
+
+    // ─── 掛機離線寵物 BP 成長 ───
+    // 每小時 +5 BP，最高 40 BP（8小時封頂）
+    const BP_PER_HOUR = 5;
+    const bpGained = Math.floor(elapsedHours * BP_PER_HOUR);
+    let petBpDetails: { petName: string; bpGained: number; gains: Record<string, number> } | null = null;
+
+    if (bpGained > 0) {
+      // 找到出戰寵物
+      const [activePet] = await db.select().from(gamePlayerPets)
+        .where(and(eq(gamePlayerPets.agentId, agent.id), eq(gamePlayerPets.isActive, 1)));
+
+      if (activePet) {
+        // 累積 BP 成長：每 1 BP 隨機分配到五維
+        const totalGains: Record<string, number> = { constitution: 0, strength: 0, defense: 0, agility: 0, magic: 0 };
+        const dims = ["constitution", "strength", "defense", "agility", "magic"];
+        for (let i = 0; i < bpGained; i++) {
+          const d = dims[Math.floor(Math.random() * dims.length)];
+          totalGains[d] += 1;
+        }
+
+        // 更新寵物 BP
+        await db.update(gamePlayerPets).set({
+          bpConstitution: activePet.bpConstitution + totalGains.constitution,
+          bpStrength: activePet.bpStrength + totalGains.strength,
+          bpDefense: activePet.bpDefense + totalGains.defense,
+          bpAgility: activePet.bpAgility + totalGains.agility,
+          bpMagic: activePet.bpMagic + totalGains.magic,
+          updatedAt: now,
+        }).where(eq(gamePlayerPets.id, activePet.id));
+
+        // 重新計算戰鬥數值
+        const newBp = {
+          constitution: activePet.bpConstitution + totalGains.constitution,
+          strength: activePet.bpStrength + totalGains.strength,
+          defense: activePet.bpDefense + totalGains.defense,
+          agility: activePet.bpAgility + totalGains.agility,
+          magic: activePet.bpMagic + totalGains.magic,
+        };
+        const newStats = calcPetStats(newBp, activePet.level);
+        await db.update(gamePlayerPets).set({
+          hp: newStats.hp, maxHp: newStats.hp,
+          mp: newStats.mp, maxMp: newStats.mp,
+          attack: newStats.attack, defense: newStats.defense,
+          speed: newStats.speed, magicAttack: newStats.magicAttack,
+        }).where(eq(gamePlayerPets.id, activePet.id));
+
+        petBpDetails = {
+          petName: activePet.nickname || `寵物#${activePet.id}`,
+          bpGained,
+          gains: totalGains,
+        };
+      }
+    }
+
+    // 更新 session 結算
     await db.update(gameIdleSessions).set({
-      endedAt: Date.now(),
+      endedAt: now,
       isSettled: 1,
+      petTotalBp: (session.petTotalBp || 0) + bpGained,
     }).where(eq(gameIdleSessions.id, session.id));
 
     return {
@@ -863,8 +922,9 @@ export const gameBattleRouter = router({
       totalBattles: session.totalBattles,
       totalWins: session.totalWins,
       petTotalExp: session.petTotalExp,
-      petTotalBp: session.petTotalBp,
-      duration: Math.min(Date.now() - session.startedAt, session.maxDuration),
+      petTotalBp: (session.petTotalBp || 0) + bpGained,
+      duration: elapsed,
+      petBpDetails,
     };
   }),
 

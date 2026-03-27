@@ -502,6 +502,7 @@ export default function GameCMS() {
             <TabsTrigger value="quest-skills">🌟 天命考核</TabsTrigger>
             <TabsTrigger value="pet-catalog">🐾 寵物圖鑑</TabsTrigger>
             <TabsTrigger value="pet-ai">🧬 寵物 AI</TabsTrigger>
+            <TabsTrigger value="ai-shop-layout">🏪 AI 商店佈局</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -526,6 +527,7 @@ export default function GameCMS() {
               <TabsContent value="quest-skills"><QuestSkillCMSTab /></TabsContent>
               <TabsContent value="pet-catalog"><PetCatalogTab /></TabsContent>
               <TabsContent value="pet-ai"><PetAIToolsTab /></TabsContent>
+              <TabsContent value="ai-shop-layout"><AIShopLayoutTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
@@ -2446,6 +2448,214 @@ function AIToolsTab() {
           <li>怪物技能現在真正影響戰鬥：使用 powerPercent 計算傷害、MP 消耗、冷卻、附加效果</li>
           <li>怪物 AI 等級會根據稀有度自動分配（common=1, rare/elite=2, boss/legendary=3）</li>
           <li>商店中「已鎖定」的商品不會被 AI 刷新覆蓋</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+
+// ─── AI Shop Layout Tab ──────────────────────────────────────────────────────
+function AIShopLayoutTab() {
+  const utils = trpc.useUtils();
+  const [shopType, setShopType] = useState<"normal" | "spirit" | "secret">("normal");
+  const [maxItems, setMaxItems] = useState(20);
+  const [result, setResult] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [updatePrices, setUpdatePrices] = useState(true);
+
+  const analyzeMutation = trpc.gameCatalog.aiShopLayoutAnalyze.useMutation({
+    onSuccess: (data) => {
+      setResult(data);
+      // 預設全選推薦的商品
+      const ids = new Set<string>((data.recommendations || []).map((r: any) => `${r.type}-${r.id}`));
+      setSelectedIds(ids);
+      toast.success("AI 分析完成");
+    },
+    onError: (err) => toast.error(`分析失敗：${err.message}`),
+  });
+
+  const applyMutation = trpc.gameCatalog.aiShopLayoutApply.useMutation({
+    onSuccess: (data) => {
+      toast.success(`佈局套用完成：上架 ${data.enabled} 件${data.pricesUpdated ? `，更新 ${data.pricesUpdated} 筆售價` : ""}`);
+      // 刷新圖鑑快取
+      utils.gameCatalog.invalidate();
+    },
+    onError: (err) => toast.error(`套用失敗：${err.message}`),
+  });
+
+  const shopTypeLabel = shopType === "normal" ? "一般商店（金幣）" : shopType === "spirit" ? "靈相商店（靈石）" : "密店（隨機出現）";
+
+  const handleApply = () => {
+    if (!result?.recommendations) return;
+    const toEnable = result.recommendations
+      .filter((r: any) => selectedIds.has(`${r.type}-${r.id}`))
+      .map((r: any) => ({ type: r.type, id: r.id, suggestedPrice: r.suggestedPrice }));
+    applyMutation.mutate({ shopType, toEnable, updatePrices });
+  };
+
+  const toggleItem = (key: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">🏪 AI 商店佈局</h2>
+      </div>
+
+      {/* 設定區 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg bg-muted/50">
+        <div>
+          <label className="text-sm font-medium mb-1 block">商店類型</label>
+          <Select value={shopType} onValueChange={(v: any) => { setShopType(v); setResult(null); }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="normal">一般商店（金幣）</SelectItem>
+              <SelectItem value="spirit">靈相商店（靈石）</SelectItem>
+              <SelectItem value="secret">密店（隨機出現）</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-sm font-medium mb-1 block">推薦商品數量上限</label>
+          <Input type="number" min={5} max={50} value={maxItems} onChange={e => setMaxItems(Number(e.target.value))} />
+        </div>
+        <div className="flex items-end">
+          <Button onClick={() => analyzeMutation.mutate({ shopType, maxItems })} disabled={analyzeMutation.isPending} className="w-full">
+            {analyzeMutation.isPending ? "🔄 AI 分析中..." : "🤖 開始 AI 分析"}
+          </Button>
+        </div>
+      </div>
+
+      {/* 玩家統計 */}
+      {result?.playerStats && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {[
+            { label: "總玩家數", value: result.playerStats.totalPlayers },
+            { label: "平均等級", value: result.playerStats.avgLevel },
+            { label: "最高等級", value: result.playerStats.maxLevel },
+            { label: "平均金幣", value: result.playerStats.avgGold?.toLocaleString() },
+            { label: "等級分佈", value: Object.keys(result.playerStats.levelDist || {}).length + " 段" },
+          ].map(s => (
+            <Card key={s.label}>
+              <CardContent className="p-3 text-center">
+                <div className="text-xs text-muted-foreground">{s.label}</div>
+                <div className="text-lg font-bold">{s.value}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* AI 分析結果 */}
+      {result?.analysis && (
+        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
+          <h3 className="font-semibold text-blue-400 mb-2">📊 AI 分析報告</h3>
+          <p className="text-sm whitespace-pre-wrap">{result.analysis}</p>
+        </div>
+      )}
+
+      {/* 推薦商品列表 */}
+      {result?.recommendations?.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold">📦 推薦上架商品（{selectedIds.size}/{result.recommendations.length}）</h3>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => setSelectedIds(new Set(result.recommendations.map((r: any) => `${r.type}-${r.id}`)))}>全選</Button>
+              <Button size="sm" variant="outline" onClick={() => setSelectedIds(new Set())}>全不選</Button>
+            </div>
+          </div>
+          <div className="border rounded-lg overflow-auto max-h-[400px]">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 sticky top-0">
+                <tr>
+                  <th className="p-2 text-left w-10">✓</th>
+                  <th className="p-2 text-left">類型</th>
+                  <th className="p-2 text-left">名稱</th>
+                  <th className="p-2 text-right">建議售價</th>
+                  <th className="p-2 text-left">推薦理由</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.recommendations.map((r: any, i: number) => {
+                  const key = `${r.type}-${r.id}`;
+                  return (
+                    <tr key={i} className={`border-t cursor-pointer hover:bg-muted/30 ${selectedIds.has(key) ? "bg-green-500/10" : ""}`} onClick={() => toggleItem(key)}>
+                      <td className="p-2"><input type="checkbox" checked={selectedIds.has(key)} onChange={() => toggleItem(key)} /></td>
+                      <td className="p-2"><Badge variant="outline">{r.type === "item" ? "道具" : r.type === "equip" ? "裝備" : "技能"}</Badge></td>
+                      <td className="p-2 font-medium">{r.name}</td>
+                      <td className="p-2 text-right text-amber-400">{r.suggestedPrice?.toLocaleString()}</td>
+                      <td className="p-2 text-muted-foreground text-xs">{r.reason}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 售價調整建議 */}
+      {result?.priceAdjustments?.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="font-semibold">💰 售價調整建議</h3>
+          <div className="border rounded-lg overflow-auto max-h-[300px]">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 sticky top-0">
+                <tr>
+                  <th className="p-2 text-left">類型</th>
+                  <th className="p-2 text-left">名稱</th>
+                  <th className="p-2 text-right">現有售價</th>
+                  <th className="p-2 text-center">→</th>
+                  <th className="p-2 text-right">建議售價</th>
+                  <th className="p-2 text-left">原因</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.priceAdjustments.map((p: any, i: number) => (
+                  <tr key={i} className="border-t">
+                    <td className="p-2"><Badge variant="outline">{p.type === "item" ? "道具" : p.type === "equip" ? "裝備" : "技能"}</Badge></td>
+                    <td className="p-2 font-medium">{p.name}</td>
+                    <td className="p-2 text-right text-muted-foreground">{p.currentPrice?.toLocaleString()}</td>
+                    <td className="p-2 text-center">→</td>
+                    <td className="p-2 text-right text-amber-400">{p.suggestedPrice?.toLocaleString()}</td>
+                    <td className="p-2 text-xs text-muted-foreground">{p.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 套用按鈕 */}
+      {result?.recommendations?.length > 0 && (
+        <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={updatePrices} onChange={e => setUpdatePrices(e.target.checked)} />
+            同時更新售價
+          </label>
+          <Button onClick={handleApply} disabled={applyMutation.isPending || selectedIds.size === 0} className="ml-auto">
+            {applyMutation.isPending ? "⏳ 套用中..." : `✅ 一鍵套用（${selectedIds.size} 件）`}
+          </Button>
+        </div>
+      )}
+
+      {/* 使用說明 */}
+      <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
+        <h4 className="font-semibold mb-2">💡 使用說明</h4>
+        <ul className="space-y-1 list-disc list-inside">
+          <li>AI 會根據玩家等級分佈和經濟數據，推薦最適合的商品組合</li>
+          <li>推薦結果可逐一勾選或全選，再一鍵套用到圖鑑的 inShop 欄位</li>
+          <li>勾選「同時更新售價」會將 AI 建議的售價寫入圖鑑的 shopPrice</li>
+          <li>套用後需要到各商店管理 Tab 手動刷新或等待自動刷新才會生效</li>
+          <li>已鎖定的商店商品不會被 AI 刷新覆蓋</li>
         </ul>
       </div>
     </div>

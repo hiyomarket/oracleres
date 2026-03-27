@@ -4681,3 +4681,23 @@
 - [x] 戰鬥獎勵結算 UI（BattleResultPanel 升級 + submitCommand 結算邏輯）
 - [x] 後端結算邏輯：submitCommand 勝利時自動發放 exp/gold/drops/petExp
 - [x] 55 個測試檔案，1171 項測試全數通過，TypeScript 零錯誤
+
+## M11 AI 商店佈局 + 戰鬥動畫強化 + 掛機寵物 BP 成長
+
+### AI 一鍵商店佈局 ✅
+- [x] 後端 API：aiShopLayoutAnalyze + aiShopLayoutApply
+- [x] 前端 UI：AIShopLayoutTab（分析/推薦/一鍵套用）
+- [x] 支援一般/靈相/密店三種商店類型
+
+### 戰鬥動畫強化 ✅
+- [x] 技能名稱飄字動畫（使用技能時顯示技能名稱）
+- [x] 傷害數字彈出動畫（攻擊時顯示傷害數字，暴擊加大加金色）
+- [x] 狀態效果圖示動畫（施加/解除狀態時顯示對應圖示）
+- [x] 治療數字動畫（綠色 +HP 數字）
+- [x] MISS 飄字 + DoT 傷害飄字
+
+### 掛機離線寵物 BP 成長 ✅
+- [x] settleIdleSession 結算時為出戰寵物累積 BP（每小時 +5 BP，最高 40 BP）
+- [x] BP 隨機分配到五維屬性 + 自動重算戰鬥數值
+- [x] IdleSessionPanel 即時預估 BP 成長量
+- [x] 55 個測試檔案，1171 項測試全數通過，TypeScript 零錯誤

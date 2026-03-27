@@ -99,6 +99,29 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
   const [rewards, setRewards] = useState<{ expReward: number; goldReward: number; drops: string[]; petExpGained: number } | null>(null);
   const logScrollRef = useRef<HTMLDivElement>(null);
 
+  // ─── 戰鬥動畫系統 ───
+  const [floatingTexts, setFloatingTexts] = useState<Array<{
+    id: number; text: string; color: string; x: string; y: string;
+    size: string; isCrit?: boolean; type: "damage" | "heal" | "skill" | "status" | "mp" | "miss";
+  }>>([]);
+  const floatIdRef = useRef(0);
+
+  const addFloatingText = useCallback((opts: {
+    text: string; color: string; x?: string; y?: string;
+    size?: string; isCrit?: boolean; type: "damage" | "heal" | "skill" | "status" | "mp" | "miss";
+  }) => {
+    const id = ++floatIdRef.current;
+    const xJitter = `${45 + Math.random() * 10}%`;
+    setFloatingTexts(prev => [...prev, {
+      id, text: opts.text, color: opts.color,
+      x: opts.x ?? xJitter,
+      y: opts.y ?? (opts.type === "damage" || opts.type === "miss" ? "25%" : opts.type === "heal" ? "65%" : "45%"),
+      size: opts.size ?? (opts.isCrit ? "text-2xl" : "text-lg"),
+      isCrit: opts.isCrit, type: opts.type,
+    }]);
+    setTimeout(() => setFloatingTexts(prev => prev.filter(f => f.id !== id)), 1800);
+  }, []);
+
   const allies = participants.filter(p => p.side === "ally");
   const enemies = participants.filter(p => p.side === "enemy");
   const character = allies.find(p => p.type === "character");
@@ -122,15 +145,87 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
         const newLogs = data.logs as BattleLogUI[];
         setLogs(prev => [...prev, ...newLogs]);
         // 動畫效果
+        let delay = 0;
         for (const log of newLogs) {
-          if (log.logType === "damage" && log.value > 0) {
-            const isAllyAttack = allies.some(a => a.id === log.actorId);
-            if (isAllyAttack) {
-              triggerGlow(log.isCritical ? "#fde047" : "#8b5cf6");
-            } else {
-              triggerShake();
+          const d = delay;
+          setTimeout(() => {
+            const isAllyActor = allies.some(a => a.id === log.actorId);
+
+            // 技能名稱飄字
+            if (log.skillName && log.logType === "damage") {
+              addFloatingText({
+                text: `✨ ${log.skillName}`,
+                color: "#c4b5fd",
+                y: isAllyActor ? "35%" : "55%",
+                size: "text-sm",
+                type: "skill",
+              });
             }
-          }
+
+            // 傷害數字彈出
+            if (log.logType === "damage" && log.value > 0) {
+              addFloatingText({
+                text: `-${log.value}`,
+                color: log.isCritical ? "#fde047" : (isAllyActor ? "#f87171" : "#fb923c"),
+                y: isAllyActor ? "22%" : "62%",
+                isCrit: log.isCritical,
+                type: "damage",
+              });
+              if (isAllyActor) {
+                triggerGlow(log.isCritical ? "#fde047" : "#8b5cf6");
+              } else {
+                triggerShake();
+              }
+            }
+
+            // MISS
+            if (log.logType === "damage" && log.value === 0) {
+              addFloatingText({
+                text: "MISS",
+                color: "#94a3b8",
+                y: isAllyActor ? "22%" : "62%",
+                size: "text-sm",
+                type: "miss",
+              });
+            }
+
+            // 治療數字
+            if (log.logType === "heal" && log.value > 0) {
+              addFloatingText({
+                text: `+${log.value}`,
+                color: "#4ade80",
+                y: isAllyActor ? "62%" : "22%",
+                type: "heal",
+              });
+            }
+
+            // 狀態效果圖示
+            if (log.statusEffectDesc) {
+              const statusType = log.statusEffectDesc.toLowerCase();
+              const emoji = STATUS_EMOJI[statusType] ?? "✨";
+              const name = STATUS_NAME[statusType] ?? log.statusEffectDesc;
+              addFloatingText({
+                text: `${emoji} ${name}`,
+                color: "#e879f9",
+                y: "45%",
+                size: "text-sm",
+                type: "status",
+              });
+            }
+
+            // DoT 傷害
+            if (log.logType === "status_tick" && log.value > 0) {
+              const emoji = STATUS_EMOJI[log.message?.includes("中毒") ? "poison" : log.message?.includes("灶燒") ? "burn" : "poison"] ?? "💠";
+              addFloatingText({
+                text: `${emoji} -${log.value}`,
+                color: "#c084fc",
+                y: isAllyActor ? "62%" : "22%",
+                size: "text-sm",
+                type: "status",
+              });
+            }
+          }, d);
+          delay += 300;
         }
       }
 
@@ -239,6 +334,24 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
             animation: "battleGlow 0.6s ease-out forwards",
           }} />
       )}
+
+      {/* 飄字動畫層 */}
+      <div className="fixed inset-0 pointer-events-none z-[202] overflow-hidden">
+        {floatingTexts.map(ft => (
+          <div key={ft.id}
+            className={`absolute font-black ${ft.size} animate-floatUp`}
+            style={{
+              left: ft.x, top: ft.y,
+              color: ft.color,
+              textShadow: ft.isCrit
+                ? "0 0 12px rgba(253,224,71,0.8), 0 0 24px rgba(253,224,71,0.4), 0 2px 4px rgba(0,0,0,0.8)"
+                : `0 0 8px ${ft.color}66, 0 2px 4px rgba(0,0,0,0.8)`,
+              transform: ft.isCrit ? "scale(1.3)" : undefined,
+            }}>
+            {ft.text}
+          </div>
+        ))}
+      </div>
 
       <div className={`relative w-full max-w-md mx-4 rounded-2xl overflow-hidden shadow-2xl ${isShaking ? "animate-battleShake" : ""}`}
         style={{
@@ -405,6 +518,26 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
         }
         .animate-battleShake {
           animation: battleShake 0.5s ease-out;
+        }
+        @keyframes floatUp {
+          0%   { opacity: 0; transform: translateY(0) scale(0.5); }
+          15%  { opacity: 1; transform: translateY(-8px) scale(1.1); }
+          30%  { transform: translateY(-16px) scale(1); }
+          100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
+        }
+        .animate-floatUp {
+          animation: floatUp 1.6s ease-out forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateX(-8px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes critPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.2); }
         }
       `}</style>
     </div>

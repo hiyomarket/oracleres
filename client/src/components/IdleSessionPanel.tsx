@@ -136,6 +136,24 @@ export function IdleSessionPanel({ agentId, strategy, onClose }: IdleSessionPane
           </div>
         )}
 
+        {/* 寵物 BP 成長預估 */}
+        {session && (
+          <div className="px-2 py-1.5 rounded-lg text-xs"
+            style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.15)" }}>
+            <div className="flex items-center justify-between">
+              <span className="text-purple-400 flex items-center gap-1">
+                <span>🐾</span> 寵物 BP 成長
+              </span>
+              <span className="font-bold text-purple-300">
+                +{Math.floor(idleHours * 5)} BP
+              </span>
+            </div>
+            <div className="text-[10px] text-purple-400/60 mt-0.5">
+              每小時 +5 BP，結算時自動分配到寵物五維屬性
+            </div>
+          </div>
+        )}
+
         {/* 掛機模式說明 */}
         <div className="text-[10px] text-slate-600 text-center pt-1">
           {isInfuse

@@ -15,8 +15,13 @@ import {
   gameSkillCatalog,
   gameAchievements,
   gameMonsterSkillCatalog,
+  gameAgents,
+  gameVirtualShop,
+  gameSpiritShop,
+  gameHiddenShopPool,
 } from "../../drizzle/schema";
-import { sql, like, or, eq, desc, asc, and, gte, lte } from "drizzle-orm";
+import { sql, like, or, eq, desc, asc, and, gte, lte, count } from "drizzle-orm";
+import { invokeLLM } from "../_core/llm";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
@@ -1258,4 +1263,244 @@ export const gameCatalogAdminRouter = router({
       },
     };
   }),
+
+  // ════════════════════════════════════════════════════════════════
+  // AI 商店佈局功能
+  // ════════════════════════════════════════════════════════════════
+
+  /** AI 分析玩家統計 + 圖鑑數據，推薦商店佈局 */
+  aiShopLayoutAnalyze: adminProcedure
+    .input(z.object({
+      shopType: z.enum(["normal", "spirit", "secret"]),
+      maxItems: z.number().int().min(5).max(50).default(20),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // 1. 玩家統計
+      const agents = await db.select({
+        level: gameAgents.level,
+        gold: gameAgents.gold,
+      }).from(gameAgents);
+      const totalPlayers = agents.length;
+      const avgLevel = totalPlayers > 0 ? Math.round(agents.reduce((s, a) => s + a.level, 0) / totalPlayers) : 1;
+      const avgGold = totalPlayers > 0 ? Math.round(agents.reduce((s, a) => s + a.gold, 0) / totalPlayers) : 0;
+      const maxLevel = totalPlayers > 0 ? Math.max(...agents.map(a => a.level)) : 1;
+      const levelDist: Record<string, number> = {};
+      for (const a of agents) {
+        const bracket = `${Math.floor(a.level / 5) * 5}-${Math.floor(a.level / 5) * 5 + 4}`;
+        levelDist[bracket] = (levelDist[bracket] || 0) + 1;
+      }
+
+      // 2. 圖鑑數據
+      const shopField = input.shopType === "normal" ? "inNormalShop"
+        : input.shopType === "spirit" ? "inSpiritShop" : "inSecretShop";
+
+      const items = await db.select({
+        id: gameItemCatalog.id,
+        itemId: gameItemCatalog.itemId,
+        name: gameItemCatalog.name,
+        category: gameItemCatalog.category,
+        rarity: gameItemCatalog.rarity,
+        shopPrice: gameItemCatalog.shopPrice,
+
+        inNormalShop: gameItemCatalog.inNormalShop,
+        inSpiritShop: gameItemCatalog.inSpiritShop,
+        inSecretShop: gameItemCatalog.inSecretShop,
+      }).from(gameItemCatalog);
+
+      const equips = await db.select({
+        id: gameEquipmentCatalog.id,
+        equipId: gameEquipmentCatalog.equipId,
+        name: gameEquipmentCatalog.name,
+        slot: gameEquipmentCatalog.slot,
+        quality: gameEquipmentCatalog.quality,
+        rarity: gameEquipmentCatalog.rarity,
+        shopPrice: gameEquipmentCatalog.shopPrice,
+        levelRequired: gameEquipmentCatalog.levelRequired,
+        inNormalShop: gameEquipmentCatalog.inNormalShop,
+        inSpiritShop: gameEquipmentCatalog.inSpiritShop,
+        inSecretShop: gameEquipmentCatalog.inSecretShop,
+      }).from(gameEquipmentCatalog);
+
+      const skills = await db.select({
+        id: gameSkillCatalog.id,
+        skillId: gameSkillCatalog.skillId,
+        name: gameSkillCatalog.name,
+        category: gameSkillCatalog.category,
+        rarity: gameSkillCatalog.rarity,
+        shopPrice: gameSkillCatalog.shopPrice,
+        learnLevel: gameSkillCatalog.learnLevel,
+        inNormalShop: gameSkillCatalog.inNormalShop,
+        inSpiritShop: gameSkillCatalog.inSpiritShop,
+        inSecretShop: gameSkillCatalog.inSecretShop,
+      }).from(gameSkillCatalog);
+
+      // 3. LLM 分析
+      const catalogSummary = JSON.stringify({
+        items: items.slice(0, 100).map(i => ({ id: i.id, itemId: i.itemId, name: i.name, category: i.category, rarity: i.rarity, price: i.shopPrice, [shopField]: (i as any)[shopField] })),
+        equips: equips.slice(0, 100).map(e => ({ id: e.id, equipId: e.equipId, name: e.name, slot: e.slot, quality: e.quality, rarity: e.rarity, price: e.shopPrice, lvReq: e.levelRequired, [shopField]: (e as any)[shopField] })),
+        skills: skills.slice(0, 100).map(s => ({ id: s.id, skillId: s.skillId, name: s.name, category: s.category, rarity: s.rarity, price: s.shopPrice, lvReq: s.learnLevel, [shopField]: (s as any)[shopField] })),
+      });
+
+      const shopTypeLabel = input.shopType === "normal" ? "一般商店（金幣）" : input.shopType === "spirit" ? "靈相商店（靈石）" : "密店（隨機出現）";
+
+      const response = await invokeLLM({
+        messages: [
+          {
+            role: "system",
+            content: `你是一個 RPG 遊戲經濟平衡專家。請根據玩家統計和圖鑑數據，為「${shopTypeLabel}」推薦最佳商品組合。
+要求：
+1. 選擇最多 ${input.maxItems} 個商品
+2. 考慮玩家等級分佈，確保各等級段都有可購買的商品
+3. 考慮經濟平衡，不要讓玩家太容易獲得高級裝備
+4. 確保商品類型多樣化（道具/裝備/技能都要有）
+5. 建議合理售價（如果現有售價為 0 或不合理）
+
+返回 JSON 格式：
+{
+  "recommendations": [
+    { "type": "item"|"equip"|"skill", "id": number, "name": string, "suggestedPrice": number, "reason": string }
+  ],
+  "analysis": string,
+  "priceAdjustments": [
+    { "type": "item"|"equip"|"skill", "id": number, "name": string, "currentPrice": number, "suggestedPrice": number, "reason": string }
+  ]
+}`,
+          },
+          {
+            role: "user",
+            content: `玩家統計：
+- 總玩家數：${totalPlayers}
+- 平均等級：${avgLevel}，最高等級：${maxLevel}
+- 平均金幣：${avgGold}
+- 等級分佈：${JSON.stringify(levelDist)}
+
+圖鑑數據：
+${catalogSummary}`,
+          },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "shop_layout",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                recommendations: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      type: { type: "string", enum: ["item", "equip", "skill"] },
+                      id: { type: "number" },
+                      name: { type: "string" },
+                      suggestedPrice: { type: "number" },
+                      reason: { type: "string" },
+                    },
+                    required: ["type", "id", "name", "suggestedPrice", "reason"],
+                    additionalProperties: false,
+                  },
+                },
+                analysis: { type: "string" },
+                priceAdjustments: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      type: { type: "string", enum: ["item", "equip", "skill"] },
+                      id: { type: "number" },
+                      name: { type: "string" },
+                      currentPrice: { type: "number" },
+                      suggestedPrice: { type: "number" },
+                      reason: { type: "string" },
+                    },
+                    required: ["type", "id", "name", "currentPrice", "suggestedPrice", "reason"],
+                    additionalProperties: false,
+                  },
+                },
+              },
+              required: ["recommendations", "analysis", "priceAdjustments"],
+              additionalProperties: false,
+            },
+          },
+        },
+      });
+
+      const rawContent = response.choices?.[0]?.message?.content ?? "{}";
+      const content = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent);
+      const parsed = JSON.parse(content);
+
+      return {
+        shopType: input.shopType,
+        playerStats: { totalPlayers, avgLevel, maxLevel, avgGold, levelDist },
+        ...parsed,
+      };
+    }),
+
+  /** 一鍵套用 AI 推薦的商店佈局 */
+  aiShopLayoutApply: adminProcedure
+    .input(z.object({
+      shopType: z.enum(["normal", "spirit", "secret"]),
+      /** 要上架的商品 */
+      toEnable: z.array(z.object({
+        type: z.enum(["item", "equip", "skill"]),
+        id: z.number().int(),
+        suggestedPrice: z.number().int().optional(),
+      })),
+      /** 要下架的商品 */
+      toDisable: z.array(z.object({
+        type: z.enum(["item", "equip", "skill"]),
+        id: z.number().int(),
+      })).optional(),
+      /** 是否同時更新售價 */
+      updatePrices: z.boolean().default(false),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const shopField = input.shopType === "normal" ? "inNormalShop"
+        : input.shopType === "spirit" ? "inSpiritShop" : "inSecretShop";
+
+      let enabled = 0;
+      let disabled = 0;
+      let pricesUpdated = 0;
+
+      // 上架商品
+      for (const item of input.toEnable) {
+        const updateData: any = { [shopField]: 1 };
+        if (input.updatePrices && item.suggestedPrice != null) {
+          updateData.shopPrice = item.suggestedPrice;
+          pricesUpdated++;
+        }
+        if (item.type === "item") {
+          await db.update(gameItemCatalog).set(updateData).where(eq(gameItemCatalog.id, item.id));
+        } else if (item.type === "equip") {
+          await db.update(gameEquipmentCatalog).set(updateData).where(eq(gameEquipmentCatalog.id, item.id));
+        } else {
+          await db.update(gameSkillCatalog).set(updateData).where(eq(gameSkillCatalog.id, item.id));
+        }
+        enabled++;
+      }
+
+      // 下架商品
+      if (input.toDisable) {
+        for (const item of input.toDisable) {
+          const updateData: any = { [shopField]: 0 };
+          if (item.type === "item") {
+            await db.update(gameItemCatalog).set(updateData).where(eq(gameItemCatalog.id, item.id));
+          } else if (item.type === "equip") {
+            await db.update(gameEquipmentCatalog).set(updateData).where(eq(gameEquipmentCatalog.id, item.id));
+          } else {
+            await db.update(gameSkillCatalog).set(updateData).where(eq(gameSkillCatalog.id, item.id));
+          }
+          disabled++;
+        }
+      }
+
+      return { enabled, disabled, pricesUpdated };
+    }),
 });
