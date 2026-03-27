@@ -60,6 +60,23 @@ export type CombatWindowData = {
   // M3L: 怪物技能和附加效果摘要
   monsterSkillsUsed?: string[];
   statusEffectsSummary?: string[];
+  // GD-019: 寵物戰鬥資訊
+  petInfo?: {
+    petId: number;
+    petName: string;
+    petLevel: number;
+    petExpGained: number;
+    petLeveledUp: boolean;
+    petNewLevel?: number;
+    skillsUsed: string[];
+    destinySkillUsageBumped: string[];
+  };
+  captureChance?: {
+    monsterHpPercent: number;
+    captureRate: number;
+    petCatalogId?: number;
+    petCatalogName?: string;
+  };
 };
 
 interface CombatWindowProps {
@@ -357,6 +374,48 @@ export function CombatWindow({ data, onClose, enabled = true }: CombatWindowProp
               <div className="space-y-0.5 mb-2">
                 {data.wuxingBoostDesc && <p className="text-yellow-400/80 text-[10px]">★ {data.wuxingBoostDesc}</p>}
                 {data.raceBoostDesc && <p className="text-purple-400/80 text-[10px]">◆ {data.raceBoostDesc}</p>}
+              </div>
+            )}
+
+            {/* GD-019: 寵物戰鬥資訊 */}
+            {data.petInfo && (
+              <div className="mb-2 rounded-lg p-2" style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)" }}>
+                <p className="text-[10px] text-purple-300 font-bold mb-1">🐾 寵物戰報 — {data.petInfo.petName}</p>
+                <div className="flex flex-wrap gap-2 text-[10px]">
+                  <span className="text-purple-200">Lv.{data.petInfo.petLevel}</span>
+                  {data.petInfo.petExpGained > 0 && (
+                    <span className="text-amber-300">+{data.petInfo.petExpGained} EXP</span>
+                  )}
+                  {data.petInfo.petLeveledUp && data.petInfo.petNewLevel && (
+                    <span className="text-yellow-300 font-bold animate-pulse">↑ 升級 Lv.{data.petInfo.petNewLevel}!</span>
+                  )}
+                </div>
+                {data.petInfo.skillsUsed.length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {data.petInfo.skillsUsed.map((sk, i) => (
+                      <span key={i} className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: "rgba(168,85,247,0.15)", color: "#c4b5fd" }}>
+                        {sk}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {data.petInfo.destinySkillUsageBumped.length > 0 && (
+                  <p className="text-[9px] text-purple-400/60 mt-1">
+                    天命技能練度 +1：{data.petInfo.destinySkillUsageBumped.join("、")}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* GD-019: 重傷捕捉機會 */}
+            {data.captureChance && data.captureChance.captureRate > 0 && (
+              <div className="mb-2 rounded-lg p-2 animate-pulse" style={{ background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.3)" }}>
+                <p className="text-[10px] text-yellow-300 font-bold mb-1">✨ 重傷捕捉機會！</p>
+                <div className="text-[10px] text-yellow-200/80">
+                  <p>發現野生 <span className="font-bold text-yellow-300">{data.captureChance.petCatalogName || "神秘生物"}</span></p>
+                  <p>怪物 HP 剩餘 {data.captureChance.monsterHpPercent}% · 捕捉率 {data.captureChance.captureRate}%</p>
+                </div>
+                <p className="text-[9px] text-yellow-400/50 mt-1">前往寵物頁面可嘗試捕捉</p>
               </div>
             )}
 

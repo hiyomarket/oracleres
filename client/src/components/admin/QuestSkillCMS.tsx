@@ -984,17 +984,151 @@ export function QuestStepManagementTab() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-// 天命考核管理主組件（整合三個子 Tab）
-// ═══════════════════════════════════════════════════════════════════════
+// ═══// ═══════════════════════════════════════════════════════════════════
+// 種子資料匹入 Tab
+// ═══════════════════════════════════════════════════════════════════
+function SeedDataTab() {
+  const utils = trpc.useUtils();
+  const { data: status, isLoading: statusLoading } = trpc.questSkillAdmin.seedStatus.useQuery();
+  const seedMut = trpc.questSkillAdmin.seedAll.useMutation({
+    onSuccess: (data) => {
+      toast.success(`匹入完成！NPC: ${data.npcsCreated}, 技能: ${data.skillsCreated}, 步驟: ${data.stepsCreated}${
+        data.skipped.length > 0 ? `, 跳過: ${data.skipped.join(", ")}` : ""
+      }`);
+      utils.questSkillAdmin.seedStatus.invalidate();
+      utils.questSkillCatalog.list.invalidate();
+      utils.questSkillNpc.list.invalidate();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+  const clearMut = trpc.questSkillAdmin.clearAll.useMutation({
+    onSuccess: () => {
+      toast.success("已清除所有天命技能種子資料");
+      utils.questSkillAdmin.seedStatus.invalidate();
+      utils.questSkillCatalog.list.invalidate();
+      utils.questSkillNpc.list.invalidate();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  const seedBuiltInMut = trpc.questSkillAdmin.seedFromBuiltIn.useMutation({
+    onSuccess: (data) => {
+      toast.success(`匹入完成！NPC: ${data.npcsCreated}, 技能: ${data.skillsCreated}, 步驟: ${data.stepsCreated}${
+        data.skipped.length > 0 ? `, 跳過: ${data.skipped.join(", ")}` : ""
+      }`);
+      utils.questSkillAdmin.seedStatus.invalidate();
+      utils.questSkillCatalog.list.invalidate();
+      utils.questSkillNpc.list.invalidate();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const categories = [
+    { label: "物理戰鬥系", codes: "P1-P8", count: 8, color: "text-red-400" },
+    { label: "魔法攻擊系", codes: "M1-M4", count: 4, color: "text-blue-400" },
+    { label: "狀態控制系", codes: "S1-S6", count: 6, color: "text-purple-400" },
+    { label: "戰鬥輔助系", codes: "A1-A8", count: 8, color: "text-green-400" },
+    { label: "特殊功能系", codes: "X1-X3", count: 3, color: "text-amber-400" },
+    { label: "生產系", codes: "C1-C3", count: 3, color: "text-orange-400" },
+  ];
+
+  return (
+    <div className="space-y-6 p-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>天命考核種子資料管理</CardTitle>
+          <CardDescription>一鍵匹入 32 種天命技能 + NPC + 任務鏈步驟，已存在的資料會自動跳過</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* 目前狀態 */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="rounded-lg border p-4 text-center">
+              <div className="text-2xl font-bold text-amber-400">{statusLoading ? "..." : status?.npcs ?? 0}</div>
+              <div className="text-xs text-muted-foreground mt-1">NPC 數量</div>
+            </div>
+            <div className="rounded-lg border p-4 text-center">
+              <div className="text-2xl font-bold text-blue-400">{statusLoading ? "..." : status?.skills ?? 0}</div>
+              <div className="text-xs text-muted-foreground mt-1">技能數量</div>
+            </div>
+            <div className="rounded-lg border p-4 text-center">
+              <div className="text-2xl font-bold text-green-400">{statusLoading ? "..." : status?.steps ?? 0}</div>
+              <div className="text-xs text-muted-foreground mt-1">任務步驟數</div>
+            </div>
+          </div>
+
+          {/* 技能分類總覽 */}
+          <div className="rounded-lg border p-4">
+            <h4 className="text-sm font-semibold mb-3">種子資料包含 32 種天命技能：</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              {categories.map(cat => (
+                <div key={cat.codes} className="flex items-center gap-2 text-sm">
+                  <span className={`font-mono font-bold ${cat.color}`}>{cat.codes}</span>
+                  <span className="text-muted-foreground">{cat.label}</span>
+                  <Badge variant="outline" className="text-xs">{cat.count}</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 操作按鈕 */}
+          <div className="flex gap-3">
+            <Button
+              onClick={() => seedBuiltInMut.mutate()}
+              disabled={seedBuiltInMut.isPending}
+              className="flex-1"
+            >
+              {seedBuiltInMut.isPending ? "匹入中..." : "一鍵匹入 32 種天命技能"}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => setConfirmClear(true)}
+              disabled={clearMut.isPending}
+            >
+              清除所有
+            </Button>
+          </div>
+
+          {seedBuiltInMut.isPending && (
+            <div className="text-sm text-muted-foreground animate-pulse">
+              正在匹入 NPC、技能和任務步驟...請稍候
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 確認清除對話框 */}
+      <Dialog open={confirmClear} onOpenChange={setConfirmClear}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>確認清除所有天命技能資料？</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            此操作將清除所有 NPC、天命技能、任務步驟、玩家進度和已學習技能。此操作不可逆。
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmClear(false)}>取消</Button>
+            <Button variant="destructive" onClick={() => { clearMut.mutate(); setConfirmClear(false); }}>確認清除</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 天命考核管理主組件（整合四個子 Tab）
+// ═════════════════════════════════════════════════════════════════════
 export function QuestSkillCMSTab() {
   return (
-    <Tabs defaultValue="skills" className="w-full">
+    <Tabs defaultValue="seed" className="w-full">
       <TabsList>
+        <TabsTrigger value="seed">種子資料</TabsTrigger>
         <TabsTrigger value="skills">天命技能</TabsTrigger>
         <TabsTrigger value="steps">任務鏈步驟</TabsTrigger>
         <TabsTrigger value="npcs">NPC 管理</TabsTrigger>
       </TabsList>
+      <TabsContent value="seed"><SeedDataTab /></TabsContent>
       <TabsContent value="skills"><QuestSkillCatalogTab /></TabsContent>
       <TabsContent value="steps"><QuestStepManagementTab /></TabsContent>
       <TabsContent value="npcs"><NPCManagementTab /></TabsContent>

@@ -423,3 +423,121 @@ describe("auditPetCatalog", () => {
     expect(result.warnings.some(w => w.includes("BP 總值") && w.includes("過高"))).toBe(true);
   });
 });
+
+// ─── DESTINY_AWAKENING_EFFECTS ───────────────────────────────
+
+import {
+  DESTINY_AWAKENING_EFFECTS,
+  petSkillsToCombatFormat,
+  calcPetBattleExp,
+} from "./services/petEngine";
+
+describe("DESTINY_AWAKENING_EFFECTS", () => {
+  it("has 14 awakening effects matching DESTINY_SKILLS keys", () => {
+    const destinyKeys = Object.keys(DESTINY_SKILLS);
+    const awakeningKeys = Object.keys(DESTINY_AWAKENING_EFFECTS);
+    expect(awakeningKeys).toHaveLength(14);
+    for (const key of awakeningKeys) {
+      expect(destinyKeys).toContain(key);
+    }
+  });
+
+  it("all effects have valid damageMultiplier >= 1.0", () => {
+    for (const [key, effect] of Object.entries(DESTINY_AWAKENING_EFFECTS)) {
+      expect(effect.damageMultiplier).toBeGreaterThanOrEqual(1.0);
+      expect(effect.name).toBeTruthy();
+      expect(effect.description).toBeTruthy();
+    }
+  });
+});
+
+// ─── petSkillsToCombatFormat ─────────────────────────────────
+
+describe("petSkillsToCombatFormat", () => {
+  it("converts innate skills to combat format", () => {
+    const innate = [
+      { name: "爪擊", skillType: "attack", wuxing: "金", powerPercent: 120, mpCost: 5, cooldown: 2 },
+    ];
+    const result = petSkillsToCombatFormat(innate, []);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("pet_innate_爪擊");
+    expect(result[0].name).toBe("[寵] 爪擊");
+    expect(result[0].damageMultiplier).toBeCloseTo(1.2);
+    expect(result[0].mpCost).toBe(5);
+    expect(result[0].wuxing).toBe("金");
+  });
+
+  it("converts destiny skills without awakening", () => {
+    const learned = [
+      { skillName: "火焰魔法", skillType: "attack", skillKey: "fireMagic", wuxing: "火", powerPercent: 130, mpCost: 8, cooldown: 3, skillLevel: 5 },
+    ];
+    const result = petSkillsToCombatFormat([], learned);
+    expect(result).toHaveLength(1);
+    expect(result[0].id).toBe("pet_destiny_fireMagic");
+    expect(result[0].name).toBe("[寵] 火焰魔法");
+    expect(result[0].damageMultiplier).toBeCloseTo(1.3);
+  });
+
+  it("applies awakening effect at level 10", () => {
+    const learned = [
+      { skillName: "火焰魔法", skillType: "attack", skillKey: "fireMagic", wuxing: "火", powerPercent: 130, mpCost: 8, cooldown: 3, skillLevel: 10 },
+    ];
+    const result = petSkillsToCombatFormat([], learned);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toContain("★");
+    expect(result[0].name).toContain(DESTINY_AWAKENING_EFFECTS.fireMagic.name);
+    // 130% * 1.25 = 162.5%
+    expect(result[0].damageMultiplier).toBeCloseTo(1.3 * 1.25);
+  });
+
+  it("combines innate and destiny skills", () => {
+    const innate = [
+      { name: "爪擊", skillType: "attack", wuxing: "金", powerPercent: 100, mpCost: 3, cooldown: 1 },
+    ];
+    const learned = [
+      { skillName: "連擊", skillType: "attack", skillKey: "combo", wuxing: null, powerPercent: 150, mpCost: 10, cooldown: 3, skillLevel: 1 },
+    ];
+    const result = petSkillsToCombatFormat(innate, learned);
+    expect(result).toHaveLength(2);
+    expect(result[0].id).toContain("innate");
+    expect(result[1].id).toContain("destiny");
+  });
+});
+
+// ─── calcPetBattleExp ────────────────────────────────────────
+
+describe("calcPetBattleExp", () => {
+  it("returns 60% of monster exp at same level", () => {
+    const exp = calcPetBattleExp(100, 10, 10);
+    expect(exp).toBe(60); // 100 * 0.6 * 1.0
+  });
+
+  it("returns more exp when fighting higher level monsters", () => {
+    const sameLevel = calcPetBattleExp(100, 10, 10);
+    const higherLevel = calcPetBattleExp(100, 10, 20);
+    expect(higherLevel).toBeGreaterThan(sameLevel);
+  });
+
+  it("returns less exp when fighting lower level monsters", () => {
+    const sameLevel = calcPetBattleExp(100, 10, 10);
+    const lowerLevel = calcPetBattleExp(100, 10, 1);
+    expect(lowerLevel).toBeLessThan(sameLevel);
+  });
+
+  it("never returns less than 1", () => {
+    const exp = calcPetBattleExp(1, 60, 1);
+    expect(exp).toBeGreaterThanOrEqual(1);
+  });
+
+  it("caps level multiplier at 1.5x for very high level monsters", () => {
+    const exp = calcPetBattleExp(100, 1, 50);
+    // levelDiff = 49, mul = min(1.5, 1 + 49*0.05) = 1.5
+    expect(exp).toBe(Math.max(1, Math.round(60 * 1.5)));
+  });
+
+  it("caps level multiplier at 0.3x for very low level monsters", () => {
+    const exp = calcPetBattleExp(100, 50, 1);
+    // levelDiff = -49, mul = max(0.3, 1 + (-49)*0.05) = max(0.3, -1.45) = 0.3
+    expect(exp).toBe(Math.max(1, Math.round(60 * 0.3)));
+  });
+});

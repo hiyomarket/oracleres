@@ -27,6 +27,8 @@ import {
   type Monster,
 } from "../shared/monsters";
 import { getCombatMonstersForNode, invalidateMonsterCache, type CombatMonster, type MonsterSkillData } from "./monsterDataService";
+import { gamePlayerPets, gamePetCatalog, gamePetInnateSkills, gamePetLearnedSkills } from "../drizzle/schema";
+import { petSkillsToCombatFormat, calcPetBattleExp, calcPetExpToNext, levelUpBP, calcPetStats, RACE_HP_MULTIPLIER, calcCaptureRate } from "./services/petEngine";
 
 // ─── 工具函數 ───
 function randInt(min: number, max: number): number {
@@ -986,6 +988,24 @@ export interface CombatResultItem {
   combatKey?: number;
   /** 戰鬥掉落道具列表 */
   lootItems?: string[];
+  /** 寵物戰鬥資訊 */
+  petInfo?: {
+    petId: number;
+    petName: string;
+    petLevel: number;
+    petExpGained: number;
+    petLeveledUp: boolean;
+    petNewLevel?: number;
+    skillsUsed: string[];
+    destinySkillUsageBumped: string[];
+  };
+  /** 重傷捕捉機會（怪物 HP<5% 時觸發） */
+  captureChance?: {
+    monsterHpPercent: number;
+    captureRate: number;
+    petCatalogId?: number;
+    petCatalogName?: string;
+  };
 }
 
 // ─── 主 Tick 處理函數 ───
@@ -1727,6 +1747,148 @@ async function processCombatEvent(
     await updateHiddenSkillTracker(agent.id, killTrackerId, 1).catch(() => {});
   }
 
+  // ═══ GD-019 寵物戰鬥整合 ───────────────────────────────────
+  let petInfo: CombatResultItem["petInfo"] = undefined;
+  let captureChance: CombatResultItem["captureChance"] = undefined;
+
+  try {
+    // 1. 載入出戰寵物
+    const [activePet] = await db.select().from(gamePlayerPets)
+      .where(and(eq(gamePlayerPets.agentId, agent.id), eq(gamePlayerPets.isActive, 1)))
+      .limit(1);
+
+    if (activePet) {
+      const petSkillsUsed: string[] = [];
+      const destinySkillUsageBumped: string[] = [];
+
+      // 2. 加載寵物天生技能（已解鎖的）
+      const innateSkills = await db.select().from(gamePetInnateSkills)
+        .where(eq(gamePetInnateSkills.petCatalogId, activePet.petCatalogId));
+      const unlockedInnate = innateSkills.filter(s => activePet.level >= s.unlockLevel);
+      for (const sk of unlockedInnate) {
+        petSkillsUsed.push(`[寵] ${sk.name}`);
+      }
+
+      // 3. 加載天命技能（已裝備的）
+      const learnedSkills = await db.select().from(gamePetLearnedSkills)
+        .where(and(eq(gamePetLearnedSkills.playerPetId, activePet.id), eq(gamePetLearnedSkills.isEquipped, 1)));
+
+      // 4. 戰鬥勝利後：寵物獲得經驗 + 天命技能使用次數 +1
+      let petExpGained = 0;
+      let petLeveledUp = false;
+      let petNewLevel = activePet.level;
+
+      if (result.won) {
+        // 寵物經驗（怪物經驗的 60%）
+        petExpGained = calcPetBattleExp(result.expGained, activePet.level, monster.level);
+
+        let currentExp = activePet.exp + petExpGained;
+        let currentLevel = activePet.level;
+        let bp = {
+          constitution: activePet.bpConstitution,
+          strength: activePet.bpStrength,
+          defense: activePet.bpDefense,
+          agility: activePet.bpAgility,
+          magic: activePet.bpMagic,
+        };
+
+        // 連續升級檢查
+        while (currentLevel < 60) {
+          const expToNext = calcPetExpToNext(currentLevel);
+          if (currentExp < expToNext) break;
+          currentExp -= expToNext;
+          currentLevel++;
+          petLeveledUp = true;
+          const bpResult = levelUpBP(bp, activePet.growthType, activePet.tier);
+          bp = { constitution: bpResult.constitution, strength: bpResult.strength, defense: bpResult.defense, agility: bpResult.agility, magic: bpResult.magic };
+        }
+        petNewLevel = currentLevel;
+
+        // 取得圖鑑資料以獲取種族 HP 倍率
+        const [catalog] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, activePet.petCatalogId));
+        const raceHpMul = catalog?.raceHpMultiplier ?? 1.0;
+        const stats = calcPetStats(bp, currentLevel, raceHpMul);
+
+        // 更新寵物資料庫
+        await db.update(gamePlayerPets).set({
+          exp: currentExp,
+          level: currentLevel,
+          bpConstitution: bp.constitution,
+          bpStrength: bp.strength,
+          bpDefense: bp.defense,
+          bpAgility: bp.agility,
+          bpMagic: bp.magic,
+          hp: stats.hp,
+          maxHp: stats.hp,
+          mp: stats.mp,
+          maxMp: stats.mp,
+          attack: stats.attack,
+          defense: stats.defense,
+          speed: stats.speed,
+          magicAttack: stats.magicAttack,
+          friendship: Math.min(100, activePet.friendship + 1), // 每場戰鬥好感度 +1
+          updatedAt: Date.now(),
+        }).where(eq(gamePlayerPets.id, activePet.id));
+
+        // 天命技能使用次數 +1（每場戰鬥每個裝備的天命技能 +1）
+        for (const sk of learnedSkills) {
+          await db.update(gamePetLearnedSkills).set({
+            usageCount: sql`${gamePetLearnedSkills.usageCount} + 1`,
+            updatedAt: Date.now(),
+          }).where(eq(gamePetLearnedSkills.id, sk.id));
+          destinySkillUsageBumped.push(sk.skillName);
+          petSkillsUsed.push(`[寵] ${sk.skillName}`);
+        }
+      }
+
+      petInfo = {
+        petId: activePet.id,
+        petName: activePet.nickname ?? "寵物",
+        petLevel: petNewLevel,
+        petExpGained,
+        petLeveledUp,
+        petNewLevel: petLeveledUp ? petNewLevel : undefined,
+        skillsUsed: petSkillsUsed,
+        destinySkillUsageBumped,
+      };
+    }
+
+    // 5. 重傷捕捉機制：怪物 HP < 5% 且戰鬥勝利時，檢查是否有對應圖鑑
+    if (result.won) {
+      const lastRound = result.rounds[result.rounds.length - 1];
+      const monsterHpPercent = lastRound ? (lastRound.monsterHpAfter / monster.hp) * 100 : 0;
+      // 查找與怪物同名或同屬性的寵物圖鑑
+      const matchingCatalogs = await db.select().from(gamePetCatalog)
+        .where(and(
+          eq(gamePetCatalog.isActive, 1),
+          eq(gamePetCatalog.wuxing, (monster as any).element ?? "earth"),
+        ))
+        .limit(5);
+
+      if (matchingCatalogs.length > 0) {
+        // 隨機選擇一個圖鑑
+        const catalog = matchingCatalogs[Math.floor(Math.random() * matchingCatalogs.length)];
+        const rate = calcCaptureRate({
+          baseCaptureRate: catalog.baseCaptureRate,
+          monsterCurrentHp: Math.max(0, Math.floor(monster.hp * monsterHpPercent / 100)),
+          monsterMaxHp: monster.hp,
+          monsterLevel: monster.level,
+          playerLevel: agent.level,
+          captureItemType: "normal",
+        });
+        captureChance = {
+          monsterHpPercent: Math.round(monsterHpPercent * 10) / 10,
+          captureRate: Math.round(rate * 100),
+          petCatalogId: catalog.id,
+          petCatalogName: catalog.name,
+        };
+      }
+    }
+  } catch (petErr) {
+    console.error("[Tick] Pet combat integration error:", petErr);
+  }
+  // ═══ GD-019 寵物戰鬥整合結束 ───────────────────────────────
+
   return {
     events: 1 + result.lootItems.length,
     levelUps: combatLevelUps,
@@ -1746,8 +1908,10 @@ async function processCombatEvent(
       rounds: result.rounds,
       agentMaxHp: agent.maxHp,
       monsterMaxHp: monster.hp,
-      lootItems: result.lootItems, // 戰鬥掉落道具列表
-      combatKey: Date.now(), // 唯一識別碼，防止前端 data 物件引用變化導致無限 setInterval
+      lootItems: result.lootItems,
+      combatKey: Date.now(),
+      petInfo,
+      captureChance,
     },
   };
 }

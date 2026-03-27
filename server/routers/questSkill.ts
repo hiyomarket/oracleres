@@ -721,6 +721,191 @@ async function checkPrerequisites(agentId: number, skillId: number): Promise<{ p
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// 管理員一鍵種子匯入
+// ═══════════════════════════════════════════════════════════════════════
+
+const adminSeedRouter = router({
+  /** 一鍵匯入 32 種天命技能 + NPC + 任務步驟 */
+  seedAll: protectedProcedure
+    .input(z.object({
+      npcs: z.array(z.object({
+        code: z.string(), name: z.string(), title: z.string().optional(),
+        location: z.string().optional(), region: z.string().optional(),
+      })),
+      skills: z.array(z.object({
+        code: z.string(), name: z.string(), questTitle: z.string().optional(),
+        category: z.string(), skillType: z.string().optional(),
+        description: z.string().optional(), wuxing: z.string().optional(),
+        powerPercent: z.number().optional(), mpCost: z.number().optional(),
+        cooldown: z.number().optional(), maxLevel: z.number().optional(),
+        levelUpBonus: z.number().optional(),
+        additionalEffect: z.any().optional(), specialMechanic: z.any().optional(),
+        learnCost: z.any().optional(), prerequisites: z.any().optional(),
+        rarity: z.string().optional(), sortOrder: z.number().optional(),
+        npcCode: z.string().optional(),
+      })),
+      steps: z.record(z.string(), z.array(z.object({
+        stepNumber: z.number(), title: z.string(),
+        dialogue: z.string().optional(), objective: z.string().optional(),
+        location: z.string().optional(), objectives: z.any().optional(),
+        rewards: z.any().optional(),
+      }))),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      const now = Date.now();
+      const results = { npcsCreated: 0, skillsCreated: 0, stepsCreated: 0, skipped: [] as string[] };
+
+      // Step 1: 匯入 NPC（跳過已存在的）
+      const existingNpcs = await db!.select({ code: gameNpcCatalog.code, id: gameNpcCatalog.id }).from(gameNpcCatalog);
+      const npcCodeMap: Record<string, number> = {};
+      for (const n of existingNpcs) npcCodeMap[n.code] = n.id;
+
+      for (const npc of input.npcs) {
+        if (npcCodeMap[npc.code]) continue;
+        const [res] = await db!.insert(gameNpcCatalog).values({
+          code: npc.code, name: npc.name, title: npc.title ?? null,
+          location: npc.location ?? null, region: npc.region ?? "初界",
+          createdAt: now, updatedAt: now,
+        } as any);
+        npcCodeMap[npc.code] = Number(res.insertId);
+        results.npcsCreated++;
+      }
+
+      // Step 2: 匯入技能（跳過已存在的）
+      const existingSkills = await db!.select({ code: gameQuestSkillCatalog.code, id: gameQuestSkillCatalog.id }).from(gameQuestSkillCatalog);
+      const skillCodeMap: Record<string, number> = {};
+      for (const s of existingSkills) skillCodeMap[s.code] = s.id;
+
+      for (const skill of input.skills) {
+        if (skillCodeMap[skill.code]) {
+          results.skipped.push(skill.code);
+          continue;
+        }
+        const npcId = skill.npcCode ? npcCodeMap[skill.npcCode] ?? null : null;
+        const { npcCode, ...skillData } = skill;
+        const [res] = await db!.insert(gameQuestSkillCatalog).values({
+          ...skillData,
+          npcId,
+          createdAt: now, updatedAt: now,
+        } as any);
+        skillCodeMap[skill.code] = Number(res.insertId);
+        results.skillsCreated++;
+      }
+
+      // Step 3: 匯入任務步驟（跳過已存在步驟的技能）
+      for (const [skillCode, steps] of Object.entries(input.steps)) {
+        const skillId = skillCodeMap[skillCode];
+        if (!skillId) continue;
+
+        // 檢查是否已有步驟
+        const existingSteps = await db!.select({ id: gameQuestSteps.id }).from(gameQuestSteps)
+          .where(eq(gameQuestSteps.skillId, skillId));
+        if (existingSteps.length > 0) continue;
+
+        for (const step of steps) {
+          await db!.insert(gameQuestSteps).values({
+            skillId,
+            stepNumber: step.stepNumber,
+            title: step.title,
+            dialogue: step.dialogue ?? null,
+            objective: step.objective ?? null,
+            location: step.location ?? null,
+            objectives: step.objectives ?? null,
+            rewards: step.rewards ?? null,
+            createdAt: now, updatedAt: now,
+          } as any);
+          results.stepsCreated++;
+        }
+      }
+
+      return results;
+    }),
+
+  /** 一鍵匹入內建種子資料（後端直接讀取） */
+  seedFromBuiltIn: protectedProcedure.mutation(async () => {
+    // 動態 import 種子資料
+    const { QUEST_NPCS, QUEST_SKILLS, QUEST_STEPS } = await import("../seeds/seedQuestSkills.mjs") as any;
+    const db = await getDb();
+    const now = Date.now();
+    const results = { npcsCreated: 0, skillsCreated: 0, stepsCreated: 0, skipped: [] as string[] };
+
+    // Step 1: 匹入 NPC
+    const existingNpcs = await db!.select({ code: gameNpcCatalog.code, id: gameNpcCatalog.id }).from(gameNpcCatalog);
+    const npcCodeMap: Record<string, number> = {};
+    for (const n of existingNpcs) npcCodeMap[n.code] = n.id;
+    for (const npc of QUEST_NPCS) {
+      if (npcCodeMap[npc.code]) continue;
+      const [res] = await db!.insert(gameNpcCatalog).values({
+        code: npc.code, name: npc.name, title: npc.title ?? null,
+        location: npc.location ?? null, region: npc.region ?? "初界",
+        createdAt: now, updatedAt: now,
+      } as any);
+      npcCodeMap[npc.code] = Number(res.insertId);
+      results.npcsCreated++;
+    }
+
+    // Step 2: 匹入技能
+    const existingSkills = await db!.select({ code: gameQuestSkillCatalog.code, id: gameQuestSkillCatalog.id }).from(gameQuestSkillCatalog);
+    const skillCodeMap: Record<string, number> = {};
+    for (const s of existingSkills) skillCodeMap[s.code] = s.id;
+    for (const skill of QUEST_SKILLS) {
+      if (skillCodeMap[skill.code]) { results.skipped.push(skill.code); continue; }
+      const npcId = skill.npcCode ? npcCodeMap[skill.npcCode] ?? null : null;
+      const { npcCode, ...skillData } = skill;
+      const [res] = await db!.insert(gameQuestSkillCatalog).values({
+        ...skillData, npcId, createdAt: now, updatedAt: now,
+      } as any);
+      skillCodeMap[skill.code] = Number(res.insertId);
+      results.skillsCreated++;
+    }
+
+    // Step 3: 匹入任務步驟
+    for (const [skillCode, steps] of Object.entries(QUEST_STEPS) as [string, any[]][]) {
+      const skillId = skillCodeMap[skillCode];
+      if (!skillId) continue;
+      const existingSteps = await db!.select({ id: gameQuestSteps.id }).from(gameQuestSteps)
+        .where(eq(gameQuestSteps.skillId, skillId));
+      if (existingSteps.length > 0) continue;
+      for (const step of steps) {
+        await db!.insert(gameQuestSteps).values({
+          skillId, stepNumber: step.stepNumber, title: step.title,
+          dialogue: step.dialogue ?? null, objective: step.objective ?? null,
+          location: step.location ?? null, objectives: step.objectives ?? null,
+          rewards: step.rewards ?? null, createdAt: now, updatedAt: now,
+        } as any);
+        results.stepsCreated++;
+      }
+    }
+    return results;
+  }),
+
+  /** 清除所有天命技能種子資料（危險操作） */
+  clearAll: protectedProcedure.mutation(async () => {
+    const db = await getDb();
+    await db!.delete(gameLearnedQuestSkills);
+    await db!.delete(gameQuestProgress);
+    await db!.delete(gameQuestSteps);
+    await db!.delete(gameQuestSkillCatalog);
+    await db!.delete(gameNpcCatalog);
+    return { success: true, message: "已清除所有天命技能種子資料" };
+  }),
+
+  /** 取得種子資料匯入狀態 */
+  seedStatus: publicProcedure.query(async () => {
+    const db = await getDb();
+    const [npcCount] = await db!.execute(sql`SELECT COUNT(*) as c FROM game_npc_catalog`) as any;
+    const [skillCount] = await db!.execute(sql`SELECT COUNT(*) as c FROM game_quest_skill_catalog`) as any;
+    const [stepCount] = await db!.execute(sql`SELECT COUNT(*) as c FROM game_quest_steps`) as any;
+    return {
+      npcs: Array.isArray(npcCount) ? npcCount[0]?.c ?? 0 : 0,
+      skills: Array.isArray(skillCount) ? skillCount[0]?.c ?? 0 : 0,
+      steps: Array.isArray(stepCount) ? stepCount[0]?.c ?? 0 : 0,
+    };
+  }),
+});
+
+// ═══════════════════════════════════════════════════════════════════════
 // 組合匯出
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -729,4 +914,5 @@ export const questSkillRouter = router({
   catalog: skillCatalogRouter,
   step: questStepRouter,
   progress: questProgressRouter,
+  admin: adminSeedRouter,
 });

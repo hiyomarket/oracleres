@@ -27,6 +27,7 @@ import {
 import { RACE_HP_MULTIPLIER, auditPetCatalog } from "../services/petEngine";
 import { sql, like, eq, desc, asc, inArray } from "drizzle-orm";
 import { auditMonster, auditSkill, auditEquipment, auditItemPrice, auditAndFix } from "../services/aiValueAudit";
+import { generateImage } from "../_core/imageGeneration";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
@@ -1964,4 +1965,177 @@ ${petDescriptions}
       message: `審核完成：${results.length} 隻寵物，${invalidCount} 隻有問題，${fixedCount} 隻已自動修正`,
     };
   }),
+
+  // ════════════════════════════════════════════════════════════
+  // 寵物圖鑑 AI 圖片生成
+  // ════════════════════════════════════════════════════════════
+
+  /**
+   * 為單隻寵物生成 AI 圖片
+   */
+  aiGeneratePetImage: adminProcedure
+    .input(z.object({ petCatalogId: z.number().int() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const [pet] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, input.petCatalogId));
+      if (!pet) throw new TRPCError({ code: "NOT_FOUND", message: "寵物圖鑑不存在" });
+
+      // 種族與屬性的中文描述
+      const raceDesc: Record<string, string> = {
+        dragon: "龍種生物，有鱗片和龍角",
+        undead: "亡靈生物，帶有幽靈氣息",
+        normal: "普通生物，外型自然",
+        flying: "飛行生物，有翅膀",
+        insect: "蟲類生物，有甲殼和觸角",
+        plant: "植物生物，有花葉和藤蔓",
+      };
+      const wuxingDesc: Record<string, string> = {
+        wood: "木屬性，綠色色調，帶有植物元素",
+        fire: "火屬性，紅色色調，帶有火焰元素",
+        earth: "土屬性，棕色色調，帶有岩石元素",
+        metal: "金屬性，金色/銀色色調，帶有金屬光澤",
+        water: "水屬性，藍色色調，帶有水流元素",
+      };
+      const rarityDesc: Record<string, string> = {
+        common: "普通品質，外型樸實",
+        rare: "稀有品質，帶有微光效果",
+        epic: "史詩品質，帶有索繞光暈",
+        legendary: "傳說品質，帶有神聖光環和特殊紋路",
+      };
+
+      const prompt = `中國古風奇幻遊戲寵物立繪，單一生物全身像，透明背景。
+寵物名稱：${pet.name}
+描述：${pet.description || "神秘生物"}
+種族特徵：${raceDesc[pet.race] || "神秘生物"}
+屬性特徵：${wuxingDesc[pet.wuxing] || "自然屬性"}
+品質：${rarityDesc[pet.rarity] || "普通"}
+風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節，適合作為遊戲圖鑑卡片。`;
+
+      const { url } = await generateImage({ prompt });
+      if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
+
+      // 儲存圖片 URL 到圖鑑
+      await db.update(gamePetCatalog).set({
+        imageUrl: url,
+        updatedAt: Date.now(),
+      }).where(eq(gamePetCatalog.id, pet.id));
+
+      return { success: true, imageUrl: url, petName: pet.name };
+    }),
+
+  /**
+   * AI 批量為所有無圖片的寵物生成圖片
+   */
+  aiBatchGeneratePetImages: adminProcedure.mutation(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+    // 找出所有沒有圖片的寵物
+    const petsWithoutImage = await db.select().from(gamePetCatalog)
+      .where(eq(gamePetCatalog.isActive, 1));
+    const needImage = petsWithoutImage.filter(p => !p.imageUrl);
+
+    if (needImage.length === 0) {
+      return { success: true, generated: 0, message: "所有寵物都已有圖片" };
+    }
+
+    const raceDesc: Record<string, string> = {
+      dragon: "龍種生物，有鱗片和龍角",
+      undead: "亡靈生物，帶有幽靈氣息",
+      normal: "普通生物，外型自然",
+      flying: "飛行生物，有翅膀",
+      insect: "蟲類生物，有甲殼和觸角",
+      plant: "植物生物，有花葉和藤蔓",
+    };
+    const wuxingDesc: Record<string, string> = {
+      wood: "木屬性，綠色色調，帶有植物元素",
+      fire: "火屬性，紅色色調，帶有火焰元素",
+      earth: "土屬性，棕色色調，帶有岩石元素",
+      metal: "金屬性，金色/銀色色調，帶有金屬光澤",
+      water: "水屬性，藍色色調，帶有水流元素",
+    };
+    const rarityDesc: Record<string, string> = {
+      common: "普通品質，外型樸實",
+      rare: "稀有品質，帶有微光效果",
+      epic: "史詩品質，帶有索繞光暈",
+      legendary: "傳說品質，帶有神聖光環和特殊紋路",
+    };
+
+    const results: { id: number; name: string; success: boolean; imageUrl?: string; error?: string }[] = [];
+
+    // 逐一生成（避免並行超過 API 限制）
+    for (const pet of needImage) {
+      try {
+        const prompt = `中國古風奇幻遊戲寵物立繪，單一生物全身像，透明背景。
+寵物名稱：${pet.name}
+描述：${pet.description || "神秘生物"}
+種族特徵：${raceDesc[pet.race] || "神秘生物"}
+屬性特徵：${wuxingDesc[pet.wuxing] || "自然屬性"}
+品質：${rarityDesc[pet.rarity] || "普通"}
+風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節，適合作為遊戲圖鑑卡片。`;
+
+        const { url } = await generateImage({ prompt });
+        if (url) {
+          await db.update(gamePetCatalog).set({ imageUrl: url, updatedAt: Date.now() })
+            .where(eq(gamePetCatalog.id, pet.id));
+          results.push({ id: pet.id, name: pet.name, success: true, imageUrl: url });
+        } else {
+          results.push({ id: pet.id, name: pet.name, success: false, error: "生成失敗" });
+        }
+      } catch (err: any) {
+        results.push({ id: pet.id, name: pet.name, success: false, error: err.message || "未知錯誤" });
+      }
+    }
+
+    const successCount = results.filter(r => r.success).length;
+    return {
+      success: true,
+      total: needImage.length,
+      generated: successCount,
+      failed: needImage.length - successCount,
+      results,
+      message: `圖片生成完成：${successCount}/${needImage.length} 成功`,
+    };
+  }),
+
+  /**
+   * 重新為指定寵物生成圖片（覆蓋現有）
+   */
+  aiRegeneratePetImage: adminProcedure
+    .input(z.object({ petCatalogId: z.number().int(), customPrompt: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const [pet] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, input.petCatalogId));
+      if (!pet) throw new TRPCError({ code: "NOT_FOUND", message: "寵物圖鑑不存在" });
+
+      const raceDesc: Record<string, string> = {
+        dragon: "龍種生物，有鱗片和龍角", undead: "亡靈生物，帶有幽靈氣息",
+        normal: "普通生物，外型自然", flying: "飛行生物，有翅膀",
+        insect: "蟲類生物，有甲殼和觸角", plant: "植物生物，有花葉和藤蔓",
+      };
+      const wuxingDesc: Record<string, string> = {
+        wood: "木屬性，綠色色調", fire: "火屬性，紅色色調",
+        earth: "土屬性，棕色色調", metal: "金屬性，金色/銀色色調",
+        water: "水屬性，藍色色調",
+      };
+
+      const prompt = input.customPrompt || `中國古風奇幻遊戲寵物立繪，單一生物全身像，透明背景。
+寵物名稱：${pet.name}
+描述：${pet.description || "神秘生物"}
+種族特徵：${raceDesc[pet.race] || "神秘生物"}
+屬性特徵：${wuxingDesc[pet.wuxing] || "自然屬性"}
+風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節，適合作為遊戲圖鑑卡片。`;
+
+      const { url } = await generateImage({ prompt });
+      if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
+
+      await db.update(gamePetCatalog).set({ imageUrl: url, updatedAt: Date.now() })
+        .where(eq(gamePetCatalog.id, pet.id));
+
+      return { success: true, imageUrl: url, petName: pet.name };
+    }),
 });

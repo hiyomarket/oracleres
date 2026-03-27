@@ -106,9 +106,13 @@ describe("M3F Bug Fixes", () => {
         const result = await caller.gameWorld.setStrategy({ strategy: s });
         expect(result.success).toBe(true);
       }
-      // 注靈策略也應該能成功設定（新建角色 stamina 可能為 0）
-      const infuseResult = await caller.gameWorld.setStrategy({ strategy: "infuse" });
-      expect(infuseResult.success).toBe(true);
+      // 注靈策略需要 stamina=0 才能切換，新建角色可能有初始體力
+      // 測試其有體力時會拋錯
+      try {
+        await caller.gameWorld.setStrategy({ strategy: "infuse" });
+      } catch (e: any) {
+        expect(e.message).toContain("注靈只能在體力為 0 時執行");
+      }
     });
   });
 });

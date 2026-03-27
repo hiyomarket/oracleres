@@ -82,10 +82,86 @@ export const DESTINY_SLOT_UNLOCK = [15, 35, 60];
 /** 天生技能格解鎖等級 */
 export const INNATE_SLOT_UNLOCK = [1, 20, 50];
 
-/** 寵物升級經驗值曲線 */
+/** Lv10 天命技能覺醒效果（14 種各自的最終覺醒加成） */
+export const DESTINY_AWAKENING_EFFECTS: Record<string, {
+  name: string;
+  description: string;
+  /** 傷害加成倍率（累乘） */
+  damageMultiplier: number;
+  /** 額外效果標誌 */
+  extraEffect?: string;
+  /** 額外效果數值 */
+  extraValue?: number;
+}> = {
+  combo:        { name: "連擊·無影",     description: "連擊次數+1（共 3 次），每次傷害+10%",   damageMultiplier: 1.10, extraEffect: "extraHits", extraValue: 1 },
+  counter:      { name: "反擊·天罰",     description: "反擊機率提升至 50%，反擊傷害+30%", damageMultiplier: 1.30, extraEffect: "counterChance", extraValue: 50 },
+  crush:        { name: "崩擊·滅世",     description: "無視 50% 防禦，傷害+20%",          damageMultiplier: 1.20, extraEffect: "armorPen", extraValue: 50 },
+  poison:       { name: "毒擊·腐骨",     description: "中毒持續 5 回合，每回合傷害+50%",  damageMultiplier: 1.00, extraEffect: "poisonDuration", extraValue: 5 },
+  fireMagic:    { name: "火焰·煙滅",     description: "火焰傷害+25%，附帶 2 回合灼燒",     damageMultiplier: 1.25, extraEffect: "burn", extraValue: 2 },
+  iceMagic:     { name: "冰凍·絕封",     description: "凍結機率提升至 40%，傷害+15%",     damageMultiplier: 1.15, extraEffect: "freezeChance", extraValue: 40 },
+  windMagic:    { name: "風刃·絕影",     description: "必定先手+忽略 20% 防禦，傷害+20%", damageMultiplier: 1.20, extraEffect: "armorPen", extraValue: 20 },
+  meteorMagic:  { name: "隕石·天崩",     description: "傷害+30%，有 30% 機率眩暈 1 回合",  damageMultiplier: 1.30, extraEffect: "stun", extraValue: 30 },
+  sleepMagic:   { name: "昆睡·永眠",     description: "昆睡持續 3 回合，睡眠中受傷+20%",   damageMultiplier: 1.00, extraEffect: "sleepDuration", extraValue: 3 },
+  petrifyMagic: { name: "石化·地獄",     description: "石化持續 2 回合，石化中防禦-30%",  damageMultiplier: 1.00, extraEffect: "petrifyDuration", extraValue: 2 },
+  confuseMagic: { name: "混亂·心魔",     description: "混亂機率提升至 70%，混亂持續 3 回合", damageMultiplier: 1.00, extraEffect: "confuseChance", extraValue: 70 },
+  poisonMagic:  { name: "中毒·天罰",     description: "每回合損失 8% HP，持續 4 回合",    damageMultiplier: 1.00, extraEffect: "poisonPercent", extraValue: 8 },
+  forgetMagic:  { name: "遺忘·天譴",     description: "遺忘持續 5 回合，封印所有技能",    damageMultiplier: 1.00, extraEffect: "forgetDuration", extraValue: 5 },
+  healMagic:    { name: "補血·天恩",     description: "恢復量+40%，同時恢復 MP 10%",       damageMultiplier: 1.40, extraEffect: "mpRestore", extraValue: 10 },
+};
+
+/** 寥物升級經驗值曲線 */
 export function calcPetExpToNext(level: number): number {
   // 類似角色的經驗曲線，但稍微平緩
   return Math.floor(50 + level * 30 + Math.pow(level, 1.6) * 5);
+}
+
+/** 將寥物技能轉換為戰鬥引擎可用的格式 */
+export function petSkillsToCombatFormat(
+  innateSkills: Array<{ name: string; skillType: string; wuxing: string | null; powerPercent: number; mpCost: number; cooldown: number }>,
+  learnedSkills: Array<{ skillName: string; skillType: string; skillKey: string; wuxing: string | null; powerPercent: number; mpCost: number; cooldown: number; skillLevel: number }>,
+): Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number; wuxing?: string; cooldown?: number }> {
+  const result: Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number; wuxing?: string; cooldown?: number }> = [];
+  
+  // 天生技能
+  for (const sk of innateSkills) {
+    result.push({
+      id: `pet_innate_${sk.name}`,
+      name: `[寵] ${sk.name}`,
+      skillType: sk.skillType === "attack" ? "attack" : sk.skillType === "heal" ? "heal" : "buff",
+      damageMultiplier: sk.powerPercent / 100,
+      mpCost: sk.mpCost,
+      wuxing: sk.wuxing ?? undefined,
+      cooldown: sk.cooldown,
+    });
+  }
+  
+  // 天命技能（含覺醒效果）
+  for (const sk of learnedSkills) {
+    const awakening = sk.skillLevel >= 10 ? DESTINY_AWAKENING_EFFECTS[sk.skillKey] : null;
+    const baseMul = sk.powerPercent / 100;
+    const finalMul = awakening ? baseMul * awakening.damageMultiplier : baseMul;
+    
+    result.push({
+      id: `pet_destiny_${sk.skillKey}`,
+      name: awakening ? `[寵★] ${awakening.name}` : `[寵] ${sk.skillName}`,
+      skillType: sk.skillType === "attack" ? "attack" : sk.skillType === "heal" ? "heal" : sk.skillType === "control" ? "attack" : "buff",
+      damageMultiplier: finalMul,
+      mpCost: sk.mpCost,
+      wuxing: sk.wuxing ?? undefined,
+      cooldown: sk.cooldown,
+    });
+  }
+  
+  return result;
+}
+
+/** 計算寥物戰鬥經驗獲得（基於怪物經驗的 60%） */
+export function calcPetBattleExp(monsterExpReward: number, petLevel: number, monsterLevel: number): number {
+  const baseExp = Math.floor(monsterExpReward * 0.6);
+  // 等級差調整：打高等怪獲得更多，打低等怪獲得更少
+  const levelDiff = monsterLevel - petLevel;
+  const levelMul = Math.max(0.3, Math.min(1.5, 1 + levelDiff * 0.05));
+  return Math.max(1, Math.round(baseExp * levelMul));
 }
 
 // ─── 核心計算函數 ─────────────────────────────────────────────

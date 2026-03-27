@@ -1846,6 +1846,18 @@ function PetAIToolsTab() {
     onError: (e) => toast.error(e.message || "AI 審核失敗"),
   });
 
+  // AI 單隻圖片生成
+  const aiGenPetImage = trpc.gameAI.aiGeneratePetImage.useMutation({
+    onSuccess: (data) => { toast.success(`${data.petName} 圖片生成成功`); utils.gamePet.getPetCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message || "AI 圖片生成失敗"),
+  });
+
+  // AI 批量圖片生成
+  const aiBatchGenImages = trpc.gameAI.aiBatchGeneratePetImages.useMutation({
+    onSuccess: (data) => { toast.success((data as any).message); utils.gamePet.getPetCatalog.invalidate(); },
+    onError: (e) => toast.error(e.message || "AI 批量圖片生成失敗"),
+  });
+
   const WUXING_MAP: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
   const isGenerating = aiBatchGenPets.isPending;
 
@@ -1976,12 +1988,75 @@ function PetAIToolsTab() {
 
       <hr className="border-border" />
 
+      {/* 區塊 4：AI 圖片生成 */}
+      <div>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">🎨 AI 寵物圖片生成</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          為寵物圖鑑生成中國古風水墨畫風格的寵物立繪，可單隻生成或批量補齊。
+        </p>
+        <div className="flex flex-wrap gap-3 items-end">
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-xs text-muted-foreground mb-1 block">選擇寵物（單隻生成）</label>
+            <Select value={selectedPetId} onValueChange={setSelectedPetId}>
+              <SelectTrigger><SelectValue placeholder="選擇一隻寵物..." /></SelectTrigger>
+              <SelectContent className="max-h-60">
+                {(petCatalog as any[]).map((p: any) => (
+                  <SelectItem key={p.id} value={String(p.id)}>
+                    {p.imageUrl ? "✅" : "❌"} {p.name} ({WUXING_MAP[p.wuxing] ?? p.wuxing}/{p.rarity})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            onClick={() => { if (selectedPetId) aiGenPetImage.mutate({ petCatalogId: Number(selectedPetId) }); }}
+            disabled={!selectedPetId || aiGenPetImage.isPending}
+            className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:from-cyan-700 hover:to-blue-700"
+          >
+            {aiGenPetImage.isPending ? "⏳ 生成中..." : "🎨 為這隻寵物生成圖片"}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => aiBatchGenImages.mutate()}
+            disabled={aiBatchGenImages.isPending}
+          >
+            {aiBatchGenImages.isPending ? "⏳ 批量生成中..." : "🖼️ 一鍵補齊所有無圖寵物"}
+          </Button>
+        </div>
+        {aiGenPetImage.data && (
+          <div className="mt-3 p-3 rounded-lg border bg-cyan-50 dark:bg-cyan-950/30 text-sm">
+            <p className="font-medium text-cyan-700 dark:text-cyan-400">✅ {aiGenPetImage.data.petName} 圖片生成成功</p>
+            {aiGenPetImage.data.imageUrl && (
+              <img src={aiGenPetImage.data.imageUrl} alt="" className="mt-2 w-32 h-32 object-contain rounded-lg border" />
+            )}
+          </div>
+        )}
+        {aiBatchGenImages.data && (
+          <div className="mt-3 p-3 rounded-lg border bg-blue-50 dark:bg-blue-950/30 text-sm">
+            <p className="font-medium text-blue-700 dark:text-blue-400">✅ {(aiBatchGenImages.data as any).message}</p>
+            {(aiBatchGenImages.data as any).results?.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(aiBatchGenImages.data as any).results.filter((r: any) => r.success).map((r: any) => (
+                  <div key={r.id} className="text-center">
+                    {r.imageUrl && <img src={r.imageUrl} alt="" className="w-16 h-16 object-contain rounded border" />}
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{r.name}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <hr className="border-border" />
+
       {/* 使用說明 */}
       <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
         <h4 className="font-semibold mb-2">💡 寵物 AI 工具使用說明</h4>
         <ul className="space-y-1 list-disc list-inside">
           <li><strong>AI 生成寵物</strong>：每次生成 5-10 隻，AI 自動分配五行、稀有度、BP 數值</li>
           <li><strong>AI 天生技能</strong>：根據寵物五行和種族特色生成 3 個天生技能（Lv.1/20/50 解鎖）</li>
+          <li><strong>AI 圖片生成</strong>：根據寵物名稱、種族、屬性、稀有度生成古風水墨畫立繪</li>
           <li><strong>AI 審核</strong>：掃描所有寵物的 BP、捕捉率、等級範圍，自動修正不合規的數值</li>
           <li>寵物 BP 總和規範：common 60-80, rare 80-100, epic 100-120, legendary 120-150</li>
           <li>捕捉率規範：common 25-45%, rare 15-30%, epic 8-20%, legendary 3-10%</li>

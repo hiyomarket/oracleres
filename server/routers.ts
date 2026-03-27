@@ -93,6 +93,7 @@ export const appRouter = router({
   questSkillCatalog: questSkillRouter.catalog,
   questSkillStep: questSkillRouter.step,
   questSkillProgress: questSkillRouter.progress,
+  questSkillAdmin: questSkillRouter.admin,
   gamePet: gamePetRouter,
   businessHub: businessHubRouter,
   userGroups: userGroupsRouter,
