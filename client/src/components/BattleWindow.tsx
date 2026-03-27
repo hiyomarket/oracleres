@@ -1,16 +1,12 @@
 /**
- * BattleWindow.tsx — GD-020 華麗回合制戰鬥視窗
+ * BattleWindow.tsx — GD-020 全螢幕回合制戰鬥視窗（6v6 佈局）
  *
- * 庫洛魔法使封印卡風格 × 日式 RPG 戰鬥介面
  * 功能：
- * 1. 左右對峙立繪佈局 + 呼吸/攻擊動畫
- * 2. 華麗 HP/MP 條 + 光澤動畫 + 低血量閃爍
- * 3. 卡牌式指令面板（封印卡風格）
- * 4. 技能施放大字閃現 + 五行光圈 + 暴擊震屏
- * 5. 動態粒子背景 + 回合轉場
- * 6. 寵物參戰完整顯示
- * 7. 回合倒數計時器
- * 8. 道具選擇面板
+ * 1. 全螢幕 6v6 佈局（前後排各 3 格，敵我各 6 格）
+ * 2. 玩家頭像 + 寵物頭像顯示
+ * 3. 道具面板可滾動
+ * 4. 回合倒數計時器
+ * 5. 五行光圈 + 暴擊震屏 + 飄字動畫
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
@@ -41,6 +37,10 @@ interface BattleParticipantUI {
     cooldown: number;
     currentCooldown: number;
   }>;
+  agentId?: number | null;
+  petId?: number | null;
+  monsterId?: string | null;
+  avatarUrl?: string | null;
 }
 
 interface BattleLogUI {
@@ -71,7 +71,6 @@ const WX_THEME: Record<string, { color: string; glow: string; bg: string; icon: 
   earth: { color: "#fbbf24", glow: "rgba(251,191,36,0.5)",  bg: "rgba(251,191,36,0.1)",  icon: "🪨", name: "土" },
   metal: { color: "#e2e8f0", glow: "rgba(226,232,240,0.5)", bg: "rgba(226,232,240,0.1)", icon: "⚡", name: "金" },
   water: { color: "#60a5fa", glow: "rgba(96,165,250,0.5)",  bg: "rgba(96,165,250,0.1)",  icon: "💧", name: "水" },
-  // 中文別名（支援 Boss 屬性字段為中文的情況）
   "木": { color: "#4ade80", glow: "rgba(74,222,128,0.5)",  bg: "rgba(74,222,128,0.1)",  icon: "🌿", name: "木" },
   "火": { color: "#f87171", glow: "rgba(248,113,113,0.5)", bg: "rgba(248,113,113,0.1)", icon: "🔥", name: "火" },
   "土": { color: "#fbbf24", glow: "rgba(251,191,36,0.5)",  bg: "rgba(251,191,36,0.1)",  icon: "🪨", name: "土" },
@@ -130,12 +129,10 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
     size: string; isCrit?: boolean; type: string;
   }>>([]);
   const floatIdRef = useRef(0);
-
   // 回合倒數計時器
   const [turnTimer, setTurnTimer] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   // 粒子系統
   const particles = useMemo(() =>
     Array.from({ length: 20 }, (_, i) => ({
@@ -147,12 +144,10 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       delay: Math.random() * 5,
       opacity: 0.2 + Math.random() * 0.4,
     })), []);
-
   const allies = participants.filter(p => p.side === "ally");
   const enemies = participants.filter(p => p.side === "enemy");
   const character = allies.find(p => p.type === "character");
   const pet = allies.find(p => p.type === "pet");
-
   // ─── 動畫工具 ───
   const addFloatingText = useCallback((opts: {
     text: string; color: string; x?: string; y?: string;
@@ -169,42 +164,27 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
     }]);
     setTimeout(() => setFloatingTexts(prev => prev.filter(f => f.id !== id)), 2200);
   }, []);
-
   const triggerScreenFlash = useCallback((color: string) => {
     setScreenFlash(color);
     setTimeout(() => setScreenFlash(null), 400);
   }, []);
-
   const triggerShake = useCallback((intensity: number = 1) => {
     setShakeIntensity(intensity);
     setTimeout(() => setShakeIntensity(0), 500);
   }, []);
-
-  const triggerAttackAnim = useCallback((actorId: number, targetId: number) => {
-    setAttackingId(actorId);
-    setTimeout(() => {
-      setAttackingId(null);
-      setHitId(targetId);
-      setTimeout(() => setHitId(null), 300);
-    }, 300);
-  }, []);
-
   const announceSkill = useCallback((name: string, element?: string) => {
     setSkillAnnounce({ name, element });
     setTimeout(() => setSkillAnnounce(null), 1500);
   }, []);
-
   // ─── 回合倒數 ───
   useEffect(() => {
     if (turnTimer > 0 && battleState === "active") {
       setTimeLeft(turnTimer);
     }
   }, [round, turnTimer, battleState]);
-
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (turnTimer <= 0 || battleState !== "active" || timeLeft <= 0) return;
-
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -228,7 +208,6 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
     }, 1000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [timeLeft, turnTimer, battleState, isSubmitting]);
-
   // ─── 回合轉場動畫 ───
   useEffect(() => {
     if (round > prevRound && prevRound > 0) {
@@ -237,131 +216,83 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
     }
     setPrevRound(round);
   }, [round]);
-
-  // ─── 取得戰鬥狀態 ───
+  // ─── 戰鬥狀態查詢 ───
   const battleQuery = trpc.gameBattle.getBattleState.useQuery(
     { battleId },
-    { enabled: !!battleId, refetchOnWindowFocus: false }
+    {
+      refetchInterval: battleState === "active" || battleState === "waiting" ? 2000 : false,
+      staleTime: 0,
+    }
   );
-
+  // ─── 日誌動畫處理 ───
+  const prevLogsLength = useRef(0);
+  useEffect(() => {
+    if (!battleQuery.data) return;
+    const d = battleQuery.data;
+    const newLogs = d.logs as BattleLogUI[];
+    // 處理新增日誌的動畫
+    if (newLogs.length > prevLogsLength.current) {
+      const addedLogs = newLogs.slice(prevLogsLength.current);
+      for (const log of addedLogs) {
+        if (log.logType === "damage" && log.value > 0) {
+          const isAllyActor = (d.participants as BattleParticipantUI[]).find(p => p.id === log.actorId)?.side === "ally";
+          const color = log.isCritical ? "#fbbf24" : isAllyActor ? "#22c55e" : "#ef4444";
+          const xPos = isAllyActor ? `${55 + Math.random() * 15}%` : `${30 + Math.random() * 15}%`;
+          addFloatingText({ text: log.isCritical ? `💥${log.value}` : `-${log.value}`, color, x: xPos, y: "35%", isCrit: log.isCritical, type: "damage" });
+          if (log.isCritical) { triggerScreenFlash("rgba(251,191,36,0.15)"); triggerShake(2); }
+          else { triggerShake(1); }
+          if (log.targetId) setHitId(log.targetId);
+          if (log.actorId) setAttackingId(log.actorId);
+          setTimeout(() => { setHitId(null); setAttackingId(null); }, 400);
+        }
+        if (log.logType === "heal" && log.value > 0) {
+          addFloatingText({ text: `+${log.value}`, color: "#22c55e", y: "30%", type: "heal" });
+        }
+        if (log.skillName) {
+          const actor = (d.participants as BattleParticipantUI[]).find(p => p.id === log.actorId);
+          announceSkill(log.skillName, actor?.dominantElement);
+        }
+      }
+      prevLogsLength.current = newLogs.length;
+    }
+    setParticipants(d.participants as BattleParticipantUI[]);
+    setLogs(newLogs);
+    setRound(d.battle.currentRound);
+    setBattleState(d.battle.state);
+    if (d.battle.result) setBattleResult(d.battle.result);
+    if ((d.battle as any).turnTimer !== undefined) setTurnTimer((d.battle as any).turnTimer);
+    setTimeout(() => {
+      if (logScrollRef.current) logScrollRef.current.scrollTop = logScrollRef.current.scrollHeight;
+    }, 100);
+  }, [battleQuery.data]);
+  // ─── 戰鬥結束處理 ───
+  useEffect(() => {
+    if (battleState === "ended" && battleResult) {
+      const result = battleResult === "win" ? "win" : battleResult === "flee" ? "flee" : "lose";
+      onBattleEnd?.(result);
+    }
+  }, [battleState, battleResult]);
   // ─── 提交指令 ───
   const submitCmd = trpc.gameBattle.submitCommand.useMutation({
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       setIsSubmitting(false);
       setSelectedCommand(null);
       setSelectedSkillId(null);
       setSelectedItemId(null);
       setShowSkillPanel(false);
       setShowItemPanel(false);
-
-      if (data.logs) {
-        const newLogs = data.logs as BattleLogUI[];
-        setLogs(prev => [...prev, ...newLogs]);
-
-        // 華麗動畫序列
-        let delay = 0;
-        for (const log of newLogs) {
-          const d = delay;
-          setTimeout(() => {
-            const isAllyActor = allies.some(a => a.id === log.actorId);
-            const targetSide = isAllyActor ? "enemy" : "ally";
-
-            // 技能名稱大字閃現
-            if (log.skillName && log.logType === "damage") {
-              const elem = participants.find(p => p.id === log.actorId)?.dominantElement;
-              announceSkill(log.skillName, elem);
-            }
-
-            // 攻擊動畫
-            if (log.logType === "damage" && log.targetId) {
-              triggerAttackAnim(log.actorId, log.targetId);
-            }
-
-            // 傷害數字
-            if (log.logType === "damage" && log.value > 0) {
-              const yPos = targetSide === "enemy" ? "25%" : "65%";
-              addFloatingText({
-                text: log.isCritical ? `💥 ${log.value}` : `-${log.value}`,
-                color: log.isCritical ? "#fde047" : (isAllyActor ? "#f87171" : "#fb923c"),
-                y: yPos,
-                isCrit: log.isCritical,
-                type: "damage",
-              });
-              if (log.isCritical) {
-                triggerScreenFlash("#fde04740");
-                triggerShake(2);
-              } else if (isAllyActor) {
-                triggerScreenFlash("#8b5cf620");
-              } else {
-                triggerShake(1);
-              }
-            }
-
-            // MISS
-            if (log.logType === "damage" && log.value === 0) {
-              addFloatingText({
-                text: "MISS", color: "#64748b",
-                y: targetSide === "enemy" ? "25%" : "65%",
-                size: "text-lg", type: "miss",
-              });
-            }
-
-            // 治療
-            if (log.logType === "heal" && log.value > 0) {
-              addFloatingText({
-                text: `+${log.value}`, color: "#4ade80",
-                y: isAllyActor ? "65%" : "25%",
-                type: "heal",
-              });
-              triggerScreenFlash("#4ade8020");
-            }
-
-            // 狀態效果
-            if (log.statusEffectDesc) {
-              const st = log.statusEffectDesc.toLowerCase();
-              const info = STATUS_ICON[st];
-              addFloatingText({
-                text: `${info?.emoji ?? "✨"} ${info?.name ?? log.statusEffectDesc}`,
-                color: info?.color ?? "#e879f9",
-                y: "45%", size: "text-base", type: "status",
-              });
-            }
-
-            // DoT
-            if (log.logType === "status_tick" && log.value > 0) {
-              addFloatingText({
-                text: `💠 -${log.value}`, color: "#c084fc",
-                y: isAllyActor ? "65%" : "25%",
-                size: "text-base", type: "dot",
-              });
-            }
-          }, d);
-          delay += 450; // 更長的間隔讓動畫更有節奏感
-        }
-      }
-
-      if (data.participants) {
-        setParticipants(data.participants as unknown as BattleParticipantUI[]);
-      }
-      setRound(data.round);
-
-      if (data.state === "ended") {
-        setBattleState("ended");
-        setBattleResult(data.result ?? null);
-        if ((data as any).rewards) setRewards((data as any).rewards);
-        onBattleEnd?.(data.result as any);
-      }
-
+      // 戦鬥結束時從 submitCommand 的返回就可取得獎勵
+      if (data?.rewards) setRewards(data.rewards);
+      battleQuery.refetch();
       setTimeout(() => {
         if (logScrollRef.current) logScrollRef.current.scrollTop = logScrollRef.current.scrollHeight;
       }, 100);
     },
-    onError: (err) => {
+    onError: (err: { message: string }) => {
       setIsSubmitting(false);
       toast.error(`戰鬥指令失敗：${err.message}`);
     },
   });
-
   // 初始化
   useEffect(() => {
     if (battleQuery.data) {
@@ -374,7 +305,6 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       if ((d.battle as any).turnTimer !== undefined) setTurnTimer((d.battle as any).turnTimer);
     }
   }, [battleQuery.data]);
-
   const handleSubmitTurn = () => {
     if (!selectedCommand || isSubmitting) return;
     setIsSubmitting(true);
@@ -394,13 +324,11 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
     }
     submitCmd.mutate({ battleId, commands });
   };
-
   const handleAutoBattle = () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     submitCmd.mutate({ battleId, commands: [] });
   };
-
   // ─── Loading ───
   if (battleQuery.isLoading) {
     return (
@@ -416,12 +344,10 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       </div>
     );
   }
-
   const timerPercent = turnTimer > 0 ? (timeLeft / turnTimer) * 100 : 0;
-
   // ─── 主渲染 ───
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-md">
       {/* 動態粒子背景 */}
       <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
         {particles.map(p => (
@@ -434,13 +360,11 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
             }} />
         ))}
       </div>
-
       {/* 全屏閃光 */}
       {screenFlash && (
         <div className="fixed inset-0 pointer-events-none z-[203] animate-screenFlash"
           style={{ background: screenFlash }} />
       )}
-
       {/* 技能名稱大字閃現 */}
       {skillAnnounce && (
         <div className="fixed inset-0 pointer-events-none z-[204] flex items-center justify-center">
@@ -461,7 +385,6 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
           </div>
         </div>
       )}
-
       {/* 回合轉場 */}
       {roundTransition && (
         <div className="fixed inset-0 pointer-events-none z-[205] flex items-center justify-center animate-roundTransition">
@@ -475,7 +398,6 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
           </div>
         </div>
       )}
-
       {/* 飄字動畫層 */}
       <div className="fixed inset-0 pointer-events-none z-[206] overflow-hidden">
         {floatingTexts.map(ft => (
@@ -494,28 +416,22 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
         ))}
       </div>
 
-      {/* ═══ 主戰鬥面板 ═══ */}
-      <div className={`relative w-full max-w-lg mx-3 rounded-2xl overflow-hidden shadow-2xl`}
+      {/* ═══ 主戰鬥面板（全螢幕） ═══ */}
+      <div className={`relative w-full h-full flex flex-col`}
         style={{
           background: "linear-gradient(160deg, #0c0a1d 0%, #1a1145 40%, #0f0d2e 70%, #0c0a1d 100%)",
-          border: "1px solid rgba(139,92,246,0.3)",
-          boxShadow: "0 0 40px rgba(139,92,246,0.15), 0 0 80px rgba(99,102,241,0.08), inset 0 1px 0 rgba(255,255,255,0.05)",
-          maxHeight: "92vh",
           animation: shakeIntensity > 0 ? `battleShake${shakeIntensity > 1 ? "Hard" : ""} 0.5s ease-out` : undefined,
         }}>
-
         {/* 頂部裝飾線 */}
-        <div className="absolute top-0 left-0 right-0 h-[2px]"
+        <div className="absolute top-0 left-0 right-0 h-[2px] z-10"
           style={{ background: "linear-gradient(90deg, transparent, #8b5cf6, #6366f1, #8b5cf6, transparent)" }} />
 
         {/* ─── 頂部欄：回合 + 倒數 + 控制 ─── */}
-        <div className="relative flex items-center justify-between px-4 py-2.5"
-          style={{ background: "linear-gradient(180deg, rgba(30,27,75,0.9) 0%, rgba(15,13,46,0.7) 100%)" }}>
+        <div className="relative flex items-center justify-between px-4 py-2.5 shrink-0"
+          style={{ background: "linear-gradient(180deg, rgba(30,27,75,0.95) 0%, rgba(15,13,46,0.8) 100%)", borderBottom: "1px solid rgba(99,102,241,0.2)" }}>
           {/* 左：回合數 */}
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <span className="text-xl" style={{ filter: "drop-shadow(0 0 6px rgba(139,92,246,0.6))" }}>⚔️</span>
-            </div>
+            <span className="text-xl" style={{ filter: "drop-shadow(0 0 6px rgba(139,92,246,0.6))" }}>⚔️</span>
             <div>
               <p className="text-white font-black text-sm tracking-wide">第 {round} 回合</p>
               <p className="text-[9px] text-indigo-400/60">
@@ -527,8 +443,8 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
           {/* 中：倒數計時器（圓形） */}
           {turnTimer > 0 && battleState === "active" && (
             <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-              <div className="relative w-9 h-9">
-                <svg className="w-9 h-9 -rotate-90" viewBox="0 0 36 36">
+              <div className="relative w-10 h-10">
+                <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
                   <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(99,102,241,0.15)" strokeWidth="2.5" />
                   <circle cx="18" cy="18" r="15" fill="none"
                     stroke={timeLeft <= 5 ? "#ef4444" : timeLeft <= 10 ? "#f59e0b" : "#8b5cf6"}
@@ -536,7 +452,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
                     strokeLinecap="round"
                     style={{ transition: "stroke-dasharray 1s linear, stroke 0.3s" }} />
                 </svg>
-                <span className={`absolute inset-0 flex items-center justify-center text-xs font-black ${
+                <span className={`absolute inset-0 flex items-center justify-center text-sm font-black ${
                   timeLeft <= 5 ? "text-red-400 animate-pulse" : timeLeft <= 10 ? "text-amber-300" : "text-indigo-200"
                 }`}>{timeLeft}</span>
               </div>
@@ -547,89 +463,88 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
           <div className="flex items-center gap-2">
             {battleState !== "ended" && (
               <button onClick={handleAutoBattle} disabled={isSubmitting}
-                className="group relative px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all hover:scale-105 active:scale-95 overflow-hidden"
+                className="group relative px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:scale-105 active:scale-95 overflow-hidden"
                 style={{ background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)" }}>
                 <span className="relative z-10 text-purple-300 group-hover:text-purple-200">🤖 自動</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-purple-600/20 to-purple-600/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               </button>
             )}
             <button onClick={onClose}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 transition-all">
+              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 transition-all text-lg">
               ✕
             </button>
           </div>
         </div>
 
-        {/* ─── 敵方區域 ─── */}
-        <div className="px-3 py-2 space-y-1" style={{ background: "rgba(127,29,29,0.06)" }}>
-          <p className="text-[9px] font-bold text-red-400/50 tracking-widest mb-1">▼ ENEMY</p>
-          {enemies.map(e => (
-            <CombatantCard key={e.id} p={e} isEnemy
-              isAttacking={attackingId === e.id}
-              isHit={hitId === e.id} />
-          ))}
-        </div>
+        {/* ─── 主戰場（上下分割） ─── */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* 上半：敵方 + 日誌 + 我方（3等分） */}
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* 敵方區域 */}
+            <div className="shrink-0 px-3 pt-2 pb-1" style={{ background: "rgba(127,29,29,0.06)" }}>
+              <p className="text-[9px] font-bold text-red-400/50 tracking-widest mb-1.5">▼ ENEMY</p>
+              <BattleGrid participants={enemies} isEnemy attackingId={attackingId} hitId={hitId} maxSlots={6} />
+            </div>
 
-        {/* ─── 戰鬥日誌（中央戰場） ─── */}
-        <div className="relative">
-          <div className="absolute left-0 right-0 top-0 h-4 z-10"
-            style={{ background: "linear-gradient(to bottom, rgba(12,10,29,0.8), transparent)" }} />
-          <div ref={logScrollRef} className="overflow-y-auto px-3 py-3 space-y-0.5"
-            style={{ maxHeight: "150px", minHeight: "80px", background: "rgba(12,10,29,0.4)" }}>
-            {logs.length === 0 && (
-              <div className="text-center py-6">
-                <p className="text-indigo-500/40 text-xs animate-pulse">⚔️ 等待指令…</p>
+            {/* 戰鬥日誌（中央戰場，可滾動） */}
+            <div className="flex-1 relative min-h-0">
+              <div className="absolute left-0 right-0 top-0 h-4 z-10"
+                style={{ background: "linear-gradient(to bottom, rgba(12,10,29,0.8), transparent)" }} />
+              <div ref={logScrollRef} className="h-full overflow-y-auto px-3 py-3 space-y-0.5"
+                style={{ background: "rgba(12,10,29,0.4)" }}>
+                {logs.length === 0 && (
+                  <div className="text-center py-6">
+                    <p className="text-indigo-500/40 text-xs animate-pulse">⚔️ 等待指令…</p>
+                  </div>
+                )}
+                {logs.slice(-30).map((log, i) => (
+                  <BattleLogLine key={`${log.round}-${i}`} log={log} allies={allies} isLatest={i === Math.min(logs.length, 30) - 1} />
+                ))}
               </div>
-            )}
-            {logs.slice(-20).map((log, i) => (
-              <BattleLogLine key={`${log.round}-${i}`} log={log} allies={allies} isLatest={i === Math.min(logs.length, 20) - 1} />
-            ))}
+              <div className="absolute left-0 right-0 bottom-0 h-4 z-10"
+                style={{ background: "linear-gradient(to top, rgba(12,10,29,0.8), transparent)" }} />
+            </div>
+
+            {/* 我方區域 */}
+            <div className="shrink-0 px-3 pt-1 pb-2" style={{ background: "rgba(30,58,138,0.06)" }}>
+              <p className="text-[9px] font-bold text-cyan-400/50 tracking-widest mb-1.5">▲ ALLY</p>
+              <BattleGrid participants={allies} attackingId={attackingId} hitId={hitId} maxSlots={6} />
+            </div>
           </div>
-          <div className="absolute left-0 right-0 bottom-0 h-4 z-10"
-            style={{ background: "linear-gradient(to top, rgba(12,10,29,0.8), transparent)" }} />
-        </div>
 
-        {/* ─── 我方區域 ─── */}
-        <div className="px-3 py-2 space-y-1" style={{ background: "rgba(30,58,138,0.06)" }}>
-          <p className="text-[9px] font-bold text-cyan-400/50 tracking-widest mb-1">▲ ALLY</p>
-          {allies.map(a => (
-            <CombatantCard key={a.id} p={a}
-              isAttacking={attackingId === a.id}
-              isHit={hitId === a.id} />
-          ))}
+          {/* 指令面板 / 結算面板（固定底部） */}
+          <div className="shrink-0" style={{ borderTop: "1px solid rgba(99,102,241,0.2)" }}>
+            {battleState === "ended" ? (
+              <VictoryPanel result={battleResult} round={round} onClose={onClose} rewards={rewards} />
+            ) : (
+              <CommandPanel
+                character={character}
+                showSkillPanel={showSkillPanel}
+                showItemPanel={showItemPanel}
+                selectedCommand={selectedCommand}
+                selectedSkillId={selectedSkillId}
+                selectedItemId={selectedItemId}
+                isSubmitting={isSubmitting}
+                turnTimer={turnTimer}
+                timeLeft={timeLeft}
+                battleId={battleId}
+                onSelectCommand={(cmd) => {
+                  if (cmd === "skill") {
+                    setShowSkillPanel(true); setShowItemPanel(false); setSelectedCommand("skill");
+                  } else if (cmd === "item") {
+                    setShowItemPanel(true); setShowSkillPanel(false); setSelectedCommand("item");
+                  } else {
+                    setSelectedCommand(cmd); setShowSkillPanel(false); setShowItemPanel(false);
+                    setSelectedSkillId(null); setSelectedItemId(null);
+                  }
+                }}
+                onSelectSkill={(id) => { setSelectedSkillId(id); setSelectedCommand("skill"); }}
+                onSelectItem={(id) => { setSelectedItemId(id); setSelectedCommand("item"); }}
+                onCancelPanel={() => { setShowSkillPanel(false); setShowItemPanel(false); setSelectedCommand(null); }}
+                onSubmit={handleSubmitTurn}
+              />
+            )}
+          </div>
         </div>
-
-        {/* ─── 指令面板 / 結算面板 ─── */}
-        {battleState === "ended" ? (
-          <VictoryPanel result={battleResult} round={round} onClose={onClose} rewards={rewards} />
-        ) : (
-          <CommandPanel
-            character={character}
-            showSkillPanel={showSkillPanel}
-            showItemPanel={showItemPanel}
-            selectedCommand={selectedCommand}
-            selectedSkillId={selectedSkillId}
-            selectedItemId={selectedItemId}
-            isSubmitting={isSubmitting}
-            turnTimer={turnTimer}
-            timeLeft={timeLeft}
-            battleId={battleId}
-            onSelectCommand={(cmd) => {
-              if (cmd === "skill") {
-                setShowSkillPanel(true); setShowItemPanel(false); setSelectedCommand("skill");
-              } else if (cmd === "item") {
-                setShowItemPanel(true); setShowSkillPanel(false); setSelectedCommand("item");
-              } else {
-                setSelectedCommand(cmd); setShowSkillPanel(false); setShowItemPanel(false);
-                setSelectedSkillId(null); setSelectedItemId(null);
-              }
-            }}
-            onSelectSkill={(id) => { setSelectedSkillId(id); setSelectedCommand("skill"); }}
-            onSelectItem={(id) => { setSelectedItemId(id); setSelectedCommand("item"); }}
-            onCancelPanel={() => { setShowSkillPanel(false); setShowItemPanel(false); setSelectedCommand(null); }}
-            onSubmit={handleSubmitTurn}
-          />
-        )}
 
         {/* 底部裝飾線 */}
         <div className="absolute bottom-0 left-0 right-0 h-[1px]"
@@ -708,35 +623,30 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
           30%  { filter: brightness(2.5) saturate(0); }
           100% { filter: brightness(1); }
         }
-        @keyframes cardHover {
-          0%   { box-shadow: 0 0 0 rgba(139,92,246,0); }
-          100% { box-shadow: 0 0 20px rgba(139,92,246,0.3); }
-        }
         @keyframes shimmer {
           0%   { background-position: -200% 0; }
           100% { background-position: 200% 0; }
         }
         @keyframes breathe {
           0%, 100% { transform: scale(1); }
-          50%      { transform: scale(1.02); }
+          50%       { transform: scale(1.01); }
         }
         @keyframes fadeSlideIn {
-          from { opacity: 0; transform: translateX(-6px); }
-          to   { opacity: 1; transform: translateX(0); }
+          0%   { opacity: 0; transform: translateY(4px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
-        .animate-fadeSlideIn { animation: fadeSlideIn 0.3s ease-out; }
+        .animate-fadeSlideIn { animation: fadeSlideIn 0.3s ease-out forwards; }
         @keyframes victoryGlow {
           0%   { opacity: 0; transform: scale(0.8); }
-          50%  { opacity: 1; transform: scale(1.05); }
           100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes defeatDarken {
-          0%   { opacity: 0; }
-          100% { opacity: 1; }
         }
         @keyframes hpShimmer {
           0%   { left: -100%; }
           100% { left: 200%; }
+        }
+        @keyframes defeatDarken {
+          0%   { opacity: 0; }
+          100% { opacity: 1; }
         }
       `}</style>
     </div>
@@ -744,7 +654,55 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
 }
 
 // ═══════════════════════════════════════════
-// ─── 戰鬥單位卡片（華麗版） ───
+// ─── 6v6 戰鬥格子佈局 ───
+// ═══════════════════════════════════════════
+function BattleGrid({ participants, isEnemy, attackingId, hitId, maxSlots = 6 }: {
+  participants: BattleParticipantUI[];
+  isEnemy?: boolean;
+  attackingId: number | null;
+  hitId: number | null;
+  maxSlots?: number;
+}) {
+  // 建立 6 個格子（前排 3 + 後排 3）
+  const frontRow = participants.slice(0, 3);
+  const backRow = participants.slice(3, 6);
+
+  const renderSlot = (p: BattleParticipantUI | undefined, slotIdx: number) => {
+    if (!p) {
+      return (
+        <div key={`empty-${slotIdx}`} className="flex-1 min-w-0 rounded-xl border border-dashed border-white/5 flex items-center justify-center"
+          style={{ minHeight: "72px", background: "rgba(255,255,255,0.01)" }}>
+          <span className="text-[10px] text-white/10">空</span>
+        </div>
+      );
+    }
+    return (
+      <div key={p.id} className="flex-1 min-w-0">
+        <CombatantCard p={p} isEnemy={isEnemy}
+          isAttacking={attackingId === p.id}
+          isHit={hitId === p.id} />
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-1">
+      {/* 前排（3格） */}
+      <div className="flex gap-1.5">
+        {Array.from({ length: 3 }, (_, i) => renderSlot(frontRow[i], i))}
+      </div>
+      {/* 後排（3格，只在有後排成員或 maxSlots > 3 時顯示） */}
+      {(participants.length > 3 || maxSlots > 3) && (
+        <div className="flex gap-1.5">
+          {Array.from({ length: 3 }, (_, i) => renderSlot(backRow[i], i + 3))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// ─── 戰鬥單位卡片（全螢幕版） ───
 // ═══════════════════════════════════════════
 function CombatantCard({ p, isEnemy, isAttacking, isHit }: {
   p: BattleParticipantUI; isEnemy?: boolean; isAttacking?: boolean; isHit?: boolean;
@@ -753,31 +711,42 @@ function CombatantCard({ p, isEnemy, isAttacking, isHit }: {
   const mpPercent = p.maxMp > 0 ? Math.max(0, Math.min(100, (p.currentMp / p.maxMp) * 100)) : 0;
   const hpColor = hpPercent > 50 ? "#22c55e" : hpPercent > 25 ? "#f59e0b" : "#ef4444";
   const hpGlow = hpPercent > 50 ? "rgba(34,197,94,0.3)" : hpPercent > 25 ? "rgba(245,158,11,0.3)" : "rgba(239,68,68,0.3)";
-  const typeIcon = p.type === "character" ? "⚔️" : p.type === "pet" ? "🐾" : "👹";
   const elem = p.dominantElement ? WX_THEME[p.dominantElement] : null;
 
+  // 頭像顯示
+  const avatarContent = p.avatarUrl ? (
+    <img src={p.avatarUrl} alt={p.name}
+      className="w-full h-full object-cover rounded-lg"
+      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+  ) : (
+    <span className="text-lg">
+      {p.type === "character" ? "⚔️" : p.type === "pet" ? "🐾" : "👹"}
+    </span>
+  );
+
   return (
-    <div className={`relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl transition-all duration-300 ${
+    <div className={`relative flex items-center gap-2 px-2 py-1.5 rounded-xl transition-all duration-300 ${
       p.isDefeated ? "opacity-30 grayscale" : ""
     }`}
       style={{
         background: isEnemy
-          ? "linear-gradient(135deg, rgba(127,29,29,0.12) 0%, rgba(30,27,75,0.2) 100%)"
-          : "linear-gradient(135deg, rgba(30,58,138,0.12) 0%, rgba(30,27,75,0.2) 100%)",
-        border: `1px solid ${isEnemy ? "rgba(239,68,68,0.15)" : "rgba(96,165,250,0.15)"}`,
+          ? "linear-gradient(135deg, rgba(127,29,29,0.15) 0%, rgba(30,27,75,0.25) 100%)"
+          : "linear-gradient(135deg, rgba(30,58,138,0.15) 0%, rgba(30,27,75,0.25) 100%)",
+        border: `1px solid ${isEnemy ? "rgba(239,68,68,0.2)" : "rgba(96,165,250,0.2)"}`,
+        minHeight: "72px",
         animation: isAttacking
           ? (isEnemy ? "attackLungeLeft 0.4s ease-out" : "attackLunge 0.4s ease-out")
           : isHit ? "hitFlash 0.3s ease-out" : p.isDefeated ? undefined : "breathe 4s ease-in-out infinite",
       }}>
-      {/* 角色圖標 */}
+      {/* 頭像 */}
       <div className="relative shrink-0">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center text-lg"
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden"
           style={{
             background: elem ? elem.bg : "rgba(99,102,241,0.1)",
             border: `1px solid ${elem ? elem.color + "30" : "rgba(99,102,241,0.2)"}`,
             boxShadow: elem ? `0 0 8px ${elem.glow}` : undefined,
           }}>
-          {typeIcon}
+          {avatarContent}
         </div>
         {elem && (
           <span className="absolute -top-1 -right-1 text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center"
@@ -785,15 +754,22 @@ function CombatantCard({ p, isEnemy, isAttacking, isHit }: {
             {elem.icon}
           </span>
         )}
+        {/* 類型標籤 */}
+        {p.type === "pet" && (
+          <span className="absolute -bottom-1 -left-1 text-[7px] px-0.5 rounded"
+            style={{ background: "rgba(139,92,246,0.4)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }}>
+            寵
+          </span>
+        )}
       </div>
 
       {/* 名稱 + HP/MP */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <span className={`text-[11px] font-bold truncate ${isEnemy ? "text-red-300" : "text-cyan-300"}`}>
+        <div className="flex items-center gap-1 mb-0.5">
+          <span className={`text-[10px] font-bold truncate ${isEnemy ? "text-red-300" : "text-cyan-300"}`}>
             {p.name}
           </span>
-          <span className="text-[8px] px-1 py-0.5 rounded-full font-bold"
+          <span className="text-[8px] px-1 py-0.5 rounded-full font-bold shrink-0"
             style={{
               background: isEnemy ? "rgba(239,68,68,0.15)" : "rgba(96,165,250,0.15)",
               color: isEnemy ? "#fca5a5" : "#93c5fd",
@@ -801,12 +777,12 @@ function CombatantCard({ p, isEnemy, isAttacking, isHit }: {
             Lv.{p.level}
           </span>
           {p.isDefending && (
-            <span className="text-[8px] px-1 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold">🛡️</span>
+            <span className="text-[8px] px-1 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold shrink-0">🛡️</span>
           )}
         </div>
 
         {/* HP 條 */}
-        <div className="flex items-center gap-1.5 mb-0.5">
+        <div className="flex items-center gap-1 mb-0.5">
           <span className="text-[7px] text-slate-500 w-3 font-bold">HP</span>
           <div className="flex-1 h-2 rounded-full overflow-hidden relative"
             style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(51,65,85,0.3)" }}>
@@ -815,7 +791,6 @@ function CombatantCard({ p, isEnemy, isAttacking, isHit }: {
                 width: `${hpPercent}%`, background: `linear-gradient(90deg, ${hpColor}cc, ${hpColor})`,
                 boxShadow: `0 0 6px ${hpGlow}`,
               }}>
-              {/* 光澤動畫 */}
               <div className="absolute inset-0 overflow-hidden rounded-full">
                 <div className="absolute top-0 h-[40%] w-[60%] rounded-full"
                   style={{
@@ -824,20 +799,19 @@ function CombatantCard({ p, isEnemy, isAttacking, isHit }: {
                   }} />
               </div>
             </div>
-            {/* 低血量閃爍 */}
             {hpPercent <= 25 && !p.isDefeated && (
               <div className="absolute inset-0 rounded-full animate-pulse"
                 style={{ background: "rgba(239,68,68,0.15)" }} />
             )}
           </div>
-          <span className="text-[8px] text-slate-400 w-16 text-right font-mono tabular-nums">
+          <span className="text-[7px] text-slate-400 w-14 text-right font-mono tabular-nums shrink-0">
             {p.currentHp}/{p.maxHp}
           </span>
         </div>
 
         {/* MP 條 */}
         {p.maxMp > 0 && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <span className="text-[7px] text-slate-500 w-3 font-bold">MP</span>
             <div className="flex-1 h-1.5 rounded-full overflow-hidden"
               style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(51,65,85,0.2)" }}>
@@ -848,32 +822,32 @@ function CombatantCard({ p, isEnemy, isAttacking, isHit }: {
                   boxShadow: "0 0 4px rgba(99,102,241,0.3)",
                 }} />
             </div>
-            <span className="text-[8px] text-slate-500 w-16 text-right font-mono tabular-nums">
+            <span className="text-[7px] text-slate-500 w-14 text-right font-mono tabular-nums shrink-0">
               {p.currentMp}/{p.maxMp}
             </span>
           </div>
         )}
-      </div>
 
-      {/* 狀態效果 */}
-      {p.statusEffects.length > 0 && (
-        <div className="flex flex-col gap-0.5 shrink-0">
-          {p.statusEffects.slice(0, 3).map((eff, i) => {
-            const info = STATUS_ICON[eff.type];
-            return (
-              <span key={i} className="text-[8px] px-1 py-0.5 rounded-full text-center"
-                title={`${info?.name ?? eff.type} (${eff.duration}回合)`}
-                style={{
-                  background: `${info?.color ?? "#94a3b8"}15`,
-                  border: `1px solid ${info?.color ?? "#94a3b8"}30`,
-                  color: info?.color ?? "#94a3b8",
-                }}>
-                {info?.emoji ?? "❓"}{eff.duration}
-              </span>
-            );
-          })}
-        </div>
-      )}
+        {/* 狀態效果 */}
+        {p.statusEffects.length > 0 && (
+          <div className="flex gap-0.5 mt-0.5 flex-wrap">
+            {p.statusEffects.slice(0, 4).map((eff, i) => {
+              const info = STATUS_ICON[eff.type];
+              return (
+                <span key={i} className="text-[7px] px-0.5 py-0.5 rounded text-center"
+                  title={`${info?.name ?? eff.type} (${eff.duration}回合)`}
+                  style={{
+                    background: `${info?.color ?? "#94a3b8"}15`,
+                    border: `1px solid ${info?.color ?? "#94a3b8"}30`,
+                    color: info?.color ?? "#94a3b8",
+                  }}>
+                  {info?.emoji ?? "❓"}{eff.duration}
+                </span>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -923,7 +897,7 @@ function CommandPanel({
   onSubmit: () => void;
 }) {
   return (
-    <div className="px-3 py-2.5 border-t border-indigo-900/30"
+    <div className="px-3 py-2.5"
       style={{ background: "linear-gradient(180deg, rgba(15,13,46,0.6) 0%, rgba(12,10,29,0.9) 100%)" }}>
 
       {/* 技能選擇面板 */}
@@ -936,7 +910,7 @@ function CommandPanel({
               ✕ 返回
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-3 gap-1.5 max-h-[120px] overflow-y-auto">
             {character.skills.map(sk => {
               const onCooldown = (sk.currentCooldown ?? 0) > 0;
               const noMp = character.currentMp < sk.mpCost;
@@ -946,7 +920,7 @@ function CommandPanel({
                 <button key={sk.id}
                   onClick={() => !disabled && onSelectSkill(sk.id)}
                   disabled={disabled}
-                  className={`relative rounded-xl px-2.5 py-2 text-left transition-all duration-200 overflow-hidden ${
+                  className={`relative rounded-xl px-2 py-2 text-left transition-all duration-200 overflow-hidden ${
                     selected ? "scale-[1.02]" : disabled ? "opacity-35" : "hover:scale-[1.02]"
                   }`}
                   style={{
@@ -954,28 +928,25 @@ function CommandPanel({
                       ? "linear-gradient(135deg, rgba(139,92,246,0.25) 0%, rgba(99,102,241,0.15) 100%)"
                       : "linear-gradient(135deg, rgba(30,27,75,0.4) 0%, rgba(15,13,46,0.6) 100%)",
                     border: `1px solid ${selected ? "rgba(139,92,246,0.5)" : "rgba(99,102,241,0.15)"}`,
-                    boxShadow: selected ? "0 0 12px rgba(139,92,246,0.2)" : undefined,
                   }}>
-                  <p className="font-bold text-[11px] text-purple-200 truncate">{sk.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[9px] text-indigo-400">MP {sk.mpCost}</span>
-                    {onCooldown && <span className="text-[9px] text-red-400 font-bold">CD {sk.currentCooldown}</span>}
-                    {noMp && !onCooldown && <span className="text-[9px] text-red-400">MP不足</span>}
+                  <p className="font-bold text-[10px] text-purple-200 truncate">{sk.name}</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="text-[8px] text-indigo-400">MP {sk.mpCost}</span>
+                    {onCooldown && <span className="text-[8px] text-red-400 font-bold">CD {sk.currentCooldown}</span>}
+                    {noMp && !onCooldown && <span className="text-[8px] text-red-400">MP不足</span>}
                   </div>
-                  {selected && (
-                    <div className="absolute top-1 right-1.5 text-[8px] text-purple-300">✓</div>
-                  )}
+                  {selected && <div className="absolute top-1 right-1.5 text-[8px] text-purple-300">✓</div>}
                 </button>
               );
             })}
             {character.skills.length === 0 && (
-              <p className="col-span-2 text-[10px] text-slate-600 text-center py-3">尚未裝備技能</p>
+              <p className="col-span-3 text-[10px] text-slate-600 text-center py-3">尚未裝備技能</p>
             )}
           </div>
         </div>
       )}
 
-      {/* 道具選擇面板 */}
+      {/* 道具選擇面板（可滾動） */}
       {showItemPanel && character && (
         <div className="mb-2 animate-fadeSlideIn">
           <ItemPanel
@@ -1011,7 +982,6 @@ function CommandPanel({
                   {cmd.icon}
                 </span>
                 <span className="tracking-wider">{cmd.label}</span>
-                {/* 卡牌底部光效 */}
                 {selected && (
                   <div className="absolute bottom-0 left-0 right-0 h-[2px]"
                     style={{ background: `linear-gradient(90deg, transparent, ${cmd.glow}, transparent)` }} />
@@ -1048,7 +1018,7 @@ function CommandPanel({
 }
 
 // ═══════════════════════════════════════════
-// ─── 道具選擇面板 ───
+// ─── 道具選擇面板（可滾動） ───
 // ═══════════════════════════════════════════
 function ItemPanel({ battleId, onSelect, onCancel, selectedItemId }: {
   battleId: string; onSelect: (itemId: string) => void; onCancel: () => void; selectedItemId: string | null;
@@ -1072,7 +1042,9 @@ function ItemPanel({ battleId, onSelect, onCancel, selectedItemId }: {
       {itemsQuery.data && itemsQuery.data.length === 0 && (
         <p className="text-[10px] text-slate-600 text-center py-3">背包中沒有可用的戰鬥道具</p>
       )}
-      <div className="grid grid-cols-2 gap-1.5 max-h-[120px] overflow-y-auto">
+      {/* 可滾動的道具列表 */}
+      <div className="grid grid-cols-3 gap-1.5 max-h-[150px] overflow-y-auto pr-1"
+        style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(99,102,241,0.3) transparent" }}>
         {(itemsQuery.data ?? []).map(item => {
           const rarityColor = RARITY_COLOR[item.rarity] ?? "#94a3b8";
           const selected = selectedItemId === item.itemId;
@@ -1080,7 +1052,7 @@ function ItemPanel({ battleId, onSelect, onCancel, selectedItemId }: {
           return (
             <button key={item.itemId}
               onClick={() => onSelect(item.itemId)}
-              className={`relative rounded-xl px-2.5 py-2 text-left transition-all duration-200 ${
+              className={`relative rounded-xl px-2 py-2 text-left transition-all duration-200 ${
                 selected ? "scale-[1.02]" : "hover:scale-[1.02]"
               }`}
               style={{
@@ -1088,10 +1060,9 @@ function ItemPanel({ battleId, onSelect, onCancel, selectedItemId }: {
                   ? "linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(15,13,46,0.6) 100%)"
                   : "linear-gradient(135deg, rgba(30,27,75,0.3) 0%, rgba(15,13,46,0.5) 100%)",
                 border: `1px solid ${selected ? "rgba(34,197,94,0.4)" : "rgba(34,197,94,0.1)"}`,
-                boxShadow: selected ? "0 0 10px rgba(34,197,94,0.15)" : undefined,
               }}>
               <div className="flex items-center gap-1">
-                <p className="font-bold text-[10px] truncate" style={{ color: rarityColor }}>{item.name}</p>
+                <p className="font-bold text-[9px] truncate" style={{ color: rarityColor }}>{item.name}</p>
                 <span className="text-[8px] text-slate-500 ml-auto shrink-0">×{item.quantity}</span>
               </div>
               <p className="text-[8px] text-slate-500 truncate mt-0.5">{effectDesc}</p>
@@ -1115,14 +1086,13 @@ function VictoryPanel({ result, round, onClose, rewards }: {
   const fled = result === "flee";
 
   return (
-    <div className="relative overflow-hidden"
+    <div className="relative overflow-hidden max-h-[50vh] overflow-y-auto"
       style={{
         background: won
           ? "linear-gradient(180deg, rgba(21,128,61,0.15) 0%, rgba(12,10,29,0.9) 100%)"
           : fled ? "linear-gradient(180deg, rgba(146,64,14,0.15) 0%, rgba(12,10,29,0.9) 100%)"
           : "linear-gradient(180deg, rgba(127,29,29,0.15) 0%, rgba(12,10,29,0.9) 100%)",
       }}>
-      {/* 頂部光效 */}
       {won && (
         <div className="absolute top-0 left-0 right-0 h-20 pointer-events-none"
           style={{
@@ -1132,7 +1102,6 @@ function VictoryPanel({ result, round, onClose, rewards }: {
       )}
 
       <div className="relative px-4 py-4">
-        {/* 結果標題 */}
         <div className="text-center mb-3">
           <p className={`text-2xl font-black mb-1 ${won ? "text-amber-300" : fled ? "text-amber-400" : "text-red-400"}`}
             style={{
@@ -1144,7 +1113,6 @@ function VictoryPanel({ result, round, onClose, rewards }: {
           <p className="text-[10px] text-slate-500">共 {round} 回合</p>
         </div>
 
-        {/* 獎勵 */}
         {won && rewards && (rewards.expReward > 0 || rewards.goldReward > 0 || rewards.drops.length > 0) && (
           <div className="mb-3 p-3 rounded-xl"
             style={{
@@ -1152,7 +1120,7 @@ function VictoryPanel({ result, round, onClose, rewards }: {
               border: "1px solid rgba(34,197,94,0.2)",
             }}>
             <p className="text-[11px] font-bold text-emerald-300 mb-2 tracking-wider">✨ 戰鬥獎勵</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {rewards.expReward > 0 && (
                 <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: "rgba(251,191,36,0.08)" }}>
                   <span className="text-base">⭐</span>
@@ -1197,7 +1165,6 @@ function VictoryPanel({ result, round, onClose, rewards }: {
           </div>
         )}
 
-        {/* 關閉按鈕 */}
         <button onClick={onClose}
           className="group relative w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-[1.01] active:scale-[0.99] overflow-hidden"
           style={{

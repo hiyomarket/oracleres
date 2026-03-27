@@ -3690,6 +3690,10 @@ function RoamingBossTab() {
   const updateBoss = trpc.roamingBoss.upsertCatalog.useMutation({
     onSuccess: () => { refetchCatalog(); setEditingBoss(null); },
   });
+  const toggleBossActive = trpc.roamingBoss.toggleActive.useMutation({
+    onSuccess: () => { refetchCatalog(); },
+    onError: (e: any) => toast.error(`停用失敗：${e.message}`),
+  });
   const createBoss = trpc.roamingBoss.upsertCatalog.useMutation({
     onSuccess: () => { refetchCatalog(); setShowCreateDialog(false); },
   });
@@ -3760,8 +3764,9 @@ function RoamingBossTab() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <Button size="sm" variant="outline" onClick={() => setEditingBoss(boss)}>✏️ 編輯</Button>
-                    <Button size="sm" variant="outline"
-                      onClick={() => updateBoss.mutate({ ...boss, isActive: boss.isActive ? 0 : 1, bossCode: boss.bossCode || boss.name } as any)}>
+                    <Button size="sm" variant={boss.isActive ? "outline" : "default"}
+                      onClick={() => toggleBossActive.mutate({ id: boss.id, isActive: boss.isActive ? 0 : 1 })}
+                      disabled={toggleBossActive.isPending}>
                       {boss.isActive ? "⏸ 停用" : "▶️ 啟用"}
                     </Button>
                     <Button size="sm" className="bg-red-600 hover:bg-red-700"
@@ -4093,28 +4098,54 @@ function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose:
   const [skills, setSkills] = useState<BossSkill[]>(() => {
     try { return Array.isArray(boss.skills) ? boss.skills : []; } catch { return []; }
   });
-  const [dropTableJson, setDropTableJson] = useState(JSON.stringify(boss.dropTable || [], null, 2));
-  const [patrolRegionJson, setPatrolRegionJson] = useState(JSON.stringify(boss.patrolRegion || [], null, 2));
-  const [enrageJson, setEnrageJson] = useState(JSON.stringify(boss.enrageConfig || {}, null, 2));
-  const [scheduleJson, setScheduleJson] = useState(JSON.stringify(boss.scheduleConfig || {}, null, 2));
+  // 掉落表結構化
+  interface DropItem { itemId: string; itemName: string; dropRate: number; minQty: number; maxQty: number; }
+  const [dropItems, setDropItems] = useState<DropItem[]>(() => {
+    try { return Array.isArray(boss.dropTable) ? boss.dropTable : []; } catch { return []; }
+  });
+  const addDropItem = () => setDropItems(d => [...d, { itemId: "", itemName: "", dropRate: 0.1, minQty: 1, maxQty: 1 }]);
+  const removeDropItem = (i: number) => setDropItems(d => d.filter((_, idx) => idx !== i));
+  const updateDropItem = (i: number, field: keyof DropItem, val: any) => setDropItems(d => d.map((x, idx) => idx === i ? { ...x, [field]: val } : x));
+
+  // 巡邏區域結構化
+  const TW_COUNTIES = ["台北市","新北市","桃園市","台中市","台南市","高雄市","基隆市","新竹市","新竹縣","苗栗縣","苗栗市","彰化縣","南投縣","雲林縣","嘉義市","嘉義縣","台東縣","花蓮縣","屏東縣","金門縣","連江縣","澎湖縣"];
+  const [patrolRegion, setPatrolRegion] = useState<string[]>(() => {
+    try { return Array.isArray(boss.patrolRegion) ? boss.patrolRegion : []; } catch { return []; }
+  });
+  const toggleRegion = (county: string) => setPatrolRegion(r => r.includes(county) ? r.filter(x => x !== county) : [...r, county]);
+
+  // 狂暴設定結構化
+  interface EnrageThreshold { hpPercent: number; atkBoost: number; spdBoost: number; message: string; }
+  const [enrageThresholds, setEnrageThresholds] = useState<EnrageThreshold[]>(() => {
+    try { const cfg = boss.enrageConfig || {}; return Array.isArray(cfg.hpThresholds) ? cfg.hpThresholds : []; } catch { return []; }
+  });
+  const addEnrage = () => setEnrageThresholds(t => [...t, { hpPercent: 50, atkBoost: 0.2, spdBoost: 0.1, message: "進入狂暴狀態！" }]);
+  const removeEnrage = (i: number) => setEnrageThresholds(t => t.filter((_, idx) => idx !== i));
+  const updateEnrage = (i: number, field: keyof EnrageThreshold, val: any) => setEnrageThresholds(t => t.map((x, idx) => idx === i ? { ...x, [field]: val } : x));
+
+  // 排程設定結構化
+  const [scheduleType, setScheduleType] = useState<"always" | "scheduled">(() => {
+    try { return (boss.scheduleConfig?.type === "scheduled") ? "scheduled" : "always"; } catch { return "always"; }
+  });
+  const [maxInstances, setMaxInstances] = useState(String(boss.scheduleConfig?.maxInstances ?? 1));
+  const [scheduleCron, setScheduleCron] = useState(boss.scheduleConfig?.cron ?? "0 0 12 * * *");
+  const [scheduleDuration, setScheduleDuration] = useState(String(boss.scheduleConfig?.duration ?? 30));
 
   const handleSubmit = () => {
-    try {
-      onSave({
-        name, title, tier: Number(tier), wuxing, level: Number(level),
-        baseHp: Number(baseHp), baseAttack: Number(baseAttack), baseDefense: Number(baseDefense),
-        baseSpeed: Number(baseSpeed), baseMagicAttack: Number(baseMagicAttack), baseMagicDefense: Number(baseMagicDefense),
-        moveIntervalSec: Number(moveIntervalSec), lifetimeMinutes: Number(lifetimeMinutes),
-        staminaCost: Number(staminaCost), expMultiplier: Number(expMultiplier), goldMultiplier: Number(goldMultiplier),
-        description, skills,
-        dropTable: JSON.parse(dropTableJson),
-        patrolRegion: JSON.parse(patrolRegionJson),
-        enrageConfig: JSON.parse(enrageJson),
-        scheduleConfig: JSON.parse(scheduleJson),
-      });
-    } catch (e) {
-      alert("JSON 格式錯誤，請檢查掉落表/巡邏區域/狂暴設定欄位");
-    }
+    onSave({
+      name, title, tier: Number(tier), wuxing, level: Number(level),
+      baseHp: Number(baseHp), baseAttack: Number(baseAttack), baseDefense: Number(baseDefense),
+      baseSpeed: Number(baseSpeed), baseMagicAttack: Number(baseMagicAttack), baseMagicDefense: Number(baseMagicDefense),
+      moveIntervalSec: Number(moveIntervalSec), lifetimeMinutes: Number(lifetimeMinutes),
+      staminaCost: Number(staminaCost), expMultiplier: Number(expMultiplier), goldMultiplier: Number(goldMultiplier),
+      description, skills,
+      dropTable: dropItems,
+      patrolRegion,
+      enrageConfig: { hpThresholds: enrageThresholds },
+      scheduleConfig: scheduleType === "always"
+        ? { type: "always", maxInstances: Number(maxInstances) }
+        : { type: "scheduled", cron: scheduleCron, duration: Number(scheduleDuration), maxInstances: Number(maxInstances) },
+    });
   };
 
   return (
@@ -4155,10 +4186,96 @@ function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose:
         </div>
         <div><label className="text-xs text-muted-foreground">描述</label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} /></div>
         <BossSkillEditor skills={skills} onChange={setSkills} />
-        <div><label className="text-xs text-muted-foreground">掉落表 (JSON)</label><Textarea value={dropTableJson} onChange={e => setDropTableJson(e.target.value)} rows={4} className="font-mono text-xs" /></div>
-        <div><label className="text-xs text-muted-foreground">巡邏區域 (JSON)</label><Textarea value={patrolRegionJson} onChange={e => setPatrolRegionJson(e.target.value)} rows={2} className="font-mono text-xs" /></div>
-        <div><label className="text-xs text-muted-foreground">狂暴設定 (JSON)</label><Textarea value={enrageJson} onChange={e => setEnrageJson(e.target.value)} rows={4} className="font-mono text-xs" /></div>
-        <div><label className="text-xs text-muted-foreground">排程設定 (JSON)</label><Textarea value={scheduleJson} onChange={e => setScheduleJson(e.target.value)} rows={3} className="font-mono text-xs" /></div>
+
+        {/* 掉落表結構化 */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-muted-foreground font-medium">掉落表 ({dropItems.length} 項)</label>
+            <Button size="sm" variant="outline" onClick={addDropItem} className="h-6 text-xs px-2">+ 新增掉落</Button>
+          </div>
+          {dropItems.length === 0 && <div className="text-xs text-muted-foreground text-center py-2 border border-dashed rounded">尚未設定掉落，點擊新增</div>}
+          {dropItems.map((item, i) => (
+            <div key={i} className="border border-border/50 rounded p-2 bg-background/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-amber-400">掉落 {i + 1}</span>
+                <Button size="sm" variant="ghost" onClick={() => removeDropItem(i)} className="h-5 w-5 p-0 text-red-400">×</Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><label className="text-xs text-muted-foreground">物品 ID</label><Input value={item.itemId} onChange={e => updateDropItem(i, "itemId", e.target.value)} className="h-7 text-xs" placeholder="e.g. ancient_stone" /></div>
+                <div><label className="text-xs text-muted-foreground">物品名稱</label><Input value={item.itemName} onChange={e => updateDropItem(i, "itemName", e.target.value)} className="h-7 text-xs" placeholder="如：遠古岩石" /></div>
+                <div><label className="text-xs text-muted-foreground">掉落機率 (0-1)</label><Input type="number" step="0.01" min="0" max="1" value={item.dropRate} onChange={e => updateDropItem(i, "dropRate", Number(e.target.value))} className="h-7 text-xs" /></div>
+                <div><label className="text-xs text-muted-foreground">最少數量</label><Input type="number" min="1" value={item.minQty} onChange={e => updateDropItem(i, "minQty", Number(e.target.value))} className="h-7 text-xs" /></div>
+                <div><label className="text-xs text-muted-foreground">最多數量</label><Input type="number" min="1" value={item.maxQty} onChange={e => updateDropItem(i, "maxQty", Number(e.target.value))} className="h-7 text-xs" /></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 巡邏區域結構化 */}
+        <div className="space-y-2">
+          <label className="text-xs text-muted-foreground font-medium">巡邏區域 ({patrolRegion.length} 個縣市)</label>
+          <div className="flex flex-wrap gap-1.5">
+            {TW_COUNTIES.map(county => (
+              <button key={county} type="button"
+                onClick={() => toggleRegion(county)}
+                className={`text-xs px-2 py-1 rounded border transition-colors ${
+                  patrolRegion.includes(county)
+                    ? "bg-amber-600 border-amber-500 text-white"
+                    : "bg-background/30 border-border/50 text-muted-foreground hover:border-amber-500/50"
+                }`}>
+                {county}
+              </button>
+            ))}
+          </div>
+          {patrolRegion.length === 0 && <p className="text-xs text-muted-foreground">未選區域表示全區巡邏</p>}
+        </div>
+
+        {/* 狂暴設定結構化 */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-muted-foreground font-medium">狂暴閥値 ({enrageThresholds.length} 階段)</label>
+            <Button size="sm" variant="outline" onClick={addEnrage} className="h-6 text-xs px-2">+ 新增閥値</Button>
+          </div>
+          {enrageThresholds.length === 0 && <div className="text-xs text-muted-foreground text-center py-2 border border-dashed rounded">尚未設定狂暴閥値</div>}
+          {enrageThresholds.map((t, i) => (
+            <div key={i} className="border border-border/50 rounded p-2 bg-background/30 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-red-400">閥値 {i + 1}</span>
+                <Button size="sm" variant="ghost" onClick={() => removeEnrage(i)} className="h-5 w-5 p-0 text-red-400">×</Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><label className="text-xs text-muted-foreground">HP 百分比 (%)</label><Input type="number" min="1" max="99" value={t.hpPercent} onChange={e => updateEnrage(i, "hpPercent", Number(e.target.value))} className="h-7 text-xs" /></div>
+                <div><label className="text-xs text-muted-foreground">攻擊加成 (0.2=+20%)</label><Input type="number" step="0.05" min="0" value={t.atkBoost} onChange={e => updateEnrage(i, "atkBoost", Number(e.target.value))} className="h-7 text-xs" /></div>
+                <div><label className="text-xs text-muted-foreground">速度加成 (0.1=+10%)</label><Input type="number" step="0.05" min="0" value={t.spdBoost} onChange={e => updateEnrage(i, "spdBoost", Number(e.target.value))} className="h-7 text-xs" /></div>
+                <div><label className="text-xs text-muted-foreground">狂暴訊息</label><Input value={t.message} onChange={e => updateEnrage(i, "message", e.target.value)} className="h-7 text-xs" placeholder="進入狂暴！" /></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 排程設定結構化 */}
+        <div className="space-y-2">
+          <label className="text-xs text-muted-foreground font-medium">排程設定</label>
+          <div className="grid grid-cols-2 gap-2">
+            <div><label className="text-xs text-muted-foreground">出現模式</label>
+              <Select value={scheduleType} onValueChange={(v: any) => setScheduleType(v)}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="always">常駐出現</SelectItem>
+                  <SelectItem value="scheduled">排程出現</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><label className="text-xs text-muted-foreground">最大同時實例數</label><Input type="number" min="1" max="10" value={maxInstances} onChange={e => setMaxInstances(e.target.value)} className="h-8 text-xs" /></div>
+            {scheduleType === "scheduled" && (
+              <>
+                <div className="col-span-2"><label className="text-xs text-muted-foreground">Cron 表達式（6欄）</label><Input value={scheduleCron} onChange={e => setScheduleCron(e.target.value)} className="h-8 text-xs font-mono" placeholder="0 0 12 * * *" /></div>
+                <div><label className="text-xs text-muted-foreground">持續時間(分)</label><Input type="number" min="5" value={scheduleDuration} onChange={e => setScheduleDuration(e.target.value)} className="h-8 text-xs" /></div>
+              </>
+            )}
+          </div>
+        </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>取消</Button>
           <Button onClick={handleSubmit} disabled={saving}>{saving ? "儲存中..." : "💾 儲存"}</Button>

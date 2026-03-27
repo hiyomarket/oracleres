@@ -328,6 +328,19 @@ export const roamingBossRouter = router({
     return await getBossStats();
   }),
 
+  /** 切換 Boss 啟用/停用狀態 */
+  toggleActive: protectedProcedure
+    .input(z.object({ id: z.number(), isActive: z.number().min(0).max(1) }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.update(roamingBossCatalog)
+        .set({ isActive: input.isActive, updatedAt: Date.now() })
+        .where(eq(roamingBossCatalog.id, input.id));
+      return { success: true };
+    }),
+
   /** 取得擊殺日誌 */
   getKillLogs: protectedProcedure
     .input(z.object({ limit: z.number().default(50), catalogId: z.number().optional() }))

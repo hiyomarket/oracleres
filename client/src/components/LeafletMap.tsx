@@ -287,14 +287,18 @@ interface LeafletMapProps {
   agentAvatarUrl?: string;
   /** 靠近玩家列表（地圖節點顯示在線人數） */
   nearbyPlayers?: NearbyPlayer[];
+  /** 活躍 Boss 列表（大地圖顯示 Boss 紅光標記） */
+  activeBosses?: Array<{ instanceId: number; name: string; title?: string | null; tier: number; wuxing: string; currentHp: number; maxHp: number; nodeId: string; imageUrl?: string | null }>;
 }
 
-const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function LeafletMap({ nodes, currentNodeId, onNodeClick, hiddenNodeIds = [], agentAvatarUrl, nearbyPlayers = [] }, ref) {
+const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function LeafletMap({ nodes, currentNodeId, onNodeClick, hiddenNodeIds = [], agentAvatarUrl, nearbyPlayers = [], activeBosses = [] }, ref) {
   const mapRef = useRef<ReturnType<typeof import("leaflet")["map"]> | null>(null);
   const markersRef = useRef<Map<string, ReturnType<typeof import("leaflet")["marker"]>>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
   // 在線玩家 layer（獨立管理，不影響節點 marker）
   const playerMarkersRef = useRef<ReturnType<typeof import("leaflet")["marker"]>[]>([]);
+  // Boss 標記 layer
+  const bossMarkersRef = useRef<ReturnType<typeof import("leaflet")["marker"]>[]>([]);
 
   // 初始化地圖
   useEffect(() => {
@@ -728,7 +732,128 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
         playerMarkersRef.current.push(m);
       });
     });
-  }, [nearbyPlayers, currentNodeId]);
+   }, [nearbyPlayers, currentNodeId]);
+
+  // activeBosses 更新時，在地圖節點上繪製 Boss 紅光標記
+  useEffect(() => {
+    if (!mapRef.current) return;
+    import("leaflet").then((leaflet) => {
+      const L = leaflet.default ?? leaflet;
+      const map = mapRef.current;
+      if (!map) return;
+      // 清除舊 Boss 標記
+      bossMarkersRef.current.forEach(m => m.remove());
+      bossMarkersRef.current = [];
+      if (!activeBosses || activeBosses.length === 0) return;
+      const WX_BOSS_COLOR: Record<string, string> = {
+        wood: "#22c55e", fire: "#ef4444", earth: "#eab308",
+        metal: "#94a3b8", water: "#3b82f6",
+        "木": "#22c55e", "火": "#ef4444", "土": "#eab308",
+        "金": "#94a3b8", "水": "#3b82f6",
+      };
+      const TIER_CROWN: Record<number, string> = { 1: "🟡", 2: "🟠", 3: "🔴" };
+      // 按節點分組
+      const byNode: Record<string, typeof activeBosses> = {};
+      activeBosses.forEach(b => {
+        if (!byNode[b.nodeId]) byNode[b.nodeId] = [];
+        byNode[b.nodeId].push(b);
+      });
+      Object.entries(byNode).forEach(([nodeId, bosses]) => {
+        const coords = NODE_COORDS[nodeId];
+        if (!coords) return;
+        const boss = bosses[0];
+        const color = WX_BOSS_COLOR[boss.wuxing] ?? "#ef4444";
+        const hpPct = boss.maxHp > 0 ? Math.max(0, boss.currentHp / boss.maxHp) : 1;
+        const tierCrown = TIER_CROWN[boss.tier] ?? "🔴";
+        const bossHtml = `
+          <div style="position:relative;width:64px;height:80px;">
+            <!-- 紅光脆變動畫效果 -->
+            <div style="
+              position:absolute;inset:-16px;
+              border-radius:50%;
+              background:radial-gradient(circle, rgba(239,68,68,0.4) 0%, transparent 70%);
+              animation:bossPulse 1.5s ease-in-out infinite;
+            "></div>
+            <div style="
+              position:absolute;inset:-8px;
+              border-radius:50%;
+              border:2px solid ${color};
+              animation:bossPulse 1.2s ease-in-out infinite;
+              opacity:0.8;
+            "></div>
+            <!-- Boss 圖示 -->
+            <div style="
+              width:56px;height:56px;
+              border-radius:50%;
+              background:radial-gradient(circle at 30% 30%, ${color}60, rgba(6,10,22,0.95));
+              border:3px solid ${color};
+              box-shadow:0 0 20px 8px ${color}66;
+              display:flex;align-items:center;justify-content:center;
+              font-size:24px;
+              cursor:pointer;
+              position:relative;z-index:2;
+            ">${boss.imageUrl ? `<img src="${boss.imageUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />` : tierCrown}</div>
+            <!-- HP 条 -->
+            <div style="
+              position:absolute;bottom:0;left:0;right:0;
+              height:6px;background:rgba(0,0,0,0.6);
+              border-radius:3px;overflow:hidden;
+            ">
+              <div style="height:100%;width:${Math.round(hpPct*100)}%;background:${hpPct>0.5?"#22c55e":hpPct>0.25?"#eab308":"#ef4444"};border-radius:3px;"></div>
+            </div>
+            <!-- Boss 名稱 -->
+            <div style="
+              position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
+              background:rgba(6,10,22,0.92);border:1px solid ${color}66;
+              border-radius:6px;padding:2px 6px;
+              font-size:10px;color:${color};white-space:nowrap;
+              font-family:'Noto Serif TC',serif;
+              box-shadow:0 2px 8px rgba(0,0,0,0.5);
+            ">${boss.name}${bosses.length > 1 ? ` xD7${bosses.length}` : ""}</div>
+          </div>
+        `;
+        const icon = L.divIcon({
+          className: "",
+          html: bossHtml,
+          iconSize: [64, 100],
+          iconAnchor: [32, 56],
+        });
+        const m = L.marker(
+          [coords[0] - 0.025, coords[1] - 0.03],
+          { icon, interactive: true, zIndexOffset: 500 }
+        ).addTo(map);
+        // Popup 顯示 Boss 詳細資訊
+        const popupContent = bosses.map(b => {
+          const c = WX_BOSS_COLOR[b.wuxing] ?? "#ef4444";
+          const hp = b.maxHp > 0 ? Math.max(0, b.currentHp) : 0;
+          const hpMax = b.maxHp;
+          const hpBar = hpMax > 0 ? Math.round((hp/hpMax)*100) : 100;
+          const hpColor = hpBar > 50 ? "#22c55e" : hpBar > 25 ? "#eab308" : "#ef4444";
+          return `
+            <div style="background:#0f1923;border:1px solid ${c}44;border-radius:10px;padding:12px 14px;min-width:200px;font-family:'Noto Serif TC',serif;color:#e2e8f0;margin-bottom:8px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <span style="font-size:20px;">${TIER_CROWN[b.tier] ?? "🔴"}</span>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:${c};">${b.name}</div>
+                  ${b.title ? `<div style="font-size:11px;color:#94a3b8;">「${b.title}」</div>` : ""}
+                </div>
+              </div>
+              <div style="font-size:11px;color:#94a3b8;margin-bottom:6px;">HP: ${hp.toLocaleString()} / ${hpMax.toLocaleString()}</div>
+              <div style="height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
+                <div style="height:100%;width:${hpBar}%;background:${hpColor};border-radius:3px;"></div>
+              </div>
+            </div>
+          `;
+        }).join("");
+        m.bindPopup(`<div style="background:transparent;">${popupContent}</div>`, {
+          className: "oracle-popup",
+          maxWidth: 240,
+          offset: [0, -60],
+        });
+        bossMarkersRef.current.push(m);
+      });
+    });
+  }, [activeBosses]);
 
   // 點擊節點時飛到該位置
   const flyToNode = useCallback((nodeId: string) => {

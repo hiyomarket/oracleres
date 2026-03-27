@@ -22,6 +22,7 @@ import { getCombatMonsterById, type CombatMonster, type MonsterSkillData } from 
 import { randomUUID } from "crypto";
 import { getEngineConfig } from "../gameEngineConfig";
 import { recordBossKill } from "../services/roamingBossEngine";
+import { broadcastLiveFeed } from "../liveFeedBroadcast";
 
 // ─── 輔助函數 ───
 
@@ -385,10 +386,17 @@ export const gameBattleRouter = router({
         participants.push(petParticipant);
       }
 
-      const monsterParticipant = buildMonsterParticipant(
-        combatMonster as any, nextId++, input.monsterLevelOverride,
-      );
-      participants.push(monsterParticipant);
+      // ─── 普通戰鬥（非 Boss）隨機生成 1-3 隻怪 ───
+      const isBossMode = input.monsterId.startsWith("boss_");
+      const monsterCount = isBossMode ? 1 : Math.floor(Math.random() * 3) + 1; // 1-3 隻
+      for (let mi = 0; mi < monsterCount; mi++) {
+        const monsterParticipant = buildMonsterParticipant(
+          combatMonster as any, nextId++, input.monsterLevelOverride,
+        );
+        // 多隻怪時稍微調整名稱區分
+        if (monsterCount > 1 && mi > 0) monsterParticipant.name = `${combatMonster.name} (${mi + 1})`;
+        participants.push(monsterParticipant);
+      }
 
       // 建立戰鬥記錄
       const battleId = randomUUID();
@@ -444,6 +452,24 @@ export const gameBattleRouter = router({
         });
       }
 
+      // ─── 全服公告：Boss 挑戰廣播 ───
+      if (isBossMode) {
+        try {
+          const bossParticipant = participants.find(p => p.side === "enemy");
+          const playerParticipant = participants.find(p => p.type === "character");
+          if (bossParticipant && playerParticipant) {
+            broadcastLiveFeed({
+              feedType: "world_event",
+              agentName: playerParticipant.name,
+              agentElement: (playerParticipant.dominantElement as string) || "earth",
+              agentLevel: playerParticipant.level,
+              detail: `向 ${bossParticipant.name} 發起挑戰！`,
+              icon: "⚔️",
+              targetPath: "/game",
+            });
+          }
+        } catch { /* 廣播失敗不影響戰鬥 */ }
+      }
       return {
         battleId,
         battleDbId: battleRow.id,
@@ -1031,6 +1057,9 @@ export const gameBattleRouter = router({
           isDefeated: p.isDefeated === 1,
           isDefending: p.isDefending === 1,
           statusEffects: (p.activeBuffs ?? []) as any,
+          agentId: p.agentId ?? null,
+          petId: p.petId ?? null,
+          monsterId: p.monsterId ?? null,
           skills: ((p.equippedSkills ?? []) as any[]).map((s: any) => {
             const cdMap = (p.skillCooldowns ?? {}) as Record<string, number>;
             return {

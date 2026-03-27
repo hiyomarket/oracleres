@@ -2182,6 +2182,22 @@ export default function VirtualWorldPage() {
     { enabled: !!user && !!currentNodeId, refetchInterval: 30000 }
   );
   const nearbyPlayers = nearbyPlayersData?.players ?? [];
+  // 活躍 Boss：全服所有活躍 Boss，每 30 秒更新
+  const { data: activeBossesData } = trpc.roamingBoss.getActiveBosses.useQuery(
+    undefined,
+    { refetchInterval: 30000 }
+  );
+  const activeBossesForMap = ((activeBossesData as any[]) ?? []).map((b: any) => ({
+    instanceId: b.id,
+    name: b.catalog?.name ?? b.name ?? "Boss",
+    title: b.catalog?.title ?? null,
+    tier: b.catalog?.tier ?? 1,
+    wuxing: b.catalog?.wuxing ?? "water",
+    currentHp: b.currentHp,
+    maxHp: b.catalog?.baseHp ?? 1000,
+    nodeId: b.currentNodeId,
+    imageUrl: b.catalog?.imageUrl ?? null,
+  }));
   const { data: nodeInfoData } = trpc.gameWorld.getNodeInfo.useQuery(
     { nodeId: currentNodeId },
     { enabled: !!currentNodeId, refetchInterval: 10000 }
@@ -3144,6 +3160,7 @@ export default function VirtualWorldPage() {
                   hiddenNodeIds={hiddenNodeIds}
                   agentAvatarUrl={agent?.avatarUrl ?? undefined}
                   nearbyPlayers={nearbyPlayers}
+                  activeBosses={activeBossesForMap}
                   onNodeClick={(nodeId) => {
                     // 點擊密店發光節點：如果是當前位置且有密店，顯示密店彈窗
                     if (nodeId === currentNodeId && hiddenNodeIds.includes(nodeId)) {
