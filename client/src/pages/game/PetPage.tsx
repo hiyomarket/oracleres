@@ -7,6 +7,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
 import GameTabLayout from "@/components/GameTabLayout";
+import PetBpRadarChart from "@/components/PetBpRadarChart";
 
 // ─── 常量 ─────────────────────────────────────────────────
 const WX_HEX: Record<string, string> = {
@@ -60,6 +61,10 @@ export default function PetPage() {
   );
   const { data: destinyDefs } = trpc.gamePet.getDestinySkillDefs.useQuery(undefined, { enabled: viewMode === "destiny" });
   const { data: tierConfig } = trpc.gamePet.getTierConfig.useQuery();
+  const { data: bpHistory } = trpc.gamePet.getPetBpHistory.useQuery(
+    { petId: selectedPetId!, limit: 100 },
+    { enabled: !!selectedPetId && viewMode === "detail" },
+  );
 
   // ─── Mutations ───
   const setActiveMut = trpc.gamePet.setActivePet.useMutation({
@@ -264,24 +269,18 @@ export default function PetPage() {
           </button>
         </div>
 
-        {/* BP 五維 */}
-        <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <h4 className="text-white text-sm font-bold mb-3">📊 BP 五維 <span className="text-gray-500 font-normal">（總計 {totalBp}）</span></h4>
-          <div className="grid grid-cols-5 gap-2">
-            {[
-              { key: "constitution", label: "體質", value: pet.bpConstitution, color: "#22c55e" },
-              { key: "strength", label: "力量", value: pet.bpStrength, color: "#ef4444" },
-              { key: "defense", label: "防禦", value: pet.bpDefense, color: "#f59e0b" },
-              { key: "agility", label: "敏捷", value: pet.bpAgility, color: "#e2e8f0" },
-              { key: "magic", label: "魔力", value: pet.bpMagic, color: "#38bdf8" },
-            ].map(bp => (
-              <div key={bp.key} className="text-center">
-                <div className="text-lg font-bold" style={{ color: bp.color }}>{bp.value}</div>
-                <div className="text-gray-500 text-xs">{bp.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* BP 五維雷達圖 */}
+        <PetBpRadarChart
+          history={bpHistory ?? []}
+          currentBp={{
+            constitution: pet.bpConstitution,
+            strength: pet.bpStrength,
+            defense: pet.bpDefense,
+            agility: pet.bpAgility,
+            magic: pet.bpMagic,
+          }}
+          accentColor={wuxingColor}
+        />
 
         {/* 戰鬥數值 */}
         <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>

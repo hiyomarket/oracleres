@@ -21,6 +21,7 @@ import {
   gamePlayerPets,
   gamePetLearnedSkills,
   gameAgents,
+  gamePetBpHistory,
 } from "../../drizzle/schema";
 import { eq, and, desc, asc, sql, like } from "drizzle-orm";
 import {
@@ -751,4 +752,34 @@ export const gamePetRouter = router({
       ...config,
     }));
   }),
+
+  /** 取得寵物 BP 歷史記錄 */
+  getPetBpHistory: protectedProcedure
+    .input(z.object({
+      petId: z.number(),
+      limit: z.number().min(1).max(200).optional().default(50),
+    }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // 確認寵物屬於當前用戶（透過 agent 關聯）
+      const [agent] = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id)));
+      if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const [pet] = await db.select().from(gamePlayerPets)
+        .where(and(
+          eq(gamePlayerPets.id, input.petId),
+          eq(gamePlayerPets.agentId, agent.id)
+        ));
+      if (!pet) throw new TRPCError({ code: "NOT_FOUND", message: "寵物不存在" });
+
+      const history = await db.select().from(gamePetBpHistory)
+        .where(eq(gamePetBpHistory.petId, input.petId))
+        .orderBy(desc(gamePetBpHistory.createdAt))
+        .limit(input.limit);
+
+      // 返回時序排序（舊→新）
+      return history.reverse();
+    }),
 });

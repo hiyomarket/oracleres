@@ -27,7 +27,7 @@ import {
   type Monster,
 } from "../shared/monsters";
 import { getCombatMonstersForNode, invalidateMonsterCache, type CombatMonster, type MonsterSkillData } from "./monsterDataService";
-import { gamePlayerPets, gamePetCatalog, gamePetInnateSkills, gamePetLearnedSkills } from "../drizzle/schema";
+import { gamePlayerPets, gamePetCatalog, gamePetInnateSkills, gamePetLearnedSkills, gamePetBpHistory } from "../drizzle/schema";
 import { petSkillsToCombatFormat, calcPetBattleExp, calcPetExpToNext, levelUpBP, calcPetStats, RACE_HP_MULTIPLIER, calcCaptureRate } from "./services/petEngine";
 
 // ─── 工具函數 ───
@@ -1396,7 +1396,7 @@ export async function processAgentTick(
         const raceHpMul = catalog?.raceHpMultiplier ?? 1.0;
         const stats = calcPetStats(bp, currentLevel, raceHpMul);
 
-        await db.update(gamePlayerPets).set({
+          await db.update(gamePlayerPets).set({
           exp: currentExp,
           level: currentLevel,
           bpConstitution: bp.constitution,
@@ -1415,6 +1415,32 @@ export async function processAgentTick(
           friendship: Math.min(100, activePet.friendship + 1),
           updatedAt: Date.now(),
         }).where(eq(gamePlayerPets.id, activePet.id));
+
+        // 記錄 BP 歷史
+        try {
+          const totalBpGain = (bpGains.constitution || 0) + (bpGains.strength || 0) + (bpGains.defense || 0) + (bpGains.agility || 0) + (bpGains.magic || 0);
+          await db.insert(gamePetBpHistory).values({
+            petId: activePet.id,
+            source: "battle",
+            description: `戰鬥獲得 ${totalBpGain} BP${currentLevel > activePet.level ? ` + 升級至 Lv.${currentLevel}` : ""}`,
+            prevConstitution: activePet.bpConstitution,
+            prevStrength: activePet.bpStrength,
+            prevDefense: activePet.bpDefense,
+            prevAgility: activePet.bpAgility,
+            prevMagic: activePet.bpMagic,
+            newConstitution: bp.constitution,
+            newStrength: bp.strength,
+            newDefense: bp.defense,
+            newAgility: bp.agility,
+            newMagic: bp.magic,
+            deltaConstitution: bp.constitution - activePet.bpConstitution,
+            deltaStrength: bp.strength - activePet.bpStrength,
+            deltaDefense: bp.defense - activePet.bpDefense,
+            deltaAgility: bp.agility - activePet.bpAgility,
+            deltaMagic: bp.magic - activePet.bpMagic,
+            createdAt: Date.now(),
+          });
+        } catch (e) { /* BP 歷史記錄失敗不影響主流程 */ }
       }
     } catch (e) {
       // 寵物掛機錯誤不影響主流程

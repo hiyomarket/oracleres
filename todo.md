@@ -4701,3 +4701,20 @@
 - [x] BP 隨機分配到五維屬性 + 自動重算戰鬥數值
 - [x] IdleSessionPanel 即時預估 BP 成長量
 - [x] 55 個測試檔案，1171 項測試全數通過，TypeScript 零錯誤
+
+## M12 寵物 BP 雷達圖 + 商店佈局預覽
+
+### 寵物 BP 五維雷達圖歷史變化動畫 ✅
+- [x] 後端：gamePetBpHistory 表 + 戰鬥/掛機自動記錄
+- [x] 後端：getPetBpHistory API（權限驗證 + 時序排序）
+- [x] 前端：PetBpRadarChart 組件（Canvas 繪製五維雷達圖）
+- [x] 前端：歷史時間軸滑桿 + 播放動畫（600ms/幀）
+- [x] 前端：前後 BP 疊加顯示（虛線前值 + 實線新值）
+- [x] 整合到 PetPage 寵物詳情頁（替換原有 BP 五維區塊）
+
+### AI 商店佈局預覽模式 ✅
+- [x] ShopPreviewModal 組件（模擬玩家商店頁面的實際呈現效果）
+- [x] 在 AIShopLayoutTab 加入「👁️ 預覽商店效果」按鈕
+- [x] 支援一般/靈相/密店三種商店類型預覽
+- [x] 商品卡片含稀有度色彩 + 類型標籤 + 推薦理由
+- [x] 56 個測試檔案，1194 項測試全數通過，TypeScript 零錯誤

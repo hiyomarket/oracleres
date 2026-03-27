@@ -2463,6 +2463,7 @@ function AIShopLayoutTab() {
   const [result, setResult] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [updatePrices, setUpdatePrices] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
 
   const analyzeMutation = trpc.gameCatalog.aiShopLayoutAnalyze.useMutation({
     onSuccess: (data) => {
@@ -2641,10 +2642,22 @@ function AIShopLayoutTab() {
             <input type="checkbox" checked={updatePrices} onChange={e => setUpdatePrices(e.target.checked)} />
             同時更新售價
           </label>
-          <Button onClick={handleApply} disabled={applyMutation.isPending || selectedIds.size === 0} className="ml-auto">
+          <Button variant="outline" onClick={() => setShowPreview(true)} className="ml-auto mr-2">
+            👁️ 預覽商店效果
+          </Button>
+          <Button onClick={handleApply} disabled={applyMutation.isPending || selectedIds.size === 0}>
             {applyMutation.isPending ? "⏳ 套用中..." : `✅ 一鍵套用（${selectedIds.size} 件）`}
           </Button>
         </div>
+      )}
+
+      {/* 商店預覽模式 */}
+      {showPreview && result?.recommendations && (
+        <ShopPreviewModal
+          recommendations={result.recommendations.filter((r: any) => selectedIds.has(`${r.type}-${r.id}`))}
+          shopType={shopType}
+          onClose={() => setShowPreview(false)}
+        />
       )}
 
       {/* 使用說明 */}
@@ -2657,6 +2670,203 @@ function AIShopLayoutTab() {
           <li>套用後需要到各商店管理 Tab 手動刷新或等待自動刷新才會生效</li>
           <li>已鎖定的商店商品不會被 AI 刷新覆蓋</li>
         </ul>
+      </div>
+    </div>
+  );
+}
+
+
+// ─── Shop Preview Modal ──────────────────────────────────────────────────────
+const PREVIEW_RARITY_COLORS: Record<string, { bg: string; border: string; text: string; glow: string }> = {
+  common:    { bg: "rgba(100,116,139,0.15)", border: "rgba(100,116,139,0.4)",  text: "#94a3b8", glow: "none" },
+  rare:      { bg: "rgba(59,130,246,0.15)",  border: "rgba(59,130,246,0.5)",   text: "#60a5fa", glow: "0 0 8px rgba(59,130,246,0.3)" },
+  epic:      { bg: "rgba(139,92,246,0.15)",  border: "rgba(139,92,246,0.5)",   text: "#a78bfa", glow: "0 0 10px rgba(139,92,246,0.4)" },
+  legendary: { bg: "rgba(245,158,11,0.15)",  border: "rgba(245,158,11,0.5)",   text: "#fbbf24", glow: "0 0 14px rgba(245,158,11,0.5)" },
+};
+const PREVIEW_RARITY_LABEL: Record<string, string> = {
+  common: "普通", rare: "稀有", epic: "史詩", legendary: "傳說",
+};
+
+function ShopPreviewModal({
+  recommendations,
+  shopType,
+  onClose,
+}: {
+  recommendations: any[];
+  shopType: "normal" | "spirit" | "secret";
+  onClose: () => void;
+}) {
+  const shopConfig = {
+    normal: { title: "一般商店", icon: "🛒", currency: "🪙 金幣", currencyColor: "#fbbf24", headerGradient: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)" },
+    spirit: { title: "靈相商店", icon: "💎", currency: "💎 靈石", currencyColor: "#a78bfa", headerGradient: "linear-gradient(135deg, #1a1a2e 0%, #2d1b69 100%)" },
+    secret: { title: "密店", icon: "🔮", currency: "🪙 金幣", currencyColor: "#fbbf24", headerGradient: "linear-gradient(135deg, #1a1a2e 0%, #3d1f1f 100%)" },
+  };
+  const cfg = shopConfig[shopType];
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.8)" }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "min(420px, 95vw)",
+          maxHeight: "85vh",
+          borderRadius: "20px",
+          overflow: "hidden",
+          background: "#0f172a",
+          border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 25px 50px rgba(0,0,0,0.5)",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* 商店標題 */}
+        <div style={{ background: cfg.headerGradient, padding: "20px 16px 16px", position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "24px" }}>{cfg.icon}</span>
+              <div>
+                <h3 style={{ color: "#e2e8f0", fontSize: "18px", fontWeight: 700, margin: 0 }}>{cfg.title}</h3>
+                <p style={{ color: "#64748b", fontSize: "11px", margin: "2px 0 0" }}>
+                  {recommendations.length} 件商品 · 預覽模式
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              style={{
+                width: "32px", height: "32px", borderRadius: "8px",
+                background: "rgba(255,255,255,0.1)", border: "none",
+                color: "#94a3b8", fontSize: "18px", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >
+              ✕
+            </button>
+          </div>
+          {/* 模擬餘額 */}
+          <div style={{
+            marginTop: "12px", display: "flex", gap: "12px",
+            padding: "8px 12px", borderRadius: "10px",
+            background: "rgba(0,0,0,0.3)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ fontSize: "14px" }}>🪙</span>
+              <span style={{ color: "#fbbf24", fontSize: "14px", fontWeight: 700 }}>99,999</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ fontSize: "14px" }}>💎</span>
+              <span style={{ color: "#a78bfa", fontSize: "14px", fontWeight: 700 }}>999</span>
+            </div>
+          </div>
+          {/* 預覽標籤 */}
+          <div style={{
+            position: "absolute", top: "8px", right: "52px",
+            padding: "2px 8px", borderRadius: "4px",
+            background: "rgba(245,158,11,0.2)", border: "1px solid rgba(245,158,11,0.4)",
+            fontSize: "10px", fontWeight: 700, color: "#fbbf24",
+          }}>
+            PREVIEW
+          </div>
+        </div>
+
+        {/* 商品網格 */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px" }}>
+          {recommendations.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "40px 0", color: "#475569" }}>
+              <p style={{ fontSize: "14px" }}>尚未選取任何商品</p>
+              <p style={{ fontSize: "12px", color: "#334155" }}>請在推薦列表中勾選要上架的商品</p>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              {recommendations.map((item: any, i: number) => {
+                const rarity = item.rarity ?? "common";
+                const rc = PREVIEW_RARITY_COLORS[rarity] ?? PREVIEW_RARITY_COLORS.common;
+                const isGold = shopType !== "spirit";
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      borderRadius: "12px",
+                      border: `1px solid ${rc.border}`,
+                      background: rc.bg,
+                      padding: "12px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "6px",
+                      boxShadow: rc.glow,
+                      transition: "transform 0.15s",
+                    }}
+                  >
+                    {/* 頂部：名稱 + 稀有度 */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <span style={{ fontSize: "16px" }}>
+                        {item.type === "item" ? "📦" : item.type === "equip" ? "🗡️" : "✨"}
+                      </span>
+                      <span style={{ fontSize: "13px", fontWeight: 600, color: "#e2e8f0", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {item.name}
+                      </span>
+                      <span style={{
+                        fontSize: "9px", padding: "1px 5px", borderRadius: "3px",
+                        background: rc.bg, border: `1px solid ${rc.border}`,
+                        color: rc.text, fontWeight: 700,
+                      }}>
+                        {PREVIEW_RARITY_LABEL[rarity] ?? rarity}
+                      </span>
+                    </div>
+                    {/* 類型標籤 */}
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      <span style={{
+                        fontSize: "10px", padding: "1px 6px", borderRadius: "4px",
+                        background: "rgba(255,255,255,0.05)", color: "#64748b",
+                      }}>
+                        {item.type === "item" ? "道具" : item.type === "equip" ? "裝備" : "技能"}
+                      </span>
+                    </div>
+                    {/* 推薦理由（截短） */}
+                    {item.reason && (
+                      <p style={{ fontSize: "11px", color: "#94a3b8", lineHeight: 1.4, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" } as React.CSSProperties}>
+                        {item.reason}
+                      </p>
+                    )}
+                    {/* 底部：價格 + 購買按鈕 */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: isGold ? "#fbbf24" : "#a78bfa" }}>
+                        {isGold ? "🪙" : "💎"} {(item.suggestedPrice ?? 0).toLocaleString()}
+                      </span>
+                      <button
+                        style={{
+                          padding: "5px 14px", borderRadius: "6px", border: "none",
+                          background: isGold
+                            ? "linear-gradient(135deg, #d97706, #f59e0b)"
+                            : "linear-gradient(135deg, #7c3aed, #a78bfa)",
+                          color: "#fff", fontSize: "12px", fontWeight: 700,
+                          cursor: "default", opacity: 0.7,
+                        }}
+                      >
+                        購買
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* 底部提示 */}
+        <div style={{
+          padding: "12px 16px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          textAlign: "center",
+          background: "rgba(0,0,0,0.2)",
+        }}>
+          <p style={{ color: "#475569", fontSize: "11px", margin: 0 }}>
+            此為預覽模式，實際效果以套用後的商店頁面為準
+          </p>
+        </div>
       </div>
     </div>
   );

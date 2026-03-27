@@ -7,7 +7,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory } from "../../drizzle/schema";
+import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory } from "../../drizzle/schema";
 import { sql } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
@@ -900,6 +900,29 @@ export const gameBattleRouter = router({
           attack: newStats.attack, defense: newStats.defense,
           speed: newStats.speed, magicAttack: newStats.magicAttack,
         }).where(eq(gamePlayerPets.id, activePet.id));
+
+        // 記錄 BP 歷史
+        await db.insert(gamePetBpHistory).values({
+          petId: activePet.id,
+          source: "idle",
+          description: `掛機 ${Math.floor(elapsedHours)}小時 ${Math.floor((elapsedHours % 1) * 60)}分鐘，獲得 ${bpGained} BP`,
+          prevConstitution: activePet.bpConstitution,
+          prevStrength: activePet.bpStrength,
+          prevDefense: activePet.bpDefense,
+          prevAgility: activePet.bpAgility,
+          prevMagic: activePet.bpMagic,
+          newConstitution: newBp.constitution,
+          newStrength: newBp.strength,
+          newDefense: newBp.defense,
+          newAgility: newBp.agility,
+          newMagic: newBp.magic,
+          deltaConstitution: totalGains.constitution,
+          deltaStrength: totalGains.strength,
+          deltaDefense: totalGains.defense,
+          deltaAgility: totalGains.agility,
+          deltaMagic: totalGains.magic,
+          createdAt: now,
+        });
 
         petBpDetails = {
           petName: activePet.nickname || `寵物#${activePet.id}`,

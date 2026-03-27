@@ -3445,3 +3445,39 @@ export const gameIdleSessions = mysqlTable("game_idle_sessions", {
 });
 export type GameIdleSession = typeof gameIdleSessions.$inferSelect;
 export type InsertGameIdleSession = typeof gameIdleSessions.$inferInsert;
+
+
+/**
+ * 寵物 BP 歷史記錄
+ * 每次 BP 變動時記錄快照，用於五維雷達圖歷史變化動畫
+ */
+export const gamePetBpHistory = mysqlTable("game_pet_bp_history", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 寵物 ID */
+  petId: int("pet_id").notNull(),
+  /** 變動來源：battle(戰鬥)/idle(掛機)/levelup(升級)/manual(手動) */
+  source: varchar("source", { length: 20 }).notNull().default("battle"),
+  /** 變動描述 */
+  description: varchar("description", { length: 200 }),
+  /** 變動前 BP 五維 */
+  prevConstitution: int("prev_constitution").notNull().default(0),
+  prevStrength: int("prev_strength").notNull().default(0),
+  prevDefense: int("prev_defense").notNull().default(0),
+  prevAgility: int("prev_agility").notNull().default(0),
+  prevMagic: int("prev_magic").notNull().default(0),
+  /** 變動後 BP 五維 */
+  newConstitution: int("new_constitution").notNull().default(0),
+  newStrength: int("new_strength").notNull().default(0),
+  newDefense: int("new_defense").notNull().default(0),
+  newAgility: int("new_agility").notNull().default(0),
+  newMagic: int("new_magic").notNull().default(0),
+  /** 變動量 */
+  deltaConstitution: int("delta_constitution").notNull().default(0),
+  deltaStrength: int("delta_strength").notNull().default(0),
+  deltaDefense: int("delta_defense").notNull().default(0),
+  deltaAgility: int("delta_agility").notNull().default(0),
+  deltaMagic: int("delta_magic").notNull().default(0),
+  /** 記錄時間 */
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GamePetBpHistory = typeof gamePetBpHistory.$inferSelect;

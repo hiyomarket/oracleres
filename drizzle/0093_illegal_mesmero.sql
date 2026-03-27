@@ -1,0 +1,23 @@
+CREATE TABLE `game_pet_bp_history` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`pet_id` int NOT NULL,
+	`source` varchar(20) NOT NULL DEFAULT 'battle',
+	`description` varchar(200),
+	`prev_constitution` int NOT NULL DEFAULT 0,
+	`prev_strength` int NOT NULL DEFAULT 0,
+	`prev_defense` int NOT NULL DEFAULT 0,
+	`prev_agility` int NOT NULL DEFAULT 0,
+	`prev_magic` int NOT NULL DEFAULT 0,
+	`new_constitution` int NOT NULL DEFAULT 0,
+	`new_strength` int NOT NULL DEFAULT 0,
+	`new_defense` int NOT NULL DEFAULT 0,
+	`new_agility` int NOT NULL DEFAULT 0,
+	`new_magic` int NOT NULL DEFAULT 0,
+	`delta_constitution` int NOT NULL DEFAULT 0,
+	`delta_strength` int NOT NULL DEFAULT 0,
+	`delta_defense` int NOT NULL DEFAULT 0,
+	`delta_agility` int NOT NULL DEFAULT 0,
+	`delta_magic` int NOT NULL DEFAULT 0,
+	`created_at` bigint NOT NULL,
+	CONSTRAINT `game_pet_bp_history_id` PRIMARY KEY(`id`)
+);
