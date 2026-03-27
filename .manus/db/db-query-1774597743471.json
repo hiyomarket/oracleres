@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as with_img FROM game_monster_catalog WHERE image_url IS NOT NULL AND image_url != '' AND image_url != 'null'; SELECT COUNT(*) as total FROM game_monster_catalog;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as with_img FROM game_monster_catalog WHERE image_url IS NOT NULL AND image_url != '' AND image_url != 'null'; SELECT COUNT(*) as total FROM game_monster_catalog;",
+  "rows": [
+    {
+      "with_img": "0"
+    },
+    {
+      "with_img": "total"
+    },
+    {
+      "with_img": "144"
+    }
+  ],
+  "messages": [],
+  "stdout": "with_img\n0\ntotal\n144\n",
+  "stderr": "",
+  "execution_time_ms": 1731
+}

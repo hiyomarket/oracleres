@@ -1,0 +1,60 @@
+{
+  "query": "SELECT monster_id, name, wuxing, rarity, base_hp, base_attack, base_defense, base_speed FROM game_monster_catalog LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id, name, wuxing, rarity, base_hp, base_attack, base_defense, base_speed FROM game_monster_catalog LIMIT 5;",
+  "rows": [
+    {
+      "monster_id": "M_W001",
+      "name": "葉刃狐",
+      "wuxing": "木",
+      "rarity": "common",
+      "base_hp": "120",
+      "base_attack": "15",
+      "base_defense": "8",
+      "base_speed": "12"
+    },
+    {
+      "monster_id": "M_W002",
+      "name": "藤蔓蜘蛛",
+      "wuxing": "木",
+      "rarity": "common",
+      "base_hp": "95",
+      "base_attack": "14",
+      "base_defense": "12",
+      "base_speed": "12"
+    },
+    {
+      "monster_id": "M_W003",
+      "name": "綠芽史萊姆",
+      "wuxing": "木",
+      "rarity": "common",
+      "base_hp": "120",
+      "base_attack": "8",
+      "base_defense": "12",
+      "base_speed": "10"
+    },
+    {
+      "monster_id": "M_W004",
+      "name": "刺刺蝟",
+      "wuxing": "木",
+      "rarity": "common",
+      "base_hp": "110",
+      "base_attack": "18",
+      "base_defense": "10",
+      "base_speed": "12"
+    },
+    {
+      "monster_id": "M_W005",
+      "name": "孢子菇",
+      "wuxing": "木",
+      "rarity": "common",
+      "base_hp": "80",
+      "base_attack": "12",
+      "base_defense": "8",
+      "base_speed": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_id\tname\twuxing\trarity\tbase_hp\tbase_attack\tbase_defense\tbase_speed\nM_W001\t葉刃狐\t木\tcommon\t120\t15\t8\t12\nM_W002\t藤蔓蜘蛛\t木\tcommon\t95\t14\t12\t12\nM_W003\t綠芽史萊姆\t木\tcommon\t120\t8\t12\t10\nM_W004\t刺刺蝟\t木\tcommon\t110\t18\t10\t12\nM_W005\t孢子菇\t木\tcommon\t80\t12\t8\t12\n",
+  "stderr": "",
+  "execution_time_ms": 1518
+}
