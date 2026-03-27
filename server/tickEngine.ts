@@ -1346,6 +1346,80 @@ export async function processAgentTick(
       await createEvent(agent.id, "rest", successMsg, { type: "infuse_success", element: nodeElement, gain, newVal }, currentNode.id);
       eventsCreated++;
     }
+
+    // ★ 寵物離線掛機 BP 成長：注靈期間出戰寵物獲得固定 BP + 少量經驗
+    try {
+      const [activePet] = await db.select().from(gamePlayerPets)
+        .where(and(
+          eq(gamePlayerPets.agentId, agent.id),
+          eq(gamePlayerPets.isActive, 1)
+        ));
+      if (activePet && activePet.level < 60) {
+        // 固定 3 BP（無隨機/成長型態加成），平均分配到五維
+        const OFFLINE_FIXED_BP = 3;
+        const dims = ["constitution", "strength", "defense", "agility", "magic"] as const;
+        const bpGains: Record<string, number> = {};
+        let remaining = OFFLINE_FIXED_BP;
+        for (let i = 0; i < OFFLINE_FIXED_BP; i++) {
+          const dim = dims[Math.floor(Math.random() * dims.length)];
+          bpGains[dim] = (bpGains[dim] || 0) + 1;
+          remaining--;
+        }
+
+        const newBp = {
+          constitution: activePet.bpConstitution + (bpGains.constitution || 0),
+          strength: activePet.bpStrength + (bpGains.strength || 0),
+          defense: activePet.bpDefense + (bpGains.defense || 0),
+          agility: activePet.bpAgility + (bpGains.agility || 0),
+          magic: activePet.bpMagic + (bpGains.magic || 0),
+        };
+
+        // 少量經驗（基礎 15 + 等級 * 2）
+        const offlineExp = 15 + activePet.level * 2;
+        let currentExp = activePet.exp + offlineExp;
+        let currentLevel = activePet.level;
+        let bp = { ...newBp };
+
+        // 檢查是否升級
+        while (currentLevel < 60) {
+          const expToNext = calcPetExpToNext(currentLevel);
+          if (currentExp < expToNext) break;
+          currentExp -= expToNext;
+          currentLevel++;
+          // 升級時用完整的 levelUpBP
+          const bpResult = levelUpBP(bp, activePet.growthType, activePet.tier);
+          bp = { constitution: bpResult.constitution, strength: bpResult.strength, defense: bpResult.defense, agility: bpResult.agility, magic: bpResult.magic };
+        }
+
+        // 取得圖鑑資料以獲取種族 HP 倍率
+        const [catalog] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, activePet.petCatalogId));
+        const raceHpMul = catalog?.raceHpMultiplier ?? 1.0;
+        const stats = calcPetStats(bp, currentLevel, raceHpMul);
+
+        await db.update(gamePlayerPets).set({
+          exp: currentExp,
+          level: currentLevel,
+          bpConstitution: bp.constitution,
+          bpStrength: bp.strength,
+          bpDefense: bp.defense,
+          bpAgility: bp.agility,
+          bpMagic: bp.magic,
+          hp: stats.hp,
+          maxHp: stats.hp,
+          mp: stats.mp,
+          maxMp: stats.mp,
+          attack: stats.attack,
+          defense: stats.defense,
+          speed: stats.speed,
+          magicAttack: stats.magicAttack,
+          friendship: Math.min(100, activePet.friendship + 1),
+          updatedAt: Date.now(),
+        }).where(eq(gamePlayerPets.id, activePet.id));
+      }
+    } catch (e) {
+      // 寵物掛機錯誤不影響主流程
+      console.error("[PetOffline] Error:", e);
+    }
   }
   return { events: eventsCreated, levelUps: tickLevelUps, legendaryDrops: tickLegendaryDrops, lastCombat: tickLastCombat };
 }

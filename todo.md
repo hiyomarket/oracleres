@@ -4611,3 +4611,55 @@
 - [x] 天命任務列表頁面（QuestSkillPage 已存在）
 - [x] 管理後台種子資料匹入按鈕（SeedDataTab）
 - [x] Vitest 測試通過 1131 項
+
+## M8 寵物離線掛機 BP 成長
+
+- [x] tickEngine 中寵物離線掛機時獲得固定 BP（每 tick 固定 3 BP，無隨機/成長型態加成）
+- [x] 寵物離線掛機經驗獲取（基礎 15 + level*2）
+- [x] 寵物升級時自動分配 BP（固定 + 隨機 + 成長型態）
+- [x] 前端顯示寵物掛機收益（戰報中顯示寵物經驗和 BP 變化）
+
+## M9 GD-020 戰鬥系統重構 Phase 1
+
+### Schema 建立
+- [x] game_battles 表（戰鬥實例：模式/狀態/回合數/獎勵倍率）
+- [x] game_battle_participants 表（參與者快照：玩家/寵物/怪物）
+- [x] game_battle_commands 表（指令記錄：攻擊/技能/防禦/道具/逃跑）
+- [x] game_battle_logs 表（戰鬥日誌：回合描述/傷害/治療）
+- [x] game_idle_sessions 表（掛機記錄：開始/結束/累計獎勵）
+- [x] 推送 schema 到資料庫
+
+### 戰鬥引擎核心 (combatEngineV2.ts)
+- [x] 先手判定公式（SPD 降冪 + 角色優先於寵物 + 隨機雜湊）
+- [x] 人寵協同行動（2 個行動單位分開排序）
+- [x] 指令系統（攻擊/技能/防禦/道具/逃跑/投降）
+- [x] 傷害公式（物理: ATK×2-DEF÷2 / 魔法: MAG×2-MDEF÷2 × 隨機係數）
+- [x] AI 決策樹（HP 閾值 + MP 判斷 + 技能選擇）
+- [x] 狀態效果系統（DoT/眩暈/冰凍/中毒）
+- [x] 戰鬥狀態機（START→SPEED_SORT→TURN→CHECK_END→END）
+- [x] 防禦機制（本回合受傷 -50%）
+- [x] 逃跑機制（20% 失敗率）
+
+### 模式整合
+- [x] 掛機模式整合（獎勵×0.33，不扣體力，離線8小時封頂）
+- [x] 玩家模式整合（開窗×1.2/關窗×1.0，扣體力）
+- [x] 快速結算演算法（掛機模式用）
+- [x] processCombatEvent 使用新引擎
+
+### 後端 API
+- [x] gameBattle router：開始戰鬥/提交指令/查詢狀態/結算
+- [x] 掛機 session 管理 API
+
+### 前端 UI
+- [x] 戰鬥視窗組件（回合制 UI：指令選擇/動畫/日誌）
+- [x] 掛機模式 UI（掛機狀態/收益統計）
+- [x] CombatWindow 升級（支持新引擎數據格式）
+
+### 測試
+- [x] Vitest 測試覆蓋先手判定
+- [x] Vitest 測試覆蓋傷害公式
+- [x] Vitest 測試覆蓋 AI 決策樹
+- [x] Vitest 測試覆蓋掛機獎勵計算
+- [x] 55 個測試檔案，1171 項測試全數通過
+- [x] IdleSessionPanel 整合至 VirtualWorldPage
+- [x] 儲存 M9 checkpoint

@@ -22,6 +22,8 @@ import type { CombatWindowData } from "@/components/CombatWindow";
 import { GlobalChat } from "@/components/GlobalChat";
 import ItemDetailModal from "@/components/ItemDetailModal";
 import { PvpChallengeButton, PvpIncomingChallenge, PlayerInfoCard } from "@/components/PvpChallengeSystem";
+import { BattleWindow } from "@/components/BattleWindow";
+import { IdleSessionPanel } from "@/components/IdleSessionPanel";
 
 /// ─── 經驗升級公式（和後端 tickEngine.ts 相同） ───
 function calcExpToNextFn(level: number): number {
@@ -2114,6 +2116,8 @@ export default function VirtualWorldPage() {
   const { enabled: combatWindowEnabled, setEnabled: setCombatWindowEnabled } = useCombatWindowSettings();
   // 戰鬥中鎖定：戰鬥視窗開啟且動畫進行中時，不允許執行下一個 Tick
   const [combatLocked, setCombatLocked] = useState(false);
+  // GD-020 玩家模式戰鬥視窗
+  const [playerBattleId, setPlayerBattleId] = useState<string | null>(null);
   // 收納式聊天大廳
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -2133,6 +2137,7 @@ export default function VirtualWorldPage() {
     "status-bar":     { x: 16,  y: 80  },   // 左上下方：HP/MP/AP/體力
     "divine-panel":   { x: 16,  y: 160 },   // 左中：靈相干預
     "strategy-panel": { x: 16,  y: 260 },   // 左中下：行動策略
+    "idle-panel":     { x: 16,  y: 340 },   // 左下：掛機收益
     "event-log":      { x: 16,  y: 380 },   // 左下：日誌
   };
   const [widgetLayout, setWidgetLayout] = useState<Record<string, { x: number; y: number }>>(WIDGET_DEFAULTS);
@@ -2748,6 +2753,35 @@ export default function VirtualWorldPage() {
           onClose={() => {
             setCombatWindowData(null);
             setCombatLocked(false); // 戰鬥結束，解除 Tick 鎖定
+          }}
+        />
+      )}
+
+      {/* 掛機收益面板 */}
+      {agent && (agent?.strategy === "combat" || agent?.strategy === "explore" || agent?.strategy === "gather" || agent?.strategy === "infuse") && (
+        <div className="hidden lg:block">
+          <DraggableWidget
+            id="idle-panel"
+            defaultPos={WIDGET_DEFAULTS["idle-panel"]}
+            savedPos={widgetLayout["idle-panel"]}
+            onPositionChange={handleWidgetMove}
+            disabled={false}
+          >
+            <IdleSessionPanel
+              agentId={agent?.id}
+              strategy={agent?.strategy}
+            />
+          </DraggableWidget>
+        </div>
+      )}
+
+      {/* GD-020 玩家模式戰鬥視窗 */}
+      {playerBattleId && (
+        <BattleWindow
+          battleId={playerBattleId}
+          onClose={() => {
+            setPlayerBattleId(null);
+            setCombatLocked(false);
           }}
         />
       )}

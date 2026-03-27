@@ -1,0 +1,100 @@
+CREATE TABLE `game_battle_commands` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`battle_id` int NOT NULL,
+	`round` int NOT NULL,
+	`participant_id` int NOT NULL,
+	`command_type` enum('attack','skill','defend','item','flee','surrender','auto') NOT NULL,
+	`target_id` int,
+	`skill_id` varchar(64),
+	`item_id` varchar(64),
+	`is_auto_decision` tinyint NOT NULL DEFAULT 0,
+	`created_at` bigint NOT NULL,
+	CONSTRAINT `game_battle_commands_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `game_battle_logs` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`battle_id` int NOT NULL,
+	`round` int NOT NULL,
+	`actor_id` int NOT NULL,
+	`log_type` varchar(30) NOT NULL,
+	`target_id` int,
+	`value` int NOT NULL DEFAULT 0,
+	`is_critical` tinyint NOT NULL DEFAULT 0,
+	`skill_name` varchar(100),
+	`element_boost_desc` varchar(200),
+	`status_effect_desc` varchar(200),
+	`message` text NOT NULL,
+	`detail` json,
+	`created_at` bigint NOT NULL,
+	CONSTRAINT `game_battle_logs_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `game_battle_participants` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`battle_id` int NOT NULL,
+	`participant_type` enum('character','pet','monster') NOT NULL,
+	`participant_side` enum('ally','enemy') NOT NULL,
+	`agent_id` int,
+	`pet_id` int,
+	`monster_id` varchar(64),
+	`display_name` varchar(100) NOT NULL,
+	`level` int NOT NULL DEFAULT 1,
+	`max_hp` int NOT NULL,
+	`current_hp` int NOT NULL,
+	`max_mp` int NOT NULL DEFAULT 50,
+	`current_mp` int NOT NULL DEFAULT 50,
+	`attack` int NOT NULL,
+	`defense` int NOT NULL,
+	`magic_attack` int NOT NULL DEFAULT 0,
+	`magic_defense` int NOT NULL DEFAULT 0,
+	`speed` int NOT NULL,
+	`dominant_element` varchar(20),
+	`race` varchar(50),
+	`equipped_skills` json,
+	`is_defending` tinyint NOT NULL DEFAULT 0,
+	`is_defeated` tinyint NOT NULL DEFAULT 0,
+	`speed_score` int NOT NULL DEFAULT 0,
+	`skill_cooldowns` json,
+	`active_buffs` json,
+	CONSTRAINT `game_battle_participants_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `game_battles` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`battle_id` varchar(64) NOT NULL,
+	`battle_mode` enum('idle','player_closed','player_open','pvp','map_mob','boss') NOT NULL,
+	`battle_state` enum('waiting','speed_sort','turn_begin','player_turn','enemy_turn','calculating','status_effect','check_end','ended') NOT NULL DEFAULT 'waiting',
+	`current_round` int NOT NULL DEFAULT 0,
+	`max_rounds` int NOT NULL DEFAULT 20,
+	`current_turn_index` int NOT NULL DEFAULT 0,
+	`turn_order` json,
+	`reward_multiplier` float NOT NULL DEFAULT 1,
+	`initiator_agent_id` int NOT NULL,
+	`node_id` varchar(64),
+	`result` varchar(20),
+	`settlement_data` json,
+	`turn_time_limit` int NOT NULL DEFAULT 20,
+	`created_at` bigint NOT NULL,
+	`updated_at` bigint NOT NULL,
+	`ended_at` bigint,
+	CONSTRAINT `game_battles_id` PRIMARY KEY(`id`),
+	CONSTRAINT `game_battles_battle_id_unique` UNIQUE(`battle_id`)
+);
+--> statement-breakpoint
+CREATE TABLE `game_idle_sessions` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`agent_id` int NOT NULL,
+	`started_at` bigint NOT NULL,
+	`ended_at` bigint,
+	`total_exp` int NOT NULL DEFAULT 0,
+	`total_gold` int NOT NULL DEFAULT 0,
+	`total_battles` int NOT NULL DEFAULT 0,
+	`total_wins` int NOT NULL DEFAULT 0,
+	`total_loot` json,
+	`pet_total_exp` int NOT NULL DEFAULT 0,
+	`pet_total_bp` int NOT NULL DEFAULT 0,
+	`max_duration` bigint NOT NULL DEFAULT 28800000,
+	`is_settled` tinyint NOT NULL DEFAULT 0,
+	CONSTRAINT `game_idle_sessions_id` PRIMARY KEY(`id`)
+);

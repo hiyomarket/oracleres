@@ -3223,3 +3223,211 @@ export const gamePetLearnedSkills = mysqlTable("game_pet_learned_skills", {
 });
 export type GamePetLearnedSkill = typeof gamePetLearnedSkills.$inferSelect;
 export type InsertGamePetLearnedSkill = typeof gamePetLearnedSkills.$inferInsert;
+
+
+// ═══════════════════════════════════════════════════════════════
+// GD-020 戰鬥系統 V2 — 回合制戰鬥實例表
+// ═══════════════════════════════════════════════════════════════
+
+/** 戰鬥模式枚舉 */
+export const battleModeEnum = mysqlEnum("battle_mode", ["idle", "player_closed", "player_open", "pvp", "map_mob", "boss"]);
+/** 戰鬥狀態枚舉 */
+export const battleStateEnum = mysqlEnum("battle_state", ["waiting", "speed_sort", "turn_begin", "player_turn", "enemy_turn", "calculating", "status_effect", "check_end", "ended"]);
+
+/**
+ * game_battles — 戰鬥實例
+ * 每場戰鬥一筆記錄，追蹤模式、狀態機、回合數、獎勵倍率
+ */
+export const gameBattles = mysqlTable("game_battles", {
+  id: int("id").primaryKey().autoincrement(),
+  /** 戰鬥唯一 ID（UUID） */
+  battleId: varchar("battle_id", { length: 64 }).notNull().unique(),
+  /** 戰鬥模式 */
+  mode: battleModeEnum.notNull(),
+  /** 戰鬥狀態機 */
+  state: battleStateEnum.notNull().default("waiting"),
+  /** 當前回合數 */
+  currentRound: int("current_round").notNull().default(0),
+  /** 最大回合數 */
+  maxRounds: int("max_rounds").notNull().default(20),
+  /** 當前行動單位索引（在 participants 中的排序位置） */
+  currentTurnIndex: int("current_turn_index").notNull().default(0),
+  /** 行動順序快照（JSON: participantId[] 按速度排序） */
+  turnOrder: json("turn_order").$type<number[]>(),
+  /** 獎勵倍率（經驗/金錢/掉落共用） */
+  rewardMultiplier: float("reward_multiplier").notNull().default(1.0),
+  /** 發起者 agentId */
+  initiatorAgentId: int("initiator_agent_id").notNull(),
+  /** 地圖節點 ID（可選） */
+  nodeId: varchar("node_id", { length: 64 }),
+  /** 戰鬥結果：win / lose / flee / draw */
+  result: varchar("result", { length: 20 }),
+  /** 結算數據（JSON：expGained, goldGained, lootItems, petExpGained 等） */
+  settlementData: json("settlement_data").$type<Record<string, unknown>>(),
+  /** 每回合思考時間限制（秒） */
+  turnTimeLimit: int("turn_time_limit").notNull().default(20),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  endedAt: bigint("ended_at", { mode: "number" }),
+});
+export type GameBattle = typeof gameBattles.$inferSelect;
+export type InsertGameBattle = typeof gameBattles.$inferInsert;
+
+/** 參與者類型枚舉 */
+export const participantTypeEnum = mysqlEnum("participant_type", ["character", "pet", "monster"]);
+/** 參與者陣營枚舉 */
+export const participantSideEnum = mysqlEnum("participant_side", ["ally", "enemy"]);
+
+/**
+ * game_battle_participants — 戰鬥參與者快照
+ * 記錄每個參與者在戰鬥開始時的屬性快照 + 即時 HP/MP
+ */
+export const gameBattleParticipants = mysqlTable("game_battle_participants", {
+  id: int("id").primaryKey().autoincrement(),
+  /** 關聯戰鬥 ID */
+  battleId: int("battle_id").notNull(),
+  /** 參與者類型 */
+  participantType: participantTypeEnum.notNull(),
+  /** 陣營 */
+  side: participantSideEnum.notNull(),
+  /** 關聯 agentId（角色/寵物擁有者） */
+  agentId: int("agent_id"),
+  /** 關聯 petId（寵物時） */
+  petId: int("pet_id"),
+  /** 關聯 monsterId（怪物時） */
+  monsterId: varchar("monster_id", { length: 64 }),
+  /** 顯示名稱 */
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  /** 等級 */
+  level: int("level").notNull().default(1),
+  /** 屬性快照 */
+  maxHp: int("max_hp").notNull(),
+  currentHp: int("current_hp").notNull(),
+  maxMp: int("max_mp").notNull().default(50),
+  currentMp: int("current_mp").notNull().default(50),
+  attack: int("attack").notNull(),
+  defense: int("defense").notNull(),
+  magicAttack: int("magic_attack").notNull().default(0),
+  magicDefense: int("magic_defense").notNull().default(0),
+  speed: int("speed").notNull(),
+  /** 五行屬性 */
+  dominantElement: varchar("dominant_element", { length: 20 }),
+  /** 種族 */
+  race: varchar("race", { length: 50 }),
+  /** 裝備技能快照（JSON） */
+  equippedSkills: json("equipped_skills").$type<Array<{
+    id: string; name: string; skillType: string;
+    damageMultiplier: number; mpCost: number;
+    wuxing?: string; cooldown?: number;
+    element?: string;
+  }>>(),
+  /** 是否正在防禦 */
+  isDefending: tinyint("is_defending").notNull().default(0),
+  /** 是否已陣亡 */
+  isDefeated: tinyint("is_defeated").notNull().default(0),
+  /** 行動順序分數（用於排序） */
+  speedScore: int("speed_score").notNull().default(0),
+  /** 技能冷卻狀態（JSON: { skillId: remainingCooldown }） */
+  skillCooldowns: json("skill_cooldowns").$type<Record<string, number>>(),
+  /** 狀態效果（JSON） */
+  activeBuffs: json("active_buffs").$type<Array<{
+    type: string; duration: number; value: number;
+    source: string; appliedRound: number;
+  }>>(),
+});
+export type GameBattleParticipant = typeof gameBattleParticipants.$inferSelect;
+export type InsertGameBattleParticipant = typeof gameBattleParticipants.$inferInsert;
+
+/** 指令類型枚舉 */
+export const commandTypeEnum = mysqlEnum("command_type", ["attack", "skill", "defend", "item", "flee", "surrender", "auto"]);
+
+/**
+ * game_battle_commands — 戰鬥指令記錄
+ */
+export const gameBattleCommands = mysqlTable("game_battle_commands", {
+  id: int("id").primaryKey().autoincrement(),
+  battleId: int("battle_id").notNull(),
+  /** 回合數 */
+  round: int("round").notNull(),
+  /** 發出指令的參與者 ID */
+  participantId: int("participant_id").notNull(),
+  /** 指令類型 */
+  commandType: commandTypeEnum.notNull(),
+  /** 目標參與者 ID */
+  targetId: int("target_id"),
+  /** 使用的技能 ID（技能指令時） */
+  skillId: varchar("skill_id", { length: 64 }),
+  /** 使用的道具 ID（道具指令時） */
+  itemId: varchar("item_id", { length: 64 }),
+  /** 是否由 AI 自動決策 */
+  isAutoDecision: tinyint("is_auto_decision").notNull().default(0),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameBattleCommand = typeof gameBattleCommands.$inferSelect;
+export type InsertGameBattleCommand = typeof gameBattleCommands.$inferInsert;
+
+/**
+ * game_battle_logs — 戰鬥日誌
+ * 每個行動產生一筆日誌，前端用於回放
+ */
+export const gameBattleLogs = mysqlTable("game_battle_logs", {
+  id: int("id").primaryKey().autoincrement(),
+  battleId: int("battle_id").notNull(),
+  round: int("round").notNull(),
+  /** 行動者參與者 ID */
+  actorId: int("actor_id").notNull(),
+  /** 日誌類型 */
+  logType: varchar("log_type", { length: 30 }).notNull(), // damage, heal, buff, debuff, flee, defeat, status_tick
+  /** 目標參與者 ID */
+  targetId: int("target_id"),
+  /** 傷害/治療數值 */
+  value: int("value").notNull().default(0),
+  /** 是否暴擊 */
+  isCritical: tinyint("is_critical").notNull().default(0),
+  /** 使用的技能名稱 */
+  skillName: varchar("skill_name", { length: 100 }),
+  /** 五行加成描述 */
+  elementBoostDesc: varchar("element_boost_desc", { length: 200 }),
+  /** 狀態效果描述 */
+  statusEffectDesc: varchar("status_effect_desc", { length: 200 }),
+  /** 文字描述 */
+  message: text("message").notNull(),
+  /** 額外數據（JSON） */
+  detail: json("detail").$type<Record<string, unknown>>(),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameBattleLog = typeof gameBattleLogs.$inferSelect;
+export type InsertGameBattleLog = typeof gameBattleLogs.$inferInsert;
+
+/**
+ * game_idle_sessions — 掛機記錄
+ * 追蹤每次掛機的開始/結束時間和累計獎勵
+ */
+export const gameIdleSessions = mysqlTable("game_idle_sessions", {
+  id: int("id").primaryKey().autoincrement(),
+  agentId: int("agent_id").notNull(),
+  /** 掛機開始時間 */
+  startedAt: bigint("started_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  /** 掛機結束時間 */
+  endedAt: bigint("ended_at", { mode: "number" }),
+  /** 累計經驗 */
+  totalExp: int("total_exp").notNull().default(0),
+  /** 累計金幣 */
+  totalGold: int("total_gold").notNull().default(0),
+  /** 累計戰鬥次數 */
+  totalBattles: int("total_battles").notNull().default(0),
+  /** 累計勝利次數 */
+  totalWins: int("total_wins").notNull().default(0),
+  /** 累計掉落物品（JSON） */
+  totalLoot: json("total_loot").$type<Record<string, number>>(),
+  /** 寵物累計經驗 */
+  petTotalExp: int("pet_total_exp").notNull().default(0),
+  /** 寵物累計 BP */
+  petTotalBp: int("pet_total_bp").notNull().default(0),
+  /** 離線封頂時間（毫秒，預設 8 小時） */
+  maxDuration: bigint("max_duration", { mode: "number" }).notNull().default(8 * 60 * 60 * 1000),
+  /** 是否已結算 */
+  isSettled: tinyint("is_settled").notNull().default(0),
+});
+export type GameIdleSession = typeof gameIdleSessions.$inferSelect;
+export type InsertGameIdleSession = typeof gameIdleSessions.$inferInsert;
