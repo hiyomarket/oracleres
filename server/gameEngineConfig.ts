@@ -48,6 +48,15 @@ export interface GameEngineConfig {
   afkTickIntervalMs: number;
   /** 是否啟用伺服器端掛機循環 */
   afkTickEnabled: boolean;
+  // ─── Boss 系統配置 ───
+  /** 是否啟用 Boss 系統 */
+  bossSystemEnabled: boolean;
+  /** T1 常駐最大數量 */
+  bossT1MaxCount: number;
+  /** T1 移動間隔（秒） */
+  bossT1MoveInterval: number;
+  /** T2 移動間隔（秒） */
+  bossT2MoveInterval: number;
 }
 
 // ─── 預設值 ───
@@ -75,6 +84,11 @@ const DEFAULT_CONFIG: GameEngineConfig = {
   // 掛機循環預設值
   afkTickIntervalMs: 15_000,
   afkTickEnabled: true,
+  // Boss 系統預設值
+  bossSystemEnabled: true,
+  bossT1MaxCount: 5,
+  bossT1MoveInterval: 300,
+  bossT2MoveInterval: 600,
 };
 
 // ─── 單例記憶體狀態 ───
@@ -148,6 +162,16 @@ export function getAfkTickConfig(): { intervalMs: number; enabled: boolean } {
   return {
     intervalMs: _config.afkTickIntervalMs,
     enabled: _config.afkTickEnabled,
+  };
+}
+
+/** 取得 Boss 系統配置 */
+export function getBossConfig(): { enabled: boolean; t1MaxCount: number; t1MoveInterval: number; t2MoveInterval: number } {
+  return {
+    enabled: _config.bossSystemEnabled,
+    t1MaxCount: _config.bossT1MaxCount,
+    t1MoveInterval: _config.bossT1MoveInterval,
+    t2MoveInterval: _config.bossT2MoveInterval,
   };
 }
 

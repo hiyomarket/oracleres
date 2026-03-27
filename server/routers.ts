@@ -39,6 +39,7 @@ import { startTickEngine } from './tickEngine';
 import { startWorldTickEngine } from './worldTickEngine';
 import { startAfkTickEngine } from './afkTickEngine';
 import { gameGuideRouter } from './routers/gameGuide';
+import { roamingBossRouter } from './routers/roamingBoss';
 
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
@@ -104,6 +105,7 @@ export const appRouter = router({
   gamePet: gamePetRouter,
   gameBattle: gameBattleRouter,
   gameGuide: gameGuideRouter,
+  roamingBoss: roamingBossRouter,
   businessHub: businessHubRouter,
   userGroups: userGroupsRouter,
   auth: router({

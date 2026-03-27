@@ -1,0 +1,127 @@
+{
+  "query": "SELECT monster_id, name, wuxing, level_range, base_hp, base_attack, rarity FROM game_monster_catalog WHERE rarity IN ('legendary', 'elite') ORDER BY rarity, name;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id, name, wuxing, level_range, base_hp, base_attack, rarity FROM game_monster_catalog WHERE rarity IN ('legendary', 'elite') ORDER BY rarity, name;",
+  "rows": [
+    {
+      "monster_id": "M_W065",
+      "name": "冬至冰靈",
+      "wuxing": "水",
+      "level_range": "15-20",
+      "base_hp": "350",
+      "base_attack": "48",
+      "rarity": "elite"
+    },
+    {
+      "monster_id": "M_W066",
+      "name": "淚之泉精靈",
+      "wuxing": "水",
+      "level_range": "18-25",
+      "base_hp": "350",
+      "base_attack": "52",
+      "rarity": "elite"
+    },
+    {
+      "monster_id": "M_W060",
+      "name": "虛空深淵主",
+      "wuxing": "水",
+      "level_range": "20-30",
+      "base_hp": "350",
+      "base_attack": "55",
+      "rarity": "elite"
+    },
+    {
+      "monster_id": "M_E022",
+      "name": "世界Boss・大地守護者",
+      "wuxing": "土",
+      "level_range": "60-60",
+      "base_hp": "50000",
+      "base_attack": "80",
+      "rarity": "legendary"
+    },
+    {
+      "monster_id": "M_Wt023",
+      "name": "世界Boss・深淵海神",
+      "wuxing": "水",
+      "level_range": "60-60",
+      "base_hp": "50000",
+      "base_attack": "80",
+      "rarity": "legendary"
+    },
+    {
+      "monster_id": "M_F024",
+      "name": "世界Boss・炎之滅世龍",
+      "wuxing": "火",
+      "level_range": "60-60",
+      "base_hp": "50000",
+      "base_attack": "80",
+      "rarity": "legendary"
+    },
+    {
+      "monster_id": "M_W025",
+      "name": "世界Boss・神木守護者",
+      "wuxing": "木",
+      "level_range": "60-60",
+      "base_hp": "50000",
+      "base_attack": "80",
+      "rarity": "legendary"
+    },
+    {
+      "monster_id": "M_M022",
+      "name": "世界Boss・金之祖龍",
+      "wuxing": "金",
+      "level_range": "60-60",
+      "base_hp": "50000",
+      "base_attack": "80",
+      "rarity": "legendary"
+    },
+    {
+      "monster_id": "M_W061",
+      "name": "冰霜巨龍",
+      "wuxing": "水",
+      "level_range": "30-40",
+      "base_hp": "50000",
+      "base_attack": "80",
+      "rarity": "legendary"
+    },
+    {
+      "monster_id": "M_W062",
+      "name": "海神波塞冬",
+      "wuxing": "水",
+      "level_range": "35-45",
+      "base_hp": "50000",
+      "base_attack": "80",
+      "rarity": "legendary"
+    },
+    {
+      "monster_id": "M_W064",
+      "name": "深海克拉肯",
+      "wuxing": "水",
+      "level_range": "40-50",
+      "base_hp": "50000",
+      "base_attack": "80",
+      "rarity": "legendary"
+    },
+    {
+      "monster_id": "M_W063",
+      "name": "萬年冰川巨獸",
+      "wuxing": "水",
+      "level_range": "38-48",
+      "base_hp": "50000",
+      "base_attack": "80",
+      "rarity": "legendary"
+    },
+    {
+      "monster_id": "M_M024",
+      "name": "金剛傀儡",
+      "wuxing": "金",
+      "level_range": "30-50",
+      "base_hp": "50000",
+      "base_attack": "80",
+      "rarity": "legendary"
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_id\tname\twuxing\tlevel_range\tbase_hp\tbase_attack\trarity\nM_W065\t冬至冰靈\t水\t15-20\t350\t48\telite\nM_W066\t淚之泉精靈\t水\t18-25\t350\t52\telite\nM_W060\t虛空深淵主\t水\t20-30\t350\t55\telite\nM_E022\t世界Boss・大地守護者\t土\t60-60\t50000\t80\tlegendary\nM_Wt023\t世界Boss・深淵海神\t水\t60-60\t50000\t80\tlegendary\nM_F024\t世界Boss・炎之滅世龍\t火\t60-60\t50000\t80\tlegendary\nM_W025\t世界Boss・神木守護者\t木\t60-60\t50000\t80\tlegendary\nM_M022\t世界Boss・金之祖龍\t金\t60-60\t50000\t80\tlegendary\nM_W061\t冰霜巨龍\t水\t30-40\t50000\t80\tlegendary\nM_W062\t海神波塞冬\t水\t35-45\t50000\t80\tlegendary\nM_W064\t深海克拉肯\t水\t40-50\t50000\t80\tlegendary\nM_W063\t萬年冰川巨獸\t水\t38-48\t50000\t80\tlegendary\nM_M024\t金剛傀儡\t金\t30-50\t50000\t80\tlegendary\n",
+  "stderr": "",
+  "execution_time_ms": 1570
+}

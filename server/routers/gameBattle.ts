@@ -7,7 +7,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog } from "../../drizzle/schema";
+import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog } from "../../drizzle/schema";
 import { sql, inArray } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
@@ -515,6 +515,51 @@ export const gameBattleRouter = router({
         const playerCmd = input.commands.find(c => c.participantId === pid);
         if (playerCmd && actor.side === "ally") {
           command = playerCmd as BattleCommand;
+
+          // ─── 道具使用：查詢效果並扣除背包 ───
+          if (command.commandType === "item" && command.itemId) {
+            try {
+              const [itemRow] = await db.select({
+                name: gameItemCatalog.name,
+                useEffect: gameItemCatalog.useEffect,
+              }).from(gameItemCatalog).where(eq(gameItemCatalog.itemId, command.itemId)).limit(1);
+
+              if (itemRow?.useEffect) {
+                const eff = itemRow.useEffect as { type: string; value: number; duration?: number; description: string };
+                command.itemEffect = {
+                  type: eff.type,
+                  value: eff.value,
+                  duration: eff.duration,
+                  itemName: itemRow.name,
+                };
+              } else {
+                command.itemEffect = {
+                  type: "heal_hp",
+                  value: 30,
+                  itemName: itemRow?.name ?? "未知道具",
+                };
+              }
+
+              // 扣除背包數量
+              const agentP = dbParticipants.find(dp => dp.participantType === "character");
+              if (agentP?.agentId) {
+                const [inv] = await db.select().from(agentInventory)
+                  .where(and(
+                    eq(agentInventory.agentId, agentP.agentId),
+                    eq(agentInventory.itemId, command.itemId),
+                    sql`${agentInventory.quantity} > 0`,
+                  )).limit(1);
+                if (inv) {
+                  await db.update(agentInventory).set({
+                    quantity: Math.max(0, inv.quantity - 1),
+                    updatedAt: Date.now(),
+                  }).where(eq(agentInventory.id, inv.id));
+                }
+              }
+            } catch (e) {
+              console.error("[Battle] item lookup error:", e);
+            }
+          }
         } else {
           const allies = participants.filter(p => p.side === actor.side);
           const enemies = participants.filter(p => p.side !== actor.side);
@@ -794,10 +839,14 @@ export const gameBattleRouter = router({
           isDefeated: p.isDefeated === 1,
           isDefending: p.isDefending === 1,
           statusEffects: (p.activeBuffs ?? []) as any,
-          skills: ((p.equippedSkills ?? []) as any[]).map((s: any) => ({
-            id: s.id, name: s.name, mpCost: s.mpCost,
-            cooldown: s.cooldown ?? 0, currentCooldown: s.currentCooldown ?? 0,
-          })),
+          skills: ((p.equippedSkills ?? []) as any[]).map((s: any) => {
+            const cdMap = (p.skillCooldowns ?? {}) as Record<string, number>;
+            return {
+              id: s.id, name: s.name, mpCost: s.mpCost,
+              cooldown: s.cooldown ?? 0,
+              currentCooldown: cdMap[s.id] ?? s.currentCooldown ?? 0,
+            };
+          }),
         })),
         logs: logs.map(l => ({
           round: l.round,
@@ -991,6 +1040,52 @@ export const gameBattleRouter = router({
       petBpDetails,
     };
   }),
+
+  // ═══════════════════════════════════════════════════════════════
+  // 戰鬥中可用道具（消耗品）
+  // ═══════════════════════════════════════════════════════════════
+  getBattleItems: protectedProcedure
+    .input(z.object({ battleId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const [agent] = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id)));
+      if (!agent) return [];
+
+      // 查詢背包中的消耗品
+      const items = await db.select({
+        inventoryId: agentInventory.id,
+        itemId: agentInventory.itemId,
+        quantity: agentInventory.quantity,
+        catalogName: gameItemCatalog.name,
+        catalogCategory: gameItemCatalog.category,
+        catalogRarity: gameItemCatalog.rarity,
+        catalogUseEffect: gameItemCatalog.useEffect,
+        catalogEffect: gameItemCatalog.effect,
+        catalogWuxing: gameItemCatalog.wuxing,
+      }).from(agentInventory)
+        .innerJoin(gameItemCatalog, eq(agentInventory.itemId, gameItemCatalog.itemId))
+        .where(
+          and(
+            eq(agentInventory.agentId, agent.id),
+            eq(agentInventory.itemType, "consumable"),
+            sql`${agentInventory.quantity} > 0`,
+          )
+        );
+
+      return items.map(item => ({
+        inventoryId: item.inventoryId,
+        itemId: item.itemId,
+        name: item.catalogName,
+        quantity: item.quantity,
+        category: item.catalogCategory,
+        rarity: item.catalogRarity,
+        wuxing: item.catalogWuxing,
+        useEffect: item.catalogUseEffect as { type: string; value: number; duration?: number; description: string } | null,
+        effectDesc: item.catalogEffect ?? "",
+      }));
+    }),
 
   // ═══════════════════════════════════════════════════════════════
   // 戰鬥歷史

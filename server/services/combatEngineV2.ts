@@ -98,6 +98,13 @@ export interface BattleCommand {
   targetId?: number;
   skillId?: string;
   itemId?: string;
+  /** 道具效果（由 gameBattle router 查詢後注入） */
+  itemEffect?: {
+    type: string;      // "heal_hp" | "heal_mp" | "atk_boost" | "def_boost" | "cure_status" | "revive"
+    value: number;     // 效果數值（百分比或固定值）
+    duration?: number; // 持續回合數（buff 類）
+    itemName: string;  // 道具名稱
+  };
 }
 
 export interface BattleLogEntry {
@@ -602,15 +609,127 @@ export function executeCommand(
     }
 
     case "item": {
-      // 道具使用（簡化版：恢復 HP 30%）
-      const healAmount = Math.floor(actor.maxHp * 0.3);
-      actor.currentHp = Math.min(actor.maxHp, actor.currentHp + healAmount);
-      logs.push({
-        round, actorId: actor.id, actorName: actor.name,
-        logType: "heal", targetId: actor.id, targetName: actor.name,
-        value: healAmount, isCritical: false,
-        message: `${actor.name}使用道具，恢復 ${healAmount} HP`,
-      });
+      const effect = command.itemEffect;
+      if (!effect) {
+        // 無效果資料，fallback 恢復 HP 30%
+        const fallbackHeal = Math.floor(actor.maxHp * 0.3);
+        actor.currentHp = Math.min(actor.maxHp, actor.currentHp + fallbackHeal);
+        logs.push({
+          round, actorId: actor.id, actorName: actor.name,
+          logType: "heal", targetId: actor.id, targetName: actor.name,
+          value: fallbackHeal, isCritical: false,
+          message: `${actor.name}使用道具，恢復 ${fallbackHeal} HP`,
+        });
+        break;
+      }
+
+      const target = command.targetId
+        ? participants.find(p => p.id === command.targetId) ?? actor
+        : actor;
+
+      switch (effect.type) {
+        case "heal_hp": {
+          const healAmt = Math.floor(target.maxHp * effect.value / 100);
+          target.currentHp = Math.min(target.maxHp, target.currentHp + healAmt);
+          logs.push({
+            round, actorId: actor.id, actorName: actor.name,
+            logType: "heal", targetId: target.id, targetName: target.name,
+            value: healAmt, isCritical: false,
+            skillName: effect.itemName,
+            message: `${actor.name}使用${effect.itemName}，${target.name}恢復 ${healAmt} HP`,
+          });
+          break;
+        }
+        case "heal_mp": {
+          const mpAmt = Math.floor(target.maxMp * effect.value / 100);
+          target.currentMp = Math.min(target.maxMp, target.currentMp + mpAmt);
+          logs.push({
+            round, actorId: actor.id, actorName: actor.name,
+            logType: "heal", targetId: target.id, targetName: target.name,
+            value: mpAmt, isCritical: false,
+            skillName: effect.itemName,
+            message: `${actor.name}使用${effect.itemName}，${target.name}恢復 ${mpAmt} MP`,
+          });
+          break;
+        }
+        case "atk_boost": {
+          const boost = Math.floor(target.attack * effect.value / 100);
+          target.statusEffects.push({ type: "atk_up", duration: effect.duration ?? 3, value: boost, source: effect.itemName, appliedRound: round });
+          target.attack += boost;
+          logs.push({
+            round, actorId: actor.id, actorName: actor.name,
+            logType: "buff", targetId: target.id, targetName: target.name,
+            value: boost, isCritical: false,
+            skillName: effect.itemName,
+            message: `${actor.name}使用${effect.itemName}，${target.name}攻擊力提升 ${boost}（${effect.duration ?? 3}回合）`,
+          });
+          break;
+        }
+        case "def_boost": {
+          const boost = Math.floor(target.defense * effect.value / 100);
+          target.statusEffects.push({ type: "def_up", duration: effect.duration ?? 3, value: boost, source: effect.itemName, appliedRound: round });
+          target.defense += boost;
+          logs.push({
+            round, actorId: actor.id, actorName: actor.name,
+            logType: "buff", targetId: target.id, targetName: target.name,
+            value: boost, isCritical: false,
+            skillName: effect.itemName,
+            message: `${actor.name}使用${effect.itemName}，${target.name}防禦力提升 ${boost}（${effect.duration ?? 3}回合）`,
+          });
+          break;
+        }
+        case "cure_status": {
+          const removed = target.statusEffects.filter(e =>
+            ["poison", "burn", "freeze", "stun", "confuse", "sleep"].includes(e.type)
+          );
+          target.statusEffects = target.statusEffects.filter(e =>
+            !["poison", "burn", "freeze", "stun", "confuse", "sleep"].includes(e.type)
+          );
+          logs.push({
+            round, actorId: actor.id, actorName: actor.name,
+            logType: "heal", targetId: target.id, targetName: target.name,
+            value: removed.length, isCritical: false,
+            skillName: effect.itemName,
+            message: `${actor.name}使用${effect.itemName}，${target.name}的異常狀態已清除`,
+          });
+          break;
+        }
+        case "revive": {
+          if (target.isDefeated) {
+            target.isDefeated = false;
+            const reviveHp = Math.floor(target.maxHp * effect.value / 100);
+            target.currentHp = reviveHp;
+            logs.push({
+              round, actorId: actor.id, actorName: actor.name,
+              logType: "heal", targetId: target.id, targetName: target.name,
+              value: reviveHp, isCritical: false,
+              skillName: effect.itemName,
+              message: `${actor.name}使用${effect.itemName}，${target.name}復活並恢復 ${reviveHp} HP！`,
+            });
+          } else {
+            logs.push({
+              round, actorId: actor.id, actorName: actor.name,
+              logType: "buff", value: 0, isCritical: false,
+              skillName: effect.itemName,
+              message: `${actor.name}使用${effect.itemName}，但${target.name}並未倒下`,
+            });
+          }
+          break;
+        }
+        default: {
+          // 未知效果類型 fallback
+          const fallback = Math.floor(actor.maxHp * 0.2);
+          actor.currentHp = Math.min(actor.maxHp, actor.currentHp + fallback);
+          logs.push({
+            round, actorId: actor.id, actorName: actor.name,
+            logType: "heal", targetId: actor.id, targetName: actor.name,
+            value: fallback, isCritical: false,
+            skillName: effect.itemName,
+            message: `${actor.name}使用${effect.itemName}，恢復 ${fallback} HP`,
+          });
+          break;
+        }
+      }
       break;
     }
   }

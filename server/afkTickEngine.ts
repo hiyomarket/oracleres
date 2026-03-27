@@ -10,6 +10,7 @@ import { processAgentTick, regenStamina } from "./tickEngine";
 import { gameAgents, gameWorld, gameConfig } from "../drizzle/schema";
 import { eq, and, sql, ne } from "drizzle-orm";
 import type { WuXing } from "../shared/types";
+import { processBossTick } from "./services/roamingBossEngine";
 
 let afkInterval: ReturnType<typeof setInterval> | null = null;
 let isProcessing = false;
@@ -119,6 +120,7 @@ export function startAfkTickEngine(): void {
     const afkCfgNow = getAfkTickConfig();
     if (!afkCfgNow.enabled) return;
     await processAllAgents();
+    await processBossTick();
   }, intervalMs);
 }
 

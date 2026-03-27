@@ -92,7 +92,9 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
   const [battleResult, setBattleResult] = useState<string | null>(null);
   const [selectedCommand, setSelectedCommand] = useState<string | null>(null);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showSkillPanel, setShowSkillPanel] = useState(false);
+  const [showItemPanel, setShowItemPanel] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentGlow, setCurrentGlow] = useState<string | null>(null);
   const [isShaking, setIsShaking] = useState(false);
@@ -139,7 +141,9 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       setIsSubmitting(false);
       setSelectedCommand(null);
       setSelectedSkillId(null);
+      setSelectedItemId(null);
       setShowSkillPanel(false);
+      setShowItemPanel(false);
 
       if (data.logs) {
         const newLogs = data.logs as BattleLogUI[];
@@ -286,6 +290,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       commandType: "attack" | "skill" | "defend" | "item" | "flee" | "surrender";
       targetId?: number;
       skillId?: string;
+      itemId?: string;
     }> = [];
 
     // 角色指令
@@ -296,6 +301,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
         commandType: selectedCommand as any,
         targetId: target?.id,
         skillId: selectedCommand === "skill" ? selectedSkillId ?? undefined : undefined,
+        itemId: selectedCommand === "item" ? selectedItemId ?? undefined : undefined,
       });
     }
 
@@ -455,19 +461,39 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
               </div>
             )}
 
+            {/* 道具選擇面板 */}
+            {showItemPanel && character && (
+              <ItemPanel
+                battleId={battleId}
+                onSelect={(itemId) => {
+                  setSelectedItemId(itemId);
+                  setSelectedCommand("item");
+                }}
+                onCancel={() => { setShowItemPanel(false); setSelectedCommand(null); }}
+                selectedItemId={selectedItemId}
+              />
+            )}
+
             {/* 指令按鈕列 */}
-            {!showSkillPanel && (
+            {!showSkillPanel && !showItemPanel && (
               <div className="flex gap-1.5 mb-2">
                 {COMMANDS.map(cmd => (
                   <button key={cmd.id}
                     onClick={() => {
                       if (cmd.id === "skill") {
                         setShowSkillPanel(true);
+                        setShowItemPanel(false);
                         setSelectedCommand("skill");
+                      } else if (cmd.id === "item") {
+                        setShowItemPanel(true);
+                        setShowSkillPanel(false);
+                        setSelectedCommand("item");
                       } else {
                         setSelectedCommand(cmd.id);
                         setShowSkillPanel(false);
+                        setShowItemPanel(false);
                         setSelectedSkillId(null);
+                        setSelectedItemId(null);
                       }
                     }}
                     disabled={isSubmitting || (character?.isDefeated ?? false)}
@@ -616,6 +642,66 @@ function LogEntry({ log, allies }: { log: BattleLogUI; allies: BattleParticipant
       {log.message}
       {log.elementBoostDesc && <span className="text-yellow-400/60 ml-1">({log.elementBoostDesc})</span>}
       {log.isCritical && <span className="text-yellow-300 ml-1">暴擊！</span>}
+    </div>
+  );
+}
+
+// ─── 道具選擇面板 ───
+function ItemPanel({ battleId, onSelect, onCancel, selectedItemId }: {
+  battleId: string;
+  onSelect: (itemId: string) => void;
+  onCancel: () => void;
+  selectedItemId: string | null;
+}) {
+  const itemsQuery = trpc.gameBattle.getBattleItems.useQuery(
+    { battleId },
+    { staleTime: 30000 }
+  );
+
+  const RARITY_COLOR: Record<string, string> = {
+    common: "#94a3b8", rare: "#60a5fa", epic: "#a78bfa", legendary: "#fbbf24",
+  };
+  const WX_ITEM_EMOJI: Record<string, string> = {
+    wood: "🌿", fire: "🔥", earth: "🪨", metal: "⚡", water: "💧",
+  };
+
+  return (
+    <div className="mb-2 space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-green-300 font-bold">🎒 選擇道具</span>
+        <button onClick={onCancel}
+          className="text-[10px] text-slate-400 hover:text-white">✕ 取消</button>
+      </div>
+      {itemsQuery.isLoading && (
+        <p className="text-[10px] text-slate-500 text-center py-2">載入中…</p>
+      )}
+      {itemsQuery.data && itemsQuery.data.length === 0 && (
+        <p className="text-[10px] text-slate-500 text-center py-2">背包中沒有可用的消耗品</p>
+      )}
+      <div className="grid grid-cols-2 gap-1 max-h-[120px] overflow-y-auto">
+        {(itemsQuery.data ?? []).map(item => {
+          const rarityColor = RARITY_COLOR[item.rarity] ?? "#94a3b8";
+          const wxEmoji = WX_ITEM_EMOJI[item.wuxing] ?? "";
+          const effectDesc = item.useEffect?.description ?? item.effectDesc ?? "使用效果";
+          return (
+            <button key={item.itemId}
+              onClick={() => onSelect(item.itemId)}
+              className={`rounded-lg px-2 py-1.5 text-left text-[10px] transition-all ${
+                selectedItemId === item.itemId
+                  ? "ring-1 ring-green-400"
+                  : "hover:bg-green-900/30"
+              }`}
+              style={{ background: "rgba(34,197,94,0.08)", border: `1px solid ${selectedItemId === item.itemId ? "rgba(34,197,94,0.5)" : "rgba(34,197,94,0.15)"}` }}>
+              <div className="flex items-center gap-1">
+                {wxEmoji && <span className="text-[9px]">{wxEmoji}</span>}
+                <p className="font-bold truncate" style={{ color: rarityColor }}>{item.name}</p>
+                <span className="text-[8px] text-slate-500 ml-auto">x{item.quantity}</span>
+              </div>
+              <p className="text-[8px] text-slate-400 truncate mt-0.5">{effectDesc}</p>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

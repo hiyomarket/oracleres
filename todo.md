@@ -4887,3 +4887,62 @@
 
 ### 測試
 - [x] vitest 測試覆蓋（59 檔案 1243 項測試全數通過）
+
+## M18 移動式 Boss 系統 + 戰鬥介面技能/道具修復
+
+### 資料庫
+- [ ] 新增 game_boss_catalog 表（Boss 圖鑑定義）
+- [ ] 新增 game_boss_instances 表（活躍 Boss 實例）
+- [ ] 新增 game_boss_kill_log 表（擊殺記錄/冷卻/首殺）
+- [ ] 預設 Tier 1 Boss 5 隻（克特、黑長老、古牛、逆位行者、蒼龍）
+- [ ] 預設 Tier 2 Boss 2 隻（死亡騎士、露比）
+- [ ] Tier 3 Boss 自動觸發機制
+
+### Boss 引擎
+- [ ] bossEngine.ts：Boss 移動邏輯（沿 connections 巡迴）
+- [ ] bossEngine.ts：Boss 生成/消亡/重生管理
+- [ ] bossEngine.ts：路徑生成（Tier1 縣市內/Tier2 跨縣市/Tier3 全島）
+- [ ] 整合 afkTickEngine（每 tick 處理 Boss 移動和狀態）
+- [ ] Boss 狂暴化機制（HP 50%/25% 觸發）
+- [ ] WebSocket 廣播（boss_spawn/boss_moved/boss_defeated/boss_despawned）
+
+### 後端 API
+- [ ] gameBoss router：查詢活躍 Boss 列表
+- [ ] gameBoss router：查詢 Boss 詳情（位置/HP/掉落表）
+- [ ] gameBoss router：發起 Boss 挑戰（startBossBattle）
+- [ ] gameBoss router：Boss 擊殺記錄和排行榜
+- [ ] adminBoss router：Boss 圖鑑 CRUD
+- [ ] adminBoss router：手動觸發/傳送/擊殺 Boss
+- [ ] adminBoss router：出王時間排程設定
+- [ ] adminBoss router：Boss 統計儀表板
+- [ ] gameEngineConfig 新增 Boss 相關配置項
+
+### 前端 Boss 系統
+- [ ] BossTracker 頁面（活躍 Boss 列表 + 位置追蹤）
+- [ ] 地圖上 Boss 標記（脈動動畫 + Boss 圖示）
+- [ ] Boss 遭遇面板（Boss 資訊 + 挑戰按鈕）
+- [ ] Boss 戰鬥結算（專屬獎勵 + 首殺獎勵）
+- [ ] 底端功能表或遊戲大廳入口
+
+### 後台 Boss 管理
+- [x] Boss 管理 Tab（GameCMS RoamingBossTab）
+- [x] Boss 圖鑑管理（新增/編輯/刪除 Boss 定義）
+- [x] 數值調整面板（HP/ATK/DEF/SPD/獎勵倍率）
+- [x] 出王時間排程（BossConfigPanel 配置 Tier2 定時生成、Tier3 觸發條件）
+- [x] 活躍 Boss 監控（位置/狀態/手動操作）
+- [x] Boss 統計儀表板（擊殺次數/掉落分布/參與率）
+
+### 戰鬥介面技能/道具修復
+- [x] BattleWindow 技能選擇接入 submitCommand（skillId 參數）
+- [x] BattleWindow 道具選擇面板（從背包讀取可用道具 + ItemPanel 組件）
+- [x] 道具使用邏輯接入 submitCommand（itemId 參數 + 後端查詢效果 + 扣除背包）
+- [x] 技能冷卻顯示和 MP 消耗檢查（修復 getBattleState skillCooldowns 映射）
+- [x] 道具效果即時反饋（heal_hp/heal_mp/atk_boost/def_boost/cure_status/revive）
+
+### 測試
+- [x] vitest 測試覆蓋（battle-items.test.ts: 19 個測試全通過）
+
+### Boss 種子資料
+- [x] Tier 1 預設 5 隻（克特、黑長老、古牛、逆位行者、蒼龍）
+- [x] Tier 2 預設 2 隻（死亡騎士、露比）
+- [x] Tier 3 自動 2 隻（混沌帝王、虛無巨蛇）

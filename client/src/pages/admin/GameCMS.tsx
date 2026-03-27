@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { MonsterCatalogV2Tab, ItemCatalogV2Tab, EquipCatalogV2Tab, SkillCatalogV2Tab, AchievementCatalogTab, MonsterSkillCatalogTab } from "@/components/admin/CatalogTabs";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -505,6 +505,7 @@ export default function GameCMS() {
             <TabsTrigger value="ai-shop-layout">🏪 AI 商店佈局</TabsTrigger>
             <TabsTrigger value="value-engine">💎 價值引擎</TabsTrigger>
             <TabsTrigger value="game-guide">📖 遊戲指南</TabsTrigger>
+            <TabsTrigger value="roaming-boss">👹 Boss 管理</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -532,6 +533,7 @@ export default function GameCMS() {
               <TabsContent value="ai-shop-layout"><AIShopLayoutTab /></TabsContent>
               <TabsContent value="value-engine"><ValueEngineTab /></TabsContent>
               <TabsContent value="game-guide"><GameGuideTab /></TabsContent>
+              <TabsContent value="roaming-boss"><RoamingBossTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
@@ -3655,5 +3657,498 @@ function GameGuideTab() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+ * 👹 RoamingBossTab — 移動式 Boss 管理
+ * ═══════════════════════════════════════════════════ */
+function RoamingBossTab() {
+  const [activeSection, setActiveSection] = useState<"catalog" | "instances" | "config" | "stats">("catalog");
+  const [editingBoss, setEditingBoss] = useState<any>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  // 查詢 Boss 圖鑑
+  const { data: bossCatalog, refetch: refetchCatalog } = trpc.roamingBoss.getCatalogList.useQuery();
+  // 查詢活躍實例
+  const { data: activeInstances, refetch: refetchInstances } = trpc.roamingBoss.getActiveBosses.useQuery();
+  // 查詢擊殺排行
+  const { data: rankings } = trpc.roamingBoss.getKillRanking.useQuery({ limit: 50 });
+
+  // Mutations
+  const updateBoss = trpc.roamingBoss.upsertCatalog.useMutation({
+    onSuccess: () => { refetchCatalog(); setEditingBoss(null); },
+  });
+  const createBoss = trpc.roamingBoss.upsertCatalog.useMutation({
+    onSuccess: () => { refetchCatalog(); setShowCreateDialog(false); },
+  });
+  const spawnBossMut = trpc.roamingBoss.spawnBoss.useMutation({
+    onSuccess: () => { refetchInstances(); },
+  });
+  const despawnBossMut = trpc.roamingBoss.despawnBoss.useMutation({
+    onSuccess: () => { refetchInstances(); },
+  });
+
+  const TIER_LABELS: Record<number, string> = { 1: "T1 遊蕩精英", 2: "T2 區域守護者", 3: "T3 天命凶獸" };
+  const WX_EMOJI: Record<string, string> = { wood: "🌿", fire: "🔥", earth: "🪨", metal: "⚔️", water: "💧" };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-bold text-amber-400">👹 移動式 Boss 管理</h3>
+        <div className="flex gap-2">
+          {(["catalog", "instances", "config", "stats"] as const).map(s => (
+            <Button key={s} size="sm" variant={activeSection === s ? "default" : "outline"}
+              onClick={() => setActiveSection(s)}>
+              {s === "catalog" ? "📋 圖鑑" : s === "instances" ? "🗺️ 活躍" : s === "config" ? "⚙️ 設定" : "📊 統計"}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* ═══ 圖鑑管理 ═══ */}
+      {activeSection === "catalog" && (
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-muted-foreground">管理 Boss 圖鑑：新增/編輯/啟用停用 Boss</p>
+            <Button size="sm" onClick={() => setShowCreateDialog(true)}>➕ 新增 Boss</Button>
+          </div>
+
+          {bossCatalog?.map((boss: any) => (
+            <Card key={boss.id} className="bg-background/50 border-border/50">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant={boss.isActive ? "default" : "secondary"}>
+                        {boss.isActive ? "✅ 啟用" : "⏸ 停用"}
+                      </Badge>
+                      <Badge className="bg-amber-600 text-white">{TIER_LABELS[boss.tier] || `T${boss.tier}`}</Badge>
+                      <span className="font-bold">{WX_EMOJI[boss.wuxing] || "❓"} {boss.name}</span>
+                      {boss.title && <span className="text-xs text-muted-foreground">「{boss.title}」</span>}
+                    </div>
+                    <div className="text-xs text-muted-foreground flex gap-3 flex-wrap">
+                      <span>Lv.{boss.level}</span>
+                      <span>HP:{boss.baseHp?.toLocaleString()}</span>
+                      <span>ATK:{boss.baseAttack}</span>
+                      <span>DEF:{boss.baseDefense}</span>
+                      <span>SPD:{boss.baseSpeed}</span>
+                      <span>MATK:{boss.baseMagicAttack}</span>
+                      <span>MDEF:{boss.baseMagicDefense}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex gap-3 flex-wrap">
+                      <span>移動間隔:{boss.moveIntervalSec}s</span>
+                      <span>存活:{boss.lifetimeMinutes}m</span>
+                      <span>體力:{boss.staminaCost}</span>
+                      <span>EXP×{boss.expMultiplier}</span>
+                      <span>Gold×{boss.goldMultiplier}</span>
+                    </div>
+                    {boss.description && (
+                      <p className="text-xs text-muted-foreground/70 mt-1">{boss.description}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Button size="sm" variant="outline" onClick={() => setEditingBoss(boss)}>✏️ 編輯</Button>
+                    <Button size="sm" variant="outline"
+                      onClick={() => updateBoss.mutate({ ...boss, isActive: boss.isActive ? 0 : 1, bossCode: boss.bossCode || boss.name } as any)}>
+                      {boss.isActive ? "⏸ 停用" : "▶️ 啟用"}
+                    </Button>
+                    <Button size="sm" className="bg-red-600 hover:bg-red-700"
+                      onClick={() => spawnBossMut.mutate({ catalogId: boss.id })}
+                      disabled={spawnBossMut.isPending}>
+                      🎯 手動召喚
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* ═══ 活躍實例 ═══ */}
+      {activeSection === "instances" && (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">目前在地圖上活躍的 Boss 實例</p>
+          {!activeInstances || activeInstances.length === 0 ? (
+            <Card className="bg-background/50"><CardContent className="py-8 text-center text-muted-foreground">目前沒有活躍的 Boss</CardContent></Card>
+          ) : activeInstances.map((inst: any) => (
+            <Card key={inst.instanceId} className="bg-background/50 border-border/50">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-amber-600 text-white">{TIER_LABELS[inst.tier] || `T${inst.tier}`}</Badge>
+                      <span className="font-bold">{inst.name}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex gap-3 flex-wrap">
+                      <span>📍 {inst.currentNodeName || inst.currentNodeId}</span>
+                      <span>HP: {inst.currentHp?.toLocaleString()}/{inst.maxHp?.toLocaleString()}</span>
+                      <span>移動次數: {inst.moveCount}</span>
+                      {inst.expiresAt && <span>剩餘: {Math.max(0, Math.round((inst.expiresAt - Date.now()) / 60000))}m</span>}
+                    </div>
+                  </div>
+                  <Button size="sm" variant="destructive"
+                    onClick={() => despawnBossMut.mutate({ instanceId: inst.instanceId })}
+                    disabled={despawnBossMut.isPending}>
+                    ❌ 強制消滅
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* ═══ 全域設定 ═══ */}
+      {activeSection === "config" && <BossConfigPanel />}
+
+      {/* ═══ 統計 ═══ */}
+      {activeSection === "stats" && (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">Boss 擊殺排行榜與統計</p>
+          {!rankings || rankings.length === 0 ? (
+            <Card className="bg-background/50"><CardContent className="py-8 text-center text-muted-foreground">尚無擊殺記錄</CardContent></Card>
+          ) : (
+            <Card className="bg-background/50 border-border/50">
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <div className="grid grid-cols-4 text-xs font-bold text-muted-foreground border-b pb-2">
+                    <span>排名</span><span>角色</span><span>擊殺數</span><span>總傷害</span>
+                  </div>
+                  {rankings.map((r: any, i: number) => (
+                    <div key={i} className="grid grid-cols-4 text-sm py-1">
+                      <span className={i < 3 ? "text-amber-400 font-bold" : "text-muted-foreground"}>#{i + 1}</span>
+                      <span>{r.agentName}</span>
+                      <span className="text-red-400">{r.kills}</span>
+                      <span className="text-muted-foreground">{Number(r.totalDamage).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ═══ 編輯 Boss 對話框 ═══ */}
+      {editingBoss && <BossEditDialog boss={editingBoss} onClose={() => setEditingBoss(null)} onSave={(data: any) => updateBoss.mutate({ id: editingBoss.id, bossCode: editingBoss.bossCode || editingBoss.name, ...data })} saving={updateBoss.isPending} />}
+
+      {/* ═══ 新增 Boss 對話框 ═══ */}
+      {showCreateDialog && <BossCreateDialog onClose={() => setShowCreateDialog(false)} onSave={(data: any) => createBoss.mutate(data)} saving={createBoss.isPending} />}
+    </div>
+  );
+}
+
+/* Boss 全域設定面板 */
+function BossConfigPanel() {
+  const { data: bossConfig, refetch } = trpc.roamingBoss.getConfig.useQuery();
+  const updateConfig = trpc.roamingBoss.updateConfig.useMutation({
+    onSuccess: () => { refetch(); toast.success("Boss 系統設定已更新"); },
+  });
+  const resetConfigMut = trpc.roamingBoss.resetConfig.useMutation({
+    onSuccess: () => { refetch(); toast.success("Boss 系統設定已重置為預設值"); },
+  });
+
+  const [enabled, setEnabled] = useState(true);
+  const [t1Max, setT1Max] = useState("5");
+  const [t2Max, setT2Max] = useState("1");
+  const [t3Max, setT3Max] = useState("1");
+  const [t3TriggerKills, setT3TriggerKills] = useState("100");
+  const [firstKillExp, setFirstKillExp] = useState("2");
+  const [firstKillGold, setFirstKillGold] = useState("2");
+
+  useEffect(() => {
+    if (bossConfig) {
+      setEnabled(bossConfig.enabled !== false);
+      setT1Max(String(bossConfig.tier1MaxInstances ?? 5));
+      setT2Max(String(bossConfig.tier2MaxInstances ?? 1));
+      setT3Max(String(bossConfig.tier3MaxInstances ?? 1));
+      setT3TriggerKills(String(bossConfig.tier3TriggerKillCount ?? 100));
+      setFirstKillExp(String(bossConfig.firstKillExpBonus ?? 2));
+      setFirstKillGold(String(bossConfig.firstKillGoldBonus ?? 2));
+    }
+  }, [bossConfig]);
+
+  const handleSave = () => {
+    updateConfig.mutate({
+      enabled,
+      tier1MaxInstances: Number(t1Max),
+      tier2MaxInstances: Number(t2Max),
+      tier3MaxInstances: Number(t3Max),
+      tier3TriggerKillCount: Number(t3TriggerKills),
+      firstKillExpBonus: Number(firstKillExp),
+      firstKillGoldBonus: Number(firstKillGold),
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card className="bg-background/50 border-border/50">
+        <CardContent className="p-4 space-y-4">
+          <h4 className="font-bold text-amber-400">⚙️ Boss 系統全域設定</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-muted-foreground">Boss 系統開關</label>
+              <div className="flex items-center gap-2 mt-1">
+                <Button size="sm" variant={enabled ? "default" : "outline"} onClick={() => setEnabled(true)}>啟用</Button>
+                <Button size="sm" variant={!enabled ? "destructive" : "outline"} onClick={() => setEnabled(false)}>停用</Button>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">T1 同時最大數量</label>
+              <Input value={t1Max} onChange={e => setT1Max(e.target.value)} type="number" min={0} max={20} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">T2 同時最大數量</label>
+              <Input value={t2Max} onChange={e => setT2Max(e.target.value)} type="number" min={0} max={10} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">T3 同時最大數量</label>
+              <Input value={t3Max} onChange={e => setT3Max(e.target.value)} type="number" min={0} max={5} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">T3 觸發條件（T1 累計擊殺數）</label>
+              <Input value={t3TriggerKills} onChange={e => setT3TriggerKills(e.target.value)} type="number" min={1} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">首殺經驗倍率</label>
+              <Input value={firstKillExp} onChange={e => setFirstKillExp(e.target.value)} type="number" min={1} max={10} step={0.5} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground">首殺金幣倍率</label>
+              <Input value={firstKillGold} onChange={e => setFirstKillGold(e.target.value)} type="number" min={1} max={10} step={0.5} className="mt-1" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={handleSave} disabled={updateConfig.isPending}>
+              {updateConfig.isPending ? "儲存中..." : "💾 儲存設定"}
+            </Button>
+            <Button variant="outline" onClick={() => { if (confirm("確定要重置為預設值嗎？")) resetConfigMut.mutate(); }}
+              disabled={resetConfigMut.isPending}>
+              🔄 重置預設
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Boss 統計快覽 */}
+      <BossStatsPanel />
+    </div>
+  );
+}
+
+/* Boss 統計快覽面板 */
+function BossStatsPanel() {
+  const { data: stats } = trpc.roamingBoss.getStats.useQuery();
+
+  if (!stats) return null;
+
+  return (
+    <Card className="bg-background/50 border-border/50">
+      <CardContent className="p-4 space-y-3">
+        <h4 className="font-bold text-amber-400">📊 Boss 系統統計</h4>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="text-center p-3 rounded-lg bg-red-950/30 border border-red-800/30">
+            <p className="text-2xl font-bold text-red-400">{stats.totalKills}</p>
+            <p className="text-[10px] text-muted-foreground">總擊殺數</p>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-amber-950/30 border border-amber-800/30">
+            <p className="text-2xl font-bold text-amber-400">{stats.totalChallenges}</p>
+            <p className="text-[10px] text-muted-foreground">總挑戰數</p>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-green-950/30 border border-green-800/30">
+            <p className="text-2xl font-bold text-green-400">{stats.activeInstances}</p>
+            <p className="text-[10px] text-muted-foreground">活躍 Boss</p>
+          </div>
+        </div>
+        {stats.topKillers && stats.topKillers.length > 0 && (
+          <div>
+            <p className="text-xs font-bold text-muted-foreground mb-1">擊殺排行 TOP 5</p>
+            <div className="space-y-1">
+              {stats.topKillers.slice(0, 5).map((k: any, i: number) => (
+                <div key={i} className="flex items-center justify-between text-xs">
+                  <span className={i < 3 ? "text-amber-400 font-bold" : "text-muted-foreground"}>#{i + 1} {k.agentName}</span>
+                  <span className="text-red-400">{k.kills} 殺</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* Boss 編輯對話框 */
+function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose: () => void; onSave: (data: any) => void; saving: boolean }) {
+  const [name, setName] = useState(boss.name);
+  const [title, setTitle] = useState(boss.title || "");
+  const [tier, setTier] = useState(String(boss.tier));
+  const [wuxing, setWuxing] = useState(boss.wuxing);
+  const [level, setLevel] = useState(String(boss.level));
+  const [baseHp, setBaseHp] = useState(String(boss.baseHp));
+  const [baseAttack, setBaseAttack] = useState(String(boss.baseAttack));
+  const [baseDefense, setBaseDefense] = useState(String(boss.baseDefense));
+  const [baseSpeed, setBaseSpeed] = useState(String(boss.baseSpeed));
+  const [baseMagicAttack, setBaseMagicAttack] = useState(String(boss.baseMagicAttack));
+  const [baseMagicDefense, setBaseMagicDefense] = useState(String(boss.baseMagicDefense));
+  const [moveIntervalSec, setMoveIntervalSec] = useState(String(boss.moveIntervalSec));
+  const [lifetimeMinutes, setLifetimeMinutes] = useState(String(boss.lifetimeMinutes));
+  const [staminaCost, setStaminaCost] = useState(String(boss.staminaCost));
+  const [expMultiplier, setExpMultiplier] = useState(String(boss.expMultiplier));
+  const [goldMultiplier, setGoldMultiplier] = useState(String(boss.goldMultiplier));
+  const [description, setDescription] = useState(boss.description || "");
+  const [skillsJson, setSkillsJson] = useState(JSON.stringify(boss.skills || [], null, 2));
+  const [dropTableJson, setDropTableJson] = useState(JSON.stringify(boss.dropTable || [], null, 2));
+  const [patrolRegionJson, setPatrolRegionJson] = useState(JSON.stringify(boss.patrolRegion || [], null, 2));
+  const [enrageJson, setEnrageJson] = useState(JSON.stringify(boss.enrageConfig || {}, null, 2));
+  const [scheduleJson, setScheduleJson] = useState(JSON.stringify(boss.scheduleConfig || {}, null, 2));
+
+  const handleSubmit = () => {
+    try {
+      onSave({
+        name, title, tier: Number(tier), wuxing, level: Number(level),
+        baseHp: Number(baseHp), baseAttack: Number(baseAttack), baseDefense: Number(baseDefense),
+        baseSpeed: Number(baseSpeed), baseMagicAttack: Number(baseMagicAttack), baseMagicDefense: Number(baseMagicDefense),
+        moveIntervalSec: Number(moveIntervalSec), lifetimeMinutes: Number(lifetimeMinutes),
+        staminaCost: Number(staminaCost), expMultiplier: Number(expMultiplier), goldMultiplier: Number(goldMultiplier),
+        description, skills: JSON.parse(skillsJson), dropTable: JSON.parse(dropTableJson),
+        patrolRegion: JSON.parse(patrolRegionJson), enrageConfig: JSON.parse(enrageJson),
+        scheduleConfig: JSON.parse(scheduleJson),
+      });
+    } catch (e) {
+      alert("JSON 格式錯誤，請檢查");
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>✏️ 編輯 Boss：{boss.name}</DialogTitle></DialogHeader>
+        <div className="grid grid-cols-2 gap-3">
+          <div><label className="text-xs text-muted-foreground">名稱</label><Input value={name} onChange={e => setName(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">稱號</label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">Tier</label>
+            <Select value={tier} onValueChange={setTier}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">T1 遊蕩精英</SelectItem>
+                <SelectItem value="2">T2 區域守護者</SelectItem>
+                <SelectItem value="3">T3 天命凶獸</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div><label className="text-xs text-muted-foreground">五行</label>
+            <Select value={wuxing} onValueChange={setWuxing}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {["wood","fire","earth","metal","water"].map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div><label className="text-xs text-muted-foreground">等級</label><Input type="number" value={level} onChange={e => setLevel(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">HP</label><Input type="number" value={baseHp} onChange={e => setBaseHp(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">ATK</label><Input type="number" value={baseAttack} onChange={e => setBaseAttack(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">DEF</label><Input type="number" value={baseDefense} onChange={e => setBaseDefense(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">SPD</label><Input type="number" value={baseSpeed} onChange={e => setBaseSpeed(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">MATK</label><Input type="number" value={baseMagicAttack} onChange={e => setBaseMagicAttack(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">MDEF</label><Input type="number" value={baseMagicDefense} onChange={e => setBaseMagicDefense(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">移動間隔(秒)</label><Input type="number" value={moveIntervalSec} onChange={e => setMoveIntervalSec(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">存活時間(分)</label><Input type="number" value={lifetimeMinutes} onChange={e => setLifetimeMinutes(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">體力消耗</label><Input type="number" value={staminaCost} onChange={e => setStaminaCost(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">EXP 倍率</label><Input type="number" step="0.1" value={expMultiplier} onChange={e => setExpMultiplier(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">Gold 倍率</label><Input type="number" step="0.1" value={goldMultiplier} onChange={e => setGoldMultiplier(e.target.value)} /></div>
+        </div>
+        <div><label className="text-xs text-muted-foreground">描述</label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} /></div>
+        <div><label className="text-xs text-muted-foreground">技能 (JSON)</label><Textarea value={skillsJson} onChange={e => setSkillsJson(e.target.value)} rows={6} className="font-mono text-xs" /></div>
+        <div><label className="text-xs text-muted-foreground">掉落表 (JSON)</label><Textarea value={dropTableJson} onChange={e => setDropTableJson(e.target.value)} rows={4} className="font-mono text-xs" /></div>
+        <div><label className="text-xs text-muted-foreground">巡邏區域 (JSON)</label><Textarea value={patrolRegionJson} onChange={e => setPatrolRegionJson(e.target.value)} rows={2} className="font-mono text-xs" /></div>
+        <div><label className="text-xs text-muted-foreground">狂暴設定 (JSON)</label><Textarea value={enrageJson} onChange={e => setEnrageJson(e.target.value)} rows={4} className="font-mono text-xs" /></div>
+        <div><label className="text-xs text-muted-foreground">排程設定 (JSON)</label><Textarea value={scheduleJson} onChange={e => setScheduleJson(e.target.value)} rows={3} className="font-mono text-xs" /></div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>取消</Button>
+          <Button onClick={handleSubmit} disabled={saving}>{saving ? "儲存中..." : "💾 儲存"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* Boss 新增對話框 */
+function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; onSave: (data: any) => void; saving: boolean }) {
+  const [bossCode, setBossCode] = useState("");
+  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
+  const [tier, setTier] = useState("1");
+  const [wuxing, setWuxing] = useState("wood");
+  const [level, setLevel] = useState("30");
+  const [baseHp, setBaseHp] = useState("10000");
+  const [baseAttack, setBaseAttack] = useState("120");
+  const [baseDefense, setBaseDefense] = useState("60");
+  const [baseSpeed, setBaseSpeed] = useState("25");
+  const [baseMagicAttack, setBaseMagicAttack] = useState("100");
+  const [baseMagicDefense, setBaseMagicDefense] = useState("50");
+  const [description, setDescription] = useState("");
+
+  const handleSubmit = () => {
+    if (!bossCode || !name) { alert("Boss 代碼和名稱必填"); return; }
+    onSave({
+      bossCode, name, title, tier: Number(tier), wuxing, level: Number(level),
+      baseHp: Number(baseHp), baseAttack: Number(baseAttack), baseDefense: Number(baseDefense),
+      baseSpeed: Number(baseSpeed), baseMagicAttack: Number(baseMagicAttack), baseMagicDefense: Number(baseMagicDefense),
+      moveIntervalSec: tier === "1" ? 300 : tier === "2" ? 600 : 900,
+      lifetimeMinutes: tier === "1" ? 0 : tier === "2" ? 30 : 60,
+      staminaCost: tier === "1" ? 15 : tier === "2" ? 25 : 40,
+      expMultiplier: tier === "1" ? 2.0 : tier === "2" ? 3.0 : 5.0,
+      goldMultiplier: tier === "1" ? 2.0 : tier === "2" ? 3.0 : 5.0,
+      description,
+      skills: [], dropTable: [], patrolRegion: [],
+      enrageConfig: { hpThresholds: [{ hpPercent: 50, atkBoost: 0.2, spdBoost: 0.1, message: "Boss 進入狂暴！" }] },
+      scheduleConfig: tier === "1" ? { type: "permanent" } : { type: "scheduled", cron: "0 0 12 * * *", duration: 30, maxInstances: 1 },
+    });
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>➕ 新增 Boss</DialogTitle></DialogHeader>
+        <div className="grid grid-cols-2 gap-3">
+          <div><label className="text-xs text-muted-foreground">Boss 代碼（英文）</label><Input value={bossCode} onChange={e => setBossCode(e.target.value)} placeholder="e.g. shadow_wolf" /></div>
+          <div><label className="text-xs text-muted-foreground">名稱</label><Input value={name} onChange={e => setName(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">稱號</label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">Tier</label>
+            <Select value={tier} onValueChange={setTier}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">T1 遊蕩精英</SelectItem>
+                <SelectItem value="2">T2 區域守護者</SelectItem>
+                <SelectItem value="3">T3 天命凶獸</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div><label className="text-xs text-muted-foreground">五行</label>
+            <Select value={wuxing} onValueChange={setWuxing}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {["wood","fire","earth","metal","water"].map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div><label className="text-xs text-muted-foreground">等級</label><Input type="number" value={level} onChange={e => setLevel(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">HP</label><Input type="number" value={baseHp} onChange={e => setBaseHp(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">ATK</label><Input type="number" value={baseAttack} onChange={e => setBaseAttack(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">DEF</label><Input type="number" value={baseDefense} onChange={e => setBaseDefense(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">SPD</label><Input type="number" value={baseSpeed} onChange={e => setBaseSpeed(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">MATK</label><Input type="number" value={baseMagicAttack} onChange={e => setBaseMagicAttack(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">MDEF</label><Input type="number" value={baseMagicDefense} onChange={e => setBaseMagicDefense(e.target.value)} /></div>
+        </div>
+        <div><label className="text-xs text-muted-foreground">描述</label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} /></div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>取消</Button>
+          <Button onClick={handleSubmit} disabled={saving}>{saving ? "建立中..." : "✅ 建立"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

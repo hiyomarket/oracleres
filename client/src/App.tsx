@@ -58,6 +58,7 @@ const PvpHistoryPage = lazy(() => import("./pages/game/PvpHistoryPage"));
 const AuctionHouse = lazy(() => import("./pages/game/AuctionHouse"));
 const QuestSkillPage = lazy(() => import("./pages/game/QuestSkillPage"));
 const PetPage = lazy(() => import("./pages/game/PetPage"));
+const BossTracker = lazy(() => import("./pages/game/BossTracker"));
 const GameGuide = lazy(() => import("./pages/GameGuide"));
 const ExpertMarket = lazy(() => import("./pages/ExpertMarket"));
 const ExpertDetail = lazy(() => import("./pages/ExpertDetail"));
@@ -157,6 +158,7 @@ function Router() {
                 <Route path={"/game/auction"} component={AuctionHouse} />
                 <Route path={"/game/quest-skills"} component={QuestSkillPage} />
                 <Route path={"/game/pets"} component={PetPage} />
+                <Route path={"/game/boss"} component={BossTracker} />
                 <Route path={"/game/guide"} component={GameGuide} />
                 <Route path={"/404"} component={NotFound} />
                 {/* Final fallback route */}

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, name, wuxing, rarity, level, hp, attack, defense, speed, matk FROM game_monster_catalog WHERE rarity IN ('elite', 'legendary', 'boss') ORDER BY rarity, level;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, wuxing, rarity, level, hp, attack, defense, speed, matk FROM game_monster_catalog WHERE rarity IN ('elite', 'legendary', 'boss') ORDER BY rarity, level;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'level' in 'field list'"
+  ]
+}

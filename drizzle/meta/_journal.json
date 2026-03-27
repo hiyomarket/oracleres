@@ -687,6 +687,13 @@
       "when": 1774593332459,
       "tag": "0097_flat_firebird",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "5",
+      "when": 1774606443979,
+      "tag": "0098_dazzling_jackal",
+      "breakpoints": true
     }
   ]
 }

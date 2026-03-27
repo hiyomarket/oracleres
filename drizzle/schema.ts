@@ -3580,3 +3580,184 @@ export const gameGuideConfig = mysqlTable("game_guide_config", {
   updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
 export type GameGuideConfig = typeof gameGuideConfig.$inferSelect;
+
+
+// ═══════════════════════════════════════════════════════════════
+// 移動式 Boss 系統
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 移動式 Boss 圖鑑
+ * 定義所有可生成的 Boss 模板（Tier 1/2/3）
+ */
+export const roamingBossCatalog = mysqlTable("roaming_boss_catalog", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Boss 唯一代碼 */
+  bossCode: varchar("boss_code", { length: 50 }).notNull(),
+  /** Boss 名稱 */
+  name: varchar("name", { length: 100 }).notNull(),
+  /** Boss 稱號（如「深淵行者」） */
+  title: varchar("title", { length: 100 }),
+  /** Tier 等級：1=遊蕩精英, 2=區域守護者, 3=天命凶獸 */
+  tier: int("tier").notNull().default(1),
+  /** 五行屬性 */
+  wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  /** 等級 */
+  level: int("level").notNull().default(30),
+  /** 基礎 HP */
+  baseHp: int("base_hp").notNull().default(5000),
+  /** 基礎攻擊 */
+  baseAttack: int("base_attack").notNull().default(80),
+  /** 基礎防禦 */
+  baseDefense: int("base_defense").notNull().default(40),
+  /** 基礎速度 */
+  baseSpeed: int("base_speed").notNull().default(25),
+  /** 基礎魔攻 */
+  baseMagicAttack: int("base_magic_attack").notNull().default(60),
+  /** 基礎魔防 */
+  baseMagicDefense: int("base_magic_defense").notNull().default(30),
+  /** Boss 專屬技能（JSON 陣列） */
+  skills: json("skills").$type<Array<{
+    id: string;
+    name: string;
+    skillType: string;
+    damageMultiplier: number;
+    mpCost: number;
+    wuxing?: string;
+    cooldown: number;
+    additionalEffect?: {
+      type: string;
+      chance: number;
+      duration?: number;
+      value?: number;
+    };
+  }>>(),
+  /** Boss 專屬掉落表（JSON 陣列） */
+  dropTable: json("drop_table").$type<Array<{
+    itemId: string;
+    itemName: string;
+    dropRate: number;
+    minQty: number;
+    maxQty: number;
+  }>>(),
+  /** 獎勵經驗倍率 */
+  expMultiplier: float("exp_multiplier").notNull().default(2.0),
+  /** 獎勵金幣倍率 */
+  goldMultiplier: float("gold_multiplier").notNull().default(2.0),
+  /** 移動間隔（秒） */
+  moveIntervalSec: int("move_interval_sec").notNull().default(300),
+  /** 存活時限（分鐘，0=無限） */
+  lifetimeMinutes: int("lifetime_minutes").notNull().default(0),
+  /** 體力消耗 */
+  staminaCost: int("stamina_cost").notNull().default(15),
+  /** 巡迴範圍（JSON：縣市列表或 "all"） */
+  patrolRegion: json("patrol_region").$type<string[] | "all">(),
+  /** 初始生成節點 ID（可選，null=隨機） */
+  spawnNodeId: varchar("spawn_node_id", { length: 50 }),
+  /** Boss 圖片 URL */
+  imageUrl: text("image_url"),
+  /** Boss 描述 */
+  description: text("description"),
+  /** 狂暴化設定（JSON） */
+  enrageConfig: json("enrage_config").$type<{
+    /** HP 百分比閾值觸發狂暴 */
+    hpThresholds: Array<{
+      hpPercent: number;
+      atkBoost: number;
+      spdBoost: number;
+      message: string;
+    }>;
+  }>(),
+  /** 是否啟用 */
+  isActive: tinyint("is_active").notNull().default(1),
+  /** 排程設定（JSON：cron 表達式或時間點列表） */
+  scheduleConfig: json("schedule_config").$type<{
+    /** 排程類型：always=常駐, scheduled=定時, triggered=條件觸發 */
+    type: "always" | "scheduled" | "triggered";
+    /** cron 表達式（scheduled 類型用） */
+    cron?: string;
+    /** 固定時間點列表（scheduled 類型用） */
+    fixedTimes?: string[];
+    /** 觸發條件描述（triggered 類型用） */
+    triggerCondition?: string;
+    /** 同時存在最大數量 */
+    maxInstances: number;
+  }>(),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type RoamingBossCatalog = typeof roamingBossCatalog.$inferSelect;
+export type InsertRoamingBossCatalog = typeof roamingBossCatalog.$inferInsert;
+
+/**
+ * 移動式 Boss 實例
+ * 記錄當前在地圖上活躍的 Boss 實例
+ */
+export const roamingBossInstances = mysqlTable("roaming_boss_instances", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 關聯的 Boss 圖鑑 ID */
+  catalogId: int("catalog_id").notNull(),
+  /** 當前所在節點 ID */
+  currentNodeId: varchar("current_node_id", { length: 50 }).notNull(),
+  /** 移動歷史（JSON：最近 10 個節點） */
+  moveHistory: json("move_history").$type<string[]>(),
+  /** 當前 HP（-1 表示滿血） */
+  currentHp: int("current_hp").notNull().default(-1),
+  /** 狀態：active=活躍, defeated=已擊敗, expired=已過期, despawned=已消失 */
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+  /** 生成時間 */
+  spawnedAt: bigint("spawned_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  /** 過期時間（0=無限） */
+  expiresAt: bigint("expires_at", { mode: "number" }).notNull().default(0),
+  /** 上次移動時間 */
+  lastMovedAt: bigint("last_moved_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  /** 擊敗者列表（JSON：記錄所有參與擊敗的玩家） */
+  defeatedBy: json("defeated_by").$type<Array<{
+    agentId: number;
+    agentName: string;
+    damage: number;
+    timestamp: number;
+  }>>(),
+  /** 全服首殺標記 */
+  isFirstKill: tinyint("is_first_kill").notNull().default(0),
+  /** 擊殺次數（同一實例被多人挑戰的累計） */
+  challengeCount: int("challenge_count").notNull().default(0),
+});
+export type RoamingBossInstance = typeof roamingBossInstances.$inferSelect;
+export type InsertRoamingBossInstance = typeof roamingBossInstances.$inferInsert;
+
+/**
+ * Boss 擊殺記錄
+ * 記錄每次 Boss 戰鬥的詳細結果
+ */
+export const roamingBossKillLog = mysqlTable("roaming_boss_kill_log", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Boss 實例 ID */
+  instanceId: int("instance_id").notNull(),
+  /** Boss 圖鑑 ID */
+  catalogId: int("catalog_id").notNull(),
+  /** 挑戰者角色 ID */
+  agentId: int("agent_id").notNull(),
+  /** 挑戰者名稱 */
+  agentName: varchar("agent_name", { length: 100 }).notNull(),
+  /** 戰鬥結果：win/lose/flee */
+  result: varchar("result", { length: 20 }).notNull(),
+  /** 造成的傷害 */
+  damageDealt: int("damage_dealt").notNull().default(0),
+  /** 戰鬥回合數 */
+  rounds: int("rounds").notNull().default(0),
+  /** 獲得的經驗 */
+  expGained: int("exp_gained").notNull().default(0),
+  /** 獲得的金幣 */
+  goldGained: int("gold_gained").notNull().default(0),
+  /** 獲得的掉落物（JSON） */
+  dropsGained: json("drops_gained").$type<Array<{ itemId: string; itemName: string; qty: number }>>(),
+  /** 是否為首殺 */
+  isFirstKill: tinyint("is_first_kill").notNull().default(0),
+  /** 戰鬥節點 */
+  nodeId: varchar("node_id", { length: 50 }).notNull(),
+  /** 戰鬥時間 */
+  battleAt: bigint("battle_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type RoamingBossKillLog = typeof roamingBossKillLog.$inferSelect;
+export type InsertRoamingBossKillLog = typeof roamingBossKillLog.$inferInsert;
