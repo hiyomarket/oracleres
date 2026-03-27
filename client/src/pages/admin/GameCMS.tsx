@@ -1820,7 +1820,8 @@ function PetAIToolsTab() {
   const utils = trpc.useUtils();
   const [selectedPetId, setSelectedPetId] = useState("");
 
-  const { data: petCatalog = [] } = trpc.gamePet.getPetCatalog.useQuery({});
+  const { data: petCatalogData } = trpc.gamePet.getPetCatalog.useQuery({});
+  const petCatalog = petCatalogData?.items ?? [];
 
   // AI 批量生成寵物
   const aiBatchGenPets = trpc.gameAI.aiBatchGeneratePets.useMutation({

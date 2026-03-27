@@ -344,13 +344,14 @@ function TeleportModal({
 // 節點資訊面板（方格面板）
 // ─────────────────────────────────────────────────────────────
 function NodeInfoPanel({
-  nodeData, isOpen, onToggle, ec, compact = false,
+  nodeData, isOpen, onToggle, ec, compact = false, onChallenge,
 }: {
   nodeData: NodeInfoData | null | undefined;
   isOpen: boolean;
   onToggle: () => void;
   ec: string;
   compact?: boolean;
+  onChallenge?: (monsterId: string, monsterName: string, isBoss?: boolean) => void;
 }) {
   const node = nodeData?.node;
   const monsters = nodeData?.monsters ?? [];
@@ -419,9 +420,17 @@ function NodeInfoPanel({
                         </div>
                         {m.description && <p className="text-xs text-slate-600 truncate">{m.description}</p>}
                       </div>
-                      <div className="text-right shrink-0">
+                      <div className="text-right shrink-0 flex flex-col items-end gap-1">
                         <p className="text-xs font-bold text-slate-300">Lv.{m.level}</p>
                         <p className="text-xs text-red-400">HP {m.hp}</p>
+                        {onChallenge && (
+                          <button
+                            onClick={() => onChallenge(m.id, m.name, m.isBoss)}
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-lg transition-all hover:scale-105 active:scale-95"
+                            style={{ background: `${mc}25`, color: mc, border: `1px solid ${mc}40` }}>
+                            ⚔️ 挑戰
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -2118,6 +2127,24 @@ export default function VirtualWorldPage() {
   const [combatLocked, setCombatLocked] = useState(false);
   // GD-020 玩家模式戰鬥視窗
   const [playerBattleId, setPlayerBattleId] = useState<string | null>(null);
+  const startBattleMut = trpc.gameBattle.startBattle.useMutation({
+    onSuccess: (data) => {
+      setPlayerBattleId(data.battleId);
+      setCombatLocked(true);
+    },
+    onError: (err) => {
+      toast.error(`戰鬥開始失敗：${err.message}`);
+    },
+  });
+  const handleChallenge = useCallback((monsterId: string, monsterName: string, isBoss?: boolean) => {
+    if (playerBattleId || startBattleMut.isPending) {
+      toast.error("戰鬥進行中，無法發起新戰鬥");
+      return;
+    }
+    const mode = isBoss ? "boss" as const : "player_open" as const;
+    startBattleMut.mutate({ mode, monsterId });
+    toast.info(`向 ${monsterName} 發起挑戰！`);
+  }, [playerBattleId, startBattleMut]);
   // 收納式聊天大廳
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -3293,6 +3320,7 @@ export default function VirtualWorldPage() {
                       onToggle={() => setNodeInfoOpen(false)}
                       ec={ec}
                       compact={true}
+                      onChallenge={handleChallenge}
                     />
                   </div>
                 )}
@@ -3341,6 +3369,7 @@ export default function VirtualWorldPage() {
                       onToggle={() => setNodeInfoOpen(false)}
                       ec={ec}
                       compact={true}
+                      onChallenge={handleChallenge}
                     />
                   </div>
                 )}
@@ -3570,6 +3599,7 @@ export default function VirtualWorldPage() {
                 isOpen={nodeInfoOpen}
                 onToggle={() => setNodeInfoOpen(v => !v)}
                 ec={ec}
+                onChallenge={handleChallenge}
               />
             </div>
           </div>
@@ -3693,6 +3723,13 @@ export default function VirtualWorldPage() {
                     mobileMode={true}
                   />
                   {/* V46: 手機版功能列已移至 GameTabLayout 底部 Tab Bar */}
+                  {/* 手機版掛機收益面板 */}
+                  <div className="px-3 py-2 border-t border-slate-800/50">
+                    <IdleSessionPanel
+                      agentId={agent?.id}
+                      strategy={agent?.strategy}
+                    />
+                  </div>
                 </div>
               )}
             </div>

@@ -96,6 +96,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentGlow, setCurrentGlow] = useState<string | null>(null);
   const [isShaking, setIsShaking] = useState(false);
+  const [rewards, setRewards] = useState<{ expReward: number; goldReward: number; drops: string[]; petExpGained: number } | null>(null);
   const logScrollRef = useRef<HTMLDivElement>(null);
 
   const allies = participants.filter(p => p.side === "ally");
@@ -142,6 +143,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       if (data.state === "ended") {
         setBattleState("ended");
         setBattleResult(data.result ?? null);
+        if ((data as any).rewards) setRewards((data as any).rewards);
         onBattleEnd?.(data.result as any);
       }
 
@@ -294,7 +296,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
 
         {/* 指令面板 / 結算面板 */}
         {battleState === "ended" ? (
-          <BattleResultPanel result={battleResult} round={round} onClose={onClose} />
+          <BattleResultPanel result={battleResult} round={round} onClose={onClose} rewards={rewards} />
         ) : (
           <div className="px-3 py-2 border-t border-indigo-900/50" style={{ background: "rgba(30,27,75,0.6)" }}>
             {/* 技能選擇面板 */}
@@ -486,7 +488,10 @@ function LogEntry({ log, allies }: { log: BattleLogUI; allies: BattleParticipant
 }
 
 // ─── 戰鬥結算面板 ───
-function BattleResultPanel({ result, round, onClose }: { result: string | null; round: number; onClose: () => void }) {
+function BattleResultPanel({ result, round, onClose, rewards }: {
+  result: string | null; round: number; onClose: () => void;
+  rewards?: { expReward: number; goldReward: number; drops: string[]; petExpGained: number } | null;
+}) {
   const won = result === "win";
   const fled = result === "flee";
 
@@ -498,6 +503,48 @@ function BattleResultPanel({ result, round, onClose }: { result: string | null; 
         </span>
         <span className="text-[10px] text-slate-500">共 {round} 回合</span>
       </div>
+
+      {/* 獎勵詳情 */}
+      {won && rewards && (rewards.expReward > 0 || rewards.goldReward > 0 || rewards.drops.length > 0) && (
+        <div className="mb-3 p-2.5 rounded-lg bg-green-950/40 border border-green-800/30">
+          <p className="text-[11px] font-bold text-green-300 mb-1.5">✨ 戰鬥獎勵</p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {rewards.expReward > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">⭐</span>
+                <span className="text-xs text-slate-300">經驗</span>
+                <span className="text-xs font-bold text-amber-300">+{rewards.expReward}</span>
+              </div>
+            )}
+            {rewards.goldReward > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">💰</span>
+                <span className="text-xs text-slate-300">金幣</span>
+                <span className="text-xs font-bold text-yellow-300">+{rewards.goldReward}</span>
+              </div>
+            )}
+            {rewards.petExpGained > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">🐾</span>
+                <span className="text-xs text-slate-300">寵物經驗</span>
+                <span className="text-xs font-bold text-purple-300">+{rewards.petExpGained}</span>
+              </div>
+            )}
+          </div>
+          {rewards.drops.length > 0 && (
+            <div className="mt-2 pt-1.5 border-t border-green-800/20">
+              <p className="text-[10px] text-green-400 mb-1">🎁 掉落物品</p>
+              <div className="flex flex-wrap gap-1">
+                {rewards.drops.map((d, i) => (
+                  <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-green-900/40 text-green-200 border border-green-700/30">
+                    {d}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <button onClick={onClose}
         className="w-full py-2 rounded-lg text-sm font-medium transition-colors"

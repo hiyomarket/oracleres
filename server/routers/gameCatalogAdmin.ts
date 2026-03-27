@@ -175,6 +175,10 @@ const equipCatalogInput = z.object({
   setId: z.string().default(""),
   specialEffect: z.string().optional(),
   rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
+  shopPrice: z.number().int().nonnegative().default(0),
+  inNormalShop: z.number().int().min(0).max(1).default(0),
+  inSpiritShop: z.number().int().min(0).max(1).default(0),
+  inSecretShop: z.number().int().min(0).max(1).default(0),
   imageUrl: z.string().default(""),
   isActive: z.number().int().min(0).max(1).default(1),
 });
@@ -195,6 +199,9 @@ const skillCatalogInput = z.object({
   hiddenTrigger: z.string().optional(),
   description: z.string().optional(),
   skillType: z.enum(["attack", "heal", "buff", "debuff", "passive", "special"]).default("attack"),
+  inNormalShop: z.number().int().min(0).max(1).default(0),
+  inSpiritShop: z.number().int().min(0).max(1).default(0),
+  inSecretShop: z.number().int().min(0).max(1).default(0),
   isActive: z.number().int().min(0).max(1).default(1),
 });
 

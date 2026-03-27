@@ -4663,3 +4663,21 @@
 - [x] 55 個測試檔案，1171 項測試全數通過
 - [x] IdleSessionPanel 整合至 VirtualWorldPage
 - [x] 儲存 M9 checkpoint
+
+## M10 後台 Bug 修復 + 圖鑑管理優化 + 戰鬥整合
+
+### Bug 修復
+- [x] 修復後台寵物 AI 頁面 TypeError: C.map is not a function（getPetCatalog 返回物件而非陣列）
+
+### 後台圖鑑管理優化
+- [x] 道具圖鑑 AI 化管理（批量調整售價、上架商店開關、篩選功能）
+- [x] 裝備圖鑑 AI 化管理（批量調整售價、上架商店開關、篩選功能 + schema 新增欄位）
+- [x] 技能圖鑑 AI 化管理（批量調整售價、上架商店開關、篩選功能 + schema 新增欄位）
+- [x] 成就圖鑑 AI 化管理（表格顯示條件類型/目標值/獎勵可讀格式）
+
+### 戰鬥系統整合
+- [x] 戰鬥入口觸發整合（地圖怪物「挑戰」按鈕 → startBattle → BattleWindow）
+- [x] 手機版掛機面板整合（角色抽屜底部加入 IdleSessionPanel）
+- [x] 戰鬥獎勵結算 UI（BattleResultPanel 升級 + submitCommand 結算邏輯）
+- [x] 後端結算邏輯：submitCommand 勝利時自動發放 exp/gold/drops/petExp
+- [x] 55 個測試檔案，1171 項測試全數通過，TypeScript 零錯誤

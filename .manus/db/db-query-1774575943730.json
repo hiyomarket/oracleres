@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE game_skill_catalog ADD COLUMN in_normal_shop TINYINT DEFAULT 0 AFTER skill_type;\nALTER TABLE game_skill_catalog ADD COLUMN in_spirit_shop TINYINT DEFAULT 0 AFTER in_normal_shop;\nALTER TABLE game_skill_catalog ADD COLUMN in_secret_shop TINYINT DEFAULT 0 AFTER in_spirit_shop;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nALTER TABLE game_skill_catalog ADD COLUMN in_normal_shop TINYINT DEFAULT 0 AFTER skill_type;\nALTER TABLE game_skill_catalog ADD COLUMN in_spirit_shop TINYINT DEFAULT 0 AFTER in_normal_shop;\nALTER TABLE game_skill_catalog ADD COLUMN in_secret_shop TINYINT DEFAULT 0 AFTER in_spirit_shop;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2590
+}

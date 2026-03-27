@@ -2173,6 +2173,14 @@ export const gameEquipmentCatalog = mysqlTable("game_equipment_catalog", {
   craftMaterials: varchar("craft_materials", { length: 300 }).default(""),
   /** 稀有度：common / rare / epic / legendary */
   rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
+  /** 商店售價（金幣，0 表示不在商店販售） */
+  shopPrice: int("shop_price").notNull().default(0),
+  /** 是否在一般商店上架 */
+  inNormalShop: tinyint("in_normal_shop").default(0),
+  /** 是否在靈相商店上架 */
+  inSpiritShop: tinyint("in_spirit_shop").default(0),
+  /** 是否在密店上架 */
+  inSecretShop: tinyint("in_secret_shop").default(0),
   /** 圖片 URL */
   imageUrl: text("image_url").default(""),
   isActive: tinyint("is_active").default(1),
@@ -2217,6 +2225,12 @@ export const gameSkillCatalog = mysqlTable("game_skill_catalog", {
   description: text("description"),
   /** 技能類型：attack / heal / buff / debuff / passive / special */
   skillType: varchar("skill_type", { length: 20 }).notNull().default("attack"),
+  /** 是否在一般商店上架 */
+  inNormalShop: tinyint("in_normal_shop").default(0),
+  /** 是否在靈相商店上架 */
+  inSpiritShop: tinyint("in_spirit_shop").default(0),
+  /** 是否在密店上架 */
+  inSecretShop: tinyint("in_secret_shop").default(0),
   isActive: tinyint("is_active").default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });

@@ -7,7 +7,8 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions } from "../../drizzle/schema";
+import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory } from "../../drizzle/schema";
+import { sql } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
 import { calcPetStats, petSkillsToCombatFormat, DESTINY_SKILLS, DESTINY_AWAKENING_EFFECTS, checkDestinySkillLevelUp, calcPetBattleExp, levelUpBP } from "../services/petEngine";
@@ -538,7 +539,97 @@ export const gameBattleRouter = router({
             }
           }
 
-          return { state: "ended", result: battleResult, round, logs: allLogs };
+          // ═══ 戰鬥結算獎勵 ═══
+          let rewards: { expReward: number; goldReward: number; drops: string[]; petExpGained: number } = {
+            expReward: 0, goldReward: 0, drops: [], petExpGained: 0,
+          };
+          if (battleResult === "win") {
+            // 找到怪物參與者以計算獎勵
+            const monsterP = dbParticipants.find(dp => dp.participantType === "monster");
+            const monsterId = monsterP?.monsterId;
+            const monsterLevel = monsterP?.level ?? 1;
+            const staticMonster = monsterId ? MONSTERS.find(m => m.id === monsterId) : null;
+            if (staticMonster) {
+              const mult = battle.rewardMultiplier ?? 1.0;
+              rewards.expReward = Math.floor(staticMonster.expReward * mult);
+              const [gMin, gMax] = staticMonster.goldReward;
+              rewards.goldReward = Math.floor((gMin + Math.random() * (gMax - gMin)) * mult);
+              // 掉落物
+              for (const drop of staticMonster.dropItems) {
+                if (Math.random() < drop.chance * mult) {
+                  rewards.drops.push(drop.itemId);
+                }
+              }
+            } else {
+              // 無靜態怪物數據，使用基礎公式
+              const mult = battle.rewardMultiplier ?? 1.0;
+              rewards.expReward = Math.floor(monsterLevel * 15 * mult);
+              rewards.goldReward = Math.floor(monsterLevel * 8 * mult);
+            }
+
+            // 更新角色經驗/金幣
+            const agentP = dbParticipants.find(dp => dp.participantType === "character");
+            if (agentP?.agentId) {
+              await db.update(gameAgents).set({
+                exp: sql`${gameAgents.exp} + ${rewards.expReward}`,
+                gold: sql`${gameAgents.gold} + ${rewards.goldReward}`,
+                totalKills: sql`${gameAgents.totalKills} + 1`,
+                updatedAt: Date.now(),
+              }).where(eq(gameAgents.id, agentP.agentId));
+
+              // 寫入背包
+              for (const itemId of rewards.drops) {
+                try {
+                  const [existing] = await db.select().from(agentInventory)
+                    .where(and(eq(agentInventory.agentId, agentP.agentId), eq(agentInventory.itemId, itemId)))
+                    .limit(1);
+                  if (existing) {
+                    await db.update(agentInventory).set({
+                      quantity: existing.quantity + 1,
+                      updatedAt: Date.now(),
+                    }).where(eq(agentInventory.id, existing.id));
+                  } else {
+                    const itemType = itemId.startsWith("equip") ? "equipment" as const
+                      : itemId.startsWith("skill") ? "skill_book" as const
+                      : itemId.startsWith("food") || itemId.startsWith("consumable") ? "consumable" as const
+                      : "material" as const;
+                    await db.insert(agentInventory).values({
+                      agentId: agentP.agentId,
+                      itemId,
+                      itemType,
+                      quantity: 1,
+                      acquiredAt: Date.now(),
+                      updatedAt: Date.now(),
+                    });
+                  }
+                } catch (e) { console.error("[Battle] drop insert error:", e); }
+              }
+            }
+
+            // 寵物經驗
+            const petP = dbParticipants.find(dp => dp.participantType === "pet");
+            if (petP?.petId && staticMonster) {
+              const [activePet] = await db.select().from(gamePlayerPets).where(eq(gamePlayerPets.id, petP.petId as number));
+              if (activePet) {
+                rewards.petExpGained = calcPetBattleExp(staticMonster.expReward, activePet.level, staticMonster.level);
+                await db.update(gamePlayerPets).set({
+                  exp: sql`${gamePlayerPets.exp} + ${rewards.petExpGained}`,
+                  friendship: sql`LEAST(100, ${gamePlayerPets.friendship} + 1)`,
+                  updatedAt: Date.now(),
+                }).where(eq(gamePlayerPets.id, activePet.id));
+              }
+            }
+          }
+
+          return {
+            state: "ended", result: battleResult, round, logs: allLogs,
+            rewards: {
+              expReward: rewards.expReward,
+              goldReward: rewards.goldReward,
+              drops: rewards.drops,
+              petExpGained: rewards.petExpGained,
+            },
+          };
         }
       }
 

@@ -928,8 +928,11 @@ export function ItemCatalogV2Tab() {
     { key: "wuxing", label: "五行", type: "select", options: WUXING_OPTS },
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
     { key: "category", label: "分類", type: "select", options: ITEM_CAT_OPTS },
-    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
     { key: "shopPrice", label: "商店售價", type: "number" },
+    { key: "inNormalShop", label: "一般商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
+    { key: "inSpiritShop", label: "靈相商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
+    { key: "inSecretShop", label: "密店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
+    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
   ];
 
   const handleSubmit = (data: any) => {
@@ -950,7 +953,10 @@ export function ItemCatalogV2Tab() {
   const toggleAll = () => { if (allSelected) setSelectedIds(new Set()); else setSelectedIds(new Set(items.map((m: any) => m.id))); };
   const toggleOne = (id: number) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
   const handleBatchDelete = () => { if (!confirm(`確定要刪除選取的 ${selectedIds.size} 筆道具？`)) return; batchDeleteMut.mutate({ ids: Array.from(selectedIds) }); };
-  const handleBatchEdit = (data: Record<string, any>) => { if (data.isActive !== undefined) data.isActive = Number(data.isActive); batchUpdateMut.mutate({ ids: Array.from(selectedIds), data }); };
+  const handleBatchEdit = (data: Record<string, any>) => {
+    ["inNormalShop", "inSpiritShop", "inSecretShop", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
+    batchUpdateMut.mutate({ ids: Array.from(selectedIds), data });
+  };
 
   return (
     <div>
@@ -984,14 +990,15 @@ export function ItemCatalogV2Tab() {
               <thead><tr className="border-b text-muted-foreground text-xs">
                 <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
                 <th className="text-left py-2 px-2 whitespace-nowrap">ID</th><th className="text-left py-2 px-2 whitespace-nowrap">名稱</th><th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
-                <th className="text-left py-2 px-2 whitespace-nowrap">分類</th><th className="text-left py-2 px-2 whitespace-nowrap">稀有度</th><th className="text-left py-2 px-2 whitespace-nowrap">售價</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">分類</th><th className="text-left py-2 px-2 whitespace-nowrap">稀有度</th><th className="text-left py-2 px-2 whitespace-nowrap">售價</th><th className="text-left py-2 px-2 whitespace-nowrap">商店</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
               </tr></thead>
               <tbody>{items.map((m: any) => (
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
                   <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.itemId}</td>
                   <td className="py-2 px-2 font-medium">{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
-                  <td className="py-2 px-2 text-xs">{m.category}</td><td className="py-2 px-2 text-xs">{m.rarity}</td><td className="py-2 px-2">{m.shopPrice}</td>
+                  <td className="py-2 px-2 text-xs">{m.category}</td><td className="py-2 px-2 text-xs">{m.rarity}</td><td className="py-2 px-2">{m.shopPrice > 0 ? m.shopPrice : '-'}</td>
+                  <td className="py-2 px-2 text-xs space-x-0.5">{m.inNormalShop ? <span className="inline-block px-1 rounded bg-green-500/20 text-green-400 text-[10px]">一般</span> : null}{m.inSpiritShop ? <span className="inline-block px-1 rounded bg-purple-500/20 text-purple-400 text-[10px]">靈相</span> : null}{m.inSecretShop ? <span className="inline-block px-1 rounded bg-amber-500/20 text-amber-400 text-[10px]">密店</span> : null}{!m.inNormalShop && !m.inSpiritShop && !m.inSecretShop ? <span className="text-muted-foreground">-</span> : null}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
@@ -1096,6 +1103,10 @@ export function EquipCatalogV2Tab() {
       }
     },
     { key: "setId", label: "套裝ID", type: "text", defaultValue: "", group: "製作" },
+    { key: "shopPrice", label: "商店售價", type: "number", defaultValue: 0, group: "商店分配" },
+    { key: "inNormalShop", label: "一般商店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
+    { key: "inSpiritShop", label: "靈相商店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
+    { key: "inSecretShop", label: "密店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
     { key: "specialEffect", label: "特殊效果", type: "textarea", group: "其他" },
     { key: "imageUrl", label: "圖片URL", type: "text", group: "其他" },
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
@@ -1106,12 +1117,16 @@ export function EquipCatalogV2Tab() {
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
     { key: "slot", label: "部位", type: "select", options: SLOT_OPTS },
     { key: "quality", label: "品質", type: "select", options: QUALITY_OPTS },
+    { key: "shopPrice", label: "商店售價", type: "number" },
+    { key: "inNormalShop", label: "一般商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
+    { key: "inSpiritShop", label: "靈相商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
+    { key: "inSecretShop", label: "密店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
     { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
   ];
 
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
-    if (data.isActive !== undefined) data.isActive = Number(data.isActive);
+    ["inNormalShop", "inSpiritShop", "inSecretShop", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
     if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
@@ -1127,7 +1142,10 @@ export function EquipCatalogV2Tab() {
   const toggleAll = () => { if (allSelected) setSelectedIds(new Set()); else setSelectedIds(new Set(items.map((m: any) => m.id))); };
   const toggleOne = (id: number) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
   const handleBatchDelete = () => { if (!confirm(`確定要刪除選取的 ${selectedIds.size} 筆裝備？`)) return; batchDeleteMut.mutate({ ids: Array.from(selectedIds) }); };
-  const handleBatchEdit = (data: Record<string, any>) => { if (data.isActive !== undefined) data.isActive = Number(data.isActive); batchUpdateMut.mutate({ ids: Array.from(selectedIds), data }); };
+  const handleBatchEdit = (data: Record<string, any>) => {
+    ["inNormalShop", "inSpiritShop", "inSecretShop", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
+    batchUpdateMut.mutate({ ids: Array.from(selectedIds), data });
+  };
 
   return (
     <div>
@@ -1160,7 +1178,7 @@ export function EquipCatalogV2Tab() {
               <thead><tr className="border-b text-muted-foreground text-xs">
                 <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
                 <th className="text-left py-2 px-2 whitespace-nowrap">ID</th><th className="text-left py-2 px-2 whitespace-nowrap">名稱</th><th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
-                <th className="text-left py-2 px-2 whitespace-nowrap">部位</th><th className="text-left py-2 px-2 whitespace-nowrap">品質</th><th className="text-left py-2 px-2 whitespace-nowrap">攻擊</th><th className="text-left py-2 px-2 whitespace-nowrap">防禦</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">部位</th><th className="text-left py-2 px-2 whitespace-nowrap">品質</th><th className="text-left py-2 px-2 whitespace-nowrap">售價</th><th className="text-left py-2 px-2 whitespace-nowrap">商店</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
               </tr></thead>
               <tbody>{items.map((m: any) => (
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
@@ -1168,7 +1186,8 @@ export function EquipCatalogV2Tab() {
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.equipId}</td>
                   <td className="py-2 px-2 font-medium">{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
                   <td className="py-2 px-2 text-xs">{m.slot}</td><td className="py-2 px-2 text-xs">{m.quality}</td>
-                  <td className="py-2 px-2">{m.attackBonus}</td><td className="py-2 px-2">{m.defenseBonus}</td>
+                  <td className="py-2 px-2">{m.shopPrice > 0 ? m.shopPrice : '-'}</td>
+                  <td className="py-2 px-2 text-xs space-x-0.5">{m.inNormalShop ? <span className="inline-block px-1 rounded bg-green-500/20 text-green-400 text-[10px]">一般</span> : null}{m.inSpiritShop ? <span className="inline-block px-1 rounded bg-purple-500/20 text-purple-400 text-[10px]">靈相</span> : null}{m.inSecretShop ? <span className="inline-block px-1 rounded bg-amber-500/20 text-amber-400 text-[10px]">密店</span> : null}{!m.inNormalShop && !m.inSpiritShop && !m.inSecretShop ? <span className="text-muted-foreground">-</span> : null}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
@@ -1261,6 +1280,9 @@ export function SkillCatalogV2Tab() {
       render: (val, onChange) => <HiddenTriggerEditor value={val ?? []} onChange={onChange} />
     },
     { key: "description", label: "效果說明", type: "textarea", group: "其他" },
+    { key: "inNormalShop", label: "一般商店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
+    { key: "inSpiritShop", label: "靈相商店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
+    { key: "inSecretShop", label: "密店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
@@ -1269,12 +1291,16 @@ export function SkillCatalogV2Tab() {
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
     { key: "category", label: "分類", type: "select", options: SKILL_CAT_OPTS },
     { key: "skillType", label: "技能類型", type: "select", options: SKILL_TYPE_OPTS },
+    { key: "shopPrice", label: "商店售價", type: "number" },
+    { key: "inNormalShop", label: "一般商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
+    { key: "inSpiritShop", label: "靈相商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
+    { key: "inSecretShop", label: "密店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
     { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
   ];
 
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
-    if (data.isActive !== undefined) data.isActive = Number(data.isActive);
+    ["inNormalShop", "inSpiritShop", "inSecretShop", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
     if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
@@ -1290,7 +1316,10 @@ export function SkillCatalogV2Tab() {
   const toggleAll = () => { if (allSelected) setSelectedIds(new Set()); else setSelectedIds(new Set(items.map((m: any) => m.id))); };
   const toggleOne = (id: number) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
   const handleBatchDelete = () => { if (!confirm(`確定要刪除選取的 ${selectedIds.size} 筆技能？`)) return; batchDeleteMut.mutate({ ids: Array.from(selectedIds) }); };
-  const handleBatchEdit = (data: Record<string, any>) => { if (data.isActive !== undefined) data.isActive = Number(data.isActive); batchUpdateMut.mutate({ ids: Array.from(selectedIds), data }); };
+  const handleBatchEdit = (data: Record<string, any>) => {
+    ["inNormalShop", "inSpiritShop", "inSecretShop", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
+    batchUpdateMut.mutate({ ids: Array.from(selectedIds), data });
+  };
 
   return (
     <div>
@@ -1323,14 +1352,15 @@ export function SkillCatalogV2Tab() {
               <thead><tr className="border-b text-muted-foreground text-xs">
                 <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
                 <th className="text-left py-2 px-2 whitespace-nowrap">ID</th><th className="text-left py-2 px-2 whitespace-nowrap">名稱</th><th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
-                <th className="text-left py-2 px-2 whitespace-nowrap">類型</th><th className="text-left py-2 px-2 whitespace-nowrap">威力%</th><th className="text-left py-2 px-2 whitespace-nowrap">MP</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">類型</th><th className="text-left py-2 px-2 whitespace-nowrap">售價</th><th className="text-left py-2 px-2 whitespace-nowrap">商店</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
               </tr></thead>
               <tbody>{items.map((m: any) => (
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
                   <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.skillId}</td>
                   <td className="py-2 px-2 font-medium">{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
-                  <td className="py-2 px-2 text-xs">{m.skillType}</td><td className="py-2 px-2">{m.powerPercent}%</td><td className="py-2 px-2">{m.mpCost}</td>
+                  <td className="py-2 px-2 text-xs">{m.skillType}</td><td className="py-2 px-2">{m.shopPrice > 0 ? m.shopPrice : '-'}</td>
+                  <td className="py-2 px-2 text-xs space-x-0.5">{m.inNormalShop ? <span className="inline-block px-1 rounded bg-green-500/20 text-green-400 text-[10px]">一般</span> : null}{m.inSpiritShop ? <span className="inline-block px-1 rounded bg-purple-500/20 text-purple-400 text-[10px]">靈相</span> : null}{m.inSecretShop ? <span className="inline-block px-1 rounded bg-amber-500/20 text-amber-400 text-[10px]">密店</span> : null}{!m.inNormalShop && !m.inSpiritShop && !m.inSecretShop ? <span className="text-muted-foreground">-</span> : null}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
@@ -1423,11 +1453,20 @@ export function AchievementCatalogTab() {
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
+  const CONDITION_LABEL: Record<string, string> = {
+    kill_count: "擊殺怪物", kill_specific: "擊殺特定怪物", explore_count: "探索節點",
+    explore_specific: "探索特定節點", level_reach: "等級達到", collect_item: "收集道具",
+    equip_quality: "裝備品質", skill_learn: "學習技能", craft_count: "製作次數",
+    pvp_win: "PVP勝利", pvp_total: "PVP總場", oracle_count: "擲筊次數",
+    gold_earn: "累計金幣", login_days: "登入天數", hp_below: "HP低於", wuxing_match: "五行匹配",
+  };
+
   const batchEditFields = [
     { key: "category", label: "分類", type: "select", options: ACH_CAT_OPTS },
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
-    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
+    { key: "rewardType", label: "獎勵類型", type: "select", options: REWARD_TYPE_OPTS },
     { key: "rewardAmount", label: "獎勵數量", type: "number" },
+    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
   ];
 
   const handleSubmit = (data: any) => {
@@ -1476,14 +1515,15 @@ export function AchievementCatalogTab() {
               <thead><tr className="border-b text-muted-foreground text-xs">
                 <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
                 <th className="text-left py-2 px-2 whitespace-nowrap">ID</th><th className="text-left py-2 px-2 whitespace-nowrap">名稱</th><th className="text-left py-2 px-2 whitespace-nowrap">分類</th>
-                <th className="text-left py-2 px-2 whitespace-nowrap">稀有度</th><th className="text-left py-2 px-2 whitespace-nowrap">獎勵</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">條件</th><th className="text-left py-2 px-2 whitespace-nowrap">獎勵</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
               </tr></thead>
               <tbody>{items.map((m: any) => (
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
                   <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.achId}</td>
                   <td className="py-2 px-2 font-medium">{m.title}</td><td className="py-2 px-2 text-xs">{m.category}</td>
-                  <td className="py-2 px-2 text-xs">{m.rarity}</td><td className="py-2 px-2 text-xs">{m.rewardType} x{m.rewardAmount}</td>
+                  <td className="py-2 px-2 text-xs"><span className="inline-block px-1 rounded bg-blue-500/15 text-blue-400 text-[10px]">{CONDITION_LABEL[m.conditionType] || m.conditionType}</span> <span className="text-muted-foreground">≥{m.conditionValue}</span></td>
+                  <td className="py-2 px-2 text-xs">{m.rewardType} x{m.rewardAmount}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.title = `${m.title}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.title}」，請修改後儲存`); }}>📋</Button>
