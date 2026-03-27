@@ -4946,3 +4946,50 @@
 - [x] Tier 1 預設 5 隻（克特、黑長老、古牛、逆位行者、蒼龍）
 - [x] Tier 2 預設 2 隻（死亡騎士、露比）
 - [x] Tier 3 自動 2 隻（混沌帝王、虛無巨蛇）
+
+## M19: 道具戰鬥篩選 + 戰鬥倒數 + AI圖片風格統一
+
+### 道具戰鬥可用性
+- [x] gameItemCatalog schema 新增 usableInBattle 欄位（boolean）
+- [x] 後台道具圖鑑管理介面增加「可在戰鬥中使用」開關
+- [x] getBattleItems API 篩選條件：category=consumable + usableInBattle=true
+- [x] 種子資料更新：25 個消耗品全部設定 useEffect + usableInBattle
+- [x] db:push 遷移（ALTER TABLE 新增 usable_in_battle 欄位）
+
+### 回合制戰鬥倒數計時
+- [x] 後台新增戰鬥倒數設定（個人戰秒數、Boss戰秒數、0=不限制）
+- [x] BattleWindow 前端倒數計時器 UI（圓形進度條 + 秒數顯示）
+- [x] 倒數結束自動提交（預設普攻）
+- [x] getBattleState 回傳 turnTimer 設定
+
+### AI 生成圖片風格統一
+- [x] 統一所有 AI 圖片 prompt 為庫洛魔法使封印卡風格（cardStylePrompt.ts）
+- [x] 華麗可愛巴洛克風，純圖片無文字
+- [x] 涵蓋：寵物圖鑑、道具圖示、裝備圖示、技能圖示、怪物/Boss 圖鑑（12 處 prompt 全部替換）
+
+### Boss 出王排程驗證
+- [x] 後台 Boss 系統開關和出王排程功能（BossConfigPanel 配置完成）
+- [x] Boss 圖鑑數值微調功能（RoamingBossTab 編輯功能完成）
+
+### 測試
+- [x] vitest 測試覆蓋新功能（60 檔 1270 測試全通過）
+
+### 戰鬥技能實裝掛載
+- [x] startBattle 同時載入 agentSkills（一般技能）+ gameLearnedQuestSkills（天命技能）
+- [x] 技能在戰鬥介面中可正常選擇和使用
+- [x] 技能效果（傷害/治療/buff/debuff）正確執行
+- [x] 寵物技能也正確掛載
+
+### 魔物後台 null 驗證 bug
+- [x] 修復 destinyClue 傳 null 導致 invalid_type 錯誤（改為 .nullish()）
+- [x] 修復 spawnNodes 傳 null 導致 invalid_type 錯誤（改為 .nullish()）
+- [x] 修復 imageUrl 傳 null 導致 invalid_type 錯誤（改為 .nullish()）
+
+### 技能/掉落地分類篩選
+- [x] linkedSelect 改為帶搜尋功能的 Combobox（LinkedSelectField 組件）
+- [x] 技能選擇/道具選擇/怪物選擇都可輸入關鍵字快速篩選
+
+### 全面整頓後台圖鑑修改回傳
+- [x] 檢查所有圖鑑 update router 的 input schema，修復 null 驗證問題（6 大圖鑑全部修復）
+- [x] 所有可選欄位改為 .nullish()，create/update 中 null 轉為空字串/空陣列
+- [x] 魔物/道具/裝備/技能/成就/魔物技能 圖鑑的修改儲存功能已修復

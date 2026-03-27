@@ -48,6 +48,13 @@ export interface GameEngineConfig {
   afkTickIntervalMs: number;
   /** 是否啟用伺服器端掛機循環 */
   afkTickEnabled: boolean;
+  // ─── 戰鬥倒數計時配置 ───
+  /** 個人戰回合倒數秒數（0=不限制） */
+  battleTurnTimerPvE: number;
+  /** Boss 戰回合倒數秒數（0=不限制） */
+  battleTurnTimerBoss: number;
+  /** PvP 戰回合倒數秒數（0=不限制） */
+  battleTurnTimerPvP: number;
   // ─── Boss 系統配置 ───
   /** 是否啟用 Boss 系統 */
   bossSystemEnabled: boolean;
@@ -81,9 +88,13 @@ const DEFAULT_CONFIG: GameEngineConfig = {
   rewardMultIdle: 0.33,
   rewardMultClosed: 1.0,
   rewardMultOpen: 1.5,
-  // 掛機循環預設值
+  // 掙機循環預設值
   afkTickIntervalMs: 15_000,
   afkTickEnabled: true,
+  // 戰鬥倒數計時預設值
+  battleTurnTimerPvE: 30,   // 個人戰 30 秒
+  battleTurnTimerBoss: 20,  // Boss 戰 20 秒
+  battleTurnTimerPvP: 15,   // PvP 戰 15 秒
   // Boss 系統預設值
   bossSystemEnabled: true,
   bossT1MaxCount: 5,

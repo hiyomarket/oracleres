@@ -2151,6 +2151,8 @@ export const gameItemCatalog = mysqlTable("game_item_catalog", {
   tradeable: tinyint("tradeable").notNull().default(1),
   /** 是否可在拍賣行上架 */
   inAuctionHouse: tinyint("in_auction_house").notNull().default(1),
+  /** 是否可在戰鬥中使用（僅消耗品） */
+  usableInBattle: tinyint("usable_in_battle").notNull().default(0),
   isActive: tinyint("is_active").default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });

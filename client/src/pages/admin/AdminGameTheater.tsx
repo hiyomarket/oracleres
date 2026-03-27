@@ -1205,6 +1205,93 @@ function EngineControlTab() {
         </CardContent>
       </Card>
 
+      {/* 戰鬥倒數計時配置 */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">⏱ 戰鬥回合倒數計時</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-[10px] text-muted-foreground mb-3">設定各模式的回合倒數秒數，0 = 不限制。倒數結束時自動提交普攻。</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs font-medium mb-1">⚔️ 個人戰 (PvE)</p>
+              <div className="flex items-center gap-2">
+                <input type="range" min={0} max={120} step={5}
+                  value={parseInt(String(localCfg.battleTurnTimerPvE ?? 30))}
+                  onChange={e => handleChange("battleTurnTimerPvE", e.target.value)}
+                  className="flex-1 accent-blue-500" />
+                <span className="text-sm font-bold tabular-nums w-12 text-right">
+                  {parseInt(String(localCfg.battleTurnTimerPvE ?? 30)) === 0 ? "無限" : `${parseInt(String(localCfg.battleTurnTimerPvE ?? 30))}s`}
+                </span>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-medium mb-1">👹 Boss 戰</p>
+              <div className="flex items-center gap-2">
+                <input type="range" min={0} max={120} step={5}
+                  value={parseInt(String(localCfg.battleTurnTimerBoss ?? 20))}
+                  onChange={e => handleChange("battleTurnTimerBoss", e.target.value)}
+                  className="flex-1 accent-red-500" />
+                <span className="text-sm font-bold tabular-nums w-12 text-right">
+                  {parseInt(String(localCfg.battleTurnTimerBoss ?? 20)) === 0 ? "無限" : `${parseInt(String(localCfg.battleTurnTimerBoss ?? 20))}s`}
+                </span>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-medium mb-1">🤺 PvP 戰</p>
+              <div className="flex items-center gap-2">
+                <input type="range" min={0} max={120} step={5}
+                  value={parseInt(String(localCfg.battleTurnTimerPvP ?? 15))}
+                  onChange={e => handleChange("battleTurnTimerPvP", e.target.value)}
+                  className="flex-1 accent-purple-500" />
+                <span className="text-sm font-bold tabular-nums w-12 text-right">
+                  {parseInt(String(localCfg.battleTurnTimerPvP ?? 15)) === 0 ? "無限" : `${parseInt(String(localCfg.battleTurnTimerPvP ?? 15))}s`}
+                </span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Boss 系統配置 */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">👹 Boss 系統配置</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs font-medium">啟用 Boss 系統</p>
+              <p className="text-[10px] text-muted-foreground">開啟後 Boss 會按排程自動生成</p>
+            </div>
+            <Switch
+              checked={Boolean(localCfg.bossSystemEnabled)}
+              onCheckedChange={v => handleChange("bossSystemEnabled", v)}
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <p className="text-xs font-medium mb-1">T1 最大數量</p>
+              <Input type="number" value={String(localCfg.bossT1MaxCount ?? 5)}
+                onChange={e => handleChange("bossT1MaxCount", e.target.value)}
+                min={0} max={20} className="h-8 text-sm" />
+            </div>
+            <div>
+              <p className="text-xs font-medium mb-1">T1 移動間隔(秒)</p>
+              <Input type="number" value={String(localCfg.bossT1MoveInterval ?? 300)}
+                onChange={e => handleChange("bossT1MoveInterval", e.target.value)}
+                min={60} max={3600} className="h-8 text-sm" />
+            </div>
+            <div>
+              <p className="text-xs font-medium mb-1">T2 移動間隔(秒)</p>
+              <Input type="number" value={String(localCfg.bossT2MoveInterval ?? 600)}
+                onChange={e => handleChange("bossT2MoveInterval", e.target.value)}
+                min={60} max={7200} className="h-8 text-sm" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* 注靈指令配置 */}
       <Card>
         <CardHeader className="pb-2">

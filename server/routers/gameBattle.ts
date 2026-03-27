@@ -7,7 +7,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog } from "../../drizzle/schema";
+import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog } from "../../drizzle/schema";
 import { sql, inArray } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
@@ -20,6 +20,7 @@ import {
 import { MONSTERS, type Monster } from "../../shared/monsters";
 import { getCombatMonsterById, type CombatMonster, type MonsterSkillData } from "../monsterDataService";
 import { randomUUID } from "crypto";
+import { getEngineConfig } from "../gameEngineConfig";
 
 // ─── 輔助函數 ───
 
@@ -213,7 +214,48 @@ export const gameBattleRouter = router({
       const participants: BattleParticipant[] = [];
       let nextId = 1;
 
-      // 讀取已裝備的天命技能
+      // ─── 讀取角色已裝備的一般技能（agentSkills） ───
+      const equippedAgentSkills = await db.select({
+        skillId: agentSkills.skillId,
+        awakeTier: agentSkills.awakeTier,
+        installedSlot: agentSkills.installedSlot,
+      }).from(agentSkills).where(
+        and(eq(agentSkills.agentId, agent.id), sql`${agentSkills.installedSlot} IS NOT NULL AND ${agentSkills.installedSlot} LIKE 'skillSlot%'`)
+      );
+      const agentSkillIds = equippedAgentSkills.map(s => s.skillId);
+      let normalCombatSkills: import("../services/combatEngineV2").CombatSkill[] = [];
+      if (agentSkillIds.length > 0) {
+        const skillData = await db.select({
+          skillId: gameSkillCatalog.skillId,
+          name: gameSkillCatalog.name,
+          category: gameSkillCatalog.category,
+          skillType: gameSkillCatalog.skillType,
+          wuxing: gameSkillCatalog.wuxing,
+          mpCost: gameSkillCatalog.mpCost,
+          cooldown: gameSkillCatalog.cooldown,
+          powerPercent: gameSkillCatalog.powerPercent,
+        }).from(gameSkillCatalog).where(inArray(gameSkillCatalog.skillId, agentSkillIds));
+        normalCombatSkills = skillData.map(sk => {
+          const equipped = equippedAgentSkills.find(e => e.skillId === sk.skillId);
+          const mappedType = sk.skillType === "heal" ? "heal" :
+            sk.skillType === "buff" ? "buff" :
+            sk.skillType === "debuff" ? "buff" :
+            sk.skillType === "passive" ? "buff" : "attack";
+          return {
+            id: `skill_${sk.skillId}`,
+            name: sk.name,
+            skillType: mappedType as any,
+            damageMultiplier: (sk.powerPercent ?? 100) / 100,
+            mpCost: sk.mpCost ?? 0,
+            wuxing: sk.wuxing === "無" ? undefined : sk.wuxing ?? undefined,
+            cooldown: sk.cooldown ?? 3,
+            currentCooldown: 0,
+            skillLevel: (equipped?.awakeTier ?? 0) + 1,
+          };
+        });
+      }
+
+      // ─── 讀取已裝備的天命技能（gameLearnedQuestSkills） ───
       const equippedQuestSkills = await db.select({
         skillId: gameLearnedQuestSkills.skillId,
         level: gameLearnedQuestSkills.level,
@@ -221,7 +263,7 @@ export const gameBattleRouter = router({
         and(eq(gameLearnedQuestSkills.agentId, agent.id), eq(gameLearnedQuestSkills.isEquipped, 1))
       );
       const questSkillIds = equippedQuestSkills.map(s => s.skillId);
-      let charCombatSkills: import("../services/combatEngineV2").CombatSkill[] = [];
+      let questCombatSkills: import("../services/combatEngineV2").CombatSkill[] = [];
       if (questSkillIds.length > 0) {
         const questSkillData = await db.select({
           id: gameQuestSkillCatalog.id,
@@ -233,7 +275,7 @@ export const gameBattleRouter = router({
           wuxing: gameQuestSkillCatalog.wuxing,
           additionalEffect: gameQuestSkillCatalog.additionalEffect,
         }).from(gameQuestSkillCatalog).where(inArray(gameQuestSkillCatalog.id, questSkillIds));
-        charCombatSkills = questSkillData.map(qs => {
+        questCombatSkills = questSkillData.map(qs => {
           const learned = equippedQuestSkills.find(e => e.skillId === qs.id);
           const mappedType = qs.skillType === "heal" ? "heal" :
             qs.skillType === "buff" ? "buff" :
@@ -252,6 +294,9 @@ export const gameBattleRouter = router({
           };
         });
       }
+
+      // ─── 合併所有技能 ───
+      const charCombatSkills = [...normalCombatSkills, ...questCombatSkills];
 
       const charParticipant = buildCharacterParticipant(agent, nextId++, charCombatSkills);
       participants.push(charParticipant);
@@ -812,6 +857,15 @@ export const gameBattleRouter = router({
       const logs = await db.select().from(gameBattleLogs)
         .where(eq(gameBattleLogs.battleId, battle.id));
 
+      // 讀取戰鬥倒數計時設定
+      const engineCfg = getEngineConfig();
+      const turnTimerMap: Record<string, number> = {
+        pve: engineCfg.battleTurnTimerPvE,
+        boss: engineCfg.battleTurnTimerBoss,
+        pvp: engineCfg.battleTurnTimerPvP,
+      };
+      const turnTimer = turnTimerMap[battle.mode] ?? engineCfg.battleTurnTimerPvE;
+
       return {
         battle: {
           battleId: battle.battleId,
@@ -821,6 +875,7 @@ export const gameBattleRouter = router({
           maxRounds: battle.maxRounds,
           result: battle.result,
           rewardMultiplier: battle.rewardMultiplier,
+          turnTimer, // 回合倒數秒數（0=不限制）
         },
         participants: participants.map(p => ({
           id: p.id,
@@ -1071,6 +1126,7 @@ export const gameBattleRouter = router({
             eq(agentInventory.agentId, agent.id),
             eq(agentInventory.itemType, "consumable"),
             sql`${agentInventory.quantity} > 0`,
+            eq(gameItemCatalog.usableInBattle, 1),
           )
         );
 

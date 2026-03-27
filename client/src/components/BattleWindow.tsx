@@ -101,6 +101,53 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
   const [rewards, setRewards] = useState<{ expReward: number; goldReward: number; drops: string[]; petExpGained: number } | null>(null);
   const logScrollRef = useRef<HTMLDivElement>(null);
 
+  // ─── 回合倒數計時器 ───
+  const [turnTimer, setTurnTimer] = useState(0); // 從後端取得的回合秒數
+  const [timeLeft, setTimeLeft] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // 當回合數變化或戰鬥狀態變化時重置倒數
+  useEffect(() => {
+    if (turnTimer > 0 && battleState === "active") {
+      setTimeLeft(turnTimer);
+    }
+  }, [round, turnTimer, battleState]);
+
+  // 倒數計時器
+  useEffect(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    if (turnTimer <= 0 || battleState !== "active" || timeLeft <= 0) return;
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          // 倒數結束，自動提交普攻
+          if (!isSubmitting) {
+            setSelectedCommand("attack");
+            setTimeout(() => {
+              const target = enemies.find(e => !e.isDefeated);
+              if (character && !character.isDefeated && target) {
+                setIsSubmitting(true);
+                submitCmd.mutate({
+                  battleId,
+                  commands: [{
+                    participantId: character.id,
+                    commandType: "attack",
+                    targetId: target.id,
+                  }],
+                });
+              }
+            }, 100);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [timeLeft, turnTimer, battleState, isSubmitting]);
+
   // ─── 戰鬥動畫系統 ───
   const [floatingTexts, setFloatingTexts] = useState<Array<{
     id: number; text: string; color: string; x: string; y: string;
@@ -267,6 +314,10 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       setRound(d.battle.currentRound);
       setBattleState(d.battle.state);
       if (d.battle.result) setBattleResult(d.battle.result);
+      // 讀取回合倒數設定
+      if ((d.battle as any).turnTimer !== undefined) {
+        setTurnTimer((d.battle as any).turnTimer);
+      }
     }
   }, [battleQuery.data]);
 
@@ -372,6 +423,14 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
           <div className="flex items-center gap-2">
             <span className="text-lg">⚔️</span>
             <span className="text-white font-bold text-sm">第 {round} 回合</span>
+            {turnTimer > 0 && battleState === "active" && (
+              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                timeLeft <= 5 ? "bg-red-500/30 text-red-300 animate-pulse" : timeLeft <= 10 ? "bg-amber-500/20 text-amber-300" : "bg-indigo-500/20 text-indigo-300"
+              }`}>
+                <span>⏱</span>
+                <span>{timeLeft}s</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {battleState !== "ended" && (
@@ -522,7 +581,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
                 border: `1px solid ${selectedCommand ? "rgba(99,102,241,0.5)" : "rgba(99,102,241,0.2)"}`,
                 color: selectedCommand ? "#c7d2fe" : "#64748b",
               }}>
-              {isSubmitting ? "⏳ 執行中…" : selectedCommand ? `確認 ${COMMANDS.find(c => c.id === selectedCommand)?.label ?? ""}` : "選擇指令"}
+              {isSubmitting ? "⏳ 執行中…" : selectedCommand ? `確認 ${COMMANDS.find(c => c.id === selectedCommand)?.label ?? ""}${turnTimer > 0 && timeLeft > 0 ? ` (${timeLeft}s)` : ""}` : `選擇指令${turnTimer > 0 && timeLeft > 0 ? ` (${timeLeft}s)` : ""}`}
             </button>
           </div>
         )}

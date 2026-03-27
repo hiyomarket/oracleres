@@ -1,0 +1,1 @@
+ALTER TABLE `game_item_catalog` ADD `usable_in_battle` tinyint DEFAULT 0 NOT NULL;

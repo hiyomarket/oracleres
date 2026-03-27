@@ -29,6 +29,7 @@ import { sql, like, eq, desc, asc, inArray } from "drizzle-orm";
 import { auditMonster, auditSkill, auditEquipment, auditItemPrice, auditAndFix } from "../services/aiValueAudit";
 import { evaluateItem, evaluateEquipment, evaluateSkill, getValueEngineRulesForAI, type TradeRules } from "../services/valueEngine";
 import { generateImage } from "../_core/imageGeneration";
+import { petCardPrompt, itemCardPrompt, equipCardPrompt, skillCardPrompt, monsterCardPrompt } from "../services/cardStylePrompt";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
@@ -2148,36 +2149,7 @@ ${petDescriptions}
       const [pet] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, input.petCatalogId));
       if (!pet) throw new TRPCError({ code: "NOT_FOUND", message: "寵物圖鑑不存在" });
 
-      // 種族與屬性的中文描述
-      const raceDesc: Record<string, string> = {
-        dragon: "龍種生物，有鱗片和龍角",
-        undead: "亡靈生物，帶有幽靈氣息",
-        normal: "普通生物，外型自然",
-        flying: "飛行生物，有翅膀",
-        insect: "蟲類生物，有甲殼和觸角",
-        plant: "植物生物，有花葉和藤蔓",
-      };
-      const wuxingDesc: Record<string, string> = {
-        wood: "木屬性，綠色色調，帶有植物元素",
-        fire: "火屬性，紅色色調，帶有火焰元素",
-        earth: "土屬性，棕色色調，帶有岩石元素",
-        metal: "金屬性，金色/銀色色調，帶有金屬光澤",
-        water: "水屬性，藍色色調，帶有水流元素",
-      };
-      const rarityDesc: Record<string, string> = {
-        common: "普通品質，外型樸實",
-        rare: "稀有品質，帶有微光效果",
-        epic: "史詩品質，帶有索繞光暈",
-        legendary: "傳說品質，帶有神聖光環和特殊紋路",
-      };
-
-      const prompt = `中國古風奇幻遊戲寵物立繪，單一生物全身像，透明背景。
-寵物名稱：${pet.name}
-描述：${pet.description || "神秘生物"}
-種族特徵：${raceDesc[pet.race] || "神秘生物"}
-屬性特徵：${wuxingDesc[pet.wuxing] || "自然屬性"}
-品質：${rarityDesc[pet.rarity] || "普通"}
-風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節，適合作為遊戲圖鑑卡片。`;
+      const prompt = petCardPrompt(pet);
 
       const { url } = await generateImage({ prompt });
       if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
@@ -2207,40 +2179,12 @@ ${petDescriptions}
       return { success: true, generated: 0, message: "所有寵物都已有圖片" };
     }
 
-    const raceDesc: Record<string, string> = {
-      dragon: "龍種生物，有鱗片和龍角",
-      undead: "亡靈生物，帶有幽靈氣息",
-      normal: "普通生物，外型自然",
-      flying: "飛行生物，有翅膀",
-      insect: "蟲類生物，有甲殼和觸角",
-      plant: "植物生物，有花葉和藤蔓",
-    };
-    const wuxingDesc: Record<string, string> = {
-      wood: "木屬性，綠色色調，帶有植物元素",
-      fire: "火屬性，紅色色調，帶有火焰元素",
-      earth: "土屬性，棕色色調，帶有岩石元素",
-      metal: "金屬性，金色/銀色色調，帶有金屬光澤",
-      water: "水屬性，藍色色調，帶有水流元素",
-    };
-    const rarityDesc: Record<string, string> = {
-      common: "普通品質，外型樸實",
-      rare: "稀有品質，帶有微光效果",
-      epic: "史詩品質，帶有索繞光暈",
-      legendary: "傳說品質，帶有神聖光環和特殊紋路",
-    };
-
     const results: { id: number; name: string; success: boolean; imageUrl?: string; error?: string }[] = [];
 
     // 逐一生成（避免並行超過 API 限制）
     for (const pet of needImage) {
       try {
-        const prompt = `中國古風奇幻遊戲寵物立繪，單一生物全身像，透明背景。
-寵物名稱：${pet.name}
-描述：${pet.description || "神秘生物"}
-種族特徵：${raceDesc[pet.race] || "神秘生物"}
-屬性特徵：${wuxingDesc[pet.wuxing] || "自然屬性"}
-品質：${rarityDesc[pet.rarity] || "普通"}
-風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節，適合作為遊戲圖鑑卡片。`;
+        const prompt = petCardPrompt(pet);
 
         const { url } = await generateImage({ prompt });
         if (url) {
@@ -2278,23 +2222,7 @@ ${petDescriptions}
       const [pet] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, input.petCatalogId));
       if (!pet) throw new TRPCError({ code: "NOT_FOUND", message: "寵物圖鑑不存在" });
 
-      const raceDesc: Record<string, string> = {
-        dragon: "龍種生物，有鱗片和龍角", undead: "亡靈生物，帶有幽靈氣息",
-        normal: "普通生物，外型自然", flying: "飛行生物，有翅膀",
-        insect: "蟲類生物，有甲殼和觸角", plant: "植物生物，有花葉和藤蔓",
-      };
-      const wuxingDesc: Record<string, string> = {
-        wood: "木屬性，綠色色調", fire: "火屬性，紅色色調",
-        earth: "土屬性，棕色色調", metal: "金屬性，金色/銀色色調",
-        water: "水屬性，藍色色調",
-      };
-
-      const prompt = input.customPrompt || `中國古風奇幻遊戲寵物立繪，單一生物全身像，透明背景。
-寵物名稱：${pet.name}
-描述：${pet.description || "神秘生物"}
-種族特徵：${raceDesc[pet.race] || "神秘生物"}
-屬性特徵：${wuxingDesc[pet.wuxing] || "自然屬性"}
-風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節，適合作為遊戲圖鑑卡片。`;
+      const prompt = input.customPrompt || petCardPrompt(pet);
 
       const { url } = await generateImage({ prompt });
       if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
@@ -2316,28 +2244,7 @@ ${petDescriptions}
       const [item] = await db.select().from(gameItemCatalog).where(eq(gameItemCatalog.itemId, input.itemId));
       if (!item) throw new TRPCError({ code: "NOT_FOUND", message: "道具不存在" });
 
-      const wuxingStyle: Record<string, string> = {
-        "木": "綠色木質紋理，藤蔓和葉子裝飾", "火": "紅色火焰紋理，燃燒效果",
-        "土": "棕色岩石紋理，大地元素", "金": "金色金屬光澤，鋒利邊緣",
-        "水": "藍色水波紋理，流動效果",
-      };
-      const rarityStyle: Record<string, string> = {
-        common: "簡約樸素風格", rare: "精緻雕刻，淡淡發光",
-        epic: "華麗裝飾，強烈光暈", legendary: "神器級別，神聖光芒和符文",
-      };
-      const categoryStyle: Record<string, string> = {
-        material: "天然材料，原石/草藥/礦物外觀", consumable: "藥水瓶/卷軸外觀",
-        treasure: "寶物，珠寶光澤", quest: "任務物品，神秘符文",
-        food: "食物，精緻烹飪", gem: "寶石，晶瑩光澤",
-      };
-
-      const prompt = input.customPrompt || `中國古風奇幻遊戲道具圖示，單一物品特寫，透明背景。
-道具名稱：${item.name}
-描述：${(item.useEffect as any)?.description || item.name}
-五行屬性：${wuxingStyle[item.wuxing] || "自然屬性"}
-稀有度風格：${rarityStyle[item.rarity] || "簡約風格"}
-類型特徵：${categoryStyle[item.category] || "神秘物品"}
-風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節，適合作為遊戲圖鑑卡片。`;
+      const prompt = input.customPrompt || itemCardPrompt({ ...item, description: (item.useEffect as any)?.description || item.name });
 
       const { url } = await generateImage({ prompt });
       if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
@@ -2359,29 +2266,7 @@ ${petDescriptions}
       const [equip] = await db.select().from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.equipId, input.equipId));
       if (!equip) throw new TRPCError({ code: "NOT_FOUND", message: "裝備不存在" });
 
-      const wuxingStyle: Record<string, string> = {
-        "木": "綠色木質紋理，藤蔓和葉子裝飾", "火": "紅色火焰紋理，燃燒效果",
-        "土": "棕色岩石紋理，大地元素", "金": "金色金屬光澤，鋒利邊緣",
-        "水": "藍色水波紋理，流動效果",
-      };
-      const rarityStyle: Record<string, string> = {
-        common: "簡約樸素風格，基礎裝備", rare: "精緻雕刻，淡淡發光光暈",
-        epic: "華麗裝飾，強烈光暈和符文", legendary: "神器級別，神聖光芒、古代符文和神力氣息",
-      };
-      const slotStyle: Record<string, string> = {
-        weapon: "武器，刀劍/弓/錘/杖等戰鬥器具", head: "頭盔/冠冕，頭部裝備",
-        body: "盔甲/袖袍，身體裝備", legs: "腳部裝備，靴子/護腳",
-        accessory: "飾品，戒指/項鏈/護符", shield: "盾牌，防禦裝備",
-      };
-
-      const prompt = input.customPrompt || `中國古風奇幻遊戲裝備圖示，單一裝備特寫，透明背景。
-裝備名稱：${equip.name}
-描述：${(equip.affix1 as any)?.description || equip.name}
-五行屬性：${wuxingStyle[equip.wuxing] || "自然屬性"}
-稀有度風格：${rarityStyle[equip.rarity] || "簡約風格"}
-裝備類型：${slotStyle[equip.slot] || "神秘裝備"}
-裝備階級：${equip.tier || "普通"}
-風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節，適合作為遊戲圖鑑卡片。`;
+      const prompt = input.customPrompt || equipCardPrompt({ ...equip, description: (equip.affix1 as any)?.description || equip.name, rarity: equip.quality || "common", tier: parseInt(equip.tier) || 1 });
 
       const { url } = await generateImage({ prompt });
       if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
@@ -2403,29 +2288,7 @@ ${petDescriptions}
       const [skill] = await db.select().from(gameSkillCatalog).where(eq(gameSkillCatalog.skillId, input.skillId));
       if (!skill) throw new TRPCError({ code: "NOT_FOUND", message: "技能不存在" });
 
-      const wuxingStyle: Record<string, string> = {
-        "木": "綠色木元素，藤蔓和葉子特效", "火": "紅色火焰特效，燃燒和爆裂",
-        "土": "棕色岩石特效，大地震動", "金": "金色金屬特效，鋒利刀刃",
-        "水": "藍色水流特效，海浪和冰霜",
-      };
-      const rarityStyle: Record<string, string> = {
-        common: "簡約符文，基礎技能書", rare: "精緻符文，淡淡發光",
-        epic: "華麗符文，強烈光暈和魔法陣", legendary: "神聖符文，神力光芒、古代符文和天地異象",
-      };
-      const typeStyle: Record<string, string> = {
-        attack: "攻擊技能，破壞力特效", defense: "防禦技能，護盾特效",
-        heal: "治療技能，治療光特效", buff: "增益技能，光環特效",
-        debuff: "減益技能，詛咒特效", special: "特殊技能，神秘特效",
-      };
-
-      const prompt = input.customPrompt || `中國古風奇幻遊戲技能書圖示，單一技能書/卷軸特寫，透明背景。
-技能名稱：${skill.name}
-描述：${skill.description || "神秘技能"}
-五行屬性：${wuxingStyle[skill.wuxing] || "自然屬性"}
-稀有度風格：${rarityStyle[skill.rarity] || "簡約風格"}
-技能類型：${typeStyle[skill.skillType] || "神秘技能"}
-技能階級：${skill.tier || "普通"}
-風格：水墨畫與現代遊戲美術融合，技能書外觀為古代卷軸或符籙，上面有發光的符文和屬性特效，高細節，適合作為遊戲圖鑑卡片。`;
+      const prompt = input.customPrompt || skillCardPrompt({ ...skill, skillType: skill.category || "attack", tier: parseInt(skill.tier) || 1 });
 
       const { url } = await generateImage({ prompt });
       if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
@@ -2457,15 +2320,7 @@ ${petDescriptions}
         const noImage = items.filter(i => !i.imageUrl).slice(0, input.limit);
         for (const item of noImage) {
           try {
-            const wuxingStyle: Record<string, string> = {
-              "木": "綠色木質", "火": "紅色火焰", "土": "棕色岩石", "金": "金色金屬", "水": "藍色水波",
-            };
-            const prompt = `中國古風奇幻遊戲道具圖示，單一物品特寫，透明背景。
-道具名稱：${item.name}
-描述：${(item.useEffect as any)?.description || item.name}
-五行屬性：${wuxingStyle[item.wuxing] || "自然屬性"}
-稀有度：${item.rarity}
-風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節。`;
+            const prompt = itemCardPrompt({ ...item, description: (item.useEffect as any)?.description || item.name });
             const { url } = await generateImage({ prompt });
             if (url) {
               await db.update(gameItemCatalog).set({ imageUrl: url })
@@ -2483,19 +2338,7 @@ ${petDescriptions}
         const noImage = equips.filter(e => !e.imageUrl).slice(0, input.limit);
         for (const equip of noImage) {
           try {
-            const wuxingStyle: Record<string, string> = {
-              "木": "綠色木質", "火": "紅色火焰", "土": "棕色岩石", "金": "金色金屬", "水": "藍色水波",
-            };
-            const slotDesc: Record<string, string> = {
-              weapon: "武器", head: "頭盔", body: "盔甲", legs: "靴子", accessory: "飾品", shield: "盾牌",
-            };
-            const prompt = `中國古風奇幻遊戲裝備圖示，單一裝備特寫，透明背景。
-裝備名稱：${equip.name}
-描述：${(equip.affix1 as any)?.description || equip.name}
-五行屬性：${wuxingStyle[equip.wuxing] || "自然屬性"}
-稀有度：${equip.rarity}
-裝備類型：${slotDesc[equip.slot] || "神秘裝備"}
-風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節。`;
+            const prompt = equipCardPrompt({ ...equip, description: (equip.affix1 as any)?.description || equip.name, rarity: equip.quality || "common", tier: parseInt(equip.tier) || 1 });
             const { url } = await generateImage({ prompt });
             if (url) {
               await db.update(gameEquipmentCatalog).set({ imageUrl: url })
@@ -2513,16 +2356,7 @@ ${petDescriptions}
         const noImage = skills.filter(s => !s.imageUrl).slice(0, input.limit);
         for (const skill of noImage) {
           try {
-            const wuxingStyle: Record<string, string> = {
-              "木": "綠色木元素", "火": "紅色火焰", "土": "棕色岩石", "金": "金色金屬", "水": "藍色水流",
-            };
-            const prompt = `中國古風奇幻遊戲技能書圖示，單一技能書/卷軸特寫，透明背景。
-技能名稱：${skill.name}
-描述：${skill.description || "神秘技能"}
-五行屬性：${wuxingStyle[skill.wuxing] || "自然屬性"}
-稀有度：${skill.rarity}
-技能類型：${skill.skillType || "攻擊"}
-風格：水墨畫與現代遊戲美術融合，技能書外觀為古代卷軸或符籙，上面有發光的符文和屬性特效。`;
+            const prompt = skillCardPrompt({ ...skill, skillType: skill.category || "attack", tier: parseInt(skill.tier) || 1 });
             const { url } = await generateImage({ prompt });
             if (url) {
               await db.update(gameSkillCatalog).set({ imageUrl: url })

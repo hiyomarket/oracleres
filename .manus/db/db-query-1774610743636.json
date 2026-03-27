@@ -1,0 +1,130 @@
+{
+  "query": "SELECT item_id, name, category, use_effect FROM game_item_catalog WHERE category = 'consumable' LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, category, use_effect FROM game_item_catalog WHERE category = 'consumable' LIMIT 20",
+  "rows": [
+    {
+      "item_id": "I_W026",
+      "name": "初級解毒草",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_W027",
+      "name": "活力樹汁",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_W028",
+      "name": "森林精華",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_W029",
+      "name": "荊棘護甲藥劑",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_W030",
+      "name": "疾風草",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_W031",
+      "name": "劇毒塗劑",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_W032",
+      "name": "迷幻花粉",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_W033",
+      "name": "復甦之風",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_W034",
+      "name": "萬能解毒劑",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_W035",
+      "name": "生命之水",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_F026",
+      "name": "初級燒傷藥",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_F027",
+      "name": "狂暴藥水",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_F028",
+      "name": "烈焰炸彈",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_F034",
+      "name": "鳳凰之血",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_E026",
+      "name": "鐵甲藥劑",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_E027",
+      "name": "磐石護盾",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_M026",
+      "name": "磨刀石",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_M027",
+      "name": "疾風藥劑",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_M032",
+      "name": "煙霧彈",
+      "category": "consumable",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_W076",
+      "name": "小靈泉",
+      "category": "consumable",
+      "use_effect": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\tcategory\tuse_effect\nI_W026\t初級解毒草\tconsumable\tNULL\nI_W027\t活力樹汁\tconsumable\tNULL\nI_W028\t森林精華\tconsumable\tNULL\nI_W029\t荊棘護甲藥劑\tconsumable\tNULL\nI_W030\t疾風草\tconsumable\tNULL\nI_W031\t劇毒塗劑\tconsumable\tNULL\nI_W032\t迷幻花粉\tconsumable\tNULL\nI_W033\t復甦之風\tconsumable\tNULL\nI_W034\t萬能解毒劑\tconsumable\tNULL\nI_W035\t生命之水\tconsumable\tNULL\nI_F026\t初級燒傷藥\tconsumable\tNULL\nI_F027\t狂暴藥水\tconsumable\tNULL\nI_F028\t烈焰炸彈\tconsumable\tNULL\nI_F034\t鳳凰之血\tconsumable\tNULL\nI_E026\t鐵甲藥劑\tconsumable\tNULL\nI_E027\t磐石護盾\tconsumable\tNULL\nI_M026\t磨刀石\tconsumable\tNULL\nI_M027\t疾風藥劑\tconsumable\tNULL\nI_M032\t煙霧彈\tconsumable\tNULL\nI_W076\t小靈泉\tconsumable\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1582
+}

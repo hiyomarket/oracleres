@@ -935,6 +935,7 @@ export function ItemCatalogV2Tab() {
     { key: "source", label: "來源說明", type: "text", group: "其他" },
     { key: "effect", label: "效果說明", type: "textarea", group: "其他" },
     { key: "imageUrl", label: "圖片URL", type: "text", group: "其他" },
+    { key: "usableInBattle", label: "戰鬥可用", type: "select", options: [{ value: "1", label: "⚔️ 可在戰鬥中使用" }, { value: "0", label: "❌ 不可" }], defaultValue: "0", group: "效果" },
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
@@ -951,7 +952,7 @@ export function ItemCatalogV2Tab() {
 
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
-    ["inNormalShop", "inSpiritShop", "inSecretShop", "isMonsterDrop", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
+    ["inNormalShop", "inSpiritShop", "inSecretShop", "isMonsterDrop", "isActive", "usableInBattle"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
     if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
@@ -1012,7 +1013,7 @@ export function ItemCatalogV2Tab() {
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.itemId}</td>
                   <td className="py-2 px-2 font-medium">{m.imageUrl ? <img src={m.imageUrl} alt="" className="w-5 h-5 inline mr-1 rounded" /> : null}{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
                   <td className="py-2 px-2 text-xs">{m.category}</td><td className="py-2 px-2 text-xs">{m.rarity}</td><td className="py-2 px-2">{m.shopPrice > 0 ? m.shopPrice : '-'}</td>
-                  <td className="py-2 px-2 text-xs space-x-0.5">{m.inNormalShop ? <span className="inline-block px-1 rounded bg-green-500/20 text-green-400 text-[10px]">一般</span> : null}{m.inSpiritShop ? <span className="inline-block px-1 rounded bg-purple-500/20 text-purple-400 text-[10px]">靈相</span> : null}{m.inSecretShop ? <span className="inline-block px-1 rounded bg-amber-500/20 text-amber-400 text-[10px]">密店</span> : null}{!m.inNormalShop && !m.inSpiritShop && !m.inSecretShop ? <span className="text-muted-foreground">-</span> : null}</td>
+                  <td className="py-2 px-2 text-xs space-x-0.5">{m.inNormalShop ? <span className="inline-block px-1 rounded bg-green-500/20 text-green-400 text-[10px]">一般</span> : null}{m.inSpiritShop ? <span className="inline-block px-1 rounded bg-purple-500/20 text-purple-400 text-[10px]">靈相</span> : null}{m.inSecretShop ? <span className="inline-block px-1 rounded bg-amber-500/20 text-amber-400 text-[10px]">密店</span> : null}{m.usableInBattle ? <span className="inline-block px-1 rounded bg-red-500/20 text-red-400 text-[10px]">⚔️戰鬥</span> : null}{!m.inNormalShop && !m.inSpiritShop && !m.inSecretShop && !m.usableInBattle ? <span className="text-muted-foreground">-</span> : null}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <AiImageBtn type="item" id={m.itemId} name={m.name} hasImage={!!m.imageUrl} onSuccess={() => refetch()} />
@@ -1136,7 +1137,8 @@ export function EquipCatalogV2Tab() {
     { key: "inNormalShop", label: "一般商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
     { key: "inSpiritShop", label: "靈相商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
     { key: "inSecretShop", label: "密店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
-    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
+     { key: "usableInBattle", label: "戰鬥可用", type: "select", options: [{ value: "1", label: "可在戰鬥中使用" }, { value: "0", label: "不可" }] },
+    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
   ];
 
   const handleSubmit = (data: any) => {

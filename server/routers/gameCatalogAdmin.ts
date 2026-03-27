@@ -99,7 +99,7 @@ async function generateMonsterSkillId(db: any): Promise<string> {
 const monsterCatalogInput = z.object({
   name: z.string().min(1).max(100),
   wuxing: z.enum(["木", "火", "土", "金", "水"]),
-  levelRange: z.string().default("1-5"),
+  levelRange: z.string().nullish().default("1-5"),
   rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
   baseHp: z.number().int().positive().default(100),
   baseAttack: z.number().int().positive().default(10),
@@ -113,27 +113,27 @@ const monsterCatalogInput = z.object({
   resistMetal: z.number().int().default(0),
   resistWater: z.number().int().default(0),
   counterBonus: z.number().int().default(50),
-  skillId1: z.string().default(""),
-  skillId2: z.string().default(""),
-  skillId3: z.string().default(""),
+  skillId1: z.string().nullish().default(""),
+  skillId2: z.string().nullish().default(""),
+  skillId3: z.string().nullish().default(""),
   aiLevel: z.number().int().min(1).max(4).default(1),
   growthRate: z.number().positive().default(1.0),
-  dropItem1: z.string().default(""),
+  dropItem1: z.string().nullish().default(""),
   dropRate1: z.number().min(0).max(100).default(0),
-  dropItem2: z.string().default(""),
+  dropItem2: z.string().nullish().default(""),
   dropRate2: z.number().min(0).max(100).default(0),
-  dropItem3: z.string().default(""),
+  dropItem3: z.string().nullish().default(""),
   dropRate3: z.number().min(0).max(100).default(0),
-  dropItem4: z.string().default(""),
+  dropItem4: z.string().nullish().default(""),
   dropRate4: z.number().min(0).max(100).default(0),
-  dropItem5: z.string().default(""),
+  dropItem5: z.string().nullish().default(""),
   dropRate5: z.number().min(0).max(100).default(0),
-  dropGold: z.object({ min: z.number(), max: z.number() }).default({ min: 5, max: 15 }),
-  legendaryDrop: z.string().default(""),
+  dropGold: z.object({ min: z.number(), max: z.number() }).nullish().default({ min: 5, max: 15 }),
+  legendaryDrop: z.string().nullish().default(""),
   legendaryDropRate: z.number().min(0).max(100).default(0),
-  destinyClue: z.string().optional(),
-  spawnNodes: z.array(z.string()).default([]),
-  imageUrl: z.string().default(""),
+  destinyClue: z.string().nullish(),
+  spawnNodes: z.array(z.string()).nullish().default([]),
+  imageUrl: z.string().nullish().default(""),
   catchRate: z.number().min(0).max(1).default(0.1),
   isActive: z.number().int().min(0).max(1).default(1),
 });
@@ -149,13 +149,13 @@ const itemCatalogInput = z.object({
   inSpiritShop: z.number().int().min(0).max(1).default(0),
   inSecretShop: z.number().int().min(0).max(1).default(0),
   isMonsterDrop: z.number().int().min(0).max(1).default(0),
-  dropMonsterId: z.string().default(""),
+  dropMonsterId: z.string().nullish().default(""),
   dropRate: z.number().min(0).max(100).default(0),
-  gatherLocations: z.array(z.object({ nodeId: z.string(), nodeName: z.string(), rate: z.number() })).default([]),
-  useEffect: z.object({ type: z.string(), value: z.number(), duration: z.number().optional(), description: z.string() }).nullable().default(null),
-  source: z.string().default(""),
-  effect: z.string().optional(),
-  imageUrl: z.string().default(""),
+  gatherLocations: z.array(z.object({ nodeId: z.string(), nodeName: z.string(), rate: z.number() })).nullish().default([]),
+  useEffect: z.object({ type: z.string(), value: z.number(), duration: z.number().optional(), description: z.string() }).nullish().default(null),
+  source: z.string().nullish().default(""),
+  effect: z.string().nullish(),
+  imageUrl: z.string().nullish().default(""),
   isActive: z.number().int().min(0).max(1).default(1),
 });
 
@@ -163,28 +163,28 @@ const equipCatalogInput = z.object({
   name: z.string().min(1).max(100),
   wuxing: z.enum(["木", "火", "土", "金", "水"]),
   slot: z.enum(["weapon", "helmet", "armor", "shoes", "accessory", "offhand"]).default("weapon"),
-  tier: z.string().default("初階"),
+  tier: z.string().nullish().default("初階"),
   quality: z.enum(["white", "green", "blue", "purple", "orange", "red"]).default("white"),
   levelRequired: z.number().int().nonnegative().default(1),
   hpBonus: z.number().int().default(0),
   attackBonus: z.number().int().default(0),
   defenseBonus: z.number().int().default(0),
   speedBonus: z.number().int().default(0),
-  resistBonus: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }).default({ wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }),
-  affix1: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullable().default(null),
-  affix2: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullable().default(null),
-  affix3: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullable().default(null),
-  affix4: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullable().default(null),
-  affix5: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullable().default(null),
-  craftMaterialsList: z.array(z.object({ itemId: z.string(), name: z.string(), quantity: z.number() })).default([]),
-  setId: z.string().default(""),
-  specialEffect: z.string().optional(),
+  resistBonus: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }).nullish().default({ wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }),
+  affix1: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullish().default(null),
+  affix2: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullish().default(null),
+  affix3: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullish().default(null),
+  affix4: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullish().default(null),
+  affix5: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullish().default(null),
+  craftMaterialsList: z.array(z.object({ itemId: z.string(), name: z.string(), quantity: z.number() })).nullish().default([]),
+  setId: z.string().nullish().default(""),
+  specialEffect: z.string().nullish(),
   rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
   shopPrice: z.number().int().nonnegative().default(0),
   inNormalShop: z.number().int().min(0).max(1).default(0),
   inSpiritShop: z.number().int().min(0).max(1).default(0),
   inSecretShop: z.number().int().min(0).max(1).default(0),
-  imageUrl: z.string().default(""),
+  imageUrl: z.string().nullish().default(""),
   isActive: z.number().int().min(0).max(1).default(1),
 });
 
@@ -193,16 +193,16 @@ const skillCatalogInput = z.object({
   wuxing: z.enum(["木", "火", "土", "金", "水"]),
   category: z.enum(["active_combat", "passive_combat", "life_gather", "craft_forge"]).default("active_combat"),
   rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
-  tier: z.string().default("初階"),
+  tier: z.string().nullish().default("初階"),
   mpCost: z.number().int().nonnegative().default(0),
   cooldown: z.number().int().nonnegative().default(0),
   powerPercent: z.number().int().nonnegative().default(100),
   learnLevel: z.number().int().positive().default(1),
   acquireType: z.enum(["shop", "drop", "quest", "craft", "hidden"]).default("shop"),
   shopPrice: z.number().int().nonnegative().default(0),
-  dropMonsterId: z.string().default(""),
-  hiddenTrigger: z.string().optional(),
-  description: z.string().optional(),
+  dropMonsterId: z.string().nullish().default(""),
+  hiddenTrigger: z.string().nullish(),
+  description: z.string().nullish(),
   skillType: z.enum(["attack", "heal", "buff", "debuff", "passive", "special"]).default("attack"),
   inNormalShop: z.number().int().min(0).max(1).default(0),
   inSpiritShop: z.number().int().min(0).max(1).default(0),
@@ -217,13 +217,13 @@ const achievementInput = z.object({
   rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
   conditionType: z.string().min(1).max(50),
   conditionValue: z.number().int().positive(),
-  conditionParams: z.record(z.string(), z.any()).default({}),
+  conditionParams: z.record(z.string(), z.any()).nullish().default({}),
   rewardType: z.enum(["stones", "coins", "title", "item", "frame", "skill"]),
   rewardAmount: z.number().int().nonnegative(),
-  rewardContent: z.array(z.object({ type: z.string(), itemId: z.string().optional(), amount: z.number() })).default([]),
-  titleReward: z.string().default(""),
-  glowEffect: z.string().default(""),
-  iconUrl: z.string().default(""),
+  rewardContent: z.array(z.object({ type: z.string(), itemId: z.string().optional(), amount: z.number() })).nullish().default([]),
+  titleReward: z.string().nullish().default(""),
+  glowEffect: z.string().nullish().default(""),
+  iconUrl: z.string().nullish().default(""),
   isActive: z.number().int().min(0).max(1).default(1),
 });
 
@@ -236,9 +236,9 @@ const monsterSkillInput = z.object({
   mpCost: z.number().int().nonnegative().default(0),
   cooldown: z.number().int().nonnegative().default(0),
   accuracyMod: z.number().int().nonnegative().default(100),
-  additionalEffect: z.object({ type: z.string(), chance: z.number(), duration: z.number().optional(), value: z.number().optional() }).nullable().default(null),
-  aiCondition: z.object({ hpBelow: z.number().optional(), targetElement: z.string().optional(), priority: z.number().optional() }).nullable().default(null),
-  description: z.string().optional(),
+  additionalEffect: z.object({ type: z.string(), chance: z.number(), duration: z.number().optional(), value: z.number().optional() }).nullish().default(null),
+  aiCondition: z.object({ hpBelow: z.number().optional(), targetElement: z.string().optional(), priority: z.number().optional() }).nullish().default(null),
+  description: z.string().nullish(),
   isActive: z.number().int().min(0).max(1).default(1),
 });
 
@@ -286,8 +286,20 @@ export const gameCatalogAdminRouter = router({
     const [result] = await db.insert(gameMonsterCatalog).values({
       ...input,
       monsterId,
-      spawnNodes: input.spawnNodes as any,
-      dropGold: input.dropGold as any,
+      destinyClue: input.destinyClue ?? "",
+      imageUrl: input.imageUrl ?? "",
+      levelRange: input.levelRange ?? "1-5",
+      skillId1: input.skillId1 ?? "",
+      skillId2: input.skillId2 ?? "",
+      skillId3: input.skillId3 ?? "",
+      dropItem1: input.dropItem1 ?? "",
+      dropItem2: input.dropItem2 ?? "",
+      dropItem3: input.dropItem3 ?? "",
+      dropItem4: input.dropItem4 ?? "",
+      dropItem5: input.dropItem5 ?? "",
+      legendaryDrop: input.legendaryDrop ?? "",
+      spawnNodes: (input.spawnNodes ?? []) as any,
+      dropGold: (input.dropGold ?? { min: 5, max: 15 }) as any,
     });
     return { id: (result as any).insertId, monsterId };
   }),
@@ -297,7 +309,18 @@ export const gameCatalogAdminRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.update(gameMonsterCatalog).set(input.data as any).where(eq(gameMonsterCatalog.id, input.id));
+      // 將 null 轉為安全預設值，避免 DB 寫入 null
+      const safeData = { ...input.data } as any;
+      if (safeData.destinyClue === null) safeData.destinyClue = "";
+      if (safeData.imageUrl === null) safeData.imageUrl = "";
+      if (safeData.spawnNodes === null) safeData.spawnNodes = [];
+      if (safeData.dropGold === null) safeData.dropGold = { min: 5, max: 15 };
+      if (safeData.levelRange === null) safeData.levelRange = "1-5";
+      if (safeData.legendaryDrop === null) safeData.legendaryDrop = "";
+      for (const k of ["skillId1","skillId2","skillId3","dropItem1","dropItem2","dropItem3","dropItem4","dropItem5"]) {
+        if (safeData[k] === null) safeData[k] = "";
+      }
+      await db.update(gameMonsterCatalog).set(safeData).where(eq(gameMonsterCatalog.id, input.id));
       return { success: true };
     }),
 
@@ -344,7 +367,11 @@ export const gameCatalogAdminRouter = router({
     const [result] = await db.insert(gameItemCatalog).values({
       ...input,
       itemId,
-      gatherLocations: input.gatherLocations as any,
+      dropMonsterId: input.dropMonsterId ?? "",
+      source: input.source ?? "",
+      effect: input.effect ?? "",
+      imageUrl: input.imageUrl ?? "",
+      gatherLocations: (input.gatherLocations ?? []) as any,
       useEffect: input.useEffect as any,
     });
     return { id: (result as any).insertId, itemId };
@@ -355,7 +382,12 @@ export const gameCatalogAdminRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.update(gameItemCatalog).set(input.data as any).where(eq(gameItemCatalog.id, input.id));
+      const safeData = { ...input.data } as any;
+      for (const k of ["dropMonsterId","source","effect","imageUrl"]) {
+        if (safeData[k] === null) safeData[k] = "";
+      }
+      if (safeData.gatherLocations === null) safeData.gatherLocations = [];
+      await db.update(gameItemCatalog).set(safeData).where(eq(gameItemCatalog.id, input.id));
       return { success: true };
     }),
 
@@ -404,13 +436,17 @@ export const gameCatalogAdminRouter = router({
     const [result] = await db.insert(gameEquipmentCatalog).values({
       ...input,
       equipId,
-      resistBonus: input.resistBonus as any,
+      tier: input.tier ?? "初階",
+      setId: input.setId ?? "",
+      specialEffect: input.specialEffect ?? "",
+      imageUrl: input.imageUrl ?? "",
+      resistBonus: (input.resistBonus ?? { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }) as any,
       affix1: input.affix1 as any,
       affix2: input.affix2 as any,
       affix3: input.affix3 as any,
       affix4: input.affix4 as any,
       affix5: input.affix5 as any,
-      craftMaterialsList: input.craftMaterialsList as any,
+      craftMaterialsList: (input.craftMaterialsList ?? []) as any,
     });
     return { id: (result as any).insertId, equipId };
   }),
@@ -420,7 +456,16 @@ export const gameCatalogAdminRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.update(gameEquipmentCatalog).set(input.data as any).where(eq(gameEquipmentCatalog.id, input.id));
+      const safeData = { ...input.data } as any;
+      for (const k of ["tier","setId","specialEffect","imageUrl"]) {
+        if (safeData[k] === null) safeData[k] = "";
+      }
+      if (safeData.resistBonus === null) safeData.resistBonus = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
+      if (safeData.craftMaterialsList === null) safeData.craftMaterialsList = [];
+      for (const k of ["affix1","affix2","affix3","affix4","affix5"]) {
+        // affix null 是合法的（表示無詞綴），保留
+      }
+      await db.update(gameEquipmentCatalog).set(safeData).where(eq(gameEquipmentCatalog.id, input.id));
       return { success: true };
     }),
 
@@ -469,6 +514,10 @@ export const gameCatalogAdminRouter = router({
     const [result] = await db.insert(gameSkillCatalog).values({
       ...input,
       skillId,
+      tier: input.tier ?? "初階",
+      dropMonsterId: input.dropMonsterId ?? "",
+      hiddenTrigger: input.hiddenTrigger ?? "",
+      description: input.description ?? "",
     });
     return { id: (result as any).insertId, skillId };
   }),
@@ -478,7 +527,11 @@ export const gameCatalogAdminRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.update(gameSkillCatalog).set(input.data as any).where(eq(gameSkillCatalog.id, input.id));
+      const safeData = { ...input.data } as any;
+      for (const k of ["tier","dropMonsterId","hiddenTrigger","description"]) {
+        if (safeData[k] === null) safeData[k] = "";
+      }
+      await db.update(gameSkillCatalog).set(safeData).where(eq(gameSkillCatalog.id, input.id));
       return { success: true };
     }),
 
@@ -523,8 +576,11 @@ export const gameCatalogAdminRouter = router({
     const [result] = await db.insert(gameAchievements).values({
       ...input,
       achId,
-      conditionParams: input.conditionParams as any,
-      rewardContent: input.rewardContent as any,
+      titleReward: input.titleReward ?? "",
+      glowEffect: input.glowEffect ?? "",
+      iconUrl: input.iconUrl ?? "",
+      conditionParams: (input.conditionParams ?? {}) as any,
+      rewardContent: (input.rewardContent ?? []) as any,
     });
     return { id: (result as any).insertId, achId };
   }),
@@ -534,7 +590,13 @@ export const gameCatalogAdminRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.update(gameAchievements).set(input.data as any).where(eq(gameAchievements.id, input.id));
+      const safeData = { ...input.data } as any;
+      for (const k of ["titleReward","glowEffect","iconUrl"]) {
+        if (safeData[k] === null) safeData[k] = "";
+      }
+      if (safeData.conditionParams === null) safeData.conditionParams = {};
+      if (safeData.rewardContent === null) safeData.rewardContent = [];
+      await db.update(gameAchievements).set(safeData).where(eq(gameAchievements.id, input.id));
       return { success: true };
     }),
 
@@ -581,6 +643,7 @@ export const gameCatalogAdminRouter = router({
     const [result] = await db.insert(gameMonsterSkillCatalog).values({
       ...input,
       monsterSkillId,
+      description: input.description ?? "",
       additionalEffect: input.additionalEffect as any,
       aiCondition: input.aiCondition as any,
     });
@@ -592,7 +655,9 @@ export const gameCatalogAdminRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.update(gameMonsterSkillCatalog).set(input.data as any).where(eq(gameMonsterSkillCatalog.id, input.id));
+      const safeData = { ...input.data } as any;
+      if (safeData.description === null) safeData.description = "";
+      await db.update(gameMonsterSkillCatalog).set(safeData).where(eq(gameMonsterSkillCatalog.id, input.id));
       return { success: true };
     }),
 

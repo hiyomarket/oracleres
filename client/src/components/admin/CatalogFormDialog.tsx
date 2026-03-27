@@ -3,7 +3,7 @@
  * 支援文字、數字、下拉選單、JSON 欄位、自訂 SmartEditor 元件
  * 新增：右側即時預覽面板（桌面版並排，手機版摺疊）
  */
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,77 @@ type Props = {
   /** 圖鑑類型，用於即時預覽 */
   catalogType?: string;
 };
+
+/** 帶搜尋篩選的關聯選擇器（取代原本的 Select） */
+function LinkedSelectField({ field: f, value, onChange }: { field: FieldDef; value: string; onChange: (v: string) => void }) {
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const opts = f.linkedOptions ?? [];
+  const filtered = search
+    ? opts.filter(o => o.label.toLowerCase().includes(search.toLowerCase()) || o.value.toLowerCase().includes(search.toLowerCase()))
+    : opts;
+  const selectedLabel = value ? (opts.find(o => o.value === value)?.label ?? value) : "";
+
+  // 點擊外部關閉
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    if (open) document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div key={f.key} className="space-y-1 relative" ref={ref}>
+      <Label className="text-xs font-medium">{f.label}</Label>
+      <div
+        className="flex items-center h-8 px-2 text-xs border rounded cursor-pointer bg-background hover:bg-muted/50"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="flex-1 truncate">{selectedLabel || <span className="text-muted-foreground">選擇{f.label}</span>}</span>
+        <span className="text-muted-foreground ml-1">▾</span>
+      </div>
+      {open && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border rounded-md shadow-lg max-h-64 flex flex-col">
+          <div className="p-1.5 border-b">
+            <input
+              type="text"
+              className="w-full h-7 px-2 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+              placeholder="🔍 搜尋篩選..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              autoFocus
+            />
+          </div>
+          <div className="overflow-y-auto flex-1">
+            <div
+              className="px-2 py-1.5 text-xs cursor-pointer hover:bg-muted text-muted-foreground"
+              onClick={() => { onChange(""); setOpen(false); setSearch(""); }}
+            >
+              （無）
+            </div>
+            {filtered.slice(0, 100).map(o => (
+              <div
+                key={o.value}
+                className={`px-2 py-1.5 text-xs cursor-pointer hover:bg-muted ${o.value === value ? "bg-primary/10 font-semibold" : ""}`}
+                onClick={() => { onChange(o.value); setOpen(false); setSearch(""); }}
+              >
+                {o.label}
+              </div>
+            ))}
+            {filtered.length > 100 && (
+              <div className="px-2 py-1 text-xs text-muted-foreground text-center">… 還有 {filtered.length - 100} 項，請輸入更多關鍵字</div>
+            )}
+            {filtered.length === 0 && (
+              <div className="px-2 py-3 text-xs text-muted-foreground text-center">找不到符合的項目</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CatalogFormDialog({ open, onClose, onSubmit, title, fields, initialData, isLoading, catalogType }: Props) {
   const [form, setForm] = useState<Record<string, any>>({});
@@ -120,8 +191,8 @@ export default function CatalogFormDialog({ open, onClose, onSubmit, title, fiel
         </div>
       );
     }
-    if (f.type === "select" || f.type === "linkedSelect") {
-      const opts = f.type === "linkedSelect" ? (f.linkedOptions ?? []) : (f.options ?? []);
+    if (f.type === "select") {
+      const opts = f.options ?? [];
       return (
         <div key={f.key} className="space-y-1">
           <Label className="text-xs font-medium">{f.label}</Label>
@@ -130,7 +201,6 @@ export default function CatalogFormDialog({ open, onClose, onSubmit, title, fiel
               <SelectValue placeholder={f.placeholder ?? `選擇${f.label}`} />
             </SelectTrigger>
             <SelectContent className="max-h-60">
-              {f.type === "linkedSelect" && <SelectItem value="__none__">（無）</SelectItem>}
               {opts.map(o => (
                 <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
               ))}
@@ -138,6 +208,9 @@ export default function CatalogFormDialog({ open, onClose, onSubmit, title, fiel
           </Select>
         </div>
       );
+    }
+    if (f.type === "linkedSelect") {
+      return <LinkedSelectField key={f.key} field={f} value={form[f.key] ?? ""} onChange={(v) => handleChange(f.key, v)} />;
     }
     if (f.type === "textarea") {
       return (

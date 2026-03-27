@@ -980,9 +980,18 @@ export const gameAdminRouter = router({
       rewardMultIdle: z.number().min(0).max(5).optional(),
       rewardMultClosed: z.number().min(0).max(5).optional(),
       rewardMultOpen: z.number().min(0).max(5).optional(),
-      // 掛機循環配置
+      // 掙機循環配置
       afkTickIntervalMs: z.number().int().min(5000).max(120000).optional(),
       afkTickEnabled: z.boolean().optional(),
+      // 戰鬥倒數計時配置
+      battleTurnTimerPvE: z.number().int().min(0).max(120).optional(),
+      battleTurnTimerBoss: z.number().int().min(0).max(120).optional(),
+      battleTurnTimerPvP: z.number().int().min(0).max(120).optional(),
+      // Boss 系統配置
+      bossSystemEnabled: z.boolean().optional(),
+      bossT1MaxCount: z.number().int().min(0).max(20).optional(),
+      bossT1MoveInterval: z.number().int().min(60).max(3600).optional(),
+      bossT2MoveInterval: z.number().int().min(60).max(7200).optional(),
     }))
     .mutation(({ input, ctx }) => {
       const { tickIntervalMs, ...rest } = input;

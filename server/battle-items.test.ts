@@ -467,3 +467,214 @@ describe("戰鬥系統 - 狀態效果處理", () => {
     expect(isStunned(char)).toBe(true);
   });
 });
+
+describe("戰鬥系統 - 技能掛載驗證", () => {
+  it("角色帶有多個技能時應都能使用", () => {
+    const char = makeCharacter({
+      skills: [
+        {
+          id: "skill_S_W001",
+          name: "木靈斬",
+          skillType: "attack",
+          damageMultiplier: 1.3,
+          mpCost: 10,
+          wuxing: "wood",
+          cooldown: 2,
+          currentCooldown: 0,
+        },
+        {
+          id: "quest_1",
+          name: "天命火焰",
+          skillType: "attack",
+          damageMultiplier: 2.0,
+          mpCost: 25,
+          wuxing: "fire",
+          cooldown: 4,
+          currentCooldown: 0,
+          skillLevel: 3,
+        },
+        {
+          id: "skill_S_F001",
+          name: "火焰治療",
+          skillType: "heal",
+          damageMultiplier: 1.5,
+          mpCost: 20,
+          cooldown: 3,
+          currentCooldown: 0,
+        },
+      ],
+    });
+    const monster = makeMonster();
+    const participants = [char, monster];
+
+    // 使用第一個技能
+    const cmd1: BattleCommand = {
+      participantId: char.id,
+      commandType: "skill",
+      skillId: "skill_S_W001",
+      targetId: monster.id,
+    };
+    const logs1 = executeCommand(cmd1, participants, 1);
+    expect(logs1.length).toBeGreaterThan(0);
+    expect(char.currentMp).toBe(90); // 100 - 10
+    expect(char.skills[0].currentCooldown).toBe(2);
+
+    // 使用第二個技能（天命技能）
+    const cmd2: BattleCommand = {
+      participantId: char.id,
+      commandType: "skill",
+      skillId: "quest_1",
+      targetId: monster.id,
+    };
+    const logs2 = executeCommand(cmd2, participants, 2);
+    expect(logs2.length).toBeGreaterThan(0);
+    expect(char.currentMp).toBe(65); // 90 - 25
+    expect(char.skills[1].currentCooldown).toBe(4);
+
+    // 使用治療技能
+    char.currentHp = 200;
+    const cmd3: BattleCommand = {
+      participantId: char.id,
+      commandType: "skill",
+      skillId: "skill_S_F001",
+      targetId: char.id,
+    };
+    const logs3 = executeCommand(cmd3, participants, 3);
+    expect(logs3.some(l => l.logType === "heal")).toBe(true);
+    expect(char.currentHp).toBeGreaterThan(200);
+    expect(char.currentMp).toBe(45); // 65 - 20
+  });
+
+  it("沒有技能的角色只能普攻和防禦", () => {
+    const char = makeCharacter({ skills: [] });
+    const monster = makeMonster();
+    const participants = [char, monster];
+
+    // 嘗試使用技能應 fallback 為普攻
+    const cmd: BattleCommand = {
+      participantId: char.id,
+      commandType: "skill",
+      skillId: "nonexistent_skill",
+      targetId: monster.id,
+    };
+    const logs = executeCommand(cmd, participants, 1);
+    expect(logs.length).toBeGreaterThan(0);
+    // MP 不應被消耗（因為 fallback）
+    expect(char.currentMp).toBe(100);
+  });
+
+  it("寵物技能也應正確執行", () => {
+    const pet = makeCharacter({
+      id: 2,
+      type: "pet",
+      name: "靈寵",
+      skills: [
+        {
+          id: "pet_skill_1",
+          name: "寵物火焰",
+          skillType: "attack",
+          damageMultiplier: 1.8,
+          mpCost: 15,
+          wuxing: "fire",
+          cooldown: 3,
+          currentCooldown: 0,
+        },
+      ],
+    });
+    const monster = makeMonster();
+    const participants = [pet, monster];
+
+    const cmd: BattleCommand = {
+      participantId: pet.id,
+      commandType: "skill",
+      skillId: "pet_skill_1",
+      targetId: monster.id,
+    };
+    const logs = executeCommand(cmd, participants, 1);
+    expect(logs.length).toBeGreaterThan(0);
+    expect(pet.currentMp).toBe(85); // 100 - 15
+    expect(pet.skills[0].currentCooldown).toBe(3);
+  });
+});
+
+describe("cardStylePrompt 風格生成器", () => {
+  // 測試 cardStylePrompt 模組的各種 prompt 生成函數
+  it("petCardPrompt 應包含庫洛魔法使風格關鍵字", async () => {
+    const { petCardPrompt } = await import("./services/cardStylePrompt");
+    const prompt = petCardPrompt({
+      name: "火焰龍",
+      description: "烈焰中誕生的幼龍",
+      race: "dragon",
+      wuxing: "火",
+      rarity: "epic",
+    });
+    expect(prompt).toContain("Cardcaptor Sakura");
+    expect(prompt).toContain("Clow Card");
+    expect(prompt).toContain("baroque");
+    expect(prompt).toContain("No text");
+    expect(prompt).toContain("ruby red");
+    expect(prompt).toContain("dragon");
+    expect(prompt).toContain("purple-gold aurora");
+  });
+
+  it("itemCardPrompt 應正確映射道具類別", async () => {
+    const { itemCardPrompt } = await import("./services/cardStylePrompt");
+    const prompt = itemCardPrompt({
+      name: "回復藥水",
+      description: "恢復生命力的藥水",
+      wuxing: "水",
+      rarity: "common",
+      category: "consumable",
+    });
+    expect(prompt).toContain("potion bottle");
+    expect(prompt).toContain("sapphire blue");
+    expect(prompt).toContain("silver shimmer");
+  });
+
+  it("monsterCardPrompt 應區分 Boss 等級", async () => {
+    const { monsterCardPrompt } = await import("./services/cardStylePrompt");
+    const bossPrompt = monsterCardPrompt({
+      name: "混沌帝王",
+      description: "毀滅一切的遠古凶獸",
+      wuxing: "火",
+      race: "demon",
+      rarity: "legendary",
+      tier: 3,
+    });
+    expect(bossPrompt).toContain("Boss-level");
+    expect(bossPrompt).toContain("menacing dark demon");
+    expect(bossPrompt).toContain("divine golden radiance");
+
+    const normalPrompt = monsterCardPrompt({
+      name: "小火蜥蜴",
+      wuxing: "火",
+      tier: 1,
+    });
+    expect(normalPrompt).toContain("Regular creature");
+  });
+
+  it("skillCardPrompt 應正確映射技能類型", async () => {
+    const { skillCardPrompt } = await import("./services/cardStylePrompt");
+    const healPrompt = skillCardPrompt({
+      name: "回春術",
+      wuxing: "木",
+      rarity: "rare",
+      skillType: "heal",
+    });
+    expect(healPrompt).toContain("healing light");
+    expect(healPrompt).toContain("emerald green");
+  });
+
+  it("equipCardPrompt 應正確映射裝備部位", async () => {
+    const { equipCardPrompt } = await import("./services/cardStylePrompt");
+    const weaponPrompt = equipCardPrompt({
+      name: "烈焰劍",
+      wuxing: "火",
+      rarity: "legendary",
+      slot: "weapon",
+      tier: 3,
+    });
+    expect(weaponPrompt).toContain("sword");
+    expect(weaponPrompt).toContain("divine golden radiance");
+  });
+});
