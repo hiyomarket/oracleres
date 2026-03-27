@@ -13,6 +13,7 @@ import GameTabLayout from "@/components/GameTabLayout";
 import LeafletMap from "@/components/LeafletMap";
 import type { LeafletMapHandle } from "@/components/LeafletMap";
 import type { MapNode } from "../../../../shared/mapNodes";
+import { BossMonsterRow } from "@/components/game/BossTooltip";
 import { calcMoveCost } from "../../../../shared/mapNodes";
 import { DraggableWidget } from "@/components/DraggableWidget";
 import { safePlay, playLevelUpSound, playLegendarySound, playTickSound, isSoundEnabled, setSoundEnabled } from "@/hooks/useGameSound";
@@ -24,6 +25,7 @@ import ItemDetailModal from "@/components/ItemDetailModal";
 import { PvpChallengeButton, PvpIncomingChallenge, PlayerInfoCard } from "@/components/PvpChallengeSystem";
 import { BattleWindow } from "@/components/BattleWindow";
 import { IdleSessionPanel } from "@/components/IdleSessionPanel";
+import { StarterPackModal } from "@/components/game/StarterPackModal";
 
 /// ─── 經驗升級公式（和後端 tickEngine.ts 相同） ───
 function calcExpToNextFn(level: number): number {
@@ -126,7 +128,7 @@ type PanelId = "combat" | "life" | "items" | "equip" | "skill" | "natal";
 // ─── NodeInfoData 型別 ─────────────────────────────────────────
 type NodeInfoData = {
   node?: { name?: string; county?: string; dangerLevel?: number; description?: string; monsterLevel?: [number, number] };
-  monsters?: Array<{ id: string; name: string; element: string; level: number; hp: number; isBoss?: boolean; description?: string }>;
+  monsters?: Array<{ id: string; name: string; element: string; level: number; hp: number; isBoss?: boolean; description?: string; attack?: number; defense?: number; speed?: number; rarity?: string; skills?: string[]; race?: string; expReward?: number; dropItems?: Array<{ itemId: string; chance: number }> }>;
   resources?: Array<{ name: string; icon: string; rarity: string }>;
   questHints?: string[];
   adventurers?: Array<{ name: string; element: string; level: number; hp: number; maxHp: number; status: string }>;
@@ -404,88 +406,9 @@ function NodeInfoPanel({
                 <span className="text-slate-600 font-normal ml-1">Lv.{node?.monsterLevel?.[0] ?? 1}–{node?.monsterLevel?.[1] ?? 10}</span>
               </p>
               <div className="space-y-1.5">
-                {monsters.map(m => {
-                  const mc = WX_HEX[m.element] ?? "#888";
-                  const isBossMonster = m.isBoss;
-                  return (
-                    <div key={m.id}
-                      className={`flex items-center gap-2 rounded-xl border transition-all ${
-                        isBossMonster
-                          ? "px-3 py-3 relative overflow-hidden"
-                          : "px-2.5 py-2"
-                      }`}
-                      style={{
-                        background: isBossMonster ? `rgba(220,38,38,0.12)` : `${mc}08`,
-                        borderColor: isBossMonster ? `rgba(220,38,38,0.5)` : `${mc}25`,
-                        boxShadow: isBossMonster ? `0 0 12px rgba(220,38,38,0.35), 0 0 24px rgba(220,38,38,0.15)` : undefined,
-                      }}>
-                      {/* Boss 紅光脈動背景 */}
-                      {isBossMonster && (
-                        <div className="absolute inset-0 pointer-events-none"
-                          style={{
-                            background: `radial-gradient(ellipse at 30% 50%, rgba(220,38,38,0.15) 0%, transparent 70%)`,
-                            animation: "pulse 2s ease-in-out infinite",
-                          }} />
-                      )}
-                      {/* Boss 大頭像 / 普通怪小圖標 */}
-                      {isBossMonster ? (
-                        <div className="shrink-0 relative" style={{ width: 48, height: 48 }}>
-                          <div className="w-12 h-12 rounded-full flex items-center justify-center text-2xl font-black"
-                            style={{
-                              background: `radial-gradient(circle, rgba(220,38,38,0.3) 0%, rgba(220,38,38,0.05) 100%)`,
-                              border: `2px solid rgba(220,38,38,0.6)`,
-                              boxShadow: `0 0 8px rgba(220,38,38,0.5), inset 0 0 6px rgba(220,38,38,0.2)`,
-                              color: "#ef4444",
-                            }}>
-                            👹
-                          </div>
-                          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-red-500"
-                            style={{ animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite", boxShadow: "0 0 6px rgba(239,68,68,0.8)" }} />
-                        </div>
-                      ) : (
-                        <span className="text-sm shrink-0">{WX_EMOJI[m.element] ?? "👾"}</span>
-                      )}
-                      <div className="flex-1 min-w-0 relative z-10">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`font-bold ${isBossMonster ? "text-base" : "text-sm"}`}
-                            style={{ color: isBossMonster ? "#ef4444" : mc }}>
-                            {m.name}
-                          </span>
-                          {isBossMonster && (
-                            <span className="text-xs px-2 py-0.5 rounded font-black tracking-wider"
-                              style={{
-                                background: "linear-gradient(135deg, rgba(220,38,38,0.3), rgba(245,158,11,0.3))",
-                                color: "#fbbf24",
-                                border: "1px solid rgba(245,158,11,0.4)",
-                                textShadow: "0 0 4px rgba(245,158,11,0.5)",
-                              }}>
-                              ☠️ BOSS
-                            </span>
-                          )}
-                        </div>
-                        {m.description && <p className={`text-xs truncate ${isBossMonster ? "text-red-300/70" : "text-slate-600"}`}>{m.description}</p>}
-                      </div>
-                      <div className="text-right shrink-0 flex flex-col items-end gap-1 relative z-10">
-                        <p className={`font-bold ${isBossMonster ? "text-sm text-red-300" : "text-xs text-slate-300"}`}>Lv.{m.level}</p>
-                        <p className={`text-red-400 ${isBossMonster ? "text-sm font-bold" : "text-xs"}`}>HP {typeof m.hp === "number" ? m.hp.toLocaleString() : m.hp}</p>
-                        {onChallenge && (
-                          <button
-                            onClick={() => onChallenge(m.id, m.name, m.isBoss)}
-                            className={`font-bold rounded-lg transition-all hover:scale-105 active:scale-95 ${
-                              isBossMonster ? "text-xs px-3 py-1" : "text-[10px] px-2 py-0.5"
-                            }`}
-                            style={{
-                              background: isBossMonster ? `rgba(220,38,38,0.25)` : `${mc}25`,
-                              color: isBossMonster ? "#fca5a5" : mc,
-                              border: `1px solid ${isBossMonster ? "rgba(220,38,38,0.5)" : `${mc}40`}`,
-                            }}>
-                            ⚔️ {isBossMonster ? "挑戰 Boss" : "挑戰"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                {monsters.map(m => (
+                  <BossMonsterRow key={m.id} m={m} onChallenge={onChallenge} />
+                ))}
               </div>
             </div>
           )}
@@ -2563,6 +2486,7 @@ export default function VirtualWorldPage() {
   });
 
   const [showNaming, setShowNaming] = useState(false);
+  const [showStarterPack, setShowStarterPack] = useState(false);
   const [showStrategyPanel, setShowStrategyPanel] = useState(false);
   const [showDivinePanel, setShowDivinePanel] = useState(false);
   const [showQuickTeleport, setShowQuickTeleport] = useState(false);
@@ -2632,7 +2556,9 @@ export default function VirtualWorldPage() {
 
   useEffect(() => {
     if (agentData?.needsNaming) setShowNaming(true);
-  }, [agentData?.needsNaming]);
+    // 新人禮包彈出：只在首次建立角色時顯示
+    if (agentData?.isNew) setShowStarterPack(true);
+  }, [agentData?.needsNaming, agentData?.isNew]);
 
   const staminaInfo = statusData?.staminaInfo as { current?: number; max?: number; nextRegenMin?: number; regenAmount?: number; regenMinutes?: number; staminaPerTick?: number; moveStaminaCost?: number; sellDiscountRate?: number } | undefined;
   const natalStats = equippedData?.natalStats as { hp?: number; atk?: number; def?: number; spd?: number; mp?: number } | undefined;
@@ -2893,6 +2819,12 @@ export default function VirtualWorldPage() {
           utils.gameWorld.getAgentStatus.invalidate();
         }} />
       )}
+
+      {/* 新人禮包彈出視窗 */}
+      <StarterPackModal
+        isOpen={showStarterPack && !showNaming}
+        onClose={() => setShowStarterPack(false)}
+      />
 
       <EventLogDrawer
         events={eventLog as Array<{ id: number; eventType: string; message: string; createdAt: string; detail?: Record<string, unknown> | null }> | undefined}

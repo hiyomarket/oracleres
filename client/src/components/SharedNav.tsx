@@ -508,6 +508,22 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
                 </div>
               </Link>
             )}
+            {/* 靈虛入口（遊戲世界） */}
+            <Link
+              href="/game"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-purple-500/10 hover:text-purple-300 transition-colors group/game"
+            >
+              <div className="w-7 h-7 rounded-lg bg-purple-500/15 flex items-center justify-center shrink-0 group-hover/game:bg-purple-500/25 transition-colors relative">
+                <span className="text-sm animate-pulse">⚔️</span>
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-purple-400 animate-ping" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-semibold" style={{ background: 'linear-gradient(90deg, #c084fc, #f0abfc, #c084fc)', backgroundSize: '200% 100%', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'shimmer 2s linear infinite' }}>靈相虛界</span>
+                <span className="text-[10px] text-purple-400/60">進入虛相世界冒險</span>
+              </div>
+            </Link>
+
             {/* 加入手機主畫面 */}
             <Link
               href="/add-to-home"
@@ -787,8 +803,8 @@ export function SharedNav({ currentPage }: SharedNavProps) {
                   }}
                   title="靈虛入口"
                 >
-                  <span style={{ fontSize: "15px", lineHeight: 1 }}>⚔️</span>
-                  <span className="hidden sm:inline" style={{ letterSpacing: "0.05em" }}>靈虛入口</span>
+                  <span style={{ fontSize: "15px", lineHeight: 1 }} className="animate-pulse">⚔️</span>
+                  <span className="hidden sm:inline" style={{ letterSpacing: "0.05em", background: 'linear-gradient(90deg, #c084fc, #f0abfc, #c084fc)', backgroundSize: '200% 100%', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', animation: 'shimmer 2s linear infinite' }}>靈虛入口</span>
                   <ChevronDown
                     style={{
                       width: "12px", height: "12px",

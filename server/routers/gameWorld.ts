@@ -19,6 +19,7 @@ import { roamingBossInstances, roamingBossCatalog } from "../../drizzle/schema";
 import { processTick, processAgentTick, regenStamina, calcExpToNext, resolveCombat, calcCharacterStats } from "../tickEngine";
 import { storagePut } from "../storage";
 import type { WuXing } from "../../shared/types";
+import { grantStarterPack } from "../services/starterPackEngine";
 
 // ─── GD-020 補充二：從命格資料計算角色初始屬性（使用統一公式） ───
 // V2: 五行主導版 — 五行屬性佔 70%+，等級只是輔助加成
@@ -213,6 +214,22 @@ export const gameWorldRouter = router({
         .from(gameAgents)
         .where(eq(gameAgents.userId, String(ctx.user.id)))
         .limit(1);
+
+      // ★ 新人禮包自動發放
+      if (created[0]) {
+        try {
+          const starterResult = await grantStarterPack(
+            created[0].id,
+            dominant,
+            "tp-zhongzheng",
+          );
+          if (starterResult.success) {
+            console.log(`[StarterPack] 已發放新人禮包給角色 ${created[0].id}: ${starterResult.items.join(", ")}`);
+          }
+        } catch (e) {
+          console.error("[StarterPack] 發放失敗:", e);
+        }
+      }
 
       return {
         agent: created[0],

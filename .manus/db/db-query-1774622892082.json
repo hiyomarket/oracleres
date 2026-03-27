@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO game_item_catalog (item_id, name, wuxing, category, rarity, stack_limit, shop_price, in_normal_shop, use_effect, effect, image_url, is_active, created_at)\nVALUES \n('I_SCR_WPN', '武器強化卷軸', '金', 'consumable', 'uncommon', 99, 500, 1, '{\"type\":\"enhance_scroll\",\"scrollType\":\"weapon_scroll\",\"description\":\"對武器進行強化，提升武器的攻擊力等基礎數值。安定值範圍內必定成功。\"}', '用於強化武器的神秘卷軸。安定值+2以下必定成功，超過安定值有機率失敗退階，極小機率裝備消失。', '', 1, UNIX_TIMESTAMP()*1000),\n('I_SCR_ARM', '防具強化卷軸', '土', 'consumable', 'uncommon', 99, 500, 1, '{\"type\":\"enhance_scroll\",\"scrollType\":\"armor_scroll\",\"description\":\"對防具、飾品進行強化，提升防禦力等基礎數值。安定值範圍內必定成功。\"}', '用於強化防具與飾品的神秘卷軸。安定值+2以下必定成功，超過安定值有機率失敗退階，極小機率裝備消失。', '', 1, UNIX_TIMESTAMP()*1000)\nON DUPLICATE KEY UPDATE name=VALUES(name), use_effect=VALUES(use_effect), effect=VALUES(effect);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute INSERT INTO game_item_catalog (item_id, name, wuxing, category, rarity, stack_limit, shop_price, in_normal_shop, use_effect, effect, image_url, is_active, created_at)\nVALUES \n('I_SCR_WPN', '武器強化卷軸', '金', 'consumable', 'uncommon', 99, 500, 1, '{\"type\":\"enhance_scroll\",\"scrollType\":\"weapon_scroll\",\"description\":\"對武器進行強化，提升武器的攻擊力等基礎數值。安定值範圍內必定成功。\"}', '用於強化武器的神秘卷軸。安定值+2以下必定成功，超過安定值有機率失敗退階，極小機率裝備消失。', '', 1, UNIX_TIMESTAMP()*1000),\n('I_SCR_ARM', '防具強化卷軸', '土', 'consumable', 'uncommon', 99, 500, 1, '{\"type\":\"enhance_scroll\",\"scrollType\":\"armor_scroll\",\"description\":\"對防具、飾品進行強化，提升防禦力等基礎數值。安定值範圍內必定成功。\"}', '用於強化防具與飾品的神秘卷軸。安定值+2以下必定成功，超過安定值有機率失敗退階，極小機率裝備消失。', '', 1, UNIX_TIMESTAMP()*1000)\nON DUPLICATE KEY UPDATE name=VALUES(name), use_effect=VALUES(use_effect), effect=VALUES(effect);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1570
+}

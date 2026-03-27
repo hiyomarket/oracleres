@@ -7,6 +7,9 @@
  * 2. getEnhanceInfo — 取得裝備強化資訊（當前等級、成功率、預覽）
  * 3. getEnhanceLogs — 取得強化歷史記錄
  * 4. getScrollInventory — 取得背包中的強化卷軸
+ * 5. getEnhanceLevels — 取得所有強化等級資訊
+ * 6. getEnhanceConfig — 後台讀取強化設定
+ * 7. updateEnhanceConfig — 後台更新強化設定
  */
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -19,33 +22,32 @@ import {
   gameEquipmentCatalog,
   gameItemCatalog,
   equipEnhanceLogs,
+  gameConfig,
 } from "../../drizzle/schema";
 import {
-  performEnhance,
+  performEnhanceWithConfig,
+  getEnhanceConfig,
   isScrollApplicable,
   ENHANCE_LEVELS,
-  ENHANCE_RATES,
-  MAX_ENHANCE_LEVEL,
-  SAFE_LEVEL,
-  DESTROY_CHANCE,
-  ENHANCE_STAT_BONUS,
   type ScrollType,
+  type EnhanceConfig,
 } from "../services/enhanceEngine";
 
 export const equipEnhanceRouter = router({
 
-  /** 取得裝備強化資訊 */
+  /** 取得裝備強化資訊（使用動態設定） */
   getEnhanceInfo: protectedProcedure
     .input(z.object({ inventoryId: z.number().int() }))
     .query(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
+      const cfg = await getEnhanceConfig();
+
       const [agent] = await db.select().from(gameAgents)
         .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
       if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
 
-      // 取得背包裝備
       const [inv] = await db.select().from(agentInventory)
         .where(and(
           eq(agentInventory.id, input.inventoryId),
@@ -54,16 +56,16 @@ export const equipEnhanceRouter = router({
         )).limit(1);
       if (!inv) throw new TRPCError({ code: "NOT_FOUND", message: "找不到該裝備" });
 
-      // 取得裝備圖鑑資料
       const [catalog] = await db.select().from(gameEquipmentCatalog)
         .where(eq(gameEquipmentCatalog.equipId, inv.itemId)).limit(1);
       if (!catalog) throw new TRPCError({ code: "NOT_FOUND", message: "找不到裝備圖鑑資料" });
 
       const itemData = (inv.itemData as any) ?? {};
       const currentLevel = itemData.enhanceLevel ?? 0;
-      const levelInfo = ENHANCE_LEVELS[Math.min(currentLevel, MAX_ENHANCE_LEVEL)];
-      const nextRate = ENHANCE_RATES[currentLevel] ?? 0;
-      const canEnhance = currentLevel < MAX_ENHANCE_LEVEL;
+      const clampedLevel = Math.min(currentLevel, 5);
+      const levelInfo = ENHANCE_LEVELS[clampedLevel];
+      const nextRate = cfg.rates[currentLevel] ?? 0;
+      const canEnhance = currentLevel < cfg.maxLevel;
 
       return {
         inventoryId: inv.id,
@@ -75,16 +77,15 @@ export const equipEnhanceRouter = router({
         currentColorLabel: levelInfo.label,
         currentColorHex: levelInfo.colorHex,
         nextLevel: canEnhance ? currentLevel + 1 : currentLevel,
-        nextColor: canEnhance ? ENHANCE_LEVELS[currentLevel + 1].color : levelInfo.color,
-        nextColorLabel: canEnhance ? ENHANCE_LEVELS[currentLevel + 1].label : levelInfo.label,
-        nextColorHex: canEnhance ? ENHANCE_LEVELS[currentLevel + 1].colorHex : levelInfo.colorHex,
+        nextColor: canEnhance ? ENHANCE_LEVELS[Math.min(currentLevel + 1, 5)].color : levelInfo.color,
+        nextColorLabel: canEnhance ? ENHANCE_LEVELS[Math.min(currentLevel + 1, 5)].label : levelInfo.label,
+        nextColorHex: canEnhance ? ENHANCE_LEVELS[Math.min(currentLevel + 1, 5)].colorHex : levelInfo.colorHex,
         successRate: nextRate,
-        isSafe: currentLevel < SAFE_LEVEL,
+        isSafe: currentLevel < cfg.safeLevel,
         canEnhance,
-        destroyChance: currentLevel >= SAFE_LEVEL ? DESTROY_CHANCE : 0,
-        statBonus: ENHANCE_STAT_BONUS[currentLevel] ?? 0,
-        nextStatBonus: canEnhance ? (ENHANCE_STAT_BONUS[currentLevel + 1] ?? 0) : (ENHANCE_STAT_BONUS[currentLevel] ?? 0),
-        // 基礎數值
+        destroyChance: currentLevel >= cfg.safeLevel ? cfg.destroyChance : 0,
+        statBonus: cfg.statBonus[currentLevel] ?? 0,
+        nextStatBonus: canEnhance ? (cfg.statBonus[currentLevel + 1] ?? 0) : (cfg.statBonus[currentLevel] ?? 0),
         baseStats: {
           hp: catalog.hpBonus,
           attack: catalog.attackBonus,
@@ -104,7 +105,6 @@ export const equipEnhanceRouter = router({
         .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
       if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
 
-      // 查詢背包中 useEffect.type === "enhance_scroll" 的道具
       const scrolls = await db.select({
         inventoryId: agentInventory.id,
         itemId: agentInventory.itemId,
@@ -136,7 +136,7 @@ export const equipEnhanceRouter = router({
       }));
     }),
 
-  /** 執行強化 */
+  /** 執行強化（使用動態設定） */
   enhanceEquip: protectedProcedure
     .input(z.object({
       inventoryId: z.number().int(),
@@ -145,6 +145,8 @@ export const equipEnhanceRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const cfg = await getEnhanceConfig();
 
       const [agent] = await db.select().from(gameAgents)
         .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
@@ -194,8 +196,8 @@ export const equipEnhanceRouter = router({
       // 5. 檢查當前等級
       const itemData = (inv.itemData as any) ?? {};
       const currentLevel = itemData.enhanceLevel ?? 0;
-      if (currentLevel >= MAX_ENHANCE_LEVEL) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "裝備已達最高強化等級（+5 紅），無法繼續強化。" });
+      if (currentLevel >= cfg.maxLevel) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `裝備已達最高強化等級（+${cfg.maxLevel}），無法繼續強化。` });
       }
 
       // 6. 扣除卷軸
@@ -206,15 +208,13 @@ export const equipEnhanceRouter = router({
         })
         .where(eq(agentInventory.id, scrollInv.id));
 
-      // 7. 執行強化
-      const result = performEnhance(currentLevel);
+      // 7. 執行強化（使用動態設定）
+      const result = performEnhanceWithConfig(currentLevel, cfg);
 
       // 8. 更新裝備或刪除
       if (result.destroyed) {
-        // 裝備消失 — 刪除背包記錄
         await db.delete(agentInventory).where(eq(agentInventory.id, inv.id));
       } else {
-        // 更新強化等級
         const newItemData = {
           ...itemData,
           enhanceLevel: result.newLevel,
@@ -247,10 +247,10 @@ export const equipEnhanceRouter = router({
         destroyed: result.destroyed,
         fromLevel: currentLevel,
         toLevel: result.destroyed ? -1 : result.newLevel,
-        fromColor: ENHANCE_LEVELS[currentLevel].label,
-        toColor: result.destroyed ? "消失" : ENHANCE_LEVELS[result.newLevel].label,
-        fromColorHex: ENHANCE_LEVELS[currentLevel].colorHex,
-        toColorHex: result.destroyed ? "#ef4444" : ENHANCE_LEVELS[result.newLevel].colorHex,
+        fromColor: ENHANCE_LEVELS[Math.min(currentLevel, 5)].label,
+        toColor: result.destroyed ? "消失" : ENHANCE_LEVELS[Math.min(result.newLevel, 5)].label,
+        fromColorHex: ENHANCE_LEVELS[Math.min(currentLevel, 5)].colorHex,
+        toColorHex: result.destroyed ? "#ef4444" : ENHANCE_LEVELS[Math.min(result.newLevel, 5)].colorHex,
         message: result.message,
         successRate: result.successRate,
         equipName: catalog.name,
@@ -276,18 +276,89 @@ export const equipEnhanceRouter = router({
       return logs;
     }),
 
-  /** 取得所有強化等級資訊（前端顯示用） */
+  /** 取得所有強化等級資訊（使用動態設定） */
   getEnhanceLevels: protectedProcedure
-    .query(() => {
+    .query(async () => {
+      const cfg = await getEnhanceConfig();
       return {
         levels: ENHANCE_LEVELS.map(l => ({
           ...l,
-          successRate: ENHANCE_RATES[l.level] ?? 0,
-          statBonus: ENHANCE_STAT_BONUS[l.level] ?? 0,
+          successRate: cfg.rates[l.level] ?? 0,
+          statBonus: cfg.statBonus[l.level] ?? 0,
         })),
-        safeLevel: SAFE_LEVEL,
-        maxLevel: MAX_ENHANCE_LEVEL,
-        destroyChance: DESTROY_CHANCE,
+        safeLevel: cfg.safeLevel,
+        maxLevel: cfg.maxLevel,
+        destroyChance: cfg.destroyChance,
       };
+    }),
+
+  /** 後台讀取強化系統設定 */
+  getAdminEnhanceConfig: protectedProcedure
+    .query(async ({ ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const cfg = await getEnhanceConfig();
+      return cfg;
+    }),
+
+  /** 後台更新強化系統設定 */
+  updateAdminEnhanceConfig: protectedProcedure
+    .input(z.object({
+      safeLevel: z.number().int().min(0).max(5).optional(),
+      destroyChance: z.number().min(0).max(1).optional(),
+      maxLevel: z.number().int().min(1).max(10).optional(),
+      rates: z.record(z.string(), z.number().min(0).max(1)).optional(),
+      statBonus: z.record(z.string(), z.number().min(0).max(5)).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const now = Date.now();
+      const updates: Array<{ key: string; value: string; desc: string }> = [];
+
+      if (input.safeLevel !== undefined) {
+        updates.push({ key: "enhance_safe_level", value: String(input.safeLevel), desc: "強化安定值" });
+      }
+      if (input.destroyChance !== undefined) {
+        updates.push({ key: "enhance_destroy_chance", value: String(input.destroyChance), desc: "強化消失機率" });
+      }
+      if (input.maxLevel !== undefined) {
+        updates.push({ key: "enhance_max_level", value: String(input.maxLevel), desc: "最大強化等級" });
+      }
+      if (input.rates !== undefined) {
+        updates.push({ key: "enhance_rates", value: JSON.stringify(input.rates), desc: "各等級強化成功率" });
+      }
+      if (input.statBonus !== undefined) {
+        updates.push({ key: "enhance_stat_bonus", value: JSON.stringify(input.statBonus), desc: "各等級數值加成" });
+      }
+
+      for (const u of updates) {
+        // upsert: 先查是否存在
+        const [existing] = await db.select().from(gameConfig)
+          .where(eq(gameConfig.configKey, u.key)).limit(1);
+        if (existing) {
+          await db.update(gameConfig).set({
+            configValue: u.value,
+            description: u.desc,
+            updatedAt: now,
+          }).where(eq(gameConfig.configKey, u.key));
+        } else {
+          await db.insert(gameConfig).values({
+            configKey: u.key,
+            configValue: u.value,
+            valueType: "string",
+            label: u.desc,
+            description: u.desc,
+            category: "enhance",
+            isActive: 1,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+      }
+
+      return { success: true, updated: updates.length };
     }),
 });

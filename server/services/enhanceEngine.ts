@@ -3,12 +3,15 @@
  * 裝備強化系統核心引擎
  *
  * 六色分級：白(+0) / 綠(+1) / 藍(+2) / 紫(+3) / 橙(+4) / 紅(+5)
- * 安定值：2（+0 → +1, +1 → +2 必定成功）
- * 失敗機制：退一階，1% 機率裝備消失
+ * 安定值、成功率、消失率、數值加成 — 全部可透過 game_config 動態調整
  * 卷軸類型：武器強化卷軸（weapon）、防具強化卷軸（armor）
  */
 
-// ─── 顏色等級定義 ─────────────────────────────────────────
+import { getDb } from "../db";
+import { gameConfig } from "../../drizzle/schema";
+import { eq, and } from "drizzle-orm";
+
+// ─── 顏色等級定義（靜態，不可調） ─────────────────────────────
 export const ENHANCE_LEVELS = [
   { level: 0, color: "white",  label: "白", colorHex: "#94a3b8" },
   { level: 1, color: "green",  label: "綠", colorHex: "#4ade80" },
@@ -20,6 +23,7 @@ export const ENHANCE_LEVELS = [
 
 export type EnhanceColor = typeof ENHANCE_LEVELS[number]["color"];
 
+// ─── 預設值（靜態 fallback，後台可覆蓋） ─────────────────────
 /** 安定值：此等級以下（含）強化必定成功 */
 export const SAFE_LEVEL = 2;
 
@@ -38,6 +42,16 @@ export const DESTROY_CHANCE = 0.01; // 1%
 /** 最大強化等級 */
 export const MAX_ENHANCE_LEVEL = 5;
 
+/** 每個強化等級對基礎數值的加成百分比 */
+export const ENHANCE_STAT_BONUS: Record<number, number> = {
+  0: 0,      // +0：無加成
+  1: 0.05,   // +1：+5%
+  2: 0.10,   // +2：+10%
+  3: 0.18,   // +3：+18%
+  4: 0.28,   // +4：+28%
+  5: 0.40,   // +5：+40%
+};
+
 // ─── 卷軸類型與適用部位 ─────────────────────────────────────
 export type ScrollType = "weapon_scroll" | "armor_scroll";
 
@@ -55,16 +69,88 @@ export function isScrollApplicable(scrollType: ScrollType, equipSlot: string): b
   return ARMOR_SLOTS.includes(equipSlot);
 }
 
-// ─── 強化數值加成 ─────────────────────────────────────────
-/** 每個強化等級對基礎數值的加成百分比 */
-export const ENHANCE_STAT_BONUS: Record<number, number> = {
-  0: 0,      // +0：無加成
-  1: 0.05,   // +1：+5%
-  2: 0.10,   // +2：+10%
-  3: 0.18,   // +3：+18%
-  4: 0.28,   // +4：+28%
-  5: 0.40,   // +5：+40%
+// ─── 動態設定讀取（從 game_config） ─────────────────────────
+export type EnhanceConfig = {
+  safeLevel: number;
+  rates: Record<number, number>;
+  destroyChance: number;
+  maxLevel: number;
+  statBonus: Record<number, number>;
 };
+
+/**
+ * 從 game_config 讀取強化系統的動態設定
+ * config keys:
+ *   enhance_safe_level       → 安定值（預設 2）
+ *   enhance_rates            → JSON: {"0":1,"1":1,"2":0.7,"3":0.5,"4":0.3}
+ *   enhance_destroy_chance   → 消失機率（預設 0.01）
+ *   enhance_max_level        → 最大等級（預設 5）
+ *   enhance_stat_bonus       → JSON: {"0":0,"1":0.05,"2":0.1,"3":0.18,"4":0.28,"5":0.4}
+ */
+export async function getEnhanceConfig(): Promise<EnhanceConfig> {
+  const defaults: EnhanceConfig = {
+    safeLevel: SAFE_LEVEL,
+    rates: { ...ENHANCE_RATES },
+    destroyChance: DESTROY_CHANCE,
+    maxLevel: MAX_ENHANCE_LEVEL,
+    statBonus: { ...ENHANCE_STAT_BONUS },
+  };
+
+  try {
+    const db = await getDb();
+    if (!db) return defaults;
+
+    const rows = await db.select({
+      configKey: gameConfig.configKey,
+      configValue: gameConfig.configValue,
+    }).from(gameConfig).where(
+      and(
+        eq(gameConfig.isActive, 1),
+      )
+    );
+
+    const cfgMap = new Map(rows.map(r => [r.configKey, r.configValue]));
+
+    if (cfgMap.has("enhance_safe_level")) {
+      const v = parseInt(cfgMap.get("enhance_safe_level")!, 10);
+      if (!isNaN(v) && v >= 0 && v <= 5) defaults.safeLevel = v;
+    }
+    if (cfgMap.has("enhance_destroy_chance")) {
+      const v = parseFloat(cfgMap.get("enhance_destroy_chance")!);
+      if (!isNaN(v) && v >= 0 && v <= 1) defaults.destroyChance = v;
+    }
+    if (cfgMap.has("enhance_max_level")) {
+      const v = parseInt(cfgMap.get("enhance_max_level")!, 10);
+      if (!isNaN(v) && v >= 1 && v <= 10) defaults.maxLevel = v;
+    }
+    if (cfgMap.has("enhance_rates")) {
+      try {
+        const parsed = JSON.parse(cfgMap.get("enhance_rates")!);
+        if (typeof parsed === "object") {
+          for (const [k, val] of Object.entries(parsed)) {
+            const lv = parseInt(k, 10);
+            if (!isNaN(lv) && typeof val === "number") defaults.rates[lv] = val;
+          }
+        }
+      } catch {}
+    }
+    if (cfgMap.has("enhance_stat_bonus")) {
+      try {
+        const parsed = JSON.parse(cfgMap.get("enhance_stat_bonus")!);
+        if (typeof parsed === "object") {
+          for (const [k, val] of Object.entries(parsed)) {
+            const lv = parseInt(k, 10);
+            if (!isNaN(lv) && typeof val === "number") defaults.statBonus[lv] = val;
+          }
+        }
+      } catch {}
+    }
+
+    return defaults;
+  } catch {
+    return defaults;
+  }
+}
 
 // ─── 強化結果類型 ─────────────────────────────────────────
 export type EnhanceResult = {
@@ -77,34 +163,45 @@ export type EnhanceResult = {
 };
 
 /**
- * 執行強化邏輯
- * @param currentLevel 當前強化等級（0-4）
- * @returns 強化結果
+ * 執行強化邏輯（使用靜態預設值，供測試用）
  */
 export function performEnhance(currentLevel: number): EnhanceResult {
+  return performEnhanceWithConfig(currentLevel, {
+    safeLevel: SAFE_LEVEL,
+    rates: ENHANCE_RATES,
+    destroyChance: DESTROY_CHANCE,
+    maxLevel: MAX_ENHANCE_LEVEL,
+    statBonus: ENHANCE_STAT_BONUS,
+  });
+}
+
+/**
+ * 執行強化邏輯（使用動態設定）
+ */
+export function performEnhanceWithConfig(currentLevel: number, cfg: EnhanceConfig): EnhanceResult {
   // 已達最大等級
-  if (currentLevel >= MAX_ENHANCE_LEVEL) {
+  if (currentLevel >= cfg.maxLevel) {
     return {
       success: false,
       newLevel: currentLevel,
-      newColor: ENHANCE_LEVELS[currentLevel].color,
+      newColor: ENHANCE_LEVELS[Math.min(currentLevel, 5)].color,
       destroyed: false,
-      message: "裝備已達最高強化等級（+5 紅），無法繼續強化。",
+      message: `裝備已達最高強化等級（+${cfg.maxLevel}），無法繼續強化。`,
       successRate: 0,
     };
   }
 
-  const successRate = ENHANCE_RATES[currentLevel] ?? 0;
+  const successRate = cfg.rates[currentLevel] ?? 0;
 
   // 安定值內必定成功
-  if (currentLevel < SAFE_LEVEL) {
+  if (currentLevel < cfg.safeLevel) {
     const newLevel = currentLevel + 1;
     return {
       success: true,
       newLevel,
-      newColor: ENHANCE_LEVELS[newLevel].color,
+      newColor: ENHANCE_LEVELS[Math.min(newLevel, 5)].color,
       destroyed: false,
-      message: `強化成功！裝備提升至 +${newLevel}（${ENHANCE_LEVELS[newLevel].label}色）。安定值範圍內，必定成功！`,
+      message: `強化成功！裝備提升至 +${newLevel}（${ENHANCE_LEVELS[Math.min(newLevel, 5)].label}色）。安定值範圍內，必定成功！`,
       successRate,
     };
   }
@@ -118,46 +215,51 @@ export function performEnhance(currentLevel: number): EnhanceResult {
     return {
       success: true,
       newLevel,
-      newColor: ENHANCE_LEVELS[newLevel].color,
+      newColor: ENHANCE_LEVELS[Math.min(newLevel, 5)].color,
       destroyed: false,
-      message: `強化成功！裝備提升至 +${newLevel}（${ENHANCE_LEVELS[newLevel].label}色）！`,
+      message: `強化成功！裝備提升至 +${newLevel}（${ENHANCE_LEVELS[Math.min(newLevel, 5)].label}色）！`,
       successRate,
     };
   }
 
   // 失敗 — 檢查是否消失
   const destroyRoll = Math.random();
-  if (destroyRoll < DESTROY_CHANCE) {
+  if (destroyRoll < cfg.destroyChance) {
     return {
       success: false,
       newLevel: -1,
       newColor: "white",
       destroyed: true,
-      message: `強化失敗！裝備在強化過程中碎裂消失了…（1% 消失機率觸發）`,
+      message: `強化失敗！裝備在強化過程中碎裂消失了…（${(cfg.destroyChance * 100).toFixed(1)}% 消失機率觸發）`,
       successRate,
     };
   }
 
   // 失敗 — 退一階
-  const newLevel = currentLevel - 1;
+  const newLevel = Math.max(0, currentLevel - 1);
   return {
     success: false,
     newLevel,
-    newColor: ENHANCE_LEVELS[newLevel].color,
+    newColor: ENHANCE_LEVELS[Math.min(newLevel, 5)].color,
     destroyed: false,
-    message: `強化失敗！裝備退回 +${newLevel}（${ENHANCE_LEVELS[newLevel].label}色）。`,
+    message: `強化失敗！裝備退回 +${newLevel}（${ENHANCE_LEVELS[Math.min(newLevel, 5)].label}色）。`,
     successRate,
   };
 }
 
 /**
  * 計算強化後的數值加成
- * @param baseValue 基礎數值
- * @param enhanceLevel 強化等級
- * @returns 加成後的數值
  */
 export function calcEnhancedStat(baseValue: number, enhanceLevel: number): number {
   const bonus = ENHANCE_STAT_BONUS[enhanceLevel] ?? 0;
+  return Math.floor(baseValue * (1 + bonus));
+}
+
+/**
+ * 計算強化後的數值加成（使用動態設定）
+ */
+export function calcEnhancedStatWithConfig(baseValue: number, enhanceLevel: number, cfg: EnhanceConfig): number {
+  const bonus = cfg.statBonus[enhanceLevel] ?? 0;
   return Math.floor(baseValue * (1 + bonus));
 }
 
