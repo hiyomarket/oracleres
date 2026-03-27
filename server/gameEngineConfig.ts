@@ -64,6 +64,43 @@ export interface GameEngineConfig {
   bossT1MoveInterval: number;
   /** T2 移動間隔（秒） */
   bossT2MoveInterval: number;
+  // ─── 屬性平衡參數 ───
+  /** 等級 HP 基礎倍率（Lv × N），預設 12 */
+  statLvHpMult: number;
+  /** 等級 HP 基礎常數，預設 80 */
+  statLvHpBase: number;
+  /** 等級 ATK 基礎倍率（Lv × N），預設 8 */
+  statLvAtkMult: number;
+  /** 等級 ATK 基礎常數，預設 15 */
+  statLvAtkBase: number;
+  /** 等級 DEF 基礎倍率（Lv × N），預設 8 */
+  statLvDefMult: number;
+  /** 等級 DEF 基礎常數，預設 15 */
+  statLvDefBase: number;
+  /** 等級 SPD 基礎倍率（Lv × N），預設 6 */
+  statLvSpdMult: number;
+  /** 等級 SPD 基礎常數，預設 10 */
+  statLvSpdBase: number;
+  /** 等級 MP 基礎倍率（Lv × N），預設 8 */
+  statLvMpMult: number;
+  /** 等級 MP 基礎常數，預設 40 */
+  statLvMpBase: number;
+  /** 注靈 木→HP 加成（每 100 點），預設 30 */
+  infuseHpPer100: number;
+  /** 注靈 火→ATK 加成（每 100 點），預設 20 */
+  infuseAtkPer100: number;
+  /** 注靈 土→DEF 加成（每 100 點），預設 20 */
+  infuseDefPer100: number;
+  /** 注靈 金→SPD 加成（每 100 點），預設 15 */
+  infuseSpdPer100: number;
+  /** 注靈 水→MP 加成（每 100 點），預設 20 */
+  infuseMpPer100: number;
+  /** 五行抗性上限（%），預設 50 */
+  resistMaxPct: number;
+  /** 戰鬥公式 ATK 係數 A（預設 1.5） */
+  combatAtkCoeff: number;
+  /** 戰鬥公式 DEF 係數 B（預設 0.5） */
+  combatDefCoeff: number;
 }
 
 // ─── 預設值 ───
@@ -95,11 +132,30 @@ const DEFAULT_CONFIG: GameEngineConfig = {
   battleTurnTimerPvE: 30,   // 個人戰 30 秒
   battleTurnTimerBoss: 20,  // Boss 戰 20 秒
   battleTurnTimerPvP: 15,   // PvP 戰 15 秒
-  // Boss 系統預設值
+  // Boss 系統預設値
   bossSystemEnabled: true,
   bossT1MaxCount: 5,
   bossT1MoveInterval: 300,
   bossT2MoveInterval: 600,
+  // 屬性平衡參數預設値
+  statLvHpMult: 12,
+  statLvHpBase: 80,
+  statLvAtkMult: 8,
+  statLvAtkBase: 15,
+  statLvDefMult: 8,
+  statLvDefBase: 15,
+  statLvSpdMult: 6,
+  statLvSpdBase: 10,
+  statLvMpMult: 8,
+  statLvMpBase: 40,
+  infuseHpPer100: 30,
+  infuseAtkPer100: 20,
+  infuseDefPer100: 20,
+  infuseSpdPer100: 15,
+  infuseMpPer100: 20,
+  resistMaxPct: 50,
+  combatAtkCoeff: 1.5,
+  combatDefCoeff: 0.5,
 };
 
 // ─── 單例記憶體狀態 ───
@@ -183,6 +239,30 @@ export function getBossConfig(): { enabled: boolean; t1MaxCount: number; t1MoveI
     t1MaxCount: _config.bossT1MaxCount,
     t1MoveInterval: _config.bossT1MoveInterval,
     t2MoveInterval: _config.bossT2MoveInterval,
+  };
+}
+
+/** 取得屬性平衡參數 */
+export function getStatBalanceConfig() {
+  return {
+    statLvHpMult:    _config.statLvHpMult    ?? 12,
+    statLvHpBase:    _config.statLvHpBase    ?? 80,
+    statLvAtkMult:   _config.statLvAtkMult   ?? 8,
+    statLvAtkBase:   _config.statLvAtkBase   ?? 15,
+    statLvDefMult:   _config.statLvDefMult   ?? 8,
+    statLvDefBase:   _config.statLvDefBase   ?? 15,
+    statLvSpdMult:   _config.statLvSpdMult   ?? 6,
+    statLvSpdBase:   _config.statLvSpdBase   ?? 10,
+    statLvMpMult:    _config.statLvMpMult    ?? 8,
+    statLvMpBase:    _config.statLvMpBase    ?? 40,
+    infuseHpPer100:  _config.infuseHpPer100  ?? 30,
+    infuseAtkPer100: _config.infuseAtkPer100 ?? 20,
+    infuseDefPer100: _config.infuseDefPer100 ?? 20,
+    infuseSpdPer100: _config.infuseSpdPer100 ?? 15,
+    infuseMpPer100:  _config.infuseMpPer100  ?? 20,
+    resistMaxPct:    _config.resistMaxPct    ?? 50,
+    combatAtkCoeff:  _config.combatAtkCoeff  ?? 1.5,
+    combatDefCoeff:  _config.combatDefCoeff  ?? 0.5,
   };
 }
 

@@ -67,6 +67,12 @@ function buildCharacterParticipant(
     speedScore: 0,
     statusEffects: [],
     agentId: agent.id,
+    // 五行抗性（由注靈自動計算，0-50）
+    resistWood:  agent.resistWood  ?? 0,
+    resistFire:  agent.resistFire  ?? 0,
+    resistEarth: agent.resistEarth ?? 0,
+    resistMetal: agent.resistMetal ?? 0,
+    resistWater: agent.resistWater ?? 0,
   };
 }
 
@@ -173,6 +179,12 @@ function buildMonsterParticipant(
     isDefeated: false,
     speedScore: 0,
     statusEffects: [],
+    // 怪物的五行抗性（從圖鑑讀取）
+    resistWood:  (cm as any).resistWood  ?? 0,
+    resistFire:  (cm as any).resistFire  ?? 0,
+    resistEarth: (cm as any).resistEarth ?? 0,
+    resistMetal: (cm as any).resistMetal ?? 0,
+    resistWater: (cm as any).resistWater ?? 0,
   };
 }
 
@@ -268,9 +280,15 @@ export const gameBattleRouter = router({
           isBoss: true,
           dbSkills: [],
           aiLevel: 4,
-          baseMp: Math.floor((30 + bossCat.level * 2) * 2.0),
+          baseMp: bossCat.baseMP ?? Math.floor((30 + bossCat.level * 2) * 2.0),
           resistances: { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 },
           magicAttack: Math.floor(bossCat.baseAttack * 0.9),
+          // Boss 圖鑑的五行抗性
+          resistWood:  bossCat.resistWood  ?? 0,
+          resistFire:  bossCat.resistFire  ?? 0,
+          resistEarth: bossCat.resistEarth ?? 0,
+          resistMetal: bossCat.resistMetal ?? 0,
+          resistWater: bossCat.resistWater ?? 0,
         };
       } else {
         const monster = await getCombatMonsterById(input.monsterId);

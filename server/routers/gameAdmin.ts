@@ -992,6 +992,25 @@ export const gameAdminRouter = router({
       bossT1MaxCount: z.number().int().min(0).max(20).optional(),
       bossT1MoveInterval: z.number().int().min(60).max(3600).optional(),
       bossT2MoveInterval: z.number().int().min(60).max(7200).optional(),
+      // 屬性平衡參數
+      statLvHpMult:    z.number().min(1).max(100).optional(),
+      statLvHpBase:    z.number().min(0).max(1000).optional(),
+      statLvAtkMult:   z.number().min(1).max(100).optional(),
+      statLvAtkBase:   z.number().min(0).max(500).optional(),
+      statLvDefMult:   z.number().min(1).max(100).optional(),
+      statLvDefBase:   z.number().min(0).max(500).optional(),
+      statLvSpdMult:   z.number().min(1).max(100).optional(),
+      statLvSpdBase:   z.number().min(0).max(500).optional(),
+      statLvMpMult:    z.number().min(1).max(100).optional(),
+      statLvMpBase:    z.number().min(0).max(500).optional(),
+      infuseHpPer100:  z.number().min(0).max(500).optional(),
+      infuseAtkPer100: z.number().min(0).max(500).optional(),
+      infuseDefPer100: z.number().min(0).max(500).optional(),
+      infuseSpdPer100: z.number().min(0).max(500).optional(),
+      infuseMpPer100:  z.number().min(0).max(500).optional(),
+      resistMaxPct:    z.number().min(1).max(90).optional(),
+      combatAtkCoeff:  z.number().min(0.1).max(10).optional(),
+      combatDefCoeff:  z.number().min(0.1).max(10).optional(),
     }))
     .mutation(({ input, ctx }) => {
       const { tickIntervalMs, ...rest } = input;

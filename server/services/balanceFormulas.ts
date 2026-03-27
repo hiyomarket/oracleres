@@ -696,43 +696,67 @@ export interface CharacterCombatStats {
 export function calcCharacterStatsV2(
   wuxing: { wood: number; fire: number; earth: number; metal: number; water: number },
   level: number = 1,
+  cfg?: {
+    statLvHpMult?: number; statLvHpBase?: number;
+    statLvAtkMult?: number; statLvAtkBase?: number;
+    statLvDefMult?: number; statLvDefBase?: number;
+    statLvSpdMult?: number; statLvSpdBase?: number;
+    statLvMpMult?: number; statLvMpBase?: number;
+    infuseHpPer100?: number; infuseAtkPer100?: number;
+    infuseDefPer100?: number; infuseSpdPer100?: number; infuseMpPer100?: number;
+  },
 ): CharacterCombatStats {
   const { wood, fire, earth, metal, water } = wuxing;
 
-  // ── HP = 基礎 + 等級加成 + 木屬性加成 ──
-  // Lv1(木20): 50 + 5 + 20*4 = 135
-  // Lv10(木38): 50 + 50 + 38*4 = 252
-  // Lv30(木78): 50 + 150 + 78*4 = 512
-  // Lv50(木118): 50 + 250 + 118*4 = 772
-  // 但怪物 HP 在 Lv30 epic 是 7700，角色 HP 不需要那麼高
-  // 因為角色有技能、裝備、回復，而怪物只有基礎數值
-  const hp = Math.floor(50 + level * 5 + wood * 4.0 + (wood > 50 ? (wood - 50) * 2.0 : 0));
+  // ═══ 新公式（已確認）：等級基礎 + 注靈加成 ═══
+  // 後台可調參數（如未傳入則使用預設値）
+  const lvHpMult   = cfg?.statLvHpMult   ?? 12;
+  const lvHpBase   = cfg?.statLvHpBase   ?? 80;
+  const lvAtkMult  = cfg?.statLvAtkMult  ?? 8;
+  const lvAtkBase  = cfg?.statLvAtkBase  ?? 15;
+  const lvDefMult  = cfg?.statLvDefMult  ?? 8;
+  const lvDefBase  = cfg?.statLvDefBase  ?? 15;
+  const lvSpdMult  = cfg?.statLvSpdMult  ?? 6;
+  const lvSpdBase  = cfg?.statLvSpdBase  ?? 10;
+  const lvMpMult   = cfg?.statLvMpMult   ?? 8;
+  const lvMpBase   = cfg?.statLvMpBase   ?? 40;
+  const hpPer100   = cfg?.infuseHpPer100  ?? 30;
+  const atkPer100  = cfg?.infuseAtkPer100 ?? 20;
+  const defPer100  = cfg?.infuseDefPer100 ?? 20;
+  const spdPer100  = cfg?.infuseSpdPer100 ?? 15;
+  const mpPer100   = cfg?.infuseMpPer100  ?? 20;
 
-  // ── MP = 基礎 + 等級加成 + 水屬性加成 ──
-  const mp = Math.floor(30 + level * 3 + water * 2.5 + (water > 50 ? (water - 50) * 1.0 : 0));
+  const hp  = Math.floor(level * lvHpMult  + lvHpBase  + (wood  / 100) * hpPer100);
+  const mp  = Math.floor(level * lvMpMult  + lvMpBase  + (water / 100) * mpPer100);
+  const atk = Math.floor(level * lvAtkMult + lvAtkBase + (fire  / 100) * atkPer100);
+  const def = Math.floor(level * lvDefMult + lvDefBase + (earth / 100) * defPer100);
+  const spd = Math.floor(level * lvSpdMult + lvSpdBase + (metal / 100) * spdPer100);
+  const matk = Math.floor(level * 4  + 10  + (water / 100) * 15);
 
-  // ── ATK = 基礎 + 等級加成 + 火屬性加成 ──
-  // Lv1(火20): 5 + 2 + 20*2 = 47 → 對比怪物 Lv1 DEF ~10，合理
-  // Lv10(火38): 5 + 20 + 38*2 = 101 → 對比怪物 Lv10 DEF ~50，合理
-  const atk = Math.floor(5 + level * 2 + fire * 2.0 + (fire > 50 ? (fire - 50) * 1.0 : 0));
-
-  // ── DEF = 基礎 + 等級加成 + 土屬性加成 ──
-  const def = Math.floor(5 + level * 1.5 + earth * 2.0 + (earth > 50 ? (earth - 50) * 1.0 : 0));
-
-  // ── SPD = 基礎 + 等級加成 + 金屬性加成 ──
-  // SPD 的數值範圍較小（5~60），避免速度差距過大
-  const spd = Math.floor(3 + level * 0.3 + metal * 0.8 + (metal > 50 ? (metal - 50) * 0.3 : 0));
-
-  // ── MATK = 基礎 + 等級加成 + 水屬性加成 ──
-  const matk = Math.floor(5 + level * 1.5 + water * 2.0 + (water > 50 ? (water - 50) * 1.0 : 0));
-
-  // ── 治癒力 = 木屬性加成 ──
-  const healPower = Math.floor(wood * 1.5 + level * 0.5);
-
-  // ── 命中率 = 金屬性加成 ──
-  const hitRate = Math.floor(metal * 1.2 + level * 0.3);
+  // 治癒力、命中率保留與五行相關
+  const healPower = Math.floor(wood * 0.8 + level * 0.5);
+  const hitRate   = Math.floor(metal * 0.8 + level * 0.3);
 
   return { hp, mp, atk, def, spd, matk, healPower, hitRate };
+}
+
+/**
+ * 計算玩家五行抗性（由注靈自動計算）
+ * 公式：抗性% = min(50, 注靈屬性分 ÷ 20)
+ * 五行注靈對應抗性：木→抗木, 火→抗火, 土→抗土, 金→抗金, 水→抗水
+ */
+export function calcResistances(
+  wuxing: { wood: number; fire: number; earth: number; metal: number; water: number; },
+  maxPct: number = 50,
+) {
+  const cap = Math.max(1, maxPct);
+  return {
+    resistWood:  Math.min(cap, Math.floor(wuxing.wood  / 20)),
+    resistFire:  Math.min(cap, Math.floor(wuxing.fire  / 20)),
+    resistEarth: Math.min(cap, Math.floor(wuxing.earth / 20)),
+    resistMetal: Math.min(cap, Math.floor(wuxing.metal / 20)),
+    resistWater: Math.min(cap, Math.floor(wuxing.water / 20)),
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════

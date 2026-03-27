@@ -173,6 +173,14 @@ export const roamingBossRouter = router({
       enrageConfig: z.any().optional(),
       isActive: z.number().min(0).max(1).optional(),
       scheduleConfig: z.any().optional(),
+      baseMP: z.number().min(0).optional(),
+      goldDrop: z.number().min(0).optional(),
+      minionIds: z.array(z.string()).optional(),
+      resistWood: z.number().min(0).max(50).optional(),
+      resistFire: z.number().min(0).max(50).optional(),
+      resistEarth: z.number().min(0).max(50).optional(),
+      resistMetal: z.number().min(0).max(50).optional(),
+      resistWater: z.number().min(0).max(50).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
@@ -209,6 +217,14 @@ export const roamingBossRouter = router({
           enrageConfig: input.enrageConfig || null,
           isActive: input.isActive ?? 1,
           scheduleConfig: input.scheduleConfig || null,
+          baseMP: input.baseMP ?? 200,
+          goldDrop: input.goldDrop ?? 0,
+          minionIds: input.minionIds ?? null,
+          resistWood: input.resistWood ?? 0,
+          resistFire: input.resistFire ?? 0,
+          resistEarth: input.resistEarth ?? 0,
+          resistMetal: input.resistMetal ?? 0,
+          resistWater: input.resistWater ?? 0,
           updatedAt: now,
         }).where(eq(roamingBossCatalog.id, input.id));
         return { id: input.id };
@@ -241,6 +257,14 @@ export const roamingBossRouter = router({
           enrageConfig: input.enrageConfig || null,
           isActive: input.isActive ?? 1,
           scheduleConfig: input.scheduleConfig || null,
+          baseMP: input.baseMP ?? 200,
+          goldDrop: input.goldDrop ?? 0,
+          minionIds: input.minionIds ?? null,
+          resistWood: input.resistWood ?? 0,
+          resistFire: input.resistFire ?? 0,
+          resistEarth: input.resistEarth ?? 0,
+          resistMetal: input.resistMetal ?? 0,
+          resistWater: input.resistWater ?? 0,
           createdAt: now,
           updatedAt: now,
         });

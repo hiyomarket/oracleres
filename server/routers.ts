@@ -40,6 +40,7 @@ import { startWorldTickEngine } from './worldTickEngine';
 import { startAfkTickEngine } from './afkTickEngine';
 import { gameGuideRouter } from './routers/gameGuide';
 import { roamingBossRouter } from './routers/roamingBoss';
+import { gamePartyRouter } from './routers/gameParty';
 import { equipEnhanceRouter } from './routers/equipEnhance';
 
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
@@ -107,6 +108,7 @@ export const appRouter = router({
   gameBattle: gameBattleRouter,
   gameGuide: gameGuideRouter,
   roamingBoss: roamingBossRouter,
+  gameParty: gamePartyRouter,
   equipEnhance: equipEnhanceRouter,
   businessHub: businessHubRouter,
   userGroups: userGroupsRouter,

@@ -708,6 +708,13 @@
       "when": 1774621015919,
       "tag": "0100_flimsy_wrecking_crew",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "5",
+      "when": 1774642130139,
+      "tag": "0101_open_white_queen",
+      "breakpoints": true
     }
   ]
 }

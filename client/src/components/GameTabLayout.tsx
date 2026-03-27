@@ -75,6 +75,13 @@ interface GameTabLayoutProps {
   divineOptions?: DivineOption[];
   divineAP?: number;
   divineMaxAP?: number;
+  /** 在線人數按鈕 */
+  onlineCount?: number;
+  onOnlineClick?: () => void;
+  /** 組隊按鈕 */
+  onPartyClick?: () => void;
+  partyMemberCount?: number;
+  hasParty?: boolean;
 }
 
 export default function GameTabLayout({
@@ -82,6 +89,8 @@ export default function GameTabLayout({
   strategyOptions, currentStrategy, onStrategyChange, movementMode, onMovementModeChange,
   elementColor,
   divineOptions, divineAP, divineMaxAP,
+  onlineCount, onOnlineClick,
+  onPartyClick, partyMemberCount, hasParty,
 }: GameTabLayoutProps) {
   const [location, navigate] = useLocation();
   const { user } = useAuth();
@@ -314,6 +323,84 @@ export default function GameTabLayout({
           WebkitOverflowScrolling: "touch",
         } as React.CSSProperties}
       >
+        {/* 在線人數按鈕（傳入 onOnlineClick 時顯示） */}
+        {onOnlineClick && (
+          <button
+            style={{
+              flex: "0 0 auto",
+              minWidth: "72px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "2px",
+              padding: "8px 4px",
+              height: `${TAB_BAR_HEIGHT}px`,
+              position: "relative",
+              transition: "all 0.15s",
+              WebkitTapHighlightColor: "transparent",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+            }}
+            onClick={onOnlineClick}
+          >
+            <span style={{ fontSize: "20px", lineHeight: 1 }}>👥</span>
+            <span style={{ fontSize: "10px", fontWeight: 500, color: "rgba(56,189,248,0.9)", whiteSpace: "nowrap" }}>
+              {onlineCount !== undefined ? `在線 ${onlineCount}` : "在線"}
+            </span>
+          </button>
+        )}
+
+        {/* 組隊按鈕（傳入 onPartyClick 時顯示） */}
+        {onPartyClick && (
+          <button
+            style={{
+              flex: "0 0 auto",
+              minWidth: "72px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "2px",
+              padding: "8px 4px",
+              height: `${TAB_BAR_HEIGHT}px`,
+              position: "relative",
+              transition: "all 0.15s",
+              WebkitTapHighlightColor: "transparent",
+              background: hasParty ? "rgba(34,197,94,0.12)" : "transparent",
+              border: "none",
+              cursor: "pointer",
+            }}
+            onClick={onPartyClick}
+          >
+            {hasParty && (
+              <div style={{
+                position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+                width: "40px", height: "2px", borderRadius: "1px",
+                background: "linear-gradient(90deg, #22c55e, #22c55e80)",
+              }} />
+            )}
+            <span style={{ fontSize: "20px", lineHeight: 1 }}>⚔️🛡️</span>
+            <span style={{
+              fontSize: "10px", fontWeight: 600, whiteSpace: "nowrap",
+              color: hasParty ? "#22c55e" : "rgba(148,163,184,0.7)",
+            }}>
+              {hasParty ? `組隊 ${partyMemberCount ?? 0}人` : "組隊"}
+            </span>
+            {hasParty && (
+              <span style={{
+                position: "absolute", top: "4px", right: "6px",
+                fontSize: "8px", fontWeight: 700,
+                background: "rgba(34,197,94,0.2)", color: "#22c55e",
+                borderRadius: "999px", padding: "0 3px", minWidth: "12px", textAlign: "center",
+              }}>
+                {partyMemberCount}
+              </span>
+            )}
+          </button>
+        )}
+
         {/* 日誌按鈕（僅在虛相世界顯示） */}
         {onLogClick && (
           <button

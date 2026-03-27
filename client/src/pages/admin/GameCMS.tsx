@@ -1601,6 +1601,147 @@ function BalanceDashboardTab() {
       <div className="mt-8 pt-6 border-t border-white/10">
         <BalanceRulesEditor />
       </div>
+
+      {/* 屬性平衡設定面板 */}
+      <div className="mt-8 pt-6 border-t border-white/10">
+        <StatBalancePanel />
+      </div>
+    </div>
+  );
+}
+
+/** 屬性平衡設定面板（管理員可調等級基礎、注靈加成、抗性上限等） */
+function StatBalancePanel() {
+  const { data: cfg, refetch } = trpc.gameAdmin.getEngineConfig.useQuery();
+  const updateMut = trpc.gameAdmin.updateEngineConfig.useMutation({ onSuccess: () => refetch() });
+
+  const [form, setForm] = useState<Record<string, number>>({});
+  const [saved, setSaved] = useState(false);
+
+  // 初始化表單
+  useEffect(() => {
+    if (cfg) {
+      setForm({
+        statLvHpMult:    cfg.statLvHpMult    ?? 12,
+        statLvHpBase:    cfg.statLvHpBase    ?? 80,
+        statLvAtkMult:   cfg.statLvAtkMult   ?? 8,
+        statLvAtkBase:   cfg.statLvAtkBase   ?? 15,
+        statLvDefMult:   cfg.statLvDefMult   ?? 8,
+        statLvDefBase:   cfg.statLvDefBase   ?? 15,
+        statLvSpdMult:   cfg.statLvSpdMult   ?? 6,
+        statLvSpdBase:   cfg.statLvSpdBase   ?? 10,
+        statLvMpMult:    cfg.statLvMpMult    ?? 8,
+        statLvMpBase:    cfg.statLvMpBase    ?? 40,
+        infuseHpPer100:  cfg.infuseHpPer100  ?? 30,
+        infuseAtkPer100: cfg.infuseAtkPer100 ?? 20,
+        infuseDefPer100: cfg.infuseDefPer100 ?? 20,
+        infuseSpdPer100: cfg.infuseSpdPer100 ?? 15,
+        infuseMpPer100:  cfg.infuseMpPer100  ?? 20,
+        resistMaxPct:    cfg.resistMaxPct    ?? 50,
+        combatAtkCoeff:  cfg.combatAtkCoeff  ?? 1.5,
+        combatDefCoeff:  cfg.combatDefCoeff  ?? 0.5,
+      });
+    }
+  }, [cfg]);
+
+  const handleSave = () => {
+    updateMut.mutate(form as any, {
+      onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2000); },
+    });
+  };
+
+  const field = (key: string, label: string, step = 1, min = 0, max = 999) => (
+    <div key={key} className="flex flex-col gap-1">
+      <label className="text-[11px] text-muted-foreground">{label}</label>
+      <input
+        type="number"
+        step={step}
+        min={min}
+        max={max}
+        value={form[key] ?? ""}
+        onChange={e => setForm(prev => ({ ...prev, [key]: parseFloat(e.target.value) || 0 }))}
+        className="w-full px-2 py-1 rounded bg-white/5 border border-white/10 text-sm text-white"
+      />
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold flex items-center gap-2"><span>📊</span> 屬性平衡設定</h3>
+        <Button size="sm" onClick={handleSave} disabled={updateMut.isPending}>
+          {saved ? "✅ 已儲存" : updateMut.isPending ? "儲存中..." : "💾 儲存設定"}
+        </Button>
+      </div>
+
+      {/* 等級基礎倍率 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-amber-400 mb-3">等級基礎倍率（Lv × N）</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {field("statLvHpMult",  "HP 倍率", 1, 1, 100)}
+          {field("statLvAtkMult", "ATK 倍率", 1, 1, 100)}
+          {field("statLvDefMult", "DEF 倍率", 1, 1, 100)}
+          {field("statLvSpdMult", "SPD 倍率", 1, 1, 100)}
+          {field("statLvMpMult",  "MP 倍率", 1, 1, 100)}
+        </div>
+      </div>
+
+      {/* 等級基礎常數 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-amber-400 mb-3">等級基礎常數（+常數）</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {field("statLvHpBase",  "HP 常數", 5, 0, 1000)}
+          {field("statLvAtkBase", "ATK 常數", 1, 0, 500)}
+          {field("statLvDefBase", "DEF 常數", 1, 0, 500)}
+          {field("statLvSpdBase", "SPD 常數", 1, 0, 500)}
+          {field("statLvMpBase",  "MP 常數", 1, 0, 500)}
+        </div>
+      </div>
+
+      {/* 注靈加成（每 100 點） */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-amber-400 mb-3">注靈加成（每 100 點）</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          {field("infuseHpPer100",  "🌿 木→HP", 1, 0, 500)}
+          {field("infuseAtkPer100", "🔥 火→ATK", 1, 0, 500)}
+          {field("infuseDefPer100", "⛰️ 土→DEF", 1, 0, 500)}
+          {field("infuseSpdPer100", "⚔️ 金→SPD", 1, 0, 500)}
+          {field("infuseMpPer100",  "💧 水→MP", 1, 0, 500)}
+        </div>
+      </div>
+
+      {/* 戰鬥公式和抗性上限 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-amber-400 mb-3">戰鬥公式和抗性上限</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {field("combatAtkCoeff", "傷害 ATK 係數 A", 0.1, 0.1, 10)}
+          {field("combatDefCoeff", "傷害 DEF 係數 B", 0.1, 0.1, 10)}
+          {field("resistMaxPct",   "五行抗性上限 (%)", 1, 1, 90)}
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2">公式：傷害 = ATK × A - DEF × B，抗性上限為注靈最高可獲得的抗性%</p>
+      </div>
+
+      {/* 預覽計算結果 */}
+      {cfg && (
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+          <h4 className="text-xs font-bold text-amber-400 mb-3">🔮 Lv.50 屬性預覽（無注靈）</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+            {[
+              { label: "HP",  val: Math.floor(50 * (form.statLvHpMult ?? 12)  + (form.statLvHpBase  ?? 80)) },
+              { label: "ATK", val: Math.floor(50 * (form.statLvAtkMult ?? 8)  + (form.statLvAtkBase ?? 15)) },
+              { label: "DEF", val: Math.floor(50 * (form.statLvDefMult ?? 8)  + (form.statLvDefBase ?? 15)) },
+              { label: "SPD", val: Math.floor(50 * (form.statLvSpdMult ?? 6)  + (form.statLvSpdBase ?? 10)) },
+              { label: "MP",  val: Math.floor(50 * (form.statLvMpMult ?? 8)   + (form.statLvMpBase  ?? 40)) },
+            ].map(({ label, val }) => (
+              <div key={label} className="p-2 rounded bg-white/5">
+                <div className="text-[10px] text-muted-foreground">{label}</div>
+                <div className="text-lg font-bold text-amber-300">{val}</div>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2">注靈满分（注靈=1000）時：HP+{(form.infuseHpPer100 ?? 30) * 10} / ATK+{(form.infuseAtkPer100 ?? 20) * 10} / DEF+{(form.infuseDefPer100 ?? 20) * 10} / SPD+{(form.infuseSpdPer100 ?? 15) * 10} / MP+{(form.infuseMpPer100 ?? 20) * 10}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -4130,6 +4271,17 @@ function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose:
   const [maxInstances, setMaxInstances] = useState(String(boss.scheduleConfig?.maxInstances ?? 1));
   const [scheduleCron, setScheduleCron] = useState(boss.scheduleConfig?.cron ?? "0 0 12 * * *");
   const [scheduleDuration, setScheduleDuration] = useState(String(boss.scheduleConfig?.duration ?? 30));
+  // 新增欄位
+  const [baseMP, setBaseMP] = useState(String(boss.baseMP ?? 200));
+  const [goldDrop, setGoldDrop] = useState(String(boss.goldDrop ?? 0));
+  const [minionIds, setMinionIds] = useState<string[]>(() => {
+    try { return Array.isArray(boss.minionIds) ? boss.minionIds : []; } catch { return []; }
+  });
+  const [resistWood, setResistWood] = useState(String(boss.resistWood ?? 0));
+  const [resistFire, setResistFire] = useState(String(boss.resistFire ?? 0));
+  const [resistEarth, setResistEarth] = useState(String(boss.resistEarth ?? 0));
+  const [resistMetal, setResistMetal] = useState(String(boss.resistMetal ?? 0));
+  const [resistWater, setResistWater] = useState(String(boss.resistWater ?? 0));
 
   const handleSubmit = () => {
     onSave({
@@ -4141,6 +4293,9 @@ function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose:
       description, skills,
       dropTable: dropItems,
       patrolRegion,
+      baseMP: Number(baseMP), goldDrop: Number(goldDrop), minionIds,
+      resistWood: Number(resistWood), resistFire: Number(resistFire),
+      resistEarth: Number(resistEarth), resistMetal: Number(resistMetal), resistWater: Number(resistWater),
       enrageConfig: { hpThresholds: enrageThresholds },
       scheduleConfig: scheduleType === "always"
         ? { type: "always", maxInstances: Number(maxInstances) }
@@ -4183,6 +4338,33 @@ function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose:
           <div><label className="text-xs text-muted-foreground">體力消耗</label><Input type="number" value={staminaCost} onChange={e => setStaminaCost(e.target.value)} /></div>
           <div><label className="text-xs text-muted-foreground">EXP 倍率</label><Input type="number" step="0.1" value={expMultiplier} onChange={e => setExpMultiplier(e.target.value)} /></div>
           <div><label className="text-xs text-muted-foreground">Gold 倍率</label><Input type="number" step="0.1" value={goldMultiplier} onChange={e => setGoldMultiplier(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">MP</label><Input type="number" value={baseMP} onChange={e => setBaseMP(e.target.value)} /></div>
+          <div><label className="text-xs text-muted-foreground">金幣掉落</label><Input type="number" value={goldDrop} onChange={e => setGoldDrop(e.target.value)} /></div>
+        </div>
+        {/* 五行抗性 */}
+        <div className="space-y-2">
+          <label className="text-xs text-muted-foreground font-medium">五行抗性（0-50%）</label>
+          <div className="grid grid-cols-5 gap-2">
+            <div><label className="text-xs text-muted-foreground">抗木%</label><Input type="number" min="0" max="50" value={resistWood} onChange={e => setResistWood(e.target.value)} className="h-7 text-xs" /></div>
+            <div><label className="text-xs text-muted-foreground">抗火%</label><Input type="number" min="0" max="50" value={resistFire} onChange={e => setResistFire(e.target.value)} className="h-7 text-xs" /></div>
+            <div><label className="text-xs text-muted-foreground">抗土%</label><Input type="number" min="0" max="50" value={resistEarth} onChange={e => setResistEarth(e.target.value)} className="h-7 text-xs" /></div>
+            <div><label className="text-xs text-muted-foreground">抗金%</label><Input type="number" min="0" max="50" value={resistMetal} onChange={e => setResistMetal(e.target.value)} className="h-7 text-xs" /></div>
+            <div><label className="text-xs text-muted-foreground">抗水%</label><Input type="number" min="0" max="50" value={resistWater} onChange={e => setResistWater(e.target.value)} className="h-7 text-xs" /></div>
+          </div>
+        </div>
+        {/* 護衛小兵 */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-muted-foreground font-medium">護衛小兵 ID（來自怪物圖鑑）</label>
+            <Button size="sm" variant="outline" onClick={() => setMinionIds(m => [...m, ""])} className="h-6 text-xs px-2">+ 新增</Button>
+          </div>
+          {minionIds.length === 0 && <div className="text-xs text-muted-foreground text-center py-2 border border-dashed rounded">未設定護衛小兵</div>}
+          {minionIds.map((id, i) => (
+            <div key={i} className="flex gap-2 items-center">
+              <Input value={id} onChange={e => setMinionIds(m => m.map((x, idx) => idx === i ? e.target.value : x))} className="h-7 text-xs" placeholder="怪物圖鑑 ID，如：slime_01" />
+              <Button size="sm" variant="ghost" onClick={() => setMinionIds(m => m.filter((_, idx) => idx !== i))} className="h-7 w-7 p-0 text-red-400">×</Button>
+            </div>
+          ))}
         </div>
         <div><label className="text-xs text-muted-foreground">描述</label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} /></div>
         <BossSkillEditor skills={skills} onChange={setSkills} />

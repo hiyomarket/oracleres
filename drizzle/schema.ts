@@ -1755,6 +1755,14 @@ export const gameAgents = mysqlTable("game_agents", {
   /** 桌機版浮動 Widget 位置記憶（JSON: { widgetId: { x, y } }） */
   /** 手動注靈已使用點數（上限 = level × 2） */
   infusePointsUsed: int("infuse_points_used").notNull().default(0),
+  /** 五行抗性（由注靈自動計算，0-50） */
+  resistWood: int("resist_wood").notNull().default(0),
+  resistFire: int("resist_fire").notNull().default(0),
+  resistEarth: int("resist_earth").notNull().default(0),
+  resistMetal: int("resist_metal").notNull().default(0),
+  resistWater: int("resist_water").notNull().default(0),
+  /** 升級自由點數（每級 +5 點） */
+  freeStatPoints: int("free_stat_points").notNull().default(0),
   /** 玩家自訂頭像（S3 URL） */
   avatarUrl: varchar("avatar_url", { length: 500 }),
   widgetLayout: json("widget_layout").$type<Record<string, { x: number; y: number }>>(),
@@ -3670,6 +3678,18 @@ export const roamingBossCatalog = mysqlTable("roaming_boss_catalog", {
       message: string;
     }>;
   }>(),
+  /** 基礎 MP */
+  baseMP: int("base_mp").notNull().default(200),
+  /** 金幣掉落（固定值） */
+  goldDrop: int("gold_drop").notNull().default(0),
+  /** 護衛小兵 ID 列表（來自 gameMonsterCatalog） */
+  minionIds: json("minion_ids").$type<string[]>(),
+  /** 五行抗性（0-50，代表百分比） */
+  resistWood: int("resist_wood").notNull().default(0),
+  resistFire: int("resist_fire").notNull().default(0),
+  resistEarth: int("resist_earth").notNull().default(0),
+  resistMetal: int("resist_metal").notNull().default(0),
+  resistWater: int("resist_water").notNull().default(0),
   /** 是否啟用 */
   isActive: tinyint("is_active").notNull().default(1),
   /** 排程設定（JSON：cron 表達式或時間點列表） */
@@ -3798,3 +3818,61 @@ export const equipEnhanceLogs = mysqlTable("equip_enhance_logs", {
 });
 export type EquipEnhanceLog = typeof equipEnhanceLogs.$inferSelect;
 export type InsertEquipEnhanceLog = typeof equipEnhanceLogs.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 組隊系統（Party System）
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * 隊伍表
+ * 記錄玩家組成的隊伍，支援 2-6 人組隊
+ */
+export const gameParties = mysqlTable("game_parties", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 隊伍名稱 */
+  partyName: varchar("party_name", { length: 100 }),
+  /** 隊長的 agent ID */
+  leaderId: int("leader_id").notNull(),
+  /** 隊長名稱（快取） */
+  leaderName: varchar("leader_name", { length: 100 }).notNull(),
+  /** 成員 agent ID 列表 */
+  memberIds: json("member_ids").$type<number[]>().notNull(),
+  /** 成員名稱列表（快取） */
+  memberNames: json("member_names").$type<string[]>().notNull(),
+  /** 隊伍狀態：waiting 等待中 / active 戰鬥中 / disbanded 已解散 */
+  status: mysqlEnum("status", ["waiting", "active", "disbanded"]).notNull().default("waiting"),
+  /** 最大成員數 */
+  maxMembers: int("max_members").notNull().default(4),
+  /** 是否公開（允許任何人申請加入） */
+  isPublic: tinyint("is_public").notNull().default(1),
+  /** 當前戰鬥 ID（進行中的戰鬥） */
+  currentBattleId: varchar("current_battle_id", { length: 36 }),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GameParty = typeof gameParties.$inferSelect;
+export type InsertGameParty = typeof gameParties.$inferInsert;
+
+/**
+ * 組隊邀請表
+ * 記錄玩家發出的邀請，5 分鐘後過期
+ */
+export const gamePartyInvites = mysqlTable("game_party_invites", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 隊伍 ID */
+  partyId: int("party_id").notNull(),
+  /** 被邀請者的 agent ID */
+  inviteeId: int("invitee_id").notNull(),
+  /** 被邀請者名稱（快取） */
+  inviteeName: varchar("invitee_name", { length: 100 }).notNull(),
+  /** 邀請者的 agent ID */
+  inviterId: int("inviter_id").notNull(),
+  /** 邀請者名稱（快取） */
+  inviterName: varchar("inviter_name", { length: 100 }).notNull(),
+  /** 邀請狀態：pending 待處理 / accepted 已接受 / rejected 已拒絕 / expired 已過期 */
+  status: mysqlEnum("status", ["pending", "accepted", "rejected", "expired"]).notNull().default("pending"),
+  /** 過期時間（毫秒時間戳） */
+  expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type GamePartyInvite = typeof gamePartyInvites.$inferSelect;
+export type InsertGamePartyInvite = typeof gamePartyInvites.$inferInsert;

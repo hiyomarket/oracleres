@@ -77,6 +77,12 @@ export interface BattleParticipant {
   // 五行
   dominantElement?: WuXing;
   race?: string;
+  // 五行抗性（玩家由注靈自動計算，0-50）
+  resistWood?: number;
+  resistFire?: number;
+  resistEarth?: number;
+  resistMetal?: number;
+  resistWater?: number;
   // 技能
   skills: CombatSkill[];
   // 狀態
@@ -238,6 +244,24 @@ export function calcMagicDamage(
 /**
  * 計算五行加成
  */
+/**
+ * 取得防御者對指定屬性的抗性%（五行抗性減傷）
+ * 只有玩家角色有注靈抗性，怪物/Boss 使用其自身的抗性欄位
+ */
+function getElementResist(defender: BattleParticipant, attackElement: WuXing | undefined): number {
+  if (!attackElement) return 0;
+  const resistMap: Record<WuXing, keyof BattleParticipant> = {
+    wood:  "resistWood",
+    fire:  "resistFire",
+    earth: "resistEarth",
+    metal: "resistMetal",
+    water: "resistWater",
+  };
+  const key = resistMap[attackElement];
+  if (!key) return 0;
+  return (defender[key] as number | undefined) ?? 0;
+}
+
 export function calcElementBoost(
   attackerElement: WuXing | undefined,
   defenderElement: WuXing | undefined,
@@ -746,15 +770,19 @@ function executeAttack(
   const logs: BattleLogEntry[] = [];
   const { damage, isCritical } = calcPhysicalDamage(attacker, defender);
   const elementBoost = calcElementBoost(attacker.dominantElement, defender.dominantElement, undefined);
-  const finalDamage = Math.max(1, Math.floor(damage * elementBoost.multiplier));
+  // 五行抗性減傷：依攻擊者主屬性對應防御者的抗性
+  const resistPct = getElementResist(defender, attacker.dominantElement);
+  const resistMultiplier = 1 - resistPct / 100;
+  const finalDamage = Math.max(1, Math.floor(damage * elementBoost.multiplier * resistMultiplier));
+  const resistDesc = resistPct > 0 ? `抗性-${resistPct}%` : "";
 
   defender.currentHp = Math.max(0, defender.currentHp - finalDamage);
   logs.push({
     round, actorId: attacker.id, actorName: attacker.name,
     logType: "damage", targetId: defender.id, targetName: defender.name,
     value: finalDamage, isCritical,
-    elementBoostDesc: elementBoost.description || undefined,
-    message: `${attacker.name}攻擊${defender.name}，造成 ${finalDamage} 點${isCritical ? "暴擊" : ""}傷害${elementBoost.description ? `（${elementBoost.description}）` : ""}`,
+    elementBoostDesc: [elementBoost.description, resistDesc].filter(Boolean).join("，") || undefined,
+    message: `${attacker.name}攻擊${defender.name}，造成 ${finalDamage} 點${isCritical ? "暴擊" : ""}傷害${elementBoost.description ? `（${elementBoost.description}${resistDesc ? "，" + resistDesc : ""}）` : resistDesc ? `（${resistDesc}）` : ""}`,
   });
 
   if (defender.currentHp <= 0) {
@@ -831,7 +859,11 @@ function executeSkill(
       : calcPhysicalDamage(attacker, target, skill.damageMultiplier * awakenMultiplier);
 
     const elementBoost = calcElementBoost(attacker.dominantElement, target.dominantElement, skill.wuxing);
-    let finalDamage = Math.max(1, Math.floor(damage * elementBoost.multiplier));
+    // 五行抗性減傷：依技能屬性對應防御者的抗性
+    const skillEl = (skill.wuxing || attacker.dominantElement) as WuXing | undefined;
+    const resistPct = getElementResist(target, skillEl);
+    const resistMultiplier = 1 - resistPct / 100;
+    let finalDamage = Math.max(1, Math.floor(damage * elementBoost.multiplier * resistMultiplier));
 
     // 覺醒效果：護甲穿透
     if (skill.awakening?.extraEffect === "armorPen" && skill.awakening.extraValue) {

@@ -2119,6 +2119,23 @@ export default function VirtualWorldPage() {
     startBattleMut.mutate({ mode, monsterId });
     toast.info(`向 ${monsterName} 發起挑戰！`);
   }, [playerBattleId, startBattleMut]);
+  // 組隊面板
+  const [partyPanelOpen, setPartyPanelOpen] = useState(false);
+  const [onlinePanelOpen, setOnlinePanelOpen] = useState(false);
+  const { data: myPartyData, refetch: refetchParty } = trpc.gameParty.getMyParty.useQuery(undefined, { enabled: !!user, refetchInterval: 15000 });
+  const { data: pendingInvites, refetch: refetchInvites } = trpc.gameParty.getPendingInvites.useQuery(undefined, { enabled: !!user, refetchInterval: 10000 });
+  const createPartyMut = trpc.gameParty.createParty.useMutation({ onSuccess: () => { refetchParty(); toast.success("隊伍建立成功！"); } });
+  const leavePartyMut = trpc.gameParty.leaveParty.useMutation({ onSuccess: () => { refetchParty(); toast.success("已離開隊伍"); } });
+  const disbandPartyMut = trpc.gameParty.disbandParty.useMutation({ onSuccess: () => { refetchParty(); toast.success("隊伍已解散"); } });
+  const acceptInviteMut = trpc.gameParty.acceptInvite.useMutation({ onSuccess: () => { refetchParty(); refetchInvites(); toast.success("已加入隊伍！"); } });
+  const rejectInviteMut = trpc.gameParty.rejectInvite.useMutation({ onSuccess: () => { refetchInvites(); } });
+  const invitePlayerMut = trpc.gameParty.invitePlayer.useMutation({ onSuccess: (d) => { toast.success(d.message); } });
+  const joinPublicPartyMut = trpc.gameParty.joinPublicParty.useMutation({ onSuccess: (d) => { refetchParty(); toast.success(d.message); } });
+  const { data: publicParties } = trpc.gameParty.searchPublicParties.useQuery(undefined, { enabled: partyPanelOpen, refetchInterval: partyPanelOpen ? 10000 : false });
+  const { data: nearbyForParty } = trpc.gameParty.getNearbyPlayers.useQuery(
+    { nodeId: agent?.currentNodeId ?? "tp-zhongzheng" },
+    { enabled: partyPanelOpen && !!agent, staleTime: 10000 }
+  );
   // 收納式聊天大廳
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -2644,6 +2661,11 @@ export default function VirtualWorldPage() {
       ]}
       divineAP={agent?.actionPoints ?? 0}
       divineMaxAP={agent?.maxActionPoints ?? 10}
+      onlineCount={onlineStats?.onlineCount ?? 0}
+      onOnlineClick={() => setOnlinePanelOpen(v => !v)}
+      onPartyClick={() => setPartyPanelOpen(v => !v)}
+      partyMemberCount={myPartyData?.party ? (myPartyData.party.members?.length ?? 1) : 0}
+      hasParty={!!myPartyData?.party}
     >
       {/* Tick 進度條 */}
       {tickProgress > 0 && (
@@ -3754,6 +3776,189 @@ export default function VirtualWorldPage() {
           onClose={() => setSelectedPlayer(null)}
           myAgentId={agent?.id}
         />
+      )}
+
+      {/* 在線人數面板 */}
+      {onlinePanelOpen && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "calc(56px + env(safe-area-inset-bottom, 0px) + 8px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 65,
+            width: "min(340px, calc(100vw - 32px))",
+            background: "rgba(6,10,22,0.97)",
+            backdropFilter: "blur(16px)",
+            borderRadius: "16px",
+            border: "1px solid rgba(56,189,248,0.3)",
+            boxShadow: "0 -8px 32px rgba(56,189,248,0.15), 0 4px 16px rgba(0,0,0,0.5)",
+            overflow: "hidden",
+            animation: "slideUpFade 0.2s ease-out",
+          }}
+        >
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: "13px", fontWeight: 700, color: "#38bdf8" }}>👥 在線旅人（{onlineStats?.onlineCount ?? 0}）</span>
+            <button onClick={() => setOnlinePanelOpen(false)} style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "16px" }}>✕</button>
+          </div>
+          <div style={{ padding: "8px", maxHeight: "50vh", overflowY: "auto" }}>
+            {nearbyPlayers.length === 0 ? (
+              <div style={{ textAlign: "center", color: "#64748b", padding: "20px", fontSize: "12px" }}>附近無其他旅人</div>
+            ) : (
+              nearbyPlayers.slice(0, 20).map(p => {
+                const elColors: Record<string, string> = { wood: "#22c55e", fire: "#ef4444", earth: "#eab308", metal: "#94a3b8", water: "#3b82f6" };
+                const elC = elColors[p.element] ?? "#94a3b8";
+                const isSameNode = p.nodeId === currentNodeId;
+                return (
+                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 8px", borderRadius: "8px", marginBottom: "4px", background: "rgba(255,255,255,0.03)" }}>
+                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: `${elC}30`, border: `1px solid ${elC}60`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", flexShrink: 0 }}>
+                      {p.avatarUrl ? <img src={p.avatarUrl} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} /> : <span>{({ wood: "🌿", fire: "🔥", earth: "⛰️", metal: "⚔️", water: "💧" } as Record<string, string>)[p.element ?? "metal"] ?? "👤"}</span>}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: "12px", fontWeight: 600, color: isSameNode ? "#86efac" : "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.agentName}</div>
+                      <div style={{ fontSize: "10px", color: "#64748b" }}>Lv.{p.level} {isSameNode ? "• 同一地點" : ""}</div>
+                    </div>
+                                 {myPartyData && myPartyData.leaderId === agent?.id && (
+                      <button
+                        onClick={() => invitePlayerMut.mutate({ partyId: myPartyData!.id, targetAgentId: p.id })}
+                        style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.4)", color: "#22c55e", cursor: "pointer" }}
+                      >
+                        邀請
+                      </button>
+                    )}
+                    <PvpChallengeButton targetAgentId={p.id} targetName={p.agentName} myAgentId={agent?.id} />
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 組隊面板 */}
+      {partyPanelOpen && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "calc(56px + env(safe-area-inset-bottom, 0px) + 8px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 65,
+            width: "min(380px, calc(100vw - 32px))",
+            background: "rgba(6,10,22,0.97)",
+            backdropFilter: "blur(16px)",
+            borderRadius: "16px",
+            border: "1px solid rgba(34,197,94,0.3)",
+            boxShadow: "0 -8px 32px rgba(34,197,94,0.15), 0 4px 16px rgba(0,0,0,0.5)",
+            overflow: "hidden",
+            animation: "slideUpFade 0.2s ease-out",
+            maxHeight: "70vh",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* 標題列 */}
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+            <span style={{ fontSize: "13px", fontWeight: 700, color: "#22c55e" }}>⚔️🛡️ 隊伍系統</span>
+            <button onClick={() => setPartyPanelOpen(false)} style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "16px" }}>✕</button>
+          </div>
+
+          <div style={{ overflowY: "auto", flex: 1 }}>
+            {/* 待處理邀請 */}
+            {(pendingInvites?.length ?? 0) > 0 && (
+              <div style={{ padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <div style={{ fontSize: "11px", color: "#f59e0b", fontWeight: 700, marginBottom: "6px" }}>✉️ 待處理邀請</div>
+                {(pendingInvites as Array<{ id: number; partyId: number; inviterName: string; partyName?: string }>)!.map((inv) => (
+                  <div key={inv.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 8px", borderRadius: "8px", background: "rgba(245,158,11,0.08)", marginBottom: "4px" }}>
+                    <div style={{ flex: 1, fontSize: "12px", color: "#e2e8f0" }}>{inv.inviterName} 邀請你加入「{inv.partyName}」</div>
+                    <button onClick={() => acceptInviteMut.mutate({ inviteId: inv.id })} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(34,197,94,0.2)", border: "1px solid rgba(34,197,94,0.4)", color: "#22c55e", cursor: "pointer" }}>接受</button>
+                    <button onClick={() => rejectInviteMut.mutate({ inviteId: inv.id })} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", cursor: "pointer" }}>拒絕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 目前隊伍 */}
+            {myPartyData?.party ? (
+              <div style={{ padding: "8px 12px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#22c55e" }}>🛡️ {myPartyData.party.name}</div>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    {myPartyData.party.leaderId === agent?.id ? (
+                      <button onClick={() => disbandPartyMut.mutate({ partyId: myPartyData!.party!.id })} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", cursor: "pointer" }}>解散</button>
+                    ) : (
+                      <button onClick={() => leavePartyMut.mutate({ partyId: myPartyData!.party!.id })} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", cursor: "pointer" }}>離開</button>
+                    )}
+                  </div>
+                </div>
+                {/* 隊員列表 */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {((myPartyData.memberIds as number[]) ?? []).map((memberId: number, idx: number) => {
+                    const memberName = (myPartyData.memberNames as string[])?.[idx] ?? "旅人";
+                    const isLeader = memberId === myPartyData.leaderId;
+                    return (
+                      <div key={memberId} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 8px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", border: `1px solid ${isLeader ? "rgba(245,158,11,0.3)" : "rgba(255,255,255,0.06)"}` }}>
+                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "rgba(148,163,184,0.2)", border: "1px solid rgba(148,163,184,0.4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", flexShrink: 0 }}>
+                          👤
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: "11px", fontWeight: 600, color: isLeader ? "#f59e0b" : "#e2e8f0" }}>{isLeader ? "★ " : ""}{memberName}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* 邀請附近玩家 */}
+                {myPartyData.leaderId === agent?.id && nearbyForParty && nearbyForParty.players.length > 0 && (
+                  <div style={{ marginTop: "8px" }}>
+                    <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "4px" }}>邀請附近旅人：</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                      {nearbyForParty.players.slice(0, 6).map((p: { id: number; agentName: string }) => (
+                        <button key={p.id} onClick={() => invitePlayerMut.mutate({ partyId: myPartyData!.id, targetAgentId: p.id })} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e", cursor: "pointer" }}>
+                          + {p.agentName}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ padding: "8px 12px" }}>
+                {/* 建立隊伍 */}
+                <div style={{ marginBottom: "12px" }}>
+                  <button
+                    onClick={() => createPartyMut.mutate({ partyName: `${agent?.agentName ?? "旅人"}的隊伍`, isPublic: true })}
+                    disabled={createPartyMut.isPending}
+                    style={{ width: "100%", padding: "10px", borderRadius: "10px", background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.4)", color: "#22c55e", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}
+                  >
+                    {createPartyMut.isPending ? "建立中...…" : "➕ 建立新隊伍"}
+                  </button>
+                </div>
+                {/* 公開隊伍列表 */}
+                {(publicParties?.length ?? 0) > 0 && (
+                  <div>
+                    <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "6px" }}>🔍 公開隊伍</div>
+                    {(publicParties as Array<{ id: number; partyName?: string; memberIds: number[]; maxMembers: number; leaderName: string }>)!.map((p) => (
+                      <div key={p.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", marginBottom: "4px" }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: "12px", fontWeight: 600, color: "#e2e8f0" }}>{p.partyName ?? "隊伍"}</div>
+                          <div style={{ fontSize: "10px", color: "#64748b" }}>隊長：{p.leaderName} • {(p.memberIds as number[])?.length ?? 0}/{p.maxMembers}人</div>
+                        </div>
+                        <button
+                          onClick={() => joinPublicPartyMut.mutate({ partyId: p.id })}
+                          disabled={(p.memberIds as number[])?.length >= p.maxMembers}
+                          style={{ fontSize: "10px", padding: "4px 10px", borderRadius: "6px", background: (p.memberIds as number[])?.length >= p.maxMembers ? "rgba(100,116,139,0.1)" : "rgba(56,189,248,0.15)", border: `1px solid ${(p.memberIds as number[])?.length >= p.maxMembers ? "rgba(100,116,139,0.3)" : "rgba(56,189,248,0.4)"}`, color: (p.memberIds as number[])?.length >= p.maxMembers ? "#64748b" : "#38bdf8", cursor: (p.memberIds as number[])?.length >= p.maxMembers ? "not-allowed" : "pointer" }}
+                        >
+                          {(p.memberIds as number[])?.length >= p.maxMembers ? "已滿" : "加入"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </GameTabLayout>
   );

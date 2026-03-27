@@ -13,7 +13,8 @@ import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, 
 import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs, getInfuseConfig } from "./gameEngineConfig";
 import { eq, and, sql } from "drizzle-orm";
-import { calcCharacterStatsV2, calcLevelUpWuxingGrowth, type WuXingElement } from "./services/balanceFormulas";
+import { calcCharacterStatsV2, calcLevelUpWuxingGrowth, calcResistances, type WuXingElement } from "./services/balanceFormulas";
+import { getStatBalanceConfig } from "./gameEngineConfig";
 import {
   MAP_NODES,
   MAP_NODE_MAP,
@@ -45,7 +46,8 @@ function randFloat(min: number, max: number): number {
 export function calcCharacterStats(natalStats: {
   wood: number; fire: number; earth: number; metal: number; water: number;
 }, level: number = 1) {
-  const v2 = calcCharacterStatsV2(natalStats, level);
+  const cfg = getStatBalanceConfig();
+  const v2 = calcCharacterStatsV2(natalStats, level, cfg);
   return {
     hp:   v2.hp,
     atk:  v2.atk,
@@ -1699,6 +1701,10 @@ async function processCombatEvent(
     wuxingEarth: accWuxingEarth,
     wuxingMetal: accWuxingMetal,
     wuxingWater: accWuxingWater,
+    // 自動更新五行抗性
+    ...calcResistances({ wood: accWuxingWood, fire: accWuxingFire, earth: accWuxingEarth, metal: accWuxingMetal, water: accWuxingWater }, getStatBalanceConfig().resistMaxPct),
+    // 升級自由點數（每級 +5 點）
+    freeStatPoints: combatLevelUps.length > 0 ? sql`free_stat_points + ${combatLevelUps.length * 5}` : agent.freeStatPoints ?? 0,
     exp: newExp,
     level: newLevel,
     gold: newGold,

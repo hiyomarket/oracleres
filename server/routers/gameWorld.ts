@@ -17,6 +17,8 @@ import { broadcastPvpWin, broadcastWeeklyChampion } from "../liveFeedBroadcast";
 import { MONSTERS } from "../../shared/monsters";
 import { roamingBossInstances, roamingBossCatalog } from "../../drizzle/schema";
 import { processTick, processAgentTick, regenStamina, calcExpToNext, resolveCombat, calcCharacterStats } from "../tickEngine";
+import { calcResistances } from "../services/balanceFormulas";
+import { getStatBalanceConfig } from "../gameEngineConfig";
 import { storagePut } from "../storage";
 import type { WuXing } from "../../shared/types";
 import { grantStarterPack } from "../services/starterPackEngine";
@@ -2867,6 +2869,8 @@ export const gameWorldRouter = router({
       const newStats = calcStatsFromNatal(newWuxing, agent.level);
 
       // 扣除金幣和靈石
+      // 計算注靈後的新抗性
+      const newResists = calcResistances({ wood: newWuxing.wood, fire: newWuxing.fire, earth: newWuxing.earth, metal: newWuxing.metal, water: newWuxing.water }, getStatBalanceConfig().resistMaxPct);
       await db.update(gameAgents).set({
         [wuxingKey]: newVal,
         infusePointsUsed: usedPoints + actualCount,
@@ -2877,6 +2881,7 @@ export const gameWorldRouter = router({
         defense: newStats.defense,
         speed: newStats.speed,
         magicAttack: newStats.magicAttack,
+        ...newResists,
         updatedAt: Date.now(),
       }).where(eq(gameAgents.id, agent.id));
 
