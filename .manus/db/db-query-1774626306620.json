@@ -1,0 +1,9 @@
+{
+  "query": "\n-- 先更新 id 1-7 的英文 wuxing 為中文\nUPDATE roaming_boss_catalog SET wuxing = '水' WHERE id = 1;\nUPDATE roaming_boss_catalog SET wuxing = '土' WHERE id = 2;\nUPDATE roaming_boss_catalog SET wuxing = '火' WHERE id = 3;\nUPDATE roaming_boss_catalog SET wuxing = '金' WHERE id = 4;\nUPDATE roaming_boss_catalog SET wuxing = '木' WHERE id = 5;\nUPDATE roaming_boss_catalog SET wuxing = '金' WHERE id = 6;\nUPDATE roaming_boss_catalog SET wuxing = '火' WHERE id = 7;\n\n-- 刪除重複的 id 8-16（這些是後來重複建立的）\n-- 先清除這些 Boss 的活躍實例\nUPDATE roaming_boss_instances SET status = 'despawned' WHERE catalog_id IN (8,9,10,11,12,13,14,15,16);\n-- 刪除重複的 Boss 圖鑑\nDELETE FROM roaming_boss_catalog WHERE id IN (8,9,10,11,12,13,14,15,16);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \n-- 先更新 id 1-7 的英文 wuxing 為中文\nUPDATE roaming_boss_catalog SET wuxing = '水' WHERE id = 1;\nUPDATE roaming_boss_catalog SET wuxing = '土' WHERE id = 2;\nUPDATE roaming_boss_catalog SET wuxing = '火' WHERE id = 3;\nUPDATE roaming_boss_catalog SET wuxing = '金' WHERE id = 4;\nUPDATE roaming_boss_catalog SET wuxing = '木' WHERE id = 5;\nUPDATE roaming_boss_catalog SET wuxing = '金' WHERE id = 6;\nUPDATE roaming_boss_catalog SET wuxing = '火' WHERE id = 7;\n\n-- 刪除重複的 id 8-16（這些是後來重複建立的）\n-- 先清除這些 Boss 的活躍實例\nUPDATE roaming_boss_instances SET status = 'despawned' WHERE catalog_id IN (8,9,10,11,12,13,14,15,16);\n-- 刪除重複的 Boss 圖鑑\nDELETE FROM roaming_boss_catalog WHERE id IN (8,9,10,11,12,13,14,15,16);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3380
+}

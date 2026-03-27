@@ -303,8 +303,9 @@ export const roamingBossRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
-      const instanceId = await spawnBossInstance(input.catalogId, input.nodeId);
-      if (!instanceId) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "生成失敗" });
+      // 後台手動召喚：forceSpawn=true 跳過 isActive 限制
+      const instanceId = await spawnBossInstance(input.catalogId, input.nodeId, true);
+      if (!instanceId) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "生成失敗，請確認 Boss 圖鑑資料是否完整" });
       return { instanceId };
     }),
 

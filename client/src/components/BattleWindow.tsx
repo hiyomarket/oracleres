@@ -71,6 +71,12 @@ const WX_THEME: Record<string, { color: string; glow: string; bg: string; icon: 
   earth: { color: "#fbbf24", glow: "rgba(251,191,36,0.5)",  bg: "rgba(251,191,36,0.1)",  icon: "🪨", name: "土" },
   metal: { color: "#e2e8f0", glow: "rgba(226,232,240,0.5)", bg: "rgba(226,232,240,0.1)", icon: "⚡", name: "金" },
   water: { color: "#60a5fa", glow: "rgba(96,165,250,0.5)",  bg: "rgba(96,165,250,0.1)",  icon: "💧", name: "水" },
+  // 中文別名（支援 Boss 屬性字段為中文的情況）
+  "木": { color: "#4ade80", glow: "rgba(74,222,128,0.5)",  bg: "rgba(74,222,128,0.1)",  icon: "🌿", name: "木" },
+  "火": { color: "#f87171", glow: "rgba(248,113,113,0.5)", bg: "rgba(248,113,113,0.1)", icon: "🔥", name: "火" },
+  "土": { color: "#fbbf24", glow: "rgba(251,191,36,0.5)",  bg: "rgba(251,191,36,0.1)",  icon: "🪨", name: "土" },
+  "金": { color: "#e2e8f0", glow: "rgba(226,232,240,0.5)", bg: "rgba(226,232,240,0.1)", icon: "⚡", name: "金" },
+  "水": { color: "#60a5fa", glow: "rgba(96,165,250,0.5)",  bg: "rgba(96,165,250,0.1)",  icon: "💧", name: "水" },
 };
 
 const STATUS_ICON: Record<string, { emoji: string; name: string; color: string }> = {

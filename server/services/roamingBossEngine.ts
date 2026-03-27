@@ -126,13 +126,15 @@ function pickNextNode(currentNodeId: string, patrolRegion: string[] | "all" | nu
 // ═══════════════════════════════════════════════════════════════
 
 /** 生成一個 Boss 實例 */
-export async function spawnBossInstance(catalogId: number, forceNodeId?: string): Promise<number | null> {
+export async function spawnBossInstance(catalogId: number, forceNodeId?: string, forceSpawn = false): Promise<number | null> {
   const db = await getDb();
   if (!db) return null;
 
   // 取得 Boss 圖鑑資料
   const [catalog] = await db.select().from(roamingBossCatalog).where(eq(roamingBossCatalog.id, catalogId));
-  if (!catalog || !catalog.isActive) return null;
+  // forceSpawn=true 時（後台手動召喚）跳過 isActive 檢查
+  if (!catalog) return null;
+  if (!forceSpawn && !catalog.isActive) return null;
 
   // 決定生成節點
   let spawnNodeId = forceNodeId || catalog.spawnNodeId;

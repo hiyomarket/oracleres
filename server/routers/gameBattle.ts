@@ -7,7 +7,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog, gamePetInnateSkills, gamePetLearnedSkills } from "../../drizzle/schema";
+import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog, gamePetInnateSkills, gamePetLearnedSkills, roamingBossInstances, roamingBossCatalog } from "../../drizzle/schema";
 import { sql, inArray } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
@@ -21,6 +21,7 @@ import { MONSTERS, type Monster } from "../../shared/monsters";
 import { getCombatMonsterById, type CombatMonster, type MonsterSkillData } from "../monsterDataService";
 import { randomUUID } from "crypto";
 import { getEngineConfig } from "../gameEngineConfig";
+import { recordBossKill } from "../services/roamingBossEngine";
 
 // ─── 輔助函數 ───
 
@@ -231,13 +232,62 @@ export const gameBattleRouter = router({
       }
 
       // 取得怪物
-      const monster = await getCombatMonsterById(input.monsterId);
-      if (!monster) {
-        // 嘗試從靜態數據中找
-        const staticMonster = MONSTERS.find(m => m.id === input.monsterId);
-        if (!staticMonster) throw new TRPCError({ code: "NOT_FOUND", message: "怪物不存在" });
+      // ─── 特殊處理：移動式 Boss（monsterId 格式為 "boss_{instanceId}"） ───
+      let combatMonster: CombatMonster;
+      if (input.monsterId.startsWith("boss_")) {
+        const instanceId = parseInt(input.monsterId.replace("boss_", ""), 10);
+        if (isNaN(instanceId)) throw new TRPCError({ code: "BAD_REQUEST", message: "無效的 Boss 實例 ID" });
+        const [bossInst] = await db.select().from(roamingBossInstances)
+          .where(and(eq(roamingBossInstances.id, instanceId), eq(roamingBossInstances.status, "active")));
+        if (!bossInst) throw new TRPCError({ code: "NOT_FOUND", message: "Boss 已離開或已被擊敗" });
+        const [bossCat] = await db.select().from(roamingBossCatalog)
+          .where(eq(roamingBossCatalog.id, bossInst.catalogId));
+        if (!bossCat) throw new TRPCError({ code: "NOT_FOUND", message: "Boss 圖鑑資料不存在" });
+        // 將 Boss 圖鑑轉換為 CombatMonster 格式
+        const WUXING_ZH_TO_EN: Record<string, string> = {
+          "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water",
+          "wood": "wood", "fire": "fire", "earth": "earth", "metal": "metal", "water": "water",
+        };
+        const bossElement = WUXING_ZH_TO_EN[bossCat.wuxing] ?? "earth";
+        const currentHp = bossInst.currentHp === -1 ? bossCat.baseHp : bossInst.currentHp;
+        combatMonster = {
+          id: input.monsterId,
+          name: `${bossCat.title ? bossCat.title + " " : ""}${bossCat.name}`,
+          element: bossElement as any,
+          level: bossCat.level,
+          hp: currentHp,
+          attack: bossCat.baseAttack,
+          defense: bossCat.baseDefense,
+          speed: bossCat.baseSpeed,
+          expReward: Math.round(bossCat.level * 8 * bossCat.expMultiplier),
+          goldReward: [bossCat.level * 3, bossCat.level * 8],
+          dropItems: [],
+          skills: ["普通攻擊"],
+          description: bossCat.description ?? "",
+          isBoss: true,
+          dbSkills: [],
+          aiLevel: 4,
+          baseMp: Math.floor((30 + bossCat.level * 2) * 2.0),
+          resistances: { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 },
+          magicAttack: Math.floor(bossCat.baseAttack * 0.9),
+        };
+      } else {
+        const monster = await getCombatMonsterById(input.monsterId);
+        if (!monster) {
+          const staticMonster = MONSTERS.find(m => m.id === input.monsterId);
+          if (!staticMonster) throw new TRPCError({ code: "NOT_FOUND", message: "怪物不存在" });
+          combatMonster = {
+            ...staticMonster,
+            dbSkills: [],
+            aiLevel: staticMonster.isBoss ? 4 : 1,
+            baseMp: Math.floor(30 + staticMonster.level * 2),
+            resistances: { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 },
+            magicAttack: Math.floor(staticMonster.attack * 0.8),
+          };
+        } else {
+          combatMonster = monster;
+        }
       }
-      const combatMonster = monster || MONSTERS.find(m => m.id === input.monsterId)!;
 
       // 建立參與者
       const participants: BattleParticipant[] = [];
@@ -730,23 +780,59 @@ export const gameBattleRouter = router({
             const monsterP = dbParticipants.find(dp => dp.participantType === "monster");
             const monsterId = monsterP?.monsterId;
             const monsterLevel = monsterP?.level ?? 1;
-            const staticMonster = monsterId ? MONSTERS.find(m => m.id === monsterId) : null;
-            if (staticMonster) {
-              const mult = battle.rewardMultiplier ?? 1.0;
-              rewards.expReward = Math.floor(staticMonster.expReward * mult);
-              const [gMin, gMax] = staticMonster.goldReward;
-              rewards.goldReward = Math.floor((gMin + Math.random() * (gMax - gMin)) * mult);
-              // 掉落物
-              for (const drop of staticMonster.dropItems) {
-                if (Math.random() < drop.chance * mult) {
-                  rewards.drops.push(drop.itemId);
+            const mult = battle.rewardMultiplier ?? 1.0;
+
+            // ─── 移動式 Boss 擊敗處理 ───
+            if (monsterId && monsterId.startsWith("boss_")) {
+              const bossInstanceId = parseInt(monsterId.replace("boss_", ""), 10);
+              if (!isNaN(bossInstanceId)) {
+                const [bossInst] = await db.select().from(roamingBossInstances)
+                  .where(eq(roamingBossInstances.id, bossInstanceId));
+                if (bossInst) {
+                  const [bossCat] = await db.select().from(roamingBossCatalog)
+                    .where(eq(roamingBossCatalog.id, bossInst.catalogId));
+                  if (bossCat) {
+                    rewards.expReward = Math.round(bossCat.level * 8 * bossCat.expMultiplier * mult);
+                    rewards.goldReward = Math.floor((bossCat.level * 3 + Math.random() * bossCat.level * 5) * mult);
+                    // 記錄 Boss 擊敗日誌
+                    const agentP2 = dbParticipants.find(dp => dp.participantType === "character");
+                    if (agentP2?.agentId) {
+                      const [agentData] = await db.select({ name: gameAgents.agentName })
+                        .from(gameAgents).where(eq(gameAgents.id, agentP2.agentId));
+                      await recordBossKill({
+                        instanceId: bossInstanceId,
+                        catalogId: bossInst.catalogId,
+                        agentId: agentP2.agentId,
+                        agentName: agentData?.name ?? "未知冒險者",
+                        result: "win",
+                        damageDealt: rewards.expReward,
+                        rounds: round,
+                        expGained: rewards.expReward,
+                        goldGained: rewards.goldReward,
+                        dropsGained: [],
+                        nodeId: bossInst.currentNodeId,
+                      });
+                    }
+                  }
                 }
               }
             } else {
-              // 無靜態怪物數據，使用基礎公式
-              const mult = battle.rewardMultiplier ?? 1.0;
-              rewards.expReward = Math.floor(monsterLevel * 15 * mult);
-              rewards.goldReward = Math.floor(monsterLevel * 8 * mult);
+              const staticMonster = monsterId ? MONSTERS.find(m => m.id === monsterId) : null;
+              if (staticMonster) {
+                rewards.expReward = Math.floor(staticMonster.expReward * mult);
+                const [gMin, gMax] = staticMonster.goldReward;
+                rewards.goldReward = Math.floor((gMin + Math.random() * (gMax - gMin)) * mult);
+                // 掉落物
+                for (const drop of staticMonster.dropItems) {
+                  if (Math.random() < drop.chance * mult) {
+                    rewards.drops.push(drop.itemId);
+                  }
+                }
+              } else {
+                // 無靜態怪物數據，使用基礎公式
+                rewards.expReward = Math.floor(monsterLevel * 15 * mult);
+                rewards.goldReward = Math.floor(monsterLevel * 8 * mult);
+              }
             }
 
             // 更新角色經驗/金幣
@@ -790,10 +876,10 @@ export const gameBattleRouter = router({
 
             // 寵物經驗
             const petP = dbParticipants.find(dp => dp.participantType === "pet");
-            if (petP?.petId && staticMonster) {
+            if (petP?.petId && rewards.expReward > 0) {
               const [activePet] = await db.select().from(gamePlayerPets).where(eq(gamePlayerPets.id, petP.petId as number));
               if (activePet) {
-                rewards.petExpGained = calcPetBattleExp(staticMonster.expReward, activePet.level, staticMonster.level);
+                rewards.petExpGained = calcPetBattleExp(rewards.expReward, activePet.level, monsterLevel);
                 await db.update(gamePlayerPets).set({
                   exp: sql`${gamePlayerPets.exp} + ${rewards.petExpGained}`,
                   friendship: sql`LEAST(100, ${gamePlayerPets.friendship} + 1)`,
