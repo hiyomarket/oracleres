@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT ri.id, ri.catalog_id, ri.current_hp, ri.base_hp, ri.is_active, bc.name\nFROM roaming_boss_instances ri\nLEFT JOIN roaming_boss_catalog bc ON ri.catalog_id = bc.id\nORDER BY ri.id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nSELECT ri.id, ri.catalog_id, ri.current_hp, ri.base_hp, ri.is_active, bc.name\nFROM roaming_boss_instances ri\nLEFT JOIN roaming_boss_catalog bc ON ri.catalog_id = bc.id\nORDER BY ri.id;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'ri.base_hp' in 'field list'"
+  ]
+}

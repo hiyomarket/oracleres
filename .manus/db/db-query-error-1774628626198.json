@@ -1,0 +1,8 @@
+{
+  "query": "SELECT i.id, i.name, i.current_hp, i.status, i.catalog_id, c.base_hp, c.level, c.name as cat_name FROM roaming_boss_instances i LEFT JOIN roaming_boss_catalog c ON i.catalog_id = c.id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT i.id, i.name, i.current_hp, i.status, i.catalog_id, c.base_hp, c.level, c.name as cat_name FROM roaming_boss_instances i LEFT JOIN roaming_boss_catalog c ON i.catalog_id = c.id LIMIT 10;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'i.name' in 'field list'"
+  ]
+}

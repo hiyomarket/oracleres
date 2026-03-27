@@ -5081,3 +5081,8 @@
 - [x] Boss 啟動機制修正（isActive 判斷、手動召喚、自動生成）
 - [x] 前台挑戰 Boss 亂碼錯誤修正
 - [x] 前後端完整測試
+
+## M-FIX: Boss 系統三問題修正
+- [x] 挑戰 Boss 錯誤：monsterId 型別改為字串（前端傳 boss_{instanceId}）
+- [x] Boss HP 顯示 -1：spawnBossInstance 正確計算初始 HP
+- [x] 新增 Boss 表單改為結構化 UI（技能欄位可視化，非 JSON 語法）

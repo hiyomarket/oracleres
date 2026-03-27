@@ -1,0 +1,19 @@
+{
+  "query": "SHOW TABLES LIKE '%boss%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW TABLES LIKE '%boss%';",
+  "rows": [
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%boss%)": "roaming_boss_catalog"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%boss%)": "roaming_boss_instances"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%boss%)": "roaming_boss_kill_log"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%boss%)\nroaming_boss_catalog\nroaming_boss_instances\nroaming_boss_kill_log\n",
+  "stderr": "",
+  "execution_time_ms": 1588
+}

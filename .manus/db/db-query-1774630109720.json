@@ -1,0 +1,157 @@
+{
+  "query": "\nSELECT ri.id, ri.catalog_id, ri.current_hp, ri.status, bc.name\nFROM roaming_boss_instances ri\nLEFT JOIN roaming_boss_catalog bc ON ri.catalog_id = bc.id\nORDER BY ri.id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nSELECT ri.id, ri.catalog_id, ri.current_hp, ri.status, bc.name\nFROM roaming_boss_instances ri\nLEFT JOIN roaming_boss_catalog bc ON ri.catalog_id = bc.id\nORDER BY ri.id;\n",
+  "rows": [
+    {
+      "id": "1",
+      "catalog_id": "1",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "鬼公子"
+    },
+    {
+      "id": "2",
+      "catalog_id": "2",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "黑長老"
+    },
+    {
+      "id": "3",
+      "catalog_id": "3",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "古牛"
+    },
+    {
+      "id": "4",
+      "catalog_id": "4",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "逆位行者"
+    },
+    {
+      "id": "5",
+      "catalog_id": "5",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "蒼龍"
+    },
+    {
+      "id": "32",
+      "catalog_id": "1",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "鬼公子"
+    },
+    {
+      "id": "33",
+      "catalog_id": "2",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "黑長老"
+    },
+    {
+      "id": "34",
+      "catalog_id": "4",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "逆位行者"
+    },
+    {
+      "id": "35",
+      "catalog_id": "5",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "蒼龍"
+    },
+    {
+      "id": "41",
+      "catalog_id": "1",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "鬼公子"
+    },
+    {
+      "id": "42",
+      "catalog_id": "2",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "黑長老"
+    },
+    {
+      "id": "43",
+      "catalog_id": "3",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "古牛"
+    },
+    {
+      "id": "44",
+      "catalog_id": "4",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "逆位行者"
+    },
+    {
+      "id": "45",
+      "catalog_id": "5",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "蒼龍"
+    },
+    {
+      "id": "51",
+      "catalog_id": "1",
+      "current_hp": "-1",
+      "status": "despawned",
+      "name": "鬼公子"
+    },
+    {
+      "id": "52",
+      "catalog_id": "1",
+      "current_hp": "-1",
+      "status": "active",
+      "name": "鬼公子"
+    },
+    {
+      "id": "53",
+      "catalog_id": "2",
+      "current_hp": "-1",
+      "status": "active",
+      "name": "黑長老"
+    },
+    {
+      "id": "54",
+      "catalog_id": "3",
+      "current_hp": "-1",
+      "status": "active",
+      "name": "古牛"
+    },
+    {
+      "id": "55",
+      "catalog_id": "4",
+      "current_hp": "-1",
+      "status": "active",
+      "name": "逆位行者"
+    },
+    {
+      "id": "56",
+      "catalog_id": "5",
+      "current_hp": "-1",
+      "status": "active",
+      "name": "蒼龍"
+    },
+    {
+      "id": "57",
+      "catalog_id": "1",
+      "current_hp": "8000",
+      "status": "active",
+      "name": "鬼公子"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcatalog_id\tcurrent_hp\tstatus\tname\n1\t1\t-1\tdespawned\t鬼公子\n2\t2\t-1\tdespawned\t黑長老\n3\t3\t-1\tdespawned\t古牛\n4\t4\t-1\tdespawned\t逆位行者\n5\t5\t-1\tdespawned\t蒼龍\n32\t1\t-1\tdespawned\t鬼公子\n33\t2\t-1\tdespawned\t黑長老\n34\t4\t-1\tdespawned\t逆位行者\n35\t5\t-1\tdespawned\t蒼龍\n41\t1\t-1\tdespawned\t鬼公子\n42\t2\t-1\tdespawned\t黑長老\n43\t3\t-1\tdespawned\t古牛\n44\t4\t-1\tdespawned\t逆位行者\n45\t5\t-1\tdespawned\t蒼龍\n51\t1\t-1\tdespawned\t鬼公子\n52\t1\t-1\tactive\t鬼公子\n53\t2\t-1\tactive\t黑長老\n54\t3\t-1\tactive\t古牛\n55\t4\t-1\tactive\t逆位行者\n56\t5\t-1\tactive\t蒼龍\n57\t1\t8000\tactive\t鬼公子\n",
+  "stderr": "",
+  "execution_time_ms": 1477
+}

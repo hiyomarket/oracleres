@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM roaming_boss_instances WHERE catalog_id NOT IN (SELECT id FROM roaming_boss_catalog);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DELETE FROM roaming_boss_instances WHERE catalog_id NOT IN (SELECT id FROM roaming_boss_catalog);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1599
+}

@@ -1,0 +1,8 @@
+{
+  "query": "\n-- 查看目前活躍的 Boss 實例\nSELECT ri.id, ri.catalog_id, ri.current_hp, ri.base_hp, ri.is_active, bc.name\nFROM roaming_boss_instances ri\nLEFT JOIN game_boss_catalog bc ON ri.catalog_id = bc.id\nORDER BY ri.id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \n-- 查看目前活躍的 Boss 實例\nSELECT ri.id, ri.catalog_id, ri.current_hp, ri.base_hp, ri.is_active, bc.name\nFROM roaming_boss_instances ri\nLEFT JOIN game_boss_catalog bc ON ri.catalog_id = bc.id\nORDER BY ri.id;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 3: Table 'mlf7blvzzzxdgtpvxtct3c.game_boss_catalog' doesn't exist"
+  ]
+}

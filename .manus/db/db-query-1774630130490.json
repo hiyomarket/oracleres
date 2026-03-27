@@ -1,0 +1,9 @@
+{
+  "query": "\n-- 修正 active 實例的 current_hp（從 catalog 的 base_hp 取得）\nUPDATE roaming_boss_instances ri\nJOIN roaming_boss_catalog bc ON ri.catalog_id = bc.id\nSET ri.current_hp = bc.base_hp\nWHERE ri.status = 'active' AND ri.current_hp <= 0;\n\n-- 清理所有 despawned 狀態的舊實例\nDELETE FROM roaming_boss_instances WHERE status = 'despawned';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \n-- 修正 active 實例的 current_hp（從 catalog 的 base_hp 取得）\nUPDATE roaming_boss_instances ri\nJOIN roaming_boss_catalog bc ON ri.catalog_id = bc.id\nSET ri.current_hp = bc.base_hp\nWHERE ri.status = 'active' AND ri.current_hp <= 0;\n\n-- 清理所有 despawned 狀態的舊實例\nDELETE FROM roaming_boss_instances WHERE status = 'despawned';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1798
+}

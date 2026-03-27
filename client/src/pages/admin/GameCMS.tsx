@@ -3992,11 +3992,91 @@ function BossStatsPanel() {
 }
 
 /* Boss 編輯對話框 */
+// 技能編輯器用的型別
+interface BossSkill {
+  id: string;
+  name: string;
+  skillType: "physical" | "magical" | "support";
+  wuxing: string;
+  damageMultiplier: number;
+  mpCost: number;
+  cooldown: number;
+  description: string;
+}
+
+const BOSS_WUXING_OPTIONS = [
+  { value: "水", label: "💧 水" },
+  { value: "木", label: "🌿 木" },
+  { value: "火", label: "🔥 火" },
+  { value: "土", label: "🪨 土" },
+  { value: "金", label: "⚔️ 金" },
+];
+
+function BossSkillEditor({ skills, onChange }: { skills: BossSkill[]; onChange: (s: BossSkill[]) => void }) {
+  const addSkill = () => onChange([...skills, {
+    id: `skill_${Date.now()}`, name: "", skillType: "physical", wuxing: "水",
+    damageMultiplier: 1.5, mpCost: 10, cooldown: 2, description: "",
+  }]);
+  const removeSkill = (i: number) => onChange(skills.filter((_, idx) => idx !== i));
+  const updateSkill = (i: number, field: keyof BossSkill, val: any) => {
+    const updated = [...skills];
+    updated[i] = { ...updated[i], [field]: val };
+    onChange(updated);
+  };
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-xs text-muted-foreground font-medium">技能列表 ({skills.length} 個)</label>
+        <Button size="sm" variant="outline" onClick={addSkill} className="h-6 text-xs px-2">+ 新增技能</Button>
+      </div>
+      {skills.length === 0 && (
+        <div className="text-xs text-muted-foreground text-center py-2 border border-dashed rounded">尚未設定技能，點擊新增</div>
+      )}
+      {skills.map((sk, i) => (
+        <div key={i} className="border border-border/50 rounded p-2 space-y-2 bg-background/30">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-amber-400">技能 {i + 1}</span>
+            <Button size="sm" variant="ghost" onClick={() => removeSkill(i)} className="h-5 w-5 p-0 text-red-400 hover:text-red-300">×</Button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div><label className="text-xs text-muted-foreground">技能名稱</label>
+              <Input value={sk.name} onChange={e => updateSkill(i, "name", e.target.value)} className="h-7 text-xs" placeholder="如：暗影突襲" /></div>
+            <div><label className="text-xs text-muted-foreground">類型</label>
+              <Select value={sk.skillType} onValueChange={v => updateSkill(i, "skillType", v)}>
+                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="physical">⚔️ 物理</SelectItem>
+                  <SelectItem value="magical">✨ 法術</SelectItem>
+                  <SelectItem value="support">🛡️ 輔助</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><label className="text-xs text-muted-foreground">五行屬性</label>
+              <Select value={sk.wuxing} onValueChange={v => updateSkill(i, "wuxing", v)}>
+                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>{BOSS_WUXING_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><label className="text-xs text-muted-foreground">傷害倍率</label>
+              <Input type="number" step="0.1" value={sk.damageMultiplier} onChange={e => updateSkill(i, "damageMultiplier", Number(e.target.value))} className="h-7 text-xs" /></div>
+            <div><label className="text-xs text-muted-foreground">MP 消耗</label>
+              <Input type="number" value={sk.mpCost} onChange={e => updateSkill(i, "mpCost", Number(e.target.value))} className="h-7 text-xs" /></div>
+            <div><label className="text-xs text-muted-foreground">冷卻回合</label>
+              <Input type="number" value={sk.cooldown} onChange={e => updateSkill(i, "cooldown", Number(e.target.value))} className="h-7 text-xs" /></div>
+          </div>
+          <div><label className="text-xs text-muted-foreground">技能說明</label>
+            <Input value={sk.description} onChange={e => updateSkill(i, "description", e.target.value)} className="h-7 text-xs" placeholder="技能效果說明" /></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose: () => void; onSave: (data: any) => void; saving: boolean }) {
   const [name, setName] = useState(boss.name);
   const [title, setTitle] = useState(boss.title || "");
   const [tier, setTier] = useState(String(boss.tier));
-  const [wuxing, setWuxing] = useState(boss.wuxing);
+  const [wuxing, setWuxing] = useState(boss.wuxing || "水");
   const [level, setLevel] = useState(String(boss.level));
   const [baseHp, setBaseHp] = useState(String(boss.baseHp));
   const [baseAttack, setBaseAttack] = useState(String(boss.baseAttack));
@@ -4010,7 +4090,9 @@ function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose:
   const [expMultiplier, setExpMultiplier] = useState(String(boss.expMultiplier));
   const [goldMultiplier, setGoldMultiplier] = useState(String(boss.goldMultiplier));
   const [description, setDescription] = useState(boss.description || "");
-  const [skillsJson, setSkillsJson] = useState(JSON.stringify(boss.skills || [], null, 2));
+  const [skills, setSkills] = useState<BossSkill[]>(() => {
+    try { return Array.isArray(boss.skills) ? boss.skills : []; } catch { return []; }
+  });
   const [dropTableJson, setDropTableJson] = useState(JSON.stringify(boss.dropTable || [], null, 2));
   const [patrolRegionJson, setPatrolRegionJson] = useState(JSON.stringify(boss.patrolRegion || [], null, 2));
   const [enrageJson, setEnrageJson] = useState(JSON.stringify(boss.enrageConfig || {}, null, 2));
@@ -4024,12 +4106,14 @@ function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose:
         baseSpeed: Number(baseSpeed), baseMagicAttack: Number(baseMagicAttack), baseMagicDefense: Number(baseMagicDefense),
         moveIntervalSec: Number(moveIntervalSec), lifetimeMinutes: Number(lifetimeMinutes),
         staminaCost: Number(staminaCost), expMultiplier: Number(expMultiplier), goldMultiplier: Number(goldMultiplier),
-        description, skills: JSON.parse(skillsJson), dropTable: JSON.parse(dropTableJson),
-        patrolRegion: JSON.parse(patrolRegionJson), enrageConfig: JSON.parse(enrageJson),
+        description, skills,
+        dropTable: JSON.parse(dropTableJson),
+        patrolRegion: JSON.parse(patrolRegionJson),
+        enrageConfig: JSON.parse(enrageJson),
         scheduleConfig: JSON.parse(scheduleJson),
       });
     } catch (e) {
-      alert("JSON 格式錯誤，請檢查");
+      alert("JSON 格式錯誤，請檢查掉落表/巡邏區域/狂暴設定欄位");
     }
   };
 
@@ -4044,18 +4128,16 @@ function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose:
             <Select value={tier} onValueChange={setTier}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">T1 遊蕩精英</SelectItem>
+                <SelectItem value="1">T1 遊走精英</SelectItem>
                 <SelectItem value="2">T2 區域守護者</SelectItem>
                 <SelectItem value="3">T3 天命凶獸</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div><label className="text-xs text-muted-foreground">五行</label>
+          <div><label className="text-xs text-muted-foreground">五行屬性</label>
             <Select value={wuxing} onValueChange={setWuxing}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {["wood","fire","earth","metal","water"].map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
-              </SelectContent>
+              <SelectContent>{BOSS_WUXING_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div><label className="text-xs text-muted-foreground">等級</label><Input type="number" value={level} onChange={e => setLevel(e.target.value)} /></div>
@@ -4072,7 +4154,7 @@ function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose:
           <div><label className="text-xs text-muted-foreground">Gold 倍率</label><Input type="number" step="0.1" value={goldMultiplier} onChange={e => setGoldMultiplier(e.target.value)} /></div>
         </div>
         <div><label className="text-xs text-muted-foreground">描述</label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} /></div>
-        <div><label className="text-xs text-muted-foreground">技能 (JSON)</label><Textarea value={skillsJson} onChange={e => setSkillsJson(e.target.value)} rows={6} className="font-mono text-xs" /></div>
+        <BossSkillEditor skills={skills} onChange={setSkills} />
         <div><label className="text-xs text-muted-foreground">掉落表 (JSON)</label><Textarea value={dropTableJson} onChange={e => setDropTableJson(e.target.value)} rows={4} className="font-mono text-xs" /></div>
         <div><label className="text-xs text-muted-foreground">巡邏區域 (JSON)</label><Textarea value={patrolRegionJson} onChange={e => setPatrolRegionJson(e.target.value)} rows={2} className="font-mono text-xs" /></div>
         <div><label className="text-xs text-muted-foreground">狂暴設定 (JSON)</label><Textarea value={enrageJson} onChange={e => setEnrageJson(e.target.value)} rows={4} className="font-mono text-xs" /></div>
@@ -4092,7 +4174,7 @@ function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; on
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
   const [tier, setTier] = useState("1");
-  const [wuxing, setWuxing] = useState("wood");
+  const [wuxing, setWuxing] = useState("水");
   const [level, setLevel] = useState("30");
   const [baseHp, setBaseHp] = useState("10000");
   const [baseAttack, setBaseAttack] = useState("120");
@@ -4101,6 +4183,7 @@ function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; on
   const [baseMagicAttack, setBaseMagicAttack] = useState("100");
   const [baseMagicDefense, setBaseMagicDefense] = useState("50");
   const [description, setDescription] = useState("");
+  const [skills, setSkills] = useState<BossSkill[]>([]);
 
   const handleSubmit = () => {
     if (!bossCode || !name) { alert("Boss 代碼和名稱必填"); return; }
@@ -4113,8 +4196,8 @@ function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; on
       staminaCost: tier === "1" ? 15 : tier === "2" ? 25 : 40,
       expMultiplier: tier === "1" ? 2.0 : tier === "2" ? 3.0 : 5.0,
       goldMultiplier: tier === "1" ? 2.0 : tier === "2" ? 3.0 : 5.0,
-      description,
-      skills: [], dropTable: [], patrolRegion: [],
+      description, skills,
+      dropTable: [], patrolRegion: [],
       enrageConfig: { hpThresholds: [{ hpPercent: 50, atkBoost: 0.2, spdBoost: 0.1, message: "Boss 進入狂暴！" }] },
       scheduleConfig: tier === "1" ? { type: "permanent" } : { type: "scheduled", cron: "0 0 12 * * *", duration: 30, maxInstances: 1 },
     });
@@ -4122,28 +4205,26 @@ function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; on
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>➕ 新增 Boss</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-3">
           <div><label className="text-xs text-muted-foreground">Boss 代碼（英文）</label><Input value={bossCode} onChange={e => setBossCode(e.target.value)} placeholder="e.g. shadow_wolf" /></div>
-          <div><label className="text-xs text-muted-foreground">名稱</label><Input value={name} onChange={e => setName(e.target.value)} /></div>
-          <div><label className="text-xs text-muted-foreground">稱號</label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
-          <div><label className="text-xs text-muted-foreground">Tier</label>
+          <div><label className="text-xs text-muted-foreground">名稱 *</label><Input value={name} onChange={e => setName(e.target.value)} placeholder="如：魔狼王" /></div>
+          <div><label className="text-xs text-muted-foreground">稱號</label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="如：暗影之王" /></div>
+          <div><label className="text-xs text-muted-foreground">Tier 等階</label>
             <Select value={tier} onValueChange={setTier}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">T1 遊蕩精英</SelectItem>
+                <SelectItem value="1">T1 遊走精英</SelectItem>
                 <SelectItem value="2">T2 區域守護者</SelectItem>
                 <SelectItem value="3">T3 天命凶獸</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div><label className="text-xs text-muted-foreground">五行</label>
+          <div><label className="text-xs text-muted-foreground">五行屬性</label>
             <Select value={wuxing} onValueChange={setWuxing}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {["wood","fire","earth","metal","water"].map(w => <SelectItem key={w} value={w}>{w}</SelectItem>)}
-              </SelectContent>
+              <SelectContent>{BOSS_WUXING_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div><label className="text-xs text-muted-foreground">等級</label><Input type="number" value={level} onChange={e => setLevel(e.target.value)} /></div>
@@ -4154,10 +4235,11 @@ function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; on
           <div><label className="text-xs text-muted-foreground">MATK</label><Input type="number" value={baseMagicAttack} onChange={e => setBaseMagicAttack(e.target.value)} /></div>
           <div><label className="text-xs text-muted-foreground">MDEF</label><Input type="number" value={baseMagicDefense} onChange={e => setBaseMagicDefense(e.target.value)} /></div>
         </div>
-        <div><label className="text-xs text-muted-foreground">描述</label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} /></div>
+        <div><label className="text-xs text-muted-foreground">描述</label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} placeholder="描述這隻 Boss 的背景與特性" /></div>
+        <BossSkillEditor skills={skills} onChange={setSkills} />
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>取消</Button>
-          <Button onClick={handleSubmit} disabled={saving}>{saving ? "建立中..." : "✅ 建立"}</Button>
+          <Button onClick={handleSubmit} disabled={saving}>{saving ? "建立中..." : "✅ 建立 Boss"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

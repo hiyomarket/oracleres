@@ -16,21 +16,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 const WX_COLORS: Record<string, string> = {
-  wood: "text-green-400",
-  fire: "text-red-400",
-  earth: "text-yellow-400",
-  metal: "text-gray-300",
-  water: "text-blue-400",
+  wood: "text-green-400", "木": "text-green-400",
+  fire: "text-red-400",  "火": "text-red-400",
+  earth: "text-yellow-400", "土": "text-yellow-400",
+  metal: "text-gray-300", "金": "text-gray-300",
+  water: "text-blue-400", "水": "text-blue-400",
 };
 const WX_BG: Record<string, string> = {
-  wood: "bg-green-900/30 border-green-700/50",
-  fire: "bg-red-900/30 border-red-700/50",
-  earth: "bg-yellow-900/30 border-yellow-700/50",
-  metal: "bg-gray-800/30 border-gray-600/50",
-  water: "bg-blue-900/30 border-blue-700/50",
+  wood: "bg-green-900/30 border-green-700/50", "木": "bg-green-900/30 border-green-700/50",
+  fire: "bg-red-900/30 border-red-700/50",    "火": "bg-red-900/30 border-red-700/50",
+  earth: "bg-yellow-900/30 border-yellow-700/50", "土": "bg-yellow-900/30 border-yellow-700/50",
+  metal: "bg-gray-800/30 border-gray-600/50",  "金": "bg-gray-800/30 border-gray-600/50",
+  water: "bg-blue-900/30 border-blue-700/50",  "水": "bg-blue-900/30 border-blue-700/50",
 };
 const WX_EMOJI: Record<string, string> = {
-  wood: "🌿", fire: "🔥", earth: "🪨", metal: "⚔️", water: "💧",
+  wood: "🌿", "木": "🌿", fire: "🔥", "火": "🔥",
+  earth: "🪨", "土": "🪨", metal: "⚔️", "金": "⚔️", water: "💧", "水": "💧",
 };
 const TIER_LABELS: Record<number, { label: string; color: string; badge: string }> = {
   1: { label: "遊蕩精英", color: "text-blue-400", badge: "bg-blue-600" },
@@ -99,7 +100,7 @@ export default function BossTracker() {
     }
     startBattleMut.mutate({
       mode: "boss",
-      monsterId: boss.catalogId,
+      monsterId: `boss_${boss.instanceId}`,
     });
   };
 

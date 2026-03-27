@@ -1,0 +1,242 @@
+{
+  "query": "DESCRIBE roaming_boss_catalog;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DESCRIBE roaming_boss_catalog;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "boss_code",
+      "Type": "varchar(50)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "title",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tier",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "level",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "30",
+      "Extra": ""
+    },
+    {
+      "Field": "base_hp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "5000",
+      "Extra": ""
+    },
+    {
+      "Field": "base_attack",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "80",
+      "Extra": ""
+    },
+    {
+      "Field": "base_defense",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "40",
+      "Extra": ""
+    },
+    {
+      "Field": "base_speed",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "25",
+      "Extra": ""
+    },
+    {
+      "Field": "base_magic_attack",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "60",
+      "Extra": ""
+    },
+    {
+      "Field": "base_magic_defense",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "30",
+      "Extra": ""
+    },
+    {
+      "Field": "skills",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_table",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "exp_multiplier",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "2",
+      "Extra": ""
+    },
+    {
+      "Field": "gold_multiplier",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "2",
+      "Extra": ""
+    },
+    {
+      "Field": "move_interval_sec",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "300",
+      "Extra": ""
+    },
+    {
+      "Field": "lifetime_minutes",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "stamina_cost",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "15",
+      "Extra": ""
+    },
+    {
+      "Field": "patrol_region",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "spawn_node_id",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "image_url",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "enrage_config",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "schedule_config",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "updated_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nboss_code\tvarchar(50)\tNO\t\tNULL\t\nname\tvarchar(100)\tNO\t\tNULL\t\ntitle\tvarchar(100)\tYES\t\tNULL\t\ntier\tint\tNO\t\t1\t\nwuxing\tvarchar(10)\tNO\t\tNULL\t\nlevel\tint\tNO\t\t30\t\nbase_hp\tint\tNO\t\t5000\t\nbase_attack\tint\tNO\t\t80\t\nbase_defense\tint\tNO\t\t40\t\nbase_speed\tint\tNO\t\t25\t\nbase_magic_attack\tint\tNO\t\t60\t\nbase_magic_defense\tint\tNO\t\t30\t\nskills\tjson\tYES\t\tNULL\t\ndrop_table\tjson\tYES\t\tNULL\t\nexp_multiplier\tfloat\tNO\t\t2\t\ngold_multiplier\tfloat\tNO\t\t2\t\nmove_interval_sec\tint\tNO\t\t300\t\nlifetime_minutes\tint\tNO\t\t0\t\nstamina_cost\tint\tNO\t\t15\t\npatrol_region\tjson\tYES\t\tNULL\t\nspawn_node_id\tvarchar(50)\tYES\t\tNULL\t\nimage_url\ttext\tYES\t\tNULL\t\ndescription\ttext\tYES\t\tNULL\t\nenrage_config\tjson\tYES\t\tNULL\t\nis_active\ttinyint\tNO\t\t1\t\nschedule_config\tjson\tYES\t\tNULL\t\ncreated_at\tbigint\tNO\t\t0\t\nupdated_at\tbigint\tNO\t\t0\t\n",
+  "stderr": "",
+  "execution_time_ms": 1483
+}

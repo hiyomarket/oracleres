@@ -1,0 +1,100 @@
+{
+  "query": "SELECT i.id, i.current_hp, i.status, i.catalog_id, c.base_hp, c.level, c.name as cat_name FROM roaming_boss_instances i LEFT JOIN roaming_boss_catalog c ON i.catalog_id = c.id LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT i.id, i.current_hp, i.status, i.catalog_id, c.base_hp, c.level, c.name as cat_name FROM roaming_boss_instances i LEFT JOIN roaming_boss_catalog c ON i.catalog_id = c.id LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "current_hp": "-1",
+      "status": "despawned",
+      "catalog_id": "1",
+      "base_hp": "8000",
+      "level": "35",
+      "cat_name": "鬼公子"
+    },
+    {
+      "id": "2",
+      "current_hp": "-1",
+      "status": "despawned",
+      "catalog_id": "2",
+      "base_hp": "10000",
+      "level": "38",
+      "cat_name": "黑長老"
+    },
+    {
+      "id": "3",
+      "current_hp": "-1",
+      "status": "despawned",
+      "catalog_id": "3",
+      "base_hp": "12000",
+      "level": "36",
+      "cat_name": "古牛"
+    },
+    {
+      "id": "4",
+      "current_hp": "-1",
+      "status": "despawned",
+      "catalog_id": "4",
+      "base_hp": "7500",
+      "level": "37",
+      "cat_name": "逆位行者"
+    },
+    {
+      "id": "5",
+      "current_hp": "-1",
+      "status": "despawned",
+      "catalog_id": "5",
+      "base_hp": "9000",
+      "level": "40",
+      "cat_name": "蒼龍"
+    },
+    {
+      "id": "6",
+      "current_hp": "-1",
+      "status": "despawned",
+      "catalog_id": "8",
+      "base_hp": "NULL",
+      "level": "NULL",
+      "cat_name": "NULL"
+    },
+    {
+      "id": "7",
+      "current_hp": "-1",
+      "status": "despawned",
+      "catalog_id": "9",
+      "base_hp": "NULL",
+      "level": "NULL",
+      "cat_name": "NULL"
+    },
+    {
+      "id": "8",
+      "current_hp": "-1",
+      "status": "despawned",
+      "catalog_id": "10",
+      "base_hp": "NULL",
+      "level": "NULL",
+      "cat_name": "NULL"
+    },
+    {
+      "id": "9",
+      "current_hp": "-1",
+      "status": "despawned",
+      "catalog_id": "11",
+      "base_hp": "NULL",
+      "level": "NULL",
+      "cat_name": "NULL"
+    },
+    {
+      "id": "10",
+      "current_hp": "-1",
+      "status": "despawned",
+      "catalog_id": "12",
+      "base_hp": "NULL",
+      "level": "NULL",
+      "cat_name": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcurrent_hp\tstatus\tcatalog_id\tbase_hp\tlevel\tcat_name\n1\t-1\tdespawned\t1\t8000\t35\t鬼公子\n2\t-1\tdespawned\t2\t10000\t38\t黑長老\n3\t-1\tdespawned\t3\t12000\t36\t古牛\n4\t-1\tdespawned\t4\t7500\t37\t逆位行者\n5\t-1\tdespawned\t5\t9000\t40\t蒼龍\n6\t-1\tdespawned\t8\tNULL\tNULL\tNULL\n7\t-1\tdespawned\t9\tNULL\tNULL\tNULL\n8\t-1\tdespawned\t10\tNULL\tNULL\tNULL\n9\t-1\tdespawned\t11\tNULL\tNULL\tNULL\n10\t-1\tdespawned\t12\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1522
+}

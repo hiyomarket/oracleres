@@ -154,12 +154,13 @@ export async function spawnBossInstance(catalogId: number, forceNodeId?: string,
     ? now + catalog.lifetimeMinutes * 60 * 1000
     : 0;
 
-  // 建立實例
+  // 建立實例（直接設定滿血 HP，避免前端顯示 -1）
+  const initialHp = catalog.baseHp > 0 ? catalog.baseHp : 5000;
   const [result] = await db.insert(roamingBossInstances).values({
     catalogId,
     currentNodeId: spawnNodeId,
     moveHistory: [spawnNodeId],
-    currentHp: -1, // -1 = 滿血
+    currentHp: initialHp,
     status: "active",
     spawnedAt: now,
     expiresAt,

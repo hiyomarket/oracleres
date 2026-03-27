@@ -1,0 +1,58 @@
+{
+  "query": "\nSELECT ri.id, ri.catalog_id, ri.current_hp, ri.status, bc.name, bc.base_hp\nFROM roaming_boss_instances ri\nLEFT JOIN roaming_boss_catalog bc ON ri.catalog_id = bc.id\nORDER BY ri.id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nSELECT ri.id, ri.catalog_id, ri.current_hp, ri.status, bc.name, bc.base_hp\nFROM roaming_boss_instances ri\nLEFT JOIN roaming_boss_catalog bc ON ri.catalog_id = bc.id\nORDER BY ri.id;\n",
+  "rows": [
+    {
+      "id": "52",
+      "catalog_id": "1",
+      "current_hp": "8000",
+      "status": "active",
+      "name": "鬼公子",
+      "base_hp": "8000"
+    },
+    {
+      "id": "53",
+      "catalog_id": "2",
+      "current_hp": "10000",
+      "status": "active",
+      "name": "黑長老",
+      "base_hp": "10000"
+    },
+    {
+      "id": "54",
+      "catalog_id": "3",
+      "current_hp": "12000",
+      "status": "active",
+      "name": "古牛",
+      "base_hp": "12000"
+    },
+    {
+      "id": "55",
+      "catalog_id": "4",
+      "current_hp": "7500",
+      "status": "active",
+      "name": "逆位行者",
+      "base_hp": "7500"
+    },
+    {
+      "id": "56",
+      "catalog_id": "5",
+      "current_hp": "9000",
+      "status": "active",
+      "name": "蒼龍",
+      "base_hp": "9000"
+    },
+    {
+      "id": "57",
+      "catalog_id": "1",
+      "current_hp": "8000",
+      "status": "active",
+      "name": "鬼公子",
+      "base_hp": "8000"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcatalog_id\tcurrent_hp\tstatus\tname\tbase_hp\n52\t1\t8000\tactive\t鬼公子\t8000\n53\t2\t10000\tactive\t黑長老\t10000\n54\t3\t12000\tactive\t古牛\t12000\n55\t4\t7500\tactive\t逆位行者\t7500\n56\t5\t9000\tactive\t蒼龍\t9000\n57\t1\t8000\tactive\t鬼公子\t8000\n",
+  "stderr": "",
+  "execution_time_ms": 1580
+}
