@@ -23,13 +23,14 @@ import {
   gameQuestSteps,
   gamePetCatalog,
   gamePetInnateSkills,
+  roamingBossCatalog,
 } from "../../drizzle/schema";
 import { RACE_HP_MULTIPLIER, auditPetCatalog } from "../services/petEngine";
 import { sql, like, eq, desc, asc, inArray } from "drizzle-orm";
 import { auditMonster, auditSkill, auditEquipment, auditItemPrice, auditAndFix } from "../services/aiValueAudit";
 import { evaluateItem, evaluateEquipment, evaluateSkill, getValueEngineRulesForAI, type TradeRules } from "../services/valueEngine";
 import { generateImage } from "../_core/imageGeneration";
-import { petCardPrompt, itemCardPrompt, equipCardPrompt, skillCardPrompt, monsterCardPrompt } from "../services/cardStylePrompt";
+import { petCardPrompt, itemCardPrompt, equipCardPrompt, skillCardPrompt, monsterCardPrompt, achievementCardPrompt, bossCardPrompt } from "../services/cardStylePrompt";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   if (ctx.user.role !== "admin") {
@@ -2304,21 +2305,27 @@ ${petDescriptions}
    */
   aiBatchGenerateImages: adminProcedure
     .input(z.object({
-      type: z.enum(["item", "equipment", "skill"]),
-      limit: z.number().int().min(1).max(10).default(5),
+      type: z.enum(["item", "equipment", "skill", "monster", "achievement", "boss"]),
+      limit: z.number().int().min(1).max(20).default(5),
+      forceRegenerate: z.boolean().default(false),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      let results: Array<{ id: string; name: string; imageUrl: string }> = [];
+      let results: Array<{ id: string | number; name: string; imageUrl: string }> = [];
+      const typeLabels: Record<string, string> = {
+        item: "道具", equipment: "裝備", skill: "技能書",
+        monster: "魔物", achievement: "成就", boss: "Boss",
+      };
 
       if (input.type === "item") {
         const items = await db.select().from(gameItemCatalog)
-          .where(eq(gameItemCatalog.isActive, 1))
-          .limit(500);
-        const noImage = items.filter(i => !i.imageUrl).slice(0, input.limit);
-        for (const item of noImage) {
+          .where(eq(gameItemCatalog.isActive, 1)).limit(500);
+        const targets = input.forceRegenerate
+          ? items.slice(0, input.limit)
+          : items.filter(i => !i.imageUrl).slice(0, input.limit);
+        for (const item of targets) {
           try {
             const prompt = itemCardPrompt({ ...item, description: (item.useEffect as any)?.description || item.name });
             const { url } = await generateImage({ prompt });
@@ -2327,16 +2334,15 @@ ${petDescriptions}
                 .where(eq(gameItemCatalog.itemId, item.itemId));
               results.push({ id: item.itemId, name: item.name, imageUrl: url });
             }
-          } catch (e) {
-            console.error(`生成道具圖片失敗: ${item.name}`, e);
-          }
+          } catch (e) { console.error(`生成道具圖片失敗: ${item.name}`, e); }
         }
       } else if (input.type === "equipment") {
         const equips = await db.select().from(gameEquipmentCatalog)
-          .where(eq(gameEquipmentCatalog.isActive, 1))
-          .limit(500);
-        const noImage = equips.filter(e => !e.imageUrl).slice(0, input.limit);
-        for (const equip of noImage) {
+          .where(eq(gameEquipmentCatalog.isActive, 1)).limit(500);
+        const targets = input.forceRegenerate
+          ? equips.slice(0, input.limit)
+          : equips.filter(e => !e.imageUrl).slice(0, input.limit);
+        for (const equip of targets) {
           try {
             const prompt = equipCardPrompt({ ...equip, description: (equip.affix1 as any)?.description || equip.name, rarity: equip.quality || "common", tier: parseInt(equip.tier) || 1 });
             const { url } = await generateImage({ prompt });
@@ -2345,16 +2351,15 @@ ${petDescriptions}
                 .where(eq(gameEquipmentCatalog.equipId, equip.equipId));
               results.push({ id: equip.equipId, name: equip.name, imageUrl: url });
             }
-          } catch (e) {
-            console.error(`生成裝備圖片失敗: ${equip.name}`, e);
-          }
+          } catch (e) { console.error(`生成裝備圖片失敗: ${equip.name}`, e); }
         }
-      } else {
+      } else if (input.type === "skill") {
         const skills = await db.select().from(gameSkillCatalog)
-          .where(eq(gameSkillCatalog.isActive, 1))
-          .limit(500);
-        const noImage = skills.filter(s => !s.imageUrl).slice(0, input.limit);
-        for (const skill of noImage) {
+          .where(eq(gameSkillCatalog.isActive, 1)).limit(500);
+        const targets = input.forceRegenerate
+          ? skills.slice(0, input.limit)
+          : skills.filter(s => !s.imageUrl).slice(0, input.limit);
+        for (const skill of targets) {
           try {
             const prompt = skillCardPrompt({ ...skill, skillType: skill.category || "attack", tier: parseInt(skill.tier) || 1 });
             const { url } = await generateImage({ prompt });
@@ -2363,9 +2368,58 @@ ${petDescriptions}
                 .where(eq(gameSkillCatalog.skillId, skill.skillId));
               results.push({ id: skill.skillId, name: skill.name, imageUrl: url });
             }
-          } catch (e) {
-            console.error(`生成技能圖片失敗: ${skill.name}`, e);
-          }
+          } catch (e) { console.error(`生成技能圖片失敗: ${skill.name}`, e); }
+        }
+      } else if (input.type === "monster") {
+        const monsters = await db.select().from(gameMonsterCatalog)
+          .where(eq(gameMonsterCatalog.isActive, 1)).limit(500);
+        const targets = input.forceRegenerate
+          ? monsters.slice(0, input.limit)
+          : monsters.filter(m => !m.imageUrl).slice(0, input.limit);
+        for (const monster of targets) {
+          try {
+            const prompt = monsterCardPrompt({ ...monster, tier: 1 });
+            const { url } = await generateImage({ prompt });
+            if (url) {
+              await db.update(gameMonsterCatalog).set({ imageUrl: url })
+                .where(eq(gameMonsterCatalog.monsterId, monster.monsterId));
+              results.push({ id: monster.monsterId, name: monster.name, imageUrl: url });
+            }
+          } catch (e) { console.error(`生成魔物圖片失敗: ${monster.name}`, e); }
+        }
+      } else if (input.type === "achievement") {
+        const achs = await db.select().from(gameAchievements)
+          .where(eq(gameAchievements.isActive, 1)).limit(500);
+        const targets = input.forceRegenerate
+          ? achs.slice(0, input.limit)
+          : achs.filter(a => !a.iconUrl).slice(0, input.limit);
+        for (const ach of targets) {
+          try {
+            const prompt = achievementCardPrompt({ ...ach, rarity: ach.rarity || "common" });
+            const { url } = await generateImage({ prompt });
+            if (url) {
+              await db.update(gameAchievements).set({ iconUrl: url })
+                .where(eq(gameAchievements.id, ach.id));
+              results.push({ id: ach.achId || String(ach.id), name: ach.title, imageUrl: url });
+            }
+          } catch (e) { console.error(`生成成就圖片失敗: ${ach.title}`, e); }
+        }
+      } else if (input.type === "boss") {
+        const bosses = await db.select().from(roamingBossCatalog)
+          .where(eq(roamingBossCatalog.isActive, 1)).limit(50);
+        const targets = input.forceRegenerate
+          ? bosses.slice(0, input.limit)
+          : bosses.filter(b => !b.imageUrl).slice(0, input.limit);
+        for (const boss of targets) {
+          try {
+            const prompt = bossCardPrompt(boss);
+            const { url } = await generateImage({ prompt });
+            if (url) {
+              await db.update(roamingBossCatalog).set({ imageUrl: url, updatedAt: Date.now() })
+                .where(eq(roamingBossCatalog.id, boss.id));
+              results.push({ id: boss.id, name: boss.name, imageUrl: url });
+            }
+          } catch (e) { console.error(`生成Boss圖片失敗: ${boss.name}`, e); }
         }
       }
 
@@ -2373,7 +2427,73 @@ ${petDescriptions}
         success: true,
         generated: results.length,
         results,
-        message: `✅ 已為 ${results.length} 個${input.type === "item" ? "道具" : input.type === "equipment" ? "裝備" : "技能書"}生成圖片`,
+        message: `✅ 已為 ${results.length} 個${typeLabels[input.type] || input.type}生成圖片`,
       };
+    }),
+
+  /**
+   * 一鍵 AI 生圖：魔物圖鑑
+   */
+  aiGenerateMonsterImage: adminProcedure
+    .input(z.object({ monsterId: z.string(), customPrompt: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [monster] = await db.select().from(gameMonsterCatalog)
+        .where(eq(gameMonsterCatalog.monsterId, input.monsterId));
+      if (!monster) throw new TRPCError({ code: "NOT_FOUND", message: "魔物不存在" });
+
+      const prompt = input.customPrompt || monsterCardPrompt({ ...monster, tier: 1 });
+      const { url } = await generateImage({ prompt });
+      if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
+
+      await db.update(gameMonsterCatalog).set({ imageUrl: url })
+        .where(eq(gameMonsterCatalog.monsterId, monster.monsterId));
+
+      return { success: true, imageUrl: url, name: monster.name };
+    }),
+
+  /**
+   * 一鍵 AI 生圖：成就徽章
+   */
+  aiGenerateAchievementImage: adminProcedure
+    .input(z.object({ achievementId: z.number(), customPrompt: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [ach] = await db.select().from(gameAchievements)
+        .where(eq(gameAchievements.id, input.achievementId));
+      if (!ach) throw new TRPCError({ code: "NOT_FOUND", message: "成就不存在" });
+
+      const prompt = input.customPrompt || achievementCardPrompt({ ...ach, rarity: ach.rarity || "common" });
+      const { url } = await generateImage({ prompt });
+      if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
+
+      await db.update(gameAchievements).set({ iconUrl: url })
+        .where(eq(gameAchievements.id, ach.id));
+
+      return { success: true, imageUrl: url, name: ach.title };
+    }),
+
+  /**
+   * 一鍵 AI 生圖：Boss 圖鑑
+   */
+  aiGenerateBossImage: adminProcedure
+    .input(z.object({ bossId: z.number(), customPrompt: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [boss] = await db.select().from(roamingBossCatalog)
+        .where(eq(roamingBossCatalog.id, input.bossId));
+      if (!boss) throw new TRPCError({ code: "NOT_FOUND", message: "Boss不存在" });
+
+      const prompt = input.customPrompt || bossCardPrompt(boss);
+      const { url } = await generateImage({ prompt });
+      if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
+
+      await db.update(roamingBossCatalog).set({ imageUrl: url, updatedAt: Date.now() })
+        .where(eq(roamingBossCatalog.id, boss.id));
+
+      return { success: true, imageUrl: url, name: boss.name };
     }),
 });

@@ -24,15 +24,21 @@ import {
 } from "./SmartEditors";
 
 /** 通用 AI 生圖按鈕 */
-function AiImageBtn({ type, id, name, hasImage, onSuccess }: { type: "item" | "equipment" | "skill"; id: string; name: string; hasImage: boolean; onSuccess: () => void }) {
+function AiImageBtn({ type, id, name, hasImage, onSuccess }: { type: "item" | "equipment" | "skill" | "monster" | "achievement" | "boss"; id: string | number; name: string; hasImage: boolean; onSuccess: () => void }) {
   const itemMut = trpc.gameAI.aiGenerateItemImage.useMutation({ onSuccess: (r: any) => { toast.success(`✅ ${r.name} 圖片已生成`); onSuccess(); }, onError: (e: any) => toast.error(`生圖失敗: ${e.message}`) });
   const equipMut = trpc.gameAI.aiGenerateEquipImage.useMutation({ onSuccess: (r: any) => { toast.success(`✅ ${r.name} 圖片已生成`); onSuccess(); }, onError: (e: any) => toast.error(`生圖失敗: ${e.message}`) });
   const skillMut = trpc.gameAI.aiGenerateSkillImage.useMutation({ onSuccess: (r: any) => { toast.success(`✅ ${r.name} 圖片已生成`); onSuccess(); }, onError: (e: any) => toast.error(`生圖失敗: ${e.message}`) });
-  const isPending = itemMut.isPending || equipMut.isPending || skillMut.isPending;
+  const monsterMut = trpc.gameAI.aiGenerateMonsterImage.useMutation({ onSuccess: (r: any) => { toast.success(`✅ ${r.name} 圖片已生成`); onSuccess(); }, onError: (e: any) => toast.error(`生圖失敗: ${e.message}`) });
+  const achievementMut = trpc.gameAI.aiGenerateAchievementImage.useMutation({ onSuccess: (r: any) => { toast.success(`✅ ${r.name} 圖片已生成`); onSuccess(); }, onError: (e: any) => toast.error(`生圖失敗: ${e.message}`) });
+  const bossMut = trpc.gameAI.aiGenerateBossImage.useMutation({ onSuccess: (r: any) => { toast.success(`✅ ${r.name} 圖片已生成`); onSuccess(); }, onError: (e: any) => toast.error(`生圖失敗: ${e.message}`) });
+  const isPending = itemMut.isPending || equipMut.isPending || skillMut.isPending || monsterMut.isPending || achievementMut.isPending || bossMut.isPending;
   const handleClick = () => {
-    if (type === "item") itemMut.mutate({ itemId: id });
-    else if (type === "equipment") equipMut.mutate({ equipId: id });
-    else skillMut.mutate({ skillId: id });
+    if (type === "item") itemMut.mutate({ itemId: String(id) });
+    else if (type === "equipment") equipMut.mutate({ equipId: String(id) });
+    else if (type === "skill") skillMut.mutate({ skillId: String(id) });
+    else if (type === "monster") monsterMut.mutate({ monsterId: String(id) });
+    else if (type === "achievement") achievementMut.mutate({ achievementId: Number(id) });
+    else if (type === "boss") bossMut.mutate({ bossId: Number(id) });
   };
   return <Button size="sm" variant="ghost" className={`h-6 px-2 text-xs ${hasImage ? "text-green-500" : "text-amber-500"}`} title={hasImage ? "重新生成圖片" : "生成圖片"} onClick={handleClick} disabled={isPending}>{isPending ? "⏳" : (hasImage ? "🖼️" : "🎨")}</Button>;
 }
@@ -747,6 +753,7 @@ export function MonsterCatalogV2Tab() {
                       <td className="py-2 px-2">{m.baseSpeed}</td>
                       <td className="py-2 px-2 text-xs">{m.rarity}</td>
                       <td className="py-2 px-2 space-x-1" onClick={e => e.stopPropagation()}>
+                        <AiImageBtn type="monster" id={m.monsterId} name={m.name} hasImage={!!m.imageUrl} onSuccess={() => refetch()} />
                         <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                         <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                         <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
@@ -1544,6 +1551,7 @@ export function AchievementCatalogTab() {
                   <td className="py-2 px-2 text-xs"><span className="inline-block px-1 rounded bg-blue-500/15 text-blue-400 text-[10px]">{CONDITION_LABEL[m.conditionType] || m.conditionType}</span> <span className="text-muted-foreground">≥{m.conditionValue}</span></td>
                   <td className="py-2 px-2 text-xs">{m.rewardType} x{m.rewardAmount}</td>
                   <td className="py-2 px-2 space-x-1">
+                    <AiImageBtn type="achievement" id={m.id} name={m.title} hasImage={!!m.imageUrl} onSuccess={() => refetch()} />
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.title = `${m.title}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.title}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.title}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>

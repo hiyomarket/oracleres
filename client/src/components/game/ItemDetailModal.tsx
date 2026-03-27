@@ -275,14 +275,86 @@ const SkillDetail: React.FC<{ skill: any }> = ({ skill }) => {
 };
 
 // ─── 使用效果顯示 ─────────────────────────────────────────────
+const CAPTURE_TYPE_LABEL: Record<string, { label: string; color: string; desc: string }> = {
+  normal:  { label: "普通獸魂甕", color: "#94a3b8", desc: "基礎捕捉道具，適合捕捉低等級寵物" },
+  great:   { label: "精良獸魂甕", color: "#60a5fa", desc: "經過強化的捕捉道具，捕捉率提升" },
+  ultra:   { label: "極品獸魂甕", color: "#a78bfa", desc: "高級捕捉道具，大幅提升捕捉率" },
+  master:  { label: "大師獸魂甕", color: "#fbbf24", desc: "頂級捕捉道具，極高捕捉率" },
+  destiny: { label: "天命獸魂甕", color: "#ef4444", desc: "傳說級捕捉道具，幾乎必定成功" },
+};
+
 const UseEffectDisplay: React.FC<{ useEffect: any }> = ({ useEffect: ue }) => {
   if (typeof ue === "string") return <p style={{ fontSize: "12px", color: "#e2e8f0", margin: 0 }}>{ue}</p>;
+
+  // ═══ 捕捉球專用顯示 ═══
+  if (ue.type === "capture") {
+    const ct = CAPTURE_TYPE_LABEL[ue.captureItemType] ?? CAPTURE_TYPE_LABEL.normal;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ padding: "8px 12px", borderRadius: "8px", background: `${ct.color}15`, border: `1px solid ${ct.color}30` }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+            <span style={{ fontSize: "16px" }}>🎯</span>
+            <span style={{ fontSize: "13px", fontWeight: 700, color: ct.color }}>{ct.label}</span>
+          </div>
+          <p style={{ fontSize: "11px", color: "#94a3b8", margin: 0, lineHeight: 1.5 }}>{ct.desc}</p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
+          <MiniStat label="捕捉倍率" value={`×${ue.multiplier ?? 1.0}`} />
+          <MiniStat label="道具等級" value={ct.label.replace("獸魂甕", "")} />
+        </div>
+        {ue.description && <p style={{ fontSize: "11px", color: "#e2e8f0", margin: 0, lineHeight: 1.5 }}>{ue.description}</p>}
+        <div style={{ padding: "6px 10px", borderRadius: "6px", background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
+          <p style={{ fontSize: "10px", color: "#fbbf24", margin: 0 }}>
+            💡 使用方式：戰鬥中將怪物 HP 打至 30% 以下時，會出現捕捉機會，選擇此道具進行捕捉
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══ 技能書專用顯示 ═══
+  if (ue.type === "skillbook" || ue.type === "learn_skill") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ padding: "8px 12px", borderRadius: "8px", background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.3)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+            <span style={{ fontSize: "16px" }}>📖</span>
+            <span style={{ fontSize: "13px", fontWeight: 700, color: "#a78bfa" }}>技能學習書</span>
+          </div>
+          {ue.skillId && <p style={{ fontSize: "11px", color: "#c4b5fd", margin: 0 }}>技能代碼：{ue.skillId}</p>}
+          {ue.skillName && <p style={{ fontSize: "12px", color: "#e2e8f0", margin: "4px 0 0", fontWeight: 600 }}>習得技能：{ue.skillName}</p>}
+        </div>
+        {ue.description && <p style={{ fontSize: "11px", color: "#e2e8f0", margin: 0, lineHeight: 1.5 }}>{ue.description}</p>}
+        <div style={{ padding: "6px 10px", borderRadius: "6px", background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)" }}>
+          <p style={{ fontSize: "10px", color: "#a78bfa", margin: 0 }}>
+            💡 使用方式：從背包中使用即可永久習得技能，每種技能書只能學習一次
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══ 消耗品專用顯示（回復類、增益類） ═══
+  if (ue.type === "heal" || ue.type === "restore" || ue.type === "buff") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        {ue.description && <p style={{ fontSize: "12px", color: "#e2e8f0", margin: 0, lineHeight: 1.5 }}>{ue.description}</p>}
+        <div style={{ display: "grid", gridTemplateColumns: ue.duration ? "1fr 1fr 1fr" : "1fr 1fr", gap: "6px" }}>
+          <MiniStat label="效果類型" value={ue.type === "heal" ? "回復" : ue.type === "buff" ? "增益" : "恢復"} />
+          {ue.value != null && <MiniStat label="效果數值" value={`${ue.value > 0 ? "+" : ""}${ue.value}`} />}
+          {ue.duration && <MiniStat label="持續" value={`${ue.duration} 回合`} />}
+        </div>
+      </div>
+    );
+  }
+
+  // ═══ 預設顯示 ═══
   return (
     <>
       {ue.description && <p style={{ fontSize: "12px", color: "#e2e8f0", margin: "0 0 6px" }}>{ue.description}</p>}
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
         {ue.type && <MiniStat label="類型" value={ue.type} />}
-        {ue.value && <MiniStat label="數值" value={`${ue.value}`} />}
+        {ue.value != null && <MiniStat label="數值" value={`${ue.value}`} />}
         {ue.duration && <MiniStat label="持續" value={`${ue.duration} 回合`} />}
       </div>
     </>

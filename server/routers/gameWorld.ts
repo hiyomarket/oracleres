@@ -15,6 +15,7 @@ import { broadcastToAll, broadcastToAllIncludingAnon, sendToAgent } from "../wsS
 import { updatePvpStats } from "../achievementEngine";
 import { broadcastPvpWin, broadcastWeeklyChampion } from "../liveFeedBroadcast";
 import { MONSTERS } from "../../shared/monsters";
+import { roamingBossInstances, roamingBossCatalog } from "../../drizzle/schema";
 import { processTick, processAgentTick, regenStamina, calcExpToNext, resolveCombat, calcCharacterStats } from "../tickEngine";
 import { storagePut } from "../storage";
 import type { WuXing } from "../../shared/types";
@@ -1448,6 +1449,44 @@ export const gameWorldRouter = router({
           element: a.dominantElement,
           status: a.status,
         }));
+      }
+      // ═══ 整合移動式 Boss（roamingBossInstances）到節點怪物列表 ═══
+      if (dbInstance) {
+        try {
+          const activeBossInsts = await dbInstance.select().from(roamingBossInstances)
+            .where(and(
+              eq(roamingBossInstances.currentNodeId, input.nodeId),
+              eq(roamingBossInstances.status, "active")
+            ));
+          if (activeBossInsts.length > 0) {
+            const catalogIds = Array.from(new Set(activeBossInsts.map(i => i.catalogId)));
+            const catalogs = await dbInstance.select().from(roamingBossCatalog)
+              .where(inArray(roamingBossCatalog.id, catalogIds));
+            const catMap = new Map(catalogs.map(c => [c.id, c]));
+            for (const inst of activeBossInsts) {
+              const cat = catMap.get(inst.catalogId);
+              if (!cat) continue;
+              nodeMonsters.push({
+                id: `boss_${inst.id}`,
+                name: cat.name,
+                element: cat.wuxing,
+                level: cat.level,
+                hp: inst.currentHp === -1 ? cat.baseHp : inst.currentHp,
+                attack: cat.baseAttack,
+                defense: cat.baseDefense,
+                speed: cat.baseSpeed,
+                expReward: Math.round(cat.level * 8 * cat.expMultiplier),
+                goldReward: [cat.level * 3, cat.level * 8],
+                description: cat.description ?? `T${cat.tier} ${cat.title || cat.name}`,
+                rarity: "boss",
+                isBoss: true,
+                skills: [],
+              });
+            }
+          }
+        } catch (e) {
+          // Boss 查詢失敗不影響主流程
+        }
       }
       return { node, monsters: nodeMonsters, resources, questHints, adventurers };
     }),

@@ -175,3 +175,52 @@ Card quality: ${RARITY_GLOW[monster.rarity || "rare"] || "ominous glow"}.
 Power level: ${tierDesc}.
 The monster should look menacing yet beautifully illustrated in the ornate card frame, conveying danger and power.`;
 }
+
+/**
+ * 成就徽章圖鑑 prompt
+ */
+export function achievementCardPrompt(ach: {
+  title: string;
+  description?: string | null;
+  category: string;
+  rarity: string;
+}): string {
+  const categoryVisual: Record<string, string> = {
+    avatar: "heroic portrait medallion with a noble character silhouette",
+    explore: "ancient compass and map with glowing trail markers",
+    combat: "crossed swords and shield with battle energy",
+    oracle: "mystical divination orb with swirling cosmic energy",
+    social: "intertwined golden rings symbolizing bonds and friendship",
+    collection: "treasure chest overflowing with magical artifacts",
+  };
+
+  return `${BASE_STYLE}
+Subject: A magical achievement badge centered on the card — ${categoryVisual[ach.category] || "radiant magical emblem"}.
+Achievement name inspiration: "${ach.title}" (${ach.description || "legendary accomplishment"}).
+Card quality: ${RARITY_GLOW[ach.rarity] || "subtle shimmer"}.
+The badge should look prestigious and rewarding, with a sense of accomplishment, within the ornate card frame.`;
+}
+
+/**
+ * Boss 圖鑑 prompt（比一般魔物更霸氣）
+ */
+export function bossCardPrompt(boss: {
+  name: string;
+  title?: string | null;
+  description?: string | null;
+  wuxing: string;
+  tier: number;
+}): string {
+  const tierVisual: Record<number, string> = {
+    1: "Elite roaming creature — powerful with visible magical aura, slightly larger than normal",
+    2: "Regional guardian boss — massive and intimidating, surrounded by elemental energy storms",
+    3: "Legendary calamity beast — colossal and terrifying, reality warping around it, divine-level threat",
+  };
+
+  return `${BASE_STYLE}
+Subject: A fearsome BOSS monster centered on the card — ${tierVisual[boss.tier] || "powerful magical boss creature"}.
+Boss name: "${boss.name}" ${boss.title ? `"${boss.title}"` : ""} (${boss.description || "legendary world boss"}).
+Color palette: ${WUXING_PALETTE[boss.wuxing] || "dark crimson and shadow tones"}.
+Card quality: ${RARITY_GLOW[boss.tier >= 3 ? "legendary" : boss.tier >= 2 ? "epic" : "rare"] || "ominous glow"}.
+The boss should look extremely menacing and powerful, dominating the card frame with an overwhelming presence. Dark dramatic lighting with intense magical energy.`;
+}

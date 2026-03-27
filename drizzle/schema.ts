@@ -3763,3 +3763,38 @@ export const roamingBossKillLog = mysqlTable("roaming_boss_kill_log", {
 });
 export type RoamingBossKillLog = typeof roamingBossKillLog.$inferSelect;
 export type InsertRoamingBossKillLog = typeof roamingBossKillLog.$inferInsert;
+
+
+// ═══════════════════════════════════════════════════════════════
+// 裝備強化系統
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 裝備強化記錄表
+ * 記錄每次強化的結果（成功/失敗/消失）
+ */
+export const equipEnhanceLogs = mysqlTable("equip_enhance_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 玩家角色 ID */
+  agentId: int("agent_id").notNull(),
+  /** 背包中的裝備 inventory ID */
+  inventoryId: int("inventory_id").notNull(),
+  /** 裝備 ID */
+  equipId: varchar("equip_id", { length: 50 }).notNull(),
+  /** 裝備名稱（快取） */
+  equipName: varchar("equip_name", { length: 100 }).notNull(),
+  /** 使用的卷軸 itemId */
+  scrollItemId: varchar("scroll_item_id", { length: 50 }).notNull(),
+  /** 強化前等級 */
+  fromLevel: int("from_level").notNull(),
+  /** 強化後等級（成功=+1，失敗=-1，消失=-999） */
+  toLevel: int("to_level").notNull(),
+  /** 結果：success / fail_downgrade / fail_destroy */
+  result: varchar("result", { length: 30 }).notNull(),
+  /** 強化成功率（記錄當時的成功率） */
+  successRate: float("success_rate").notNull(),
+  /** 記錄時間 */
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type EquipEnhanceLog = typeof equipEnhanceLogs.$inferSelect;
+export type InsertEquipEnhanceLog = typeof equipEnhanceLogs.$inferInsert;

@@ -1919,8 +1919,8 @@ function PetAIToolsTab() {
     onError: (e) => toast.error(e.message || "AI 審核失敗"),
   });
 
-  // AI 單隻圖片生成
-  const aiGenPetImage = trpc.gameAI.aiGeneratePetImage.useMutation({
+  // AI 單隻圖片生成（使用 regenerate 支援覆蓋已有圖片）
+  const aiGenPetImage = trpc.gameAI.aiRegeneratePetImage.useMutation({
     onSuccess: (data) => { toast.success(`${data.petName} 圖片生成成功`); utils.gamePet.getPetCatalog.invalidate(); },
     onError: (e) => toast.error(e.message || "AI 圖片生成失敗"),
   });
@@ -2086,7 +2086,7 @@ function PetAIToolsTab() {
             disabled={!selectedPetId || aiGenPetImage.isPending}
             className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:from-cyan-700 hover:to-blue-700"
           >
-            {aiGenPetImage.isPending ? "⏳ 生成中..." : "🎨 為這隻寵物生成圖片"}
+            {aiGenPetImage.isPending ? "⏳ 生成中..." : "🎨 生成/重新生成圖片"}
           </Button>
           <Button
             variant="outline"
@@ -2949,6 +2949,7 @@ function ValueEngineTab() {
   const [previewData, setPreviewData] = useState<any>(null);
   const [dropPreview, setDropPreview] = useState<any>(null);
   const [activeSection, setActiveSection] = useState<"rebalance" | "drops" | "images">("rebalance");
+  const [batchForceRegen, setBatchForceRegen] = useState(false);
 
   // 預覽所有圖鑑的價值評估
   const previewAll = trpc.valueRebalance.previewAll.useQuery(undefined, { enabled: false });
@@ -3297,40 +3298,50 @@ function ValueEngineTab() {
         <div className="space-y-6">
           <div className="p-4 rounded-xl border bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20">
             <h3 className="font-bold text-lg">🎨 批量 AI 生圖</h3>
-            <p className="text-sm text-muted-foreground mt-1">自動為所有缺少圖片的道具/裝備/技能書生成圖片。每次最多處理 10 件。</p>
+            <p className="text-sm text-muted-foreground mt-1">自動為所有缺少圖片的圖鑑生成圖片。每次最多處理 10 件。勾選「強制重新生成」可覆蓋已有圖片。</p>
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+              <input type="checkbox" checked={batchForceRegen} onChange={e => setBatchForceRegen(e.target.checked)} className="rounded" />
+              <span className="text-amber-600 font-medium">強制重新生成（覆蓋已有圖片）</span>
+            </label>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl border bg-card">
-              <h4 className="font-semibold mb-3">🎒 道具生圖</h4>
-              <Button
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white"
-                disabled={batchGenImages.isPending}
-                onClick={() => batchGenImages.mutate({ type: "item", limit: 10 })}
-              >
-                {batchGenImages.isPending ? "⚙️ 生成中..." : "一鍵生成道具圖片（10件）"}
-              </Button>
-            </div>
-            <div className="p-4 rounded-xl border bg-card">
-              <h4 className="font-semibold mb-3">⚔️ 裝備生圖</h4>
-              <Button
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
-                disabled={batchGenImages.isPending}
-                onClick={() => batchGenImages.mutate({ type: "equipment", limit: 10 })}
-              >
-                {batchGenImages.isPending ? "⚙️ 生成中..." : "一鍵生成裝備圖片（10件）"}
-              </Button>
-            </div>
-            <div className="p-4 rounded-xl border bg-card">
-              <h4 className="font-semibold mb-3">📖 技能書生圖</h4>
-              <Button
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                disabled={batchGenImages.isPending}
-                onClick={() => batchGenImages.mutate({ type: "skill", limit: 10 })}
-              >
-                {batchGenImages.isPending ? "⚙️ 生成中..." : "一鍵生成技能書圖片（10件）"}
-              </Button>
-            </div>
+            {[
+              { type: "item" as const, label: "🎒 道具", from: "from-emerald-600", to: "to-teal-600" },
+              { type: "equipment" as const, label: "⚔️ 裝備", from: "from-blue-600", to: "to-indigo-600" },
+              { type: "skill" as const, label: "📖 技能書", from: "from-purple-600", to: "to-pink-600" },
+              { type: "monster" as const, label: "🐉 魔物", from: "from-red-600", to: "to-orange-600" },
+              { type: "achievement" as const, label: "🏆 成就", from: "from-amber-600", to: "to-yellow-600" },
+              { type: "boss" as const, label: "💀 Boss", from: "from-rose-700", to: "to-red-600" },
+            ].map(cfg => (
+              <div key={cfg.type} className="p-4 rounded-xl border bg-card">
+                <h4 className="font-semibold mb-3">{cfg.label}生圖</h4>
+                <Button
+                  className={`w-full bg-gradient-to-r ${cfg.from} ${cfg.to} text-white`}
+                  disabled={batchGenImages.isPending}
+                  onClick={() => batchGenImages.mutate({ type: cfg.type, limit: 10, forceRegenerate: batchForceRegen })}
+                >
+                  {batchGenImages.isPending ? "⚙️ 生成中..." : `一鍵生成${cfg.label.slice(2)}圖片（10件）`}
+                </Button>
+              </div>
+            ))}
           </div>
+          {batchGenImages.data && (
+            <div className="mt-3 p-3 rounded-lg border bg-emerald-50 dark:bg-emerald-950/30 text-sm">
+              <p className="font-medium text-emerald-700 dark:text-emerald-400">✅ {(batchGenImages.data as any).message}</p>
+              {(batchGenImages.data as any).results?.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {(batchGenImages.data as any).results.map((r: any) => (
+                    <div key={r.id} className="text-center">
+                      {r.imageUrl && <img src={r.imageUrl} alt="" className="w-16 h-16 object-contain rounded border" />}
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{r.name}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <p className="text-xs text-muted-foreground">提示：每次點擊會為最多 10 件缺少圖片的物品生成圖片，可多次點擊直到所有物品都有圖片。也可以在各圖鑑的操作欄中點擊 🎨 按鈕單獨生成。</p>
         </div>
       )}

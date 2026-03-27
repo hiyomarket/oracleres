@@ -26,6 +26,7 @@ const GAME_TABS: GameTab[] = [
   { id: "quests",   path: "/game/quest-skills", icon: "📖", label: "天命考核" },
   { id: "pvp",      path: "/game/achievements", icon: "🏆",  label: "排行/成就" },
   { id: "combat",   path: "/game/combat",       icon: "⚔️", label: "戰鬥大廳" },
+  { id: "enhance", path: "/game/enhance",     icon: "✨", label: "強化" },
   { id: "boss",     path: "/game/boss",         icon: "👹", label: "Boss追蹤" },
   { id: "guide",    path: "/game/guide",        icon: "📖", label: "指南" },
   // Bug 3+9 fix: 管理員後台整合為單一按鈕（僅 admin 可見）
@@ -123,6 +124,7 @@ export default function GameTabLayout({
     if (location.startsWith("/game/auction")) return "auction";
     if (location.startsWith("/game/achievements")) return "pvp";
     if (location.startsWith("/game/pvp")) return "pvp";
+    if (location.startsWith("/game/enhance")) return "enhance";
     if (location.startsWith("/game/guide")) return "guide";
     if (location.startsWith("/admin")) return "admin";
     return "world";

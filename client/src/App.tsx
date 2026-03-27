@@ -60,6 +60,7 @@ const QuestSkillPage = lazy(() => import("./pages/game/QuestSkillPage"));
 const PetPage = lazy(() => import("./pages/game/PetPage"));
 const BossTracker = lazy(() => import("./pages/game/BossTracker"));
 const GameGuide = lazy(() => import("./pages/GameGuide"));
+const EnhancePage = lazy(() => import("./pages/game/EnhancePage"));
 const ExpertMarket = lazy(() => import("./pages/ExpertMarket"));
 const ExpertDetail = lazy(() => import("./pages/ExpertDetail"));
 const ExpertDashboard = lazy(() => import("./pages/expert/ExpertDashboard"));
@@ -160,6 +161,7 @@ function Router() {
                 <Route path={"/game/pets"} component={PetPage} />
                 <Route path={"/game/boss"} component={BossTracker} />
                 <Route path={"/game/guide"} component={GameGuide} />
+                <Route path={"/game/enhance"} component={EnhancePage} />
                 <Route path={"/404"} component={NotFound} />
                 {/* Final fallback route */}
                 <Route component={NotFound} />
