@@ -7,8 +7,8 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory } from "../../drizzle/schema";
-import { sql } from "drizzle-orm";
+import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog } from "../../drizzle/schema";
+import { sql, inArray } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
 import { calcPetStats, petSkillsToCombatFormat, DESTINY_SKILLS, DESTINY_AWAKENING_EFFECTS, checkDestinySkillLevelUp, calcPetBattleExp, levelUpBP } from "../services/petEngine";
@@ -27,6 +27,7 @@ import { randomUUID } from "crypto";
 function buildCharacterParticipant(
   agent: any,
   id: number,
+  equippedSkills: import("../services/combatEngineV2").CombatSkill[] = [],
 ): BattleParticipant {
   const wuxing = {
     wood: agent.wuxingWood ?? 0,
@@ -57,7 +58,7 @@ function buildCharacterParticipant(
     magicDefense: Math.floor(stats.def * 0.7),
     speed: stats.spd,
     dominantElement,
-    skills: [], // 角色技能從裝備的天命技能轉換
+    skills: equippedSkills, // 從已裝備的天命技能轉換
     isDefending: false,
     isDefeated: false,
     speedScore: 0,
@@ -212,7 +213,47 @@ export const gameBattleRouter = router({
       const participants: BattleParticipant[] = [];
       let nextId = 1;
 
-      const charParticipant = buildCharacterParticipant(agent, nextId++);
+      // 讀取已裝備的天命技能
+      const equippedQuestSkills = await db.select({
+        skillId: gameLearnedQuestSkills.skillId,
+        level: gameLearnedQuestSkills.level,
+      }).from(gameLearnedQuestSkills).where(
+        and(eq(gameLearnedQuestSkills.agentId, agent.id), eq(gameLearnedQuestSkills.isEquipped, 1))
+      );
+      const questSkillIds = equippedQuestSkills.map(s => s.skillId);
+      let charCombatSkills: import("../services/combatEngineV2").CombatSkill[] = [];
+      if (questSkillIds.length > 0) {
+        const questSkillData = await db.select({
+          id: gameQuestSkillCatalog.id,
+          name: gameQuestSkillCatalog.name,
+          skillType: gameQuestSkillCatalog.skillType,
+          powerPercent: gameQuestSkillCatalog.powerPercent,
+          mpCost: gameQuestSkillCatalog.mpCost,
+          cooldown: gameQuestSkillCatalog.cooldown,
+          wuxing: gameQuestSkillCatalog.wuxing,
+          additionalEffect: gameQuestSkillCatalog.additionalEffect,
+        }).from(gameQuestSkillCatalog).where(inArray(gameQuestSkillCatalog.id, questSkillIds));
+        charCombatSkills = questSkillData.map(qs => {
+          const learned = equippedQuestSkills.find(e => e.skillId === qs.id);
+          const mappedType = qs.skillType === "heal" ? "heal" :
+            qs.skillType === "buff" ? "buff" :
+            qs.skillType === "utility" ? "buff" : "attack";
+          return {
+            id: `quest_${qs.id}`,
+            name: qs.name,
+            skillType: mappedType,
+            damageMultiplier: (qs.powerPercent ?? 100) / 100,
+            mpCost: qs.mpCost ?? 0,
+            wuxing: qs.wuxing ?? undefined,
+            cooldown: qs.cooldown ?? 3,
+            currentCooldown: 0,
+            additionalEffect: qs.additionalEffect as any ?? undefined,
+            skillLevel: learned?.level ?? 1,
+          };
+        });
+      }
+
+      const charParticipant = buildCharacterParticipant(agent, nextId++, charCombatSkills);
       participants.push(charParticipant);
 
       if (activePet && petCatalog) {

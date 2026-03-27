@@ -13,6 +13,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import GameTabLayout from "@/components/GameTabLayout";
 import { ArrowLeft, RefreshCw, ShoppingBag, Gem, Eye, Sparkles, PackageOpen } from "lucide-react";
+import ItemDetailModal from "@/components/game/ItemDetailModal";
 import { getItemInfo, RARITY_COLORS as SHARED_RARITY_COLORS } from "../../../../shared/itemNames";
 
 // ─── 稀有度顏色 ─────────────────────────────────────────────
@@ -128,8 +129,9 @@ interface ShopItemCardProps {
   rarity?: string;
   canAfford: boolean;
   onBuy: () => void;
+  onDetail?: () => void;
 }
-const ShopItemCard: React.FC<ShopItemCardProps> = ({ name, description, price, currency, rarity = "common", canAfford, onBuy }) => {
+const ShopItemCard: React.FC<ShopItemCardProps> = ({ name, description, price, currency, rarity = "common", canAfford, onBuy, onDetail }) => {
   const rc = RARITY_COLORS[rarity] ?? RARITY_COLORS.common;
   const isGold = currency === "gold";
   return (
@@ -143,7 +145,9 @@ const ShopItemCard: React.FC<ShopItemCardProps> = ({ name, description, price, c
         flexDirection: "column",
         gap: "6px",
         boxShadow: rc.glow,
+        cursor: onDetail ? "pointer" : "default",
       }}
+      onClick={onDetail}
     >
       {/* 頂部：名稱 + 稀有度 */}
       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -163,7 +167,7 @@ const ShopItemCard: React.FC<ShopItemCardProps> = ({ name, description, price, c
           {isGold ? "🪙" : "💎"} {price.toLocaleString()}
         </span>
         <button
-          onClick={onBuy}
+          onClick={(e) => { e.stopPropagation(); onBuy(); }}
           disabled={!canAfford}
           style={{
             padding: "5px 14px",
@@ -201,6 +205,7 @@ export default function GameShop() {
     rarity?: string;
     shopType: "coin" | "stone" | "hidden";
   } | null>(null);
+  const [detailItemKey, setDetailItemKey] = useState<string | null>(null);
 
   // ─── 資料查詢 ───
   const { data, isLoading, refetch } = trpc.gameWorld.getGameShopItems.useQuery(undefined, {
@@ -306,6 +311,13 @@ export default function GameShop() {
           onConfirm={handleConfirmBuy}
           onCancel={() => setConfirmItem(null)}
           isPending={buyGameItem.isPending || buyHiddenItem.isPending}
+        />
+      )}
+      {/* 道具詳情彈窗 */}
+      {detailItemKey && (
+        <ItemDetailModal
+          itemKey={detailItemKey}
+          onClose={() => setDetailItemKey(null)}
         />
       )}
 
@@ -455,6 +467,7 @@ export default function GameShop() {
                         currency: "gold",
                         shopType: "coin",
                       })}
+                      onDetail={() => setDetailItemKey((item as any).itemKey)}
                     />
                   ))}
                 </div>
@@ -498,6 +511,7 @@ export default function GameShop() {
                         rarity: item.rarity,
                         shopType: "stone",
                       })}
+                      onDetail={() => setDetailItemKey((item as any).itemKey)}
                     />
                   ))}
                 </div>
@@ -646,6 +660,7 @@ export default function GameShop() {
                             rarity: item.rarity,
                             shopType: "hidden",
                           })}
+                          onDetail={() => setDetailItemKey((item as any).itemKey)}
                         />
                       );
                     })}

@@ -7,9 +7,9 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, hiddenShopInstances, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements, agentSkills, gameConfig } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, hiddenShopInstances, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements, agentSkills, gameConfig, gameShopPurchaseLog } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
-import { eq, and, desc, gt, lt, sql, count, asc, inArray } from "drizzle-orm";
+import { eq, and, desc, gt, lt, sql, count, asc, inArray, like } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
 import { broadcastToAll, broadcastToAllIncludingAnon, sendToAgent } from "../wsServer";
 import { updatePvpStats } from "../achievementEngine";
@@ -1977,6 +1977,12 @@ export const gameWorldRouter = router({
         const [item] = await db.select().from(gameVirtualShop)
           .where(and(eq(gameVirtualShop.id, input.itemId), eq(gameVirtualShop.isOnSale, 1))).limit(1);
         if (!item) throw new TRPCError({ code: "NOT_FOUND", message: "商品不存在" });
+        // 限購檢查
+        if (item.purchaseLimit > 0) {
+          const [logCount] = await db.select({ cnt: count() }).from(gameShopPurchaseLog)
+            .where(and(eq(gameShopPurchaseLog.agentId, agent.id), eq(gameShopPurchaseLog.shopType, "coin"), eq(gameShopPurchaseLog.shopItemId, item.id)));
+          if ((logCount?.cnt ?? 0) >= item.purchaseLimit) throw new TRPCError({ code: "BAD_REQUEST", message: `此商品限購 ${item.purchaseLimit} 次，已達上限` });
+        }
         if (agent.gold < item.priceCoins) throw new TRPCError({ code: "BAD_REQUEST", message: "金幣不足" });
         // 扣除金幣
         await db.update(gameAgents).set({ gold: agent.gold - item.priceCoins, updatedAt: Date.now() })
@@ -1996,12 +2002,20 @@ export const gameWorldRouter = router({
           detail: { type: "shop_buy", itemId: item.itemKey, qty: item.quantity, cost: item.priceCoins, currency: "gold" },
           createdAt: Date.now(),
         });
+        // 記錄購買
+        await db.insert(gameShopPurchaseLog).values({ agentId: agent.id, shopType: "coin", shopItemId: item.id, itemKey: item.itemKey, quantity: item.quantity, purchasedAt: Date.now() });
         return { success: true, itemName: item.displayName, quantity: item.quantity, currency: "gold", cost: item.priceCoins };
       } else {
         // 靈石商店
         const [item] = await db.select().from(gameSpiritShop)
           .where(and(eq(gameSpiritShop.id, input.itemId), eq(gameSpiritShop.isOnSale, 1))).limit(1);
         if (!item) throw new TRPCError({ code: "NOT_FOUND", message: "商品不存在" });
+        // 限購檢查
+        if (item.purchaseLimit > 0) {
+          const [logCount] = await db.select({ cnt: count() }).from(gameShopPurchaseLog)
+            .where(and(eq(gameShopPurchaseLog.agentId, agent.id), eq(gameShopPurchaseLog.shopType, "stone"), eq(gameShopPurchaseLog.shopItemId, item.id)));
+          if ((logCount?.cnt ?? 0) >= item.purchaseLimit) throw new TRPCError({ code: "BAD_REQUEST", message: `此商品限購 ${item.purchaseLimit} 次，已達上限` });
+        }
         const userRows = await db.select({ gameStones: users.gameStones, id: users.id })
           .from(users).where(eq(users.id, ctx.user.id)).limit(1);
         if (!userRows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "用戶不存在" });
@@ -2024,6 +2038,8 @@ export const gameWorldRouter = router({
           detail: { type: "shop_buy", itemId: item.itemKey, qty: item.quantity, cost: item.priceStones, currency: "stones" },
           createdAt: Date.now(),
         });
+        // 記錄購買
+        await db.insert(gameShopPurchaseLog).values({ agentId: agent.id, shopType: "stone", shopItemId: item.id, itemKey: item.itemKey, quantity: item.quantity, purchasedAt: Date.now() });
         return { success: true, itemName: item.displayName, quantity: item.quantity, currency: "stones", cost: item.priceStones };
       }
     }),
@@ -2831,5 +2847,43 @@ export const gameWorldRouter = router({
         remainingPoints: remainingPoints - actualCount,
         newStats,
       };
+    }),
+
+  // ─── 公開道具/裝備/技能詳情查詢（供商店使用） ───
+  getItemDetail: publicProcedure
+    .input(z.object({ itemKey: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const key = input.itemKey;
+      const isEquip = key.startsWith("E_") || key.startsWith("equip-");
+      const isSkill = key.startsWith("S_") || key.startsWith("skill-");
+
+      if (isEquip) {
+        const rows = await db.select().from(gameEquipmentCatalog)
+          .where(eq(gameEquipmentCatalog.equipId, key)).limit(1);
+        if (rows[0]) return { type: "equip" as const, data: rows[0] };
+        // fallback: 搜尋名稱
+        const byName = await db.select().from(gameEquipmentCatalog)
+          .where(like(gameEquipmentCatalog.name, `%${key}%`)).limit(1);
+        return { type: "equip" as const, data: byName[0] ?? null };
+      }
+
+      if (isSkill) {
+        const rows = await db.select().from(gameSkillCatalog)
+          .where(eq(gameSkillCatalog.skillId, key)).limit(1);
+        if (rows[0]) return { type: "skill" as const, data: rows[0] };
+        const byName = await db.select().from(gameSkillCatalog)
+          .where(like(gameSkillCatalog.name, `%${key}%`)).limit(1);
+        return { type: "skill" as const, data: byName[0] ?? null };
+      }
+
+      // 道具
+      const rows = await db.select().from(gameItemCatalog)
+        .where(eq(gameItemCatalog.itemId, key)).limit(1);
+      if (rows[0]) return { type: "item" as const, data: rows[0] };
+      const byName = await db.select().from(gameItemCatalog)
+        .where(like(gameItemCatalog.name, `%${key}%`)).limit(1);
+      return { type: "item" as const, data: byName[0] ?? null };
     }),
 });

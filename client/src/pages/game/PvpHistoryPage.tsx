@@ -184,7 +184,7 @@ export default function PvpHistoryPage() {
 
         {/* 前往排行榜 */}
         <div className="text-center">
-          <Link href="/game/lobby">
+          <Link href="/game/achievements">
             <Button variant="outline" className="border-gray-700 text-gray-400 hover:text-white">
               <Trophy className="w-4 h-4 mr-2" />
               前往排行榜挑戰

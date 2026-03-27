@@ -1,0 +1,8 @@
+{
+  "query": "SELECT 'equipment' as tbl, COUNT(*) as cnt FROM game_equipment_catalog WHERE equipment_id LIKE 'item-177%' OR equipment_id LIKE 'eq-177%' UNION ALL SELECT 'skill' as tbl, COUNT(*) as cnt FROM game_skill_catalog WHERE skill_id LIKE 'item-177%' OR skill_id LIKE 'sk-177%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT 'equipment' as tbl, COUNT(*) as cnt FROM game_equipment_catalog WHERE equipment_id LIKE 'item-177%' OR equipment_id LIKE 'eq-177%' UNION ALL SELECT 'skill' as tbl, COUNT(*) as cnt FROM game_skill_catalog WHERE skill_id LIKE 'item-177%' OR skill_id LIKE 'sk-177%';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'equipment_id' in 'where clause'"
+  ]
+}

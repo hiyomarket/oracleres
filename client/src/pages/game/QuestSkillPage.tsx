@@ -141,10 +141,10 @@ export default function QuestSkillPage() {
       <div className="sticky top-0 z-10 bg-gray-950/95 backdrop-blur border-b border-gray-800 px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/game/lobby">
+            <Link href="/game">
               <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
                 <ArrowLeft className="w-4 h-4 mr-1" />
-                返回大廳
+                返回世界
               </Button>
             </Link>
             <div>

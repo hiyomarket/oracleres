@@ -4718,3 +4718,45 @@
 - [x] 支援一般/靈相/密店三種商店類型預覽
 - [x] 商品卡片含稀有度色彩 + 類型標籤 + 推薦理由
 - [x] 56 個測試檔案，1194 項測試全數通過，TypeScript 零錯誤
+
+## M13 天命技能任務修復 + 亂碼修復 + 商店詳情 + BP 分配 + 限購
+
+### Bug 修復：天命技能任務系統
+- [x] 分析現有天命技能任務流程和 bug 根因
+- [x] 改為繳交道具流程（打怪/採集稀有材料 → 繳交道具 → 學習技能）
+- [x] 未繳交道具時阻擋進入下一步
+- [x] 學完技能後自動加入角色技能欄位
+- [x] 後台天命 AI 生成任務邏輯配合修改
+
+### Bug 修復：道具/裝備/技能亂碼
+- [x] 檢查所有道具是否有亂碼或缺少中文名稱
+- [x] 檢查所有裝備是否有亂碼或缺少中文名稱
+- [x] 檢查所有技能是否有亂碼或缺少中文名稱
+- [x] 清理測試道具的亂碼問題（刪除 25 筆 item-177xxx 測試道具）
+
+### 商店商品詳情彈窗
+- [x] 商店商品點擊後顯示能力和數值詳情（ItemDetailModal + getItemDetail API）
+
+### 寵物 BP 手動分配介面
+- [x] 寵物升級或使用道具時手動分配 BP 點數到五維屬性（BpAllocatePanel + allocateBp API）
+
+### 商店限購機制
+- [x] 商品加入每日/每週限購數量（purchaseLimit 欄位）
+- [x] 後端限購驗證邏輯（buyGameShopItem 限購檢查 + gameShopPurchaseLog 記錄）
+- [x] 前端限購數量顯示
+
+### 遊戲大廳功能遷移到底端功能區
+- [x] 分析遊戲大廳（GameLobby）中的功能列表
+- [x] 將功能遷移到遊戲底端功能區（VirtualWorldPage 底部 Tab）
+- [x] 確保手機版和桌機版同步呈現
+- [x] 移除或重定向遊戲大廳中的過時連結
+
+## 功能遷移 - 遊戲大廳功能區整理
+
+- [x] 將排行榜功能整合到底端 Tab Bar 的「排行/成就」頁面
+- [x] 將成就徽章牆功能整合到底端 Tab Bar 的「排行/成就」頁面
+- [x] 關閉 /game/lobby 路由（從 App.tsx 移除）
+- [x] 修正所有連結到 /game/lobby 的地方（SkillCatalogPage、PvpHistoryPage、QuestSkillPage）
+- [x] 商店商品點擊顯示能力和數值詳情（ItemDetailModal）
+- [x] 寵物 BP 手動分配介面（BpAllocatePanel）
+- [x] 商店限購機制（purchaseLimit + gameShopPurchaseLog）

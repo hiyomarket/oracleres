@@ -1930,6 +1930,8 @@ export const gameVirtualShop = mysqlTable("game_virtual_shop", {
   sortOrder: int("sort_order").notNull().default(0),
   /** 是否上架 */
   isOnSale: tinyint("is_on_sale").notNull().default(1),
+  /** 每人限購數量（0 = 不限） */
+  purchaseLimit: int("purchase_limit").notNull().default(0),
   /** 是否鎖定（鎖定後 AI 刷新不會覆蓋） */
   isLocked: tinyint("is_locked").notNull().default(0),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
@@ -1959,12 +1961,27 @@ export const gameSpiritShop = mysqlTable("game_spirit_shop", {
   sortOrder: int("sort_order").notNull().default(0),
   /** 是否上架 */
   isOnSale: tinyint("is_on_sale").notNull().default(1),
+  /** 每人限購數量（0 = 不限） */
+  purchaseLimit: int("purchase_limit").notNull().default(0),
   /** 是否鎖定（鎖定後 AI 刷新不會覆蓋） */
   isLocked: tinyint("is_locked").notNull().default(0),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
 export type GameSpiritShopItem = typeof gameSpiritShop.$inferSelect;
 export type InsertGameSpiritShopItem = typeof gameSpiritShop.$inferInsert;
+
+/**
+ * 商店購買記錄（用於限購檢查）
+ */
+export const gameShopPurchaseLog = mysqlTable("game_shop_purchase_log", {
+  id: int("id").autoincrement().primaryKey(),
+  agentId: int("agent_id").notNull(),
+  shopType: varchar("shop_type", { length: 20 }).notNull(),
+  shopItemId: int("shop_item_id").notNull(),
+  itemKey: varchar("item_key", { length: 100 }).notNull(),
+  quantity: int("quantity").notNull().default(1),
+  purchasedAt: bigint("purchased_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
 
 /**
  * 密店商品池（隨機密店商品）
@@ -3180,6 +3197,8 @@ export const gamePlayerPets = mysqlTable("game_player_pets", {
   bpDefense: int("bp_defense").notNull().default(20),
   bpAgility: int("bp_agility").notNull().default(20),
   bpMagic: int("bp_magic").notNull().default(20),
+  /** 未分配 BP（升級時獲得，玩家手動分配） */
+  bpUnallocated: int("bp_unallocated").notNull().default(0),
   /** 戰鬥數值（由 BP 推導，快取用） */
   hp: int("hp").notNull().default(50),
   maxHp: int("max_hp").notNull().default(50),

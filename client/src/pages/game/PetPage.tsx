@@ -282,6 +282,9 @@ export default function PetPage() {
           accentColor={wuxingColor}
         />
 
+        {/* BP 手動分配 */}
+        <BpAllocatePanel pet={pet} wuxingColor={wuxingColor} onDone={() => { refetchDetail(); refetchPets(); }} />
+
         {/* 戰鬥數值 */}
         <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
           <h4 className="text-white text-sm font-bold mb-3">⚔️ 戰鬥數值</h4>
@@ -465,6 +468,105 @@ export default function PetPage() {
             );
           })}
         </div>
+      </div>
+    );
+  }
+
+  // ─── BP 手動分配面板 ───
+  function BpAllocatePanel({ pet, wuxingColor, onDone }: { pet: any; wuxingColor: string; onDone: () => void }) {
+    const [alloc, setAlloc] = useState({ constitution: 0, strength: 0, defense: 0, agility: 0, magic: 0 });
+    const unallocated = pet.bpUnallocated ?? 0;
+    const totalUsed = alloc.constitution + alloc.strength + alloc.defense + alloc.agility + alloc.magic;
+    const remaining = unallocated - totalUsed;
+
+    const allocMut = trpc.gamePet.allocateBp.useMutation({
+      onSuccess: () => {
+        toast.success(`成功分配 ${totalUsed} 點 BP`);
+        setAlloc({ constitution: 0, strength: 0, defense: 0, agility: 0, magic: 0 });
+        onDone();
+      },
+      onError: (e) => toast.error(e.message),
+    });
+
+    if (unallocated <= 0) return null;
+
+    const dims = [
+      { key: "constitution" as const, label: "體質", emoji: "❤️", color: "#22c55e", current: pet.bpConstitution },
+      { key: "strength" as const, label: "力量", emoji: "⚔️", color: "#ef4444", current: pet.bpStrength },
+      { key: "defense" as const, label: "防禦", emoji: "🛡️", color: "#f59e0b", current: pet.bpDefense },
+      { key: "agility" as const, label: "敏捷", emoji: "⚡", color: "#38bdf8", current: pet.bpAgility },
+      { key: "magic" as const, label: "魔力", emoji: "🔮", color: "#a855f7", current: pet.bpMagic },
+    ];
+
+    return (
+      <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${wuxingColor}20` }}>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-white text-sm font-bold">🎯 BP 分配</h4>
+          <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)" }}>
+            可用 {remaining} / {unallocated}
+          </span>
+        </div>
+
+        <div className="space-y-3">
+          {dims.map(d => (
+            <div key={d.key} className="flex items-center gap-2">
+              <span className="text-sm w-6 text-center">{d.emoji}</span>
+              <span className="text-gray-400 text-xs w-8">{d.label}</span>
+              <span className="text-gray-500 text-xs w-6 text-right">{d.current}</span>
+              <div className="flex-1 flex items-center gap-1">
+                <button
+                  onClick={() => setAlloc(a => ({ ...a, [d.key]: Math.max(0, a[d.key] - 1) }))}
+                  disabled={alloc[d.key] <= 0}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-all disabled:opacity-20"
+                  style={{ background: "rgba(255,255,255,0.08)", color: "#e2e8f0" }}
+                >
+                  −
+                </button>
+                <div className="flex-1 h-7 rounded-lg flex items-center justify-center text-sm font-bold"
+                  style={{ background: alloc[d.key] > 0 ? `${d.color}15` : "rgba(255,255,255,0.03)", color: alloc[d.key] > 0 ? d.color : "#475569", border: `1px solid ${alloc[d.key] > 0 ? d.color + '40' : 'rgba(255,255,255,0.06)'}` }}>
+                  {alloc[d.key] > 0 ? `+${alloc[d.key]}` : "0"}
+                </div>
+                <button
+                  onClick={() => setAlloc(a => ({ ...a, [d.key]: a[d.key] + 1 }))}
+                  disabled={remaining <= 0}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-all disabled:opacity-20"
+                  style={{ background: "rgba(255,255,255,0.08)", color: "#e2e8f0" }}
+                >
+                  +
+                </button>
+                {/* 快速 +5 */}
+                <button
+                  onClick={() => setAlloc(a => ({ ...a, [d.key]: a[d.key] + Math.min(5, remaining) }))}
+                  disabled={remaining <= 0}
+                  className="text-xs px-1.5 py-1 rounded transition-all disabled:opacity-20"
+                  style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8" }}
+                >
+                  +5
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {totalUsed > 0 && (
+          <div className="flex gap-2 mt-4">
+            <button
+              onClick={() => setAlloc({ constitution: 0, strength: 0, defense: 0, agility: 0, magic: 0 })}
+              className="flex-1 py-2 rounded-xl text-sm text-gray-400 hover:text-white transition-all"
+              style={{ background: "rgba(255,255,255,0.05)" }}
+            >
+              重置
+            </button>
+            <button
+              onClick={() => allocMut.mutate({ petId: pet.id, ...alloc })}
+              disabled={allocMut.isPending}
+              className="flex-1 py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
+              style={{ background: `linear-gradient(135deg, ${wuxingColor}, ${wuxingColor}80)` }}
+            >
+              {allocMut.isPending ? "分配中..." : `確認分配 (${totalUsed} 點)`}
+            </button>
+          </div>
+        )}
       </div>
     );
   }

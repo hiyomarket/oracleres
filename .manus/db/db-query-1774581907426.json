@@ -1,0 +1,210 @@
+{
+  "query": "SELECT item_id, name, category, rarity, wuxing, is_active FROM game_item_catalog WHERE item_id LIKE 'item-177%' OR name IS NULL OR name = '' LIMIT 50;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, category, rarity, wuxing, is_active FROM game_item_catalog WHERE item_id LIKE 'item-177%' OR name IS NULL OR name = '' LIMIT 50;",
+  "rows": [
+    {
+      "item_id": "item-1774499071576-0",
+      "name": "測試道具_M3E_1774499071575",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774499093556-0",
+      "name": "測試道具_M3E_1774499093555",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774514416699-0",
+      "name": "測試道具_M3E_1774514416699",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774514991606-0",
+      "name": "測試道具_M3E_1774514991605",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774516619355-0",
+      "name": "測試道具_M3E_1774516619354",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774518632594-0",
+      "name": "測試道具_M3E_1774518632594",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774518696636-0",
+      "name": "測試道具_M3E_1774518696635",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774520293022-0",
+      "name": "測試道具_M3E_1774520293021",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774534127113-0",
+      "name": "測試道具_M3E_1774534127112",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774534537932-0",
+      "name": "測試道具_M3E_1774534537932",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774538565927-0",
+      "name": "測試道具_M3E_1774538565927",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774540171899-0",
+      "name": "測試道具_M3E_1774540171898",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774541888334-0",
+      "name": "測試道具_M3E_1774541888333",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774551135289-0",
+      "name": "測試道具_M3E_1774551135289",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774555686245-0",
+      "name": "測試道具_M3E_1774555686244",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774555741550-0",
+      "name": "測試道具_M3E_1774555741549",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774555800261-0",
+      "name": "測試道具_M3E_1774555800261",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774570209586-0",
+      "name": "測試道具_M3E_1774570209585",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774570259312-0",
+      "name": "測試道具_M3E_1774570259311",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774573716353-0",
+      "name": "測試道具_M3E_1774573716353",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774574062667-0",
+      "name": "測試道具_M3E_1774574062666",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774574345892-0",
+      "name": "測試道具_M3E_1774574345891",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774577075966-0",
+      "name": "測試道具_M3E_1774577075965",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774578586601-0",
+      "name": "測試道具_M3E_1774578586600",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    },
+    {
+      "item_id": "item-1774579959230-0",
+      "name": "測試道具_M3E_1774579959229",
+      "category": "material_basic",
+      "rarity": "common",
+      "wuxing": "火",
+      "is_active": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\tcategory\trarity\twuxing\tis_active\nitem-1774499071576-0\t測試道具_M3E_1774499071575\tmaterial_basic\tcommon\t火\t1\nitem-1774499093556-0\t測試道具_M3E_1774499093555\tmaterial_basic\tcommon\t火\t1\nitem-1774514416699-0\t測試道具_M3E_1774514416699\tmaterial_basic\tcommon\t火\t1\nitem-1774514991606-0\t測試道具_M3E_1774514991605\tmaterial_basic\tcommon\t火\t1\nitem-1774516619355-0\t測試道具_M3E_1774516619354\tmaterial_basic\tcommon\t火\t1\nitem-1774518632594-0\t測試道具_M3E_1774518632594\tmaterial_basic\tcommon\t火\t1\nitem-1774518696636-0\t測試道具_M3E_1774518696635\tmaterial_basic\tcommon\t火\t1\nitem-1774520293022-0\t測試道具_M3E_1774520293021\tmaterial_basic\tcommon\t火\t1\nitem-1774534127113-0\t測試道具_M3E_1774534127112\tmaterial_basic\tcommon\t火\t1\nitem-1774534537932-0\t測試道具_M3E_1774534537932\tmaterial_basic\tcommon\t火\t1\nitem-1774538565927-0\t測試道具_M3E_1774538565927\tmaterial_basic\tcommon\t火\t1\nitem-1774540171899-0\t測試道具_M3E_1774540171898\tmaterial_basic\tcommon\t火\t1\nitem-1774541888334-0\t測試道具_M3E_1774541888333\tmaterial_basic\tcommon\t火\t1\nitem-1774551135289-0\t測試道具_M3E_1774551135289\tmaterial_basic\tcommon\t火\t1\nitem-1774555686245-0\t測試道具_M3E_1774555686244\tmaterial_basic\tcommon\t火\t1\nitem-1774555741550-0\t測試道具_M3E_1774555741549\tmaterial_basic\tcommon\t火\t1\nitem-1774555800261-0\t測試道具_M3E_1774555800261\tmaterial_basic\tcommon\t火\t1\nitem-1774570209586-0\t測試道具_M3E_1774570209585\tmaterial_basic\tcommon\t火\t1\nitem-1774570259312-0\t測試道具_M3E_1774570259311\tmaterial_basic\tcommon\t火\t1\nitem-1774573716353-0\t測試道具_M3E_1774573716353\tmaterial_basic\tcommon\t火\t1\nitem-1774574062667-0\t測試道具_M3E_1774574062666\tmaterial_basic\tcommon\t火\t1\nitem-1774574345892-0\t測試道具_M3E_1774574345891\tmaterial_basic\tcommon\t火\t1\nitem-1774577075966-0\t測試道具_M3E_1774577075965\tmaterial_basic\tcommon\t火\t1\nitem-1774578586601-0\t測試道具_M3E_1774578586600\tmaterial_basic\tcommon\t火\t1\nitem-1774579959230-0\t測試道具_M3E_1774579959229\tmaterial_basic\tcommon\t火\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1547
+}

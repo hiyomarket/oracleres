@@ -8,11 +8,13 @@ import {
   gameQuestSteps,
   gameQuestProgress,
   gameLearnedQuestSkills,
+  agentInventory,
+  gameItemCatalog,
   type InsertGameNpcCatalog,
   type InsertGameQuestSkillCatalog,
   type InsertGameQuestStep,
 } from "../../drizzle/schema";
-import { eq, and, sql, desc, asc, inArray } from "drizzle-orm";
+import { eq, and, sql, desc, asc, inArray, like } from "drizzle-orm";
 import { gameAgents } from "../../drizzle/schema";
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -499,8 +501,81 @@ const questProgressRouter = router({
         .orderBy(asc(gameQuestSteps.stepNumber));
 
       const currentStepIdx = steps.findIndex(s => s.stepNumber === progress.currentStep);
-      const nextStep = steps[currentStepIdx + 1];
+      if (currentStepIdx < 0) throw new Error("找不到當前步驟");
+      const currentStep = steps[currentStepIdx];
 
+      // ─── 道具繳交驗證 ───
+      const objectives = (typeof currentStep.objectives === "string"
+        ? JSON.parse(currentStep.objectives)
+        : currentStep.objectives) as any;
+
+      if (objectives && (objectives.type === "collect" || objectives.type === "deliver")) {
+        const targets = objectives.targets as Array<{ name: string; count: number; itemId?: string }>;
+        if (targets && targets.length > 0) {
+          const missingItems: string[] = [];
+          for (const target of targets) {
+            // 用 itemId 或 name 查找道具
+            let matchedItemId = target.itemId;
+            if (!matchedItemId) {
+              // 用名稱模糊匹配 gameItemCatalog
+              const [catalogItem] = await db!.select({ itemId: gameItemCatalog.itemId })
+                .from(gameItemCatalog)
+                .where(eq(gameItemCatalog.name, target.name))
+                .limit(1);
+              matchedItemId = catalogItem?.itemId;
+            }
+
+            if (!matchedItemId) {
+              missingItems.push(`${target.name} (道具不存在於圖鑑中)`);
+              continue;
+            }
+
+            // 檢查背包中是否有足夠數量
+            const [inv] = await db!.select({ quantity: agentInventory.quantity })
+              .from(agentInventory)
+              .where(and(
+                eq(agentInventory.agentId, agentId),
+                eq(agentInventory.itemId, matchedItemId),
+              ))
+              .limit(1);
+
+            const held = inv?.quantity ?? 0;
+            if (held < (target.count || 1)) {
+              missingItems.push(`${target.name} (需要 ${target.count || 1} 個，持有 ${held} 個)`);
+            }
+          }
+
+          if (missingItems.length > 0) {
+            throw new Error(`道具不足，無法完成此步驟：\n${missingItems.join("\n")}`);
+          }
+
+          // 扣除道具
+          for (const target of targets) {
+            let matchedItemId = target.itemId;
+            if (!matchedItemId) {
+              const [catalogItem] = await db!.select({ itemId: gameItemCatalog.itemId })
+                .from(gameItemCatalog)
+                .where(eq(gameItemCatalog.name, target.name))
+                .limit(1);
+              matchedItemId = catalogItem?.itemId;
+            }
+            if (!matchedItemId) continue;
+
+            const deductAmount = target.count || 1;
+            // 減少數量
+            await db!.execute(
+              sql`UPDATE agent_inventory SET quantity = quantity - ${deductAmount}, updated_at = ${Date.now()} WHERE agent_id = ${agentId} AND item_id = ${matchedItemId} AND quantity >= ${deductAmount}`
+            );
+            // 刪除數量為 0 的道具
+            await db!.execute(
+              sql`DELETE FROM agent_inventory WHERE agent_id = ${agentId} AND item_id = ${matchedItemId} AND quantity <= 0`
+            );
+          }
+        }
+      }
+      // ─── 道具繳交驗證結束 ───
+
+      const nextStep = steps[currentStepIdx + 1];
       const now = Date.now();
       if (nextStep) {
         // 進入下一步

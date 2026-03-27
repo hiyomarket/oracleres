@@ -1,0 +1,150 @@
+{
+  "query": "SELECT id, skill_id, step_number, title, objectives FROM game_quest_steps WHERE objectives LIKE '%collect%' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, skill_id, step_number, title, objectives FROM game_quest_steps WHERE objectives LIKE '%collect%' LIMIT 20;",
+  "rows": [
+    {
+      "id": "2",
+      "skill_id": "1",
+      "step_number": "2",
+      "title": "凝土之精",
+      "objectives": "{\"targets\": [{\"count\": 5, \"name\": \"厚土晶髓\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "4",
+      "skill_id": "2",
+      "step_number": "1",
+      "title": "追逐風的痕跡",
+      "objectives": "{\"targets\": [{\"count\": 5, \"name\": \"疾風兔之影\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "5",
+      "skill_id": "2",
+      "step_number": "2",
+      "title": "風刃的磨礪",
+      "objectives": "{\"targets\": [{\"count\": 7, \"name\": \"風刃草\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "8",
+      "skill_id": "3",
+      "step_number": "2",
+      "title": "引導火源",
+      "objectives": "{\"targets\": [{\"count\": 3, \"name\": \"地心火種\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "28",
+      "skill_id": "8",
+      "step_number": "2",
+      "title": "毒藥調配",
+      "objectives": "{\"targets\": [{\"count\": 5, \"dropRate\": 0.3, \"name\": \"解毒草\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "37",
+      "skill_id": "10",
+      "step_number": "2",
+      "title": "收集暖陽石",
+      "objectives": "{\"targets\": [{\"count\": 3, \"dropRate\": 0.2, \"name\": \"暖陽石\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "47",
+      "skill_id": "12",
+      "step_number": "2",
+      "title": "星辰共鳴",
+      "objectives": "{\"targets\": [{\"count\": 5, \"dropRate\": 0.1, \"name\": \"星辰碎片\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "52",
+      "skill_id": "13",
+      "step_number": "2",
+      "title": "催眠訓練",
+      "objectives": "{\"targets\": [{\"count\": 3, \"dropRate\": 0.25, \"name\": \"清醒草\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "61",
+      "skill_id": "15",
+      "step_number": "2",
+      "title": "混亂試劑",
+      "objectives": "{\"targets\": [{\"count\": 1, \"dropRate\": 0.05, \"name\": \"秩序護符\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "65",
+      "skill_id": "16",
+      "step_number": "2",
+      "title": "毒素收集",
+      "objectives": "{\"targets\": [{\"count\": 5, \"dropRate\": 0.3, \"name\": \"解毒草\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "70",
+      "skill_id": "17",
+      "step_number": "2",
+      "title": "記憶碎片",
+      "objectives": "{\"targets\": [{\"count\": 1, \"dropRate\": 0.03, \"name\": \"古老忘卻之證\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "75",
+      "skill_id": "18",
+      "step_number": "2",
+      "title": "葡萄收集",
+      "objectives": "{\"targets\": [{\"count\": 10, \"dropRate\": 0.5, \"name\": \"熟透葡萄\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "82",
+      "skill_id": "20",
+      "step_number": "2",
+      "title": "湧泉之心",
+      "objectives": "{\"targets\": [{\"count\": 1, \"dropRate\": 0.08, \"name\": \"湧泉之心\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "85",
+      "skill_id": "21",
+      "step_number": "2",
+      "title": "復活聖徽",
+      "objectives": "{\"targets\": [{\"count\": 1, \"dropRate\": 0.05, \"name\": \"復活聖徽\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "89",
+      "skill_id": "22",
+      "step_number": "2",
+      "title": "淨化水晶",
+      "objectives": "{\"targets\": [{\"count\": 3, \"dropRate\": 0.15, \"name\": \"淨化水晶\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "113",
+      "skill_id": "28",
+      "step_number": "3",
+      "title": "黃金之鑰",
+      "objectives": "{\"targets\": [{\"count\": 1, \"dropRate\": 0.1, \"name\": \"黃金之鑰\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "117",
+      "skill_id": "29",
+      "step_number": "3",
+      "title": "聖盾碎片",
+      "objectives": "{\"targets\": [{\"count\": 1, \"dropRate\": 0.05, \"name\": \"永恆之盾碎片\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "120",
+      "skill_id": "30",
+      "step_number": "2",
+      "title": "基礎採集",
+      "objectives": "{\"targets\": [{\"count\": 10, \"dropRate\": 0.8, \"name\": \"野草\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "121",
+      "skill_id": "30",
+      "step_number": "3",
+      "title": "採集考核",
+      "objectives": "{\"targets\": [{\"count\": 1, \"dropRate\": 0.1, \"name\": \"稀有草藥\"}], \"type\": \"collect\"}"
+    },
+    {
+      "id": "128",
+      "skill_id": "32",
+      "step_number": "2",
+      "title": "鑑定基礎",
+      "objectives": "{\"targets\": [{\"count\": 5, \"dropRate\": 0.2, \"name\": \"鑑定見習水晶\"}], \"type\": \"collect\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tskill_id\tstep_number\ttitle\tobjectives\n2\t1\t2\t凝土之精\t{\"targets\": [{\"count\": 5, \"name\": \"厚土晶髓\"}], \"type\": \"collect\"}\n4\t2\t1\t追逐風的痕跡\t{\"targets\": [{\"count\": 5, \"name\": \"疾風兔之影\"}], \"type\": \"collect\"}\n5\t2\t2\t風刃的磨礪\t{\"targets\": [{\"count\": 7, \"name\": \"風刃草\"}], \"type\": \"collect\"}\n8\t3\t2\t引導火源\t{\"targets\": [{\"count\": 3, \"name\": \"地心火種\"}], \"type\": \"collect\"}\n28\t8\t2\t毒藥調配\t{\"targets\": [{\"count\": 5, \"dropRate\": 0.3, \"name\": \"解毒草\"}], \"type\": \"collect\"}\n37\t10\t2\t收集暖陽石\t{\"targets\": [{\"count\": 3, \"dropRate\": 0.2, \"name\": \"暖陽石\"}], \"type\": \"collect\"}\n47\t12\t2\t星辰共鳴\t{\"targets\": [{\"count\": 5, \"dropRate\": 0.1, \"name\": \"星辰碎片\"}], \"type\": \"collect\"}\n52\t13\t2\t催眠訓練\t{\"targets\": [{\"count\": 3, \"dropRate\": 0.25, \"name\": \"清醒草\"}], \"type\": \"collect\"}\n61\t15\t2\t混亂試劑\t{\"targets\": [{\"count\": 1, \"dropRate\": 0.05, \"name\": \"秩序護符\"}], \"type\": \"collect\"}\n65\t16\t2\t毒素收集\t{\"targets\": [{\"count\": 5, \"dropRate\": 0.3, \"name\": \"解毒草\"}], \"type\": \"collect\"}\n70\t17\t2\t記憶碎片\t{\"targets\": [{\"count\": 1, \"dropRate\": 0.03, \"name\": \"古老忘卻之證\"}], \"type\": \"collect\"}\n75\t18\t2\t葡萄收集\t{\"targets\": [{\"count\": 10, \"dropRate\": 0.5, \"name\": \"熟透葡萄\"}], \"type\": \"collect\"}\n82\t20\t2\t湧泉之心\t{\"targets\": [{\"count\": 1, \"dropRate\": 0.08, \"name\": \"湧泉之心\"}], \"type\": \"collect\"}\n85\t21\t2\t復活聖徽\t{\"targets\": [{\"count\": 1, \"dropRate\": 0.05, \"name\": \"復活聖徽\"}], \"type\": \"collect\"}\n89\t22\t2\t淨化水晶\t{\"targets\": [{\"count\": 3, \"dropRate\": 0.15, \"name\": \"淨化水晶\"}], \"type\": \"collect\"}\n113\t28\t3\t黃金之鑰\t{\"targets\": [{\"count\": 1, \"dropRate\": 0.1, \"name\": \"黃金之鑰\"}], \"type\": \"collect\"}\n117\t29\t3\t聖盾碎片\t{\"targets\": [{\"count\": 1, \"dropRate\": 0.05, \"name\": \"永恆之盾碎片\"}], \"type\": \"collect\"}\n120\t30\t2\t基礎採集\t{\"targets\": [{\"count\": 10, \"dropRate\": 0.8, \"name\": \"野草\"}], \"type\": \"collect\"}\n121\t30\t3\t採集考核\t{\"targets\": [{\"count\": 1, \"dropRate\": 0.1, \"name\": \"稀有草藥\"}], \"type\": \"collect\"}\n128\t32\t2\t鑑定基礎\t{\"targets\": [{\"count\": 5, \"dropRate\": 0.2, \"name\": \"鑑定見習水晶\"}], \"type\": \"collect\"}\n",
+  "stderr": "",
+  "execution_time_ms": 1479
+}

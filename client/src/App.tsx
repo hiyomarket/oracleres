@@ -45,7 +45,6 @@ const AdminAccessTokens = lazy(() => import("./pages/AdminAccessTokens"));
 const AiView = lazy(() => import("./pages/AiView"));
 const AiEntry = lazy(() => import("./pages/AiEntry"));
 const AvatarRoom = lazy(() => import("./pages/game/AvatarRoom"));
-const GameLobby = lazy(() => import("./pages/game/GameLobby"));
 const VirtualWorldPage = lazy(() => import("./pages/game/VirtualWorldPage"));
 const GameCMS = lazy(() => import("./pages/admin/GameCMS"));
 const AdminGameTheater = lazy(() => import("./pages/admin/AdminGameTheater"));
@@ -145,7 +144,6 @@ function Router() {
                 <Route path={"/admin/access-tokens"} component={AdminAccessTokens} />
                 <Route path={"/admin/game"} component={GameCMS} />
                 <Route path={"/admin/game-theater"} component={AdminGameTheater} />
-                <Route path={"/game/lobby"} component={GameLobby} />
                 <Route path={"/game"} component={VirtualWorldPage} />
                 <Route path={"/game/avatar"} component={AvatarRoom} />
                 <Route path={"/game/shop"} component={Shop} />

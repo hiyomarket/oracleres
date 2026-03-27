@@ -446,26 +446,28 @@ export const gamePetRouter = router({
       
       let currentExp = pet.exp + input.exp;
       let currentLevel = pet.level;
-      let bp = {
+      const bp = {
         constitution: pet.bpConstitution,
         strength: pet.bpStrength,
         defense: pet.bpDefense,
         agility: pet.bpAgility,
         magic: pet.bpMagic,
       };
-      const levelUps: Array<{ level: number; gains: Record<string, number> }> = [];
+      let bpUnallocated = pet.bpUnallocated ?? 0;
+      const levelUps: Array<{ level: number; bpGained: number }> = [];
       
       // 連續升級檢查
+      const growthBonus = 1 + (({ S: 0.3, A: 0.2, B: 0.1, C: 0, D: -0.05, E: -0.1 } as Record<string, number>)[pet.tier] ?? 0);
       while (currentLevel < 60) {
         const expToNext = calcPetExpToNext(currentLevel);
         if (currentExp < expToNext) break;
         currentExp -= expToNext;
         currentLevel++;
         
-        // BP 成長
-        const result = levelUpBP(bp, pet.growthType, pet.tier);
-        bp = { constitution: result.constitution, strength: result.strength, defense: result.defense, agility: result.agility, magic: result.magic };
-        levelUps.push({ level: currentLevel, gains: result.gains });
+        // 每級獲得 4 點未分配 BP（乘以檔位加成）
+        const bpGained = Math.max(1, Math.round(4 * growthBonus));
+        bpUnallocated += bpGained;
+        levelUps.push({ level: currentLevel, bpGained });
       }
       
       // 取得圖鑑資料以獲取種族 HP 倍率
@@ -476,11 +478,7 @@ export const gamePetRouter = router({
       await db.update(gamePlayerPets).set({
         exp: currentExp,
         level: currentLevel,
-        bpConstitution: bp.constitution,
-        bpStrength: bp.strength,
-        bpDefense: bp.defense,
-        bpAgility: bp.agility,
-        bpMagic: bp.magic,
+        bpUnallocated,
         hp: stats.hp,
         maxHp: stats.hp,
         mp: stats.mp,
@@ -498,6 +496,7 @@ export const gamePetRouter = router({
         expToNext: calcPetExpToNext(currentLevel),
         levelUps,
         stats,
+        bpUnallocated,
         totalBp: bp.constitution + bp.strength + bp.defense + bp.agility + bp.magic,
       };
     }),
@@ -781,5 +780,105 @@ export const gamePetRouter = router({
 
       // 返回時序排序（舊→新）
       return history.reverse();
+    }),
+
+  // ════════════════════════════════════════════════════════════════
+  // 7. BP 手動分配
+  // ════════════════════════════════════════════════════════════════
+
+  /** 分配未使用的 BP 點數到指定屬性 */
+  allocateBp: protectedProcedure
+    .input(z.object({
+      petId: z.number().int(),
+      constitution: z.number().int().min(0).default(0),
+      strength: z.number().int().min(0).default(0),
+      defense: z.number().int().min(0).default(0),
+      agility: z.number().int().min(0).default(0),
+      magic: z.number().int().min(0).default(0),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [agent] = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+      const [pet] = await db.select().from(gamePlayerPets)
+        .where(and(eq(gamePlayerPets.id, input.petId), eq(gamePlayerPets.agentId, agent.id)));
+      if (!pet) throw new TRPCError({ code: "NOT_FOUND", message: "寵物不存在" });
+
+      const totalAllocate = input.constitution + input.strength + input.defense + input.agility + input.magic;
+      if (totalAllocate <= 0) throw new TRPCError({ code: "BAD_REQUEST", message: "請至少分配 1 點 BP" });
+      if (totalAllocate > (pet.bpUnallocated ?? 0)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `未分配 BP 不足，可用 ${pet.bpUnallocated ?? 0} 點，嘗試分配 ${totalAllocate} 點` });
+      }
+
+      // 記錄變動前的 BP
+      const oldBp = {
+        constitution: pet.bpConstitution,
+        strength: pet.bpStrength,
+        defense: pet.bpDefense,
+        agility: pet.bpAgility,
+        magic: pet.bpMagic,
+      };
+
+      const newBp = {
+        constitution: pet.bpConstitution + input.constitution,
+        strength: pet.bpStrength + input.strength,
+        defense: pet.bpDefense + input.defense,
+        agility: pet.bpAgility + input.agility,
+        magic: pet.bpMagic + input.magic,
+      };
+
+      // 重新計算戰鬥數值
+      const [catalog] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, pet.petCatalogId));
+      const stats = calcPetStats(newBp, pet.level, catalog?.raceHpMultiplier ?? 1.0);
+
+      await db.update(gamePlayerPets).set({
+        bpConstitution: newBp.constitution,
+        bpStrength: newBp.strength,
+        bpDefense: newBp.defense,
+        bpAgility: newBp.agility,
+        bpMagic: newBp.magic,
+        bpUnallocated: (pet.bpUnallocated ?? 0) - totalAllocate,
+        hp: stats.hp,
+        maxHp: stats.hp,
+        mp: stats.mp,
+        maxMp: stats.mp,
+        attack: stats.attack,
+        defense: stats.defense,
+        speed: stats.speed,
+        magicAttack: stats.magicAttack,
+        updatedAt: Date.now(),
+      }).where(eq(gamePlayerPets.id, pet.id));
+
+      // 記錄 BP 歷史
+      await db.insert(gamePetBpHistory).values({
+        petId: pet.id,
+        source: "manual",
+        description: `手動分配 ${totalAllocate} 點 BP`,
+        prevConstitution: oldBp.constitution,
+        prevStrength: oldBp.strength,
+        prevDefense: oldBp.defense,
+        prevAgility: oldBp.agility,
+        prevMagic: oldBp.magic,
+        newConstitution: newBp.constitution,
+        newStrength: newBp.strength,
+        newDefense: newBp.defense,
+        newAgility: newBp.agility,
+        newMagic: newBp.magic,
+        deltaConstitution: input.constitution,
+        deltaStrength: input.strength,
+        deltaDefense: input.defense,
+        deltaAgility: input.agility,
+        deltaMagic: input.magic,
+        createdAt: Date.now(),
+      });
+
+      return {
+        success: true,
+        newBp,
+        bpUnallocated: (pet.bpUnallocated ?? 0) - totalAllocate,
+        stats,
+        totalBp: newBp.constitution + newBp.strength + newBp.defense + newBp.agility + newBp.magic,
+      };
     }),
 });

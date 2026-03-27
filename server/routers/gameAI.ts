@@ -1375,6 +1375,26 @@ ${monsterDescriptions}
         }
       }
 
+      // 取得可用的真實道具列表（材料類 + 任務類）
+      const availableItems = await db.select({
+        itemId: gameItemCatalog.itemId,
+        name: gameItemCatalog.name,
+        category: gameItemCatalog.category,
+        rarity: gameItemCatalog.rarity,
+        wuxing: gameItemCatalog.wuxing,
+      }).from(gameItemCatalog)
+        .where(eq(gameItemCatalog.isActive, 1));
+
+      // 篩選與技能五行相關的材料，或通用材料
+      const materialItems = availableItems.filter(i =>
+        i.category?.includes('material') || i.category === 'quest'
+      );
+      const wuxingItems = materialItems.filter(i => i.wuxing === skill.wuxing);
+      const otherItems = materialItems.filter(i => i.wuxing !== skill.wuxing);
+      // 優先同五行，再補其他
+      const itemPool = [...wuxingItems, ...otherItems].slice(0, 20);
+      const itemListStr = itemPool.map(i => `${i.itemId}: ${i.name} [${i.rarity}]`).join('\n');
+
       const categoryLabels: Record<string, string> = {
         physical: "物理戰鬥", magic: "魔法攻擊", status: "狀態控制",
         support: "戰鬥輔助", special: "特殊功能", production: "生產",
@@ -1392,23 +1412,36 @@ ${monsterDescriptions}
 稀有度：${skill.rarity}
 教導 NPC：${npcName}（位於 ${npcLocation}）
 
+★★★ 重要：以下是系統中可用的真實道具列表，步驟 2 的 collect 任務必須從這個列表中選擇道具：
+${itemListStr}
+★★★
+
 設計要求：
-- 步驟 1：邂逅/接觸（與 NPC 對話、了解技能背景）
-- 步驟 2：修煉/收集（完成特定挑戰或收集材料）
-- 步驟 3：最終試煉（擊敗 BOSS 或完成高難度挑戰）
+- 步驟 1：郂逅/接觸（與 NPC 對話，了解技能背景，type: "challenge"）
+- 步驟 2：修煉/收集（收集指定材料，type: "collect"，targets 中的 name 必須完全匹配上面列表中的道具名稱，並加上 itemId 欄位）
+- 步驟 3：最終試煉（擊敗挑戰，type: "boss"）
 - 每個步驟要有連貫的劇情
-- 對話要有角色個性
+- 對話要有角色個性（至少 50 字）
 - 獎勵遞增（經驗 100→200→500，金幣 200→300→500）
 
 回覆 JSON 陣列：
 [{
   "stepNumber": 1,
   "title": "步驟標題",
-  "dialogue": "NPC 對話文本（至少 50 字）",
+  "dialogue": "NPC 對話文本",
   "objective": "任務目標描述",
   "location": "任務地點",
-  "objectives": {"type": "kill/collect/boss/challenge", "targets": [{"name": "目標名", "count": 5}]},
+  "objectives": {"type": "challenge", "targets": [{"name": "目標名", "count": 1}]},
   "rewards": {"exp": 100, "gold": 200}
+},
+{
+  "stepNumber": 2,
+  "title": "步驟標題",
+  "dialogue": "NPC 對話文本",
+  "objective": "任務目標描述",
+  "location": "任務地點",
+  "objectives": {"type": "collect", "targets": [{"name": "道具名稱", "itemId": "I_XXXX", "count": 5}]},
+  "rewards": {"exp": 200, "gold": 300}
 }]` },
         ],
       });
@@ -1424,6 +1457,33 @@ ${monsterDescriptions}
         steps = Array.isArray(parsed) ? parsed : parsed.steps || parsed.data || [parsed];
       } catch {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI 回覆格式錯誤" });
+      }
+
+      // 驗證並修正 AI 生成的步驟中的道具引用
+      const itemNameToId = new Map(availableItems.map(i => [i.name, i.itemId]));
+      for (const step of steps) {
+        if (step.objectives?.type === "collect" && step.objectives?.targets) {
+          for (const target of step.objectives.targets) {
+            // 如果 AI 生成的 itemId 不在圖鑑中，嘗試用名稱匹配
+            if (target.itemId && !availableItems.find(i => i.itemId === target.itemId)) {
+              target.itemId = itemNameToId.get(target.name) || null;
+            }
+            // 如果名稱也不匹配，替換為同五行的隨機材料
+            if (!target.itemId && !itemNameToId.has(target.name)) {
+              const fallback = wuxingItems.length > 0
+                ? wuxingItems[Math.floor(Math.random() * wuxingItems.length)]
+                : itemPool[Math.floor(Math.random() * itemPool.length)];
+              if (fallback) {
+                target.name = fallback.name;
+                target.itemId = fallback.itemId;
+              }
+            }
+            // 確保有 itemId
+            if (!target.itemId) {
+              target.itemId = itemNameToId.get(target.name) || null;
+            }
+          }
+        }
       }
 
       const now = Date.now();

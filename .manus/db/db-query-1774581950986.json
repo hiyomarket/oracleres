@@ -1,0 +1,304 @@
+{
+  "query": "SELECT item_id, name, wuxing, category FROM game_item_catalog WHERE category IN ('material_basic', 'material_drop', 'quest') ORDER BY wuxing, item_id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, wuxing, category FROM game_item_catalog WHERE category IN ('material_basic', 'material_drop', 'quest') ORDER BY wuxing, item_id;",
+  "rows": [
+    {
+      "item_id": "I_E001",
+      "name": "礦石",
+      "wuxing": "土",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_E011",
+      "name": "土晶石",
+      "wuxing": "土",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_E041",
+      "name": "秋分紀念徽章",
+      "wuxing": "土",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_W001",
+      "name": "靈草",
+      "wuxing": "木",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W002",
+      "name": "堅韌藤蔓",
+      "wuxing": "木",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W003",
+      "name": "苦澀樹皮",
+      "wuxing": "木",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W004",
+      "name": "迷幻蘑菇",
+      "wuxing": "木",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W005",
+      "name": "晨露",
+      "wuxing": "木",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W006",
+      "name": "芳香花瓣",
+      "wuxing": "木",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W007",
+      "name": "帶刺荊棘",
+      "wuxing": "木",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W008",
+      "name": "黏稠樹液",
+      "wuxing": "木",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W009",
+      "name": "翠綠樹葉",
+      "wuxing": "木",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W010",
+      "name": "奇異種子",
+      "wuxing": "木",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W011",
+      "name": "木晶石",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W012",
+      "name": "毒液腺",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W013",
+      "name": "綠色核心",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W014",
+      "name": "迷幻孢子",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W015",
+      "name": "古木心材",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W016",
+      "name": "消化液",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W017",
+      "name": "幻影鐮刀",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W018",
+      "name": "腐敗核心",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W019",
+      "name": "森猿獠牙",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W020",
+      "name": "鐵木熊皮",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W021",
+      "name": "木靈王核心",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W022",
+      "name": "蛛后毒囊",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W023",
+      "name": "翡翠龍鱗",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W024",
+      "name": "世界樹枝",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W025",
+      "name": "花神之淚",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W036",
+      "name": "迷路藥童的草藥",
+      "wuxing": "木",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_W037",
+      "name": "破損的木雕",
+      "wuxing": "木",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_W038",
+      "name": "森林守護者印記",
+      "wuxing": "木",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_W039",
+      "name": "奇異的蟲卵",
+      "wuxing": "木",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_W040",
+      "name": "枯萎的樹枝",
+      "wuxing": "木",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_W041",
+      "name": "春分紀念徽章",
+      "wuxing": "木",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_W042",
+      "name": "驚蟄雷木枝",
+      "wuxing": "木",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_W043",
+      "name": "迷霧精華",
+      "wuxing": "木",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_W044",
+      "name": "毒沼之心",
+      "wuxing": "木",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_W045",
+      "name": "幸運四葉草",
+      "wuxing": "木",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_W101",
+      "name": "青木靈髓",
+      "wuxing": "木",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W051",
+      "name": "水滴",
+      "wuxing": "水",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W061",
+      "name": "水晶石",
+      "wuxing": "水",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_W091",
+      "name": "冬至紀念徽章",
+      "wuxing": "水",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_F001",
+      "name": "餘燼",
+      "wuxing": "火",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_F011",
+      "name": "火晶石",
+      "wuxing": "火",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_F041",
+      "name": "夏至紀念徽章",
+      "wuxing": "火",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_M001",
+      "name": "金屬零件",
+      "wuxing": "金",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_M011",
+      "name": "金晶石",
+      "wuxing": "金",
+      "category": "material_drop"
+    },
+    {
+      "item_id": "I_M041",
+      "name": "立秋紀念徽章",
+      "wuxing": "金",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_M051",
+      "name": "淬金砂",
+      "wuxing": "金",
+      "category": "material_drop"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\twuxing\tcategory\nI_E001\t礦石\t土\tmaterial_basic\nI_E011\t土晶石\t土\tmaterial_drop\nI_E041\t秋分紀念徽章\t土\tquest\nI_W001\t靈草\t木\tmaterial_basic\nI_W002\t堅韌藤蔓\t木\tmaterial_basic\nI_W003\t苦澀樹皮\t木\tmaterial_basic\nI_W004\t迷幻蘑菇\t木\tmaterial_basic\nI_W005\t晨露\t木\tmaterial_basic\nI_W006\t芳香花瓣\t木\tmaterial_basic\nI_W007\t帶刺荊棘\t木\tmaterial_basic\nI_W008\t黏稠樹液\t木\tmaterial_basic\nI_W009\t翠綠樹葉\t木\tmaterial_basic\nI_W010\t奇異種子\t木\tmaterial_basic\nI_W011\t木晶石\t木\tmaterial_drop\nI_W012\t毒液腺\t木\tmaterial_drop\nI_W013\t綠色核心\t木\tmaterial_drop\nI_W014\t迷幻孢子\t木\tmaterial_drop\nI_W015\t古木心材\t木\tmaterial_drop\nI_W016\t消化液\t木\tmaterial_drop\nI_W017\t幻影鐮刀\t木\tmaterial_drop\nI_W018\t腐敗核心\t木\tmaterial_drop\nI_W019\t森猿獠牙\t木\tmaterial_drop\nI_W020\t鐵木熊皮\t木\tmaterial_drop\nI_W021\t木靈王核心\t木\tmaterial_drop\nI_W022\t蛛后毒囊\t木\tmaterial_drop\nI_W023\t翡翠龍鱗\t木\tmaterial_drop\nI_W024\t世界樹枝\t木\tmaterial_drop\nI_W025\t花神之淚\t木\tmaterial_drop\nI_W036\t迷路藥童的草藥\t木\tquest\nI_W037\t破損的木雕\t木\tquest\nI_W038\t森林守護者印記\t木\tquest\nI_W039\t奇異的蟲卵\t木\tquest\nI_W040\t枯萎的樹枝\t木\tquest\nI_W041\t春分紀念徽章\t木\tquest\nI_W042\t驚蟄雷木枝\t木\tquest\nI_W043\t迷霧精華\t木\tquest\nI_W044\t毒沼之心\t木\tquest\nI_W045\t幸運四葉草\t木\tquest\nI_W101\t青木靈髓\t木\tmaterial_drop\nI_W051\t水滴\t水\tmaterial_basic\nI_W061\t水晶石\t水\tmaterial_drop\nI_W091\t冬至紀念徽章\t水\tquest\nI_F001\t餘燼\t火\tmaterial_basic\nI_F011\t火晶石\t火\tmaterial_drop\nI_F041\t夏至紀念徽章\t火\tquest\nI_M001\t金屬零件\t金\tmaterial_basic\nI_M011\t金晶石\t金\tmaterial_drop\nI_M041\t立秋紀念徽章\t金\tquest\nI_M051\t淬金砂\t金\tmaterial_drop\n",
+  "stderr": "",
+  "execution_time_ms": 1540
+}

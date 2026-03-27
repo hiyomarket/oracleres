@@ -1,0 +1,1 @@
+ALTER TABLE `game_player_pets` ADD `bp_unallocated` int DEFAULT 0 NOT NULL;
