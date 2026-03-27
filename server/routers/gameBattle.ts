@@ -7,7 +7,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog } from "../../drizzle/schema";
+import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog, gamePetInnateSkills, gamePetLearnedSkills } from "../../drizzle/schema";
 import { sql, inArray } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
@@ -199,6 +199,35 @@ export const gameBattleRouter = router({
       if (activePet) {
         const [cat] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, activePet.petCatalogId));
         petCatalog = cat;
+
+        // ─── 載入寵物先天技能 ───
+        const innateSkills = await db.select().from(gamePetInnateSkills)
+          .where(eq(gamePetInnateSkills.petCatalogId, activePet.petCatalogId));
+        (activePet as any).innateSkills = innateSkills.map(s => ({
+          id: s.id,
+          name: s.name,
+          skillType: s.skillType,
+          damageMultiplier: (s.powerPercent ?? 100) / 100,
+          mpCost: s.mpCost ?? 0,
+          wuxing: s.wuxing ?? undefined,
+          cooldown: s.cooldown ?? 3,
+          description: s.description,
+        }));
+
+        // ─── 載入寵物天命技能（已學習的） ───
+        const learnedDestinySkills = await db.select().from(gamePetLearnedSkills)
+          .where(eq(gamePetLearnedSkills.playerPetId, activePet.id));
+        (activePet as any).destinySkills = learnedDestinySkills.map(s => ({
+          id: `destiny_${s.skillKey}`,
+          name: s.skillName,
+          skillType: s.skillType as any ?? "special",
+          damageMultiplier: (s.powerPercent ?? 100) / 100,
+          mpCost: s.mpCost ?? 10,
+          cooldown: s.cooldown ?? 4,
+          skillLevel: s.skillLevel ?? 1,
+          destinySkillKey: s.skillKey,
+          wuxing: s.wuxing ?? undefined,
+        }));
       }
 
       // 取得怪物
@@ -412,6 +441,28 @@ export const gameBattleRouter = router({
       if (activePet) {
         const [cat] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, activePet.petCatalogId));
         petCatalog = cat;
+
+        // 載入寵物先天技能
+        const innateSkills = await db.select().from(gamePetInnateSkills)
+          .where(eq(gamePetInnateSkills.petCatalogId, activePet.petCatalogId));
+        (activePet as any).innateSkills = innateSkills.map(s => ({
+          id: s.id, name: s.name, skillType: s.skillType,
+          damageMultiplier: (s.powerPercent ?? 100) / 100,
+          mpCost: s.mpCost ?? 0, wuxing: s.wuxing ?? undefined,
+          cooldown: s.cooldown ?? 3, description: s.description,
+        }));
+
+        // 載入寵物天命技能
+        const learnedDestinySkills = await db.select().from(gamePetLearnedSkills)
+          .where(eq(gamePetLearnedSkills.playerPetId, activePet.id));
+        (activePet as any).destinySkills = learnedDestinySkills.map(s => ({
+          id: `destiny_${s.skillKey}`, name: s.skillName,
+          skillType: s.skillType as any ?? "special",
+          damageMultiplier: (s.powerPercent ?? 100) / 100,
+          mpCost: s.mpCost ?? 10, cooldown: s.cooldown ?? 4,
+          skillLevel: s.skillLevel ?? 1, destinySkillKey: s.skillKey,
+          wuxing: s.wuxing ?? undefined,
+        }));
       }
 
       // 取得怪物

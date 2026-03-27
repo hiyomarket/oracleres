@@ -11,6 +11,7 @@
  */
 import { useEffect, useRef, useState, useCallback } from "react";
 import { getItemInfo, RARITY_COLORS, RARITY_BG } from "../../../shared/itemNames";
+import { trpc } from "../lib/trpc";
 
 export type CombatRoundData = {
   round: number;
@@ -71,11 +72,15 @@ export type CombatWindowData = {
     skillsUsed: string[];
     destinySkillUsageBumped: string[];
   };
+  monsterLevel?: number;
   captureChance?: {
     monsterHpPercent: number;
     captureRate: number;
     petCatalogId?: number;
     petCatalogName?: string;
+    monsterCurrentHp?: number;
+    monsterMaxHp?: number;
+    monsterLevel?: number;
   };
 };
 
@@ -407,16 +412,13 @@ export function CombatWindow({ data, onClose, enabled = true }: CombatWindowProp
               </div>
             )}
 
-            {/* GD-019: 重傷捕捉機會 */}
+            {/* GD-019: 重傷捕捉機會 + 捕捉按鈕 */}
             {data.captureChance && data.captureChance.captureRate > 0 && (
-              <div className="mb-2 rounded-lg p-2 animate-pulse" style={{ background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.3)" }}>
-                <p className="text-[10px] text-yellow-300 font-bold mb-1">✨ 重傷捕捉機會！</p>
-                <div className="text-[10px] text-yellow-200/80">
-                  <p>發現野生 <span className="font-bold text-yellow-300">{data.captureChance.petCatalogName || "神秘生物"}</span></p>
-                  <p>怪物 HP 剩餘 {data.captureChance.monsterHpPercent}% · 捕捉率 {data.captureChance.captureRate}%</p>
-                </div>
-                <p className="text-[9px] text-yellow-400/50 mt-1">前往寵物頁面可嘗試捕捉</p>
-              </div>
+              <CapturePanel
+                captureChance={data.captureChance}
+                monsterMaxHp={data.monsterMaxHp}
+                monsterLevel={data.monsterLevel ?? 1}
+              />
             )}
 
             {/* M3M: 戰鬥回放摘要 */}
@@ -652,6 +654,195 @@ function RoundCard({ round, agentName, monsterName, index }: { round: CombatRoun
         <span className="text-cyan-500">{agentName.slice(0, 4)} HP: {round.agentHpAfter}</span>
         <span className="text-red-500">{monsterName.slice(0, 4)} HP: {round.monsterHpAfter}</span>
       </div>
+    </div>
+  );
+}
+
+// ─── 捕捉面板 ───
+function CapturePanel({ captureChance, monsterMaxHp, monsterLevel }: {
+  captureChance: NonNullable<CombatWindowData["captureChance"]>;
+  monsterMaxHp: number;
+  monsterLevel: number;
+}) {
+  const [phase, setPhase] = useState<"idle" | "selecting" | "capturing" | "result">("idle");
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [captureResult, setCaptureResult] = useState<any>(null);
+
+  const captureItemsQuery = trpc.gamePet.getCaptureItems.useQuery(undefined, {
+    enabled: phase === "selecting",
+    staleTime: 10000,
+  });
+
+  const captureMutation = trpc.gamePet.capturePet.useMutation({
+    onSuccess: (result) => {
+      setCaptureResult(result);
+      setPhase("result");
+    },
+    onError: (err) => {
+      setCaptureResult({ success: false, message: err.message });
+      setPhase("result");
+    },
+  });
+
+  const handleCapture = () => {
+    if (!selectedItemId || !captureChance.petCatalogId) return;
+    setPhase("capturing");
+    captureMutation.mutate({
+      petCatalogId: captureChance.petCatalogId,
+      monsterCurrentHp: captureChance.monsterCurrentHp ?? Math.floor(monsterMaxHp * captureChance.monsterHpPercent / 100),
+      monsterMaxHp: captureChance.monsterMaxHp ?? monsterMaxHp,
+      monsterLevel: captureChance.monsterLevel ?? monsterLevel,
+      captureItemId: selectedItemId,
+    });
+  };
+
+  const RARITY_GLOW: Record<string, string> = {
+    common: "rgba(148,163,184,0.3)",
+    rare: "rgba(96,165,250,0.3)",
+    epic: "rgba(167,139,250,0.3)",
+    legendary: "rgba(251,191,36,0.3)",
+  };
+  const RARITY_BORDER: Record<string, string> = {
+    common: "rgba(148,163,184,0.5)",
+    rare: "rgba(96,165,250,0.5)",
+    epic: "rgba(167,139,250,0.5)",
+    legendary: "rgba(251,191,36,0.5)",
+  };
+  const RARITY_TEXT: Record<string, string> = {
+    common: "#94a3b8",
+    rare: "#60a5fa",
+    epic: "#a78bfa",
+    legendary: "#fbbf24",
+  };
+
+  return (
+    <div className="mb-2 rounded-lg overflow-hidden" style={{ background: "rgba(234,179,8,0.06)", border: "1px solid rgba(234,179,8,0.25)" }}>
+      {/* 捕捉機會提示 */}
+      <div className="p-2">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-base animate-bounce">✨</span>
+          <p className="text-[11px] text-yellow-300 font-bold">重傷捕捉機會！</p>
+        </div>
+        <div className="text-[10px] text-yellow-200/80">
+          <p>發現野生 <span className="font-bold text-yellow-300">{captureChance.petCatalogName || "神秘生物"}</span></p>
+          <p>怪物 HP 剩餘 {captureChance.monsterHpPercent}% · 基礎捕捉率 {captureChance.captureRate}%</p>
+        </div>
+      </div>
+
+      {/* 開始捕捉按鈕 */}
+      {phase === "idle" && (
+        <div className="px-2 pb-2">
+          <button
+            onClick={() => setPhase("selecting")}
+            className="w-full py-2 rounded-lg text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              background: "linear-gradient(135deg, rgba(234,179,8,0.25), rgba(251,191,36,0.15))",
+              border: "1px solid rgba(234,179,8,0.5)",
+              color: "#fde047",
+              boxShadow: "0 0 20px rgba(234,179,8,0.15)",
+            }}>
+            🎯 嘗試捕捉
+          </button>
+        </div>
+      )}
+
+      {/* 捕捉球選擇 */}
+      {phase === "selecting" && (
+        <div className="px-2 pb-2 space-y-2">
+          <p className="text-[10px] text-yellow-300/70 font-bold">選擇捕捉球：</p>
+          {captureItemsQuery.isLoading && (
+            <p className="text-[10px] text-slate-500 text-center py-2">載入中…</p>
+          )}
+          {captureItemsQuery.data && captureItemsQuery.data.length === 0 && (
+            <div className="text-center py-2">
+              <p className="text-[10px] text-red-400">背包中沒有捕捉球道具！</p>
+              <p className="text-[9px] text-slate-500 mt-1">可在商店購買獸魂甕系列道具</p>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-1.5">
+            {(captureItemsQuery.data ?? []).map(item => (
+              <button key={item.itemId}
+                onClick={() => setSelectedItemId(item.itemId)}
+                className={`rounded-lg px-2 py-1.5 text-left text-[10px] transition-all ${selectedItemId === item.itemId ? "ring-1 scale-[1.02]" : "hover:scale-[1.01]"}`}
+                style={{
+                  background: selectedItemId === item.itemId ? RARITY_GLOW[item.rarity] : "rgba(30,27,75,0.5)",
+                  border: `1px solid ${selectedItemId === item.itemId ? RARITY_BORDER[item.rarity] : "rgba(99,102,241,0.15)"}`,
+                  outlineColor: RARITY_BORDER[item.rarity],
+                }}>
+                <div className="flex items-center gap-1">
+                  <span className="font-bold truncate" style={{ color: RARITY_TEXT[item.rarity] ?? "#94a3b8" }}>{item.name}</span>
+                  <span className="text-[8px] text-slate-500 ml-auto shrink-0">x{item.quantity}</span>
+                </div>
+                <p className="text-[8px] text-slate-400 mt-0.5">倍率 ×{item.multiplier} · 捕捉率 ~{Math.round(captureChance.captureRate * item.multiplier)}%</p>
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-1.5">
+            <button onClick={() => { setPhase("idle"); setSelectedItemId(null); }}
+              className="flex-1 py-1.5 rounded-lg text-[10px] text-slate-400 hover:text-white transition-colors"
+              style={{ background: "rgba(30,27,75,0.4)", border: "1px solid rgba(99,102,241,0.2)" }}>
+              取消
+            </button>
+            <button onClick={handleCapture}
+              disabled={!selectedItemId}
+              className="flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40"
+              style={{
+                background: selectedItemId ? "linear-gradient(135deg, rgba(234,179,8,0.3), rgba(251,191,36,0.2))" : "rgba(30,27,75,0.4)",
+                border: `1px solid ${selectedItemId ? "rgba(234,179,8,0.5)" : "rgba(99,102,241,0.2)"}`,
+                color: selectedItemId ? "#fde047" : "#64748b",
+              }}>
+              確認捕捉
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 捕捉動畫 */}
+      {phase === "capturing" && (
+        <div className="px-2 pb-3 text-center">
+          <div className="relative w-16 h-16 mx-auto mb-2">
+            <div className="absolute inset-0 rounded-full animate-ping" style={{ background: "rgba(234,179,8,0.2)" }} />
+            <div className="absolute inset-1 rounded-full animate-spin" style={{ background: "conic-gradient(from 0deg, rgba(234,179,8,0.6), transparent, rgba(234,179,8,0.6))", animationDuration: "1s" }} />
+            <div className="absolute inset-3 rounded-full flex items-center justify-center" style={{ background: "rgba(30,27,75,0.8)" }}>
+              <span className="text-2xl animate-bounce">🎯</span>
+            </div>
+          </div>
+          <p className="text-[11px] text-yellow-300 font-bold animate-pulse">捕捉中…</p>
+        </div>
+      )}
+
+      {/* 捕捉結果 */}
+      {phase === "result" && captureResult && (
+        <div className="px-2 pb-2">
+          {captureResult.success ? (
+            <div className="text-center space-y-1.5 py-2">
+              <div className="text-3xl animate-bounce">🎉</div>
+              <p className="text-[12px] text-green-300 font-bold">捕捉成功！</p>
+              <p className="text-[10px] text-green-200/80">{captureResult.message}</p>
+              {captureResult.tier && (
+                <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold" style={{
+                  background: captureResult.tier === "S" ? "rgba(251,191,36,0.2)" : captureResult.tier === "A" ? "rgba(167,139,250,0.2)" : "rgba(96,165,250,0.2)",
+                  color: captureResult.tier === "S" ? "#fde047" : captureResult.tier === "A" ? "#c4b5fd" : "#93c5fd",
+                  border: `1px solid ${captureResult.tier === "S" ? "rgba(251,191,36,0.4)" : captureResult.tier === "A" ? "rgba(167,139,250,0.4)" : "rgba(96,165,250,0.4)"}`,
+                }}>
+                  檔位：{captureResult.tier}
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="text-center space-y-1 py-2">
+              <div className="text-2xl">💨</div>
+              <p className="text-[11px] text-red-400 font-bold">捕捉失敗</p>
+              <p className="text-[10px] text-red-300/70">{captureResult.message}</p>
+            </div>
+          )}
+          <button onClick={() => { setPhase("idle"); setCaptureResult(null); setSelectedItemId(null); }}
+            className="w-full mt-1 py-1.5 rounded-lg text-[10px] text-slate-400 hover:text-white transition-colors"
+            style={{ background: "rgba(30,27,75,0.4)", border: "1px solid rgba(99,102,241,0.2)" }}>
+            {captureResult.success ? "太好了！" : "再試一次"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

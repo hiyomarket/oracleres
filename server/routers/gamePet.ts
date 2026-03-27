@@ -22,6 +22,8 @@ import {
   gamePetLearnedSkills,
   gameAgents,
   gamePetBpHistory,
+  agentInventory,
+  gameItemCatalog,
 } from "../../drizzle/schema";
 import { eq, and, desc, asc, sql, like } from "drizzle-orm";
 import {
@@ -292,21 +294,91 @@ export const gamePetRouter = router({
       };
     }),
 
-  /** 捕捉寵物 */
+  /** 查詢背包中的捕捉球道具 */
+  getCaptureItems: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [agent] = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+
+      // 查詢背包中的捕捉球
+      const items = await db.select({
+        inventoryId: agentInventory.id,
+        itemId: agentInventory.itemId,
+        quantity: agentInventory.quantity,
+        name: gameItemCatalog.name,
+        rarity: gameItemCatalog.rarity,
+        useEffect: gameItemCatalog.useEffect,
+        imageUrl: gameItemCatalog.imageUrl,
+      })
+        .from(agentInventory)
+        .innerJoin(gameItemCatalog, eq(agentInventory.itemId, gameItemCatalog.itemId))
+        .where(
+          and(
+            eq(agentInventory.agentId, agent.id),
+            sql`${agentInventory.quantity} > 0`,
+            sql`JSON_EXTRACT(${gameItemCatalog.useEffect}, '$.type') = 'capture'`,
+          )
+        );
+
+      return items.map(i => ({
+        inventoryId: i.inventoryId,
+        itemId: i.itemId,
+        name: i.name,
+        rarity: i.rarity,
+        quantity: i.quantity,
+        imageUrl: i.imageUrl,
+        captureItemType: (i.useEffect as any)?.captureItemType ?? "normal",
+        multiplier: (i.useEffect as any)?.multiplier ?? 1.0,
+        description: (i.useEffect as any)?.description ?? "",
+      }));
+    }),
+
+  /** 捕捉寵物（含道具扣除） */
   capturePet: protectedProcedure
     .input(z.object({
       petCatalogId: z.number().int(),
       monsterCurrentHp: z.number().int().min(0),
       monsterMaxHp: z.number().int().min(1),
       monsterLevel: z.number().int().min(1),
-      captureItemType: z.enum(["normal", "silver", "starlight", "destiny"]).default("normal"),
+      captureItemId: z.string().min(1), // 使用的捕捉球 itemId
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const [agent] = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
       if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
-      
+
+      // ─── 驗證並扣除捕捉球道具 ───
+      const [invItem] = await db.select({
+        id: agentInventory.id,
+        quantity: agentInventory.quantity,
+        itemId: agentInventory.itemId,
+      }).from(agentInventory).where(
+        and(
+          eq(agentInventory.agentId, agent.id),
+          eq(agentInventory.itemId, input.captureItemId),
+          sql`${agentInventory.quantity} > 0`,
+        )
+      ).limit(1);
+      if (!invItem) throw new TRPCError({ code: "BAD_REQUEST", message: "背包中沒有此捕捉球道具" });
+
+      // 查詢道具效果取得 captureItemType
+      const [itemCat] = await db.select({ useEffect: gameItemCatalog.useEffect })
+        .from(gameItemCatalog).where(eq(gameItemCatalog.itemId, input.captureItemId)).limit(1);
+      const captureItemType = (itemCat?.useEffect as any)?.captureItemType ?? "normal";
+
+      // 扣除 1 個捕捉球
+      const newQty = invItem.quantity - 1;
+      if (newQty <= 0) {
+        await db.update(agentInventory).set({ quantity: 0, updatedAt: Date.now() })
+          .where(eq(agentInventory.id, invItem.id));
+      } else {
+        await db.update(agentInventory).set({ quantity: newQty, updatedAt: Date.now() })
+          .where(eq(agentInventory.id, invItem.id));
+      }
+
       // 取得寵物圖鑑
       const [catalog] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, input.petCatalogId));
       if (!catalog) throw new TRPCError({ code: "NOT_FOUND", message: "寵物種類不存在" });
@@ -319,7 +391,7 @@ export const gamePetRouter = router({
         monsterMaxHp: input.monsterMaxHp,
         monsterLevel: input.monsterLevel,
         playerLevel: agent.level,
-        captureItemType: input.captureItemType,
+        captureItemType,
       });
       
       // 擲骰
@@ -331,7 +403,8 @@ export const gamePetRouter = router({
           success: false,
           captureRate: Math.round(captureRate * 100),
           roll: Math.round(roll * 100),
-          message: `捕捉失敗！成功率 ${Math.round(captureRate * 100)}%`,
+          captureItemUsed: captureItemType,
+          message: `捕捉失敗！成功率 ${Math.round(captureRate * 100)}%，已消耗 1 個捕捉球`,
         };
       }
       
