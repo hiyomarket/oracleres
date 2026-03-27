@@ -1,0 +1,19 @@
+ALTER TABLE `game_equipment_catalog` ADD `value_score` int DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_equipment_catalog` ADD `quality_grade` varchar(5) DEFAULT 'C' NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_equipment_catalog` ADD `drop_level_min` int DEFAULT 1 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_equipment_catalog` ADD `drop_level_max` int DEFAULT 15 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_equipment_catalog` ADD `tradeable` tinyint DEFAULT 1 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_equipment_catalog` ADD `in_auction_house` tinyint DEFAULT 1 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_item_catalog` ADD `value_score` int DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_item_catalog` ADD `quality_grade` varchar(5) DEFAULT 'C' NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_item_catalog` ADD `drop_level_min` int DEFAULT 1 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_item_catalog` ADD `drop_level_max` int DEFAULT 15 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_item_catalog` ADD `tradeable` tinyint DEFAULT 1 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_item_catalog` ADD `in_auction_house` tinyint DEFAULT 1 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_skill_catalog` ADD `value_score` int DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_skill_catalog` ADD `quality_grade` varchar(5) DEFAULT 'C' NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_skill_catalog` ADD `drop_level_min` int DEFAULT 1 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_skill_catalog` ADD `drop_level_max` int DEFAULT 15 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_skill_catalog` ADD `tradeable` tinyint DEFAULT 1 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_skill_catalog` ADD `in_auction_house` tinyint DEFAULT 1 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_skill_catalog` ADD `image_url` text DEFAULT ('');

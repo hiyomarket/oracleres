@@ -27,6 +27,7 @@ import {
 import { RACE_HP_MULTIPLIER, auditPetCatalog } from "../services/petEngine";
 import { sql, like, eq, desc, asc, inArray } from "drizzle-orm";
 import { auditMonster, auditSkill, auditEquipment, auditItemPrice, auditAndFix } from "../services/aiValueAudit";
+import { evaluateItem, evaluateEquipment, evaluateSkill, getValueEngineRulesForAI, type TradeRules } from "../services/valueEngine";
 import { generateImage } from "../_core/imageGeneration";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -115,7 +116,7 @@ export const gameAIRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const shopType = input?.shopType ?? "both";
 
-      // 取得所有啟用的道具
+      // 取得所有啟用的道具（含價值評估欄位）
       const allItems = await db.select({
         itemId: gameItemCatalog.itemId,
         name: gameItemCatalog.name,
@@ -123,9 +124,14 @@ export const gameAIRouter = router({
         category: gameItemCatalog.category,
         wuxing: gameItemCatalog.wuxing,
         shopPrice: gameItemCatalog.shopPrice,
+        valueScore: gameItemCatalog.valueScore,
+        qualityGrade: gameItemCatalog.qualityGrade,
+        inNormalShop: gameItemCatalog.inNormalShop,
+        inSpiritShop: gameItemCatalog.inSpiritShop,
+        inSecretShop: gameItemCatalog.inSecretShop,
       }).from(gameItemCatalog).where(sql`is_active = 1`);
 
-      // 取得所有啟用的裝備
+      // 取得所有啟用的裝備（含價值評估欄位）
       const allEquips = await db.select({
         equipId: gameEquipmentCatalog.equipId,
         name: gameEquipmentCatalog.name,
@@ -134,9 +140,15 @@ export const gameAIRouter = router({
         slot: gameEquipmentCatalog.slot,
         tier: gameEquipmentCatalog.tier,
         levelRequired: gameEquipmentCatalog.levelRequired,
+        shopPrice: gameEquipmentCatalog.shopPrice,
+        valueScore: gameEquipmentCatalog.valueScore,
+        qualityGrade: gameEquipmentCatalog.qualityGrade,
+        inNormalShop: gameEquipmentCatalog.inNormalShop,
+        inSpiritShop: gameEquipmentCatalog.inSpiritShop,
+        inSecretShop: gameEquipmentCatalog.inSecretShop,
       }).from(gameEquipmentCatalog).where(sql`is_active = 1`);
 
-      // 取得所有啟用的技能
+      // 取得所有啟用的技能（含價值評估欄位）
       const allSkills = await db.select({
         skillId: gameSkillCatalog.skillId,
         name: gameSkillCatalog.name,
@@ -145,21 +157,45 @@ export const gameAIRouter = router({
         category: gameSkillCatalog.category,
         shopPrice: gameSkillCatalog.shopPrice,
         acquireType: gameSkillCatalog.acquireType,
+        tier: gameSkillCatalog.tier,
+        valueScore: gameSkillCatalog.valueScore,
+        qualityGrade: gameSkillCatalog.qualityGrade,
+        inNormalShop: gameSkillCatalog.inNormalShop,
+        inSpiritShop: gameSkillCatalog.inSpiritShop,
+        inSecretShop: gameSkillCatalog.inSecretShop,
       }).from(gameSkillCatalog).where(sql`is_active = 1`);
 
-      // 合併成一個商品池
+      // 合併成商品池，加入 ValueEngine 流通權限和正確定價
       const allProducts = [
         ...allItems.map(i => ({
           id: i.itemId, name: i.name, rarity: i.rarity, wuxing: i.wuxing,
-          type: "item" as const, category: i.category, price: i.shopPrice || 0,
+          type: "item" as const, category: i.category, 
+          price: i.shopPrice || 0,
+          valueScore: i.valueScore || 0,
+          qualityGrade: (i.qualityGrade || "C") as string,
+          canNormal: i.inNormalShop === 1,
+          canSpirit: i.inSpiritShop === 1,
+          canSecret: i.inSecretShop === 1,
         })),
         ...allEquips.map(e => ({
           id: e.equipId, name: e.name, rarity: e.rarity, wuxing: e.wuxing,
-          type: "equipment" as const, category: e.slot, price: 0,
+          type: "equipment" as const, category: e.slot, 
+          price: e.shopPrice || 0,
+          valueScore: e.valueScore || 0,
+          qualityGrade: (e.qualityGrade || "C") as string,
+          canNormal: e.inNormalShop === 1,
+          canSpirit: e.inSpiritShop === 1,
+          canSecret: e.inSecretShop === 1,
         })),
         ...allSkills.filter(s => s.acquireType === "shop").map(s => ({
           id: s.skillId, name: s.name, rarity: s.rarity, wuxing: s.wuxing,
-          type: "skill" as const, category: s.category, price: s.shopPrice || 0,
+          type: "skill" as const, category: s.category, 
+          price: s.shopPrice || 0,
+          valueScore: s.valueScore || 0,
+          qualityGrade: (s.qualityGrade || "C") as string,
+          canNormal: s.inNormalShop === 1,
+          canSpirit: s.inSpiritShop === 1,
+          canSecret: s.inSecretShop === 1,
         })),
       ];
 
@@ -168,17 +204,27 @@ export const gameAIRouter = router({
       }
 
       // 用 AI 挑選合適的商品
-      const productListStr = allProducts.map(p =>
-        `${p.id}|${p.name}|${p.type}|${p.rarity}|${p.wuxing}|${p.category}`
+      // 用 ValueEngine 流通權限篩選商品池
+      const normalPool = allProducts.filter(p => p.canNormal && p.category !== "quest" && p.category !== "treasure");
+      const hiddenPool = allProducts.filter(p => (p.canSpirit || p.canSecret) && p.category !== "quest" && p.category !== "treasure");
+
+      const productListStr = normalPool.concat(hiddenPool.filter(h => !normalPool.some(n => n.id === h.id))).map(p =>
+        `${p.id}|${p.name}|${p.type}|${p.rarity}|${p.qualityGrade}|${p.wuxing}|${p.category}|${p.canNormal ? "normal" : ""}${p.canSpirit ? ",spirit" : ""}${p.canSecret ? ",secret" : ""}`
       ).join("\n");
 
-      const aiPrompt = `你是一個遊戲商店管理 AI。以下是所有可用商品列表（格式：ID|名稱|類型|稀有度|五行|分類）：
+      const valueRules = getValueEngineRulesForAI();
+
+      const aiPrompt = `你是一個遊戲商店管理 AI。
+
+${valueRules}
+
+以下是所有可用商品列表（格式：ID|名稱|類型|稀有度|品質等級|五行|分類|允許商店）：
 
 ${productListStr}
 
 請幫我挑選商品上架到商店，要求：
-1. 一般商店（normal）：挑選 20 件，以 common 和 rare 為主，五行分布均衡，種類多樣（道具、裝備、技能書混搭）
-2. 隱藏商店（hidden）：挑選 10 件，以 rare、epic、legendary 為主，要有吸引力的稀有商品
+1. 一般商店（normal）：挑選 20 件，只能從允許商店含 "normal" 的商品中選取，五行分布均衡，種類多樣
+2. 隱藏商店（hidden）：挑選 10 件，只能從允許商店含 "spirit" 或 "secret" 的商品中選取，要有吸引力
 
 回覆 JSON 格式（不要加 markdown 標記）：
 {
@@ -188,8 +234,8 @@ ${productListStr}
 
 注意：
 - 每個商品只能出現在一個商店中
-- 優先選擇名稱有趣、稀有度合理的商品
-- quest 和 treasure 類別的道具不要上架
+- 傳說級技能書絕對不能進入任何商店
+- 優先選擇品質等級較高的商品（S > A > B > C > D）
 - 確保五行（木火土金水）分布盡量均衡`;
 
       let normalIds: string[] = [];
@@ -229,14 +275,22 @@ ${productListStr}
         console.error("[AI Shop] LLM 呼叫失敗，使用隨機選取:", err);
       }
 
-      // Fallback：如果 AI 沒有回覆或回覆不足，用隨機補齊
+      // Fallback：如果 AI 沒有回覆或回覆不足，用 ValueEngine 流通權限篩選補齊
       const usedIds = new Set([...normalIds, ...hiddenIds]);
+      // 過濾掉 AI 選中但不符合流通權限的商品
+      normalIds = normalIds.filter(id => {
+        const p = allProducts.find(x => x.id === id);
+        return p && p.canNormal;
+      });
+      hiddenIds = hiddenIds.filter(id => {
+        const p = allProducts.find(x => x.id === id);
+        return p && (p.canSpirit || p.canSecret);
+      });
+
       if (normalIds.length < 20 && (shopType === "normal" || shopType === "both")) {
-        const pool = allProducts.filter(p =>
-          !usedIds.has(p.id) &&
-          (p.rarity === "common" || p.rarity === "rare") &&
-          p.category !== "quest" && p.category !== "treasure"
-        ).sort(() => Math.random() - 0.5);
+        const pool = normalPool.filter(p =>
+          !usedIds.has(p.id)
+        ).sort((a, b) => b.valueScore - a.valueScore || Math.random() - 0.5);
         while (normalIds.length < 20 && pool.length > 0) {
           const item = pool.shift()!;
           normalIds.push(item.id);
@@ -244,10 +298,9 @@ ${productListStr}
         }
       }
       if (hiddenIds.length < 10 && (shopType === "hidden" || shopType === "both")) {
-        const pool = allProducts.filter(p =>
-          !usedIds.has(p.id) &&
-          (p.rarity === "rare" || p.rarity === "epic" || p.rarity === "legendary")
-        ).sort(() => Math.random() - 0.5);
+        const pool = hiddenPool.filter(p =>
+          !usedIds.has(p.id)
+        ).sort((a, b) => b.valueScore - a.valueScore || Math.random() - 0.5);
         while (hiddenIds.length < 10 && pool.length > 0) {
           const item = pool.shift()!;
           hiddenIds.push(item.id);
@@ -282,6 +335,7 @@ ${productListStr}
             displayName: product.name,
             description: `【${product.wuxing}行】${typeLabel}`,
             priceCoins: product.price > 0 ? product.price : calcPrice(product.rarity, product.type, "coins"),
+            // 價格已由 ValueEngine 重新計算過，優先使用圖鑑中的 shopPrice
             quantity: 1,
             stock: -1,
             nodeId: "",
@@ -550,7 +604,15 @@ ${existingNamesStr}
       try {
         const response = await invokeLLM({
           messages: [
-            { role: "system", content: "你是遊戲設計 AI，只回覆 JSON 陣列，不加任何 markdown 標記或解釋。確保生成的內容符合遊戲平衡性。" },
+            { role: "system", content: `你是遊戲設計 AI，只回覆 JSON 陣列，不加任何 markdown 標記或解釋。確保生成的內容符合遊戲平衡性。
+
+${getValueEngineRulesForAI()}
+
+重要規則：
+- 傳說級技能書的 acquireType 必須是 "quest"，不能是 "shop"
+- 同稀有度內，數值強度要有差異（不能全部一樣）
+- 裝備價格必須比同稀有度的一般道具高
+- 技能書價格必須比同稀有度的裝備高` },
             { role: "user", content: prompt },
           ],
         });
@@ -630,16 +692,27 @@ ${existingNamesStr}
             }, auditItemPrice);
             const wuxing = item.wuxing || "木";
             const itemId = await generateNextId(db, gameItemCatalog, gameItemCatalog.itemId, "I", wuxing);
+            // ValueEngine 評估
+            const itemEval = evaluateItem({
+              category: item.category || "material_basic",
+              rarity: item.rarity || "common",
+              stackLimit: item.stackLimit || 99,
+            });
             await db.insert(gameItemCatalog).values({
               itemId,
               name: item.name,
               wuxing,
               category: item.category || "material_basic",
-              rarity: item.rarity || "common",
+              rarity: itemEval.correctedRarity,
               stackLimit: item.stackLimit || 99,
-              shopPrice: fi.shopPrice,
+              shopPrice: itemEval.suggestedCoinPrice,
               source: item.source || "",
               effect: item.effect || "",
+              valueScore: itemEval.valueScore,
+              qualityGrade: itemEval.qualityGrade,
+              inNormalShop: itemEval.tradeRules.normalShop ? 1 : 0,
+              inSpiritShop: itemEval.tradeRules.spiritShop ? 1 : 0,
+              inSecretShop: itemEval.tradeRules.secretShop ? 1 : 0,
               isActive: 1,
               createdAt: Date.now(),
             });
@@ -655,6 +728,17 @@ ${existingNamesStr}
             }, auditEquipment);
             const wuxing = item.wuxing || "木";
             const equipId = await generateNextId(db, gameEquipmentCatalog, gameEquipmentCatalog.equipId, "E", wuxing);
+            // ValueEngine 評估
+            const equipEval = evaluateEquipment({
+              slot: item.slot || "weapon",
+              tier: item.tier || "初階",
+              rarity: item.rarity || "common",
+              hpBonus: fe.hpBonus,
+              attackBonus: fe.attackBonus,
+              defenseBonus: fe.defenseBonus,
+              speedBonus: fe.speedBonus,
+              levelRequired: Math.min(60, Math.max(1, item.levelRequired || 1)),
+            });
             await db.insert(gameEquipmentCatalog).values({
               equipId,
               name: item.name,
@@ -668,7 +752,13 @@ ${existingNamesStr}
               defenseBonus: fe.defenseBonus,
               speedBonus: fe.speedBonus,
               specialEffect: item.specialEffect || "",
-              rarity: item.rarity || "common",
+              rarity: equipEval.correctedRarity,
+              shopPrice: equipEval.suggestedCoinPrice,
+              valueScore: equipEval.valueScore,
+              qualityGrade: equipEval.qualityGrade,
+              inNormalShop: equipEval.tradeRules.normalShop ? 1 : 0,
+              inSpiritShop: equipEval.tradeRules.spiritShop ? 1 : 0,
+              inSecretShop: equipEval.tradeRules.secretShop ? 1 : 0,
               isActive: 1,
               createdAt: Date.now(),
             });
@@ -684,21 +774,37 @@ ${existingNamesStr}
             }, auditSkill);
             const wuxing = item.wuxing || "木";
             const skillId = await generateNextId(db, gameSkillCatalog, gameSkillCatalog.skillId, "S", wuxing);
+            // ValueEngine 評估
+            const skillEval = evaluateSkill({
+              tier: item.tier || "初階",
+              rarity: item.rarity || "common",
+              powerPercent: fs.powerPercent,
+              mpCost: fs.mpCost,
+              cooldown: fs.cooldown,
+              skillType: item.skillType || "attack",
+              learnLevel: Math.min(60, Math.max(1, item.learnLevel || 1)),
+              description: item.description || "",
+            });
             await db.insert(gameSkillCatalog).values({
               skillId,
               name: item.name,
               wuxing,
               category: item.category || "active_combat",
-              rarity: item.rarity || "common",
+              rarity: skillEval.correctedRarity,
               tier: item.tier || "初階",
               mpCost: fs.mpCost,
               cooldown: fs.cooldown,
               powerPercent: fs.powerPercent,
               learnLevel: Math.min(60, Math.max(1, item.learnLevel || 1)),
               acquireType: item.acquireType || "shop",
-              shopPrice: fs.shopPrice,
+              shopPrice: skillEval.suggestedCoinPrice,
               description: item.description || "",
               skillType: item.skillType || "attack",
+              valueScore: skillEval.valueScore,
+              qualityGrade: skillEval.qualityGrade,
+              inNormalShop: skillEval.tradeRules.normalShop ? 1 : 0,
+              inSpiritShop: skillEval.tradeRules.spiritShop ? 1 : 0,
+              inSecretShop: skillEval.tradeRules.secretShop ? 1 : 0,
               isActive: 1,
               createdAt: Date.now(),
             });
@@ -2197,5 +2303,243 @@ ${petDescriptions}
         .where(eq(gamePetCatalog.id, pet.id));
 
       return { success: true, imageUrl: url, petName: pet.name };
+    }),
+
+  /**
+   * 一鍵 AI 生圖：道具圖鑑
+   */
+  aiGenerateItemImage: adminProcedure
+    .input(z.object({ itemId: z.string(), customPrompt: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [item] = await db.select().from(gameItemCatalog).where(eq(gameItemCatalog.itemId, input.itemId));
+      if (!item) throw new TRPCError({ code: "NOT_FOUND", message: "道具不存在" });
+
+      const wuxingStyle: Record<string, string> = {
+        "木": "綠色木質紋理，藤蔓和葉子裝飾", "火": "紅色火焰紋理，燃燒效果",
+        "土": "棕色岩石紋理，大地元素", "金": "金色金屬光澤，鋒利邊緣",
+        "水": "藍色水波紋理，流動效果",
+      };
+      const rarityStyle: Record<string, string> = {
+        common: "簡約樸素風格", rare: "精緻雕刻，淡淡發光",
+        epic: "華麗裝飾，強烈光暈", legendary: "神器級別，神聖光芒和符文",
+      };
+      const categoryStyle: Record<string, string> = {
+        material: "天然材料，原石/草藥/礦物外觀", consumable: "藥水瓶/卷軸外觀",
+        treasure: "寶物，珠寶光澤", quest: "任務物品，神秘符文",
+        food: "食物，精緻烹飪", gem: "寶石，晶瑩光澤",
+      };
+
+      const prompt = input.customPrompt || `中國古風奇幻遊戲道具圖示，單一物品特寫，透明背景。
+道具名稱：${item.name}
+描述：${(item.useEffect as any)?.description || item.name}
+五行屬性：${wuxingStyle[item.wuxing] || "自然屬性"}
+稀有度風格：${rarityStyle[item.rarity] || "簡約風格"}
+類型特徵：${categoryStyle[item.category] || "神秘物品"}
+風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節，適合作為遊戲圖鑑卡片。`;
+
+      const { url } = await generateImage({ prompt });
+      if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
+
+      await db.update(gameItemCatalog).set({ imageUrl: url })
+        .where(eq(gameItemCatalog.itemId, item.itemId));
+
+      return { success: true, imageUrl: url, name: item.name };
+    }),
+
+  /**
+   * 一鍵 AI 生圖：裝備圖鑑
+   */
+  aiGenerateEquipImage: adminProcedure
+    .input(z.object({ equipId: z.string(), customPrompt: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [equip] = await db.select().from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.equipId, input.equipId));
+      if (!equip) throw new TRPCError({ code: "NOT_FOUND", message: "裝備不存在" });
+
+      const wuxingStyle: Record<string, string> = {
+        "木": "綠色木質紋理，藤蔓和葉子裝飾", "火": "紅色火焰紋理，燃燒效果",
+        "土": "棕色岩石紋理，大地元素", "金": "金色金屬光澤，鋒利邊緣",
+        "水": "藍色水波紋理，流動效果",
+      };
+      const rarityStyle: Record<string, string> = {
+        common: "簡約樸素風格，基礎裝備", rare: "精緻雕刻，淡淡發光光暈",
+        epic: "華麗裝飾，強烈光暈和符文", legendary: "神器級別，神聖光芒、古代符文和神力氣息",
+      };
+      const slotStyle: Record<string, string> = {
+        weapon: "武器，刀劍/弓/錘/杖等戰鬥器具", head: "頭盔/冠冕，頭部裝備",
+        body: "盔甲/袖袍，身體裝備", legs: "腳部裝備，靴子/護腳",
+        accessory: "飾品，戒指/項鏈/護符", shield: "盾牌，防禦裝備",
+      };
+
+      const prompt = input.customPrompt || `中國古風奇幻遊戲裝備圖示，單一裝備特寫，透明背景。
+裝備名稱：${equip.name}
+描述：${(equip.affix1 as any)?.description || equip.name}
+五行屬性：${wuxingStyle[equip.wuxing] || "自然屬性"}
+稀有度風格：${rarityStyle[equip.rarity] || "簡約風格"}
+裝備類型：${slotStyle[equip.slot] || "神秘裝備"}
+裝備階級：${equip.tier || "普通"}
+風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節，適合作為遊戲圖鑑卡片。`;
+
+      const { url } = await generateImage({ prompt });
+      if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
+
+      await db.update(gameEquipmentCatalog).set({ imageUrl: url })
+        .where(eq(gameEquipmentCatalog.equipId, equip.equipId));
+
+      return { success: true, imageUrl: url, name: equip.name };
+    }),
+
+  /**
+   * 一鍵 AI 生圖：技能書圖鑑
+   */
+  aiGenerateSkillImage: adminProcedure
+    .input(z.object({ skillId: z.string(), customPrompt: z.string().optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [skill] = await db.select().from(gameSkillCatalog).where(eq(gameSkillCatalog.skillId, input.skillId));
+      if (!skill) throw new TRPCError({ code: "NOT_FOUND", message: "技能不存在" });
+
+      const wuxingStyle: Record<string, string> = {
+        "木": "綠色木元素，藤蔓和葉子特效", "火": "紅色火焰特效，燃燒和爆裂",
+        "土": "棕色岩石特效，大地震動", "金": "金色金屬特效，鋒利刀刃",
+        "水": "藍色水流特效，海浪和冰霜",
+      };
+      const rarityStyle: Record<string, string> = {
+        common: "簡約符文，基礎技能書", rare: "精緻符文，淡淡發光",
+        epic: "華麗符文，強烈光暈和魔法陣", legendary: "神聖符文，神力光芒、古代符文和天地異象",
+      };
+      const typeStyle: Record<string, string> = {
+        attack: "攻擊技能，破壞力特效", defense: "防禦技能，護盾特效",
+        heal: "治療技能，治療光特效", buff: "增益技能，光環特效",
+        debuff: "減益技能，詛咒特效", special: "特殊技能，神秘特效",
+      };
+
+      const prompt = input.customPrompt || `中國古風奇幻遊戲技能書圖示，單一技能書/卷軸特寫，透明背景。
+技能名稱：${skill.name}
+描述：${skill.description || "神秘技能"}
+五行屬性：${wuxingStyle[skill.wuxing] || "自然屬性"}
+稀有度風格：${rarityStyle[skill.rarity] || "簡約風格"}
+技能類型：${typeStyle[skill.skillType] || "神秘技能"}
+技能階級：${skill.tier || "普通"}
+風格：水墨畫與現代遊戲美術融合，技能書外觀為古代卷軸或符籙，上面有發光的符文和屬性特效，高細節，適合作為遊戲圖鑑卡片。`;
+
+      const { url } = await generateImage({ prompt });
+      if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
+
+      await db.update(gameSkillCatalog).set({ imageUrl: url })
+        .where(eq(gameSkillCatalog.skillId, skill.skillId));
+
+      return { success: true, imageUrl: url, name: skill.name };
+    }),
+
+  /**
+   * 批量 AI 生圖：為所有缺少圖片的圖鑑生成圖片
+   */
+  aiBatchGenerateImages: adminProcedure
+    .input(z.object({
+      type: z.enum(["item", "equipment", "skill"]),
+      limit: z.number().int().min(1).max(10).default(5),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      let results: Array<{ id: string; name: string; imageUrl: string }> = [];
+
+      if (input.type === "item") {
+        const items = await db.select().from(gameItemCatalog)
+          .where(eq(gameItemCatalog.isActive, 1))
+          .limit(500);
+        const noImage = items.filter(i => !i.imageUrl).slice(0, input.limit);
+        for (const item of noImage) {
+          try {
+            const wuxingStyle: Record<string, string> = {
+              "木": "綠色木質", "火": "紅色火焰", "土": "棕色岩石", "金": "金色金屬", "水": "藍色水波",
+            };
+            const prompt = `中國古風奇幻遊戲道具圖示，單一物品特寫，透明背景。
+道具名稱：${item.name}
+描述：${(item.useEffect as any)?.description || item.name}
+五行屬性：${wuxingStyle[item.wuxing] || "自然屬性"}
+稀有度：${item.rarity}
+風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節。`;
+            const { url } = await generateImage({ prompt });
+            if (url) {
+              await db.update(gameItemCatalog).set({ imageUrl: url })
+                .where(eq(gameItemCatalog.itemId, item.itemId));
+              results.push({ id: item.itemId, name: item.name, imageUrl: url });
+            }
+          } catch (e) {
+            console.error(`生成道具圖片失敗: ${item.name}`, e);
+          }
+        }
+      } else if (input.type === "equipment") {
+        const equips = await db.select().from(gameEquipmentCatalog)
+          .where(eq(gameEquipmentCatalog.isActive, 1))
+          .limit(500);
+        const noImage = equips.filter(e => !e.imageUrl).slice(0, input.limit);
+        for (const equip of noImage) {
+          try {
+            const wuxingStyle: Record<string, string> = {
+              "木": "綠色木質", "火": "紅色火焰", "土": "棕色岩石", "金": "金色金屬", "水": "藍色水波",
+            };
+            const slotDesc: Record<string, string> = {
+              weapon: "武器", head: "頭盔", body: "盔甲", legs: "靴子", accessory: "飾品", shield: "盾牌",
+            };
+            const prompt = `中國古風奇幻遊戲裝備圖示，單一裝備特寫，透明背景。
+裝備名稱：${equip.name}
+描述：${(equip.affix1 as any)?.description || equip.name}
+五行屬性：${wuxingStyle[equip.wuxing] || "自然屬性"}
+稀有度：${equip.rarity}
+裝備類型：${slotDesc[equip.slot] || "神秘裝備"}
+風格：水墨畫與現代遊戲美術融合，線條細致，色彩豐富，高細節。`;
+            const { url } = await generateImage({ prompt });
+            if (url) {
+              await db.update(gameEquipmentCatalog).set({ imageUrl: url })
+                .where(eq(gameEquipmentCatalog.equipId, equip.equipId));
+              results.push({ id: equip.equipId, name: equip.name, imageUrl: url });
+            }
+          } catch (e) {
+            console.error(`生成裝備圖片失敗: ${equip.name}`, e);
+          }
+        }
+      } else {
+        const skills = await db.select().from(gameSkillCatalog)
+          .where(eq(gameSkillCatalog.isActive, 1))
+          .limit(500);
+        const noImage = skills.filter(s => !s.imageUrl).slice(0, input.limit);
+        for (const skill of noImage) {
+          try {
+            const wuxingStyle: Record<string, string> = {
+              "木": "綠色木元素", "火": "紅色火焰", "土": "棕色岩石", "金": "金色金屬", "水": "藍色水流",
+            };
+            const prompt = `中國古風奇幻遊戲技能書圖示，單一技能書/卷軸特寫，透明背景。
+技能名稱：${skill.name}
+描述：${skill.description || "神秘技能"}
+五行屬性：${wuxingStyle[skill.wuxing] || "自然屬性"}
+稀有度：${skill.rarity}
+技能類型：${skill.skillType || "攻擊"}
+風格：水墨畫與現代遊戲美術融合，技能書外觀為古代卷軸或符籙，上面有發光的符文和屬性特效。`;
+            const { url } = await generateImage({ prompt });
+            if (url) {
+              await db.update(gameSkillCatalog).set({ imageUrl: url })
+                .where(eq(gameSkillCatalog.skillId, skill.skillId));
+              results.push({ id: skill.skillId, name: skill.name, imageUrl: url });
+            }
+          } catch (e) {
+            console.error(`生成技能圖片失敗: ${skill.name}`, e);
+          }
+        }
+      }
+
+      return {
+        success: true,
+        generated: results.length,
+        results,
+        message: `✅ 已為 ${results.length} 個${input.type === "item" ? "道具" : input.type === "equipment" ? "裝備" : "技能書"}生成圖片`,
+      };
     }),
 });

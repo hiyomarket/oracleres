@@ -503,6 +503,7 @@ export default function GameCMS() {
             <TabsTrigger value="pet-catalog">🐾 寵物圖鑑</TabsTrigger>
             <TabsTrigger value="pet-ai">🧬 寵物 AI</TabsTrigger>
             <TabsTrigger value="ai-shop-layout">🏪 AI 商店佈局</TabsTrigger>
+            <TabsTrigger value="value-engine">💎 價值引擎</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -528,6 +529,7 @@ export default function GameCMS() {
               <TabsContent value="pet-catalog"><PetCatalogTab /></TabsContent>
               <TabsContent value="pet-ai"><PetAIToolsTab /></TabsContent>
               <TabsContent value="ai-shop-layout"><AIShopLayoutTab /></TabsContent>
+              <TabsContent value="value-engine"><ValueEngineTab /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
@@ -2868,6 +2870,395 @@ function ShopPreviewModal({
           </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+
+// ─── Value Engine Tab ──────────────────────────────────────────────────────
+function ValueEngineTab() {
+  const utils = trpc.useUtils();
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [dropPreview, setDropPreview] = useState<any>(null);
+  const [activeSection, setActiveSection] = useState<"rebalance" | "drops" | "images">("rebalance");
+
+  // 預覽所有圖鑑的價值評估
+  const previewAll = trpc.valueRebalance.previewAll.useQuery(undefined, { enabled: false });
+  // 執行批量重新評估
+  const applyAll = trpc.valueRebalance.applyAll.useMutation({
+    onSuccess: (data) => {
+      toast.success(`✅ 重新評估完成：道具 ${data.updated.items} 件、裝備 ${data.updated.equipment} 件、技能 ${data.updated.skills} 件`);
+      utils.gameCatalog.invalidate();
+    },
+    onError: (e) => toast.error(e.message || "重新評估失敗"),
+  });
+  // AI 掉落分配
+  const aiAssignDrops = trpc.valueRebalance.aiAssignDrops.useMutation({
+    onSuccess: (data) => {
+      setDropPreview(data);
+      if (!data.dryRun) {
+        toast.success(data.message);
+        utils.gameCatalog.invalidate();
+      }
+    },
+    onError: (e) => toast.error(e.message || "掉落分配失敗"),
+  });
+  // 批量 AI 生圖
+  const batchGenImages = trpc.gameAI.aiBatchGenerateImages.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(`✅ 批量生圖完成：成功 ${data.success} 件、失敗 ${data.failed} 件`);
+      utils.gameCatalog.invalidate();
+    },
+    onError: (e: any) => toast.error(e.message || "批量生圖失敗"),
+  });
+
+  const rarityColors: Record<string, string> = {
+    common: "#9CA3AF", rare: "#3B82F6", epic: "#A855F7", legendary: "#F59E0B",
+  };
+  const qualityColors: Record<string, string> = {
+    S: "#EF4444", A: "#F97316", B: "#EAB308", C: "#22C55E", D: "#6B7280",
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* 標題區 */}
+      <div>
+        <h2 className="text-xl font-bold flex items-center gap-2">💎 價值評估引擎</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          根據「稀有度 → 價值性 → 實用性 → 影響程度」四層邏輯，自動計算所有道具/裝備/技能書的品質等級（S/A/B/C/D）、合理價格、流通權限和怪物掉落分配。
+        </p>
+      </div>
+
+      {/* 切換區 */}
+      <div className="flex gap-2">
+        <Button
+          variant={activeSection === "rebalance" ? "default" : "outline"}
+          onClick={() => setActiveSection("rebalance")}
+          className={activeSection === "rebalance" ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white" : ""}
+        >
+          ⚖️ 全圖鑑重新評估
+        </Button>
+        <Button
+          variant={activeSection === "drops" ? "default" : "outline"}
+          onClick={() => setActiveSection("drops")}
+          className={activeSection === "drops" ? "bg-gradient-to-r from-amber-600 to-orange-600 text-white" : ""}
+        >
+          🎯 怪物掉落分配
+        </Button>
+      </div>
+
+      {activeSection === "rebalance" && (
+        <div className="space-y-6">
+          {/* 說明卡片 */}
+          <div className="p-4 rounded-xl border bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20">
+            <h3 className="font-bold text-violet-700 dark:text-violet-400 mb-2">📐 評估規則</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="font-semibold mb-1">品質等級（同稀有度內排名）</p>
+                <div className="space-y-1">
+                  {[
+                    { g: "S", desc: "前 10%，價格 ×4，限制流通", color: "#EF4444" },
+                    { g: "A", desc: "10~30%，價格 ×2.5，限靈石/密店", color: "#F97316" },
+                    { g: "B", desc: "30~60%，價格 ×1.5，一般/靈石商店", color: "#EAB308" },
+                    { g: "C", desc: "60~85%，基準價格", color: "#22C55E" },
+                    { g: "D", desc: "後 15%，價格 ×0.6", color: "#6B7280" },
+                  ].map(q => (
+                    <div key={q.g} className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: q.color }}>{q.g}</span>
+                      <span>{q.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="font-semibold mb-1">流通權限</p>
+                <ul className="space-y-1 text-muted-foreground">
+                  <li>🏪 一般商店：C/D 級的 common/rare</li>
+                  <li>💎 靈石商店：B/C 級的 rare/epic</li>
+                  <li>🔮 密店：A/B 級的 epic，S 級非傳說</li>
+                  <li>🏛️ 拍賣行：所有可交易物品</li>
+                  <li>🚫 傳說技能書：完全禁止交易</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* 操作按鈕 */}
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={() => previewAll.refetch().then(r => r.data && setPreviewData(r.data))}
+              disabled={previewAll.isFetching}
+              variant="outline"
+              className="border-violet-300 text-violet-700 hover:bg-violet-50 dark:border-violet-700 dark:text-violet-400"
+            >
+              {previewAll.isFetching ? "⏳ 分析中..." : "🔍 預覽評估結果"}
+            </Button>
+            <Button
+              onClick={() => {
+                if (confirm("確定要執行全圖鑑重新評估？這會修改所有道具/裝備/技能的價格、品質、流通權限。")) {
+                  applyAll.mutate();
+                }
+              }}
+              disabled={applyAll.isPending}
+              className="bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700"
+            >
+              {applyAll.isPending ? "⏳ 執行中..." : "🚀 執行全圖鑑重新評估"}
+            </Button>
+          </div>
+
+          {/* 評估結果 */}
+          {applyAll.data && (
+            <div className="p-4 rounded-xl border bg-green-50 dark:bg-green-950/20">
+              <p className="font-bold text-green-700 dark:text-green-400">✅ 重新評估完成</p>
+              <div className="flex gap-4 mt-2 text-sm">
+                <span>道具：{applyAll.data.updated.items} 件</span>
+                <span>裝備：{applyAll.data.updated.equipment} 件</span>
+                <span>技能：{applyAll.data.updated.skills} 件</span>
+              </div>
+            </div>
+          )}
+
+          {/* 預覽結果表格 */}
+          {previewData && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold">📊 評估預覽</h3>
+                <div className="flex gap-4 text-sm text-muted-foreground">
+                  <span>道具：{previewData.summary.items} 件</span>
+                  <span>裝備：{previewData.summary.equipment} 件</span>
+                  <span>技能：{previewData.summary.skills} 件</span>
+                </div>
+              </div>
+
+              {/* 合併顯示所有結果 */}
+              <div className="max-h-[500px] overflow-y-auto rounded-lg border">
+                <table className="w-full text-sm border-collapse">
+                  <thead className="sticky top-0 bg-background z-10">
+                    <tr className="border-b">
+                      <th className="text-left py-2 px-3">類型</th>
+                      <th className="text-left py-2 px-3">名稱</th>
+                      <th className="text-left py-2 px-3">五行</th>
+                      <th className="text-center py-2 px-3">稀有度</th>
+                      <th className="text-center py-2 px-3">品質</th>
+                      <th className="text-right py-2 px-3">價值分</th>
+                      <th className="text-right py-2 px-3">建議價</th>
+                      <th className="text-center py-2 px-3">掉落等級</th>
+                      <th className="text-center py-2 px-3">流通</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ...(previewData.items || []),
+                      ...(previewData.equipment || []),
+                      ...(previewData.skills || []),
+                    ]
+                      .sort((a: any, b: any) => b.evaluation.valueScore - a.evaluation.valueScore)
+                      .map((item: any, i: number) => {
+                        const e = item.evaluation;
+                        return (
+                          <tr key={`${item.type}-${item.id}-${i}`} className="border-b hover:bg-muted/30">
+                            <td className="py-1.5 px-3">
+                              <span className="text-xs px-1.5 py-0.5 rounded" style={{
+                                background: item.type === "item" ? "#2E8B5720" : item.type === "equipment" ? "#C9A22720" : "#8B5CF620",
+                                color: item.type === "item" ? "#2E8B57" : item.type === "equipment" ? "#C9A227" : "#8B5CF6",
+                              }}>
+                                {item.type === "item" ? "道具" : item.type === "equipment" ? "裝備" : "技能"}
+                              </span>
+                            </td>
+                            <td className="py-1.5 px-3 font-medium">{item.name}</td>
+                            <td className="py-1.5 px-3">{item.wuxing}</td>
+                            <td className="py-1.5 px-3 text-center">
+                              <span className="text-xs px-1.5 py-0.5 rounded" style={{
+                                background: (rarityColors[e.correctedRarity] || "#999") + "20",
+                                color: rarityColors[e.correctedRarity] || "#999",
+                              }}>
+                                {e.correctedRarity}
+                              </span>
+                            </td>
+                            <td className="py-1.5 px-3 text-center">
+                              <span className="w-6 h-6 rounded-full inline-flex items-center justify-center text-xs font-bold text-white" style={{
+                                background: qualityColors[e.qualityGrade] || "#999",
+                              }}>
+                                {e.qualityGrade}
+                              </span>
+                            </td>
+                            <td className="py-1.5 px-3 text-right font-mono">{e.valueScore}</td>
+                            <td className="py-1.5 px-3 text-right font-mono">{e.suggestedCoinPrice}💰</td>
+                            <td className="py-1.5 px-3 text-center text-xs">
+                              Lv{e.dropLevelRange[0]}~{e.dropLevelRange[1]}
+                            </td>
+                            <td className="py-1.5 px-3 text-center">
+                              <div className="flex gap-0.5 justify-center">
+                                {e.tradeRules.normalShop && <span title="一般商店" className="text-xs">🏪</span>}
+                                {e.tradeRules.spiritShop && <span title="靈石商店" className="text-xs">💎</span>}
+                                {e.tradeRules.secretShop && <span title="密店" className="text-xs">🔮</span>}
+                                {e.tradeRules.auctionHouse && <span title="拍賣行" className="text-xs">🏛️</span>}
+                                {!e.tradeRules.tradeable && <span title="禁止交易" className="text-xs">🚫</span>}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeSection === "drops" && (
+        <div className="space-y-6">
+          {/* 說明卡片 */}
+          <div className="p-4 rounded-xl border bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
+            <h3 className="font-bold text-amber-700 dark:text-amber-400 mb-2">🎯 掉落分配規則</h3>
+            <div className="text-sm space-y-1 text-muted-foreground">
+              <p>根據 ValueEngine 的掉落等級範圍，自動為每個怪物分配合適的掉落物品：</p>
+              <ul className="list-disc list-inside space-y-0.5 ml-2">
+                <li>common 物品 → Lv1~15 怪物</li>
+                <li>rare 物品 → Lv8~30 怪物</li>
+                <li>epic 物品 → Lv20~45 怪物</li>
+                <li>legendary 物品 → Lv35~50 怪物</li>
+                <li>同五行優先分配，確保類型多樣性（道具+裝備+技能書）</li>
+                <li>傳說級技能書不會出現在掉落池中</li>
+                <li>epic/boss/legendary 怪物額外有傳說掉落欄位</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* 操作按鈕 */}
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={() => aiAssignDrops.mutate({ dryRun: true })}
+              disabled={aiAssignDrops.isPending}
+              variant="outline"
+              className="border-amber-300 text-amber-700 hover:bg-amber-50 dark:border-amber-700 dark:text-amber-400"
+            >
+              {aiAssignDrops.isPending ? "⏳ 分析中..." : "🔍 預覽掉落分配"}
+            </Button>
+            <Button
+              onClick={() => {
+                if (confirm("確定要執行怪物掉落分配？這會覆蓋所有怪物的掉落設定。")) {
+                  aiAssignDrops.mutate({ dryRun: false });
+                }
+              }}
+              disabled={aiAssignDrops.isPending}
+              className="bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700"
+            >
+              {aiAssignDrops.isPending ? "⏳ 執行中..." : "🚀 執行掉落分配"}
+            </Button>
+          </div>
+
+          {/* 掉落分配結果 */}
+          {dropPreview && (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg border bg-amber-50 dark:bg-amber-950/20">
+                <p className="font-bold text-amber-700 dark:text-amber-400">
+                  {dropPreview.dryRun ? "🔍 預覽模式" : "✅ 已執行"}：{dropPreview.message}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  掉落池：{dropPreview.totalDropPool} 種物品
+                </p>
+              </div>
+
+              <div className="max-h-[500px] overflow-y-auto rounded-lg border">
+                <table className="w-full text-sm border-collapse">
+                  <thead className="sticky top-0 bg-background z-10">
+                    <tr className="border-b">
+                      <th className="text-left py-2 px-3">怪物</th>
+                      <th className="text-center py-2 px-3">等級</th>
+                      <th className="text-center py-2 px-3">稀有度</th>
+                      <th className="text-left py-2 px-3">掉落 1</th>
+                      <th className="text-left py-2 px-3">掉落 2</th>
+                      <th className="text-left py-2 px-3">掉落 3</th>
+                      <th className="text-left py-2 px-3">掉落 4</th>
+                      <th className="text-left py-2 px-3">掉落 5</th>
+                      <th className="text-left py-2 px-3">傳說掉落</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(dropPreview.assignments || []).map((a: any, i: number) => (
+                      <tr key={i} className="border-b hover:bg-muted/30">
+                        <td className="py-1.5 px-3 font-medium">{a.monsterName}</td>
+                        <td className="py-1.5 px-3 text-center text-xs">{a.monsterLevel}</td>
+                        <td className="py-1.5 px-3 text-center">
+                          <span className="text-xs px-1.5 py-0.5 rounded" style={{
+                            background: (rarityColors[a.monsterRarity] || "#999") + "20",
+                            color: rarityColors[a.monsterRarity] || "#999",
+                          }}>
+                            {a.monsterRarity}
+                          </span>
+                        </td>
+                        {[0, 1, 2, 3, 4].map(slot => {
+                          const drop = a.drops[slot];
+                          if (!drop) return <td key={slot} className="py-1.5 px-3 text-muted-foreground text-xs">-</td>;
+                          const typeIcon = drop.type === "item" ? "🎒" : drop.type === "equipment" ? "⚔️" : "📖";
+                          return (
+                            <td key={slot} className="py-1.5 px-3 text-xs">
+                              <span title={`${drop.itemName} (${(drop.rate * 100).toFixed(1)}%)`}>
+                                {typeIcon} {drop.itemName.slice(0, 6)}{drop.itemName.length > 6 ? "…" : ""} <span className="text-muted-foreground">{(drop.rate * 100).toFixed(1)}%</span>
+                              </span>
+                            </td>
+                          );
+                        })}
+                        <td className="py-1.5 px-3 text-xs">
+                          {a.legendaryDrop ? (
+                            <span className="text-amber-600" title={`${a.legendaryDrop.itemName} (${(a.legendaryDrop.rate * 100).toFixed(2)}%)`}>
+                              ⭐ {a.legendaryDrop.itemName.slice(0, 6)}{a.legendaryDrop.itemName.length > 6 ? "…" : ""} <span className="text-muted-foreground">{(a.legendaryDrop.rate * 100).toFixed(2)}%</span>
+                            </span>
+                          ) : <span className="text-muted-foreground">-</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeSection === "images" && (
+        <div className="space-y-6">
+          <div className="p-4 rounded-xl border bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20">
+            <h3 className="font-bold text-lg">🎨 批量 AI 生圖</h3>
+            <p className="text-sm text-muted-foreground mt-1">自動為所有缺少圖片的道具/裝備/技能書生成圖片。每次最多處理 10 件。</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-xl border bg-card">
+              <h4 className="font-semibold mb-3">🎒 道具生圖</h4>
+              <Button
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white"
+                disabled={batchGenImages.isPending}
+                onClick={() => batchGenImages.mutate({ type: "item", limit: 10 })}
+              >
+                {batchGenImages.isPending ? "⚙️ 生成中..." : "一鍵生成道具圖片（10件）"}
+              </Button>
+            </div>
+            <div className="p-4 rounded-xl border bg-card">
+              <h4 className="font-semibold mb-3">⚔️ 裝備生圖</h4>
+              <Button
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                disabled={batchGenImages.isPending}
+                onClick={() => batchGenImages.mutate({ type: "equipment", limit: 10 })}
+              >
+                {batchGenImages.isPending ? "⚙️ 生成中..." : "一鍵生成裝備圖片（10件）"}
+              </Button>
+            </div>
+            <div className="p-4 rounded-xl border bg-card">
+              <h4 className="font-semibold mb-3">📖 技能書生圖</h4>
+              <Button
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                disabled={batchGenImages.isPending}
+                onClick={() => batchGenImages.mutate({ type: "skill", limit: 10 })}
+              >
+                {batchGenImages.isPending ? "⚙️ 生成中..." : "一鍵生成技能書圖片（10件）"}
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">提示：每次點擊會為最多 10 件缺少圖片的物品生成圖片，可多次點擊直到所有物品都有圖片。也可以在各圖鑑的操作欄中點擊 🎨 按鈕單獨生成。</p>
+        </div>
+      )}
     </div>
   );
 }

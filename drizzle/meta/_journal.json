@@ -673,6 +673,13 @@
       "when": 1774584185272,
       "tag": "0095_absent_lord_hawal",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "5",
+      "when": 1774585543938,
+      "tag": "0096_tired_gambit",
+      "breakpoints": true
     }
   ]
 }

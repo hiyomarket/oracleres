@@ -23,6 +23,20 @@ import {
   SpawnNodeEditor,
 } from "./SmartEditors";
 
+/** 通用 AI 生圖按鈕 */
+function AiImageBtn({ type, id, name, hasImage, onSuccess }: { type: "item" | "equipment" | "skill"; id: string; name: string; hasImage: boolean; onSuccess: () => void }) {
+  const itemMut = trpc.gameAI.aiGenerateItemImage.useMutation({ onSuccess: (r: any) => { toast.success(`✅ ${r.name} 圖片已生成`); onSuccess(); }, onError: (e: any) => toast.error(`生圖失敗: ${e.message}`) });
+  const equipMut = trpc.gameAI.aiGenerateEquipImage.useMutation({ onSuccess: (r: any) => { toast.success(`✅ ${r.name} 圖片已生成`); onSuccess(); }, onError: (e: any) => toast.error(`生圖失敗: ${e.message}`) });
+  const skillMut = trpc.gameAI.aiGenerateSkillImage.useMutation({ onSuccess: (r: any) => { toast.success(`✅ ${r.name} 圖片已生成`); onSuccess(); }, onError: (e: any) => toast.error(`生圖失敗: ${e.message}`) });
+  const isPending = itemMut.isPending || equipMut.isPending || skillMut.isPending;
+  const handleClick = () => {
+    if (type === "item") itemMut.mutate({ itemId: id });
+    else if (type === "equipment") equipMut.mutate({ equipId: id });
+    else skillMut.mutate({ skillId: id });
+  };
+  return <Button size="sm" variant="ghost" className={`h-6 px-2 text-xs ${hasImage ? "text-green-500" : "text-amber-500"}`} title={hasImage ? "重新生成圖片" : "生成圖片"} onClick={handleClick} disabled={isPending}>{isPending ? "⏳" : (hasImage ? "🖼️" : "🎨")}</Button>;
+}
+
 // ===== 共用常數 =====
 const WUXING_OPTS = [
   { value: "木", label: "🌿 木" },
@@ -996,11 +1010,12 @@ export function ItemCatalogV2Tab() {
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
                   <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.itemId}</td>
-                  <td className="py-2 px-2 font-medium">{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
+                  <td className="py-2 px-2 font-medium">{m.imageUrl ? <img src={m.imageUrl} alt="" className="w-5 h-5 inline mr-1 rounded" /> : null}{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
                   <td className="py-2 px-2 text-xs">{m.category}</td><td className="py-2 px-2 text-xs">{m.rarity}</td><td className="py-2 px-2">{m.shopPrice > 0 ? m.shopPrice : '-'}</td>
                   <td className="py-2 px-2 text-xs space-x-0.5">{m.inNormalShop ? <span className="inline-block px-1 rounded bg-green-500/20 text-green-400 text-[10px]">一般</span> : null}{m.inSpiritShop ? <span className="inline-block px-1 rounded bg-purple-500/20 text-purple-400 text-[10px]">靈相</span> : null}{m.inSecretShop ? <span className="inline-block px-1 rounded bg-amber-500/20 text-amber-400 text-[10px]">密店</span> : null}{!m.inNormalShop && !m.inSpiritShop && !m.inSecretShop ? <span className="text-muted-foreground">-</span> : null}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
+                    <AiImageBtn type="item" id={m.itemId} name={m.name} hasImage={!!m.imageUrl} onSuccess={() => refetch()} />
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
@@ -1184,12 +1199,13 @@ export function EquipCatalogV2Tab() {
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
                   <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.equipId}</td>
-                  <td className="py-2 px-2 font-medium">{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
+                  <td className="py-2 px-2 font-medium">{m.imageUrl ? <img src={m.imageUrl} alt="" className="w-5 h-5 inline mr-1 rounded" /> : null}{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
                   <td className="py-2 px-2 text-xs">{m.slot}</td><td className="py-2 px-2 text-xs">{m.quality}</td>
                   <td className="py-2 px-2">{m.shopPrice > 0 ? m.shopPrice : '-'}</td>
                   <td className="py-2 px-2 text-xs space-x-0.5">{m.inNormalShop ? <span className="inline-block px-1 rounded bg-green-500/20 text-green-400 text-[10px]">一般</span> : null}{m.inSpiritShop ? <span className="inline-block px-1 rounded bg-purple-500/20 text-purple-400 text-[10px]">靈相</span> : null}{m.inSecretShop ? <span className="inline-block px-1 rounded bg-amber-500/20 text-amber-400 text-[10px]">密店</span> : null}{!m.inNormalShop && !m.inSpiritShop && !m.inSecretShop ? <span className="text-muted-foreground">-</span> : null}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
+                    <AiImageBtn type="equipment" id={m.equipId} name={m.name} hasImage={!!m.imageUrl} onSuccess={() => refetch()} />
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
@@ -1358,11 +1374,12 @@ export function SkillCatalogV2Tab() {
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
                   <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
                   <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.skillId}</td>
-                  <td className="py-2 px-2 font-medium">{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
+                  <td className="py-2 px-2 font-medium">{m.imageUrl ? <img src={m.imageUrl} alt="" className="w-5 h-5 inline mr-1 rounded" /> : null}{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
                   <td className="py-2 px-2 text-xs">{m.skillType}</td><td className="py-2 px-2">{m.shopPrice > 0 ? m.shopPrice : '-'}</td>
                   <td className="py-2 px-2 text-xs space-x-0.5">{m.inNormalShop ? <span className="inline-block px-1 rounded bg-green-500/20 text-green-400 text-[10px]">一般</span> : null}{m.inSpiritShop ? <span className="inline-block px-1 rounded bg-purple-500/20 text-purple-400 text-[10px]">靈相</span> : null}{m.inSecretShop ? <span className="inline-block px-1 rounded bg-amber-500/20 text-amber-400 text-[10px]">密店</span> : null}{!m.inNormalShop && !m.inSpiritShop && !m.inSecretShop ? <span className="text-muted-foreground">-</span> : null}</td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
+                    <AiImageBtn type="skill" id={m.skillId} name={m.name} hasImage={!!m.imageUrl} onSuccess={() => refetch()} />
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>

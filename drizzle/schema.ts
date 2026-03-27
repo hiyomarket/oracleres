@@ -2138,6 +2138,19 @@ export const gameItemCatalog = mysqlTable("game_item_catalog", {
   effect: text("effect"),
   /** 圖片 URL */
   imageUrl: text("image_url").default(""),
+  // ===== 價值評估引擎 =====
+  /** 價值分數（0~1000） */
+  valueScore: int("value_score").notNull().default(0),
+  /** 品質等級：S/A/B/C/D */
+  qualityGrade: varchar("quality_grade", { length: 5 }).notNull().default("C"),
+  /** 建議掉落等級下限 */
+  dropLevelMin: int("drop_level_min").notNull().default(1),
+  /** 建議掉落等級上限 */
+  dropLevelMax: int("drop_level_max").notNull().default(15),
+  /** 是否可交易 */
+  tradeable: tinyint("tradeable").notNull().default(1),
+  /** 是否可在拍賣行上架 */
+  inAuctionHouse: tinyint("in_auction_house").notNull().default(1),
   isActive: tinyint("is_active").default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
@@ -2200,6 +2213,19 @@ export const gameEquipmentCatalog = mysqlTable("game_equipment_catalog", {
   inSecretShop: tinyint("in_secret_shop").default(0),
   /** 圖片 URL */
   imageUrl: text("image_url").default(""),
+  // ===== 價值評估引擎 =====
+  /** 價值分數（0~1000） */
+  valueScore: int("value_score").notNull().default(0),
+  /** 品質等級：S/A/B/C/D */
+  qualityGrade: varchar("quality_grade", { length: 5 }).notNull().default("C"),
+  /** 建議掉落等級下限 */
+  dropLevelMin: int("drop_level_min").notNull().default(1),
+  /** 建議掉落等級上限 */
+  dropLevelMax: int("drop_level_max").notNull().default(15),
+  /** 是否可交易 */
+  tradeable: tinyint("tradeable").notNull().default(1),
+  /** 是否可在拍賣行上架 */
+  inAuctionHouse: tinyint("in_auction_house").notNull().default(1),
   isActive: tinyint("is_active").default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
@@ -2248,6 +2274,21 @@ export const gameSkillCatalog = mysqlTable("game_skill_catalog", {
   inSpiritShop: tinyint("in_spirit_shop").default(0),
   /** 是否在密店上架 */
   inSecretShop: tinyint("in_secret_shop").default(0),
+  // ===== 價值評估引擎 =====
+  /** 價值分數（0~1000） */
+  valueScore: int("value_score").notNull().default(0),
+  /** 品質等級：S/A/B/C/D */
+  qualityGrade: varchar("quality_grade", { length: 5 }).notNull().default("C"),
+  /** 建議掉落等級下限 */
+  dropLevelMin: int("drop_level_min").notNull().default(1),
+  /** 建議掉落等級上限 */
+  dropLevelMax: int("drop_level_max").notNull().default(15),
+  /** 是否可交易 */
+  tradeable: tinyint("tradeable").notNull().default(1),
+  /** 是否可在拍賣行上架 */
+  inAuctionHouse: tinyint("in_auction_house").notNull().default(1),
+  /** 圖片 URL */
+  imageUrl: text("image_url").default(""),
   isActive: tinyint("is_active").default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });

@@ -1,0 +1,82 @@
+{
+  "query": "\nSELECT '道具' as type, rarity, COUNT(*) as cnt, MIN(shop_price) as min_price, MAX(shop_price) as max_price, AVG(shop_price) as avg_price FROM game_item_catalog WHERE is_active=1 GROUP BY rarity\nUNION ALL\nSELECT '裝備' as type, rarity, COUNT(*) as cnt, MIN(shop_price) as min_price, MAX(shop_price) as max_price, AVG(shop_price) as avg_price FROM game_equipment_catalog WHERE is_active=1 GROUP BY rarity\nUNION ALL\nSELECT '技能' as type, rarity, COUNT(*) as cnt, MIN(shop_price) as min_price, MAX(shop_price) as max_price, AVG(shop_price) as avg_price FROM game_skill_catalog WHERE is_active=1 GROUP BY rarity;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nSELECT '道具' as type, rarity, COUNT(*) as cnt, MIN(shop_price) as min_price, MAX(shop_price) as max_price, AVG(shop_price) as avg_price FROM game_item_catalog WHERE is_active=1 GROUP BY rarity\nUNION ALL\nSELECT '裝備' as type, rarity, COUNT(*) as cnt, MIN(shop_price) as min_price, MAX(shop_price) as max_price, AVG(shop_price) as avg_price FROM game_equipment_catalog WHERE is_active=1 GROUP BY rarity\nUNION ALL\nSELECT '技能' as type, rarity, COUNT(*) as cnt, MIN(shop_price) as min_price, MAX(shop_price) as max_price, AVG(shop_price) as avg_price FROM game_skill_catalog WHERE is_active=1 GROUP BY rarity;\n",
+  "rows": [
+    {
+      "type": "裝備",
+      "rarity": "common",
+      "cnt": "17",
+      "min_price": "0",
+      "max_price": "500",
+      "avg_price": "61.7647"
+    },
+    {
+      "type": "裝備",
+      "rarity": "epic",
+      "cnt": "4",
+      "min_price": "0",
+      "max_price": "0",
+      "avg_price": "0.0000"
+    },
+    {
+      "type": "技能",
+      "rarity": "common",
+      "cnt": "109",
+      "min_price": "0",
+      "max_price": "300",
+      "avg_price": "5.9633"
+    },
+    {
+      "type": "裝備",
+      "rarity": "legendary",
+      "cnt": "22",
+      "min_price": "0",
+      "max_price": "0",
+      "avg_price": "0.0000"
+    },
+    {
+      "type": "裝備",
+      "rarity": "rare",
+      "cnt": "13",
+      "min_price": "0",
+      "max_price": "1500",
+      "avg_price": "207.6923"
+    },
+    {
+      "type": "道具",
+      "rarity": "legendary",
+      "cnt": "21",
+      "min_price": "0",
+      "max_price": "100000",
+      "avg_price": "4761.9048"
+    },
+    {
+      "type": "道具",
+      "rarity": "rare",
+      "cnt": "29",
+      "min_price": "0",
+      "max_price": "500",
+      "avg_price": "103.4483"
+    },
+    {
+      "type": "道具",
+      "rarity": "common",
+      "cnt": "31",
+      "min_price": "0",
+      "max_price": "250",
+      "avg_price": "56.7742"
+    },
+    {
+      "type": "道具",
+      "rarity": "epic",
+      "cnt": "20",
+      "min_price": "0",
+      "max_price": "5000",
+      "avg_price": "250.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "type\trarity\tcnt\tmin_price\tmax_price\tavg_price\n裝備\tcommon\t17\t0\t500\t61.7647\n裝備\tepic\t4\t0\t0\t0.0000\n技能\tcommon\t109\t0\t300\t5.9633\n裝備\tlegendary\t22\t0\t0\t0.0000\n裝備\trare\t13\t0\t1500\t207.6923\n道具\tlegendary\t21\t0\t100000\t4761.9048\n道具\trare\t29\t0\t500\t103.4483\n道具\tcommon\t31\t0\t250\t56.7742\n道具\tepic\t20\t0\t5000\t250.0000\n",
+  "stderr": "",
+  "execution_time_ms": 1621
+}
