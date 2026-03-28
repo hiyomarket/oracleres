@@ -19,7 +19,8 @@ export type LiveFeedType =
   | "legendary_drop"     // 傳說掉落
   | "pvp_win"            // PvP 勝利
   | "weekly_champion"    // 週冠軍
-  | "world_event";       // 世界事件（重要）
+  | "world_event"        // 世界事件（重要）
+  | "boss_kill";         // Boss 擊殺公告
 
 export interface LiveFeedPayload {
   feedType: LiveFeedType;
@@ -40,6 +41,7 @@ const FEED_ICONS: Record<LiveFeedType, string> = {
   pvp_win: "⚔️",
   weekly_champion: "👑",
   world_event: "🌍",
+  boss_kill: "🏆",
 };
 
 // ─── 各類型預設跳轉路徑 ──────────────────────────────────────
@@ -50,6 +52,7 @@ const FEED_PATHS: Record<LiveFeedType, string> = {
   pvp_win: "/game/achievements",
   weekly_champion: "/game/achievements",
   world_event: "/game",
+  boss_kill: "/game",
 };
 
 // ─── 廣播全服動態 ────────────────────────────────────────────
@@ -202,5 +205,32 @@ export function broadcastWeeklyChampion(params: {
     detail: `榮獲本週${label}！`,
     icon: "👑",
     targetPath: "/game/achievements",
+  });
+}
+
+// ─── 廣播 Boss 擊殺 ──────────────────────────────────────────
+export function broadcastBossKill(params: {
+  agentName: string;
+  agentElement: string;
+  agentLevel?: number;
+  bossName: string;
+  drops?: string[];
+  isParty?: boolean;
+  partyName?: string;
+}): void {
+  const who = params.isParty && params.partyName
+    ? `${params.partyName}（隊伍）`
+    : params.agentName;
+  const dropText = params.drops && params.drops.length > 0
+    ? `，獲得 ${params.drops.slice(0, 3).join("、")}${params.drops.length > 3 ? "…" : ""}`
+    : "";
+  broadcastLiveFeed({
+    feedType: "boss_kill",
+    agentName: params.agentName,
+    agentElement: params.agentElement,
+    agentLevel: params.agentLevel,
+    detail: `${who} 擊殺了 ${params.bossName}${dropText}！`,
+    icon: "🏆",
+    targetPath: "/game",
   });
 }

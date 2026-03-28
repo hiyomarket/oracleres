@@ -7,7 +7,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog, gamePetInnateSkills, gamePetLearnedSkills, roamingBossInstances, roamingBossCatalog } from "../../drizzle/schema";
+import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog, gamePetInnateSkills, gamePetLearnedSkills, roamingBossInstances, roamingBossCatalog, gameParties } from "../../drizzle/schema";
 import { sql, inArray } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
@@ -22,7 +22,7 @@ import { getCombatMonsterById, type CombatMonster, type MonsterSkillData } from 
 import { randomUUID } from "crypto";
 import { getEngineConfig } from "../gameEngineConfig";
 import { recordBossKill } from "../services/roamingBossEngine";
-import { broadcastLiveFeed } from "../liveFeedBroadcast";
+import { broadcastLiveFeed, broadcastBossKill } from "../liveFeedBroadcast";
 
 // ─── 輔助函數 ───
 
@@ -414,6 +414,30 @@ export const gameBattleRouter = router({
         // 多隻怪時稍微調整名稱區分
         if (monsterCount > 1 && mi > 0) monsterParticipant.name = `${combatMonster.name} (${mi + 1})`;
         participants.push(monsterParticipant);
+      }
+
+      // ─── Boss 護衛小兵生成 ───
+      if (isBossMode) {
+        const instanceId2 = parseInt(input.monsterId.replace("boss_", ""), 10);
+        if (!isNaN(instanceId2)) {
+          const [bossInst2] = await db.select().from(roamingBossInstances)
+            .where(eq(roamingBossInstances.id, instanceId2));
+          if (bossInst2) {
+            const [bossCat2] = await db.select().from(roamingBossCatalog)
+              .where(eq(roamingBossCatalog.id, bossInst2.catalogId));
+            const minionIds: string[] = (bossCat2?.minionIds as string[] | null) ?? [];
+            // 最多生成 2 隻護衛小兵
+            const minionSlots = minionIds.slice(0, 2);
+            for (const minionId of minionSlots) {
+              const minionData = await getCombatMonsterById(minionId);
+              if (minionData) {
+                const minionParticipant = buildMonsterParticipant(minionData, nextId++);
+                minionParticipant.name = `護衛 ${minionData.name}`;
+                participants.push(minionParticipant);
+              }
+            }
+          }
+        }
       }
 
       // 建立戰鬥記錄
@@ -838,10 +862,17 @@ export const gameBattleRouter = router({
                   if (bossCat) {
                     rewards.expReward = Math.round(bossCat.level * 8 * bossCat.expMultiplier * mult);
                     rewards.goldReward = Math.floor((bossCat.level * 3 + Math.random() * bossCat.level * 5) * mult);
+                    // ─── Boss 掉落物品（從圖鑑 drop_table 讀取） ───
+                    const dropTable = (bossCat.dropTable as Array<{itemId: string; chance: number}> | null) ?? [];
+                    for (const drop of dropTable) {
+                      if (Math.random() < (drop.chance ?? 0) * mult) {
+                        rewards.drops.push(drop.itemId);
+                      }
+                    }
                     // 記錄 Boss 擊敗日誌
                     const agentP2 = dbParticipants.find(dp => dp.participantType === "character");
                     if (agentP2?.agentId) {
-                      const [agentData] = await db.select({ name: gameAgents.agentName })
+                      const [agentData] = await db.select({ name: gameAgents.agentName, wuxing: gameAgents.wuxing, level: gameAgents.level })
                         .from(gameAgents).where(eq(gameAgents.id, agentP2.agentId));
                       await recordBossKill({
                         instanceId: bossInstanceId,
@@ -853,8 +884,26 @@ export const gameBattleRouter = router({
                         rounds: round,
                         expGained: rewards.expReward,
                         goldGained: rewards.goldReward,
-                        dropsGained: [],
+                        dropsGained: rewards.drops,
                         nodeId: bossInst.currentNodeId,
+                      });
+                      // ─── 全服公告：Boss 擊殺 ───
+                      const bossFullName = `${bossCat.title ? bossCat.title + " " : ""}${bossCat.name}`;
+                      // 確認是否組隊擊殺
+                      const killerParty = await db.select().from(gameParties)
+                        .where(and(
+                          sql`JSON_CONTAINS(${gameParties.memberIds}, JSON_ARRAY(${agentP2.agentId}))`,
+                          eq(gameParties.status, "active")
+                        ));
+                      const isPartyKill = killerParty.length > 0;
+                      broadcastBossKill({
+                        agentName: agentData?.name ?? "未知冒險者",
+                        agentElement: agentData?.wuxing ?? "earth",
+                        agentLevel: agentData?.level ?? 1,
+                        bossName: bossFullName,
+                        drops: rewards.drops,
+                        isParty: isPartyKill,
+                        partyName: isPartyKill ? killerParty[0].partyName ?? undefined : undefined,
                       });
                     }
                   }
@@ -879,8 +928,55 @@ export const gameBattleRouter = router({
               }
             }
 
-            // 更新角色經驗/金幣
+            // ═══ Boss 擊殺全服公告 ═══
+            const isBossWin = monsterId?.startsWith("boss_") && battleResult === "win";
             const agentP = dbParticipants.find(dp => dp.participantType === "character");
+
+            if (isBossWin && agentP?.agentId) {
+              // 查詢角色屬性用於公告
+              const [agentForBroadcast] = await db.select({
+                name: gameAgents.agentName, level: gameAgents.level, wuxing: gameAgents.wuxing,
+              }).from(gameAgents).where(eq(gameAgents.id, agentP.agentId));
+              // 查詢是否有組隊
+              const partyRows = await db.select().from(gameParties)
+                .where(sql`JSON_CONTAINS(${gameParties.memberIds}, JSON_ARRAY(${agentP.agentId})) AND ${gameParties.status} != 'disbanded'`)
+                .limit(1);
+              const party = partyRows[0] ?? null;
+              const bossInstanceId2 = parseInt(monsterId!.replace("boss_", ""), 10);
+              const [bossInstForBroadcast] = await db.select({ catalogId: roamingBossInstances.catalogId })
+                .from(roamingBossInstances).where(eq(roamingBossInstances.id, bossInstanceId2));
+              const [bossCatForBroadcast] = bossInstForBroadcast
+                ? await db.select({ name: roamingBossCatalog.name, title: roamingBossCatalog.title })
+                    .from(roamingBossCatalog).where(eq(roamingBossCatalog.id, bossInstForBroadcast.catalogId))
+                : [null];
+              const bossDisplayName = bossCatForBroadcast
+                ? `${bossCatForBroadcast.title ? bossCatForBroadcast.title + " " : ""}${bossCatForBroadcast.name}`
+                : "Boss";
+              const WUXING_EN: Record<string, string> = { "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water" };
+              broadcastBossKill({
+                agentName: agentForBroadcast?.name ?? "冒險者",
+                agentElement: WUXING_EN[agentForBroadcast?.wuxing ?? ""] ?? "earth",
+                agentLevel: agentForBroadcast?.level,
+                bossName: bossDisplayName,
+                drops: rewards.drops,
+                isParty: !!party,
+                partyName: party?.partyName ?? undefined,
+              });
+            }
+
+            // ═══ 組隊成員物品分配逻輯 ═══
+            // 先查詢玩家是否在組隊中
+            let partyMemberIds: number[] = [];
+            if (agentP?.agentId && rewards.drops.length > 0) {
+              const partyRowsForDrop = await db.select().from(gameParties)
+                .where(sql`JSON_CONTAINS(${gameParties.memberIds}, JSON_ARRAY(${agentP.agentId})) AND ${gameParties.status} != 'disbanded'`)
+                .limit(1);
+              if (partyRowsForDrop.length > 0) {
+                partyMemberIds = (partyRowsForDrop[0].memberIds as number[]) ?? [];
+              }
+            }
+
+            // 更新角色經驗/金幣
             if (agentP?.agentId) {
               await db.update(gameAgents).set({
                 exp: sql`${gameAgents.exp} + ${rewards.expReward}`,
@@ -889,32 +985,76 @@ export const gameBattleRouter = router({
                 updatedAt: Date.now(),
               }).where(eq(gameAgents.id, agentP.agentId));
 
-              // 寫入背包
-              for (const itemId of rewards.drops) {
-                try {
-                  const [existing] = await db.select().from(agentInventory)
-                    .where(and(eq(agentInventory.agentId, agentP.agentId), eq(agentInventory.itemId, itemId)))
-                    .limit(1);
-                  if (existing) {
-                    await db.update(agentInventory).set({
-                      quantity: existing.quantity + 1,
-                      updatedAt: Date.now(),
-                    }).where(eq(agentInventory.id, existing.id));
-                  } else {
-                    const itemType = itemId.startsWith("equip") ? "equipment" as const
-                      : itemId.startsWith("skill") ? "skill_book" as const
-                      : itemId.startsWith("food") || itemId.startsWith("consumable") ? "consumable" as const
-                      : "material" as const;
-                    await db.insert(agentInventory).values({
-                      agentId: agentP.agentId,
-                      itemId,
-                      itemType,
-                      quantity: 1,
-                      acquiredAt: Date.now(),
-                      updatedAt: Date.now(),
-                    });
+              if (partyMemberIds.length > 1) {
+                // ─── 組隊模式：平均分配經驗/金幣，掉落物品隨機分配給隊員 ───
+                const memberCount = partyMemberIds.length;
+                const expPerMember = Math.floor(rewards.expReward / memberCount);
+                const goldPerMember = Math.floor(rewards.goldReward / memberCount);
+                // 掉落物品隨機分配給隊員
+                const dropAssignments: Record<number, string[]> = {};
+                for (const itemId of rewards.drops) {
+                  const luckyMemberId = partyMemberIds[Math.floor(Math.random() * memberCount)];
+                  if (!dropAssignments[luckyMemberId]) dropAssignments[luckyMemberId] = [];
+                  dropAssignments[luckyMemberId].push(itemId);
+                }
+                // 發放給每位隊員
+                for (const memberId of partyMemberIds) {
+                  const memberDrops = dropAssignments[memberId] ?? [];
+                  await db.update(gameAgents).set({
+                    exp: sql`${gameAgents.exp} + ${expPerMember}`,
+                    gold: sql`${gameAgents.gold} + ${goldPerMember}`,
+                    totalKills: sql`${gameAgents.totalKills} + 1`,
+                    updatedAt: Date.now(),
+                  }).where(eq(gameAgents.id, memberId));
+                  for (const itemId of memberDrops) {
+                    try {
+                      const [ex] = await db.select().from(agentInventory)
+                        .where(and(eq(agentInventory.agentId, memberId), eq(agentInventory.itemId, itemId))).limit(1);
+                      if (ex) {
+                        await db.update(agentInventory).set({ quantity: ex.quantity + 1, updatedAt: Date.now() })
+                          .where(eq(agentInventory.id, ex.id));
+                      } else {
+                        const itemType = itemId.startsWith("equip") ? "equipment" as const
+                          : itemId.startsWith("skill") ? "skill_book" as const
+                          : itemId.startsWith("food") || itemId.startsWith("consumable") ? "consumable" as const
+                          : "material" as const;
+                        await db.insert(agentInventory).values({
+                          agentId: memberId, itemId, itemType, quantity: 1,
+                          acquiredAt: Date.now(), updatedAt: Date.now(),
+                        });
+                      }
+                    } catch (e) { console.error("[Battle] party drop insert error:", e); }
                   }
-                } catch (e) { console.error("[Battle] drop insert error:", e); }
+                }
+              } else {
+                // ─── 單人模式：直接發放給玩家 ───
+                // 寫入背包
+                for (const itemId of rewards.drops) {
+                  try {
+                    const [existing] = await db.select().from(agentInventory)
+                      .where(and(eq(agentInventory.agentId, agentP.agentId), eq(agentInventory.itemId, itemId)))
+                      .limit(1);
+                    if (existing) {
+                      await db.update(agentInventory).set({
+                        quantity: existing.quantity + 1,
+                        updatedAt: Date.now(),
+                      }).where(eq(agentInventory.id, existing.id));
+                    } else {
+                      const itemType = itemId.startsWith("equip") ? "equipment" as const
+                        : itemId.startsWith("skill") ? "skill_book" as const
+                        : itemId.startsWith("food") || itemId.startsWith("consumable") ? "consumable" as const
+                        : "material" as const;
+                      await db.insert(agentInventory).values({
+                        agentId: agentP.agentId,
+                        itemId,
+                        itemType,
+                        quantity: 1,
+                        acquiredAt: Date.now(),
+                        updatedAt: Date.now(),
+                      });
+                    }
+                  } catch (e) { console.error("[Battle] drop insert error:", e); }
+                }
               }
             }
 

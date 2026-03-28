@@ -111,6 +111,17 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
   const [showSkillPanel, setShowSkillPanel] = useState(false);
   const [showItemPanel, setShowItemPanel] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // 目標選擇
+  const [selectedTargetId, setSelectedTargetId] = useState<number | null>(null);
+  // 寵物独立指令
+  const [petCommand, setPetCommand] = useState<string | null>(null);
+  const [petSkillId, setPetSkillId] = useState<string | null>(null);
+  const [petTargetId, setPetTargetId] = useState<number | null>(null);
+  const [showPetSkillPanel, setShowPetSkillPanel] = useState(false);
+  const [activePetCmdMode, setActivePetCmdMode] = useState(false);
+  // Boss 擊殺掉落動畫
+  const [showDropAnimation, setShowDropAnimation] = useState(false);
+  const [animatedDrops, setAnimatedDrops] = useState<string[]>([]);
   const [rewards, setRewards] = useState<{ expReward: number; goldReward: number; drops: string[]; petExpGained: number } | null>(null);
   const logScrollRef = useRef<HTMLDivElement>(null);
 
@@ -279,10 +290,25 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       setSelectedCommand(null);
       setSelectedSkillId(null);
       setSelectedItemId(null);
+      setSelectedTargetId(null);
       setShowSkillPanel(false);
       setShowItemPanel(false);
-      // 戦鬥結束時從 submitCommand 的返回就可取得獎勵
-      if (data?.rewards) setRewards(data.rewards);
+      // 寵物指令重置
+      setPetCommand(null);
+      setPetSkillId(null);
+      setPetTargetId(null);
+      setShowPetSkillPanel(false);
+      setActivePetCmdMode(false);
+      // 戰鬥結束時從 submitCommand 的返回就可取得獎勵
+      if (data?.rewards) {
+        setRewards(data.rewards);
+        // Boss 擊殺掉落動畫（有掉落物品時展示）
+        if (data.state === "ended" && data.result === "win" && data.rewards.drops?.length > 0) {
+          setAnimatedDrops(data.rewards.drops);
+          setShowDropAnimation(true);
+          setTimeout(() => setShowDropAnimation(false), 3500);
+        }
+      }
       battleQuery.refetch();
       setTimeout(() => {
         if (logScrollRef.current) logScrollRef.current.scrollTop = logScrollRef.current.scrollHeight;
@@ -313,13 +339,28 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       participantId: number; commandType: CmdType; targetId?: number; skillId?: string; itemId?: string;
     }> = [];
     if (character && !character.isDefeated) {
-      const target = enemies.find(e => !e.isDefeated);
+      // 目標：已選擇的指定目標 > 第一個存活敵人
+      const target = selectedTargetId
+        ? enemies.find(e => e.id === selectedTargetId && !e.isDefeated) ?? enemies.find(e => !e.isDefeated)
+        : enemies.find(e => !e.isDefeated);
       commands.push({
         participantId: character.id,
         commandType: selectedCommand as CmdType,
         targetId: target?.id,
         skillId: selectedCommand === "skill" ? selectedSkillId ?? undefined : undefined,
         itemId: selectedCommand === "item" ? selectedItemId ?? undefined : undefined,
+      });
+    }
+    // 寵物独立指令（若有寵物且玩家已選擇寵物指令）
+    if (pet && !pet.isDefeated && petCommand) {
+      const petTarget = petTargetId
+        ? enemies.find(e => e.id === petTargetId && !e.isDefeated) ?? enemies.find(e => !e.isDefeated)
+        : enemies.find(e => !e.isDefeated);
+      commands.push({
+        participantId: pet.id,
+        commandType: petCommand as CmdType,
+        targetId: petTarget?.id,
+        skillId: petCommand === "skill" ? petSkillId ?? undefined : undefined,
       });
     }
     submitCmd.mutate({ battleId, commands });
@@ -364,6 +405,37 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       {screenFlash && (
         <div className="fixed inset-0 pointer-events-none z-[203] animate-screenFlash"
           style={{ background: screenFlash }} />
+      )}
+
+      {/* 擊殺 Boss 掉落動畫 */}
+      {showDropAnimation && animatedDrops.length > 0 && (
+        <div className="fixed inset-0 pointer-events-none z-[210] flex items-center justify-center">
+          <div className="text-center animate-fadeSlideIn">
+            <div className="text-4xl mb-3 animate-bounce">🌟</div>
+            <p className="text-lg font-black text-yellow-300 mb-3 tracking-widest"
+              style={{ textShadow: "0 0 20px rgba(251,191,36,0.8), 0 0 40px rgba(251,191,36,0.4)" }}>
+              掉落物品！
+            </p>
+            <div className="flex flex-col gap-2 items-center">
+              {animatedDrops.slice(0, 6).map((drop, i) => (
+                <div key={i}
+                  className="px-4 py-2 rounded-xl text-sm font-bold"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(245,158,11,0.1) 100%)",
+                    border: "1px solid rgba(251,191,36,0.4)",
+                    color: "#fde68a",
+                    boxShadow: "0 0 12px rgba(251,191,36,0.2)",
+                    animation: `fadeSlideIn 0.4s ease-out ${i * 0.15}s both`,
+                  }}>
+                  ✨ {drop}
+                </div>
+              ))}
+              {animatedDrops.length > 6 && (
+                <p className="text-[10px] text-yellow-400/60">...+{animatedDrops.length - 6} 更多物品</p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
       {/* 技能名稱大字閃現 */}
       {skillAnnounce && (
@@ -481,8 +553,20 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
           <div className="flex-1 flex flex-col min-h-0">
             {/* 敵方區域 */}
             <div className="shrink-0 px-3 pt-2 pb-1" style={{ background: "rgba(127,29,29,0.06)" }}>
-              <p className="text-[9px] font-bold text-red-400/50 tracking-widest mb-1.5">▼ ENEMY</p>
-              <BattleGrid participants={enemies} isEnemy attackingId={attackingId} hitId={hitId} maxSlots={6} />
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[9px] font-bold text-red-400/50 tracking-widest">▼ ENEMY</p>
+                {battleState === "active" && enemies.filter(e => !e.isDefeated).length > 1 && (
+                  <p className="text-[8px] text-amber-400/60 animate-pulse">
+                    {selectedTargetId ? `🔻 已選擇目標` : "点擊敵方可指定目標"}
+                  </p>
+                )}
+              </div>
+              <BattleGrid participants={enemies} isEnemy attackingId={attackingId} hitId={hitId} maxSlots={6}
+                selectedTargetId={selectedTargetId}
+                onTargetSelect={(id) => {
+                  setSelectedTargetId(prev => prev === id ? null : id);
+                  setPetTargetId(prev => prev === id ? null : id);
+                }} />
             </div>
 
             {/* 戰鬥日誌（中央戰場，可滾動） */}
@@ -506,8 +590,87 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
 
             {/* 我方區域 */}
             <div className="shrink-0 px-3 pt-1 pb-2" style={{ background: "rgba(30,58,138,0.06)" }}>
-              <p className="text-[9px] font-bold text-cyan-400/50 tracking-widest mb-1.5">▲ ALLY</p>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[9px] font-bold text-cyan-400/50 tracking-widest">▲ ALLY</p>
+                {pet && !pet.isDefeated && battleState === "active" && (
+                  <button
+                    onClick={() => setActivePetCmdMode(prev => !prev)}
+                    className="text-[8px] px-1.5 py-0.5 rounded-full transition-all"
+                    style={{
+                      background: activePetCmdMode ? "rgba(139,92,246,0.25)" : "rgba(139,92,246,0.08)",
+                      border: `1px solid ${activePetCmdMode ? "rgba(139,92,246,0.5)" : "rgba(139,92,246,0.2)"}`,
+                      color: activePetCmdMode ? "#c4b5fd" : "#7c3aed",
+                    }}>
+                    {activePetCmdMode ? "🐾 寵物指令設定中" : "🐾 設定寵物指令"}
+                  </button>
+                )}
+              </div>
               <BattleGrid participants={allies} attackingId={attackingId} hitId={hitId} maxSlots={6} />
+              {/* 寵物指令面板 */}
+              {activePetCmdMode && pet && !pet.isDefeated && (
+                <div className="mt-2 p-2 rounded-xl animate-fadeSlideIn"
+                  style={{ background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.2)" }}>
+                  <p className="text-[9px] text-purple-300 font-bold mb-1.5">🐾 {pet.name} 的指令</p>
+                  <div className="flex gap-1.5 mb-1.5">
+                    {[{ id: "attack", label: "普攻", icon: "⚔️" }, { id: "skill", label: "技能", icon: "✨" }, { id: "defend", label: "防御", icon: "🛡️" }].map(cmd => (
+                      <button key={cmd.id}
+                        onClick={() => {
+                          if (cmd.id === "skill") setShowPetSkillPanel(true);
+                          setPetCommand(cmd.id);
+                        }}
+                        className="flex-1 py-1.5 rounded-lg text-[9px] font-bold transition-all"
+                        style={{
+                          background: petCommand === cmd.id ? "rgba(139,92,246,0.25)" : "rgba(30,27,75,0.4)",
+                          border: `1px solid ${petCommand === cmd.id ? "rgba(139,92,246,0.5)" : "rgba(99,102,241,0.15)"}`,
+                          color: petCommand === cmd.id ? "#c4b5fd" : "#64748b",
+                        }}>
+                        {cmd.icon} {cmd.label}
+                      </button>
+                    ))}
+                  </div>
+                  {/* 寵物技能選擇 */}
+                  {showPetSkillPanel && pet.skills.length > 0 && (
+                    <div className="grid grid-cols-3 gap-1 mb-1.5">
+                      {pet.skills.map(sk => (
+                        <button key={sk.id}
+                          onClick={() => { setPetSkillId(sk.id); setPetCommand("skill"); setShowPetSkillPanel(false); }}
+                          className="py-1 px-1.5 rounded-lg text-[8px] font-bold transition-all"
+                          style={{
+                            background: petSkillId === sk.id ? "rgba(139,92,246,0.3)" : "rgba(30,27,75,0.5)",
+                            border: `1px solid ${petSkillId === sk.id ? "rgba(139,92,246,0.5)" : "rgba(99,102,241,0.15)"}`,
+                            color: petSkillId === sk.id ? "#c4b5fd" : "#64748b",
+                          }}>
+                          {sk.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {/* 寵物目標選擇 */}
+                  {enemies.filter(e => !e.isDefeated).length > 1 && (
+                    <div className="flex gap-1 flex-wrap">
+                      <span className="text-[8px] text-slate-500 self-center">寵物目標:</span>
+                      {enemies.filter(e => !e.isDefeated).map(e => (
+                        <button key={e.id}
+                          onClick={() => setPetTargetId(prev => prev === e.id ? null : e.id)}
+                          className="text-[8px] px-1.5 py-0.5 rounded-full transition-all"
+                          style={{
+                            background: petTargetId === e.id ? "rgba(239,68,68,0.2)" : "rgba(30,27,75,0.4)",
+                            border: `1px solid ${petTargetId === e.id ? "rgba(239,68,68,0.4)" : "rgba(99,102,241,0.15)"}`,
+                            color: petTargetId === e.id ? "#fca5a5" : "#64748b",
+                          }}>
+                          {e.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {petCommand && (
+                    <p className="text-[8px] text-purple-400 mt-1">
+                      已設定: {petCommand === "skill" && petSkillId ? `技能 ${petSkillId}` : petCommand}
+                      {petTargetId ? ` → ${enemies.find(e => e.id === petTargetId)?.name ?? "指定目標"}` : " → 自動選擇"}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -516,32 +679,113 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
             {battleState === "ended" ? (
               <VictoryPanel result={battleResult} round={round} onClose={onClose} rewards={rewards} />
             ) : (
-              <CommandPanel
-                character={character}
-                showSkillPanel={showSkillPanel}
-                showItemPanel={showItemPanel}
-                selectedCommand={selectedCommand}
-                selectedSkillId={selectedSkillId}
-                selectedItemId={selectedItemId}
-                isSubmitting={isSubmitting}
-                turnTimer={turnTimer}
-                timeLeft={timeLeft}
-                battleId={battleId}
-                onSelectCommand={(cmd) => {
-                  if (cmd === "skill") {
-                    setShowSkillPanel(true); setShowItemPanel(false); setSelectedCommand("skill");
-                  } else if (cmd === "item") {
-                    setShowItemPanel(true); setShowSkillPanel(false); setSelectedCommand("item");
-                  } else {
-                    setSelectedCommand(cmd); setShowSkillPanel(false); setShowItemPanel(false);
-                    setSelectedSkillId(null); setSelectedItemId(null);
-                  }
-                }}
-                onSelectSkill={(id) => { setSelectedSkillId(id); setSelectedCommand("skill"); }}
-                onSelectItem={(id) => { setSelectedItemId(id); setSelectedCommand("item"); }}
-                onCancelPanel={() => { setShowSkillPanel(false); setShowItemPanel(false); setSelectedCommand(null); }}
-                onSubmit={handleSubmitTurn}
-              />
+              <>
+                <CommandPanel
+                  character={character}
+                  showSkillPanel={showSkillPanel}
+                  showItemPanel={showItemPanel}
+                  selectedCommand={selectedCommand}
+                  selectedSkillId={selectedSkillId}
+                  selectedItemId={selectedItemId}
+                  isSubmitting={isSubmitting}
+                  turnTimer={turnTimer}
+                  timeLeft={timeLeft}
+                  battleId={battleId}
+                  onSelectCommand={(cmd) => {
+                    if (cmd === "skill") {
+                      setShowSkillPanel(true); setShowItemPanel(false); setSelectedCommand("skill");
+                    } else if (cmd === "item") {
+                      setShowItemPanel(true); setShowSkillPanel(false); setSelectedCommand("item");
+                    } else {
+                      setSelectedCommand(cmd); setShowSkillPanel(false); setShowItemPanel(false);
+                      setSelectedSkillId(null); setSelectedItemId(null);
+                    }
+                  }}
+                  onSelectSkill={(id) => { setSelectedSkillId(id); setSelectedCommand("skill"); }}
+                  onSelectItem={(id) => { setSelectedItemId(id); setSelectedCommand("item"); }}
+                  onCancelPanel={() => { setShowSkillPanel(false); setShowItemPanel(false); setSelectedCommand(null); }}
+                  onSubmit={handleSubmitTurn}
+                />
+                {/* ─── 寵物独立指令區塊 ─── */}
+                {pet && !pet.isDefeated && battleState === "active" && (
+                  <div className="px-3 py-2 border-t"
+                    style={{ borderColor: "rgba(139,92,246,0.2)", background: "rgba(139,92,246,0.04)" }}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-[9px] font-bold text-purple-400 tracking-wider">🐾 寵物指令</span>
+                      {petCommand && (
+                        <span className="text-[8px] px-1.5 py-0.5 rounded-full"
+                          style={{ background: "rgba(139,92,246,0.2)", color: "#c4b5fd", border: "1px solid rgba(139,92,246,0.3)" }}>
+                          {petCommand === "attack" ? "普通攻擊" : petCommand === "skill" ? `技能${petSkillId ? " (已選)" : ""}` : petCommand === "defend" ? "防御" : petCommand}
+                        </span>
+                      )}
+                      {!petCommand && (
+                        <span className="text-[8px] text-slate-600">（未選擇→自動 AI）</span>
+                      )}
+                    </div>
+                    {showPetSkillPanel && pet.skills.length > 0 ? (
+                      <div className="mb-1.5">
+                        <div className="grid grid-cols-3 gap-1 max-h-[80px] overflow-y-auto">
+                          {pet.skills.map(sk => {
+                            const cd = (sk.currentCooldown ?? 0) > 0;
+                            const noMp = pet.currentMp < sk.mpCost;
+                            return (
+                              <button key={sk.id}
+                                disabled={cd || noMp}
+                                onClick={() => { setPetSkillId(sk.id); setPetCommand("skill"); setShowPetSkillPanel(false); }}
+                                className="text-[8px] px-1.5 py-1 rounded-lg transition-all disabled:opacity-30"
+                                style={{ background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.25)", color: "#c4b5fd" }}>
+                                {sk.name}
+                                {cd && <span className="text-red-400 ml-0.5">CD{sk.currentCooldown}</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <button onClick={() => setShowPetSkillPanel(false)}
+                          className="text-[8px] text-slate-500 mt-1">✕ 返回</button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-1.5">
+                        <button onClick={() => { setPetCommand("attack"); setPetSkillId(null); }}
+                          className="flex-1 py-1 rounded-lg text-[9px] font-bold transition-all"
+                          style={{
+                            background: petCommand === "attack" ? "rgba(239,68,68,0.2)" : "rgba(30,27,75,0.4)",
+                            border: `1px solid ${petCommand === "attack" ? "rgba(239,68,68,0.4)" : "rgba(99,102,241,0.15)"}`,
+                            color: petCommand === "attack" ? "#fca5a5" : "#64748b",
+                          }}>
+                          ⚔️ 攻擊
+                        </button>
+                        {pet.skills.length > 0 && (
+                          <button onClick={() => setShowPetSkillPanel(true)}
+                            className="flex-1 py-1 rounded-lg text-[9px] font-bold transition-all"
+                            style={{
+                              background: petCommand === "skill" ? "rgba(139,92,246,0.2)" : "rgba(30,27,75,0.4)",
+                              border: `1px solid ${petCommand === "skill" ? "rgba(139,92,246,0.4)" : "rgba(99,102,241,0.15)"}`,
+                              color: petCommand === "skill" ? "#c4b5fd" : "#64748b",
+                            }}>
+                            ✨ 技能
+                          </button>
+                        )}
+                        <button onClick={() => { setPetCommand("defend"); setPetSkillId(null); }}
+                          className="flex-1 py-1 rounded-lg text-[9px] font-bold transition-all"
+                          style={{
+                            background: petCommand === "defend" ? "rgba(59,130,246,0.2)" : "rgba(30,27,75,0.4)",
+                            border: `1px solid ${petCommand === "defend" ? "rgba(59,130,246,0.4)" : "rgba(99,102,241,0.15)"}`,
+                            color: petCommand === "defend" ? "#93c5fd" : "#64748b",
+                          }}>
+                          🛡️ 防御
+                        </button>
+                        {petCommand && (
+                          <button onClick={() => { setPetCommand(null); setPetSkillId(null); }}
+                            className="px-2 py-1 rounded-lg text-[9px] text-slate-500 transition-all hover:text-white"
+                            style={{ background: "rgba(30,27,75,0.4)", border: "1px solid rgba(99,102,241,0.1)" }}>
+                            AI
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -656,12 +900,14 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
 // ═══════════════════════════════════════════
 // ─── 6v6 戰鬥格子佈局 ───
 // ═══════════════════════════════════════════
-function BattleGrid({ participants, isEnemy, attackingId, hitId, maxSlots = 6 }: {
+function BattleGrid({ participants, isEnemy, attackingId, hitId, maxSlots = 6, selectedTargetId, onTargetSelect }: {
   participants: BattleParticipantUI[];
   isEnemy?: boolean;
   attackingId: number | null;
   hitId: number | null;
   maxSlots?: number;
+  selectedTargetId?: number | null;
+  onTargetSelect?: (id: number) => void;
 }) {
   // 建立 6 個格子（前排 3 + 後排 3）
   const frontRow = participants.slice(0, 3);
@@ -676,11 +922,30 @@ function BattleGrid({ participants, isEnemy, attackingId, hitId, maxSlots = 6 }:
         </div>
       );
     }
+    const isSelected = isEnemy && selectedTargetId === p.id;
     return (
-      <div key={p.id} className="flex-1 min-w-0">
-        <CombatantCard p={p} isEnemy={isEnemy}
-          isAttacking={attackingId === p.id}
-          isHit={hitId === p.id} />
+      <div key={p.id} className="flex-1 min-w-0 relative"
+        style={{ cursor: isEnemy && onTargetSelect && !p.isDefeated ? "crosshair" : undefined }}
+        onClick={() => {
+          if (isEnemy && onTargetSelect && !p.isDefeated) onTargetSelect(p.id);
+        }}>
+        {/* 目標選中標記 */}
+        {isSelected && (
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+            <span className="text-[10px] animate-bounce" style={{ filter: "drop-shadow(0 0 4px #ef4444)" }}>🔻</span>
+          </div>
+        )}
+        <div style={{
+          borderRadius: "12px",
+          outline: isSelected ? "2px solid rgba(239,68,68,0.7)" : "none",
+          outlineOffset: "2px",
+          boxShadow: isSelected ? "0 0 12px rgba(239,68,68,0.4)" : undefined,
+          transition: "all 0.15s",
+        }}>
+          <CombatantCard p={p} isEnemy={isEnemy}
+            isAttacking={attackingId === p.id}
+            isHit={hitId === p.id} />
+        </div>
       </div>
     );
   };
@@ -1084,6 +1349,17 @@ function VictoryPanel({ result, round, onClose, rewards }: {
 }) {
   const won = result === "win";
   const fled = result === "flee";
+  // 掉落物品動畫狀態（逐個顯示）
+  const [visibleDrops, setVisibleDrops] = React.useState<number[]>([]);
+  React.useEffect(() => {
+    if (!won || !rewards?.drops.length) return;
+    // 逐個彈出掉落物品
+    rewards.drops.forEach((_, i) => {
+      setTimeout(() => {
+        setVisibleDrops(prev => [...prev, i]);
+      }, 300 + i * 200);
+    });
+  }, [won, rewards?.drops.length]);
 
   return (
     <div className="relative overflow-hidden max-h-[50vh] overflow-y-auto"
@@ -1151,12 +1427,21 @@ function VictoryPanel({ result, round, onClose, rewards }: {
             </div>
             {rewards.drops.length > 0 && (
               <div className="mt-2 pt-2 border-t border-emerald-800/20">
-                <p className="text-[9px] text-emerald-400 mb-1">🎁 掉落物品</p>
-                <div className="flex flex-wrap gap-1">
+                <p className="text-[9px] text-emerald-400 mb-2">🎁 掉落物品</p>
+                <div className="flex flex-wrap gap-1.5">
                   {rewards.drops.map((d, i) => (
-                    <span key={i} className="text-[9px] px-2 py-0.5 rounded-full"
-                      style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", color: "#86efac" }}>
-                      {d}
+                    <span key={i}
+                      className="text-[9px] px-2 py-1 rounded-full transition-all"
+                      style={{
+                        background: visibleDrops.includes(i) ? "rgba(34,197,94,0.15)" : "transparent",
+                        border: `1px solid ${visibleDrops.includes(i) ? "rgba(34,197,94,0.4)" : "transparent"}`,
+                        color: visibleDrops.includes(i) ? "#86efac" : "transparent",
+                        transform: visibleDrops.includes(i) ? "translateY(0) scale(1)" : "translateY(-12px) scale(0.5)",
+                        opacity: visibleDrops.includes(i) ? 1 : 0,
+                        transition: "all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                        boxShadow: visibleDrops.includes(i) ? "0 0 8px rgba(34,197,94,0.2)" : "none",
+                      }}>
+                      ✨ {d}
                     </span>
                   ))}
                 </div>
