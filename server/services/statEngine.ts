@@ -664,3 +664,211 @@ export function calcBlockRate(): number {
 export function determineFirstStrike(agentSpd: number, monsterSpd: number): boolean {
   return agentSpd >= monsterSpd;
 }
+
+
+// ═══════════════════════════════════════════════════════════════
+// 十、寵物屬性計算（GD-028 步驟 6）
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 寵物 BP 五維
+ */
+export interface PetBP {
+  constitution: number;
+  strength: number;
+  defense: number;
+  agility: number;
+  magic: number;
+}
+
+/**
+ * 寵物完整戰鬥數值
+ */
+export interface PetFullStats {
+  hp: number;
+  mp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  magicAttack: number;
+  mdef: number;
+  /** 命格協同加成倍率（用於 UI 顯示） */
+  synergyMultiplier: number;
+  /** 協同類型描述 */
+  synergyType: "same" | "generate" | "overcome" | "neutral";
+}
+
+/**
+ * 命格協同加成表
+ *
+ * 寵物五行與主人命格的關係決定加成：
+ *   同五行 → +15% 全屬性（共鳴加成）
+ *   相生   → +8%  全屬性（輔助加成）
+ *   中性   → +0%  無加成
+ *   相剋   → -5%  全屬性（衝突減益）
+ */
+export const PET_SYNERGY_BONUSES = {
+  same:     0.15,  // 同五行
+  generate: 0.08,  // 相生
+  neutral:  0.00,  // 中性
+  overcome: -0.05, // 相剋
+} as const;
+
+/**
+ * 判定寵物五行與主人命格的協同關係
+ */
+export function calcPetSynergyType(
+  petElement: WuXingElement,
+  ownerFateElement: WuXingElement,
+): PetFullStats["synergyType"] {
+  if (petElement === ownerFateElement) return "same";
+  // 相生：木生火、火生土、土生金、金生水、水生木
+  const GENERATE_MAP: Record<WuXingElement, WuXingElement> = {
+    wood: "fire", fire: "earth", earth: "metal", metal: "water", water: "wood",
+  };
+  if (GENERATE_MAP[petElement] === ownerFateElement || GENERATE_MAP[ownerFateElement] === petElement) return "generate";
+  // 相剋：木剋土、火剋金、土剋水、金剋木、水剋火
+  const OVERCOME_MAP: Record<WuXingElement, WuXingElement> = {
+    wood: "earth", fire: "metal", earth: "water", metal: "wood", water: "fire",
+  };
+  if (OVERCOME_MAP[petElement] === ownerFateElement || OVERCOME_MAP[ownerFateElement] === petElement) return "overcome";
+  return "neutral";
+}
+
+/**
+ * 計算寵物完整戰鬥數值（GD-028 步驟 6）
+ *
+ * 整合：
+ * 1. 主人屬性繼承（HP×0.6, ATK×0.35, DEF×0.4, SPD×0.5）
+ * 2. 寵物等級加成
+ * 3. BP 微調加成（每 10 BP +1%）
+ * 4. 種族 HP 倍率
+ * 5. 主人命格協同加成（同五行+15%, 相生+8%, 相剋-5%）
+ *
+ * @param ownerStats 主人的戰鬥數值
+ * @param petLevel 寵物等級
+ * @param bp 寵物 BP 五維
+ * @param raceHpMultiplier 種族 HP 倍率
+ * @param petElement 寵物五行屬性
+ * @param ownerFateElement 主人命格五行
+ */
+export function calcPetFullStats(
+  ownerStats: { hp: number; atk: number; def: number; spd: number; matk?: number; mp?: number },
+  petLevel: number,
+  bp: PetBP,
+  raceHpMultiplier: number = 1.0,
+  petElement?: WuXingElement,
+  ownerFateElement?: WuXingElement,
+): PetFullStats {
+  // 1. 基礎值：繼承主人屬性
+  let baseHp   = Math.floor(ownerStats.hp  * 0.6  + petLevel * 5);
+  let baseAtk  = Math.floor(ownerStats.atk * 0.35 + petLevel * 3);
+  let baseDef  = Math.floor(ownerStats.def * 0.4  + petLevel * 2);
+  let baseSpd  = Math.floor(ownerStats.spd * 0.5  + petLevel * 2);
+  let baseMp   = Math.floor((ownerStats.mp ?? 50)   * 0.4  + petLevel * 2);
+  let baseMatk = Math.floor((ownerStats.matk ?? 20)  * 0.3  + petLevel * 2);
+  let baseMdef = Math.floor(petLevel * 3 + 5);
+
+  // 2. BP 微調加成（每 10 BP 點 +1%）
+  const hpBonus  = 1 + (bp.constitution / 10) * 0.01;
+  const atkBonus = 1 + (bp.strength / 10) * 0.01;
+  const defBonus = 1 + (bp.defense / 10) * 0.01;
+  const spdBonus = 1 + (bp.agility / 10) * 0.01;
+  const magBonus = 1 + (bp.magic / 10) * 0.01;
+
+  baseHp   = Math.round(baseHp * hpBonus);
+  baseAtk  = Math.round(baseAtk * atkBonus);
+  baseDef  = Math.round(baseDef * defBonus);
+  baseSpd  = Math.round(baseSpd * spdBonus);
+  baseMp   = Math.round(baseMp * magBonus);
+  baseMatk = Math.round(baseMatk * magBonus);
+
+  // 3. 種族 HP 倍率
+  baseHp = Math.round(baseHp * raceHpMultiplier);
+
+  // 4. 命格協同加成
+  let synergyType: PetFullStats["synergyType"] = "neutral";
+  let synergyMultiplier = 1.0;
+
+  if (petElement && ownerFateElement) {
+    synergyType = calcPetSynergyType(petElement, ownerFateElement);
+    const bonus = PET_SYNERGY_BONUSES[synergyType];
+    synergyMultiplier = 1 + bonus;
+
+    baseHp   = Math.round(baseHp * synergyMultiplier);
+    baseMp   = Math.round(baseMp * synergyMultiplier);
+    baseAtk  = Math.round(baseAtk * synergyMultiplier);
+    baseDef  = Math.round(baseDef * synergyMultiplier);
+    baseSpd  = Math.round(baseSpd * synergyMultiplier);
+    baseMatk = Math.round(baseMatk * synergyMultiplier);
+    baseMdef = Math.round(baseMdef * synergyMultiplier);
+  }
+
+  return {
+    hp: Math.max(1, baseHp),
+    mp: Math.max(0, baseMp),
+    attack: Math.max(1, baseAtk),
+    defense: Math.max(1, baseDef),
+    speed: Math.max(1, baseSpd),
+    magicAttack: Math.max(0, baseMatk),
+    mdef: Math.max(0, baseMdef),
+    synergyMultiplier,
+    synergyType,
+  };
+}
+
+/**
+ * 取得協同加成的中文描述
+ */
+export function getPetSynergyDesc(synergyType: PetFullStats["synergyType"]): string {
+  switch (synergyType) {
+    case "same":     return "命格共鳴（同五行 +15%）";
+    case "generate": return "五行相生（+8%）";
+    case "overcome": return "五行相剋（-5%）";
+    case "neutral":  return "五行中性（無加成）";
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 十一、經驗值曲線（GD-028 步驟 7）
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 新版經驗值曲線（線性+對數混合）
+ *
+ * 舊版：100 × 1.4^(level-1) → 指數爆炸，Lv30 需要 2.4 億經驗
+ * 新版：線性基礎 + 對數增長，更平滑
+ *
+ * 公式：base × level × (1 + ln(level) × logScale)
+ *   - base = 80（基礎經驗值）
+ *   - logScale = 0.5（對數增長係數）
+ *
+ * Lv1:  80, Lv10: 1720, Lv30: 6480, Lv60: 17280
+ * 比舊版溫和很多，但仍有明顯的等級門檻感
+ */
+export function calcExpToNextV2(level: number, base: number = 80, logScale: number = 0.5): number {
+  if (level >= 60) return 999999;
+  if (level <= 0) return base;
+  return Math.floor(base * level * (1 + Math.log(level) * logScale));
+}
+
+/**
+ * 怪物經驗值動態調整
+ *
+ * 根據玩家等級與怪物等級差計算經驗倍率：
+ *   等級差 >= +5  → 1.5x（挑戰高等怪物獎勵）
+ *   等級差 +1~+4  → 1.0 + diff × 0.1
+ *   等級差 0       → 1.0x
+ *   等級差 -1~-4  → 1.0 - |diff| × 0.1
+ *   等級差 <= -5  → 0.5x（碾壓低等怪物懲罰）
+ *   等級差 <= -10 → 0.2x（嚴重碾壓）
+ */
+export function calcMonsterExpMultiplier(playerLevel: number, monsterLevel: number): number {
+  const diff = monsterLevel - playerLevel;
+  if (diff >= 5)   return 1.5;
+  if (diff > 0)    return 1.0 + diff * 0.1;
+  if (diff === 0)  return 1.0;
+  if (diff >= -4)  return Math.max(0.5, 1.0 + diff * 0.1);
+  if (diff >= -9)  return 0.5;
+  return 0.2; // 等級差 <= -10
+}

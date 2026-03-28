@@ -13,9 +13,16 @@ import {
   DEFAULT_FATE_BONUSES,
   DEFAULT_POTENTIAL_PER_POINT,
   POTENTIAL_POINTS_PER_LEVEL,
+  calcPetFullStats,
+  calcPetSynergyType,
+  getPetSynergyDesc,
+  PET_SYNERGY_BONUSES,
+  calcExpToNextV2,
+  calcMonsterExpMultiplier,
   type WuXingValues,
   type PotentialAllocation,
   type WuXingElement,
+  type PetBP,
 } from "./statEngine";
 
 // ─── 測試用五行分配 ───
@@ -504,5 +511,224 @@ describe("statEngine - combat utility functions", () => {
     expect(determineFirstStrike(100, 50)).toBe(true);
     expect(determineFirstStrike(50, 100)).toBe(false);
     expect(determineFirstStrike(50, 50)).toBe(true); // equal speed → agent first
+  });
+});
+
+
+// ═══════════════════════════════════════════════════════════════
+// GD-028 步驟 6：寵物命格協同系統測試
+// ═══════════════════════════════════════════════════════════════
+
+const DEFAULT_BP: PetBP = { constitution: 20, strength: 20, defense: 20, agility: 20, magic: 20 };
+const OWNER_STATS = { hp: 500, atk: 100, def: 80, spd: 60, matk: 50, mp: 200 };
+
+describe("statEngine - calcPetSynergyType", () => {
+  it("should return 'same' for identical elements", () => {
+    expect(calcPetSynergyType("wood", "wood")).toBe("same");
+    expect(calcPetSynergyType("fire", "fire")).toBe("same");
+    expect(calcPetSynergyType("water", "water")).toBe("same");
+  });
+
+  it("should return 'generate' for generating pairs", () => {
+    // 木生火
+    expect(calcPetSynergyType("wood", "fire")).toBe("generate");
+    // 火生土
+    expect(calcPetSynergyType("fire", "earth")).toBe("generate");
+    // 土生金
+    expect(calcPetSynergyType("earth", "metal")).toBe("generate");
+    // 金生水
+    expect(calcPetSynergyType("metal", "water")).toBe("generate");
+    // 水生木
+    expect(calcPetSynergyType("water", "wood")).toBe("generate");
+  });
+
+  it("should return 'overcome' for overcoming pairs", () => {
+    // 木剋土
+    expect(calcPetSynergyType("wood", "earth")).toBe("overcome");
+    // 火剋金
+    expect(calcPetSynergyType("fire", "metal")).toBe("overcome");
+    // 土剋水
+    expect(calcPetSynergyType("earth", "water")).toBe("overcome");
+    // 金剋木
+    expect(calcPetSynergyType("metal", "wood")).toBe("overcome");
+    // 水剋火
+    expect(calcPetSynergyType("water", "fire")).toBe("overcome");
+  });
+
+  it("should be symmetric for generate and overcome", () => {
+    // 相生是雙向的
+    expect(calcPetSynergyType("fire", "wood")).toBe("generate");
+    // 相剋也是雙向的
+    expect(calcPetSynergyType("earth", "wood")).toBe("overcome");
+  });
+});
+
+describe("statEngine - calcPetFullStats", () => {
+  it("should return all stat fields", () => {
+    const stats = calcPetFullStats(OWNER_STATS, 10, DEFAULT_BP);
+    expect(stats).toHaveProperty("hp");
+    expect(stats).toHaveProperty("mp");
+    expect(stats).toHaveProperty("attack");
+    expect(stats).toHaveProperty("defense");
+    expect(stats).toHaveProperty("speed");
+    expect(stats).toHaveProperty("magicAttack");
+    expect(stats).toHaveProperty("mdef");
+    expect(stats).toHaveProperty("synergyMultiplier");
+    expect(stats).toHaveProperty("synergyType");
+  });
+
+  it("should apply same-element synergy bonus (+15%)", () => {
+    const noSynergy = calcPetFullStats(OWNER_STATS, 10, DEFAULT_BP, 1.0);
+    const sameSynergy = calcPetFullStats(OWNER_STATS, 10, DEFAULT_BP, 1.0, "fire", "fire");
+    expect(sameSynergy.synergyType).toBe("same");
+    expect(sameSynergy.synergyMultiplier).toBeCloseTo(1.15);
+    expect(sameSynergy.hp).toBeGreaterThan(noSynergy.hp);
+    expect(sameSynergy.attack).toBeGreaterThan(noSynergy.attack);
+  });
+
+  it("should apply generate synergy bonus (+8%)", () => {
+    const noSynergy = calcPetFullStats(OWNER_STATS, 10, DEFAULT_BP, 1.0);
+    const genSynergy = calcPetFullStats(OWNER_STATS, 10, DEFAULT_BP, 1.0, "wood", "fire");
+    expect(genSynergy.synergyType).toBe("generate");
+    expect(genSynergy.synergyMultiplier).toBeCloseTo(1.08);
+    expect(genSynergy.hp).toBeGreaterThan(noSynergy.hp);
+  });
+
+  it("should apply overcome synergy penalty (-5%)", () => {
+    const noSynergy = calcPetFullStats(OWNER_STATS, 10, DEFAULT_BP, 1.0);
+    const overSynergy = calcPetFullStats(OWNER_STATS, 10, DEFAULT_BP, 1.0, "wood", "earth");
+    expect(overSynergy.synergyType).toBe("overcome");
+    expect(overSynergy.synergyMultiplier).toBeCloseTo(0.95);
+    expect(overSynergy.hp).toBeLessThan(noSynergy.hp);
+  });
+
+  it("should have neutral synergy when no elements provided", () => {
+    const stats = calcPetFullStats(OWNER_STATS, 10, DEFAULT_BP, 1.0);
+    expect(stats.synergyType).toBe("neutral");
+    expect(stats.synergyMultiplier).toBe(1.0);
+  });
+
+  it("should scale with pet level", () => {
+    const lv1 = calcPetFullStats(OWNER_STATS, 1, DEFAULT_BP, 1.0);
+    const lv30 = calcPetFullStats(OWNER_STATS, 30, DEFAULT_BP, 1.0);
+    expect(lv30.hp).toBeGreaterThan(lv1.hp);
+    expect(lv30.attack).toBeGreaterThan(lv1.attack);
+    expect(lv30.defense).toBeGreaterThan(lv1.defense);
+  });
+
+  it("should apply race HP multiplier", () => {
+    const normal = calcPetFullStats(OWNER_STATS, 10, DEFAULT_BP, 1.0);
+    const tanky = calcPetFullStats(OWNER_STATS, 10, DEFAULT_BP, 1.5);
+    expect(tanky.hp).toBeGreaterThan(normal.hp);
+    // Non-HP stats should be the same
+    expect(tanky.attack).toBe(normal.attack);
+  });
+
+  it("should have minimum stat values of 1 or 0", () => {
+    const weakOwner = { hp: 1, atk: 1, def: 1, spd: 1, matk: 0, mp: 0 };
+    const stats = calcPetFullStats(weakOwner, 1, DEFAULT_BP, 1.0, "wood", "earth");
+    expect(stats.hp).toBeGreaterThanOrEqual(1);
+    expect(stats.attack).toBeGreaterThanOrEqual(1);
+    expect(stats.defense).toBeGreaterThanOrEqual(1);
+    expect(stats.speed).toBeGreaterThanOrEqual(1);
+    expect(stats.mp).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe("statEngine - getPetSynergyDesc", () => {
+  it("should return correct descriptions", () => {
+    expect(getPetSynergyDesc("same")).toContain("共鳴");
+    expect(getPetSynergyDesc("generate")).toContain("相生");
+    expect(getPetSynergyDesc("overcome")).toContain("相剋");
+    expect(getPetSynergyDesc("neutral")).toContain("中性");
+  });
+});
+
+describe("statEngine - PET_SYNERGY_BONUSES", () => {
+  it("should have correct bonus values", () => {
+    expect(PET_SYNERGY_BONUSES.same).toBe(0.15);
+    expect(PET_SYNERGY_BONUSES.generate).toBe(0.08);
+    expect(PET_SYNERGY_BONUSES.neutral).toBe(0);
+    expect(PET_SYNERGY_BONUSES.overcome).toBe(-0.05);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// GD-028 步驟 7：經驗值曲線測試
+// ═══════════════════════════════════════════════════════════════
+
+describe("statEngine - calcExpToNextV2", () => {
+  it("should return 999999 for level 60 (max level)", () => {
+    expect(calcExpToNextV2(60)).toBe(999999);
+  });
+
+  it("should return base for level 0 or below", () => {
+    expect(calcExpToNextV2(0)).toBe(80);
+    expect(calcExpToNextV2(-1)).toBe(80);
+  });
+
+  it("should increase with level", () => {
+    const lv1 = calcExpToNextV2(1);
+    const lv10 = calcExpToNextV2(10);
+    const lv30 = calcExpToNextV2(30);
+    const lv50 = calcExpToNextV2(50);
+    expect(lv10).toBeGreaterThan(lv1);
+    expect(lv30).toBeGreaterThan(lv10);
+    expect(lv50).toBeGreaterThan(lv30);
+  });
+
+  it("should not grow as fast as the old exponential curve", () => {
+    // Old: 100 * 1.4^29 = ~24,201,432 at level 30
+    // New should be much lower
+    const lv30 = calcExpToNextV2(30);
+    expect(lv30).toBeLessThan(100000); // Should be around 6480
+    expect(lv30).toBeGreaterThan(1000); // But still meaningful
+  });
+
+  it("should respect custom base and logScale parameters", () => {
+    const defaultExp = calcExpToNextV2(10, 80, 0.5);
+    const highBase = calcExpToNextV2(10, 160, 0.5);
+    const highLog = calcExpToNextV2(10, 80, 1.0);
+    expect(highBase).toBeGreaterThan(defaultExp);
+    expect(highLog).toBeGreaterThan(defaultExp);
+  });
+
+  it("should return positive integers for all valid levels", () => {
+    for (let lv = 1; lv <= 59; lv++) {
+      const exp = calcExpToNextV2(lv);
+      expect(exp).toBeGreaterThan(0);
+      expect(Number.isInteger(exp)).toBe(true);
+    }
+  });
+});
+
+describe("statEngine - calcMonsterExpMultiplier", () => {
+  it("should return 1.0 for same level", () => {
+    expect(calcMonsterExpMultiplier(10, 10)).toBe(1.0);
+  });
+
+  it("should return 1.5 for monster 5+ levels higher", () => {
+    expect(calcMonsterExpMultiplier(10, 15)).toBe(1.5);
+    expect(calcMonsterExpMultiplier(10, 20)).toBe(1.5);
+  });
+
+  it("should return bonus for monster 1-4 levels higher", () => {
+    expect(calcMonsterExpMultiplier(10, 11)).toBeCloseTo(1.1);
+    expect(calcMonsterExpMultiplier(10, 14)).toBeCloseTo(1.4);
+  });
+
+  it("should return penalty for monster 1-4 levels lower", () => {
+    expect(calcMonsterExpMultiplier(10, 9)).toBeCloseTo(0.9);  // diff=-1 → 0.9
+    expect(calcMonsterExpMultiplier(10, 6)).toBeCloseTo(0.6);  // diff=-4 → 0.6
+  });
+
+  it("should return 0.5 for monster 5-9 levels lower", () => {
+    expect(calcMonsterExpMultiplier(10, 5)).toBe(0.5);  // diff=-5 → 0.5
+    expect(calcMonsterExpMultiplier(10, 1)).toBe(0.5);  // diff=-9 → 0.5
+  });
+
+  it("should return 0.2 for monster 10+ levels lower", () => {
+    expect(calcMonsterExpMultiplier(20, 10)).toBe(0.2);  // diff=-10 → 0.2
+    expect(calcMonsterExpMultiplier(30, 1)).toBe(0.2);   // diff=-29 → 0.2
   });
 });

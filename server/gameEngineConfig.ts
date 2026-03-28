@@ -90,6 +90,63 @@ export interface GameEngineConfig {
   wuxingCap: number;
   // ─── 販售折扣率 ───
   sellDiscountRate: number;
+  // ─── GD-028 經驗值曲線配置 ───
+  /** 經驗值基礎係數（預設 80） */
+  expCurveBase: number;
+  /** 經驗值對數係數（預設 0.5） */
+  expCurveLogScale: number;
+  // ─── GD-028 職業加成配置 ───
+  /** 獵人 ATK 加成（預設 0.12） */
+  profHunterAtk: number;
+  /** 獵人 SPD 加成（預設 0.08） */
+  profHunterSpd: number;
+  /** 法師 MATK 加成（預設 0.15） */
+  profMageMatk: number;
+  /** 法師 MP 加成（預設 0.10） */
+  profMageMp: number;
+  /** 鬥士 HP 加成（預設 0.15） */
+  profTankHp: number;
+  /** 鬥士 DEF 加成（預設 0.12） */
+  profTankDef: number;
+  /** 盜賊 SPD 加成（預設 0.15） */
+  profThiefSpd: number;
+  /** 盜賊 暴擊率 加成（預設 5） */
+  profThiefCrit: number;
+  /** 巫師 MATK 加成（預設 0.10） */
+  profWizardMatk: number;
+  /** 巫師 SPR 加成（預設 0.12） */
+  profWizardSpr: number;
+  // ─── GD-028 命格加成配置 ───
+  /** 青龍命 HP 加成（預設 0.10） */
+  fateWoodHp: number;
+  /** 朱雀命 ATK 加成（預設 0.10） */
+  fateFireAtk: number;
+  /** 朱雀命 MATK 加成（預設 0.10） */
+  fateFireMatk: number;
+  /** 麒麟命 DEF 加成（預設 0.10） */
+  fateEarthDef: number;
+  /** 麒麟命 MDEF 加成（預設 0.10） */
+  fateEarthMdef: number;
+  /** 白虎命 SPD 加成（預設 0.10） */
+  fateMetalSpd: number;
+  /** 白虎命 暴擊率 加成（預設 5） */
+  fateMetalCrit: number;
+  /** 玄武命 MP 加成（預設 0.10） */
+  fateWaterMp: number;
+  /** 玄武命 SPR 加成（預設 0.05） */
+  fateWaterSpr: number;
+  // ─── GD-028 寵物協同加成配置 ───
+  /** 同五行協同加成（預設 0.15） */
+  petSynergySame: number;
+  /** 相生協同加成（預設 0.08） */
+  petSynergyGenerate: number;
+  /** 相剣協同減益（預設 -0.05） */
+  petSynergyOvercome: number;
+  // ─── GD-028 戰鬥傷害係數 ───
+  /** 五行相剣傷害倍率（預設 1.5） */
+  wuxingOvercomeMult: number;
+  /** 五行相生傷害倍率（預設 0.8） */
+  wuxingGenerateMult: number;
 }
 
 // ─── 預設值 ───
@@ -149,6 +206,37 @@ const DEFAULT_CONFIG: GameEngineConfig = {
   statCapMdef: 1500,
   wuxingCap: 100,
   sellDiscountRate: 0.5,
+  // GD-028 經驗值曲線
+  expCurveBase: 80,
+  expCurveLogScale: 0.5,
+  // GD-028 職業加成
+  profHunterAtk: 0.12,
+  profHunterSpd: 0.08,
+  profMageMatk: 0.15,
+  profMageMp: 0.10,
+  profTankHp: 0.15,
+  profTankDef: 0.12,
+  profThiefSpd: 0.15,
+  profThiefCrit: 5,
+  profWizardMatk: 0.10,
+  profWizardSpr: 0.12,
+  // GD-028 命格加成
+  fateWoodHp: 0.10,
+  fateFireAtk: 0.10,
+  fateFireMatk: 0.10,
+  fateEarthDef: 0.10,
+  fateEarthMdef: 0.10,
+  fateMetalSpd: 0.10,
+  fateMetalCrit: 5,
+  fateWaterMp: 0.10,
+  fateWaterSpr: 0.05,
+  // GD-028 寵物協同
+  petSynergySame: 0.15,
+  petSynergyGenerate: 0.08,
+  petSynergyOvercome: -0.05,
+  // GD-028 戰鬥傷害
+  wuxingOvercomeMult: 1.5,
+  wuxingGenerateMult: 0.8,
 };
 
 // ─── 記憶體快取 ───

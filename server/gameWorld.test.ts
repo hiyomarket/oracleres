@@ -5,9 +5,9 @@
 import { describe, it, expect } from "vitest";
 import { calcExpToNext, resolveCombat } from "./tickEngine";
 
-describe("calcExpToNext (GD-018 等級曲線)", () => {
-  it("Lv.1 需要 100 經驗", () => {
-    expect(calcExpToNext(1)).toBe(100);
+describe("calcExpToNext (GD-028 線性+對數曲線)", () => {
+  it("Lv.1 需要 80 經驗（新版曲線）", () => {
+    expect(calcExpToNext(1)).toBe(80);
   });
 
   it("Lv.10 需要大於 Lv.1（經驗曲線遞增）", () => {

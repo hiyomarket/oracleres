@@ -14,7 +14,7 @@ import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs, getInfuseConfig } from "./gameEngineConfig";
 import { eq, and, sql } from "drizzle-orm";
 import { calcCharacterStatsV2, calcLevelUpWuxingGrowth, calcResistances, type WuXingElement } from "./services/balanceFormulas";
-import { calcAgentFullStats, calcCombatDamage, calcDodgeRate, calcBlockRate, determineFirstStrike, calcSpiritCoefficient, calcWuxingCombatMultiplier, type Profession } from "./services/statEngine";
+import { calcAgentFullStats, calcCombatDamage, calcDodgeRate, calcBlockRate, determineFirstStrike, calcSpiritCoefficient, calcWuxingCombatMultiplier, calcPetFullStats, calcMonsterExpMultiplier, calcExpToNextV2, type Profession, type WuXingElement as StatWuXingElement } from "./services/statEngine";
 import { getStatBalanceConfig, getStatCaps } from "./gameEngineConfig";
 import {
   MAP_NODES,
@@ -932,8 +932,9 @@ export function resolveCombat(
   const hpLost = Math.min(agent.hp, agent.hp - agentHp);
   const mpUsed = totalMpUsed;
 
-  // 計算獎勵
-  const expGained = won ? monster.expReward : Math.floor(monster.expReward * 0.1);
+  // GD-028 步驟 7: 怪物經驗值動態調整（根據等級差）
+  const monsterExpMult = calcMonsterExpMultiplier(agent.level, monster.level);
+  const expGained = won ? Math.floor(monster.expReward * monsterExpMult) : Math.floor(monster.expReward * 0.1);
   const goldGained = won ? randInt(monster.goldReward[0], monster.goldReward[1]) : 0;
 
   // 掉落物
@@ -971,10 +972,10 @@ export function resolveCombat(
   };
 }
 
-// ─── 計算升級所需經驗（GD-018：60 級上限，等級只是地圖通行證） ───
+// ─── 計算升級所需經驗（GD-028：線性+對數混合曲線，取代舊版指數爆炸） ───
 export function calcExpToNext(level: number): number {
-  if (level >= 60) return 999999; // 滿級
-  return Math.floor(100 * Math.pow(1.4, level - 1));
+  // GD-028 步驟 7: 委託給 statEngine 的新版曲線
+  return calcExpToNextV2(level);
 }
 
 // ─── 體力値再生（每 30 分鐘 +30 點，上限 maxStamina） ───
@@ -1420,10 +1421,13 @@ export async function processAgentTick(
           bp = { constitution: bpResult.constitution, strength: bpResult.strength, defense: bpResult.defense, agility: bpResult.agility, magic: bpResult.magic };
         }
 
-        // 取得圖鑑資料以獲取種族 HP 倍率
+        // GD-028 步驟 6: 使用 calcPetFullStats（含主人命格協同加成）
         const [catalog] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, activePet.petCatalogId));
         const raceHpMul = catalog?.raceHpMultiplier ?? 1.0;
-        const stats = calcPetStats(bp, currentLevel, raceHpMul);
+        const petWuxing = (catalog?.wuxing ?? "earth") as StatWuXingElement;
+        const ownerFateEl = (agent.fateElement ?? agent.dominantElement ?? "wood") as StatWuXingElement;
+        const ownerStats = { hp: agent.maxHp, atk: agent.attack, def: agent.defense, spd: agent.speed, matk: agent.magicAttack ?? 0, mp: agent.maxMp };
+        const stats = calcPetFullStats(ownerStats, currentLevel, bp, raceHpMul, petWuxing, ownerFateEl);
 
         await db.update(gamePlayerPets).set({
           exp: currentExp,
@@ -1441,6 +1445,7 @@ export async function processAgentTick(
           defense: stats.defense,
           speed: stats.speed,
           magicAttack: stats.magicAttack,
+          magicDefense: stats.mdef,
           friendship: Math.min(100, activePet.friendship + 1),
           updatedAt: Date.now(),
         }).where(eq(gamePlayerPets.id, activePet.id));
@@ -1960,10 +1965,13 @@ async function processCombatEvent(
         }
         petNewLevel = currentLevel;
 
-        // 取得圖鑑資料以獲取種族 HP 倍率
+        // GD-028 步驟 6: 使用 calcPetFullStats（含主人命格協同加成）
         const [catalog] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, activePet.petCatalogId));
         const raceHpMul = catalog?.raceHpMultiplier ?? 1.0;
-        const stats = calcPetStats(bp, currentLevel, raceHpMul);
+        const petWuxingEl = (catalog?.wuxing ?? "earth") as StatWuXingElement;
+        const ownerFate = (agent.fateElement ?? agent.dominantElement ?? "wood") as StatWuXingElement;
+        const ownerCombatStats = { hp: agent.maxHp, atk: agent.attack, def: agent.defense, spd: agent.speed, matk: agent.magicAttack ?? 0, mp: agent.maxMp };
+        const stats = calcPetFullStats(ownerCombatStats, currentLevel, bp, raceHpMul, petWuxingEl, ownerFate);
 
         // 更新寵物資料庫
         await db.update(gamePlayerPets).set({
@@ -1982,6 +1990,7 @@ async function processCombatEvent(
           defense: stats.defense,
           speed: stats.speed,
           magicAttack: stats.magicAttack,
+          magicDefense: stats.mdef,
           friendship: Math.min(100, activePet.friendship + 1), // 每場戰鬥好感度 +1
           updatedAt: Date.now(),
         }).where(eq(gamePlayerPets.id, activePet.id));

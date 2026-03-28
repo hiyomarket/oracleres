@@ -1748,6 +1748,11 @@ function BalanceDashboardTab() {
       <div className="mt-8 pt-6 border-t border-white/10">
         <StatBalancePanel />
       </div>
+
+      {/* GD-028 職業/命格/寵物/經驗值/戰鬥係數設定 */}
+      <div className="mt-8 pt-6 border-t border-white/10">
+        <GD028ConfigPanel />
+      </div>
     </div>
   );
 }
@@ -1889,7 +1894,211 @@ function StatBalancePanel() {
 }
 
 
-// ─── Catalog Stats Tab ────────────────────────────────────────────────────────────────────────
+/** GD-028 職業/命格/寵物協同/經驗值曲線/戰鬥係數設定面板 */
+function GD028ConfigPanel() {
+  const { data: cfg, refetch } = trpc.gameAdmin.getEngineConfig.useQuery();
+  const updateMut = trpc.gameAdmin.updateEngineConfig.useMutation({ onSuccess: () => refetch() });
+
+  const [form, setForm] = useState<Record<string, number>>({});
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (cfg) {
+      setForm({
+        expCurveBase: cfg.expCurveBase ?? 80,
+        expCurveLogScale: cfg.expCurveLogScale ?? 0.5,
+        profHunterAtk: cfg.profHunterAtk ?? 0.12,
+        profHunterSpd: cfg.profHunterSpd ?? 0.08,
+        profMageMatk: cfg.profMageMatk ?? 0.15,
+        profMageMp: cfg.profMageMp ?? 0.10,
+        profTankHp: cfg.profTankHp ?? 0.15,
+        profTankDef: cfg.profTankDef ?? 0.12,
+        profThiefSpd: cfg.profThiefSpd ?? 0.15,
+        profThiefCrit: cfg.profThiefCrit ?? 5,
+        profWizardMatk: cfg.profWizardMatk ?? 0.10,
+        profWizardSpr: cfg.profWizardSpr ?? 0.12,
+        fateWoodHp: cfg.fateWoodHp ?? 0.10,
+        fateFireAtk: cfg.fateFireAtk ?? 0.10,
+        fateFireMatk: cfg.fateFireMatk ?? 0.10,
+        fateEarthDef: cfg.fateEarthDef ?? 0.10,
+        fateEarthMdef: cfg.fateEarthMdef ?? 0.10,
+        fateMetalSpd: cfg.fateMetalSpd ?? 0.10,
+        fateMetalCrit: cfg.fateMetalCrit ?? 5,
+        fateWaterMp: cfg.fateWaterMp ?? 0.10,
+        fateWaterSpr: cfg.fateWaterSpr ?? 0.05,
+        petSynergySame: cfg.petSynergySame ?? 0.15,
+        petSynergyGenerate: cfg.petSynergyGenerate ?? 0.08,
+        petSynergyOvercome: cfg.petSynergyOvercome ?? -0.05,
+        wuxingOvercomeMult: cfg.wuxingOvercomeMult ?? 1.5,
+        wuxingGenerateMult: cfg.wuxingGenerateMult ?? 0.8,
+      });
+    }
+  }, [cfg]);
+
+  const handleSave = () => {
+    updateMut.mutate(form as any, {
+      onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2000); },
+    });
+  };
+
+  const field = (key: string, label: string, step = 0.01, min = -1, max = 5) => (
+    <div key={key} className="flex flex-col gap-1">
+      <label className="text-[11px] text-muted-foreground">{label}</label>
+      <input
+        type="number"
+        step={step}
+        min={min}
+        max={max}
+        value={form[key] ?? ""}
+        onChange={e => setForm(prev => ({ ...prev, [key]: parseFloat(e.target.value) || 0 }))}
+        className="w-full px-2 py-1 rounded bg-white/5 border border-white/10 text-sm text-white"
+      />
+    </div>
+  );
+
+  // 經驗值曲線預覽
+  const expPreview = [1, 5, 10, 20, 30, 40, 50, 60].map(lv => {
+    const base = form.expCurveBase ?? 80;
+    const logScale = form.expCurveLogScale ?? 0.5;
+    const exp = lv >= 60 ? 999999 : lv <= 0 ? base : Math.floor(base * lv * (1 + Math.log(lv) * logScale));
+    return { lv, exp };
+  });
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold flex items-center gap-2"><span>⚙️</span> GD-028 進階平衡設定</h3>
+        <Button size="sm" onClick={handleSave} disabled={updateMut.isPending}>
+          {saved ? "✅ 已儲存" : updateMut.isPending ? "儲存中..." : "💾 儲存設定"}
+        </Button>
+      </div>
+
+      {/* 經驗值曲線 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-cyan-400 mb-3">📈 經驗值曲線（線性+對數混合）</h4>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          {field("expCurveBase", "基礎係數", 5, 10, 500)}
+          {field("expCurveLogScale", "對數係數", 0.1, 0.1, 3.0)}
+        </div>
+        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 text-center">
+          {expPreview.map(({ lv, exp }) => (
+            <div key={lv} className="p-1.5 rounded bg-white/5">
+              <div className="text-[10px] text-muted-foreground">Lv.{lv}</div>
+              <div className="text-xs font-bold text-cyan-300">{exp >= 999999 ? "MAX" : exp.toLocaleString()}</div>
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2">公式：base × level × (1 + ln(level) × logScale)</p>
+      </div>
+
+      {/* 職業加成 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-emerald-400 mb-3">⚔️ 職業屬性加成</h4>
+        <div className="space-y-3">
+          <div>
+            <div className="text-[10px] text-amber-300 mb-1">🏹 獵人</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("profHunterAtk", "ATK +%", 0.01, 0, 1)}
+              {field("profHunterSpd", "SPD +%", 0.01, 0, 1)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-blue-300 mb-1">🔮 法師</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("profMageMatk", "MATK +%", 0.01, 0, 1)}
+              {field("profMageMp", "MP +%", 0.01, 0, 1)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-red-300 mb-1">🛡️ 鬥士</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("profTankHp", "HP +%", 0.01, 0, 1)}
+              {field("profTankDef", "DEF +%", 0.01, 0, 1)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-purple-300 mb-1">🗡️ 盜賊</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("profThiefSpd", "SPD +%", 0.01, 0, 1)}
+              {field("profThiefCrit", "暴擊率 +", 1, 0, 50)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-indigo-300 mb-1">🪄 巫師</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("profWizardMatk", "MATK +%", 0.01, 0, 1)}
+              {field("profWizardSpr", "SPR +%", 0.01, 0, 1)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 命格加成 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-amber-400 mb-3">✨ 命格屬性加成</h4>
+        <div className="space-y-3">
+          <div>
+            <div className="text-[10px] text-green-300 mb-1">🐲 青龍命（木）</div>
+            <div className="grid grid-cols-1 gap-3">
+              {field("fateWoodHp", "HP +%", 0.01, 0, 1)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-red-300 mb-1">🔥 朱雀命（火）</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("fateFireAtk", "ATK +%", 0.01, 0, 1)}
+              {field("fateFireMatk", "MATK +%", 0.01, 0, 1)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-yellow-300 mb-1">🦄 麒麟命（土）</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("fateEarthDef", "DEF +%", 0.01, 0, 1)}
+              {field("fateEarthMdef", "MDEF +%", 0.01, 0, 1)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-gray-300 mb-1">🐯 白虎命（金）</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("fateMetalSpd", "SPD +%", 0.01, 0, 1)}
+              {field("fateMetalCrit", "暴擊率 +", 1, 0, 50)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-blue-300 mb-1">🐢 玄武命（水）</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("fateWaterMp", "MP +%", 0.01, 0, 1)}
+              {field("fateWaterSpr", "SPR +%", 0.01, 0, 1)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 寵物命格協同 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-pink-400 mb-3">🐾 寵物命格協同加成</h4>
+        <div className="grid grid-cols-3 gap-3">
+          {field("petSynergySame", "同五行 +%", 0.01, 0, 1)}
+          {field("petSynergyGenerate", "相生 +%", 0.01, 0, 1)}
+          {field("petSynergyOvercome", "相剣 -%", 0.01, -1, 0)}
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2">寵物五行與主人命格的關係決定全屬性加成倍率</p>
+      </div>
+
+      {/* 戰鬥傷害係數 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-red-400 mb-3">💥 五行戰鬥傷害係數</h4>
+        <div className="grid grid-cols-2 gap-3">
+          {field("wuxingOvercomeMult", "相剣傷害倍率", 0.1, 1, 5)}
+          {field("wuxingGenerateMult", "相生傷害倍率", 0.1, 0.1, 1)}
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2">相剣倍率越高越強，相生倍率越低越弱（預設：相剣 1.5x / 相生 0.8x）</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Catalog Stats Tab ────────────────────────────────────────────────────────────────────────────────
 function CatalogStatsTab() {
   const { data, isLoading } = trpc.gameCatalog.getCatalogStats.useQuery();
 

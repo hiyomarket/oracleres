@@ -1067,6 +1067,37 @@ export const gameAdminRouter = router({
       wuxingCap:    z.number().int().min(10).max(9999).optional(),
       // 販售折扣率
       sellDiscountRate: z.number().min(0.01).max(1).optional(),
+      // GD-028 經驗值曲線
+      expCurveBase: z.number().min(10).max(500).optional(),
+      expCurveLogScale: z.number().min(0.1).max(3.0).optional(),
+      // GD-028 職業加成
+      profHunterAtk: z.number().min(0).max(1).optional(),
+      profHunterSpd: z.number().min(0).max(1).optional(),
+      profMageMatk: z.number().min(0).max(1).optional(),
+      profMageMp: z.number().min(0).max(1).optional(),
+      profTankHp: z.number().min(0).max(1).optional(),
+      profTankDef: z.number().min(0).max(1).optional(),
+      profThiefSpd: z.number().min(0).max(1).optional(),
+      profThiefCrit: z.number().min(0).max(50).optional(),
+      profWizardMatk: z.number().min(0).max(1).optional(),
+      profWizardSpr: z.number().min(0).max(1).optional(),
+      // GD-028 命格加成
+      fateWoodHp: z.number().min(0).max(1).optional(),
+      fateFireAtk: z.number().min(0).max(1).optional(),
+      fateFireMatk: z.number().min(0).max(1).optional(),
+      fateEarthDef: z.number().min(0).max(1).optional(),
+      fateEarthMdef: z.number().min(0).max(1).optional(),
+      fateMetalSpd: z.number().min(0).max(1).optional(),
+      fateMetalCrit: z.number().min(0).max(50).optional(),
+      fateWaterMp: z.number().min(0).max(1).optional(),
+      fateWaterSpr: z.number().min(0).max(1).optional(),
+      // GD-028 寵物協同
+      petSynergySame: z.number().min(0).max(1).optional(),
+      petSynergyGenerate: z.number().min(0).max(1).optional(),
+      petSynergyOvercome: z.number().min(-1).max(0).optional(),
+      // GD-028 戰鬥傷害
+      wuxingOvercomeMult: z.number().min(1).max(5).optional(),
+      wuxingGenerateMult: z.number().min(0.1).max(1).optional(),
     }))
     .mutation(({ input, ctx }) => {
       const { tickIntervalMs, ...rest } = input;
