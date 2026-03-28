@@ -1,0 +1,31 @@
+{
+  "query": "SHOW TABLES LIKE '%inventory%'; SHOW TABLES LIKE '%bag%'; SHOW TABLES LIKE '%item%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW TABLES LIKE '%inventory%'; SHOW TABLES LIKE '%bag%'; SHOW TABLES LIKE '%item%';",
+  "rows": [
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%inventory%)": "agent_inventory"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%inventory%)": "game_inventory_items"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%inventory%)": "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%item%)"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%inventory%)": "game_inventory_items"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%inventory%)": "game_item_catalog"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%inventory%)": "game_items"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%inventory%)": "wardrobe_items"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%inventory%)\nagent_inventory\ngame_inventory_items\nTables_in_MLF7bLVZzzxdGTPVXTct3c (%item%)\ngame_inventory_items\ngame_item_catalog\ngame_items\nwardrobe_items\n",
+  "stderr": "",
+  "execution_time_ms": 2064
+}

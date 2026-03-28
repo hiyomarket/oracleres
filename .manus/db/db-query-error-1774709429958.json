@@ -1,0 +1,8 @@
+{
+  "query": "SELECT equip_id, name, element, slot, rarity, hp_bonus, attack_bonus, defense_bonus, speed_bonus, resist_bonus FROM game_equipment_catalog ORDER BY element, slot LIMIT 30",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT equip_id, name, element, slot, rarity, hp_bonus, attack_bonus, defense_bonus, speed_bonus, resist_bonus FROM game_equipment_catalog ORDER BY element, slot LIMIT 30",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'element' in 'field list'"
+  ]
+}

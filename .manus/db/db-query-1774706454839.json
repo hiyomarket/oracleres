@@ -1,0 +1,40 @@
+{
+  "query": "SELECT DISTINCT slot FROM game_equipment_catalog; SELECT equip_id, name, slot, tier, rarity, base_stats FROM game_equipment_catalog WHERE equip_id IN ('E_W001','E_W003','E_W004','E_W005','E_E001','E_F031','E_M033','E_Wt001');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT DISTINCT slot FROM game_equipment_catalog; SELECT equip_id, name, slot, tier, rarity, base_stats FROM game_equipment_catalog WHERE equip_id IN ('E_W001','E_W003','E_W004','E_W005','E_E001','E_F031','E_M033','E_Wt001');",
+  "rows": [
+    {
+      "slot": "weapon"
+    },
+    {
+      "slot": "equip_id\tname\tslot\ttier\trarity\tbase_stats"
+    },
+    {
+      "slot": "E_W001\t木劍\tweapon\t初階\tcommon\t攻擊 +10"
+    },
+    {
+      "slot": "E_W003\t樹皮帽\tweapon\t初階\tcommon\t防禦 +5, HP +20"
+    },
+    {
+      "slot": "E_W004\t粗布衣\tweapon\t初階\tcommon\t防禦 +8"
+    },
+    {
+      "slot": "E_W005\t草鞋\tweapon\t初階\tcommon\t速度 +5"
+    },
+    {
+      "slot": "E_E001\t岩石盾\tweapon\t初階\tcommon\t防禦 +12"
+    },
+    {
+      "slot": "E_F031\t赤炎護腕\tweapon\t初階\tcommon\t"
+    },
+    {
+      "slot": "E_M033\t金烏羽冠\tweapon\t初階\tcommon\t"
+    },
+    {
+      "slot": "E_Wt001\t寒冰符文\tweapon\t初階\tcommon\t"
+    }
+  ],
+  "messages": [],
+  "stdout": "slot\nweapon\nequip_id\tname\tslot\ttier\trarity\tbase_stats\nE_W001\t木劍\tweapon\t初階\tcommon\t攻擊 +10\nE_W003\t樹皮帽\tweapon\t初階\tcommon\t防禦 +5, HP +20\nE_W004\t粗布衣\tweapon\t初階\tcommon\t防禦 +8\nE_W005\t草鞋\tweapon\t初階\tcommon\t速度 +5\nE_E001\t岩石盾\tweapon\t初階\tcommon\t防禦 +12\nE_F031\t赤炎護腕\tweapon\t初階\tcommon\t\nE_M033\t金烏羽冠\tweapon\t初階\tcommon\t\nE_Wt001\t寒冰符文\tweapon\t初階\tcommon\t\n",
+  "stderr": "",
+  "execution_time_ms": 1827
+}

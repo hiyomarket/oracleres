@@ -1,0 +1,16 @@
+{
+  "query": "SELECT rarity, tier, COUNT(*) as count, GROUP_CONCAT(DISTINCT slot) as slots FROM game_equipment_catalog GROUP BY rarity, tier ORDER BY FIELD(rarity,'common','uncommon','rare','epic','legendary'), tier;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT rarity, tier, COUNT(*) as count, GROUP_CONCAT(DISTINCT slot) as slots FROM game_equipment_catalog GROUP BY rarity, tier ORDER BY FIELD(rarity,'common','uncommon','rare','epic','legendary'), tier;",
+  "rows": [
+    {
+      "rarity": "common",
+      "tier": "初階",
+      "count": "56",
+      "slots": "weapon"
+    }
+  ],
+  "messages": [],
+  "stdout": "rarity\ttier\tcount\tslots\ncommon\t初階\t56\tweapon\n",
+  "stderr": "",
+  "execution_time_ms": 1529
+}

@@ -1,0 +1,14 @@
+{
+  "query": "SELECT config_key, SUBSTRING(config_value, 1, 500) as config_value_preview FROM game_config WHERE config_key = '__engine_config_v2__';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT config_key, SUBSTRING(config_value, 1, 500) as config_value_preview FROM game_config WHERE config_key = '__engine_config_v2__';",
+  "rows": [
+    {
+      "config_key": "__engine_config_v2__",
+      "config_value_preview": "{\"tickIntervalMs\":300000,\"expMultiplier\":1,\"goldMultiplier\":1,\"dropMultiplier\":1,\"combatChance\":0.65,\"gatherChance\":0.2,\"rogueChance\":0.05,\"gameEnabled\":true,\"maintenanceMsg\":\"系統維護中，請稍後再試\",\"lastUpdatedAt\":1774704265259,\"lastUpdatedBy\":\"1\",\"infuseMinGain\":0.05,\"infuseMaxGain\":0.3,\"infuseFailRate\":0.3,\"infuseMaxWuxing\":999,\"rewardMultIdle\":0.33,\"rewardMultClosed\":1,\"rewardMultOpen\":1.5,\"afkTickIntervalMs\":30000,\"afkTickEnabled\":true,\"battleTurnTimerPvE\":30,\"battleTurnTimerBoss\":20,\"battleTurnTimer"
+    }
+  ],
+  "messages": [],
+  "stdout": "config_key\tconfig_value_preview\n__engine_config_v2__\t{\"tickIntervalMs\":300000,\"expMultiplier\":1,\"goldMultiplier\":1,\"dropMultiplier\":1,\"combatChance\":0.65,\"gatherChance\":0.2,\"rogueChance\":0.05,\"gameEnabled\":true,\"maintenanceMsg\":\"系統維護中，請稍後再試\",\"lastUpdatedAt\":1774704265259,\"lastUpdatedBy\":\"1\",\"infuseMinGain\":0.05,\"infuseMaxGain\":0.3,\"infuseFailRate\":0.3,\"infuseMaxWuxing\":999,\"rewardMultIdle\":0.33,\"rewardMultClosed\":1,\"rewardMultOpen\":1.5,\"afkTickIntervalMs\":30000,\"afkTickEnabled\":true,\"battleTurnTimerPvE\":30,\"battleTurnTimerBoss\":20,\"battleTurnTimer\n",
+  "stderr": "",
+  "execution_time_ms": 1512
+}

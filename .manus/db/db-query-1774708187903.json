@@ -1,0 +1,9 @@
+{
+  "query": "SELECT equip_id, name, slot, tier, JSON_EXTRACT(resist_bonus,'$.wood') as wood, JSON_EXTRACT(resist_bonus,'$.fire') as fire, JSON_EXTRACT(resist_bonus,'$.earth') as earth, JSON_EXTRACT(resist_bonus,'$.metal') as metal, JSON_EXTRACT(resist_bonus,'$.water') as water FROM game_equipment_catalog WHERE JSON_EXTRACT(resist_bonus,'$.wood') > 0 OR JSON_EXTRACT(resist_bonus,'$.fire') > 0 OR JSON_EXTRACT(resist_bonus,'$.earth') > 0 OR JSON_EXTRACT(resist_bonus,'$.metal') > 0 OR JSON_EXTRACT(resist_bonus,'$.water') > 0 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT equip_id, name, slot, tier, JSON_EXTRACT(resist_bonus,'$.wood') as wood, JSON_EXTRACT(resist_bonus,'$.fire') as fire, JSON_EXTRACT(resist_bonus,'$.earth') as earth, JSON_EXTRACT(resist_bonus,'$.metal') as metal, JSON_EXTRACT(resist_bonus,'$.water') as water FROM game_equipment_catalog WHERE JSON_EXTRACT(resist_bonus,'$.wood') > 0 OR JSON_EXTRACT(resist_bonus,'$.fire') > 0 OR JSON_EXTRACT(resist_bonus,'$.earth') > 0 OR JSON_EXTRACT(resist_bonus,'$.metal') > 0 OR JSON_EXTRACT(resist_bonus,'$.water') > 0 LIMIT 10;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1516
+}

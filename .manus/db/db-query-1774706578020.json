@@ -1,0 +1,190 @@
+{
+  "query": "SELECT config_key, config_value, label, category FROM game_config ORDER BY category, config_key LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT config_key, config_value, label, category FROM game_config ORDER BY category, config_key LIMIT 30;",
+  "rows": [
+    {
+      "config_key": "combat_drop_rate_multiplier",
+      "config_value": "1.0",
+      "label": "裝備掉落率倍率",
+      "category": "combat"
+    },
+    {
+      "config_key": "combat_exp_multiplier",
+      "config_value": "0.2",
+      "label": "戰鬥經驗值倍率",
+      "category": "combat"
+    },
+    {
+      "config_key": "combat_gold_multiplier",
+      "config_value": "0.2",
+      "label": "戰鬥金幣倍率",
+      "category": "combat"
+    },
+    {
+      "config_key": "pity_threshold_common",
+      "config_value": "15",
+      "label": "初階低保門檻（場次）",
+      "category": "combat"
+    },
+    {
+      "config_key": "pity_threshold_high",
+      "config_value": "75",
+      "label": "高階低保門檻（場次）",
+      "category": "combat"
+    },
+    {
+      "config_key": "pity_threshold_mid",
+      "config_value": "30",
+      "label": "中階低保門檻（場次）",
+      "category": "combat"
+    },
+    {
+      "config_key": "divine_cooldown_seconds",
+      "config_value": "0",
+      "label": "靈相干預冷卻時間(秒)",
+      "category": "divine"
+    },
+    {
+      "config_key": "divine_eye_ap_cost",
+      "config_value": "1",
+      "label": "神眼加持靈力消耗",
+      "category": "divine"
+    },
+    {
+      "config_key": "divine_eye_boost_percent",
+      "config_value": "15",
+      "label": "神眼加持提升百分比",
+      "category": "divine"
+    },
+    {
+      "config_key": "divine_heal_ap_cost",
+      "config_value": "1",
+      "label": "神癒恢復靈力消耗",
+      "category": "divine"
+    },
+    {
+      "config_key": "divine_heal_hp_percent",
+      "config_value": "50",
+      "label": "神癒恢復HP百分比",
+      "category": "divine"
+    },
+    {
+      "config_key": "divine_stamina_ap_cost",
+      "config_value": "1",
+      "label": "靈癒疲勞靈力消耗",
+      "category": "divine"
+    },
+    {
+      "config_key": "divine_stamina_restore",
+      "config_value": "50",
+      "label": "靈癒疲勞恢復體力值",
+      "category": "divine"
+    },
+    {
+      "config_key": "divine_transport_ap_cost",
+      "config_value": "2",
+      "label": "神蹟傳送靈力消耗",
+      "category": "divine"
+    },
+    {
+      "config_key": "ap_regen_minutes",
+      "config_value": "60",
+      "label": "靈力恢復間隔（分鐘）",
+      "category": "economy"
+    },
+    {
+      "config_key": "auction_fee_rate",
+      "config_value": "0.05",
+      "label": "拍賣行手續費率",
+      "category": "economy"
+    },
+    {
+      "config_key": "sell_discount_rate",
+      "config_value": "0.2",
+      "label": "販售折扣率",
+      "category": "economy"
+    },
+    {
+      "config_key": "stamina_per_tick",
+      "config_value": "5",
+      "label": "每 Tick 體力消耗",
+      "category": "economy"
+    },
+    {
+      "config_key": "stamina_regen_amount",
+      "config_value": "100",
+      "label": "體力恢復量（每次）",
+      "category": "economy"
+    },
+    {
+      "config_key": "stamina_regen_minutes",
+      "config_value": "10",
+      "label": "體力恢復間隔（分鐘）",
+      "category": "economy"
+    },
+    {
+      "config_key": "event_drop_bonus",
+      "config_value": "0.0",
+      "label": "活動掉落率加成",
+      "category": "event"
+    },
+    {
+      "config_key": "event_end_time",
+      "config_value": "0",
+      "label": "活動結束時間（Unix ms）",
+      "category": "event"
+    },
+    {
+      "config_key": "event_exp_bonus",
+      "config_value": "0.0",
+      "label": "活動經驗值加成",
+      "category": "event"
+    },
+    {
+      "config_key": "event_gold_bonus",
+      "config_value": "0.0",
+      "label": "活動金幣加成",
+      "category": "event"
+    },
+    {
+      "config_key": "event_name",
+      "config_value": "",
+      "label": "當前活動名稱",
+      "category": "event"
+    },
+    {
+      "config_key": "adventure_encounter_rate",
+      "config_value": "0.05",
+      "label": "奇遇觸發機率",
+      "category": "exploration"
+    },
+    {
+      "config_key": "gather_success_rate_bonus",
+      "config_value": "0.0",
+      "label": "採集成功率加成",
+      "category": "exploration"
+    },
+    {
+      "config_key": "hidden_npc_base_rate",
+      "config_value": "0.05",
+      "label": "隱藏NPC基礎感知機率",
+      "category": "exploration"
+    },
+    {
+      "config_key": "hidden_quest_base_rate",
+      "config_value": "0.05",
+      "label": "隱藏任務基礎感知機率",
+      "category": "exploration"
+    },
+    {
+      "config_key": "hidden_shop_base_rate",
+      "config_value": "0.05",
+      "label": "密店基礎感知機率",
+      "category": "exploration"
+    }
+  ],
+  "messages": [],
+  "stdout": "config_key\tconfig_value\tlabel\tcategory\ncombat_drop_rate_multiplier\t1.0\t裝備掉落率倍率\tcombat\ncombat_exp_multiplier\t0.2\t戰鬥經驗值倍率\tcombat\ncombat_gold_multiplier\t0.2\t戰鬥金幣倍率\tcombat\npity_threshold_common\t15\t初階低保門檻（場次）\tcombat\npity_threshold_high\t75\t高階低保門檻（場次）\tcombat\npity_threshold_mid\t30\t中階低保門檻（場次）\tcombat\ndivine_cooldown_seconds\t0\t靈相干預冷卻時間(秒)\tdivine\ndivine_eye_ap_cost\t1\t神眼加持靈力消耗\tdivine\ndivine_eye_boost_percent\t15\t神眼加持提升百分比\tdivine\ndivine_heal_ap_cost\t1\t神癒恢復靈力消耗\tdivine\ndivine_heal_hp_percent\t50\t神癒恢復HP百分比\tdivine\ndivine_stamina_ap_cost\t1\t靈癒疲勞靈力消耗\tdivine\ndivine_stamina_restore\t50\t靈癒疲勞恢復體力值\tdivine\ndivine_transport_ap_cost\t2\t神蹟傳送靈力消耗\tdivine\nap_regen_minutes\t60\t靈力恢復間隔（分鐘）\teconomy\nauction_fee_rate\t0.05\t拍賣行手續費率\teconomy\nsell_discount_rate\t0.2\t販售折扣率\teconomy\nstamina_per_tick\t5\t每 Tick 體力消耗\teconomy\nstamina_regen_amount\t100\t體力恢復量（每次）\teconomy\nstamina_regen_minutes\t10\t體力恢復間隔（分鐘）\teconomy\nevent_drop_bonus\t0.0\t活動掉落率加成\tevent\nevent_end_time\t0\t活動結束時間（Unix ms）\tevent\nevent_exp_bonus\t0.0\t活動經驗值加成\tevent\nevent_gold_bonus\t0.0\t活動金幣加成\tevent\nevent_name\t\t當前活動名稱\tevent\nadventure_encounter_rate\t0.05\t奇遇觸發機率\texploration\ngather_success_rate_bonus\t0.0\t採集成功率加成\texploration\nhidden_npc_base_rate\t0.05\t隱藏NPC基礎感知機率\texploration\nhidden_quest_base_rate\t0.05\t隱藏任務基礎感知機率\texploration\nhidden_shop_base_rate\t0.05\t密店基礎感知機率\texploration\n",
+  "stderr": "",
+  "execution_time_ms": 1562
+}

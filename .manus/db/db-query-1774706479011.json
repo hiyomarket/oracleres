@@ -1,0 +1,19 @@
+{
+  "query": "SHOW TABLES LIKE '%equip%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW TABLES LIKE '%equip%';",
+  "rows": [
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%equip%)": "equip_enhance_logs"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%equip%)": "equipment_templates"
+    },
+    {
+      "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%equip%)": "game_equipment_catalog"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_MLF7bLVZzzxdGTPVXTct3c (%equip%)\nequip_enhance_logs\nequipment_templates\ngame_equipment_catalog\n",
+  "stderr": "",
+  "execution_time_ms": 1573
+}

@@ -1,0 +1,65 @@
+{
+  "query": "SELECT tier, slot, COUNT(*) as cnt, MIN(atk_bonus+def_bonus+hp_bonus+spd_bonus+matk_bonus+mp_bonus) as min_total, MAX(atk_bonus+def_bonus+hp_bonus+spd_bonus+matk_bonus+mp_bonus) as max_total, AVG(atk_bonus) as avg_atk, AVG(def_bonus) as avg_def, AVG(hp_bonus) as avg_hp, AVG(spd_bonus) as avg_spd FROM equipment_templates GROUP BY tier, slot ORDER BY FIELD(tier,'basic','intermediate','advanced','legendary'), slot;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT tier, slot, COUNT(*) as cnt, MIN(atk_bonus+def_bonus+hp_bonus+spd_bonus+matk_bonus+mp_bonus) as min_total, MAX(atk_bonus+def_bonus+hp_bonus+spd_bonus+matk_bonus+mp_bonus) as max_total, AVG(atk_bonus) as avg_atk, AVG(def_bonus) as avg_def, AVG(hp_bonus) as avg_hp, AVG(spd_bonus) as avg_spd FROM equipment_templates GROUP BY tier, slot ORDER BY FIELD(tier,'basic','intermediate','advanced','legendary'), slot;",
+  "rows": [
+    {
+      "tier": "basic",
+      "slot": "weapon",
+      "cnt": "1",
+      "min_total": "10",
+      "max_total": "10",
+      "avg_atk": "8.0000",
+      "avg_def": "0.0000",
+      "avg_hp": "0.0000",
+      "avg_spd": "2.0000"
+    },
+    {
+      "tier": "basic",
+      "slot": "helmet",
+      "cnt": "1",
+      "min_total": "18",
+      "max_total": "18",
+      "avg_atk": "0.0000",
+      "avg_def": "3.0000",
+      "avg_hp": "15.0000",
+      "avg_spd": "0.0000"
+    },
+    {
+      "tier": "basic",
+      "slot": "armor",
+      "cnt": "1",
+      "min_total": "25",
+      "max_total": "25",
+      "avg_atk": "0.0000",
+      "avg_def": "5.0000",
+      "avg_hp": "20.0000",
+      "avg_spd": "0.0000"
+    },
+    {
+      "tier": "basic",
+      "slot": "boots",
+      "cnt": "1",
+      "min_total": "5",
+      "max_total": "5",
+      "avg_atk": "0.0000",
+      "avg_def": "0.0000",
+      "avg_hp": "0.0000",
+      "avg_spd": "5.0000"
+    },
+    {
+      "tier": "basic",
+      "slot": "accessory",
+      "cnt": "2",
+      "min_total": "15",
+      "max_total": "18",
+      "avg_atk": "0.0000",
+      "avg_def": "0.0000",
+      "avg_hp": "12.5000",
+      "avg_spd": "0.0000"
+    }
+  ],
+  "messages": [],
+  "stdout": "tier\tslot\tcnt\tmin_total\tmax_total\tavg_atk\tavg_def\tavg_hp\tavg_spd\nbasic\tweapon\t1\t10\t10\t8.0000\t0.0000\t0.0000\t2.0000\nbasic\thelmet\t1\t18\t18\t0.0000\t3.0000\t15.0000\t0.0000\nbasic\tarmor\t1\t25\t25\t0.0000\t5.0000\t20.0000\t0.0000\nbasic\tboots\t1\t5\t5\t0.0000\t0.0000\t0.0000\t5.0000\nbasic\taccessory\t2\t15\t18\t0.0000\t0.0000\t12.5000\t0.0000\n",
+  "stderr": "",
+  "execution_time_ms": 1501
+}

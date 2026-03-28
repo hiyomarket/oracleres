@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, agent_id, item_id, item_type, quantity, item_data, is_equipped, equipped_slot FROM agent_inventory WHERE item_type = 'equipment' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_id, item_id, item_type, quantity, item_data, is_equipped, equipped_slot FROM agent_inventory WHERE item_type = 'equipment' LIMIT 10;",
+  "rows": [
+    {
+      "id": "198",
+      "agent_id": "11",
+      "item_id": "equip-wood-001",
+      "item_type": "equipment",
+      "quantity": "2",
+      "item_data": "NULL",
+      "is_equipped": "0",
+      "equipped_slot": "NULL"
+    },
+    {
+      "id": "257",
+      "agent_id": "9",
+      "item_id": "E_W004",
+      "item_type": "equipment",
+      "quantity": "1",
+      "item_data": "NULL",
+      "is_equipped": "1",
+      "equipped_slot": "armor"
+    },
+    {
+      "id": "260",
+      "agent_id": "9",
+      "item_id": "E_W001",
+      "item_type": "equipment",
+      "quantity": "11",
+      "item_data": "NULL",
+      "is_equipped": "1",
+      "equipped_slot": "weapon"
+    },
+    {
+      "id": "278",
+      "agent_id": "11",
+      "item_id": "E_W001",
+      "item_type": "equipment",
+      "quantity": "6",
+      "item_data": "NULL",
+      "is_equipped": "0",
+      "equipped_slot": "NULL"
+    },
+    {
+      "id": "301",
+      "agent_id": "12",
+      "item_id": "E_W003",
+      "item_type": "equipment",
+      "quantity": "104",
+      "item_data": "NULL",
+      "is_equipped": "1",
+      "equipped_slot": "helmet"
+    },
+    {
+      "id": "302",
+      "agent_id": "8",
+      "item_id": "E_W001",
+      "item_type": "equipment",
+      "quantity": "10",
+      "item_data": "NULL",
+      "is_equipped": "1",
+      "equipped_slot": "weapon"
+    },
+    {
+      "id": "315",
+      "agent_id": "8",
+      "item_id": "E_W003",
+      "item_type": "equipment",
+      "quantity": "40",
+      "item_data": "NULL",
+      "is_equipped": "1",
+      "equipped_slot": "helmet"
+    },
+    {
+      "id": "382",
+      "agent_id": "12",
+      "item_id": "E_W001",
+      "item_type": "equipment",
+      "quantity": "15",
+      "item_data": "NULL",
+      "is_equipped": "0",
+      "equipped_slot": "NULL"
+    },
+    {
+      "id": "389",
+      "agent_id": "10",
+      "item_id": "E_W001",
+      "item_type": "equipment",
+      "quantity": "21",
+      "item_data": "NULL",
+      "is_equipped": "0",
+      "equipped_slot": "NULL"
+    },
+    {
+      "id": "403",
+      "agent_id": "13",
+      "item_id": "E_W003",
+      "item_type": "equipment",
+      "quantity": "73",
+      "item_data": "NULL",
+      "is_equipped": "0",
+      "equipped_slot": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_id\titem_id\titem_type\tquantity\titem_data\tis_equipped\tequipped_slot\n198\t11\tequip-wood-001\tequipment\t2\tNULL\t0\tNULL\n257\t9\tE_W004\tequipment\t1\tNULL\t1\tarmor\n260\t9\tE_W001\tequipment\t11\tNULL\t1\tweapon\n278\t11\tE_W001\tequipment\t6\tNULL\t0\tNULL\n301\t12\tE_W003\tequipment\t104\tNULL\t1\thelmet\n302\t8\tE_W001\tequipment\t10\tNULL\t1\tweapon\n315\t8\tE_W003\tequipment\t40\tNULL\t1\thelmet\n382\t12\tE_W001\tequipment\t15\tNULL\t0\tNULL\n389\t10\tE_W001\tequipment\t21\tNULL\t0\tNULL\n403\t13\tE_W003\tequipment\t73\tNULL\t0\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1576
+}

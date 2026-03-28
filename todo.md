@@ -5225,3 +5225,27 @@
 - [x] 確認商城裝備（56 件）均有加成數値，無零値
 - [x] 裝備比較功能已完整實作（ItemDetailModal 的 EquipComparePanel + gameWorld.getEquipCompare）
 - [x] TypeScript 編譯零錯誤，1347 項測試全部通過
+
+## 修正任務（2026-03-28 第十三批）── 強化系統 +20 + AI 工具修正
+
+- [x] 擴展 enhanceEngine.ts 到 +20（天堂模式：三段安定値、四種卷軸、爆裝邏輯、抗性加成）
+- [x] 修復 gameBattle.ts 裝備 resistBonus 未套用到戰鬥抗性的 bug
+- [x] 批量更新 game_equipment_catalog 的 resistBonus 數値（依五行屬性設定合理抗性）
+- [x] 修正 AI 工具生成邏輯（符合現有公式、加入五行抗性欄位、修正欄位名稱）
+- [x] 更新強化 UI（20 色進度条、爆裝警告、閃光特效、抗性加成預覽）
+- [x] 撰寫強化系統 vitest 測試（+20 邏輯、四種卷軸、抗性計算）
+
+## 修正任務（2026-03-28 第十四批）── 手套裝備槽位
+
+- [x] gameEquipmentCatalog schema 新增 gloves slot 値（slot 為 varchar，不需 migration）
+- [x] SQL migration：確認 slot 為 varchar(20) 可存入 gloves，不需額外 migration
+- [x] 批量建立手套類裝備資料（AI 工具生成 prompt 加入 gloves slot）
+- [x] 更新 equipItem/unequipItem 的 SLOT_MAP 支援 gloves（gameWorld.ts 已有 gloves→equippedHands）
+- [x] 更新 CharacterPanel.tsx 裝備區顯示手套槽位（constants.ts EQUIP_SLOTS 已有 hands 槽位）
+- [x] 更新 gameAvatar.ts getEquipped 的 SLOT_MAP 支援 gloves（equippedHands→hands）
+- [x] 更新 gameBattle.ts 裝備加成查詢支援 gloves slot（equippedHands 已包含在查詢中）
+- [x] CatalogTabs.tsx SLOT_OPTS 加入 gloves 選項（裝備圖鑑管理介面）
+- [x] enhanceEngine.ts ARMOR_SLOTS 加入 gloves（防具卷軸適用）
+- [x] 撰寫 gloves-slot.test.ts（15 項測試全部通過）
+- [x] 更新 enhanceEngine.test.ts 符合 +20 天堂模式 API（36 項測試全部通過）
+- [x] TypeScript 編譯零錯誤，1371 項測試全部通過

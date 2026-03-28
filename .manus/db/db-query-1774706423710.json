@@ -1,0 +1,21 @@
+{
+  "query": "SELECT quality, slot, COUNT(*) as count, AVG(hp_bonus) as avg_hp, AVG(attack_bonus) as avg_atk, AVG(defense_bonus) as avg_def, AVG(speed_bonus) as avg_spd, MIN(hp_bonus) as min_hp, MAX(hp_bonus) as max_hp FROM game_equipment_catalog GROUP BY quality, slot ORDER BY FIELD(quality,'white','green','blue','purple','orange','red'), slot;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT quality, slot, COUNT(*) as count, AVG(hp_bonus) as avg_hp, AVG(attack_bonus) as avg_atk, AVG(defense_bonus) as avg_def, AVG(speed_bonus) as avg_spd, MIN(hp_bonus) as min_hp, MAX(hp_bonus) as max_hp FROM game_equipment_catalog GROUP BY quality, slot ORDER BY FIELD(quality,'white','green','blue','purple','orange','red'), slot;",
+  "rows": [
+    {
+      "quality": "white",
+      "slot": "weapon",
+      "count": "56",
+      "avg_hp": "0.0000",
+      "avg_atk": "0.0000",
+      "avg_def": "0.0000",
+      "avg_spd": "0.0000",
+      "min_hp": "0",
+      "max_hp": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "quality\tslot\tcount\tavg_hp\tavg_atk\tavg_def\tavg_spd\tmin_hp\tmax_hp\nwhite\tweapon\t56\t0.0000\t0.0000\t0.0000\t0.0000\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1548
+}

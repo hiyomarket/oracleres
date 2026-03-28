@@ -514,20 +514,26 @@ ${existingNamesStr}
 請生成 10 件新裝備，要求：
 - 名稱不可與已有裝備重複，要有東方玄幻風格
 - 五行分布均衡（木火土金水各 2 件）
-- 部位多樣：weapon/helmet/armor/shoes/accessory/offhand
+- 部位多樣：weapon/helmet/armor/shoes/accessory/offhand/gloves（手套為新增槽位）
 - 品質分布：white 2, green 3, blue 2, purple 2, orange 1
-- 數值必須符合裝備階級基準（武器偏 ATK，護甲偏 DEF/HP，鞋子偏 SPD）：
+- 數值必須符合裝備階級基準（武器偏 ATK，護甲偏 DEF/HP，鞋子偏 SPD，手套偏 ATK/SPD）：
   初階：HP 10-30, ATK 3-8, DEF 2-6, SPD 1-3, 售價 50-200, Lv需求 1
   中階：HP 30-80, ATK 8-20, DEF 6-15, SPD 2-5, 售價 300-800, Lv需求 10
   高階：HP 80-200, ATK 20-50, DEF 15-40, SPD 3-8, 售價 1500-5000, Lv需求 25
   傳說：HP 200-500, ATK 50-120, DEF 40-100, SPD 5-12, 售價 10000-50000, Lv需求 40
-- 部位修正倍率：武器 ATK×2.0, 護甲 DEF×2.0/HP×1.5, 鞋子 SPD×2.5, 頭盔 DEF×1.5
+- 部位修正倍率：武器 ATK×2.0, 護甲 DEF×2.0/HP×1.5, 鞋子 SPD×2.5, 頭盔 DEF×1.5, 手套 ATK×1.2/SPD×1.5
+- 五行抗性加成（resistBonus）規則：
+  * 防具/頭盔/手套/鞋子：主五行抗性 8-15，相生五行 3-5，其餘 0-2
+  * 飾品（accessory）：主五行抗性 10-20，相生五行 3-8，其餘 0-3
+  * 武器/副手：主五行抗性 0-5，其餘 0-2
+  * 五行相生：木生火、火生土、土生金、金生水、水生木
+  * 五行屬性對應：木=wood, 火=fire, 土=earth, 金=metal, 水=water
 
 回覆 JSON 陣列，每個元素格式：
 {
   "name": "裝備名稱",
   "wuxing": "木/火/土/金/水",
-  "slot": "weapon/helmet/armor/shoes/accessory/offhand",
+  "slot": "weapon/helmet/armor/shoes/accessory/offhand/gloves",
   "tier": "初階/中階/高階/傳說",
   "quality": "white/green/blue/purple/orange",
   "levelRequired": 1,
@@ -535,6 +541,7 @@ ${existingNamesStr}
   "attackBonus": 5,
   "defenseBonus": 3,
   "speedBonus": 0,
+  "resistBonus": {"wood": 0, "fire": 0, "earth": 0, "metal": 0, "water": 0},
   "rarity": "common/rare/epic/legendary",
   "specialEffect": "特殊效果說明（可為空）"
 }`,
@@ -753,6 +760,7 @@ ${getValueEngineRulesForAI()}
               attackBonus: fe.attackBonus,
               defenseBonus: fe.defenseBonus,
               speedBonus: fe.speedBonus,
+              resistBonus: item.resistBonus && typeof item.resistBonus === 'object' ? item.resistBonus : { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 },
               specialEffect: item.specialEffect || "",
               rarity: equipEval.correctedRarity,
               shopPrice: equipEval.suggestedCoinPrice,

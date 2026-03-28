@@ -1,0 +1,122 @@
+{
+  "query": "DESCRIBE game_items;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DESCRIBE game_items;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "gender",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "female",
+      "Extra": ""
+    },
+    {
+      "Field": "layer",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "view",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "front",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxingColor",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "#888888",
+      "Extra": ""
+    },
+    {
+      "Field": "rarity",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "common",
+      "Extra": ""
+    },
+    {
+      "Field": "currencyType",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "initial",
+      "Extra": ""
+    },
+    {
+      "Field": "price",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "isInitial",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "isOnSale",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "imageUrl",
+      "Type": "text",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nname\tvarchar(100)\tNO\t\tNULL\t\ngender\tvarchar(10)\tNO\t\tfemale\t\nlayer\tvarchar(20)\tNO\t\tNULL\t\nview\tvarchar(10)\tNO\t\tfront\t\nwuxing\tvarchar(10)\tNO\t\tNULL\t\nwuxingColor\tvarchar(10)\tNO\t\t#888888\t\nrarity\tvarchar(10)\tNO\t\tcommon\t\ncurrencyType\tvarchar(20)\tNO\t\tinitial\t\nprice\tint\tNO\t\t0\t\nisInitial\ttinyint\tNO\t\t0\t\nisOnSale\ttinyint\tNO\t\t0\t\nimageUrl\ttext\tNO\t\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\n",
+  "stderr": "",
+  "execution_time_ms": 1499
+}

@@ -1,15 +1,15 @@
 /**
  * equipEnhance.ts
- * 裝備強化系統 tRPC Router
+ * 裝備強化系統 tRPC Router（天堂模式 +0 到 +20）
  *
  * 功能：
- * 1. enhanceEquip — 使用卷軸強化裝備
- * 2. getEnhanceInfo — 取得裝備強化資訊（當前等級、成功率、預覽）
+ * 1. enhanceEquip — 使用卷軸強化裝備（四種卷軸）
+ * 2. getEnhanceInfo — 取得裝備強化資訊（含五行抗性預覽）
  * 3. getEnhanceLogs — 取得強化歷史記錄
  * 4. getScrollInventory — 取得背包中的強化卷軸
  * 5. getEnhanceLevels — 取得所有強化等級資訊
- * 6. getEnhanceConfig — 後台讀取強化設定
- * 7. updateEnhanceConfig — 後台更新強化設定
+ * 6. getAdminEnhanceConfig — 後台讀取強化設定
+ * 7. updateAdminEnhanceConfig — 後台更新強化設定
  */
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -28,14 +28,22 @@ import {
   performEnhanceWithConfig,
   getEnhanceConfig,
   isScrollApplicable,
+  isBlessedScroll,
+  getSafeLevel,
+  getEnhanceLevelInfo,
+  getEnhancedBonusPreview,
   ENHANCE_LEVELS,
+  ENHANCE_SUCCESS_RATES,
+  DESTROY_RATES,
+  ENHANCE_STAT_BONUS,
+  MAX_ENHANCE_LEVEL,
   type ScrollType,
   type EnhanceConfig,
 } from "../services/enhanceEngine";
 
 export const equipEnhanceRouter = router({
 
-  /** 取得裝備強化資訊（使用動態設定） */
+  /** 取得裝備強化資訊（含五行抗性預覽） */
   getEnhanceInfo: protectedProcedure
     .input(z.object({ inventoryId: z.number().int() }))
     .query(async ({ ctx, input }) => {
@@ -62,10 +70,15 @@ export const equipEnhanceRouter = router({
 
       const itemData = (inv.itemData as any) ?? {};
       const currentLevel = itemData.enhanceLevel ?? 0;
-      const clampedLevel = Math.min(currentLevel, 5);
-      const levelInfo = ENHANCE_LEVELS[clampedLevel];
-      const nextRate = cfg.rates[currentLevel] ?? 0;
+      const levelInfo = getEnhanceLevelInfo(currentLevel);
+      const safeLevel = getSafeLevel(catalog.slot);
+      const nextRate = cfg.successRates[currentLevel] ?? 0;
+      const destroyRate = cfg.destroyRates[currentLevel] ?? 0;
       const canEnhance = currentLevel < cfg.maxLevel;
+
+      // 強化後加成預覽（含五行抗性）
+      const currentPreview = getEnhancedBonusPreview(catalog, currentLevel);
+      const nextPreview = canEnhance ? getEnhancedBonusPreview(catalog, currentLevel + 1) : currentPreview;
 
       return {
         inventoryId: inv.id,
@@ -77,21 +90,18 @@ export const equipEnhanceRouter = router({
         currentColorLabel: levelInfo.label,
         currentColorHex: levelInfo.colorHex,
         nextLevel: canEnhance ? currentLevel + 1 : currentLevel,
-        nextColor: canEnhance ? ENHANCE_LEVELS[Math.min(currentLevel + 1, 5)].color : levelInfo.color,
-        nextColorLabel: canEnhance ? ENHANCE_LEVELS[Math.min(currentLevel + 1, 5)].label : levelInfo.label,
-        nextColorHex: canEnhance ? ENHANCE_LEVELS[Math.min(currentLevel + 1, 5)].colorHex : levelInfo.colorHex,
+        nextColor: canEnhance ? getEnhanceLevelInfo(currentLevel + 1).color : levelInfo.color,
+        nextColorLabel: canEnhance ? getEnhanceLevelInfo(currentLevel + 1).label : levelInfo.label,
+        nextColorHex: canEnhance ? getEnhanceLevelInfo(currentLevel + 1).colorHex : levelInfo.colorHex,
         successRate: nextRate,
-        isSafe: currentLevel < cfg.safeLevel,
+        isSafe: currentLevel < safeLevel,
+        safeLevel,
         canEnhance,
-        destroyChance: currentLevel >= cfg.safeLevel ? cfg.destroyChance : 0,
+        destroyRate: currentLevel >= safeLevel ? destroyRate : 0,
         statBonus: cfg.statBonus[currentLevel] ?? 0,
         nextStatBonus: canEnhance ? (cfg.statBonus[currentLevel + 1] ?? 0) : (cfg.statBonus[currentLevel] ?? 0),
-        baseStats: {
-          hp: catalog.hpBonus,
-          attack: catalog.attackBonus,
-          defense: catalog.defenseBonus,
-          speed: catalog.speedBonus,
-        },
+        currentPreview,
+        nextPreview,
       };
     }),
 
@@ -132,11 +142,12 @@ export const equipEnhanceRouter = router({
         quantity: s.quantity,
         imageUrl: s.imageUrl,
         scrollType: ((s.useEffect as any)?.scrollType ?? "weapon_scroll") as ScrollType,
+        isBlessed: isBlessedScroll(((s.useEffect as any)?.scrollType ?? "weapon_scroll") as ScrollType),
         description: (s.useEffect as any)?.description ?? "",
       }));
     }),
 
-  /** 執行強化（使用動態設定） */
+  /** 執行強化（天堂模式：爆裝或閃光失敗，黃卷爆裝率減半且成功 +1~+3） */
   enhanceEquip: protectedProcedure
     .input(z.object({
       inventoryId: z.number().int(),
@@ -185,11 +196,16 @@ export const equipEnhanceRouter = router({
       // 4. 檢查卷軸適用性
       const scrollType = ((scrollInv.useEffect as any)?.scrollType ?? "weapon_scroll") as ScrollType;
       if (!isScrollApplicable(scrollType, catalog.slot)) {
-        const scrollLabel = scrollType === "weapon_scroll" ? "武器強化卷軸" : "防具強化卷軸";
-        const slotLabel = catalog.slot === "weapon" ? "武器" : "防具/飾品";
+        const scrollLabelMap: Record<ScrollType, string> = {
+          weapon_scroll: "武器強化卷軸（白武卷）",
+          blessed_weapon_scroll: "祝福的武器強化卷軸（黃武卷）",
+          armor_scroll: "防具飾品強化卷軸（白防卷）",
+          blessed_armor_scroll: "祝福的防具飾品強化卷軸（黃防卷）",
+        };
+        const slotLabel = ["weapon", "offhand"].includes(catalog.slot) ? "武器" : "防具/飾品";
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: `${scrollLabel}不能用於${slotLabel}類裝備「${catalog.name}」。`,
+          message: `${scrollLabelMap[scrollType] ?? scrollType}不能用於${slotLabel}類裝備「${catalog.name}」。`,
         });
       }
 
@@ -208,10 +224,10 @@ export const equipEnhanceRouter = router({
         })
         .where(eq(agentInventory.id, scrollInv.id));
 
-      // 7. 執行強化（使用動態設定）
-      const result = performEnhanceWithConfig(currentLevel, cfg);
+      // 7. 執行強化（天堂模式）
+      const result = performEnhanceWithConfig(currentLevel, scrollType, catalog.slot, cfg);
 
-      // 8. 更新裝備或刪除
+      // 8. 更新裝備或刪除（爆裝）
       if (result.destroyed) {
         await db.delete(agentInventory).where(eq(agentInventory.id, inv.id));
       } else {
@@ -229,6 +245,7 @@ export const equipEnhanceRouter = router({
       }
 
       // 9. 記錄日誌
+      const logResult = result.destroyed ? "fail_destroy" : (result.success ? "success" : "fail_flash");
       await db.insert(equipEnhanceLogs).values({
         agentId: agent.id,
         inventoryId: inv.id,
@@ -237,23 +254,30 @@ export const equipEnhanceRouter = router({
         scrollItemId: input.scrollItemId,
         fromLevel: currentLevel,
         toLevel: result.destroyed ? -999 : result.newLevel,
-        result: result.destroyed ? "fail_destroy" : (result.success ? "success" : "fail_downgrade"),
+        result: logResult,
         successRate: result.successRate,
         createdAt: Date.now(),
       });
 
+      const fromInfo = getEnhanceLevelInfo(currentLevel);
+      const toInfo = result.destroyed ? null : getEnhanceLevelInfo(result.newLevel);
+
       return {
         success: result.success,
         destroyed: result.destroyed,
+        flashEffect: result.flashEffect,
+        bonusLevels: result.bonusLevels,
         fromLevel: currentLevel,
         toLevel: result.destroyed ? -1 : result.newLevel,
-        fromColor: ENHANCE_LEVELS[Math.min(currentLevel, 5)].label,
-        toColor: result.destroyed ? "消失" : ENHANCE_LEVELS[Math.min(result.newLevel, 5)].label,
-        fromColorHex: ENHANCE_LEVELS[Math.min(currentLevel, 5)].colorHex,
-        toColorHex: result.destroyed ? "#ef4444" : ENHANCE_LEVELS[Math.min(result.newLevel, 5)].colorHex,
+        fromColor: fromInfo.label,
+        toColor: result.destroyed ? "消失" : (toInfo?.label ?? fromInfo.label),
+        fromColorHex: fromInfo.colorHex,
+        toColorHex: result.destroyed ? "#ef4444" : (toInfo?.colorHex ?? fromInfo.colorHex),
         message: result.message,
         successRate: result.successRate,
+        destroyRate: result.destroyRate,
         equipName: catalog.name,
+        isBlessed: isBlessedScroll(scrollType),
       };
     }),
 
@@ -283,12 +307,11 @@ export const equipEnhanceRouter = router({
       return {
         levels: ENHANCE_LEVELS.map(l => ({
           ...l,
-          successRate: cfg.rates[l.level] ?? 0,
+          successRate: cfg.successRates[l.level] ?? 0,
+          destroyRate: cfg.destroyRates[l.level] ?? 0,
           statBonus: cfg.statBonus[l.level] ?? 0,
         })),
-        safeLevel: cfg.safeLevel,
         maxLevel: cfg.maxLevel,
-        destroyChance: cfg.destroyChance,
       };
     }),
 
@@ -297,17 +320,22 @@ export const equipEnhanceRouter = router({
     .query(async ({ ctx }) => {
       if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
       const cfg = await getEnhanceConfig();
-      return cfg;
+      return {
+        ...cfg,
+        defaultSuccessRates: ENHANCE_SUCCESS_RATES,
+        defaultDestroyRates: DESTROY_RATES,
+        defaultStatBonus: ENHANCE_STAT_BONUS,
+        maxEnhanceLevel: MAX_ENHANCE_LEVEL,
+      };
     }),
 
   /** 後台更新強化系統設定 */
   updateAdminEnhanceConfig: protectedProcedure
     .input(z.object({
-      safeLevel: z.number().int().min(0).max(5).optional(),
-      destroyChance: z.number().min(0).max(1).optional(),
-      maxLevel: z.number().int().min(1).max(10).optional(),
-      rates: z.record(z.string(), z.number().min(0).max(1)).optional(),
-      statBonus: z.record(z.string(), z.number().min(0).max(5)).optional(),
+      maxLevel: z.number().int().min(1).max(20).optional(),
+      successRates: z.record(z.string(), z.number().min(0).max(1)).optional(),
+      destroyRates: z.record(z.string(), z.number().min(0).max(1)).optional(),
+      statBonus: z.record(z.string(), z.number().min(0).max(10)).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
@@ -318,24 +346,20 @@ export const equipEnhanceRouter = router({
       const now = Date.now();
       const updates: Array<{ key: string; value: string; desc: string }> = [];
 
-      if (input.safeLevel !== undefined) {
-        updates.push({ key: "enhance_safe_level", value: String(input.safeLevel), desc: "強化安定值" });
-      }
-      if (input.destroyChance !== undefined) {
-        updates.push({ key: "enhance_destroy_chance", value: String(input.destroyChance), desc: "強化消失機率" });
-      }
       if (input.maxLevel !== undefined) {
         updates.push({ key: "enhance_max_level", value: String(input.maxLevel), desc: "最大強化等級" });
       }
-      if (input.rates !== undefined) {
-        updates.push({ key: "enhance_rates", value: JSON.stringify(input.rates), desc: "各等級強化成功率" });
+      if (input.successRates !== undefined) {
+        updates.push({ key: "enhance_success_rates", value: JSON.stringify(input.successRates), desc: "各等級強化成功率" });
+      }
+      if (input.destroyRates !== undefined) {
+        updates.push({ key: "enhance_destroy_rates", value: JSON.stringify(input.destroyRates), desc: "各等級爆裝率" });
       }
       if (input.statBonus !== undefined) {
         updates.push({ key: "enhance_stat_bonus", value: JSON.stringify(input.statBonus), desc: "各等級數值加成" });
       }
 
       for (const u of updates) {
-        // upsert: 先查是否存在
         const [existing] = await db.select().from(gameConfig)
           .where(eq(gameConfig.configKey, u.key)).limit(1);
         if (existing) {

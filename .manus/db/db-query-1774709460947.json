@@ -1,0 +1,9 @@
+{
+  "query": "SELECT equip_id, name, wuxing, slot, rarity, hp_bonus, attack_bonus, defense_bonus, speed_bonus, base_stats FROM game_equipment_catalog WHERE hp_bonus > 0 OR attack_bonus > 0 LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT equip_id, name, wuxing, slot, rarity, hp_bonus, attack_bonus, defense_bonus, speed_bonus, base_stats FROM game_equipment_catalog WHERE hp_bonus > 0 OR attack_bonus > 0 LIMIT 5",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1511
+}

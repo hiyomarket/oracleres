@@ -160,7 +160,7 @@ export default function EnhancePage() {
                     <div style={{ fontSize: "14px", fontWeight: 700, color: c.hex }}>+{l.level}</div>
                     <div style={{ fontSize: "10px", color: c.hex }}>{c.label}</div>
                     <div style={{ fontSize: "9px", color: "#64748b", marginTop: "2px" }}>
-                      {l.level < (levelsQuery.data?.safeLevel ?? 2) ? "安定" : `${Math.round(l.successRate * 100)}%`}
+                      {l.level < (info?.safeLevel ?? 2) ? "安定" : `${Math.round(l.successRate * 100)}%`}
                     </div>
                   </div>
                 );
@@ -279,25 +279,25 @@ export default function EnhancePage() {
                   </div>
                   <div style={{ textAlign: "center", padding: "6px", borderRadius: "6px", background: "rgba(255,255,255,0.04)" }}>
                     <div style={{ fontSize: "10px", color: "#64748b" }}>消失風險</div>
-                    <div style={{ fontSize: "14px", fontWeight: 700, color: info.destroyChance > 0 ? "#ef4444" : "#4ade80" }}>
-                      {info.destroyChance > 0 ? `${Math.round(info.destroyChance * 100)}%` : "無"}
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: info.destroyRate > 0 ? "#ef4444" : "#4ade80" }}>
+                      {info.destroyRate > 0 ? `${Math.round(info.destroyRate * 100)}%` : "無"}
                     </div>
                   </div>
                 </div>
 
                 {/* 基礎數值預覽 */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", marginBottom: "12px" }}>
-                  {info.baseStats.hp > 0 && (
-                    <StatPreview icon={<Heart size={12} />} label="生命" base={info.baseStats.hp} bonus={info.statBonus} nextBonus={info.nextStatBonus} color="#ef4444" />
+                  {(info.currentPreview?.hpBonus ?? 0) > 0 && (
+                    <StatPreview icon={<Heart size={12} />} label="生命" base={info.currentPreview?.hpBonus ?? 0} bonus={info.statBonus} nextBonus={info.nextStatBonus} color="#ef4444" />
                   )}
-                  {info.baseStats.attack > 0 && (
-                    <StatPreview icon={<Swords size={12} />} label="攻擊" base={info.baseStats.attack} bonus={info.statBonus} nextBonus={info.nextStatBonus} color="#f97316" />
+                  {(info.currentPreview?.attackBonus ?? 0) > 0 && (
+                    <StatPreview icon={<Swords size={12} />} label="攻擊" base={info.currentPreview?.attackBonus ?? 0} bonus={info.statBonus} nextBonus={info.nextStatBonus} color="#f97316" />
                   )}
-                  {info.baseStats.defense > 0 && (
-                    <StatPreview icon={<Shield size={12} />} label="防禦" base={info.baseStats.defense} bonus={info.statBonus} nextBonus={info.nextStatBonus} color="#3b82f6" />
+                  {(info.currentPreview?.defenseBonus ?? 0) > 0 && (
+                    <StatPreview icon={<Shield size={12} />} label="防禦" base={info.currentPreview?.defenseBonus ?? 0} bonus={info.statBonus} nextBonus={info.nextStatBonus} color="#3b82f6" />
                   )}
-                  {info.baseStats.speed > 0 && (
-                    <StatPreview icon={<Zap size={12} />} label="速度" base={info.baseStats.speed} bonus={info.statBonus} nextBonus={info.nextStatBonus} color="#22c55e" />
+                  {(info.currentPreview?.speedBonus ?? 0) > 0 && (
+                    <StatPreview icon={<Zap size={12} />} label="速度" base={info.currentPreview?.speedBonus ?? 0} bonus={info.statBonus} nextBonus={info.nextStatBonus} color="#22c55e" />
                   )}
                 </div>
 

@@ -32,7 +32,7 @@ function buildCharacterParticipant(
   agent: any,
   id: number,
   equippedSkills: import("../services/combatEngineV2").CombatSkill[] = [],
-  equipBonus: { hp: number; atk: number; def: number; spd: number } = { hp: 0, atk: 0, def: 0, spd: 0 },
+  equipBonus: { hp: number; atk: number; def: number; spd: number; resistWood?: number; resistFire?: number; resistEarth?: number; resistMetal?: number; resistWater?: number } = { hp: 0, atk: 0, def: 0, spd: 0 },
 ): BattleParticipant {
   const wuxing = {
     wood: agent.wuxingWood ?? 0,
@@ -82,12 +82,12 @@ function buildCharacterParticipant(
     speedScore: 0,
     statusEffects: [],
     agentId: agent.id,
-    // 五行抗性（由注靈自動計算，0-50）
-    resistWood:  agent.resistWood  ?? 0,
-    resistFire:  agent.resistFire  ?? 0,
-    resistEarth: agent.resistEarth ?? 0,
-    resistMetal: agent.resistMetal ?? 0,
-    resistWater: agent.resistWater ?? 0,
+    // 五行抗性（注靈自動計算 + 裝備加成，上限 100）
+    resistWood:  Math.min((agent.resistWood  ?? 0) + (equipBonus.resistWood  ?? 0), 100),
+    resistFire:  Math.min((agent.resistFire  ?? 0) + (equipBonus.resistFire  ?? 0), 100),
+    resistEarth: Math.min((agent.resistEarth ?? 0) + (equipBonus.resistEarth ?? 0), 100),
+    resistMetal: Math.min((agent.resistMetal ?? 0) + (equipBonus.resistMetal ?? 0), 100),
+    resistWater: Math.min((agent.resistWater ?? 0) + (equipBonus.resistWater ?? 0), 100),
   };
 }
 
@@ -416,7 +416,7 @@ export const gameBattleRouter = router({
       const charCombatSkills = [...normalCombatSkills, ...questCombatSkills];
 
       // ─── 計算裝備加成 ───
-      const equipBonus = { hp: 0, atk: 0, def: 0, spd: 0 };
+      const equipBonus = { hp: 0, atk: 0, def: 0, spd: 0, resistWood: 0, resistFire: 0, resistEarth: 0, resistMetal: 0, resistWater: 0 };
       const equippedIds = [
         agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
         agent.equippedBody, agent.equippedHands, agent.equippedFeet,
@@ -429,6 +429,13 @@ export const gameBattleRouter = router({
           equipBonus.atk += eq.attackBonus   ?? 0;
           equipBonus.def += eq.defenseBonus  ?? 0;
           equipBonus.spd += eq.speedBonus    ?? 0;
+          // 五行抗性加成（從 resistBonus JSON 欄位解析）
+          const rb = (eq.resistBonus as any) ?? {};
+          equipBonus.resistWood  += rb.wood  ?? 0;
+          equipBonus.resistFire  += rb.fire  ?? 0;
+          equipBonus.resistEarth += rb.earth ?? 0;
+          equipBonus.resistMetal += rb.metal ?? 0;
+          equipBonus.resistWater += rb.water ?? 0;
         }
       }
 

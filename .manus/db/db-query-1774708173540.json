@@ -1,0 +1,160 @@
+{
+  "query": "SELECT equip_id, name, slot, hp_bonus, attack_bonus, defense_bonus, speed_bonus, resist_bonus FROM game_equipment_catalog WHERE resist_bonus IS NOT NULL AND resist_bonus != '{\"wood\":0,\"fire\":0,\"earth\":0,\"metal\":0,\"water\":0}' AND resist_bonus != 'null' LIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT equip_id, name, slot, hp_bonus, attack_bonus, defense_bonus, speed_bonus, resist_bonus FROM game_equipment_catalog WHERE resist_bonus IS NOT NULL AND resist_bonus != '{\"wood\":0,\"fire\":0,\"earth\":0,\"metal\":0,\"water\":0}' AND resist_bonus != 'null' LIMIT 15;",
+  "rows": [
+    {
+      "equip_id": "E_W001",
+      "name": "木劍",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W002",
+      "name": "藤蔓弓",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W003",
+      "name": "樹皮帽",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W004",
+      "name": "粗布衣",
+      "slot": "armor",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W005",
+      "name": "草鞋",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W006",
+      "name": "綠葉護符",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W007",
+      "name": "古木長弓",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W008",
+      "name": "毒牙匕首",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W009",
+      "name": "荊棘頭冠",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W010",
+      "name": "森猿皮甲",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W011",
+      "name": "疾風靴",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W012",
+      "name": "孢子戒指",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W017",
+      "name": "木靈王之劍",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W018",
+      "name": "翡翠龍弓",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    },
+    {
+      "equip_id": "E_W019",
+      "name": "世界樹法杖",
+      "slot": "weapon",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0",
+      "resist_bonus": "{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}"
+    }
+  ],
+  "messages": [],
+  "stdout": "equip_id\tname\tslot\thp_bonus\tattack_bonus\tdefense_bonus\tspeed_bonus\tresist_bonus\nE_W001\t木劍\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W002\t藤蔓弓\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W003\t樹皮帽\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W004\t粗布衣\tarmor\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W005\t草鞋\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W006\t綠葉護符\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W007\t古木長弓\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W008\t毒牙匕首\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W009\t荊棘頭冠\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W010\t森猿皮甲\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W011\t疾風靴\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W012\t孢子戒指\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W017\t木靈王之劍\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W018\t翡翠龍弓\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\nE_W019\t世界樹法杖\tweapon\t0\t0\t0\t0\t{\"earth\": 0, \"fire\": 0, \"metal\": 0, \"water\": 0, \"wood\": 0}\n",
+  "stderr": "",
+  "execution_time_ms": 1537
+}

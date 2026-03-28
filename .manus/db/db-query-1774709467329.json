@@ -1,0 +1,45 @@
+{
+  "query": "SELECT equip_id, name, wuxing, slot, base_stats FROM game_equipment_catalog LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT equip_id, name, wuxing, slot, base_stats FROM game_equipment_catalog LIMIT 5",
+  "rows": [
+    {
+      "equip_id": "E_W001",
+      "name": "木劍",
+      "wuxing": "木",
+      "slot": "weapon",
+      "base_stats": "攻擊 +10"
+    },
+    {
+      "equip_id": "E_W002",
+      "name": "藤蔓弓",
+      "wuxing": "木",
+      "slot": "weapon",
+      "base_stats": "攻擊 +8, 速度 +5"
+    },
+    {
+      "equip_id": "E_W003",
+      "name": "樹皮帽",
+      "wuxing": "木",
+      "slot": "helmet",
+      "base_stats": "防禦 +5, HP +20"
+    },
+    {
+      "equip_id": "E_W004",
+      "name": "粗布衣",
+      "wuxing": "木",
+      "slot": "armor",
+      "base_stats": "防禦 +8"
+    },
+    {
+      "equip_id": "E_W005",
+      "name": "草鞋",
+      "wuxing": "木",
+      "slot": "shoes",
+      "base_stats": "速度 +5"
+    }
+  ],
+  "messages": [],
+  "stdout": "equip_id\tname\twuxing\tslot\tbase_stats\nE_W001\t木劍\t木\tweapon\t攻擊 +10\nE_W002\t藤蔓弓\t木\tweapon\t攻擊 +8, 速度 +5\nE_W003\t樹皮帽\t木\thelmet\t防禦 +5, HP +20\nE_W004\t粗布衣\t木\tarmor\t防禦 +8\nE_W005\t草鞋\t木\tshoes\t速度 +5\n",
+  "stderr": "",
+  "execution_time_ms": 1572
+}

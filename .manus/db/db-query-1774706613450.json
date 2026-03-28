@@ -1,0 +1,19 @@
+{
+  "query": "SELECT JSON_EXTRACT(config_value, '$.statCapHp') as statCapHp, JSON_EXTRACT(config_value, '$.statCapMp') as statCapMp, JSON_EXTRACT(config_value, '$.statCapAtk') as statCapAtk, JSON_EXTRACT(config_value, '$.statCapDef') as statCapDef, JSON_EXTRACT(config_value, '$.statCapSpd') as statCapSpd, JSON_EXTRACT(config_value, '$.statCapMatk') as statCapMatk, JSON_EXTRACT(config_value, '$.statCapMdef') as statCapMdef FROM game_config WHERE config_key = '__engine_config_v2__';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT JSON_EXTRACT(config_value, '$.statCapHp') as statCapHp, JSON_EXTRACT(config_value, '$.statCapMp') as statCapMp, JSON_EXTRACT(config_value, '$.statCapAtk') as statCapAtk, JSON_EXTRACT(config_value, '$.statCapDef') as statCapDef, JSON_EXTRACT(config_value, '$.statCapSpd') as statCapSpd, JSON_EXTRACT(config_value, '$.statCapMatk') as statCapMatk, JSON_EXTRACT(config_value, '$.statCapMdef') as statCapMdef FROM game_config WHERE config_key = '__engine_config_v2__';",
+  "rows": [
+    {
+      "statCapHp": "1500",
+      "statCapMp": "1500",
+      "statCapAtk": "2000",
+      "statCapDef": "2000",
+      "statCapSpd": "2000",
+      "statCapMatk": "2000",
+      "statCapMdef": "2000"
+    }
+  ],
+  "messages": [],
+  "stdout": "statCapHp\tstatCapMp\tstatCapAtk\tstatCapDef\tstatCapSpd\tstatCapMatk\tstatCapMdef\n1500\t1500\t2000\t2000\t2000\t2000\t2000\n",
+  "stderr": "",
+  "execution_time_ms": 1547
+}

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, agent_id, item_id, item_name, item_type, quantity, enhance_level, is_equipped FROM game_agent_inventory WHERE item_type = 'equipment' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_id, item_id, item_name, item_type, quantity, enhance_level, is_equipped FROM game_agent_inventory WHERE item_type = 'equipment' LIMIT 10;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table 'mlf7blvzzzxdgtpvxtct3c.game_agent_inventory' doesn't exist"
+  ]
+}

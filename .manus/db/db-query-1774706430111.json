@@ -1,0 +1,230 @@
+{
+  "query": "SELECT equip_id, name, slot, quality, tier, hp_bonus, attack_bonus, defense_bonus, speed_bonus FROM game_equipment_catalog ORDER BY slot, quality LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT equip_id, name, slot, quality, tier, hp_bonus, attack_bonus, defense_bonus, speed_bonus FROM game_equipment_catalog ORDER BY slot, quality LIMIT 20;",
+  "rows": [
+    {
+      "equip_id": "E_W002",
+      "name": "藤蔓弓",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W003",
+      "name": "樹皮帽",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W004",
+      "name": "粗布衣",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W005",
+      "name": "草鞋",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W006",
+      "name": "綠葉護符",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W007",
+      "name": "古木長弓",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W008",
+      "name": "毒牙匕首",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W009",
+      "name": "荊棘頭冠",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W010",
+      "name": "森猿皮甲",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W011",
+      "name": "疾風靴",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W012",
+      "name": "孢子戒指",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W017",
+      "name": "木靈王之劍",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W018",
+      "name": "翡翠龍弓",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W019",
+      "name": "世界樹法杖",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W021",
+      "name": "萬古神木甲",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W023",
+      "name": "疾風螳螂靴",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W030",
+      "name": "天命木靈套裝",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_F001",
+      "name": "餘燼法杖",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_F002",
+      "name": "溫熱石錘",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    },
+    {
+      "equip_id": "E_W001",
+      "name": "木劍",
+      "slot": "weapon",
+      "quality": "white",
+      "tier": "初階",
+      "hp_bonus": "0",
+      "attack_bonus": "0",
+      "defense_bonus": "0",
+      "speed_bonus": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "equip_id\tname\tslot\tquality\ttier\thp_bonus\tattack_bonus\tdefense_bonus\tspeed_bonus\nE_W002\t藤蔓弓\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W003\t樹皮帽\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W004\t粗布衣\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W005\t草鞋\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W006\t綠葉護符\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W007\t古木長弓\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W008\t毒牙匕首\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W009\t荊棘頭冠\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W010\t森猿皮甲\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W011\t疾風靴\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W012\t孢子戒指\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W017\t木靈王之劍\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W018\t翡翠龍弓\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W019\t世界樹法杖\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W021\t萬古神木甲\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W023\t疾風螳螂靴\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W030\t天命木靈套裝\tweapon\twhite\t初階\t0\t0\t0\t0\nE_F001\t餘燼法杖\tweapon\twhite\t初階\t0\t0\t0\t0\nE_F002\t溫熱石錘\tweapon\twhite\t初階\t0\t0\t0\t0\nE_W001\t木劍\tweapon\twhite\t初階\t0\t0\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1572
+}

@@ -1,0 +1,410 @@
+{
+  "query": "SELECT equip_id, name, wuxing, slot, rarity, base_stats FROM game_equipment_catalog ORDER BY wuxing, slot",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT equip_id, name, wuxing, slot, rarity, base_stats FROM game_equipment_catalog ORDER BY wuxing, slot",
+  "rows": [
+    {
+      "equip_id": "E_E031",
+      "name": "厚土腰帶",
+      "wuxing": "土",
+      "slot": "accessory",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_E034",
+      "name": "后土聖盾",
+      "wuxing": "土",
+      "slot": "offhand",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_E032",
+      "name": "磐石巨盾",
+      "wuxing": "土",
+      "slot": "offhand",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_E001",
+      "name": "岩石盾",
+      "wuxing": "土",
+      "slot": "offhand",
+      "rarity": "common",
+      "base_stats": "防禦 +12"
+    },
+    {
+      "equip_id": "E_E017",
+      "name": "泰坦巨斧",
+      "wuxing": "土",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +110, 速度 -20"
+    },
+    {
+      "equip_id": "E_E002",
+      "name": "堅硬石錘",
+      "wuxing": "土",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +18, 速度 -10"
+    },
+    {
+      "equip_id": "E_E021",
+      "name": "大地之母鎧",
+      "wuxing": "土",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "防禦 +100, HP +800"
+    },
+    {
+      "equip_id": "E_E033",
+      "name": "山嶽巨錘",
+      "wuxing": "土",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_W006",
+      "name": "綠葉護符",
+      "wuxing": "木",
+      "slot": "accessory",
+      "rarity": "common",
+      "base_stats": "HP +50"
+    },
+    {
+      "equip_id": "E_W012",
+      "name": "孢子戒指",
+      "wuxing": "木",
+      "slot": "accessory",
+      "rarity": "common",
+      "base_stats": "魔法攻擊 +15"
+    },
+    {
+      "equip_id": "E_W004",
+      "name": "粗布衣",
+      "wuxing": "木",
+      "slot": "armor",
+      "rarity": "common",
+      "base_stats": "防禦 +8"
+    },
+    {
+      "equip_id": "E_W010",
+      "name": "森猿皮甲",
+      "wuxing": "木",
+      "slot": "armor",
+      "rarity": "common",
+      "base_stats": "防禦 +25, HP +100"
+    },
+    {
+      "equip_id": "E_W021",
+      "name": "萬古神木甲",
+      "wuxing": "木",
+      "slot": "armor",
+      "rarity": "common",
+      "base_stats": "防禦 +80, HP +500"
+    },
+    {
+      "equip_id": "E_W009",
+      "name": "荊棘頭冠",
+      "wuxing": "木",
+      "slot": "helmet",
+      "rarity": "common",
+      "base_stats": "防禦 +15, 反傷 5%"
+    },
+    {
+      "equip_id": "E_W003",
+      "name": "樹皮帽",
+      "wuxing": "木",
+      "slot": "helmet",
+      "rarity": "common",
+      "base_stats": "防禦 +5, HP +20"
+    },
+    {
+      "equip_id": "E_W011",
+      "name": "疾風靴",
+      "wuxing": "木",
+      "slot": "shoes",
+      "rarity": "common",
+      "base_stats": "速度 +25, 閃避 +5%"
+    },
+    {
+      "equip_id": "E_W005",
+      "name": "草鞋",
+      "wuxing": "木",
+      "slot": "shoes",
+      "rarity": "common",
+      "base_stats": "速度 +5"
+    },
+    {
+      "equip_id": "E_W023",
+      "name": "疾風螳螂靴",
+      "wuxing": "木",
+      "slot": "shoes",
+      "rarity": "common",
+      "base_stats": "速度 +60, 暴擊 +10%"
+    },
+    {
+      "equip_id": "E_W017",
+      "name": "木靈王之劍",
+      "wuxing": "木",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +80, 吸血 10%"
+    },
+    {
+      "equip_id": "E_W081",
+      "name": "青竹短棍",
+      "wuxing": "木",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_W007",
+      "name": "古木長弓",
+      "wuxing": "木",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +30, 速度 +10"
+    },
+    {
+      "equip_id": "E_W002",
+      "name": "藤蔓弓",
+      "wuxing": "木",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +8, 速度 +5"
+    },
+    {
+      "equip_id": "E_W008",
+      "name": "毒牙匕首",
+      "wuxing": "木",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +25, 暴擊 +5%"
+    },
+    {
+      "equip_id": "E_W001",
+      "name": "木劍",
+      "wuxing": "木",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +10"
+    },
+    {
+      "equip_id": "E_W019",
+      "name": "世界樹法杖",
+      "wuxing": "木",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "魔法攻擊 +90"
+    },
+    {
+      "equip_id": "E_W018",
+      "name": "翡翠龍弓",
+      "wuxing": "木",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +75, 速度 +30"
+    },
+    {
+      "equip_id": "E_Wt001",
+      "name": "寒冰符文",
+      "wuxing": "水",
+      "slot": "accessory",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_W071",
+      "name": "冰霜龍鱗甲",
+      "wuxing": "水",
+      "slot": "armor",
+      "rarity": "common",
+      "base_stats": "防禦 +70, 魔法防禦 +80"
+    },
+    {
+      "equip_id": "E_Wt002",
+      "name": "滄海龍魂鎧",
+      "wuxing": "水",
+      "slot": "armor",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_Wt003",
+      "name": "玄武戰靴",
+      "wuxing": "水",
+      "slot": "shoes",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_W051",
+      "name": "冰晶法杖",
+      "wuxing": "水",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "魔法攻擊 +15"
+    },
+    {
+      "equip_id": "E_W052",
+      "name": "珊瑚短劍",
+      "wuxing": "水",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +12, 魔法攻擊 +8"
+    },
+    {
+      "equip_id": "E_W067",
+      "name": "海神三叉戟",
+      "wuxing": "水",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +60, 魔法攻擊 +90"
+    },
+    {
+      "equip_id": "E_Wt004",
+      "name": "冰魄龍吟",
+      "wuxing": "水",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_F033",
+      "name": "焰心指環",
+      "wuxing": "火",
+      "slot": "accessory",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_F022",
+      "name": "熔岩龍鱗甲",
+      "wuxing": "火",
+      "slot": "armor",
+      "rarity": "common",
+      "base_stats": "防禦 +90, 火抗 +50%"
+    },
+    {
+      "equip_id": "E_F032",
+      "name": "焚天戰靴",
+      "wuxing": "火",
+      "slot": "shoes",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_F001",
+      "name": "餘燼法杖",
+      "wuxing": "火",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "魔法攻擊 +12"
+    },
+    {
+      "equip_id": "E_F034",
+      "name": "赤霄烈刃",
+      "wuxing": "火",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_F002",
+      "name": "溫熱石錘",
+      "wuxing": "火",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +15, 速度 -5"
+    },
+    {
+      "equip_id": "E_F031",
+      "name": "赤炎護腕",
+      "wuxing": "火",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_F007",
+      "name": "烈焰劍",
+      "wuxing": "火",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +35"
+    },
+    {
+      "equip_id": "E_F017",
+      "name": "太陽神劍",
+      "wuxing": "火",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +95, 暴擊 +15%"
+    },
+    {
+      "equip_id": "E_M031",
+      "name": "淬毒金針",
+      "wuxing": "金",
+      "slot": "accessory",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_M021",
+      "name": "巨神兵裝甲",
+      "wuxing": "金",
+      "slot": "armor",
+      "rarity": "common",
+      "base_stats": "防禦 +95, 免疫異常"
+    },
+    {
+      "equip_id": "E_M033",
+      "name": "金烏羽冠",
+      "wuxing": "金",
+      "slot": "helmet",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_M001",
+      "name": "鐵劍",
+      "wuxing": "金",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +15"
+    },
+    {
+      "equip_id": "E_M034",
+      "name": "白虎利爪",
+      "wuxing": "金",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_M032",
+      "name": "玄鐵重劍",
+      "wuxing": "金",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": ""
+    },
+    {
+      "equip_id": "E_M017",
+      "name": "天命龍槍",
+      "wuxing": "金",
+      "slot": "weapon",
+      "rarity": "common",
+      "base_stats": "攻擊 +100, 暴擊 +15%"
+    }
+  ],
+  "messages": [],
+  "stdout": "equip_id\tname\twuxing\tslot\trarity\tbase_stats\nE_E031\t厚土腰帶\t土\taccessory\tcommon\t\nE_E034\t后土聖盾\t土\toffhand\tcommon\t\nE_E032\t磐石巨盾\t土\toffhand\tcommon\t\nE_E001\t岩石盾\t土\toffhand\tcommon\t防禦 +12\nE_E017\t泰坦巨斧\t土\tweapon\tcommon\t攻擊 +110, 速度 -20\nE_E002\t堅硬石錘\t土\tweapon\tcommon\t攻擊 +18, 速度 -10\nE_E021\t大地之母鎧\t土\tweapon\tcommon\t防禦 +100, HP +800\nE_E033\t山嶽巨錘\t土\tweapon\tcommon\t\nE_W006\t綠葉護符\t木\taccessory\tcommon\tHP +50\nE_W012\t孢子戒指\t木\taccessory\tcommon\t魔法攻擊 +15\nE_W004\t粗布衣\t木\tarmor\tcommon\t防禦 +8\nE_W010\t森猿皮甲\t木\tarmor\tcommon\t防禦 +25, HP +100\nE_W021\t萬古神木甲\t木\tarmor\tcommon\t防禦 +80, HP +500\nE_W009\t荊棘頭冠\t木\thelmet\tcommon\t防禦 +15, 反傷 5%\nE_W003\t樹皮帽\t木\thelmet\tcommon\t防禦 +5, HP +20\nE_W011\t疾風靴\t木\tshoes\tcommon\t速度 +25, 閃避 +5%\nE_W005\t草鞋\t木\tshoes\tcommon\t速度 +5\nE_W023\t疾風螳螂靴\t木\tshoes\tcommon\t速度 +60, 暴擊 +10%\nE_W017\t木靈王之劍\t木\tweapon\tcommon\t攻擊 +80, 吸血 10%\nE_W081\t青竹短棍\t木\tweapon\tcommon\t\nE_W007\t古木長弓\t木\tweapon\tcommon\t攻擊 +30, 速度 +10\nE_W002\t藤蔓弓\t木\tweapon\tcommon\t攻擊 +8, 速度 +5\nE_W008\t毒牙匕首\t木\tweapon\tcommon\t攻擊 +25, 暴擊 +5%\nE_W001\t木劍\t木\tweapon\tcommon\t攻擊 +10\nE_W019\t世界樹法杖\t木\tweapon\tcommon\t魔法攻擊 +90\nE_W018\t翡翠龍弓\t木\tweapon\tcommon\t攻擊 +75, 速度 +30\nE_Wt001\t寒冰符文\t水\taccessory\tcommon\t\nE_W071\t冰霜龍鱗甲\t水\tarmor\tcommon\t防禦 +70, 魔法防禦 +80\nE_Wt002\t滄海龍魂鎧\t水\tarmor\tcommon\t\nE_Wt003\t玄武戰靴\t水\tshoes\tcommon\t\nE_W051\t冰晶法杖\t水\tweapon\tcommon\t魔法攻擊 +15\nE_W052\t珊瑚短劍\t水\tweapon\tcommon\t攻擊 +12, 魔法攻擊 +8\nE_W067\t海神三叉戟\t水\tweapon\tcommon\t攻擊 +60, 魔法攻擊 +90\nE_Wt004\t冰魄龍吟\t水\tweapon\tcommon\t\nE_F033\t焰心指環\t火\taccessory\tcommon\t\nE_F022\t熔岩龍鱗甲\t火\tarmor\tcommon\t防禦 +90, 火抗 +50%\nE_F032\t焚天戰靴\t火\tshoes\tcommon\t\nE_F001\t餘燼法杖\t火\tweapon\tcommon\t魔法攻擊 +12\nE_F034\t赤霄烈刃\t火\tweapon\tcommon\t\nE_F002\t溫熱石錘\t火\tweapon\tcommon\t攻擊 +15, 速度 -5\nE_F031\t赤炎護腕\t火\tweapon\tcommon\t\nE_F007\t烈焰劍\t火\tweapon\tcommon\t攻擊 +35\nE_F017\t太陽神劍\t火\tweapon\tcommon\t攻擊 +95, 暴擊 +15%\nE_M031\t淬毒金針\t金\taccessory\tcommon\t\nE_M021\t巨神兵裝甲\t金\tarmor\tcommon\t防禦 +95, 免疫異常\nE_M033\t金烏羽冠\t金\thelmet\tcommon\t\nE_M001\t鐵劍\t金\tweapon\tcommon\t攻擊 +15\nE_M034\t白虎利爪\t金\tweapon\tcommon\t\nE_M032\t玄鐵重劍\t金\tweapon\tcommon\t\nE_M017\t天命龍槍\t金\tweapon\tcommon\t攻擊 +100, 暴擊 +15%\n",
+  "stderr": "",
+  "execution_time_ms": 1516
+}

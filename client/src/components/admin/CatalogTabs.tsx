@@ -1047,8 +1047,9 @@ export function ItemCatalogV2Tab() {
 // ════════════════════════════════════════════════════════════════
 const SLOT_OPTS = [
   { value: "weapon", label: "武器" }, { value: "helmet", label: "頭盔" },
-  { value: "armor", label: "護甲" }, { value: "shoes", label: "鞋子" },
-  { value: "accessory", label: "飾品" }, { value: "offhand", label: "副手" },
+  { value: "armor", label: "護甲" }, { value: "gloves", label: "手套" },
+  { value: "shoes", label: "鞋子" }, { value: "accessory", label: "飾品" },
+  { value: "offhand", label: "副手" },
 ];
 const SLOT_FILTER = [{ value: "", label: "全部部位" }, ...SLOT_OPTS];
 const QUALITY_OPTS = [

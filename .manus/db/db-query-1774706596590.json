@@ -1,0 +1,9 @@
+{
+  "query": "SELECT config_key, config_value FROM game_config WHERE config_key = 'engine_config' OR config_key LIKE 'engine%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT config_key, config_value FROM game_config WHERE config_key = 'engine_config' OR config_key LIKE 'engine%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1498
+}

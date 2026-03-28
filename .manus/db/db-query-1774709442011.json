@@ -1,0 +1,306 @@
+{
+  "query": "DESCRIBE game_equipment_catalog",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DESCRIBE game_equipment_catalog",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "equip_id",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "slot",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "weapon",
+      "Extra": ""
+    },
+    {
+      "Field": "tier",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "初階",
+      "Extra": ""
+    },
+    {
+      "Field": "level_required",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "base_stats",
+      "Type": "varchar(300)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "",
+      "Extra": ""
+    },
+    {
+      "Field": "special_effect",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "craft_materials",
+      "Type": "varchar(300)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "",
+      "Extra": ""
+    },
+    {
+      "Field": "rarity",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "common",
+      "Extra": ""
+    },
+    {
+      "Field": "shop_price",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "in_normal_shop",
+      "Type": "tinyint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "in_spirit_shop",
+      "Type": "tinyint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "in_secret_shop",
+      "Type": "tinyint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "image_url",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "quality",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "white",
+      "Extra": ""
+    },
+    {
+      "Field": "hp_bonus",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "attack_bonus",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "defense_bonus",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "speed_bonus",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "resist_bonus",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "affix_1",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "affix_2",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "affix_3",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "affix_4",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "affix_5",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "craft_materials_list",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "set_id",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "value_score",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "quality_grade",
+      "Type": "varchar(5)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "C",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_level_min",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_level_max",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "15",
+      "Extra": ""
+    },
+    {
+      "Field": "tradeable",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "in_auction_house",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nequip_id\tvarchar(20)\tNO\tUNI\tNULL\t\nname\tvarchar(100)\tNO\t\tNULL\t\nwuxing\tvarchar(10)\tNO\t\tNULL\t\nslot\tvarchar(20)\tNO\t\tweapon\t\ntier\tvarchar(20)\tNO\t\t初階\t\nlevel_required\tint\tNO\t\t1\t\nbase_stats\tvarchar(300)\tYES\t\t\t\nspecial_effect\ttext\tYES\t\tNULL\t\ncraft_materials\tvarchar(300)\tYES\t\t\t\nrarity\tvarchar(20)\tNO\t\tcommon\t\nshop_price\tint\tNO\t\t0\t\nin_normal_shop\ttinyint\tYES\t\t0\t\nin_spirit_shop\ttinyint\tYES\t\t0\t\nin_secret_shop\ttinyint\tYES\t\t0\t\nimage_url\ttext\tYES\t\tNULL\t\nis_active\ttinyint\tYES\t\t1\t\ncreated_at\tbigint\tNO\t\t0\t\nquality\tvarchar(20)\tNO\t\twhite\t\nhp_bonus\tint\tNO\t\t0\t\nattack_bonus\tint\tNO\t\t0\t\ndefense_bonus\tint\tNO\t\t0\t\nspeed_bonus\tint\tNO\t\t0\t\nresist_bonus\tjson\tYES\t\tNULL\t\naffix_1\tjson\tYES\t\tNULL\t\naffix_2\tjson\tYES\t\tNULL\t\naffix_3\tjson\tYES\t\tNULL\t\naffix_4\tjson\tYES\t\tNULL\t\naffix_5\tjson\tYES\t\tNULL\t\ncraft_materials_list\tjson\tYES\t\tNULL\t\nset_id\tvarchar(20)\tYES\t\tNULL\t\nvalue_score\tint\tNO\t\t0\t\nquality_grade\tvarchar(5)\tNO\t\tC\t\ndrop_level_min\tint\tNO\t\t1\t\ndrop_level_max\tint\tNO\t\t15\t\ntradeable\ttinyint\tNO\t\t1\t\nin_auction_house\ttinyint\tNO\t\t1\t\n",
+  "stderr": "",
+  "execution_time_ms": 1563
+}
