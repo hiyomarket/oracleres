@@ -167,6 +167,20 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          // Separate large vendor libraries into their own chunks
+          if (id.includes('node_modules/cytoscape')) return 'vendor-cytoscape';
+          if (id.includes('node_modules/mermaid') || id.includes('node_modules/@mermaid')) return 'vendor-mermaid';
+          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) return 'vendor-charts';
+          if (id.includes('node_modules/@codemirror') || id.includes('node_modules/@lezer')) return 'vendor-codemirror';
+          if (id.includes('node_modules/react-dom')) return 'vendor-react-dom';
+          if (id.includes('node_modules/@radix-ui')) return 'vendor-radix';
+          if (id.includes('node_modules/leaflet')) return 'vendor-leaflet';
+        },
+      },
+    },
   },
   server: {
     host: true,

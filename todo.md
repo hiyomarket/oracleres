@@ -5150,3 +5150,9 @@
 - [x] 加入 GameErrorBoundary 組件（遊戲頁面渲染錯誤時顯示友善提示）
 - [x] 修復 VirtualWorldPage.tsx 的 TS 錯誤（agent TDZ、party 屬性、players 屬性）
 - [x] 徹底修復 /game 頁面 TDZ 根本問題（移動 agentData 宣告順序 + 修復所有 TS 錯誤）
+
+## 優化任務（2026-03-28 第六批）
+
+- [x] 拆分 VirtualWorldPage.tsx（4038→2333 行）為獨立組件（CharacterPanel、NamingDialog、TeleportModal、NodeInfoPanel、StatBars、constants）
+- [x] 加入 Vite manualChunks 配置（分離 react-dom、charts、cytoscape、mermaid、leaflet）
+- [x] gameBattle vitest 測試已存在且全部通過（涵蓋 sortTurnOrder、executeCommand、simulateBattle、quickBattle、calcTotalPower 等）
