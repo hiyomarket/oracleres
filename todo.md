@@ -5315,3 +5315,10 @@
 - [x] 修復成就圖鑑創建失敗：achievementInput 的 conditionType 允許空字串（z.string().max(50).default("")）
 - [x] 修復成就圖鑑創建失敗：achievementInput 的 conditionValue 改為 nonnegative（允許 0）
 - [x] 修復裝備圖鑑創建失敗：equipCatalogInput 的 slot 加入 gloves 選項
+## 修正任務（2026-03-29 第十九批）── 圖鑑創建 id undefined + 商店管理編輯
+- [x] Bug1（圖1/3/5）：魔物/裝備/魔物技能創建時 id undefined（Invalid input: expected number, received undefined）
+- [x] Bug2（圖2）：道具圖鑑創建時 id undefined
+- [x] Bug3（圖4）：技能圖鑑創建時 name too_small + wuxing invalid（前端傳送空值）
+- [x] Bug4（圖5）：魔物技能創建時 id undefined + aiCondition expected object received string
+- [x] Bug5（圖6）：裝備圖鑑編輯表單缺少 stackable（可疊加）欄位
+- [x] Bug6（圖7）：商店管理（虛界/靈相）無法編輯商品（缺少編輯按鈕，無法修改價格/數量/maxPerOrder）

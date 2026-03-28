@@ -186,6 +186,7 @@ const equipCatalogInput = z.object({
   inNormalShop: z.number().int().min(0).max(1).default(0),
   inSpiritShop: z.number().int().min(0).max(1).default(0),
   inSecretShop: z.number().int().min(0).max(1).default(0),
+  stackable: z.number().int().min(0).max(1).default(0),
   imageUrl: z.string().nullish().default(""),
   isActive: z.number().int().min(0).max(1).default(1),
 });
@@ -238,8 +239,8 @@ const monsterSkillInput = z.object({
   mpCost: z.number().int().nonnegative().default(0),
   cooldown: z.number().int().nonnegative().default(0),
   accuracyMod: z.number().int().nonnegative().default(100),
-  additionalEffect: z.object({ type: z.string(), chance: z.number(), duration: z.number().optional(), value: z.number().optional() }).nullish().default(null),
-  aiCondition: z.object({ hpBelow: z.number().optional(), targetElement: z.string().optional(), priority: z.number().optional() }).nullish().default(null),
+  additionalEffect: z.any().nullish().optional(),
+  aiCondition: z.any().nullish().optional(),
   description: z.string().nullish(),
   isActive: z.number().int().min(0).max(1).default(1),
 });

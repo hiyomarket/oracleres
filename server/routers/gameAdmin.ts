@@ -600,6 +600,7 @@ export const gameAdminRouter = router({
       weight: z.number().int().optional(),
       rarity: z.enum(["common", "rare", "epic", "legendary"]).optional(),
       isActive: z.number().int().optional(),
+      maxPerOrder: z.number().int().optional(),
     }) }))
     .mutation(async ({ input }) => {
       const db = await getDb();

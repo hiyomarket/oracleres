@@ -687,8 +687,16 @@ function VirtualShopTab() {
   });
 
   const [open, setOpen] = useState(false);
-  const defaultForm = { itemKey: "", displayName: "", description: "", priceCoins: 100, quantity: 1, stock: -1, nodeId: "", sortOrder: 0, isOnSale: 1 as number };
+  const [editItem, setEditItem] = useState<any>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const defaultForm = { itemKey: "", displayName: "", description: "", priceCoins: 100, quantity: 1, stock: -1, nodeId: "", sortOrder: 0, isOnSale: 1 as number, maxPerOrder: 1 };
   const [form, setForm] = useState(defaultForm);
+  const [editForm, setEditForm] = useState<any>({});
+  const handleEdit = (item: any) => {
+    setEditItem(item);
+    setEditForm({ displayName: item.displayName, description: item.description ?? "", priceCoins: item.priceCoins, quantity: item.quantity, stock: item.stock, nodeId: item.nodeId ?? "", sortOrder: item.sortOrder ?? 0, maxPerOrder: item.maxPerOrder ?? 1 });
+    setEditOpen(true);
+  };
 
   return (
     <div>
@@ -737,6 +745,7 @@ function VirtualShopTab() {
                     </Button>
                   </td>
                   <td className="py-2 px-2 flex gap-1">
+                    <Button size="sm" variant="secondary" onClick={() => handleEdit(item)}>編輯</Button>
                     <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: item.id, data: { isOnSale: item.isOnSale ? 0 : 1 } })}>
                       {item.isOnSale ? "下架" : "上架"}
                     </Button>
@@ -749,6 +758,7 @@ function VirtualShopTab() {
         </div>
       )}
 
+      {/* 新增 Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>新增虛界商店商品</DialogTitle></DialogHeader>
@@ -763,14 +773,42 @@ function VirtualShopTab() {
               <Input type="number" placeholder="購買數量" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} />
               <Input type="number" placeholder="庫存（-1=無限）" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: +e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <Input placeholder="綁定節點 ID（留空=全圖）" value={form.nodeId} onChange={e => setForm(f => ({ ...f, nodeId: e.target.value }))} />
               <Input type="number" placeholder="排序順序" value={form.sortOrder} onChange={e => setForm(f => ({ ...f, sortOrder: +e.target.value }))} />
+              <Input type="number" placeholder="單次最多購買" value={form.maxPerOrder} onChange={e => setForm(f => ({ ...f, maxPerOrder: +e.target.value }))} />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>取消</Button>
             <Button onClick={() => createMutation.mutate(form)} disabled={createMutation.isPending}>儲存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* 編輯 Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>編輯商品：{editItem?.displayName}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className="text-xs text-muted-foreground">顯示名稱</label><Input value={editForm.displayName ?? ""} onChange={e => setEditForm((f: any) => ({ ...f, displayName: e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">道具 Key（唯讀）</label><Input value={editItem?.itemKey ?? ""} disabled className="opacity-50" /></div>
+            </div>
+            <div><label className="text-xs text-muted-foreground">商品描述</label><Textarea value={editForm.description ?? ""} onChange={e => setEditForm((f: any) => ({ ...f, description: e.target.value }))} rows={2} /></div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><label className="text-xs text-muted-foreground">遊戲幣價格</label><Input type="number" value={editForm.priceCoins ?? 0} onChange={e => setEditForm((f: any) => ({ ...f, priceCoins: +e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">購買數量</label><Input type="number" value={editForm.quantity ?? 1} onChange={e => setEditForm((f: any) => ({ ...f, quantity: +e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">庫存（-1=無限）</label><Input type="number" value={editForm.stock ?? -1} onChange={e => setEditForm((f: any) => ({ ...f, stock: +e.target.value }))} /></div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><label className="text-xs text-muted-foreground">綁定節點（留空=全圖）</label><Input value={editForm.nodeId ?? ""} onChange={e => setEditForm((f: any) => ({ ...f, nodeId: e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">排序順序</label><Input type="number" value={editForm.sortOrder ?? 0} onChange={e => setEditForm((f: any) => ({ ...f, sortOrder: +e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">單次最多購買</label><Input type="number" value={editForm.maxPerOrder ?? 1} onChange={e => setEditForm((f: any) => ({ ...f, maxPerOrder: +e.target.value }))} /></div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>取消</Button>
+            <Button onClick={() => updateMutation.mutate({ id: editItem.id, data: editForm }, { onSuccess: () => { setEditOpen(false); setEditItem(null); } })} disabled={updateMutation.isPending}>儲存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -800,10 +838,18 @@ function SpiritShopTab() {
   });
 
   const [open, setOpen] = useState(false);
-  const defaultForm = { itemKey: "", displayName: "", description: "", priceStones: 50, quantity: 1, rarity: "rare" as "common" | "rare" | "epic" | "legendary", sortOrder: 0, isOnSale: 1 as number };
+  const [editItem, setEditItem] = useState<any>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const defaultForm = { itemKey: "", displayName: "", description: "", priceStones: 50, quantity: 1, rarity: "rare" as "common" | "rare" | "epic" | "legendary", sortOrder: 0, isOnSale: 1 as number, maxPerOrder: 1 };
   const [form, setForm] = useState(defaultForm);
+  const [editForm, setEditForm] = useState<any>({});
   const RARITY_COLORS: Record<string, string> = { common: "#888", rare: "#3B82F6", epic: "#8B5CF6", legendary: "#F59E0B" };
   const RARITY_ZH: Record<string, string> = { common: "普通", rare: "稀有", epic: "史詩", legendary: "傳說" };
+  const handleEdit = (item: any) => {
+    setEditItem(item);
+    setEditForm({ displayName: item.displayName, description: item.description ?? "", priceStones: item.priceStones, quantity: item.quantity, rarity: item.rarity, sortOrder: item.sortOrder ?? 0, maxPerOrder: item.maxPerOrder ?? 1 });
+    setEditOpen(true);
+  };
 
   return (
     <div>
@@ -852,6 +898,7 @@ function SpiritShopTab() {
                     </Button>
                   </td>
                   <td className="py-2 px-2 flex gap-1">
+                    <Button size="sm" variant="secondary" onClick={() => handleEdit(item)}>編輯</Button>
                     <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: item.id, data: { isOnSale: item.isOnSale ? 0 : 1 } })}>
                       {item.isOnSale ? "下架" : "上架"}
                     </Button>
@@ -893,6 +940,42 @@ function SpiritShopTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* 編輯 Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>編輯靈相商品：{editItem?.displayName}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className="text-xs text-muted-foreground">顯示名稱</label><Input value={editForm.displayName ?? ""} onChange={e => setEditForm((f: any) => ({ ...f, displayName: e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">道具 Key（唯讀）</label><Input value={editItem?.itemKey ?? ""} disabled className="opacity-50" /></div>
+            </div>
+            <div><label className="text-xs text-muted-foreground">商品描述</label><Textarea value={editForm.description ?? ""} onChange={e => setEditForm((f: any) => ({ ...f, description: e.target.value }))} rows={2} /></div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><label className="text-xs text-muted-foreground">靈石價格</label><Input type="number" value={editForm.priceStones ?? 0} onChange={e => setEditForm((f: any) => ({ ...f, priceStones: +e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">購買數量</label><Input type="number" value={editForm.quantity ?? 1} onChange={e => setEditForm((f: any) => ({ ...f, quantity: +e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">單次最多購買</label><Input type="number" value={editForm.maxPerOrder ?? 1} onChange={e => setEditForm((f: any) => ({ ...f, maxPerOrder: +e.target.value }))} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className="text-xs text-muted-foreground">排序順序</label><Input type="number" value={editForm.sortOrder ?? 0} onChange={e => setEditForm((f: any) => ({ ...f, sortOrder: +e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">稀有度</label>
+                <Select value={editForm.rarity ?? "rare"} onValueChange={(v) => setEditForm((f: any) => ({ ...f, rarity: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="common">普通</SelectItem>
+                    <SelectItem value="rare">稀有</SelectItem>
+                    <SelectItem value="epic">史詩</SelectItem>
+                    <SelectItem value="legendary">傳說</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>取消</Button>
+            <Button onClick={() => updateMutation.mutate({ id: editItem.id, data: editForm }, { onSuccess: () => { setEditOpen(false); setEditItem(null); } })} disabled={updateMutation.isPending}>儲存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -909,14 +992,26 @@ function HiddenShopTab() {
     onSuccess: () => { utils.gameAdmin.getHiddenShopPool.invalidate(); toast.success("已刪除"); },
     onError: (e) => toast.error(e.message),
   });
+  const updateMutation = trpc.gameAdmin.updateHiddenShopItem.useMutation({
+    onSuccess: () => { utils.gameAdmin.getHiddenShopPool.invalidate(); toast.success("已更新"); },
+    onError: (e) => toast.error(e.message),
+  });
   const toggleLockMutation = trpc.gameAdmin.toggleHiddenShopLock.useMutation({
     onSuccess: () => { utils.gameAdmin.getHiddenShopPool.invalidate(); toast.success("鎖定狀態已更新"); },
     onError: (e) => toast.error(e.message),
   });
 
   const [open, setOpen] = useState(false);
-  const defaultForm = { itemKey: "", displayName: "", description: "", currencyType: "coins" as "coins" | "stones", price: 200, quantity: 1, weight: 10, rarity: "rare" as "common" | "rare" | "epic" | "legendary", isActive: 1 as number };
+  const [editItem, setEditItem] = useState<any>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const defaultForm = { itemKey: "", displayName: "", description: "", currencyType: "coins" as "coins" | "stones", price: 200, quantity: 1, weight: 10, rarity: "rare" as "common" | "rare" | "epic" | "legendary", isActive: 1 as number, maxPerOrder: 1 };
   const [form, setForm] = useState(defaultForm);
+  const [editForm, setEditForm] = useState<any>({});
+  const handleEdit = (item: any) => {
+    setEditItem(item);
+    setEditForm({ displayName: item.displayName, description: item.description ?? "", currencyType: item.currencyType, price: item.price, quantity: item.quantity, weight: item.weight, rarity: item.rarity, maxPerOrder: item.maxPerOrder ?? 1 });
+    setEditOpen(true);
+  };
   const RARITY_COLORS: Record<string, string> = { common: "#888", rare: "#3B82F6", epic: "#8B5CF6", legendary: "#F59E0B" };
   const RARITY_ZH: Record<string, string> = { common: "普通", rare: "稀有", epic: "史詩", legendary: "傳說" };
 
@@ -968,7 +1063,9 @@ function HiddenShopTab() {
                       {item.isLocked ? '🔒 已鎖' : '🔓 未鎖'}
                     </Button>
                   </td>
-                  <td className="py-2 px-2">
+                  <td className="py-2 px-2 flex gap-1">
+                    <Button size="sm" variant="secondary" onClick={() => handleEdit(item)}>編輯</Button>
+                    <Button size="sm" variant="outline" onClick={() => updateMutation.mutate({ id: item.id, data: { isActive: item.isActive ? 0 : 1 } })}>{item.isActive ? "停用" : "啟用"}</Button>
                     <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate({ id: item.id })}>刪除</Button>
                   </td>
                 </tr>
@@ -1014,6 +1111,51 @@ function HiddenShopTab() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>取消</Button>
             <Button onClick={() => createMutation.mutate(form)} disabled={createMutation.isPending}>儲存</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* 編輯 Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>編輯密店商品：{editItem?.displayName}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className="text-xs text-muted-foreground">顯示名稱</label><Input value={editForm.displayName ?? ""} onChange={e => setEditForm((f: any) => ({ ...f, displayName: e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">道具 Key（唯讀）</label><Input value={editItem?.itemKey ?? ""} disabled className="opacity-50" /></div>
+            </div>
+            <div><label className="text-xs text-muted-foreground">商品描述</label><Textarea value={editForm.description ?? ""} onChange={e => setEditForm((f: any) => ({ ...f, description: e.target.value }))} rows={2} /></div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><label className="text-xs text-muted-foreground">貨幣類型</label>
+                <Select value={editForm.currencyType ?? "coins"} onValueChange={(v) => setEditForm((f: any) => ({ ...f, currencyType: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="coins">🪙 遊戲幣</SelectItem>
+                    <SelectItem value="stones">💎 靈石</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><label className="text-xs text-muted-foreground">價格</label><Input type="number" value={editForm.price ?? 0} onChange={e => setEditForm((f: any) => ({ ...f, price: +e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">購買數量</label><Input type="number" value={editForm.quantity ?? 1} onChange={e => setEditForm((f: any) => ({ ...f, quantity: +e.target.value }))} /></div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><label className="text-xs text-muted-foreground">出現權重</label><Input type="number" value={editForm.weight ?? 10} onChange={e => setEditForm((f: any) => ({ ...f, weight: +e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">單次最多購買</label><Input type="number" value={editForm.maxPerOrder ?? 1} onChange={e => setEditForm((f: any) => ({ ...f, maxPerOrder: +e.target.value }))} /></div>
+              <div><label className="text-xs text-muted-foreground">稀有度</label>
+                <Select value={editForm.rarity ?? "rare"} onValueChange={(v) => setEditForm((f: any) => ({ ...f, rarity: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="common">普通</SelectItem>
+                    <SelectItem value="rare">稀有</SelectItem>
+                    <SelectItem value="epic">史詩</SelectItem>
+                    <SelectItem value="legendary">傳說</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>取消</Button>
+            <Button onClick={() => updateMutation.mutate({ id: editItem.id, data: editForm }, { onSuccess: () => { setEditOpen(false); setEditItem(null); } })} disabled={updateMutation.isPending}>儲存</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

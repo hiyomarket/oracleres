@@ -669,7 +669,7 @@ export function MonsterCatalogV2Tab() {
 
   const fields: FieldDef[] = [
     { key: "name", label: "名稱", type: "text", required: true, placeholder: "輸入怪物名稱" },
-    { key: "wuxing", label: "五行", type: "select", required: true, options: WUXING_OPTS },
+    { key: "wuxing", label: "五行", type: "select", required: true, options: WUXING_OPTS, defaultValue: "木" },
     { key: "levelRange", label: "等級範圍", type: "text", defaultValue: "1-5", placeholder: "如 1-5" },
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS, defaultValue: "common" },
     { key: "baseHp", label: "HP", type: "number", defaultValue: 100, group: "基礎屬性" },
@@ -739,7 +739,7 @@ export function MonsterCatalogV2Tab() {
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
     if (data.isActive !== undefined) data.isActive = Number(data.isActive);
-    if (editItem) updateMut.mutate({ id: editItem.id, data });
+    if (editItem && editItem.id != null) updateMut.mutate({ id: editItem.id, data });
     else createMut.mutate(data);
   };
 
@@ -1021,7 +1021,7 @@ export function ItemCatalogV2Tab() {
 
   const fields: FieldDef[] = [
     { key: "name", label: "名稱", type: "text", required: true },
-    { key: "wuxing", label: "五行", type: "select", required: true, options: WUXING_OPTS },
+    { key: "wuxing", label: "五行", type: "select", required: true, options: WUXING_OPTS, defaultValue: "木" },
     { key: "category", label: "分類", type: "select", options: ITEM_CAT_OPTS, defaultValue: "material_basic" },
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS, defaultValue: "common" },
     { key: "stackLimit", label: "疊加上限", type: "number", defaultValue: 99 },
@@ -1059,8 +1059,8 @@ export function ItemCatalogV2Tab() {
 
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
-    ["inNormalShop", "inSpiritShop", "inSecretShop", "isMonsterDrop", "isActive", "usableInBattle"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
-    if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
+    ["inNormalShop", "inSpiritShop", "inSecretShop", "isMonsterDrop", "isActive", "usableInBattle", "stackable"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
+    if (editItem && editItem.id != null) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
   const handleExport = useCallback(async (format: "csv" | "json") => {
@@ -1195,7 +1195,7 @@ export function EquipCatalogV2Tab() {
 
   const fields: FieldDef[] = [
     { key: "name", label: "名稱", type: "text", required: true },
-    { key: "wuxing", label: "五行", type: "select", required: true, options: WUXING_OPTS },
+    { key: "wuxing", label: "五行", type: "select", required: true, options: WUXING_OPTS, defaultValue: "木" },
     { key: "slot", label: "部位", type: "select", options: SLOT_OPTS, defaultValue: "weapon" },
     { key: "quality", label: "品質", type: "select", options: QUALITY_OPTS, defaultValue: "white" },
     { key: "tier", label: "階級", type: "text", defaultValue: "初階" },
@@ -1255,8 +1255,8 @@ export function EquipCatalogV2Tab() {
 
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
-    ["inNormalShop", "inSpiritShop", "inSecretShop", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
-    if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
+    ["inNormalShop", "inSpiritShop", "inSecretShop", "isActive", "stackable"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
+    if (editItem && editItem.id != null) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
   const handleExport = useCallback(async (format: "csv" | "json") => {
@@ -1397,7 +1397,7 @@ export function SkillCatalogV2Tab() {
 
   const fields: FieldDef[] = [
     { key: "name", label: "名稱", type: "text", required: true },
-    { key: "wuxing", label: "五行", type: "select", required: true, options: WUXING_OPTS },
+    { key: "wuxing", label: "五行", type: "select", required: true, options: WUXING_OPTS, defaultValue: "木" },
     { key: "category", label: "分類", type: "select", options: SKILL_CAT_OPTS, defaultValue: "active_combat" },
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS, defaultValue: "common" },
     { key: "tier", label: "階級", type: "text", defaultValue: "初階" },
@@ -1434,7 +1434,7 @@ export function SkillCatalogV2Tab() {
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
     ["inNormalShop", "inSpiritShop", "inSecretShop", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
-    if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
+    if (editItem && editItem.id != null) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
   const handleExport = useCallback(async (format: "csv" | "json") => {
@@ -1607,7 +1607,7 @@ export function AchievementCatalogTab() {
 
   const handleSubmit = (data: any) => {
     if (data.isActive !== undefined) data.isActive = Number(data.isActive);
-    if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
+    if (editItem && editItem.id != null) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
   const handleExport = useCallback(async (format: "csv" | "json") => {
@@ -1750,7 +1750,7 @@ export function MonsterSkillCatalogTab() {
 
   const handleSubmit = (data: any) => {
     if (data.isActive !== undefined) data.isActive = Number(data.isActive);
-    if (editItem) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
+    if (editItem && editItem.id != null) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
   const handleExport = useCallback(async (format: "csv" | "json") => {
