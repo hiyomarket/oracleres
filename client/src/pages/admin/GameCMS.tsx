@@ -2028,11 +2028,16 @@ function PetCatalogTab() {
     growthType: "balanced" as const, baseBpConstitution: 20, baseBpStrength: 20, baseBpDefense: 20,
     baseBpAgility: 20, baseBpMagic: 20, minLevel: 1, maxLevel: 50, baseCaptureRate: 30,
     imageUrl: "", isActive: 1, sortOrder: 0,
+    // GD-028 新增
+    species: "beast", realm: "初界", realmMultiplier: 1.0,
+    wuxingWood: 20, wuxingFire: 20, wuxingEarth: 20, wuxingMetal: 20, wuxingWater: 20,
+    baseMp: 20, baseMagicDefense: 5, baseHealPower: 0, baseCritRate: 5, baseCritDamage: 150,
+    linkedMonsterId: "",
   });
   const [filter, setFilter] = useState<{ wuxing?: string; rarity?: string }>({});
 
-  const openCreate = () => { setEditing(null); setForm({ name: "", description: "", race: "normal" as const, wuxing: "wood" as const, rarity: "common" as const, growthType: "balanced" as const, baseBpConstitution: 20, baseBpStrength: 20, baseBpDefense: 20, baseBpAgility: 20, baseBpMagic: 20, minLevel: 1, maxLevel: 50, baseCaptureRate: 30, imageUrl: "", isActive: 1, sortOrder: 0 }); setOpen(true); };
-  const openEdit = (p: any) => { setEditing(p); setForm({ name: p.name, description: p.description ?? "", race: p.race as any, wuxing: p.wuxing as any, rarity: p.rarity as any, growthType: p.growthType as any, baseBpConstitution: p.baseBpConstitution, baseBpStrength: p.baseBpStrength, baseBpDefense: p.baseBpDefense, baseBpAgility: p.baseBpAgility, baseBpMagic: p.baseBpMagic, minLevel: p.minLevel, maxLevel: p.maxLevel, baseCaptureRate: p.baseCaptureRate, imageUrl: p.imageUrl ?? "", isActive: p.isActive, sortOrder: p.sortOrder ?? 0 }); setOpen(true); };
+  const openCreate = () => { setEditing(null); setForm({ name: "", description: "", race: "normal" as const, wuxing: "wood" as const, rarity: "common" as const, growthType: "balanced" as const, baseBpConstitution: 20, baseBpStrength: 20, baseBpDefense: 20, baseBpAgility: 20, baseBpMagic: 20, minLevel: 1, maxLevel: 50, baseCaptureRate: 30, imageUrl: "", isActive: 1, sortOrder: 0, species: "beast", realm: "初界", realmMultiplier: 1.0, wuxingWood: 20, wuxingFire: 20, wuxingEarth: 20, wuxingMetal: 20, wuxingWater: 20, baseMp: 20, baseMagicDefense: 5, baseHealPower: 0, baseCritRate: 5, baseCritDamage: 150, linkedMonsterId: "" }); setOpen(true); };
+  const openEdit = (p: any) => { setEditing(p); setForm({ name: p.name, description: p.description ?? "", race: p.race as any, wuxing: p.wuxing as any, rarity: p.rarity as any, growthType: p.growthType as any, baseBpConstitution: p.baseBpConstitution, baseBpStrength: p.baseBpStrength, baseBpDefense: p.baseBpDefense, baseBpAgility: p.baseBpAgility, baseBpMagic: p.baseBpMagic, minLevel: p.minLevel, maxLevel: p.maxLevel, baseCaptureRate: p.baseCaptureRate, imageUrl: p.imageUrl ?? "", isActive: p.isActive, sortOrder: p.sortOrder ?? 0, species: p.species ?? "beast", realm: p.realm ?? "初界", realmMultiplier: p.realmMultiplier ?? 1.0, wuxingWood: p.wuxingWood ?? 20, wuxingFire: p.wuxingFire ?? 20, wuxingEarth: p.wuxingEarth ?? 20, wuxingMetal: p.wuxingMetal ?? 20, wuxingWater: p.wuxingWater ?? 20, baseMp: p.baseMp ?? 20, baseMagicDefense: p.baseMagicDefense ?? 5, baseHealPower: p.baseHealPower ?? 0, baseCritRate: p.baseCritRate ?? 5, baseCritDamage: p.baseCritDamage ?? 150, linkedMonsterId: p.linkedMonsterId ?? "" }); setOpen(true); };
 
   const filteredCatalog = catalog.filter((p: any) => {
     if (filter.wuxing && p.wuxing !== filter.wuxing) return false;
@@ -2155,6 +2160,59 @@ function PetCatalogTab() {
               <div><label className="text-xs text-muted-foreground">最低等級</label><Input type="number" value={form.minLevel} onChange={e => setForm(f => ({ ...f, minLevel: Number(e.target.value) }))} /></div>
               <div><label className="text-xs text-muted-foreground">最高等級</label><Input type="number" value={form.maxLevel} onChange={e => setForm(f => ({ ...f, maxLevel: Number(e.target.value) }))} /></div>
               <div><label className="text-xs text-muted-foreground">捕捉率(%)</label><Input type="number" value={form.baseCaptureRate} onChange={e => setForm(f => ({ ...f, baseCaptureRate: Number(e.target.value) }))} /></div>
+            </div>
+            {/* GD-028 新增欄位 */}
+            <div className="border-t pt-3 mt-2">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">種族 / 境界</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div><label className="text-xs text-muted-foreground">種族</label>
+                  <Select value={form.species} onValueChange={v => setForm(f => ({ ...f, species: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="humanoid">人形</SelectItem>
+                      <SelectItem value="beast">獸類</SelectItem>
+                      <SelectItem value="plant">植物</SelectItem>
+                      <SelectItem value="undead">不死</SelectItem>
+                      <SelectItem value="dragon">龍族</SelectItem>
+                      <SelectItem value="flying">飛行</SelectItem>
+                      <SelectItem value="insect">蟲類</SelectItem>
+                      <SelectItem value="special">特殊</SelectItem>
+                      <SelectItem value="metal">金屬</SelectItem>
+                      <SelectItem value="demon">邪魔</SelectItem>
+                    </SelectContent>
+                  </Select></div>
+                <div><label className="text-xs text-muted-foreground">境界</label>
+                  <Select value={form.realm} onValueChange={v => setForm(f => ({ ...f, realm: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="初界">初界</SelectItem>
+                      <SelectItem value="中界">中界</SelectItem>
+                      <SelectItem value="高界">高界</SelectItem>
+                    </SelectContent>
+                  </Select></div>
+                <div><label className="text-xs text-muted-foreground">境界倍率</label><Input type="number" step={0.1} min={0.5} max={5} value={form.realmMultiplier} onChange={e => setForm(f => ({ ...f, realmMultiplier: Number(e.target.value) }))} /></div>
+              </div>
+            </div>
+            <div className="border-t pt-3 mt-2">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">五行分配（合計應為100%）</p>
+              <div className="grid grid-cols-5 gap-2">
+                {(["wuxingWood","wuxingFire","wuxingEarth","wuxingMetal","wuxingWater"] as const).map(k => {
+                  const label = { wuxingWood: "🌿木", wuxingFire: "🔥火", wuxingEarth: "🪨土", wuxingMetal: "⚔️金", wuxingWater: "💧水" }[k];
+                  return <div key={k}><label className="text-xs text-muted-foreground">{label}%</label><Input type="number" min={0} max={100} value={form[k]} onChange={e => setForm(f => ({ ...f, [k]: Number(e.target.value) }))} /></div>;
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">合計: {form.wuxingWood + form.wuxingFire + form.wuxingEarth + form.wuxingMetal + form.wuxingWater}%</p>
+            </div>
+            <div className="border-t pt-3 mt-2">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">進階屬性</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div><label className="text-xs text-muted-foreground">MP</label><Input type="number" value={form.baseMp} onChange={e => setForm(f => ({ ...f, baseMp: Number(e.target.value) }))} /></div>
+                <div><label className="text-xs text-muted-foreground">魔防</label><Input type="number" value={form.baseMagicDefense} onChange={e => setForm(f => ({ ...f, baseMagicDefense: Number(e.target.value) }))} /></div>
+                <div><label className="text-xs text-muted-foreground">回復力</label><Input type="number" value={form.baseHealPower} onChange={e => setForm(f => ({ ...f, baseHealPower: Number(e.target.value) }))} /></div>
+                <div><label className="text-xs text-muted-foreground">暴擊率%</label><Input type="number" step={0.1} value={form.baseCritRate} onChange={e => setForm(f => ({ ...f, baseCritRate: Number(e.target.value) }))} /></div>
+                <div><label className="text-xs text-muted-foreground">暴擊傷害%</label><Input type="number" value={form.baseCritDamage} onChange={e => setForm(f => ({ ...f, baseCritDamage: Number(e.target.value) }))} /></div>
+                <div><label className="text-xs text-muted-foreground">關聯魔物ID</label><Input value={form.linkedMonsterId} onChange={e => setForm(f => ({ ...f, linkedMonsterId: e.target.value }))} placeholder="如 M_W001" /></div>
+              </div>
             </div>
             <div><label className="text-xs text-muted-foreground">圖片 URL</label><Input value={form.imageUrl} onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))} /></div>
           </div>

@@ -5302,13 +5302,13 @@
 
 ## 修正任務（2026-03-29 第十七批）── 怪物/技能/Boss/HP 修正
 
-- [ ] Bug1：修復創建怪物時 id undefined 錯誤（圖1）
-- [ ] Bug2：Boss 掉落物改為下拉選單（和一般怪物介面相同，圖2 vs 圖3）
-- [ ] 新功能：技能圖鑑新增「傷害方式」欄位（單體/全體）
-- [ ] 新功能：戰鬥系統（單人/組隊/回合制）套用技能傷害方式（全體技能攻擊所有敵人）
-- [ ] 新功能：Boss 新增「每回合動作次數」欄位（schema + CMS + 戰鬥引擎）
-- [ ] 新功能：Boss 每回合多次動作連動到所有戰鬥系統
-- [ ] Bug3：角色面板 HP 加成和上限未正確顯示（裝備 hpBonus 和 maxHp cap 未套用）
+- [x] Bug1：修復創建怪物時 id undefined 錯誤（圖1）
+- [x] Bug2：Boss 掉落物改為下拉選單（和一般怪物介面相同，圖2 vs 圖3）
+- [x] 新功能：技能圖鑑新增「傷害方式」欄位（單體/全體）
+- [x] 新功能：戰鬥系統（單人/組隊/回合制）套用技能傷害方式（全體技能攻擊所有敵人）
+- [x] 新功能：Boss 新增「每回合動作次數」欄位（schema + CMS + 戰鬥引擎）
+- [x] 新功能：Boss 每回合多次動作連動到所有戰鬥系統
+- [x] Bug3：角色面板 HP 加成和上限未正確顯示（裝備 hpBonus 和 maxHp cap 未套用）
 ## 修正任務（2026-03-29 第十八批）── 圖鑑創建問題全面修復
 - [x] 修復技能圖鑑創建失敗：skillCatalogInput 的 hiddenTrigger 改為接受陣列或字串（z.union）
 - [x] 修復技能圖鑑創建失敗：createSkillCatalog insert 時將陣列轉為 JSON 字串
@@ -5324,11 +5324,11 @@
 - [x] Bug6（圖7）：商店管理（虛界/靈相）無法編輯商品（缺少編輯按鈕，無法修改價格/數量/maxPerOrder）
 
 ## 修正任務（2026-03-29 第二十批）── HP 加成 + Boss 多次動作 + 技能傷害方式
-- [ ] Bug1：角色面板 HP 加成未顯示 + HP 上限未套用裝備加成
-- [ ] 新功能：Boss 每回合多次動作（schema actionsPerRound + CMS 欄位 + 所有戰鬥引擎套用）
-- [ ] 新功能：技能圖鑑新增「傷害方式」欄位（單體/全體），連動單人/組隊/回合制戰鬥
-- [ ] 修復：技能圖鑑 hiddenTrigger 編輯時自動 JSON.parse 預填陣列
-- [ ] 優化：成就圖鑑 ConditionEditor 加入「請選擇條件類型」必填提示
+- [x] Bug1：角色面板 HP 加成未顯示 + HP 上限未套用裝備加成
+- [x] 新功能：Boss 每回合多次動作（schema actionsPerRound + CMS 欄位 + 所有戰鬥引擎套用）
+- [x] 新功能：技能圖鑑新增「傷害方式」欄位（單體/全體），連動單人/組隊/回合制戰鬥
+- [x] 修復：技能圖鑑 hiddenTrigger 編輯時自動 JSON.parse 預填陣列
+- [x] 優化：成就圖鑑 ConditionEditor 加入「請選擇條件類型」必填提示
 
 ## 功能修復 v5.X - 戰鬥系統五項修復
 
@@ -5337,3 +5337,22 @@
 - [x] 新增技能傷害方式：gameSkillCatalog 新增 damageType（single/aoe），技能圖鑑表單新增「傷害方式」欄位，戰鬥引擎 executeSkill 支援全體 AOE 傷害邏輯
 - [x] 修復技能 hiddenTrigger 編輯預填：CatalogTabs.tsx 的 render 函數自動 JSON.parse，updateSkillCatalog 確保 Array 存為 JSON 字串
 - [x] 成就條件類型必填提示：ConditionEditor 加入紅色邊框警告 + 必填文字提示，Select 加入「請選擇條件類型」預設選項
+
+## GD-027/028 基礎改動 ── 步驟 1：全圖鑑欄位統一補齊
+
+- [x] 建立 MIGRATION-PRINCIPLES.md 最高原則文件
+- [x] gameMonsterCatalog 新增欄位（baseMp/baseMagicDefense/baseHealPower/baseCritRate/baseCritDamage/wuxing五行×5/realm/realmMultiplier/species統一）
+- [x] gamePetCatalog 新增欄位（wuxing五行×5/baseMagicDefense/baseHealPower/baseMp/baseCritRate/baseCritDamage/realm/realmMultiplier/linkedMonsterId/species）
+- [x] gamePlayerPets 新增欄位（magicDefense/healPower/wuxing五行×5/mp/maxMp/magicAttack/critRate/critDamage/spr/realm）
+- [x] gameAgents 新增欄位（mdef/spr/critRate/critDamage/realm/profession/professionTier/fateElement）
+- [x] gameEquipmentCatalog 新增欄位（bonusMp/bonusMagicDefense/bonusHealPower/bonusCritRate/bonusCritDamage/bonusSpr/requiredProfession/requiredRealm）
+- [x] gameSkillCatalog 新增欄位（wuxingThreshold/statusEffect/statusChance/statusDuration/healPercent/professionRequired/damageType）
+- [x] 更新 gameCatalogAdmin.ts Zod schema（monsterCatalogInput 新增所有欄位）
+- [x] 更新 gameCatalogAdmin.ts Zod schema（skillCatalogInput 新增所有欄位）
+- [x] 更新 gamePet.ts Zod schema（petCatalogInput 新增所有欄位）
+- [x] 更新後台魔物圖鑑表單（CatalogTabs.tsx）
+- [x] 更新後台技能圖鑑表單（CatalogTabs.tsx）
+- [x] 更新後台裝備圖鑑表單（CatalogTabs.tsx）
+- [x] 更新後台寵物圖鑑表單（GameCMS.tsx PetCatalogTab）
+- [x] DB migration 推送成功（6 張表共 66 個新欄位全部驗證到位）
+- [x] 所有後台表單可正常新增/編輯新欄位

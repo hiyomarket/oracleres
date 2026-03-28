@@ -43,8 +43,13 @@ function calcStatsFromNatal(natalStats: {
     refinePower: Math.min(100, Math.max(10, Math.round(10 + natalStats.metal * 1.5))),
     treasureHunting: Math.min(100, Math.max(10, Math.round(10 + natalStats.water * 1.5))),
     // V2: 戰鬥系額外屬性改由 calcCharacterStatsV2 計算
-    healPower: base.hp > 0 ? Math.min(200, Math.floor(natalStats.wood * 1.5 + level * 0.5)) : 10,
+        healPower: base.hp > 0 ? Math.min(200, Math.floor(natalStats.wood * 1.5 + level * 0.5)) : 10,
     hitRate: Math.min(200, Math.floor(natalStats.metal * 1.2 + level * 0.3)),
+    // GD-028 新增屬性
+    mdef: base.mdef,
+    spr: Math.min(200, Math.floor(natalStats.water * 1.2 + level * 0.5)),
+    critRate: Math.min(100, Math.max(1, Math.floor(natalStats.metal * 0.3 + 5))),
+    critDamage: 150,
   };
 }
 // ─── 根據主屬性取得初始技能（使用技能目錄 ID） ───
@@ -115,6 +120,10 @@ export const gameWorldRouter = router({
             healPower: lifeStats.healPower,
             magicAttack: lifeStats.magicAttack,
             hitRate: lifeStats.hitRate,
+            mdef: lifeStats.mdef,
+            spr: lifeStats.spr,
+            critRate: lifeStats.critRate,
+            critDamage: lifeStats.critDamage,
             skillSlot1: migratedSlot1 ?? initSkills.slot1,
             skillSlot2: migratedSlot2 ?? initSkills.slot2,
             passiveSlot1: migratedPassive1 ?? initSkills.passive1,
@@ -196,6 +205,15 @@ export const gameWorldRouter = router({
         healPower: stats.healPower,
         magicAttack: stats.magicAttack,
         hitRate: stats.hitRate,
+        // GD-028 新增屬性
+        mdef: stats.mdef,
+        spr: stats.spr,
+        critRate: stats.critRate,
+        critDamage: stats.critDamage,
+        realm: "初界",
+        profession: "none",
+        professionTier: 0,
+        fateElement: dominant,
         // 初始技能
         skillSlot1: getInitialSkills(dominant).slot1,
         skillSlot2: getInitialSkills(dominant).slot2,
@@ -2946,6 +2964,10 @@ export const gameWorldRouter = router({
         defense: newStats.defense,
         speed: newStats.speed,
         magicAttack: newStats.magicAttack,
+        mdef: newStats.mdef,
+        spr: newStats.spr,
+        critRate: newStats.critRate,
+        critDamage: newStats.critDamage,
         ...newResists,
         updatedAt: Date.now(),
       }).where(eq(gameAgents.id, agent.id));

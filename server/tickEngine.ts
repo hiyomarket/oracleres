@@ -1706,6 +1706,10 @@ async function processCombatEvent(
     defense: newStats.def,
     speed: newStats.spd,
     magicAttack: newStats.matk,
+    mdef: newStats.mdef,
+    spr: Math.min(200, Math.floor(accWuxingWater * 1.2 + newLevel * 0.5)),
+    critRate: Math.min(100, Math.max(1, Math.floor(accWuxingMetal * 0.3 + 5))),
+    critDamage: 150,
     // V2: 升級後更新五行屬性
     wuxingWood: accWuxingWood,
     wuxingFire: accWuxingFire,

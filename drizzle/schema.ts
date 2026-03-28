@@ -1763,6 +1763,23 @@ export const gameAgents = mysqlTable("game_agents", {
   resistWater: int("resist_water").notNull().default(0),
   /** 升級自由點數（每級 +5 點） */
   freeStatPoints: int("free_stat_points").notNull().default(0),
+  // ===== GD-028 新增欄位 =====
+  /** 魔法防禦 */
+  mdef: int("mdef").notNull().default(10),
+  /** 精神值 */
+  spr: int("spr").notNull().default(10),
+  /** 暴擊率（%） */
+  critRate: float("crit_rate").notNull().default(5),
+  /** 暴擊傷害（%） */
+  critDamage: float("crit_damage").notNull().default(150),
+  /** 境界（初界/中界/高界） */
+  realm: varchar("realm", { length: 10 }).notNull().default("初界"),
+  /** 職業（none/hunter/mage/tank/thief/wizard） */
+  profession: varchar("profession", { length: 20 }).notNull().default("none"),
+  /** 職業階級（0=無業, 1=初階, 2=二次進階） */
+  professionTier: int("profession_tier").notNull().default(0),
+  /** 命格主屬性（從用戶八字自動帶入：wood/fire/earth/metal/water） */
+  fateElement: varchar("fate_element", { length: 10 }).notNull().default("wood"),
   /** 玩家自訂頭像（S3 URL） */
   avatarUrl: varchar("avatar_url", { length: 500 }),
   widgetLayout: json("widget_layout").$type<Record<string, { x: number; y: number }>>(),
@@ -2108,6 +2125,34 @@ export const gameMonsterCatalog = mysqlTable("game_monster_catalog", {
   baseBp: int("base_bp").notNull().default(50),
   /** 每回合動作次數（Boss 可設為 2~3，普通怪物為 1） */
   actionsPerTurn: int("actions_per_turn").notNull().default(1),
+  // ===== GD-028 新增欄位 =====
+  /** 基礎 MP */
+  baseMp: int("base_mp").notNull().default(30),
+  /** 基礎魔法防禦 */
+  baseMagicDefense: int("base_magic_defense").notNull().default(5),
+  /** 基礎回復力 */
+  baseHealPower: int("base_heal_power").notNull().default(0),
+  /** 基礎暴擊率（%） */
+  baseCritRate: float("base_crit_rate").notNull().default(5),
+  /** 基礎暴擊傷害（%） */
+  baseCritDamage: float("base_crit_damage").notNull().default(150),
+  // ===== 五行分配百分比（合計 100） =====
+  /** 木屬性百分比 */
+  wuxingWood: int("wuxing_wood").notNull().default(20),
+  /** 火屬性百分比 */
+  wuxingFire: int("wuxing_fire").notNull().default(20),
+  /** 土屬性百分比 */
+  wuxingEarth: int("wuxing_earth").notNull().default(20),
+  /** 金屬性百分比 */
+  wuxingMetal: int("wuxing_metal").notNull().default(20),
+  /** 水屬性百分比 */
+  wuxingWater: int("wuxing_water").notNull().default(20),
+  /** 境界（初界/中界/高界） */
+  realm: varchar("realm", { length: 10 }).notNull().default("初界"),
+  /** 境界倍率（初界1.0/中界1.5/高界2.0） */
+  realmMultiplier: float("realm_multiplier").notNull().default(1.0),
+  /** 種族（統一10種：humanoid/beast/plant/undead/dragon/flying/insect/special/metal/demon） */
+  species: varchar("species", { length: 20 }).notNull().default("beast"),
   isActive: tinyint("is_active").default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
@@ -2204,6 +2249,19 @@ export const gameEquipmentCatalog = mysqlTable("game_equipment_catalog", {
   attackBonus: int("attack_bonus").notNull().default(0),
   defenseBonus: int("defense_bonus").notNull().default(0),
   speedBonus: int("speed_bonus").notNull().default(0),
+  // ===== GD-028 新增加成欄位 =====
+  /** MP 加成 */
+  mpBonus: int("mp_bonus").notNull().default(0),
+  /** 魔法攻擊加成 */
+  magicAttackBonus: int("magic_attack_bonus").notNull().default(0),
+  /** 魔法防禦加成 */
+  magicDefenseBonus: int("magic_defense_bonus").notNull().default(0),
+  /** 回復力加成 */
+  healPowerBonus: int("heal_power_bonus").notNull().default(0),
+  /** 暴擊率加成（%） */
+  critRateBonus: float("crit_rate_bonus").notNull().default(0),
+  /** 暴擊傷害加成（%） */
+  critDamageBonus: float("crit_damage_bonus").notNull().default(0),
   /** 五行抗性加成（JSON：{wood, fire, earth, metal, water}） */
   resistBonus: json("resist_bonus").$type<{wood: number; fire: number; earth: number; metal: number; water: number}>().default({wood:0, fire:0, earth:0, metal:0, water:0}),
   // ===== 詞條系統（最多 5 個詞條） =====
@@ -2317,6 +2375,23 @@ export const gameSkillCatalog = mysqlTable("game_skill_catalog", {
   imageUrl: text("image_url").default(""),
   /** 傷害方式： single 單體攻擊 / aoe 全體攻擊 */
   damageType: mysqlEnum("damage_type", ["single", "aoe"]).notNull().default("single"),
+  // ===== GD-028 新增欄位 =====
+  /** 五行門檻（學習該技能所需的主屬性最低值，0=無門檻） */
+  wuxingThreshold: int("wuxing_threshold").notNull().default(0),
+  /** 狀態異常效果（poison/petrify/sleep/confuse/forget/drunk/stun/none） */
+  statusEffect: varchar("status_effect", { length: 20 }).notNull().default("none"),
+  /** 狀態異常觸發機率（%） */
+  statusChance: int("status_chance").notNull().default(0),
+  /** 狀態異常持續回合數 */
+  statusDuration: int("status_duration").notNull().default(0),
+  /** 治療百分比（治療技能用，0=非治療） */
+  healPercent: int("heal_percent").notNull().default(0),
+  /** 職業需求（none=無限制） */
+  professionRequired: varchar("profession_required", { length: 20 }).notNull().default("none"),
+  /** 技能階級（basic/intermediate/advanced/destiny/legendary） */
+  skillTier: varchar("skill_tier", { length: 20 }).notNull().default("basic"),
+  /** 取得方式（levelup/profession/skillbook/destiny） */
+  acquireMethod: varchar("acquire_method", { length: 20 }).notNull().default("levelup"),
   isActive: tinyint("is_active").default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
@@ -3191,6 +3266,23 @@ export const gamePetCatalog = mysqlTable("game_pet_catalog", {
   baseBpMagic: int("base_bp_magic").notNull().default(20),
   /** 來源魔物圖鑑 monsterId（如 M_W001，用於捕捉時對應） */
   sourceMonsterKey: varchar("source_monster_key", { length: 30 }).default(""),
+  // ===== GD-028 新增欄位 =====
+  /** 木屬性百分比（繼承自魔物，固定） */
+  wuxingWood: int("wuxing_wood").notNull().default(20),
+  /** 火屬性百分比 */
+  wuxingFire: int("wuxing_fire").notNull().default(20),
+  /** 土屬性百分比 */
+  wuxingEarth: int("wuxing_earth").notNull().default(20),
+  /** 金屬性百分比 */
+  wuxingMetal: int("wuxing_metal").notNull().default(20),
+  /** 水屬性百分比 */
+  wuxingWater: int("wuxing_water").notNull().default(20),
+  /** 基礎魔法防禦 */
+  baseMagicDefense: int("base_magic_defense").notNull().default(5),
+  /** 基礎回復力 */
+  baseHealPower: int("base_heal_power").notNull().default(0),
+  /** 種族（統一10種：humanoid/beast/plant/undead/dragon/flying/insect/special/metal/demon） */
+  species: varchar("species", { length: 20 }).notNull().default("beast"),
   /** 種族 HP 倍率（龍×1.3, 不死×1.2, 一般×1.0, 昆蟲×0.9, 植物×0.8, 飛行×1.0） */
   raceHpMultiplier: float("race_hp_multiplier").notNull().default(1.0),
   /** 可出現的最低等級 */
@@ -3281,6 +3373,25 @@ export const gamePlayerPets = mysqlTable("game_player_pets", {
   magicAttack: int("magic_attack").notNull().default(10),
   /** 成長型態（繼承自圖鑑，但可能因特殊道具改變） */
   growthType: varchar("growth_type", { length: 20 }).notNull().default("balanced"),
+  // ===== GD-028 新增欄位 =====
+  /** 魔法防禦 */
+  magicDefense: int("magic_defense").notNull().default(5),
+  /** 回復力 */
+  healPower: int("heal_power").notNull().default(0),
+  /** 木屬性百分比（繼承自圖鑑，不可改） */
+  wuxingWood: int("wuxing_wood").notNull().default(20),
+  /** 火屬性百分比 */
+  wuxingFire: int("wuxing_fire").notNull().default(20),
+  /** 土屬性百分比 */
+  wuxingEarth: int("wuxing_earth").notNull().default(20),
+  /** 金屬性百分比 */
+  wuxingMetal: int("wuxing_metal").notNull().default(20),
+  /** 水屬性百分比 */
+  wuxingWater: int("wuxing_water").notNull().default(20),
+  /** 種族（繼承自圖鑑） */
+  species: varchar("species", { length: 20 }).notNull().default("beast"),
+  /** 寵物境界（初界/中界/高界） */
+  realm: varchar("realm", { length: 10 }).notNull().default("初界"),
   /** 是否為出戰寵物 */
   isActive: tinyint("is_active").notNull().default(0),
   /** 好感度（0-100） */

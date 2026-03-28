@@ -756,6 +756,24 @@ export const gameAdminRouter = router({
       wuxingMetal: z.number().int().min(0).max(255).optional(),
       wuxingWater: z.number().int().min(0).max(255).optional(),
       currentNodeId: z.string().optional(),
+      // GD-028 新增欄位
+      attack: z.number().int().min(0).optional(),
+      defense: z.number().int().min(0).optional(),
+      speed: z.number().int().min(0).optional(),
+      magicAttack: z.number().int().min(0).optional(),
+      mdef: z.number().int().min(0).optional(),
+      spr: z.number().int().min(0).optional(),
+      critRate: z.number().min(0).max(100).optional(),
+      critDamage: z.number().min(0).max(500).optional(),
+      maxHp: z.number().int().min(1).optional(),
+      maxMp: z.number().int().min(0).optional(),
+      healPower: z.number().int().min(0).optional(),
+      hitRate: z.number().int().min(0).optional(),
+      realm: z.string().optional(),
+      profession: z.string().optional(),
+      professionTier: z.number().int().min(0).max(2).optional(),
+      fateElement: z.string().optional(),
+      freeStatPoints: z.number().int().min(0).optional(),
       // users 表的點數
       pointsBalance: z.number().int().optional(),
       gameCoins: z.number().int().optional(),
@@ -779,6 +797,24 @@ export const gameAdminRouter = router({
       if (input.wuxingMetal !== undefined) agentUpdate.wuxingMetal = input.wuxingMetal;
       if (input.wuxingWater !== undefined) agentUpdate.wuxingWater = input.wuxingWater;
       if (input.currentNodeId !== undefined) agentUpdate.currentNodeId = input.currentNodeId;
+      // GD-028 新增欄位
+      if (input.attack !== undefined) agentUpdate.attack = input.attack;
+      if (input.defense !== undefined) agentUpdate.defense = input.defense;
+      if (input.speed !== undefined) agentUpdate.speed = input.speed;
+      if (input.magicAttack !== undefined) agentUpdate.magicAttack = input.magicAttack;
+      if (input.mdef !== undefined) agentUpdate.mdef = input.mdef;
+      if (input.spr !== undefined) agentUpdate.spr = input.spr;
+      if (input.critRate !== undefined) agentUpdate.critRate = input.critRate;
+      if (input.critDamage !== undefined) agentUpdate.critDamage = input.critDamage;
+      if (input.maxHp !== undefined) agentUpdate.maxHp = input.maxHp;
+      if (input.maxMp !== undefined) agentUpdate.maxMp = input.maxMp;
+      if (input.healPower !== undefined) agentUpdate.healPower = input.healPower;
+      if (input.hitRate !== undefined) agentUpdate.hitRate = input.hitRate;
+      if (input.realm !== undefined) agentUpdate.realm = input.realm;
+      if (input.profession !== undefined) agentUpdate.profession = input.profession;
+      if (input.professionTier !== undefined) agentUpdate.professionTier = input.professionTier;
+      if (input.fateElement !== undefined) agentUpdate.fateElement = input.fateElement;
+      if (input.freeStatPoints !== undefined) agentUpdate.freeStatPoints = input.freeStatPoints;
 
       if (Object.keys(agentUpdate).length > 0) {
         await db.update(gameAgents).set({ ...agentUpdate, updatedAt: Date.now() }).where(eq(gameAgents.id, input.agentId));

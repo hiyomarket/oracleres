@@ -289,6 +289,24 @@ function AgentManagementTab() {
       pointsBalance: String(agent.pointsBalance ?? 0),
       gameCoins: String(agent.gameCoins ?? 0),
       gameStones: String(agent.gameStones ?? 0),
+      // GD-028 新增
+      attack: String((agent as any).attack ?? 0),
+      defense: String((agent as any).defense ?? 0),
+      speed: String((agent as any).speed ?? 0),
+      magicAttack: String((agent as any).magicAttack ?? 0),
+      mdef: String((agent as any).mdef ?? 0),
+      spr: String((agent as any).spr ?? 0),
+      critRate: String((agent as any).critRate ?? 5),
+      critDamage: String((agent as any).critDamage ?? 150),
+      maxHp: String((agent as any).maxHp ?? 100),
+      maxMp: String((agent as any).maxMp ?? 50),
+      healPower: String((agent as any).healPower ?? 0),
+      hitRate: String((agent as any).hitRate ?? 0),
+      realm: String((agent as any).realm ?? "初界"),
+      profession: String((agent as any).profession ?? "none"),
+      professionTier: String((agent as any).professionTier ?? 0),
+      fateElement: String((agent as any).fateElement ?? ""),
+      freeStatPoints: String((agent as any).freeStatPoints ?? 0),
     });
     setShowEditPanel(true);
   };
@@ -314,6 +332,24 @@ function AgentManagementTab() {
       pointsBalance: toInt("pointsBalance"),
       gameCoins: toInt("gameCoins"),
       gameStones: toInt("gameStones"),
+      // GD-028 新增
+      attack: toInt("attack"),
+      defense: toInt("defense"),
+      speed: toInt("speed"),
+      magicAttack: toInt("magicAttack"),
+      mdef: toInt("mdef"),
+      spr: toInt("spr"),
+      critRate: parseFloat(editValues.critRate ?? "5") || 5,
+      critDamage: parseFloat(editValues.critDamage ?? "150") || 150,
+      maxHp: toInt("maxHp"),
+      maxMp: toInt("maxMp"),
+      healPower: toInt("healPower"),
+      hitRate: toInt("hitRate"),
+      realm: editValues.realm || "初界",
+      profession: editValues.profession || "none",
+      professionTier: toInt("professionTier"),
+      fateElement: editValues.fateElement || undefined,
+      freeStatPoints: toInt("freeStatPoints"),
     });
   };
 
@@ -496,6 +532,85 @@ function AgentManagementTab() {
                   />
                 </div>
               ))}
+            </div>
+
+            {/* GD-028 新增戰鬥屬性 */}
+            <div className="border-t pt-3 mt-3">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">戰鬥屬性</p>
+              <div className="grid grid-cols-2 gap-3">
+              {[
+                { key: "maxHp", label: "HP上限", min: 1, max: 99999 },
+                { key: "maxMp", label: "MP上限", min: 0, max: 99999 },
+                { key: "attack", label: "攻擊力", min: 0, max: 9999 },
+                { key: "defense", label: "物理防禦", min: 0, max: 9999 },
+                { key: "magicAttack", label: "魔法攻擊", min: 0, max: 9999 },
+                { key: "mdef", label: "魔法防禦", min: 0, max: 9999 },
+                { key: "speed", label: "速度", min: 0, max: 9999 },
+                { key: "spr", label: "精神值", min: 0, max: 9999 },
+                { key: "healPower", label: "回復力", min: 0, max: 9999 },
+                { key: "hitRate", label: "命中率", min: 0, max: 9999 },
+                { key: "critRate", label: "暴擊率%", min: 0, max: 100 },
+                { key: "critDamage", label: "暴擊傷害%", min: 0, max: 500 },
+                { key: "freeStatPoints", label: "自由點數", min: 0, max: 9999 },
+              ].map(({ key, label }) => (
+                <div key={key}>
+                  <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
+                  <Input
+                    type="number"
+                    value={editValues[key] ?? ""}
+                    onChange={e => setEditValues(prev => ({ ...prev, [key]: e.target.value }))}
+                    className="h-8 text-sm"
+                  />
+                </div>
+              ))}
+            </div>
+            </div>
+
+            {/* 境界 / 職業 / 命格 */}
+            <div className="border-t pt-3 mt-3">
+              <p className="text-xs font-semibold text-muted-foreground mb-2">境界 / 職業 / 命格</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">境界</label>
+                  <select className="w-full h-8 text-sm rounded border border-border bg-background px-2" value={editValues.realm ?? "初界"} onChange={e => setEditValues(prev => ({ ...prev, realm: e.target.value }))}>
+                    <option value="初界">初界</option>
+                    <option value="中界">中界</option>
+                    <option value="高界">高界</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">職業</label>
+                  <select className="w-full h-8 text-sm rounded border border-border bg-background px-2" value={editValues.profession ?? "none"} onChange={e => setEditValues(prev => ({ ...prev, profession: e.target.value }))}>
+                    <option value="none">無</option>
+                    <option value="hunter">獵人</option>
+                    <option value="mage">法師</option>
+                    <option value="tank">護衛</option>
+                    <option value="thief">盜賊</option>
+                    <option value="wizard">巫師</option>
+                    <option value="priest">神官</option>
+                    <option value="warrior">戰士</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">職業階級</label>
+                  <select className="w-full h-8 text-sm rounded border border-border bg-background px-2" value={editValues.professionTier ?? "0"} onChange={e => setEditValues(prev => ({ ...prev, professionTier: e.target.value }))}>
+                    <option value="0">0 (未轉職)</option>
+                    <option value="1">1 (一轉)</option>
+                    <option value="2">2 (二轉)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">命格五行</label>
+                  <select className="w-full h-8 text-sm rounded border border-border bg-background px-2" value={editValues.fateElement ?? ""} onChange={e => setEditValues(prev => ({ ...prev, fateElement: e.target.value }))}>
+                    <option value="">未設定</option>
+                    <option value="wood">木</option>
+                    <option value="fire">火</option>
+                    <option value="earth">土</option>
+                    <option value="metal">金</option>
+                    <option value="water">水</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-2 mt-4">
