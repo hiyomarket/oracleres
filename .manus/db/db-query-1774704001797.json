@@ -1,0 +1,50 @@
+{
+  "query": "SELECT COLUMN_NAME, COLUMN_TYPE, COLUMN_DEFAULT \nFROM INFORMATION_SCHEMA.COLUMNS \nWHERE TABLE_NAME = 'game_monster_catalog' \nORDER BY ORDINAL_POSITION\nLIMIT 20 OFFSET 40;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COLUMN_NAME, COLUMN_TYPE, COLUMN_DEFAULT \nFROM INFORMATION_SCHEMA.COLUMNS \nWHERE TABLE_NAME = 'game_monster_catalog' \nORDER BY ORDINAL_POSITION\nLIMIT 20 OFFSET 40;",
+  "rows": [
+    {
+      "COLUMN_NAME": "drop_gold",
+      "COLUMN_TYPE": "json",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "legendary_drop",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "legendary_drop_rate",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "destiny_clue",
+      "COLUMN_TYPE": "text",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "spawn_nodes",
+      "COLUMN_TYPE": "json",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "base_capture_rate",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "25"
+    },
+    {
+      "COLUMN_NAME": "base_bp",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "50"
+    },
+    {
+      "COLUMN_NAME": "is_capturable",
+      "COLUMN_TYPE": "tinyint",
+      "COLUMN_DEFAULT": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tCOLUMN_TYPE\tCOLUMN_DEFAULT\ndrop_gold\tjson\tNULL\nlegendary_drop\tvarchar(20)\tNULL\nlegendary_drop_rate\tfloat\t0\ndestiny_clue\ttext\tNULL\nspawn_nodes\tjson\tNULL\nbase_capture_rate\tint\t25\nbase_bp\tint\t50\nis_capturable\ttinyint\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1532
+}

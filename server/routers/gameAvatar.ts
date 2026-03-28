@@ -16,7 +16,7 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { users, gameWardrobe, gameDailyAura, gameItems, gameAgents } from "../../drizzle/schema";
+import { users, gameWardrobe, gameDailyAura, gameItems, gameAgents, gameEquipmentCatalog } from "../../drizzle/schema";
 import { calcCharacterStats } from "../tickEngine";
 import { generateDailyQuest, checkQuestCompletion, QUEST_REWARD } from "../utils/questEngine";
 import {
@@ -360,14 +360,50 @@ export const gameAvatarRouter = router({
     let revisitGameWuxing = { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 };
     let revisitGameLevel = 1;
     let revisitDominantElement = "wood";
+    let revisitAgent: typeof gameAgents.$inferSelect | null = null;
+    let revisitEquippedMap: Record<string, { name: string; quality: string; equipId: string; slot: string; hpBonus: number; attackBonus: number; defenseBonus: number; speedBonus: number; baseStats: string } | null> = {};
     try {
       const [agent] = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
       if (agent) {
+        revisitAgent = agent;
         revisitGameWuxing = { wood: agent.wuxingWood, fire: agent.wuxingFire, earth: agent.wuxingEarth, metal: agent.wuxingMetal, water: agent.wuxingWater };
         revisitGameLevel = agent.level;
         revisitDominantElement = agent.dominantElement;
         const stats = calcCharacterStats(revisitGameWuxing, revisitGameLevel);
         revisitStats = { hp: stats.hp, atk: stats.atk, def: stats.def, spd: stats.spd, mp: stats.mp, matk: stats.matk };
+        // 建立裝備槽位對照表（key 與前端 EQUIP_SLOTS 的 slot 一致）
+        const SLOT_MAP: Record<string, string> = {
+          equippedWeapon: "weapon", equippedOffhand: "offhand",
+          equippedHead: "head", equippedBody: "body",
+          equippedHands: "hands", equippedFeet: "feet",
+          equippedRingA: "ringA", equippedRingB: "ringB",
+          equippedNecklace: "necklace", equippedAmulet: "amulet",
+        };
+        const equippedIds = [
+          agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
+          agent.equippedBody, agent.equippedHands, agent.equippedFeet,
+          agent.equippedRingA, agent.equippedRingB, agent.equippedNecklace, agent.equippedAmulet,
+        ].filter(Boolean) as string[];
+        if (equippedIds.length > 0) {
+          const { inArray } = await import("drizzle-orm");
+          const equipRows = await db.select().from(gameEquipmentCatalog).where(inArray(gameEquipmentCatalog.equipId, equippedIds));
+          const equipById: Record<string, typeof equipRows[0]> = {};
+          for (const e of equipRows) equipById[e.equipId] = e;
+          for (const [agentField, slotName] of Object.entries(SLOT_MAP)) {
+            const equipId = (agent as any)[agentField] as string | null;
+            if (equipId && equipById[equipId]) {
+              const e = equipById[equipId];
+              revisitEquippedMap[slotName] = {
+                name: e.name, quality: e.quality, equipId: e.equipId, slot: e.slot,
+                hpBonus: e.hpBonus ?? 0, attackBonus: e.attackBonus ?? 0,
+                defenseBonus: e.defenseBonus ?? 0, speedBonus: e.speedBonus ?? 0,
+                baseStats: e.baseStats ?? "",
+              };
+            } else {
+              revisitEquippedMap[slotName] = null;
+            }
+          }
+        }
       }
     } catch { /* fallback */ }
     return {
@@ -380,6 +416,7 @@ export const gameAvatarRouter = router({
       gameWuxing: revisitGameWuxing,
       gameLevel: revisitGameLevel,
       gameDominantElement: revisitDominantElement,
+      equipped: revisitEquippedMap,
     };
   }),
 

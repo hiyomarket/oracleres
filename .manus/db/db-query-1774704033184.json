@@ -1,0 +1,40 @@
+{
+  "query": "-- 修正 epic 捕捉率（25% → 10%）\nUPDATE game_monster_catalog SET base_capture_rate = 10 WHERE rarity = 'epic';\n\n-- legendary 魔物設為不可捕捉（傳說級不應被捕捉）\nUPDATE game_monster_catalog SET is_capturable = 0, base_capture_rate = 0 WHERE rarity = 'legendary';\n\n-- 確認修正結果\nSELECT rarity, COUNT(*) as cnt, AVG(base_capture_rate) as avg_rate, SUM(CASE WHEN is_capturable = 1 THEN 1 ELSE 0 END) as capturable_cnt\nFROM game_monster_catalog\nGROUP BY rarity\nORDER BY cnt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute -- 修正 epic 捕捉率（25% → 10%）\nUPDATE game_monster_catalog SET base_capture_rate = 10 WHERE rarity = 'epic';\n\n-- legendary 魔物設為不可捕捉（傳說級不應被捕捉）\nUPDATE game_monster_catalog SET is_capturable = 0, base_capture_rate = 0 WHERE rarity = 'legendary';\n\n-- 確認修正結果\nSELECT rarity, COUNT(*) as cnt, AVG(base_capture_rate) as avg_rate, SUM(CASE WHEN is_capturable = 1 THEN 1 ELSE 0 END) as capturable_cnt\nFROM game_monster_catalog\nGROUP BY rarity\nORDER BY cnt DESC;",
+  "rows": [
+    {
+      "rarity": "rare",
+      "cnt": "58",
+      "avg_rate": "20.0000",
+      "capturable_cnt": "58"
+    },
+    {
+      "rarity": "common",
+      "cnt": "58",
+      "avg_rate": "35.0000",
+      "capturable_cnt": "58"
+    },
+    {
+      "rarity": "epic",
+      "cnt": "15",
+      "avg_rate": "10.0000",
+      "capturable_cnt": "15"
+    },
+    {
+      "rarity": "legendary",
+      "cnt": "10",
+      "avg_rate": "0.0000",
+      "capturable_cnt": "0"
+    },
+    {
+      "rarity": "elite",
+      "cnt": "3",
+      "avg_rate": "10.0000",
+      "capturable_cnt": "3"
+    }
+  ],
+  "messages": [],
+  "stdout": "rarity\tcnt\tavg_rate\tcapturable_cnt\nrare\t58\t20.0000\t58\ncommon\t58\t35.0000\t58\nepic\t15\t10.0000\t15\nlegendary\t10\t0.0000\t0\nelite\t3\t10.0000\t3\n",
+  "stderr": "",
+  "execution_time_ms": 1947
+}

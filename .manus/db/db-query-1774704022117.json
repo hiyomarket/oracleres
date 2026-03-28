@@ -1,0 +1,45 @@
+{
+  "query": "SELECT rarity, COUNT(*) as cnt, AVG(base_capture_rate) as avg_rate, MIN(base_capture_rate) as min_rate, MAX(base_capture_rate) as max_rate\nFROM game_monster_catalog\nGROUP BY rarity\nORDER BY cnt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT rarity, COUNT(*) as cnt, AVG(base_capture_rate) as avg_rate, MIN(base_capture_rate) as min_rate, MAX(base_capture_rate) as max_rate\nFROM game_monster_catalog\nGROUP BY rarity\nORDER BY cnt DESC;",
+  "rows": [
+    {
+      "rarity": "rare",
+      "cnt": "58",
+      "avg_rate": "20.0000",
+      "min_rate": "20",
+      "max_rate": "20"
+    },
+    {
+      "rarity": "common",
+      "cnt": "58",
+      "avg_rate": "35.0000",
+      "min_rate": "35",
+      "max_rate": "35"
+    },
+    {
+      "rarity": "epic",
+      "cnt": "15",
+      "avg_rate": "25.0000",
+      "min_rate": "25",
+      "max_rate": "25"
+    },
+    {
+      "rarity": "legendary",
+      "cnt": "10",
+      "avg_rate": "5.0000",
+      "min_rate": "5",
+      "max_rate": "5"
+    },
+    {
+      "rarity": "elite",
+      "cnt": "3",
+      "avg_rate": "10.0000",
+      "min_rate": "10",
+      "max_rate": "10"
+    }
+  ],
+  "messages": [],
+  "stdout": "rarity\tcnt\tavg_rate\tmin_rate\tmax_rate\nrare\t58\t20.0000\t20\t20\ncommon\t58\t35.0000\t35\t35\nepic\t15\t25.0000\t25\t25\nlegendary\t10\t5.0000\t5\t5\nelite\t3\t10.0000\t10\t10\n",
+  "stderr": "",
+  "execution_time_ms": 1596
+}

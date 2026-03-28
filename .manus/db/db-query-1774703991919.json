@@ -1,0 +1,250 @@
+{
+  "query": "SELECT COLUMN_NAME, COLUMN_TYPE, COLUMN_DEFAULT \nFROM INFORMATION_SCHEMA.COLUMNS \nWHERE TABLE_NAME = 'game_monster_catalog' \nORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COLUMN_NAME, COLUMN_TYPE, COLUMN_DEFAULT \nFROM INFORMATION_SCHEMA.COLUMNS \nWHERE TABLE_NAME = 'game_monster_catalog' \nORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "monster_id",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "name",
+      "COLUMN_TYPE": "varchar(100)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "wuxing",
+      "COLUMN_TYPE": "varchar(10)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "level_range",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "1-5"
+    },
+    {
+      "COLUMN_NAME": "base_hp",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "50"
+    },
+    {
+      "COLUMN_NAME": "base_attack",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "10"
+    },
+    {
+      "COLUMN_NAME": "base_defense",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "5"
+    },
+    {
+      "COLUMN_NAME": "base_speed",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "10"
+    },
+    {
+      "COLUMN_NAME": "description",
+      "COLUMN_TYPE": "text",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "drop_items",
+      "COLUMN_TYPE": "json",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "rarity",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "common"
+    },
+    {
+      "COLUMN_NAME": "image_url",
+      "COLUMN_TYPE": "text",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "catch_rate",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0.1"
+    },
+    {
+      "COLUMN_NAME": "is_active",
+      "COLUMN_TYPE": "tinyint",
+      "COLUMN_DEFAULT": "1"
+    },
+    {
+      "COLUMN_NAME": "created_at",
+      "COLUMN_TYPE": "bigint",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "base_accuracy",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "80"
+    },
+    {
+      "COLUMN_NAME": "base_magic_attack",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "8"
+    },
+    {
+      "COLUMN_NAME": "resist_wood",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "resist_fire",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "resist_earth",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "resist_metal",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "resist_water",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "counter_bonus",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "50"
+    },
+    {
+      "COLUMN_NAME": "skill_id_1",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "skill_id_2",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "skill_id_3",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "race",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": ""
+    },
+    {
+      "COLUMN_NAME": "ai_level",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "1"
+    },
+    {
+      "COLUMN_NAME": "growth_rate",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "1"
+    },
+    {
+      "COLUMN_NAME": "drop_item_1",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "drop_rate_1",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "drop_item_2",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "drop_rate_2",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "drop_item_3",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "drop_rate_3",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "drop_item_4",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "drop_rate_4",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "drop_item_5",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "drop_rate_5",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "drop_gold",
+      "COLUMN_TYPE": "json",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "legendary_drop",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "legendary_drop_rate",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "destiny_clue",
+      "COLUMN_TYPE": "text",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "spawn_nodes",
+      "COLUMN_TYPE": "json",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "base_capture_rate",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "25"
+    },
+    {
+      "COLUMN_NAME": "base_bp",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "50"
+    },
+    {
+      "COLUMN_NAME": "is_capturable",
+      "COLUMN_TYPE": "tinyint",
+      "COLUMN_DEFAULT": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tCOLUMN_TYPE\tCOLUMN_DEFAULT\nid\tint\tNULL\nmonster_id\tvarchar(20)\tNULL\nname\tvarchar(100)\tNULL\nwuxing\tvarchar(10)\tNULL\nlevel_range\tvarchar(20)\t1-5\nbase_hp\tint\t50\nbase_attack\tint\t10\nbase_defense\tint\t5\nbase_speed\tint\t10\ndescription\ttext\tNULL\ndrop_items\tjson\tNULL\nrarity\tvarchar(20)\tcommon\nimage_url\ttext\tNULL\ncatch_rate\tfloat\t0.1\nis_active\ttinyint\t1\ncreated_at\tbigint\t0\nbase_accuracy\tint\t80\nbase_magic_attack\tint\t8\nresist_wood\tint\t0\nresist_fire\tint\t0\nresist_earth\tint\t0\nresist_metal\tint\t0\nresist_water\tint\t0\ncounter_bonus\tint\t50\nskill_id_1\tvarchar(20)\tNULL\nskill_id_2\tvarchar(20)\tNULL\nskill_id_3\tvarchar(20)\tNULL\nrace\tvarchar(20)\t\nai_level\tint\t1\ngrowth_rate\tfloat\t1\ndrop_item_1\tvarchar(20)\tNULL\ndrop_rate_1\tfloat\t0\ndrop_item_2\tvarchar(20)\tNULL\ndrop_rate_2\tfloat\t0\ndrop_item_3\tvarchar(20)\tNULL\ndrop_rate_3\tfloat\t0\ndrop_item_4\tvarchar(20)\tNULL\ndrop_rate_4\tfloat\t0\ndrop_item_5\tvarchar(20)\tNULL\ndrop_rate_5\tfloat\t0\ndrop_gold\tjson\tNULL\nlegendary_drop\tvarchar(20)\tNULL\nlegendary_drop_rate\tfloat\t0\ndestiny_clue\ttext\tNULL\nspawn_nodes\tjson\tNULL\nbase_capture_rate\tint\t25\nbase_bp\tint\t50\nis_capturable\ttinyint\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1566
+}

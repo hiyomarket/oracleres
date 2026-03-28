@@ -1,0 +1,110 @@
+{
+  "query": "SELECT COLUMN_NAME, COLUMN_TYPE, COLUMN_DEFAULT \nFROM INFORMATION_SCHEMA.COLUMNS \nWHERE TABLE_NAME = 'game_monster_catalog' \nORDER BY ORDINAL_POSITION\nLIMIT 20 OFFSET 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COLUMN_NAME, COLUMN_TYPE, COLUMN_DEFAULT \nFROM INFORMATION_SCHEMA.COLUMNS \nWHERE TABLE_NAME = 'game_monster_catalog' \nORDER BY ORDINAL_POSITION\nLIMIT 20 OFFSET 20;",
+  "rows": [
+    {
+      "COLUMN_NAME": "resist_earth",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "resist_metal",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "resist_water",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "counter_bonus",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "50"
+    },
+    {
+      "COLUMN_NAME": "skill_id_1",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "skill_id_2",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "skill_id_3",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "race",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": ""
+    },
+    {
+      "COLUMN_NAME": "ai_level",
+      "COLUMN_TYPE": "int",
+      "COLUMN_DEFAULT": "1"
+    },
+    {
+      "COLUMN_NAME": "growth_rate",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "1"
+    },
+    {
+      "COLUMN_NAME": "drop_item_1",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "drop_rate_1",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "drop_item_2",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "drop_rate_2",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "drop_item_3",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "drop_rate_3",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "drop_item_4",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "drop_rate_4",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    },
+    {
+      "COLUMN_NAME": "drop_item_5",
+      "COLUMN_TYPE": "varchar(20)",
+      "COLUMN_DEFAULT": "NULL"
+    },
+    {
+      "COLUMN_NAME": "drop_rate_5",
+      "COLUMN_TYPE": "float",
+      "COLUMN_DEFAULT": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tCOLUMN_TYPE\tCOLUMN_DEFAULT\nresist_earth\tint\t0\nresist_metal\tint\t0\nresist_water\tint\t0\ncounter_bonus\tint\t50\nskill_id_1\tvarchar(20)\tNULL\nskill_id_2\tvarchar(20)\tNULL\nskill_id_3\tvarchar(20)\tNULL\nrace\tvarchar(20)\t\nai_level\tint\t1\ngrowth_rate\tfloat\t1\ndrop_item_1\tvarchar(20)\tNULL\ndrop_rate_1\tfloat\t0\ndrop_item_2\tvarchar(20)\tNULL\ndrop_rate_2\tfloat\t0\ndrop_item_3\tvarchar(20)\tNULL\ndrop_rate_3\tfloat\t0\ndrop_item_4\tvarchar(20)\tNULL\ndrop_rate_4\tfloat\t0\ndrop_item_5\tvarchar(20)\tNULL\ndrop_rate_5\tfloat\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1519
+}

@@ -1,0 +1,130 @@
+{
+  "query": "SELECT equip_id, name, slot, tier, quality, hp_bonus, attack_bonus, defense_bonus, speed_bonus, level_required\nFROM game_equipment_catalog\nORDER BY id\nLIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT equip_id, name, slot, tier, quality, hp_bonus, attack_bonus, defense_bonus, speed_bonus, level_required\nFROM game_equipment_catalog\nORDER BY id\nLIMIT 10;",
+  "rows": [
+    {
+      "equip_id": "E_W001",
+      "name": "木劍",
+      "slot": "weapon",
+      "tier": "初階",
+      "quality": "red",
+      "hp_bonus": "60",
+      "attack_bonus": "25",
+      "defense_bonus": "18",
+      "speed_bonus": "8",
+      "level_required": "1"
+    },
+    {
+      "equip_id": "E_W002",
+      "name": "藤蔓弓",
+      "slot": "weapon",
+      "tier": "初階",
+      "quality": "red",
+      "hp_bonus": "60",
+      "attack_bonus": "25",
+      "defense_bonus": "18",
+      "speed_bonus": "8",
+      "level_required": "1"
+    },
+    {
+      "equip_id": "E_W003",
+      "name": "樹皮帽",
+      "slot": "helmet",
+      "tier": "初階",
+      "quality": "orange",
+      "hp_bonus": "40",
+      "attack_bonus": "18",
+      "defense_bonus": "12",
+      "speed_bonus": "5",
+      "level_required": "1"
+    },
+    {
+      "equip_id": "E_W004",
+      "name": "粗布衣",
+      "slot": "armor",
+      "tier": "初階",
+      "quality": "purple",
+      "hp_bonus": "29",
+      "attack_bonus": "12",
+      "defense_bonus": "8",
+      "speed_bonus": "3",
+      "level_required": "1"
+    },
+    {
+      "equip_id": "E_W005",
+      "name": "草鞋",
+      "slot": "shoes",
+      "tier": "初階",
+      "quality": "orange",
+      "hp_bonus": "40",
+      "attack_bonus": "18",
+      "defense_bonus": "12",
+      "speed_bonus": "5",
+      "level_required": "1"
+    },
+    {
+      "equip_id": "E_W006",
+      "name": "綠葉護符",
+      "slot": "accessory",
+      "tier": "初階",
+      "quality": "red",
+      "hp_bonus": "60",
+      "attack_bonus": "25",
+      "defense_bonus": "18",
+      "speed_bonus": "8",
+      "level_required": "1"
+    },
+    {
+      "equip_id": "E_W007",
+      "name": "古木長弓",
+      "slot": "weapon",
+      "tier": "中階",
+      "quality": "red",
+      "hp_bonus": "60",
+      "attack_bonus": "27",
+      "defense_bonus": "18",
+      "speed_bonus": "8",
+      "level_required": "11"
+    },
+    {
+      "equip_id": "E_W008",
+      "name": "毒牙匕首",
+      "slot": "weapon",
+      "tier": "中階",
+      "quality": "red",
+      "hp_bonus": "60",
+      "attack_bonus": "29",
+      "defense_bonus": "18",
+      "speed_bonus": "8",
+      "level_required": "11"
+    },
+    {
+      "equip_id": "E_W009",
+      "name": "荊棘頭冠",
+      "slot": "helmet",
+      "tier": "中階",
+      "quality": "purple",
+      "hp_bonus": "60",
+      "attack_bonus": "12",
+      "defense_bonus": "14",
+      "speed_bonus": "3",
+      "level_required": "11"
+    },
+    {
+      "equip_id": "E_W010",
+      "name": "森猿皮甲",
+      "slot": "armor",
+      "tier": "中階",
+      "quality": "orange",
+      "hp_bonus": "83",
+      "attack_bonus": "18",
+      "defense_bonus": "19",
+      "speed_bonus": "5",
+      "level_required": "11"
+    }
+  ],
+  "messages": [],
+  "stdout": "equip_id\tname\tslot\ttier\tquality\thp_bonus\tattack_bonus\tdefense_bonus\tspeed_bonus\tlevel_required\nE_W001\t木劍\tweapon\t初階\tred\t60\t25\t18\t8\t1\nE_W002\t藤蔓弓\tweapon\t初階\tred\t60\t25\t18\t8\t1\nE_W003\t樹皮帽\thelmet\t初階\torange\t40\t18\t12\t5\t1\nE_W004\t粗布衣\tarmor\t初階\tpurple\t29\t12\t8\t3\t1\nE_W005\t草鞋\tshoes\t初階\torange\t40\t18\t12\t5\t1\nE_W006\t綠葉護符\taccessory\t初階\tred\t60\t25\t18\t8\t1\nE_W007\t古木長弓\tweapon\t中階\tred\t60\t27\t18\t8\t11\nE_W008\t毒牙匕首\tweapon\t中階\tred\t60\t29\t18\t8\t11\nE_W009\t荊棘頭冠\thelmet\t中階\tpurple\t60\t12\t14\t3\t11\nE_W010\t森猿皮甲\tarmor\t中階\torange\t83\t18\t19\t5\t11\n",
+  "stderr": "",
+  "execution_time_ms": 1516
+}

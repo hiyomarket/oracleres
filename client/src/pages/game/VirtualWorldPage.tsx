@@ -1966,7 +1966,7 @@ export default function VirtualWorldPage() {
                 agent={agent}
                 staminaInfo={staminaInfo}
                 natalStats={natalStats}
-                equippedData={equippedData as { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string } | null> } | null | undefined}
+                equippedData={equippedData as { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string; equipId?: string; hpBonus?: number; attackBonus?: number; defenseBonus?: number; speedBonus?: number } | null> } | null | undefined}
                 balanceData={balanceData as { gameCoins?: number; gameStones?: number } | null | undefined}
                 dailyData={dailyData as { dayPillar?: { stem?: string; branch?: string; stemElement?: string } } | null | undefined}
                 divineHeal={divineHeal}
@@ -2063,7 +2063,7 @@ export default function VirtualWorldPage() {
                     agent={agent}
                     staminaInfo={staminaInfo}
                     natalStats={natalStats}
-                    equippedData={equippedData as { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string } | null> } | null | undefined}
+                    equippedData={equippedData as { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string; equipId?: string; hpBonus?: number; attackBonus?: number; defenseBonus?: number; speedBonus?: number } | null> } | null | undefined}
                     balanceData={balanceData as { gameCoins?: number; gameStones?: number } | null | undefined}
                     dailyData={dailyData as { dayPillar?: { stem?: string; branch?: string; stemElement?: string } } | null | undefined}
                     divineHeal={divineHeal}

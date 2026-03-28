@@ -7,7 +7,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog, gamePetInnateSkills, gamePetLearnedSkills, roamingBossInstances, roamingBossCatalog, gameParties, gameMonsterCatalog } from "../../drizzle/schema";
+import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog, gamePetInnateSkills, gamePetLearnedSkills, roamingBossInstances, roamingBossCatalog, gameParties, gameMonsterCatalog, gameEquipmentCatalog } from "../../drizzle/schema";
 import { sql, inArray } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
@@ -32,6 +32,7 @@ function buildCharacterParticipant(
   agent: any,
   id: number,
   equippedSkills: import("../services/combatEngineV2").CombatSkill[] = [],
+  equipBonus: { hp: number; atk: number; def: number; spd: number } = { hp: 0, atk: 0, def: 0, spd: 0 },
 ): BattleParticipant {
   const wuxing = {
     wood: agent.wuxingWood ?? 0,
@@ -44,11 +45,11 @@ function buildCharacterParticipant(
   const caps = getStatCaps();
   const rawStats = calcCharacterStatsV2(wuxing, agent.level ?? 1, cfg);
   const stats = {
-    hp: Math.min(rawStats.hp, caps.hp),
+    hp: Math.min(rawStats.hp + equipBonus.hp, caps.hp),
     mp: Math.min(rawStats.mp, caps.mp),
-    atk: Math.min(rawStats.atk, caps.atk),
-    def: Math.min(rawStats.def, caps.def),
-    spd: Math.min(rawStats.spd, caps.spd),
+    atk: Math.min(rawStats.atk + equipBonus.atk, caps.atk),
+    def: Math.min(rawStats.def + equipBonus.def, caps.def),
+    spd: Math.min(rawStats.spd + equipBonus.spd, caps.spd),
     matk: Math.min(rawStats.matk, caps.matk),
     mdef: Math.min(rawStats.mdef, caps.mdef),
     healPower: rawStats.healPower,
@@ -414,7 +415,24 @@ export const gameBattleRouter = router({
       // ─── 合併所有技能 ───
       const charCombatSkills = [...normalCombatSkills, ...questCombatSkills];
 
-      const charParticipant = buildCharacterParticipant(agent, nextId++, charCombatSkills);
+      // ─── 計算裝備加成 ───
+      const equipBonus = { hp: 0, atk: 0, def: 0, spd: 0 };
+      const equippedIds = [
+        agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
+        agent.equippedBody, agent.equippedHands, agent.equippedFeet,
+        agent.equippedRingA, agent.equippedRingB, agent.equippedNecklace, agent.equippedAmulet,
+      ].filter(Boolean) as string[];
+      if (equippedIds.length > 0) {
+        const equips = await db.select().from(gameEquipmentCatalog).where(inArray(gameEquipmentCatalog.equipId, equippedIds));
+        for (const eq of equips) {
+          equipBonus.hp  += eq.hpBonus       ?? 0;
+          equipBonus.atk += eq.attackBonus   ?? 0;
+          equipBonus.def += eq.defenseBonus  ?? 0;
+          equipBonus.spd += eq.speedBonus    ?? 0;
+        }
+      }
+
+      const charParticipant = buildCharacterParticipant(agent, nextId++, charCombatSkills, equipBonus);
       participants.push(charParticipant);
 
       if (activePet && petCatalog) {
@@ -609,10 +627,27 @@ export const gameBattleRouter = router({
       const monsterData = combatMonster || staticMonster;
       if (!monsterData) throw new TRPCError({ code: "NOT_FOUND", message: "怪物不存在" });
 
+      // ─── 計算裝備加成 ───
+      const simEquipBonus = { hp: 0, atk: 0, def: 0, spd: 0 };
+      const simEquippedIds = [
+        agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
+        agent.equippedBody, agent.equippedHands, agent.equippedFeet,
+        agent.equippedRingA, agent.equippedRingB, agent.equippedNecklace, agent.equippedAmulet,
+      ].filter(Boolean) as string[];
+      if (simEquippedIds.length > 0) {
+        const simEquips = await db.select().from(gameEquipmentCatalog).where(inArray(gameEquipmentCatalog.equipId, simEquippedIds));
+        for (const eq of simEquips) {
+          simEquipBonus.hp  += eq.hpBonus       ?? 0;
+          simEquipBonus.atk += eq.attackBonus   ?? 0;
+          simEquipBonus.def += eq.defenseBonus  ?? 0;
+          simEquipBonus.spd += eq.speedBonus    ?? 0;
+        }
+      }
+
       // 建立參與者
       const participants: BattleParticipant[] = [];
       let nextId = 1;
-      const charP = buildCharacterParticipant(agent, nextId++);
+      const charP = buildCharacterParticipant(agent, nextId++, [], simEquipBonus);
       participants.push(charP);
       if (activePet && petCatalog) {
         const ownerStats2 = { hp: charP.maxHp, atk: charP.attack, def: charP.defense, spd: charP.speed, matk: charP.magicAttack, mp: charP.maxMp };

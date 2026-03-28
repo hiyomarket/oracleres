@@ -23,7 +23,7 @@ export function CharacterPanel({
   agent: AgentData | null | undefined;
   staminaInfo: { current?: number; max?: number; nextRegenMin?: number; regenAmount?: number; regenMinutes?: number; staminaPerTick?: number; moveStaminaCost?: number; sellDiscountRate?: number } | null | undefined;
   natalStats: { hp?: number; atk?: number; def?: number; spd?: number; mp?: number } | null | undefined;
-  equippedData: { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string } | null> } | null | undefined;
+  equippedData: { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string; equipId?: string; hpBonus?: number; attackBonus?: number; defenseBonus?: number; speedBonus?: number } | null> } | null | undefined;
   balanceData: { gameCoins?: number; gameStones?: number } | null | undefined;
   dailyData: { dayPillar?: { stem?: string; branch?: string; stemElement?: string } } | null | undefined;
   divineHeal: { mutate: () => void; isPending: boolean };
@@ -591,33 +591,53 @@ export function CharacterPanel({
 
               {/* 裝備屬性加成摘要 */}
               {(() => {
-                const bonuses: { label: string; val: number; color: string }[] = [];
-                Object.values(equipped).forEach((e: any) => {
-                  if (!e?.baseStats) return;
-                  const baseStatsMatch = String(e.baseStats).match(/([\+\-]?\d+)/g);
-                  if (baseStatsMatch) baseStatsMatch.forEach(v => { /* 簡化展示，只展示裝備數量 */ });
-                });
-                const equippedList = Object.entries(equipped).filter(([, v]) => v != null);
+                const equippedList = Object.entries(equipped).filter(([, v]) => v != null) as [string, { name: string; quality?: string; hpBonus?: number; attackBonus?: number; defenseBonus?: number; speedBonus?: number }][];
+                // 計算總加成
+                const totalHp  = equippedList.reduce((s, [, e]) => s + (e?.hpBonus ?? 0), 0);
+                const totalAtk = equippedList.reduce((s, [, e]) => s + (e?.attackBonus ?? 0), 0);
+                const totalDef = equippedList.reduce((s, [, e]) => s + (e?.defenseBonus ?? 0), 0);
+                const totalSpd = equippedList.reduce((s, [, e]) => s + (e?.speedBonus ?? 0), 0);
                 if (equippedList.length === 0) return (
                   <div className="px-2.5 py-2 rounded-xl border text-center"
                     style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
                     <p className="text-xs text-slate-600">尚未裝備任何裝備</p>
-                    <p className="text-[10px] text-slate-700 mt-0.5">至「道具」頁籤選擇裝備並安裝</p>
+                    <p className="text-[10px] text-slate-700 mt-0.5">至「道具」頁簽選擇裝備並安裝</p>
                   </div>
                 );
                 return (
-                  <div className="rounded-xl border p-2.5 space-y-1.5"
+                  <div className="rounded-xl border p-2.5 space-y-2"
                     style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
-                    <p className="text-xs font-bold text-slate-500">⚔️ 裝備屬性加成</p>
-                    {equippedList.map(([slot, e]: any) => (
-                      <div key={slot} className="flex items-center gap-2">
-                        <span className="text-xs text-slate-600 w-12 shrink-0">{EQUIP_SLOTS.find(s => s.slot === slot)?.label ?? slot}</span>
-                        <span className="text-xs font-bold" style={{ color: e?.quality ? QUALITY_COLOR[e.quality] ?? '#94a3b8' : '#94a3b8' }}>{e?.name ?? ''}</span>
-                        {e?.baseStats && <span className="text-[10px] text-slate-500 ml-auto shrink-0">{e.baseStats}</span>}
+                    {/* 裝備列表 */}
+                    <p className="text-xs font-bold text-slate-400">⚔️ 裝備列表</p>
+                    {equippedList.map(([slot, e]) => {
+                      const qc = e?.quality ? QUALITY_COLOR[e.quality] ?? '#94a3b8' : '#94a3b8';
+                      const bonusParts: string[] = [];
+                      if (e?.hpBonus) bonusParts.push(`HP+${e.hpBonus}`);
+                      if (e?.attackBonus) bonusParts.push(`攻+${e.attackBonus}`);
+                      if (e?.defenseBonus) bonusParts.push(`防+${e.defenseBonus}`);
+                      if (e?.speedBonus) bonusParts.push(`速+${e.speedBonus}`);
+                      return (
+                        <div key={slot} className="flex items-center gap-2">
+                          <span className="text-xs text-slate-600 w-10 shrink-0">{EQUIP_SLOTS.find(s => s.slot === slot)?.label ?? slot}</span>
+                          <span className="text-xs font-bold truncate" style={{ color: qc }}>{e?.name ?? ''}</span>
+                          {bonusParts.length > 0 && (
+                            <span className="text-[10px] text-emerald-400 ml-auto shrink-0">{bonusParts.join(' ')}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {/* 總加成摘要 */}
+                    <div className="pt-1.5 border-t border-slate-800/60">
+                      <p className="text-xs font-bold text-slate-400 mb-1">✨ 總加成</p>
+                      <div className="grid grid-cols-4 gap-1">
+                        {[{ label: 'HP', val: totalHp, color: '#ef4444' }, { label: '攻擊', val: totalAtk, color: '#f59e0b' }, { label: '防禦', val: totalDef, color: '#3b82f6' }, { label: '速度', val: totalSpd, color: '#22c55e' }].map(({ label, val, color }) => (
+                          <div key={label} className="text-center rounded-lg py-1" style={{ background: `${color}10` }}>
+                            <p className="text-[10px] text-slate-500">{label}</p>
+                            <p className="text-xs font-bold" style={{ color }}>+{val}</p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                    <div className="pt-1 border-t border-slate-800/60">
-                      <p className="text-[10px] text-slate-600">• 裝備屬性已反映至「戰鬥」頁籤的數値</p>
+                      <p className="text-[10px] text-slate-600 mt-1">• 裝備加成已實際套用至戰鬥屬性</p>
                     </div>
                   </div>
                 );

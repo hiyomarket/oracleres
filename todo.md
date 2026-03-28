@@ -5203,3 +5203,15 @@
   - [x] 移除不再使用的 DestinySkillView（viewMode="destiny"）
 - [x] 新增 petPage-refactor.test.ts（15 項測試全部通過：getStatCaps、stat caps integration、calcPetStats、calcCaptureRate、checkDestinySkillLevelUp、slot unlock levels、getDestinySkillPower）
 - [x] TypeScript 編譯零錯誤
+
+## 修正任務（2026-03-28 第十一批）── 魔物捕捉率 + 裝備系統完整修復
+
+- [x] 批量設定 gameMonsterCatalog 捕捉率（common=35%, rare=20%, epic=10%, elite=10%, legendary=0%/不可捕捉）
+- [x] 修復 gameBattle.ts startBattle：加入裝備加成計算，buildCharacterParticipant 接收 equipBonus 參數
+- [x] 修復 gameBattle.ts simulateBattle：同樣加入裝備加成計算
+- [x] 修復 gameAvatar.ts getEquipped：返回 equipped 物件（含裝備槽位資料和數値加成）
+- [x] 修正 gameAvatar.ts SLOT_MAP key 與前端 EQUIP_SLOTS slot 名稱一致（head/body/hands/feet）
+- [x] 修復 CharacterPanel.tsx 裝備面板：顯示每件裝備的 HP/攻/防/速加成，並顯示總加成摘要
+- [x] 更新 CharacterPanel 和 VirtualWorldPage 的 equippedData 型別定義
+- [x] 新增 8 項裝備系統測試（equipment-system.test.ts），全部通過
+- [x] TypeScript 編譯零錯誤，1347 項測試全部通過

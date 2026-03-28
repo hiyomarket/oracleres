@@ -1,0 +1,80 @@
+{
+  "query": "SELECT ga.agent_name, ga.level, \n  ga.equipped_weapon, ga.equipped_offhand, ga.equipped_head, ga.equipped_body, \n  ga.equipped_hands, ga.equipped_feet, ga.equipped_ring_a, ga.equipped_ring_b,\n  ga.equipped_necklace, ga.equipped_amulet\nFROM game_agents ga\nLIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT ga.agent_name, ga.level, \n  ga.equipped_weapon, ga.equipped_offhand, ga.equipped_head, ga.equipped_body, \n  ga.equipped_hands, ga.equipped_feet, ga.equipped_ring_a, ga.equipped_ring_b,\n  ga.equipped_necklace, ga.equipped_amulet\nFROM game_agents ga\nLIMIT 5;",
+  "rows": [
+    {
+      "agent_name": "凜冬月",
+      "level": "19",
+      "equipped_weapon": "E_W001",
+      "equipped_offhand": "NULL",
+      "equipped_head": "E_W003",
+      "equipped_body": "NULL",
+      "equipped_hands": "NULL",
+      "equipped_feet": "NULL",
+      "equipped_ring_a": "NULL",
+      "equipped_ring_b": "NULL",
+      "equipped_necklace": "NULL",
+      "equipped_amulet": "NULL"
+    },
+    {
+      "agent_name": "碎楓",
+      "level": "20",
+      "equipped_weapon": "E_W001",
+      "equipped_offhand": "NULL",
+      "equipped_head": "NULL",
+      "equipped_body": "E_W004",
+      "equipped_hands": "NULL",
+      "equipped_feet": "NULL",
+      "equipped_ring_a": "NULL",
+      "equipped_ring_b": "NULL",
+      "equipped_necklace": "NULL",
+      "equipped_amulet": "NULL"
+    },
+    {
+      "agent_name": "MO",
+      "level": "19",
+      "equipped_weapon": "NULL",
+      "equipped_offhand": "NULL",
+      "equipped_head": "NULL",
+      "equipped_body": "NULL",
+      "equipped_hands": "NULL",
+      "equipped_feet": "NULL",
+      "equipped_ring_a": "NULL",
+      "equipped_ring_b": "NULL",
+      "equipped_necklace": "NULL",
+      "equipped_amulet": "NULL"
+    },
+    {
+      "agent_name": "阿成",
+      "level": "20",
+      "equipped_weapon": "NULL",
+      "equipped_offhand": "NULL",
+      "equipped_head": "NULL",
+      "equipped_body": "NULL",
+      "equipped_hands": "NULL",
+      "equipped_feet": "NULL",
+      "equipped_ring_a": "NULL",
+      "equipped_ring_b": "NULL",
+      "equipped_necklace": "NULL",
+      "equipped_amulet": "NULL"
+    },
+    {
+      "agent_name": "御詠漓",
+      "level": "19",
+      "equipped_weapon": "NULL",
+      "equipped_offhand": "NULL",
+      "equipped_head": "E_W003",
+      "equipped_body": "NULL",
+      "equipped_hands": "NULL",
+      "equipped_feet": "NULL",
+      "equipped_ring_a": "NULL",
+      "equipped_ring_b": "NULL",
+      "equipped_necklace": "NULL",
+      "equipped_amulet": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "agent_name\tlevel\tequipped_weapon\tequipped_offhand\tequipped_head\tequipped_body\tequipped_hands\tequipped_feet\tequipped_ring_a\tequipped_ring_b\tequipped_necklace\tequipped_amulet\n凜冬月\t19\tE_W001\tNULL\tE_W003\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n碎楓\t20\tE_W001\tNULL\tNULL\tE_W004\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\nMO\t19\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n阿成\t20\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n御詠漓\t19\tNULL\tNULL\tE_W003\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1558
+}

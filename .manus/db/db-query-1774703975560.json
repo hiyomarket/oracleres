@@ -1,0 +1,30 @@
+{
+  "query": "SELECT 'equipment_templates' as tbl, COUNT(*) as cnt FROM equipment_templates\nUNION ALL SELECT 'game_equipment_catalog', COUNT(*) FROM game_equipment_catalog\nUNION ALL SELECT 'agent_inventory_equipment', COUNT(*) FROM agent_inventory WHERE item_type = 'equipment'\nUNION ALL SELECT 'game_monster_catalog_total', COUNT(*) FROM game_monster_catalog\nUNION ALL SELECT 'game_monster_catalog_capturable', COUNT(*) FROM game_monster_catalog WHERE is_capturable = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT 'equipment_templates' as tbl, COUNT(*) as cnt FROM equipment_templates\nUNION ALL SELECT 'game_equipment_catalog', COUNT(*) FROM game_equipment_catalog\nUNION ALL SELECT 'agent_inventory_equipment', COUNT(*) FROM agent_inventory WHERE item_type = 'equipment'\nUNION ALL SELECT 'game_monster_catalog_total', COUNT(*) FROM game_monster_catalog\nUNION ALL SELECT 'game_monster_catalog_capturable', COUNT(*) FROM game_monster_catalog WHERE is_capturable = 1;",
+  "rows": [
+    {
+      "tbl": "equipment_templates",
+      "cnt": "6"
+    },
+    {
+      "tbl": "game_equipment_catalog",
+      "cnt": "56"
+    },
+    {
+      "tbl": "game_monster_catalog_total",
+      "cnt": "144"
+    },
+    {
+      "tbl": "agent_inventory_equipment",
+      "cnt": "14"
+    },
+    {
+      "tbl": "game_monster_catalog_capturable",
+      "cnt": "144"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tcnt\nequipment_templates\t6\ngame_equipment_catalog\t56\ngame_monster_catalog_total\t144\nagent_inventory_equipment\t14\ngame_monster_catalog_capturable\t144\n",
+  "stderr": "",
+  "execution_time_ms": 1592
+}
