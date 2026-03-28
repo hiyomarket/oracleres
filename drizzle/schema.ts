@@ -2094,8 +2094,14 @@ export const gameMonsterCatalog = mysqlTable("game_monster_catalog", {
   dropItems: json("drop_items").$type<string[]>().default([]),
   /** 圖片 URL */
   imageUrl: text("image_url").default(""),
-  /** 捕捉機率（0.0-1.0） */
+  /** 捕捉機率（0.0-1.0）（舊版欄位，保留相容） */
   catchRate: float("catch_rate").notNull().default(0.1),
+  /** 是否可捕捉（1=可捕捉, 0=不可捕捉，boss 預設不可） */
+  isCapturable: tinyint("is_capturable").notNull().default(1),
+  /** 捕捉基礎率（0-100，預設 25） */
+  baseCaptureRate: int("base_capture_rate").notNull().default(25),
+  /** 基礎 BP 總值（捕捉後轉換為寵物時使用） */
+  baseBp: int("base_bp").notNull().default(50),
   isActive: tinyint("is_active").default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
@@ -3171,6 +3177,8 @@ export const gamePetCatalog = mysqlTable("game_pet_catalog", {
   baseBpDefense: int("base_bp_defense").notNull().default(20),
   baseBpAgility: int("base_bp_agility").notNull().default(20),
   baseBpMagic: int("base_bp_magic").notNull().default(20),
+  /** 來源魔物圖鑑 monsterId（如 M_W001，用於捕捉時對應） */
+  sourceMonsterKey: varchar("source_monster_key", { length: 30 }).default(""),
   /** 種族 HP 倍率（龍×1.3, 不死×1.2, 一般×1.0, 昆蟲×0.9, 植物×0.8, 飛行×1.0） */
   raceHpMultiplier: float("race_hp_multiplier").notNull().default(1.0),
   /** 可出現的最低等級 */

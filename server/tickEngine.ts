@@ -14,7 +14,7 @@ import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs, getInfuseConfig } from "./gameEngineConfig";
 import { eq, and, sql } from "drizzle-orm";
 import { calcCharacterStatsV2, calcLevelUpWuxingGrowth, calcResistances, type WuXingElement } from "./services/balanceFormulas";
-import { getStatBalanceConfig } from "./gameEngineConfig";
+import { getStatBalanceConfig, getStatCaps } from "./gameEngineConfig";
 import {
   MAP_NODES,
   MAP_NODE_MAP,
@@ -47,15 +47,16 @@ export function calcCharacterStats(natalStats: {
   wood: number; fire: number; earth: number; metal: number; water: number;
 }, level: number = 1) {
   const cfg = getStatBalanceConfig();
+  const caps = getStatCaps();
   const v2 = calcCharacterStatsV2(natalStats, level, cfg);
   return {
-    hp:   v2.hp,
-    atk:  v2.atk,
-    def:  v2.def,
-    spd:  v2.spd,
-    matk: v2.matk,
-    mdef: v2.mdef,
-    mp:   v2.mp,
+    hp:   Math.min(v2.hp,   caps.hp),
+    atk:  Math.min(v2.atk,  caps.atk),
+    def:  Math.min(v2.def,  caps.def),
+    spd:  Math.min(v2.spd,  caps.spd),
+    matk: Math.min(v2.matk, caps.matk),
+    mdef: Math.min(v2.mdef, caps.mdef),
+    mp:   Math.min(v2.mp,   caps.mp),
   };
 }
 

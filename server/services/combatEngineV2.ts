@@ -116,7 +116,9 @@ export interface BattleCommand {
     captureRate: number;    // 0-1 捕捉機率
     captureItemName: string; // 捕捉道具名稱
     targetMonsterName: string; // 目標魔物名稱
-    petCatalogId?: number;  // 寵物圖鑑 ID
+    petCatalogId?: number | null;  // 寵物圖鑑 ID（如果有）
+    monsterCatalogId?: string | null; // 魔物圖鑑 monsterId（如果沒有 petCatalog）
+    captureSource?: "pet_catalog" | "monster_catalog"; // 捕捉數據來源
   };
 }
 

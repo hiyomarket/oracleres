@@ -5185,3 +5185,21 @@
 - [x] 新增後台屬性調整面板：升級指數、注靈係數、HP/MP/ATK/DEF/SPD/MATK/MDEF 上限、五行上限
 - [x] 戰鬥捕捉功能：新增 capture 指令類型，前端捕捉按鈕 + 道具選擇 + 目標選擇，後端捕捉機率計算 + 寵物創建
 - [x] 1324 項測試全部通過，無回歸
+
+## 修正任務（2026-03-28 第十批）── 捕捉重構 + 屬性上限 + 寵物面板
+
+- [x] 修正捕捉功能 TS 錯誤：combatEngineV2 captureInfo 型別新增 monsterCatalogId 和 captureSource
+- [x] 重構捕捉寵物創建邏輯：支援 gamePetCatalog 和 gameMonsterCatalog 雙路徑查詢
+- [x] 為 gameMonsterCatalog 加入 isCapturable 和 baseCaptureRate 欄位（schema + SQL migration）
+- [x] 為 gamePetCatalog 加入 sourceMonsterKey 欄位（schema + SQL migration）
+- [x] 修正戰鬥屬性上限串接：tickEngine.ts calcCharacterStats 使用 getStatCaps() 限制
+- [x] 修正戰鬥屬性上限串接：gameBattle.ts buildCharacterParticipant 使用 getStatCaps() 限制
+- [x] 重構 PetPage.tsx 寵物管理面板：
+  - [x] 整個頁面可上下滾動（overflow-y-auto）
+  - [x] 天生技能和天命技能直接在詳情頁中管理（內嵌 SkillSlotRow 組件）
+  - [x] 天命技能學習面板改為展開式（DestinyLearnPanel 在詳情頁內展開）
+  - [x] 技能裝備/替換功能：每個天命技能格位可直接替換
+  - [x] 整體 UI 優化：SectionCard 通用區塊卡片、更清晰的視覺層次
+  - [x] 移除不再使用的 DestinySkillView（viewMode="destiny"）
+- [x] 新增 petPage-refactor.test.ts（15 項測試全部通過：getStatCaps、stat caps integration、calcPetStats、calcCaptureRate、checkDestinySkillLevelUp、slot unlock levels、getDestinySkillPower）
+- [x] TypeScript 編譯零錯誤

@@ -7,10 +7,11 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog, gamePetInnateSkills, gamePetLearnedSkills, roamingBossInstances, roamingBossCatalog, gameParties } from "../../drizzle/schema";
+import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog, gamePetInnateSkills, gamePetLearnedSkills, roamingBossInstances, roamingBossCatalog, gameParties, gameMonsterCatalog } from "../../drizzle/schema";
 import { sql, inArray } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
+import { getStatCaps, getStatBalanceConfig } from "../gameEngineConfig";
 import { calcPetStats, calcPetStatsGD024, petSkillsToCombatFormat, DESTINY_SKILLS, DESTINY_AWAKENING_EFFECTS, checkDestinySkillLevelUp, calcPetBattleExp, levelUpBP, calcCaptureRate } from "../services/petEngine";
 import {
   type BattleParticipant, type BattleMode, type BattleCommand, type BattleLogEntry,
@@ -39,7 +40,20 @@ function buildCharacterParticipant(
     metal: agent.wuxingMetal ?? 0,
     water: agent.wuxingWater ?? 0,
   };
-  const stats = calcCharacterStatsV2(wuxing, agent.level ?? 1);
+  const cfg = getStatBalanceConfig();
+  const caps = getStatCaps();
+  const rawStats = calcCharacterStatsV2(wuxing, agent.level ?? 1, cfg);
+  const stats = {
+    hp: Math.min(rawStats.hp, caps.hp),
+    mp: Math.min(rawStats.mp, caps.mp),
+    atk: Math.min(rawStats.atk, caps.atk),
+    def: Math.min(rawStats.def, caps.def),
+    spd: Math.min(rawStats.spd, caps.spd),
+    matk: Math.min(rawStats.matk, caps.matk),
+    mdef: Math.min(rawStats.mdef, caps.mdef),
+    healPower: rawStats.healPower,
+    hitRate: rawStats.hitRate,
+  };
   // 找出主導五行
   const elements = Object.entries(wuxing) as [string, number][];
   elements.sort((a, b) => b[1] - a[1]);
@@ -745,7 +759,7 @@ export const gameBattleRouter = router({
               const [captureItem] = await db.select({
                 name: gameItemCatalog.name,
                 useEffect: gameItemCatalog.useEffect,
-                itemType: gameItemCatalog.itemType,
+                category: gameItemCatalog.category,
               }).from(gameItemCatalog).where(eq(gameItemCatalog.itemId, command.itemId)).limit(1);
 
               // 找到目標魔物的參與者
@@ -753,22 +767,44 @@ export const gameBattleRouter = router({
               if (!targetP || !targetP.monsterId) {
                 command.commandType = "attack" as any; // fallback
               } else {
-                // 查詢寵物圖鑑
-                const catalogs = await db.select().from(gamePetCatalog)
+                // ★ 新捕捉邏輯：先查 gamePetCatalog，沒有就查 gameMonsterCatalog
+                let baseCaptureRate = 25;
+                let petCatalogId: number | null = null;
+                let monsterCatalogId: string | null = null;
+                let captureSource: "pet_catalog" | "monster_catalog" = "monster_catalog";
+
+                // 1. 先查寵物圖鑑
+                const petCatalogs = await db.select().from(gamePetCatalog)
                   .where(eq(gamePetCatalog.sourceMonsterKey, targetP.monsterId))
                   .limit(1);
-                const catalog = catalogs[0];
+                const petCat = petCatalogs[0];
 
-                if (!catalog) {
-                  // 此魔物無對應圖鑑，無法捕捉
-                  command.commandType = "attack" as any; // fallback
+                if (petCat) {
+                  baseCaptureRate = petCat.baseCaptureRate;
+                  petCatalogId = petCat.id;
+                  captureSource = "pet_catalog";
                 } else {
+                  // 2. 查魔物圖鑑
+                  const [monCat] = await db.select().from(gameMonsterCatalog)
+                    .where(eq(gameMonsterCatalog.monsterId, targetP.monsterId))
+                    .limit(1);
+                  if (monCat && monCat.isCapturable) {
+                    baseCaptureRate = monCat.baseCaptureRate;
+                    monsterCatalogId = monCat.monsterId;
+                    captureSource = "monster_catalog";
+                  } else {
+                    // 此魔物不可捕捉（boss 或未設定）
+                    command.commandType = "attack" as any;
+                  }
+                }
+
+                if (command.commandType === "capture") {
                   // 計算捕捉機率
                   const agentP = dbParticipants.find(dp => dp.participantType === "character");
                   const agentRow = agentP?.agentId ? await db.select().from(gameAgents).where(eq(gameAgents.id, agentP.agentId)).limit(1).then(r => r[0]) : null;
                   const captureItemType = (captureItem?.useEffect as any)?.captureType ?? "normal";
                   const rate = calcCaptureRate({
-                    baseCaptureRate: catalog.baseCaptureRate,
+                    baseCaptureRate,
                     monsterCurrentHp: targetP.currentHp,
                     monsterMaxHp: targetP.maxHp,
                     monsterLevel: targetP.level,
@@ -780,7 +816,9 @@ export const gameBattleRouter = router({
                     captureRate: rate,
                     captureItemName: captureItem?.name ?? "捕捉道具",
                     targetMonsterName: targetP.name,
-                    petCatalogId: catalog.id,
+                    petCatalogId,
+                    monsterCatalogId,
+                    captureSource,
                   };
 
                   // 扣除捕捉道具
@@ -891,28 +929,119 @@ export const gameBattleRouter = router({
         // 檢查捕捉成功
         if (command.commandType === "capture") {
           const captureLog = cmdLogs.find(l => l.logType === "capture" && l.value === 1);
-          if (captureLog && command.captureInfo?.petCatalogId) {
+          const cInfo = command.captureInfo;
+          if (captureLog && cInfo && (cInfo.petCatalogId || cInfo.monsterCatalogId)) {
             // 捕捉成功！創建寵物
             try {
-              const [catalog] = await db.select().from(gamePetCatalog)
-                .where(eq(gamePetCatalog.id, command.captureInfo.petCatalogId)).limit(1);
               const agentP = dbParticipants.find(dp => dp.participantType === "character");
-              if (catalog && agentP?.agentId) {
-                const newPet = await db.insert(gamePlayerPets).values({
+              if (agentP?.agentId) {
+                // ─── 捕捉個體差異機制 ───
+                const targetMonster = participants.find(p => p.monsterId && p.side === "enemy");
+                const monsterBP = (targetMonster as any)?.individualBP;
+                const monsterLevel = targetMonster?.level ?? 1;
+
+                // 20% 機率回到 1 等（「重生」機制）
+                const isReborn = Math.random() < 0.2;
+                const capturedLevel = isReborn ? 1 : monsterLevel;
+
+                let petCatalogId: number;
+                let petName: string;
+                let petGrowthType: string;
+                let bpCon: number, bpStr: number, bpDef2: number, bpAgi: number, bpMag: number;
+
+                if (cInfo.captureSource === "pet_catalog" && cInfo.petCatalogId) {
+                  // ★ 路徑 A：有寵物圖鑑記錄
+                  const [catalog] = await db.select().from(gamePetCatalog)
+                    .where(eq(gamePetCatalog.id, cInfo.petCatalogId)).limit(1);
+                  if (!catalog) throw new Error("Pet catalog not found");
+
+                  petCatalogId = catalog.id;
+                  petName = catalog.name;
+                  petGrowthType = catalog.growthType ?? "balanced";
+
+                  const initBp = monsterBP ? (
+                    monsterBP.constitution + monsterBP.strength + monsterBP.defense + monsterBP.agility + monsterBP.magic
+                  ) : (catalog.baseBpConstitution + catalog.baseBpStrength + catalog.baseBpDefense + catalog.baseBpAgility + catalog.baseBpMagic);
+                  bpCon = monsterBP?.constitution ?? Math.floor(initBp * 0.3);
+                  bpStr = monsterBP?.strength ?? Math.floor(initBp * 0.2);
+                  bpDef2 = monsterBP?.defense ?? Math.floor(initBp * 0.2);
+                  bpAgi = monsterBP?.agility ?? Math.floor(initBp * 0.15);
+                  bpMag = monsterBP?.magic ?? Math.floor(initBp * 0.15);
+                } else {
+                  // ★ 路徑 B：從 gameMonsterCatalog 動態生成寵物
+                  const [monCat] = await db.select().from(gameMonsterCatalog)
+                    .where(eq(gameMonsterCatalog.monsterId, cInfo.monsterCatalogId!))
+                    .limit(1);
+                  if (!monCat) throw new Error("Monster catalog not found");
+
+                  // 自動建立 gamePetCatalog 記錄（方便後續管理）
+                  const wuxingMap: Record<string, string> = { "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water" };
+                  const petWuxing = wuxingMap[monCat.wuxing] ?? "earth";
+                  const totalBp = monCat.baseBp ?? 50;
+                  const totalBase = Math.max(1, monCat.baseHp + monCat.baseAttack + monCat.baseDefense + monCat.baseSpeed + monCat.baseMagicAttack);
+                  const catBpCon = Math.max(5, Math.round(totalBp * (monCat.baseHp / totalBase)));
+                  const catBpStr = Math.max(5, Math.round(totalBp * (monCat.baseAttack / totalBase)));
+                  const catBpDef = Math.max(5, Math.round(totalBp * (monCat.baseDefense / totalBase)));
+                  const catBpAgi = Math.max(5, Math.round(totalBp * (monCat.baseSpeed / totalBase)));
+                  const catBpMag = Math.max(5, totalBp - catBpCon - catBpStr - catBpDef - catBpAgi);
+
+                  const maxStat = Math.max(monCat.baseAttack, monCat.baseDefense, monCat.baseSpeed, monCat.baseMagicAttack);
+                  let growthType = "balanced";
+                  if (maxStat === monCat.baseAttack) growthType = "fighter";
+                  else if (maxStat === monCat.baseDefense) growthType = "guardian";
+                  else if (maxStat === monCat.baseSpeed) growthType = "swift";
+                  else if (maxStat === monCat.baseMagicAttack) growthType = "mage";
+
+                  const raceMap: Record<string, string> = {
+                    "靈獸系": "normal", "亡魂系": "undead", "金屬系": "normal",
+                    "人型系": "normal", "植物系": "plant", "水生系": "normal",
+                    "妖化系": "normal", "龍種系": "dragon", "蟲類系": "insect", "天命系": "normal",
+                  };
+                  const petRace = raceMap[monCat.race ?? ""] ?? "normal";
+
+                  const [newCatalog] = await db.insert(gamePetCatalog).values({
+                    name: monCat.name,
+                    description: monCat.description ?? `由${monCat.name}捕捉而來的寵物`,
+                    sourceMonsterKey: monCat.monsterId,
+                    race: petRace,
+                    wuxing: petWuxing,
+                    rarity: monCat.rarity === "elite" ? "epic" : (monCat.rarity as any) ?? "common",
+                    growthType,
+                    baseBpConstitution: catBpCon,
+                    baseBpStrength: catBpStr,
+                    baseBpDefense: catBpDef,
+                    baseBpAgility: catBpAgi,
+                    baseBpMagic: catBpMag,
+                    baseCaptureRate: monCat.baseCaptureRate,
+                    imageUrl: monCat.imageUrl ?? "",
+                    isActive: 1,
+                  }).$returningId();
+
+                  petCatalogId = newCatalog.id;
+                  petName = monCat.name;
+                  petGrowthType = growthType;
+
+                  // 使用怪物個體 BP（如果有），否則用剛計算的圖鑑 BP
+                  bpCon = monsterBP?.constitution ?? catBpCon;
+                  bpStr = monsterBP?.strength ?? catBpStr;
+                  bpDef2 = monsterBP?.defense ?? catBpDef;
+                  bpAgi = monsterBP?.agility ?? catBpAgi;
+                  bpMag = monsterBP?.magic ?? catBpMag;
+                }
+
+                await db.insert(gamePlayerPets).values({
                   agentId: agentP.agentId,
-                  catalogId: catalog.id,
-                  nickname: catalog.name,
-                  level: 1,
+                  petCatalogId,
+                  nickname: petName,
+                  level: capturedLevel,
                   exp: 0,
-                  expToNext: 100,
-                  growthType: catalog.growthType ?? "balanced",
-                  bpTotal: catalog.initialBp ?? 30,
-                  bpHp: Math.floor((catalog.initialBp ?? 30) * 0.3),
-                  bpAtk: Math.floor((catalog.initialBp ?? 30) * 0.2),
-                  bpDef: Math.floor((catalog.initialBp ?? 30) * 0.2),
-                  bpSpd: Math.floor((catalog.initialBp ?? 30) * 0.15),
-                  bpMp: Math.floor((catalog.initialBp ?? 30) * 0.15),
-                  happiness: 50,
+                  growthType: petGrowthType,
+                  bpConstitution: bpCon,
+                  bpStrength: bpStr,
+                  bpDefense: bpDef2,
+                  bpAgility: bpAgi,
+                  bpMagic: bpMag,
+                  bpUnallocated: 0,
                   hp: 100,
                   maxHp: 100,
                   mp: 50,
@@ -921,14 +1050,17 @@ export const gameBattleRouter = router({
                   defense: 15,
                   speed: 15,
                   isActive: 0,
-                  createdAt: Date.now(),
+                  capturedAt: Date.now(),
                   updatedAt: Date.now(),
                 });
+
                 // 添加捕捉成功日誌
+                const rebornMsg = isReborn ? "（重生！等級重置為 1）" : `（Lv.${capturedLevel}）`;
+                const bpMsg = `BP: 體${bpCon}/力${bpStr}/防${bpDef2}/敏${bpAgi}/魔${bpMag}`;
                 allLogs.push({
                   round, actorId: actor.id, actorName: actor.name,
                   logType: "capture_success", value: 1, isCritical: false,
-                  message: `🎉 ${command.captureInfo.targetMonsterName}已被成功捕捉，成為你的新寵物「${catalog.name}」！`,
+                  message: `🎉 ${cInfo.targetMonsterName}已被成功捕捉，成為你的新寵物「${petName}」${rebornMsg}！${bpMsg}`,
                 });
               }
             } catch (e) {

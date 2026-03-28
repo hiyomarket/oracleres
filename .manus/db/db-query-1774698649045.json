@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE `game_monster_catalog` ADD COLUMN IF NOT EXISTS `is_capturable` tinyint NOT NULL DEFAULT 1;\nALTER TABLE `game_monster_catalog` ADD COLUMN IF NOT EXISTS `base_capture_rate` int NOT NULL DEFAULT 25;\nALTER TABLE `game_monster_catalog` ADD COLUMN IF NOT EXISTS `base_bp` int NOT NULL DEFAULT 50;\nALTER TABLE `game_pet_catalog` ADD COLUMN IF NOT EXISTS `source_monster_key` varchar(30) DEFAULT '';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nALTER TABLE `game_monster_catalog` ADD COLUMN IF NOT EXISTS `is_capturable` tinyint NOT NULL DEFAULT 1;\nALTER TABLE `game_monster_catalog` ADD COLUMN IF NOT EXISTS `base_capture_rate` int NOT NULL DEFAULT 25;\nALTER TABLE `game_monster_catalog` ADD COLUMN IF NOT EXISTS `base_bp` int NOT NULL DEFAULT 50;\nALTER TABLE `game_pet_catalog` ADD COLUMN IF NOT EXISTS `source_monster_key` varchar(30) DEFAULT '';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2270
+}

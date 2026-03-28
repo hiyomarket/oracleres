@@ -1,6 +1,12 @@
 /**
- * PetPage.tsx — 寵物系統主頁面
- * GD-019：寵物列表、詳情、技能管理、出戰切換
+ * PetPage.tsx — 寵物系統主頁面（重構版）
+ * GD-019：寵物列表、詳情、技能管理（內嵌）、出戰切換
+ *
+ * 重構重點：
+ *   - 整個頁面可上下滾動
+ *   - 天生技能和天命技能直接在詳情頁中管理（不需跳到另一個頁面）
+ *   - 技能裝備/卸除功能 — 每個技能格位可以直接操作
+ *   - 整體 UI 優化 — 更清晰的區塊劃分和視覺層次
  */
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
@@ -35,7 +41,7 @@ const TIER_COLOR: Record<string, string> = {
   S: "#ff6b6b", A: "#ffa502", B: "#2ed573", C: "#70a1ff", D: "#a4b0be", E: "#636e72",
 };
 
-type ViewMode = "list" | "detail" | "catalog" | "destiny";
+type ViewMode = "list" | "detail" | "catalog";
 
 export default function PetPage() {
   const { user } = useAuth();
@@ -44,6 +50,8 @@ export default function PetPage() {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [newNickname, setNewNickname] = useState("");
   const [catalogFilter, setCatalogFilter] = useState<{ wuxing?: string; rarity?: string; race?: string }>({});
+  const [showDestinyLearn, setShowDestinyLearn] = useState(false);
+  const [targetSlotIndex, setTargetSlotIndex] = useState<number | null>(null);
 
   // ─── 資料查詢 ───
   const { data: myPets, refetch: refetchPets } = trpc.gamePet.getMyPets.useQuery(undefined, { enabled: !!user });
@@ -57,9 +65,8 @@ export default function PetPage() {
   );
   const { data: destinySkills } = trpc.gamePet.getAvailableDestinySkills.useQuery(
     { petId: selectedPetId! },
-    { enabled: !!selectedPetId && viewMode === "destiny" },
+    { enabled: !!selectedPetId && showDestinyLearn },
   );
-  const { data: destinyDefs } = trpc.gamePet.getDestinySkillDefs.useQuery(undefined, { enabled: viewMode === "destiny" });
   const { data: tierConfig } = trpc.gamePet.getTierConfig.useQuery();
   const { data: bpHistory } = trpc.gamePet.getPetBpHistory.useQuery(
     { petId: selectedPetId!, limit: 100 },
@@ -72,7 +79,7 @@ export default function PetPage() {
     onError: (e) => toast.error(e.message),
   });
   const unsetActiveMut = trpc.gamePet.unsetActivePet.useMutation({
-    onSuccess: () => { toast.success("已取消出戰"); refetchPets(); },
+    onSuccess: () => { toast.success("已取消出戰"); refetchPets(); refetchDetail(); },
     onError: (e) => toast.error(e.message),
   });
   const renameMut = trpc.gamePet.renamePet.useMutation({
@@ -80,11 +87,18 @@ export default function PetPage() {
     onError: (e) => toast.error(e.message),
   });
   const learnSkillMut = trpc.gamePet.learnDestinySkill.useMutation({
-    onSuccess: (res) => { toast.success(res.message); refetchDetail(); },
+    onSuccess: (res) => {
+      toast.success(res.message);
+      setShowDestinyLearn(false);
+      setTargetSlotIndex(null);
+      refetchDetail();
+    },
     onError: (e) => toast.error(e.message),
   });
 
-  // ─── 寵物列表 ───
+  // ═══════════════════════════════════════════════════════════
+  // 寵物列表
+  // ═══════════════════════════════════════════════════════════
   function PetListView() {
     const activePet = myPets?.find(p => p.isActive);
     const otherPets = myPets?.filter(p => !p.isActive) ?? [];
@@ -96,20 +110,18 @@ export default function PetPage() {
           <h2 className="text-white text-lg font-bold flex items-center gap-2">
             🐾 我的寵物 <span className="text-sm text-gray-400">({myPets?.length ?? 0})</span>
           </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setViewMode("catalog")}
-              className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-80"
-              style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}
-            >
-              📖 圖鑑
-            </button>
-          </div>
+          <button
+            onClick={() => setViewMode("catalog")}
+            className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-80"
+            style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}
+          >
+            📖 圖鑑
+          </button>
         </div>
 
         {/* 出戰寵物 */}
         {activePet && (
-          <div className="rounded-xl p-4" style={{ background: "linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.05))", border: "1px solid rgba(255,215,0,0.3)" }}>
+          <div className="rounded-xl p-4" style={{ background: "linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,165,0,0.03))", border: "1px solid rgba(255,215,0,0.25)" }}>
             <div className="flex items-center gap-1 mb-2">
               <span className="text-yellow-400 text-xs font-bold">⭐ 出戰中</span>
             </div>
@@ -138,7 +150,9 @@ export default function PetPage() {
     );
   }
 
-  // ─── 寵物卡片 ───
+  // ═══════════════════════════════════════════════════════════
+  // 寵物卡片
+  // ═══════════════════════════════════════════════════════════
   function PetCard({ pet, isActive, onSelect }: { pet: any; isActive?: boolean; onSelect: () => void }) {
     const catalog = pet.catalog;
     const rarityColor = RARITY_COLOR[catalog?.rarity ?? "common"];
@@ -153,16 +167,12 @@ export default function PetPage() {
         style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
       >
         <div className="flex items-center gap-3">
-          {/* 寵物圖標 */}
           <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0"
             style={{ background: `${wuxingColor}15`, border: `1px solid ${wuxingColor}30` }}>
             {catalog?.imageUrl ? (
               <img src={catalog.imageUrl} alt={pet.nickname} className="w-10 h-10 object-contain" />
-            ) : (
-              WX_EMOJI[catalog?.wuxing ?? "earth"]
-            )}
+            ) : WX_EMOJI[catalog?.wuxing ?? "earth"]}
           </div>
-          {/* 資訊 */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-white font-bold text-sm truncate">{pet.nickname ?? catalog?.name ?? "未知"}</span>
@@ -179,7 +189,6 @@ export default function PetPage() {
               <span className="text-gray-500 text-xs">{RACE_ZH[catalog?.race ?? "normal"]}</span>
               <span className="text-gray-500 text-xs">BP:{totalBp}</span>
             </div>
-            {/* 經驗條 */}
             <div className="mt-1.5 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.1)" }}>
               <div className="h-full rounded-full transition-all" style={{
                 width: `${Math.min(100, (pet.exp / (pet.expToNext || 1)) * 100)}%`,
@@ -193,7 +202,9 @@ export default function PetPage() {
     );
   }
 
-  // ─── 寵物詳情 ───
+  // ═══════════════════════════════════════════════════════════
+  // 寵物詳情（含技能管理內嵌）
+  // ═══════════════════════════════════════════════════════════
   function PetDetailView() {
     if (!petDetail) return <div className="text-center py-12 text-gray-400">載入中...</div>;
     const { pet, catalog, innateSkills, learnedSkills, stats, destinySlots, innateSlots, expToNext, totalBp } = petDetail;
@@ -203,176 +214,193 @@ export default function PetPage() {
     return (
       <div className="space-y-4">
         {/* 返回按鈕 */}
-        <button onClick={() => setViewMode("list")} className="text-gray-400 hover:text-white text-sm flex items-center gap-1">
+        <button onClick={() => { setViewMode("list"); setShowDestinyLearn(false); setTargetSlotIndex(null); }}
+          className="text-gray-400 hover:text-white text-sm flex items-center gap-1 transition-colors">
           ← 返回列表
         </button>
 
-        {/* 頭部資訊 */}
-        <div className="rounded-xl p-4" style={{ background: `linear-gradient(135deg, ${wuxingColor}10, rgba(0,0,0,0.3))`, border: `1px solid ${wuxingColor}20` }}>
-          <div className="flex items-center gap-4">
+        {/* ── 頭部資訊卡 ── */}
+        <div className="rounded-2xl p-4 relative overflow-hidden"
+          style={{ background: `linear-gradient(135deg, ${wuxingColor}12, rgba(0,0,0,0.4))`, border: `1px solid ${wuxingColor}25` }}>
+          {/* 背景光暈 */}
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-20 blur-3xl" style={{ background: wuxingColor }} />
+
+          <div className="relative flex items-center gap-4">
             <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl shrink-0"
-              style={{ background: `${wuxingColor}15`, border: `2px solid ${wuxingColor}40` }}>
+              style={{ background: `${wuxingColor}15`, border: `2px solid ${wuxingColor}40`, boxShadow: `0 0 20px ${wuxingColor}15` }}>
               {catalog?.imageUrl ? (
                 <img src={catalog.imageUrl} alt="" className="w-16 h-16 object-contain" />
               ) : WX_EMOJI[catalog?.wuxing ?? "earth"]}
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-white font-bold text-lg">{pet.nickname ?? catalog?.name}</h3>
                 <button onClick={() => { setNewNickname(pet.nickname ?? ""); setShowRenameModal(true); }}
-                  className="text-gray-500 hover:text-white text-xs">✏️</button>
-                <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ color: tierColor, background: `${tierColor}20`, border: `1px solid ${tierColor}40` }}>
+                  className="text-gray-500 hover:text-white text-xs transition-colors">✏️</button>
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                  style={{ color: tierColor, background: `${tierColor}20`, border: `1px solid ${tierColor}40` }}>
                   {pet.tier} 檔
                 </span>
               </div>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span className="text-xs px-2 py-0.5 rounded" style={{ color: RARITY_COLOR[catalog?.rarity ?? "common"], background: `${RARITY_COLOR[catalog?.rarity ?? "common"]}15` }}>
+                <span className="text-xs px-2 py-0.5 rounded"
+                  style={{ color: RARITY_COLOR[catalog?.rarity ?? "common"], background: `${RARITY_COLOR[catalog?.rarity ?? "common"]}15` }}>
                   {RARITY_ZH[catalog?.rarity ?? "common"]}
                 </span>
                 <span className="text-xs" style={{ color: wuxingColor }}>{WX_EMOJI[catalog?.wuxing ?? "earth"]} {WX_ZH[catalog?.wuxing ?? "earth"]}屬</span>
                 <span className="text-gray-500 text-xs">{RACE_ZH[catalog?.race ?? "normal"]}</span>
                 <span className="text-gray-500 text-xs">{GROWTH_ZH[pet.growthType]}</span>
               </div>
+              {/* 等級 + 經驗條 */}
               <div className="flex items-center gap-3 mt-2">
                 <span className="text-white text-sm font-bold">Lv.{pet.level}</span>
                 <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.1)" }}>
-                  <div className="h-full rounded-full" style={{
+                  <div className="h-full rounded-full transition-all" style={{
                     width: `${Math.min(100, (pet.exp / (expToNext || 1)) * 100)}%`,
                     background: `linear-gradient(90deg, ${wuxingColor}, ${wuxingColor}80)`,
                   }} />
                 </div>
-                <span className="text-gray-500 text-xs">{pet.exp}/{expToNext}</span>
+                <span className="text-gray-500 text-xs whitespace-nowrap">{pet.exp}/{expToNext}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 操作按鈕 */}
+        {/* ── 操作按鈕 ── */}
         <div className="flex gap-2">
           {pet.isActive ? (
             <button onClick={() => unsetActiveMut.mutate()} disabled={unsetActiveMut.isPending}
-              className="flex-1 py-2 rounded-xl text-sm font-bold transition-all"
-              style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
+              style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)" }}>
               取消出戰
             </button>
           ) : (
             <button onClick={() => setActiveMut.mutate({ petId: pet.id })} disabled={setActiveMut.isPending}
-              className="flex-1 py-2 rounded-xl text-sm font-bold transition-all"
-              style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
+              style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}>
               ⭐ 設為出戰
             </button>
           )}
-          <button onClick={() => { setSelectedPetId(pet.id); setViewMode("destiny"); }}
-            className="flex-1 py-2 rounded-xl text-sm font-bold transition-all"
-            style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}>
-            🌟 天命技能
-          </button>
         </div>
 
-        {/* BP 五維雷達圖 */}
-        <PetBpRadarChart
-          history={bpHistory ?? []}
-          currentBp={{
-            constitution: pet.bpConstitution,
-            strength: pet.bpStrength,
-            defense: pet.bpDefense,
-            agility: pet.bpAgility,
-            magic: pet.bpMagic,
-          }}
-          accentColor={wuxingColor}
-        />
+        {/* ── BP 五維雷達圖 ── */}
+        <SectionCard title="📊 BP 五維分佈" accentColor={wuxingColor}>
+          <PetBpRadarChart
+            history={bpHistory ?? []}
+            currentBp={{
+              constitution: pet.bpConstitution,
+              strength: pet.bpStrength,
+              defense: pet.bpDefense,
+              agility: pet.bpAgility,
+              magic: pet.bpMagic,
+            }}
+            accentColor={wuxingColor}
+          />
+        </SectionCard>
 
-        {/* BP 手動分配 */}
+        {/* ── BP 手動分配 ── */}
         <BpAllocatePanel pet={pet} wuxingColor={wuxingColor} onDone={() => { refetchDetail(); refetchPets(); }} />
 
-        {/* 戰鬥數值 */}
-        <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <h4 className="text-white text-sm font-bold mb-3">⚔️ 戰鬥數值</h4>
-          <div className="grid grid-cols-3 gap-3">
+        {/* ── 戰鬥數值 ── */}
+        <SectionCard title="⚔️ 戰鬥數值" accentColor={wuxingColor}>
+          <div className="grid grid-cols-3 gap-2">
             {[
-              { label: "HP", value: stats.hp, color: "#22c55e" },
-              { label: "MP", value: stats.mp, color: "#38bdf8" },
-              { label: "攻擊", value: stats.attack, color: "#ef4444" },
-              { label: "防禦", value: stats.defense, color: "#f59e0b" },
-              { label: "速度", value: stats.speed, color: "#e2e8f0" },
-              { label: "魔攻", value: stats.magicAttack, color: "#a855f7" },
+              { label: "HP", value: stats.hp, color: "#22c55e", icon: "❤️" },
+              { label: "MP", value: stats.mp, color: "#38bdf8", icon: "💧" },
+              { label: "攻擊", value: stats.attack, color: "#ef4444", icon: "⚔️" },
+              { label: "防禦", value: stats.defense, color: "#f59e0b", icon: "🛡️" },
+              { label: "速度", value: stats.speed, color: "#e2e8f0", icon: "⚡" },
+              { label: "魔攻", value: stats.magicAttack, color: "#a855f7", icon: "🔮" },
             ].map(s => (
-              <div key={s.label} className="flex items-center justify-between px-3 py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-                <span className="text-gray-400 text-xs">{s.label}</span>
-                <span className="font-bold text-sm" style={{ color: s.color }}>{s.value}</span>
+              <div key={s.label} className="flex items-center gap-2 px-3 py-2.5 rounded-lg"
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <span className="text-xs">{s.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-gray-400 text-xs leading-none">{s.label}</div>
+                  <div className="font-bold text-sm leading-tight mt-0.5" style={{ color: s.color }}>{s.value}</div>
+                </div>
               </div>
             ))}
           </div>
-        </div>
+        </SectionCard>
 
-        {/* 天生技能 */}
-        <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <h4 className="text-white text-sm font-bold mb-3">🎯 天生技能</h4>
+        {/* ── 天生技能（內嵌管理） ── */}
+        <SectionCard title="🎯 天生技能" accentColor="#22c55e"
+          subtitle={`${innateSlots.filter(s => s.isUnlocked).length}/${innateSlots.length} 格已解鎖`}>
           <div className="space-y-2">
             {innateSlots.map(slot => {
               const skill = innateSkills.find(s => s.slotIndex === slot.slotIndex);
               return (
-                <div key={slot.slotIndex} className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
-                    style={{ background: slot.isUnlocked ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.05)", color: slot.isUnlocked ? "#22c55e" : "#636e72" }}>
-                    {slot.slotIndex}
-                  </div>
-                  {slot.isUnlocked && skill ? (
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-white text-sm font-medium">{skill.name}</span>
-                        {skill.wuxing && <span className="text-xs" style={{ color: WX_HEX[skill.wuxing] }}>{WX_ZH[skill.wuxing]}</span>}
-                      </div>
-                      <div className="text-gray-500 text-xs mt-0.5">
-                        威力 {skill.powerPercent}% · MP {skill.mpCost} · CD {skill.cooldown}回合
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="text-gray-600 text-xs">
-                      {slot.isUnlocked ? "（空）" : `Lv.${slot.unlockLevel} 解鎖`}
-                    </span>
-                  )}
-                </div>
+                <SkillSlotRow
+                  key={slot.slotIndex}
+                  slotIndex={slot.slotIndex}
+                  isUnlocked={slot.isUnlocked}
+                  unlockLevel={slot.unlockLevel}
+                  skill={skill ? {
+                    name: skill.name,
+                    wuxing: skill.wuxing,
+                    powerPercent: skill.powerPercent,
+                    mpCost: skill.mpCost,
+                    cooldown: skill.cooldown,
+                    skillType: skill.skillType,
+                  } : null}
+                  type="innate"
+                />
               );
             })}
           </div>
-        </div>
+        </SectionCard>
 
-        {/* 天命技能 */}
-        <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <h4 className="text-white text-sm font-bold mb-3">🌟 天命技能</h4>
+        {/* ── 天命技能（內嵌管理 + 裝備/替換） ── */}
+        <SectionCard title="🌟 天命技能" accentColor="#a855f7"
+          subtitle={`${destinySlots.filter(s => s.isUnlocked).length}/${destinySlots.length} 格已解鎖`}>
           <div className="space-y-2">
             {destinySlots.map(slot => {
               const skill = learnedSkills.find(s => s.slotIndex === slot.slotIndex);
               return (
-                <div key={slot.slotIndex} className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
-                    style={{ background: slot.isUnlocked ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.05)", color: slot.isUnlocked ? "#a855f7" : "#636e72" }}>
-                    {slot.slotIndex}
-                  </div>
-                  {slot.isUnlocked && skill ? (
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-white text-sm font-medium">{skill.skillName}</span>
-                        <span className="text-xs text-purple-400">Lv.{skill.skillLevel}</span>
-                        {skill.wuxing && <span className="text-xs" style={{ color: WX_HEX[skill.wuxing] }}>{WX_ZH[skill.wuxing]}</span>}
-                      </div>
-                      <div className="text-gray-500 text-xs mt-0.5">
-                        威力 {skill.powerPercent}% · MP {skill.mpCost} · CD {skill.cooldown}回合 · 使用 {skill.usageCount} 次
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="text-gray-600 text-xs">
-                      {slot.isUnlocked ? "（可學習天命技能）" : `Lv.${slot.unlockLevel} 解鎖`}
-                    </span>
-                  )}
-                </div>
+                <SkillSlotRow
+                  key={slot.slotIndex}
+                  slotIndex={slot.slotIndex}
+                  isUnlocked={slot.isUnlocked}
+                  unlockLevel={slot.unlockLevel}
+                  skill={skill ? {
+                    name: skill.skillName,
+                    wuxing: skill.wuxing,
+                    powerPercent: skill.powerPercent,
+                    mpCost: skill.mpCost,
+                    cooldown: skill.cooldown,
+                    skillType: skill.skillType,
+                    skillLevel: skill.skillLevel,
+                    usageCount: skill.usageCount,
+                  } : null}
+                  type="destiny"
+                  onLearn={() => {
+                    setTargetSlotIndex(slot.slotIndex);
+                    setShowDestinyLearn(true);
+                  }}
+                  onReplace={() => {
+                    setTargetSlotIndex(slot.slotIndex);
+                    setShowDestinyLearn(true);
+                  }}
+                />
               );
             })}
           </div>
-        </div>
 
-        {/* 好感度 */}
+          {/* 天命技能學習面板（展開式） */}
+          {showDestinyLearn && targetSlotIndex !== null && (
+            <DestinyLearnPanel
+              petId={pet.id}
+              targetSlot={targetSlotIndex}
+              destinySkills={destinySkills ?? []}
+              onClose={() => { setShowDestinyLearn(false); setTargetSlotIndex(null); }}
+              onLearn={(skillKey) => learnSkillMut.mutate({ petId: pet.id, skillKey, slotIndex: targetSlotIndex })}
+              isPending={learnSkillMut.isPending}
+            />
+          )}
+        </SectionCard>
+
+        {/* ── 好感度 ── */}
         <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
           <div className="flex items-center justify-between">
             <span className="text-gray-400 text-xs">❤️ 好感度</span>
@@ -386,84 +414,169 @@ export default function PetPage() {
     );
   }
 
-  // ─── 天命技能學習 ───
-  function DestinySkillView() {
-    if (!destinySkills || !petDetail) return <div className="text-center py-12 text-gray-400">載入中...</div>;
-    const { pet, catalog } = petDetail;
-    const unlockedSlots = petDetail.destinySlots.filter(s => s.isUnlocked);
+  // ═══════════════════════════════════════════════════════════
+  // 技能格位行（通用）
+  // ═══════════════════════════════════════════════════════════
+  function SkillSlotRow({ slotIndex, isUnlocked, unlockLevel, skill, type, onLearn, onReplace }: {
+    slotIndex: number;
+    isUnlocked: boolean;
+    unlockLevel: number;
+    skill: {
+      name: string;
+      wuxing: string | null;
+      powerPercent: number;
+      mpCost: number;
+      cooldown: number;
+      skillType: string;
+      skillLevel?: number;
+      usageCount?: number;
+    } | null;
+    type: "innate" | "destiny";
+    onLearn?: () => void;
+    onReplace?: () => void;
+  }) {
+    const isDestiny = type === "destiny";
+    const accentColor = isDestiny ? "#a855f7" : "#22c55e";
+    const bgActive = isDestiny ? "rgba(168,85,247,0.12)" : "rgba(34,197,94,0.12)";
+    const bgLocked = "rgba(255,255,255,0.02)";
+
+    if (!isUnlocked) {
+      return (
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: bgLocked, border: "1px solid rgba(255,255,255,0.04)" }}>
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold"
+            style={{ background: "rgba(255,255,255,0.04)", color: "#475569" }}>
+            🔒
+          </div>
+          <span className="text-gray-600 text-xs">Lv.{unlockLevel} 解鎖第 {slotIndex} 格</span>
+        </div>
+      );
+    }
+
+    if (!skill) {
+      return (
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl" style={{ background: bgLocked, border: `1px dashed ${accentColor}30` }}>
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm"
+            style={{ background: `${accentColor}10`, color: accentColor }}>
+            {slotIndex}
+          </div>
+          <span className="text-gray-500 text-xs flex-1">
+            {isDestiny ? "可學習天命技能" : "（空格）"}
+          </span>
+          {isDestiny && onLearn && (
+            <button onClick={onLearn}
+              className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-80 active:scale-[0.96]"
+              style={{ background: `${accentColor}15`, color: accentColor, border: `1px solid ${accentColor}30` }}>
+              學習
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    const wuxingColor = skill.wuxing ? (WX_HEX[skill.wuxing] ?? "#9ca3af") : "#9ca3af";
 
     return (
-      <div className="space-y-4">
-        <button onClick={() => setViewMode("detail")} className="text-gray-400 hover:text-white text-sm flex items-center gap-1">
-          ← 返回詳情
-        </button>
-
-        <div className="flex items-center gap-2">
-          <h2 className="text-white text-lg font-bold">🌟 天命技能學習</h2>
-          <span className="text-gray-500 text-xs">({pet.nickname ?? catalog?.name})</span>
-        </div>
-
-        <div className="text-gray-400 text-xs px-1">
-          已解鎖 {unlockedSlots.length}/{petDetail.destinySlots.length} 格 · 
-          可學習 14 種天命技能，每格可替換
-        </div>
-
-        {/* 可用格位 */}
-        <div className="flex gap-2 mb-2">
-          {petDetail.destinySlots.map(slot => (
-            <div key={slot.slotIndex} className="px-3 py-1.5 rounded-lg text-xs font-bold"
-              style={{
-                background: slot.isUnlocked ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.05)",
-                color: slot.isUnlocked ? "#a855f7" : "#636e72",
-                border: `1px solid ${slot.isUnlocked ? "rgba(168,85,247,0.3)" : "rgba(255,255,255,0.08)"}`,
-              }}>
-              格{slot.slotIndex} {slot.isUnlocked ? "✓" : `Lv.${slot.unlockLevel}`}
+      <div className="rounded-xl px-3 py-2.5 transition-all" style={{ background: bgActive, border: `1px solid ${accentColor}20` }}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold shrink-0"
+            style={{ background: `${accentColor}20`, color: accentColor }}>
+            {slotIndex}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-white text-sm font-medium">{skill.name}</span>
+              {skill.wuxing && (
+                <span className="text-xs px-1.5 py-0.5 rounded" style={{ color: wuxingColor, background: `${wuxingColor}15` }}>
+                  {WX_ZH[skill.wuxing] ?? skill.wuxing}
+                </span>
+              )}
+              {isDestiny && skill.skillLevel && (
+                <span className="text-xs font-bold" style={{ color: accentColor }}>Lv.{skill.skillLevel}</span>
+              )}
             </div>
-          ))}
+            <div className="text-gray-500 text-xs mt-0.5 flex items-center gap-2 flex-wrap">
+              <span>威力 {skill.powerPercent}%</span>
+              <span>·</span>
+              <span>MP {skill.mpCost}</span>
+              <span>·</span>
+              <span>CD {skill.cooldown}回合</span>
+              {isDestiny && skill.usageCount !== undefined && (
+                <>
+                  <span>·</span>
+                  <span>使用 {skill.usageCount} 次</span>
+                </>
+              )}
+            </div>
+          </div>
+          {isDestiny && onReplace && (
+            <button onClick={onReplace}
+              className="text-xs px-2.5 py-1.5 rounded-lg font-medium transition-all hover:opacity-80 active:scale-[0.96] shrink-0"
+              style={{ background: "rgba(255,255,255,0.06)", color: "#94a3b8", border: "1px solid rgba(255,255,255,0.1)" }}>
+              替換
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 天命技能學習面板（展開式，在詳情頁內）
+  // ═══════════════════════════════════════════════════════════
+  function DestinyLearnPanel({ petId, targetSlot, destinySkills, onClose, onLearn, isPending }: {
+    petId: number;
+    targetSlot: number;
+    destinySkills: Array<any>;
+    onClose: () => void;
+    onLearn: (skillKey: string) => void;
+    isPending: boolean;
+  }) {
+    return (
+      <div className="mt-3 rounded-xl p-4" style={{ background: "rgba(168,85,247,0.06)", border: "1px solid rgba(168,85,247,0.2)" }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h4 className="text-white text-sm font-bold">選擇天命技能</h4>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(168,85,247,0.2)", color: "#a855f7" }}>
+              格位 {targetSlot}
+            </span>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-white text-sm transition-colors">✕</button>
         </div>
 
-        {/* 技能列表 */}
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(168,85,247,0.3) transparent" }}>
           {destinySkills.map(skill => {
-            const wuxingColor = skill.wuxing ? WX_HEX[skill.wuxing] : "#9ca3af";
+            const wuxingColor = skill.wuxing ? (WX_HEX[skill.wuxing] ?? "#9ca3af") : "#9ca3af";
             return (
-              <div key={skill.key} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
+              <div key={skill.key} className="rounded-lg p-3 transition-all hover:bg-white/[0.03]"
+                style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-white text-sm font-bold">{skill.name}</span>
                       <span className="text-xs px-1.5 py-0.5 rounded" style={{ color: wuxingColor, background: `${wuxingColor}15` }}>
                         {skill.wuxing ? WX_ZH[skill.wuxing] : "無屬性"}
                       </span>
-                      <span className="text-gray-500 text-xs">{skill.skillType}</span>
+                      <span className="text-gray-600 text-xs">{skill.skillType}</span>
                       {skill.isLearned && <span className="text-green-400 text-xs font-bold">已學</span>}
                     </div>
-                    <p className="text-gray-500 text-xs mt-1">{skill.description}</p>
+                    <p className="text-gray-500 text-xs mt-1 line-clamp-1">{skill.description}</p>
                     <div className="text-gray-600 text-xs mt-0.5">
                       威力 {skill.basePower}% · MP {skill.baseMp} · CD {skill.baseCooldown}回合
                     </div>
+                    {skill.isLearned && skill.learnedData && (
+                      <div className="text-purple-400/60 text-xs mt-0.5">
+                        目前 Lv.{skill.learnedData.skillLevel} · 格位 {skill.learnedData.slotIndex} · 使用 {skill.learnedData.usageCount} 次
+                      </div>
+                    )}
                   </div>
-                  {!skill.isLearned && unlockedSlots.length > 0 && (
-                    <div className="flex flex-col gap-1">
-                      {unlockedSlots.map(slot => (
-                        <button
-                          key={slot.slotIndex}
-                          onClick={() => learnSkillMut.mutate({ petId: pet.id, skillKey: skill.key, slotIndex: slot.slotIndex })}
-                          disabled={learnSkillMut.isPending}
-                          className="text-xs px-2 py-1 rounded-lg transition-all hover:opacity-80"
-                          style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}
-                        >
-                          裝到格{slot.slotIndex}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <button
+                    onClick={() => onLearn(skill.key)}
+                    disabled={isPending}
+                    className="text-xs px-3 py-1.5 rounded-lg font-medium transition-all hover:opacity-80 active:scale-[0.96] shrink-0 disabled:opacity-40"
+                    style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}>
+                    {skill.isLearned ? "替換" : "學習"}
+                  </button>
                 </div>
-                {skill.isLearned && skill.learnedData && (
-                  <div className="mt-2 pt-2 border-t border-white/5 text-xs text-gray-500">
-                    等級 Lv.{skill.learnedData.skillLevel} · 使用 {skill.learnedData.usageCount} 次 · 格位 {skill.learnedData.slotIndex}
-                  </div>
-                )}
               </div>
             );
           })}
@@ -472,7 +585,9 @@ export default function PetPage() {
     );
   }
 
-  // ─── BP 手動分配面板 ───
+  // ═══════════════════════════════════════════════════════════
+  // BP 手動分配面板
+  // ═══════════════════════════════════════════════════════════
   function BpAllocatePanel({ pet, wuxingColor, onDone }: { pet: any; wuxingColor: string; onDone: () => void }) {
     const [alloc, setAlloc] = useState({ constitution: 0, strength: 0, defense: 0, agility: 0, magic: 0 });
     const unallocated = pet.bpUnallocated ?? 0;
@@ -499,14 +614,13 @@ export default function PetPage() {
     ];
 
     return (
-      <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${wuxingColor}20` }}>
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-white text-sm font-bold">🎯 BP 分配</h4>
-          <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)" }}>
+      <SectionCard title="🎯 BP 分配" accentColor={wuxingColor}
+        headerRight={
+          <span className="text-xs font-bold px-2 py-1 rounded-lg"
+            style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)" }}>
             可用 {remaining} / {unallocated}
           </span>
-        </div>
-
+        }>
         <div className="space-y-3">
           {dims.map(d => (
             <div key={d.key} className="flex items-center gap-2">
@@ -519,11 +633,13 @@ export default function PetPage() {
                   disabled={alloc[d.key] <= 0}
                   className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-all disabled:opacity-20"
                   style={{ background: "rgba(255,255,255,0.08)", color: "#e2e8f0" }}
-                >
-                  −
-                </button>
+                >−</button>
                 <div className="flex-1 h-7 rounded-lg flex items-center justify-center text-sm font-bold"
-                  style={{ background: alloc[d.key] > 0 ? `${d.color}15` : "rgba(255,255,255,0.03)", color: alloc[d.key] > 0 ? d.color : "#475569", border: `1px solid ${alloc[d.key] > 0 ? d.color + '40' : 'rgba(255,255,255,0.06)'}` }}>
+                  style={{
+                    background: alloc[d.key] > 0 ? `${d.color}15` : "rgba(255,255,255,0.03)",
+                    color: alloc[d.key] > 0 ? d.color : "#475569",
+                    border: `1px solid ${alloc[d.key] > 0 ? d.color + '40' : 'rgba(255,255,255,0.06)'}`,
+                  }}>
                   {alloc[d.key] > 0 ? `+${alloc[d.key]}` : "0"}
                 </div>
                 <button
@@ -531,18 +647,13 @@ export default function PetPage() {
                   disabled={remaining <= 0}
                   className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold transition-all disabled:opacity-20"
                   style={{ background: "rgba(255,255,255,0.08)", color: "#e2e8f0" }}
-                >
-                  +
-                </button>
-                {/* 快速 +5 */}
+                >+</button>
                 <button
                   onClick={() => setAlloc(a => ({ ...a, [d.key]: a[d.key] + Math.min(5, remaining) }))}
                   disabled={remaining <= 0}
                   className="text-xs px-1.5 py-1 rounded transition-all disabled:opacity-20"
                   style={{ background: "rgba(255,255,255,0.05)", color: "#94a3b8" }}
-                >
-                  +5
-                </button>
+                >+5</button>
               </div>
             </div>
           ))}
@@ -554,28 +665,28 @@ export default function PetPage() {
               onClick={() => setAlloc({ constitution: 0, strength: 0, defense: 0, agility: 0, magic: 0 })}
               className="flex-1 py-2 rounded-xl text-sm text-gray-400 hover:text-white transition-all"
               style={{ background: "rgba(255,255,255,0.05)" }}
-            >
-              重置
-            </button>
+            >重置</button>
             <button
               onClick={() => allocMut.mutate({ petId: pet.id, ...alloc })}
               disabled={allocMut.isPending}
-              className="flex-1 py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50"
+              className="flex-1 py-2 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50 active:scale-[0.98]"
               style={{ background: `linear-gradient(135deg, ${wuxingColor}, ${wuxingColor}80)` }}
             >
               {allocMut.isPending ? "分配中..." : `確認分配 (${totalUsed} 點)`}
             </button>
           </div>
         )}
-      </div>
+      </SectionCard>
     );
   }
 
-  // ─── 寵物圖鑑 ───
+  // ═══════════════════════════════════════════════════════════
+  // 寵物圖鑑
+  // ═══════════════════════════════════════════════════════════
   function CatalogView() {
     return (
       <div className="space-y-4">
-        <button onClick={() => setViewMode("list")} className="text-gray-400 hover:text-white text-sm flex items-center gap-1">
+        <button onClick={() => setViewMode("list")} className="text-gray-400 hover:text-white text-sm flex items-center gap-1 transition-colors">
           ← 返回列表
         </button>
         <h2 className="text-white text-lg font-bold">📖 寵物圖鑑</h2>
@@ -616,11 +727,11 @@ export default function PetPage() {
             return (
               <div key={pet.id} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${rarityColor}20` }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0"
                     style={{ background: `${wuxingColor}15`, border: `1px solid ${wuxingColor}30` }}>
                     {pet.imageUrl ? <img src={pet.imageUrl} alt="" className="w-9 h-9 object-contain" /> : WX_EMOJI[pet.wuxing]}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-white text-sm font-bold">{pet.name}</span>
                       <span className="text-xs px-1.5 py-0.5 rounded" style={{ color: rarityColor, background: `${rarityColor}15` }}>
@@ -652,7 +763,33 @@ export default function PetPage() {
     );
   }
 
-  // ─── 改名 Modal ───
+  // ═══════════════════════════════════════════════════════════
+  // 通用區塊卡片
+  // ═══════════════════════════════════════════════════════════
+  function SectionCard({ title, accentColor, subtitle, headerRight, children }: {
+    title: string;
+    accentColor: string;
+    subtitle?: string;
+    headerRight?: React.ReactNode;
+    children: React.ReactNode;
+  }) {
+    return (
+      <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <h4 className="text-white text-sm font-bold">{title}</h4>
+            {subtitle && <span className="text-gray-500 text-xs">{subtitle}</span>}
+          </div>
+          {headerRight}
+        </div>
+        {children}
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // 改名 Modal
+  // ═══════════════════════════════════════════════════════════
   function RenameModal() {
     if (!showRenameModal || !selectedPetId) return null;
     return (
@@ -676,23 +813,23 @@ export default function PetPage() {
               disabled={!newNickname.trim() || renameMut.isPending}
               className="flex-1 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-40"
               style={{ background: "linear-gradient(135deg, #a855f7, #7c3aed)" }}
-            >
-              確認
-            </button>
+            >確認</button>
           </div>
         </div>
       </div>
     );
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // 主渲染
+  // ═══════════════════════════════════════════════════════════
   return (
     <GameTabLayout activeTab="pets">
-      <div className="min-h-screen pb-20" style={{ background: "linear-gradient(180deg, #0a0a1a 0%, #111827 100%)" }}>
+      <div className="min-h-screen overflow-y-auto pb-24" style={{ background: "linear-gradient(180deg, #0a0a1a 0%, #111827 100%)" }}>
         <div className="max-w-lg mx-auto px-4 py-4">
           {viewMode === "list" && <PetListView />}
           {viewMode === "detail" && <PetDetailView />}
           {viewMode === "catalog" && <CatalogView />}
-          {viewMode === "destiny" && <DestinySkillView />}
         </div>
         <RenameModal />
       </div>
