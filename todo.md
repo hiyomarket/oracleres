@@ -5249,3 +5249,41 @@
 - [x] 撰寫 gloves-slot.test.ts（15 項測試全部通過）
 - [x] 更新 enhanceEngine.test.ts 符合 +20 天堂模式 API（36 項測試全部通過）
 - [x] TypeScript 編譯零錯誤，1371 項測試全部通過
+
+## 修正任務（2026-03-28 第十五批）── 商店/屬性上限/裝備三大 bug
+
+### 商店系統
+- [ ] 關閉 tickEngine 的 refreshShopItems 自動刷新（Tick 不再自動覆蓋商店）
+- [ ] schema 新增 game_virtual_shop.maxPurchaseQty（每人限購總數）
+- [ ] schema 新增 game_virtual_shop.maxPerOrder（每次最多購買數量）
+- [ ] schema 同步更新 game_spirit_shop 和 game_hidden_shop_pool
+- [ ] 後端 buyGameShopItem 支援 quantity 參數（一次多買）
+- [ ] 後端 buyHiddenShopItem 支援 quantity 參數
+- [ ] 前端商店 UI 新增數量輸入框（可輸入 1~maxPerOrder）
+- [ ] 後台商店管理介面新增 maxPurchaseQty / maxPerOrder 欄位設定
+- [ ] pnpm db:push 推送 schema 變更
+
+### 屬性上限後台（圖2）
+- [ ] 確認 gameEngineConfig 中 MATK/MDEF/SPD 上限欄位是否存在
+- [ ] 確認 gameBattle.ts 中戰鬥屬性是否套用這些上限
+- [ ] 修正後台「屬性上限設定」儲存後實際生效到戰鬥系統
+
+### 裝備三大 bug
+- [ ] Bug1：戰鬥屬性加成未套用 ── 確認 getEquipped + gameBattle 的加成計算路徑
+- [ ] Bug2：裝備疊加問題 ── 道具/裝備/技能圖鑑新增 stackable 欄位，裝備類不可疊加
+- [ ] Bug3：裝備頁面體驗 ── 裝備/卸下改為 optimistic update（即時反應）
+- [ ] Bug3：裝備頁面體驗 ── 裝備欄位點擊後直接開啟背包裝備選取 modal
+
+## 修正任務（2026-03-28 第十五批）── 商店手動管理 + 裝備三大 Bug
+
+- [x] 關閉 tickEngine 中的自動商店刷新（refreshShopItems 不再被 processTick 呼叫）
+- [x] schema 新增 maxPerOrder 欄位到 game_virtual_shop 和 game_spirit_shop 資料表（SQL 直接 ALTER TABLE）
+- [x] 後端 gameAdmin.ts：createVirtualShopItem/createSpiritShopItem/updateVirtualShopItem/updateSpiritShopItem 加入 maxPerOrder 參數
+- [x] 後端 gameWorld.ts：buyGameShopItem 支援 buyQty 批量購買和 maxPerOrder 限制（超過上限自動截斷）
+- [x] 後台 ShopManagementTab UI：移除「立即刷新商店」按鈕、加入「每次最多購買數量」欄位、更新說明文字
+- [x] 玩家端 GameShop.tsx：ConfirmModal 加入數量選擇器（-/+/輸入框），顯示 maxPerOrder 上限，總費用即時計算
+- [x] 修正裝備加成未套用到戰鬥屬性（圖1）：gameAvatar.getEquipped 返回 equipBonus，CharacterPanel 戰鬥屬性顯示加上裝備加成
+- [x] 修正裝備疊加問題（圖3）：equipItemMutation 加入 optimistic update，裝備/卸下後同時 invalidate equippedData 和 agent
+- [x] 修正裝備頁面體驗（圖4）：點擊裝備槽位開啟選取 Modal，顯示背包中對應槽位的裝備，可直接點選裝備
+- [x] 撰寫 shop-equip-fixes.test.ts（16 項測試全部通過）
+- [x] TypeScript 零錯誤，1387 項測試全部通過

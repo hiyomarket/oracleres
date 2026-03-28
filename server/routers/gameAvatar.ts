@@ -408,6 +408,16 @@ export const gameAvatarRouter = router({
       }
     } catch { /* fallback */ }
     const statCaps = getStatCaps();
+    // 計算裝備加成總和（用於前端戰鬥屬性顯示）
+    const equipBonus = { hp: 0, atk: 0, def: 0, spd: 0 };
+    for (const slot of Object.values(revisitEquippedMap)) {
+      if (slot) {
+        equipBonus.hp  += (slot as any).hpBonus      ?? 0;
+        equipBonus.atk += (slot as any).attackBonus  ?? 0;
+        equipBonus.def += (slot as any).defenseBonus ?? 0;
+        equipBonus.spd += (slot as any).speedBonus   ?? 0;
+      }
+    }
     return {
       items: equipped.map((item) => ({ ...item, isDefault: false })),
       isFirstTime: false,
@@ -419,6 +429,7 @@ export const gameAvatarRouter = router({
       gameLevel: revisitGameLevel,
       gameDominantElement: revisitDominantElement,
       equipped: revisitEquippedMap,
+      equipBonus,
       statCaps,
     };
   }),

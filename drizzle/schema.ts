@@ -1940,6 +1940,8 @@ export const gameVirtualShop = mysqlTable("game_virtual_shop", {
   isOnSale: tinyint("is_on_sale").notNull().default(1),
   /** 每人限購數量（0 = 不限） */
   purchaseLimit: int("purchase_limit").notNull().default(0),
+  /** 每次最多購買數量（1 = 每次只能買 1 個，0 = 不限） */
+  maxPerOrder: int("max_per_order").notNull().default(0),
   /** 是否鎖定（鎖定後 AI 刷新不會覆蓋） */
   isLocked: tinyint("is_locked").notNull().default(0),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
@@ -1971,6 +1973,8 @@ export const gameSpiritShop = mysqlTable("game_spirit_shop", {
   isOnSale: tinyint("is_on_sale").notNull().default(1),
   /** 每人限購數量（0 = 不限） */
   purchaseLimit: int("purchase_limit").notNull().default(0),
+  /** 每次最多購買數量（1 = 每次只能買 1 個，0 = 不限） */
+  maxPerOrder: int("max_per_order").notNull().default(0),
   /** 是否鎖定（鎖定後 AI 刷新不會覆蓋） */
   isLocked: tinyint("is_locked").notNull().default(0),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),

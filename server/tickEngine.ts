@@ -1070,10 +1070,8 @@ export async function processTick(): Promise<TickResult> {
   // 確保成就種子資料存在
   try { await seedAchievements(); } catch { }
 
-  // 自動刷新商店商品（每次全地圖 Tick 同步更新）
-  try { await refreshShopItems(db); } catch (err) {
-    console.error("[Tick] 商店刷新失敗:", err);
-  }
+  // 商店已改為完全手動管理，不再自動刷新
+  // refreshShopItems 已停用，請透過後台「商店管理」手動上架商品
 
   return { processed: 0, events: 0, levelUps: [], legendaryDrops: [], lastCombats: [] };
 }

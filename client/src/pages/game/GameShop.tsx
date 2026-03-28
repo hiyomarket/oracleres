@@ -30,18 +30,22 @@ const RARITY_LABEL: Record<string, string> = {
 
 // ─── 購買確認彈窗 ─────────────────────────────────────────────
 interface ConfirmModalProps {
-  item: { displayName: string; description?: string | null; price: number; currency: "gold" | "stones"; rarity?: string } | null;
+  item: { displayName: string; description?: string | null; price: number; currency: "gold" | "stones"; rarity?: string; maxPerOrder?: number } | null;
   balance: { gold: number; gameStones: number };
-  onConfirm: () => void;
+  onConfirm: (qty: number) => void;
   onCancel: () => void;
   isPending: boolean;
 }
 const ConfirmModal: React.FC<ConfirmModalProps> = ({ item, balance, onConfirm, onCancel, isPending }) => {
+  const [qty, setQty] = React.useState(1);
+  React.useEffect(() => { if (item) setQty(1); }, [item]);
   if (!item) return null;
   const isGold = item.currency === "gold";
+  const maxPerOrder = item.maxPerOrder ?? 10;
+  const totalPrice = item.price * qty;
   const currentBalance = isGold ? balance.gold : balance.gameStones;
-  const canAfford = currentBalance >= item.price;
-  const afterBalance = currentBalance - item.price;
+  const canAfford = currentBalance >= totalPrice;
+  const afterBalance = currentBalance - totalPrice;
   const rarity = item.rarity ?? "common";
   const rc = RARITY_COLORS[rarity] ?? RARITY_COLORS.common;
 
@@ -56,9 +60,9 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ item, balance, onConfirm, o
       >
         <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#e2e8f0", textAlign: "center", marginBottom: "16px" }}>確認購買</h3>
         {/* 商品資訊 */}
-        <div style={{ padding: "12px", borderRadius: "10px", background: rc.bg, border: `1px solid ${rc.border}`, marginBottom: "16px" }}>
+        <div style={{ padding: "12px", borderRadius: "10px", background: rc.bg, border: `1px solid ${rc.border}`, marginBottom: "12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-            <span style={{ fontSize: "18px" }}>{isGold ? "🛒" : "💎"}</span>
+            <span style={{ fontSize: "18px" }}>{isGold ? "🛒" : "💸"}</span>
             <span style={{ fontSize: "14px", fontWeight: 600, color: "#e2e8f0" }}>{item.displayName}</span>
             <span style={{ marginLeft: "auto", fontSize: "10px", padding: "2px 6px", borderRadius: "4px", background: rc.bg, border: `1px solid ${rc.border}`, color: rc.text, fontWeight: 700 }}>
               {RARITY_LABEL[rarity] ?? rarity}
@@ -68,23 +72,41 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ item, balance, onConfirm, o
             <p style={{ fontSize: "12px", color: "#94a3b8", marginTop: "4px" }}>{item.description}</p>
           )}
         </div>
+        {/* 購買數量選擇 */}
+        <div style={{ marginBottom: "12px" }}>
+          <p style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "6px" }}>購買數量（最多 {maxPerOrder} 件）</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={() => setQty(q => Math.max(1, q - 1))}
+              style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.05)", color: "#e2e8f0", fontSize: "18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >-</button>
+            <input
+              type="number" min={1} max={maxPerOrder} value={qty}
+              onChange={e => setQty(Math.min(maxPerOrder, Math.max(1, parseInt(e.target.value) || 1)))}
+              style={{ flex: 1, textAlign: "center", padding: "6px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.05)", color: "#e2e8f0", fontSize: "16px", fontWeight: 700 }}
+            />
+            <button
+              onClick={() => setQty(q => Math.min(maxPerOrder, q + 1))}
+              style={{ width: "32px", height: "32px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.05)", color: "#e2e8f0", fontSize: "18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+          </div>
+        </div>
         {/* 餘額資訊 */}
         <div style={{ marginBottom: "16px", fontSize: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", color: "#94a3b8" }}>
             <span>目前{isGold ? "金幣" : "靈石"}</span>
-            <span style={{ color: "#e2e8f0" }}>{isGold ? "🪙" : "💎"} {currentBalance.toLocaleString()}</span>
+            <span style={{ color: "#e2e8f0" }}>{isGold ? "🪙" : "💸"} {currentBalance.toLocaleString()}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", color: "#94a3b8" }}>
-            <span>購買費用</span>
+            <span>購買費用 x{qty}</span>
             <span style={{ color: canAfford ? "#ef4444" : "#f87171" }}>
-              - {isGold ? "🪙" : "💎"} {item.price.toLocaleString()}
+              - {isGold ? "🪙" : "💸"} {totalPrice.toLocaleString()}
             </span>
           </div>
           <div style={{ height: "1px", background: "rgba(255,255,255,0.1)" }} />
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <span style={{ color: "#94a3b8" }}>購買後餘額</span>
             <span style={{ color: canAfford ? "#4ade80" : "#ef4444", fontWeight: 700 }}>
-              {isGold ? "🪙" : "💎"} {afterBalance.toLocaleString()}
+              {isGold ? "🪙" : "💸"} {afterBalance.toLocaleString()}
             </span>
           </div>
         </div>
@@ -102,7 +124,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ item, balance, onConfirm, o
             取消
           </button>
           <button
-            onClick={onConfirm}
+            onClick={() => onConfirm(qty)}
             disabled={!canAfford || isPending}
             style={{
               flex: 1, padding: "10px", borderRadius: "8px", border: "none",
@@ -112,7 +134,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ item, balance, onConfirm, o
               opacity: isPending ? 0.7 : 1,
             }}
           >
-            {isPending ? "購買中..." : "確認購買"}
+            {isPending ? "購買中..." : `確認購買 x${qty}`}
           </button>
         </div>
       </div>
@@ -204,6 +226,7 @@ export default function GameShop() {
     currency: "gold" | "stones";
     rarity?: string;
     shopType: "coin" | "stone" | "hidden";
+    maxPerOrder?: number;
   } | null>(null);
   const [detailItemKey, setDetailItemKey] = useState<string | null>(null);
 
@@ -261,12 +284,12 @@ export default function GameShop() {
     },
   });
 
-  const handleConfirmBuy = useCallback(() => {
+  const handleConfirmBuy = useCallback((qty: number) => {
     if (!confirmItem) return;
     if (confirmItem.shopType === "hidden") {
       buyHiddenItem.mutate({ itemId: confirmItem.id });
     } else {
-      buyGameItem.mutate({ shopType: confirmItem.shopType, itemId: confirmItem.id });
+      buyGameItem.mutate({ shopType: confirmItem.shopType, itemId: confirmItem.id, buyQty: qty });
     }
   }, [confirmItem, buyGameItem, buyHiddenItem]);
 
@@ -466,6 +489,7 @@ export default function GameShop() {
                         price: item.priceCoins,
                         currency: "gold",
                         shopType: "coin",
+                        maxPerOrder: (item as any).maxPerOrder ?? 10,
                       })}
                       onDetail={() => setDetailItemKey((item as any).itemKey)}
                     />
@@ -510,6 +534,7 @@ export default function GameShop() {
                         currency: "stones",
                         rarity: item.rarity,
                         shopType: "stone",
+                        maxPerOrder: (item as any).maxPerOrder ?? 10,
                       })}
                       onDetail={() => setDetailItemKey((item as any).itemKey)}
                     />

@@ -2131,6 +2131,7 @@ function ShopManagementTab() {
     priceCoins: 50, priceStones: 1, price: 100,
     quantity: 1, stock: -1, rarity: "common" as string,
     currencyType: "coins" as string, weight: 10, sortOrder: 0,
+    maxPerOrder: 10,
   });
 
   const { data: virtualItems, refetch: refetchVirtual } = trpc.gameAdmin.getVirtualShop.useQuery(
@@ -2175,9 +2176,9 @@ function ShopManagementTab() {
   const handleSubmit = () => {
     if (!form.itemKey || !form.displayName) { toast.error("請填寫道具 Key 和顯示名稱"); return; }
     if (shopType === "virtual") {
-      createVirtual.mutate({ itemKey: form.itemKey, displayName: form.displayName, description: form.description, priceCoins: form.priceCoins, quantity: form.quantity, stock: form.stock, sortOrder: form.sortOrder, isOnSale: 1 });
+      createVirtual.mutate({ itemKey: form.itemKey, displayName: form.displayName, description: form.description, priceCoins: form.priceCoins, quantity: form.quantity, stock: form.stock, sortOrder: form.sortOrder, isOnSale: 1, maxPerOrder: form.maxPerOrder });
     } else if (shopType === "spirit") {
-      createSpirit.mutate({ itemKey: form.itemKey, displayName: form.displayName, description: form.description, priceStones: form.priceStones, quantity: form.quantity, rarity: form.rarity as "common" | "rare" | "epic" | "legendary", sortOrder: form.sortOrder, isOnSale: 1 });
+      createSpirit.mutate({ itemKey: form.itemKey, displayName: form.displayName, description: form.description, priceStones: form.priceStones, quantity: form.quantity, rarity: form.rarity as "common" | "rare" | "epic" | "legendary", sortOrder: form.sortOrder, isOnSale: 1, maxPerOrder: form.maxPerOrder });
     } else {
       createHidden.mutate({ itemKey: form.itemKey, displayName: form.displayName, description: form.description, currencyType: form.currencyType as "coins" | "stones", price: form.price, quantity: form.quantity, weight: form.weight, rarity: form.rarity as "common" | "rare" | "epic" | "legendary", isActive: 1 });
     }
@@ -2196,9 +2197,6 @@ function ShopManagementTab() {
           ))}
         </div>
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => refreshShop.mutate()} disabled={refreshShop.isPending}>
-            🔄 立即刷新商店
-          </Button>
           <Button size="sm" onClick={() => setShowForm(!showForm)}>
             {showForm ? "✕ 取消" : "+ 新增商品"}
           </Button>
@@ -2228,6 +2226,7 @@ function ShopManagementTab() {
                   <div><p className="text-xs text-muted-foreground mb-1">金幣價格</p><Input type="number" value={form.priceCoins} onChange={e => setForm(f => ({ ...f, priceCoins: +e.target.value }))} /></div>
                   <div><p className="text-xs text-muted-foreground mb-1">數量</p><Input type="number" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} /></div>
                   <div><p className="text-xs text-muted-foreground mb-1">庫存(-1=無限)</p><Input type="number" value={form.stock} onChange={e => setForm(f => ({ ...f, stock: +e.target.value }))} /></div>
+                  <div><p className="text-xs text-muted-foreground mb-1">每次最多購買</p><Input type="number" min={1} value={form.maxPerOrder} onChange={e => setForm(f => ({ ...f, maxPerOrder: +e.target.value }))} /></div>
                   <div><p className="text-xs text-muted-foreground mb-1">排序</p><Input type="number" value={form.sortOrder} onChange={e => setForm(f => ({ ...f, sortOrder: +e.target.value }))} /></div>
                 </>
               )}
@@ -2235,6 +2234,7 @@ function ShopManagementTab() {
                 <>
                   <div><p className="text-xs text-muted-foreground mb-1">靈石價格</p><Input type="number" value={form.priceStones} onChange={e => setForm(f => ({ ...f, priceStones: +e.target.value }))} /></div>
                   <div><p className="text-xs text-muted-foreground mb-1">數量</p><Input type="number" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: +e.target.value }))} /></div>
+                  <div><p className="text-xs text-muted-foreground mb-1">每次最多購買</p><Input type="number" min={1} value={form.maxPerOrder} onChange={e => setForm(f => ({ ...f, maxPerOrder: +e.target.value }))} /></div>
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">稾有度</p>
                     <select className="w-full border rounded px-2 py-1.5 text-sm bg-background" value={form.rarity} onChange={e => setForm(f => ({ ...f, rarity: e.target.value }))}>
@@ -2281,7 +2281,7 @@ function ShopManagementTab() {
         </CardHeader>
         <CardContent>
           {currentItems.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">目前無商品，點擊「+ 新增商品」或「立即刷新商店」自動生成</p>
+            <p className="text-sm text-muted-foreground text-center py-4">目前無商品，點擊「+ 新增商品」手動新增</p>
           ) : (
             <div className="space-y-2">
               {currentItems.map((item: Record<string, unknown>) => (
@@ -2293,9 +2293,9 @@ function ShopManagementTab() {
                       {item.rarity != null && <Badge variant="outline" className="text-xs">{String(item.rarity)}</Badge>}
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
-                      {shopType === "virtual" && `🪙 ${item.priceCoins} 金幣 · x${item.quantity}`}
-                      {shopType === "spirit" && `💎 ${item.priceStones} 靈石 · x${item.quantity}`}
-                      {shopType === "hidden" && `${item.currencyType === "coins" ? "🪙" : "💎"} ${item.price} · x${item.quantity} · 權重 ${item.weight}`}
+                      {shopType === "virtual" && `🪙 ${item.priceCoins} 金幣 · x${item.quantity} · 庫存 ${Number(item.stock) === -1 ? '無限' : item.stock} · 每次最多 ${item.maxPerOrder ?? 10}`}
+                      {shopType === "spirit" && `💸 ${item.priceStones} 靈石 · x${item.quantity} · 每次最多 ${item.maxPerOrder ?? 10}`}
+                      {shopType === "hidden" && `${item.currencyType === "coins" ? "🪙" : "💸"} ${item.price} · x${item.quantity} · 權重 ${item.weight}`}
                     </div>
                   </div>
                   <Button
@@ -2314,7 +2314,7 @@ function ShopManagementTab() {
       </Card>
 
       <p className="text-xs text-muted-foreground">
-        密店池是隨機抽取名單，權重越高出現機率越大。一般商店和靈石專區會在每次 Tick 自動從道具圖鑑隨機補充商品。
+        密店池是隨機抽取名單，權重越高出現機率越大。一般商店和靈石專區為完全手動管理，不會自動刷新。「每次最多購買」限制玩家單次購買的數量上限。
       </p>
     </div>
   );

@@ -2025,6 +2025,8 @@ export const gameWorldRouter = router({
     .input(z.object({
       shopType: z.enum(["coin", "stone"]),
       itemId: z.number().int().positive(),
+      /** 此次購買的個數（預設 1） */
+      buyQty: z.number().int().positive().default(1),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -2039,70 +2041,82 @@ export const gameWorldRouter = router({
         const [item] = await db.select().from(gameVirtualShop)
           .where(and(eq(gameVirtualShop.id, input.itemId), eq(gameVirtualShop.isOnSale, 1))).limit(1);
         if (!item) throw new TRPCError({ code: "NOT_FOUND", message: "商品不存在" });
-        // 限購檢查
+        // 每次最多購買數量限制
+        const maxPerOrder = item.maxPerOrder ?? 0;
+        const buyQty = maxPerOrder > 0 ? Math.min(input.buyQty, maxPerOrder) : input.buyQty;
+        // 限購次數檢查
         if (item.purchaseLimit > 0) {
           const [logCount] = await db.select({ cnt: count() }).from(gameShopPurchaseLog)
             .where(and(eq(gameShopPurchaseLog.agentId, agent.id), eq(gameShopPurchaseLog.shopType, "coin"), eq(gameShopPurchaseLog.shopItemId, item.id)));
-          if ((logCount?.cnt ?? 0) >= item.purchaseLimit) throw new TRPCError({ code: "BAD_REQUEST", message: `此商品限購 ${item.purchaseLimit} 次，已達上限` });
+          const alreadyBought = logCount?.cnt ?? 0;
+          if (alreadyBought >= item.purchaseLimit) throw new TRPCError({ code: "BAD_REQUEST", message: `此商品限購 ${item.purchaseLimit} 次，已達上限` });
         }
-        if (agent.gold < item.priceCoins) throw new TRPCError({ code: "BAD_REQUEST", message: "金幣不足" });
+        const totalCost = item.priceCoins * buyQty;
+        const totalQty = item.quantity * buyQty;
+        if (agent.gold < totalCost) throw new TRPCError({ code: "BAD_REQUEST", message: `金幣不足（需要 ${totalCost} 金幣）` });
         // 扣除金幣
-        await db.update(gameAgents).set({ gold: agent.gold - item.priceCoins, updatedAt: Date.now() })
+        await db.update(gameAgents).set({ gold: agent.gold - totalCost, updatedAt: Date.now() })
           .where(eq(gameAgents.id, agent.id));
         // 加入背包
         const existing = await db.select().from(agentInventory)
           .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
         if (existing[0]) {
-          await db.update(agentInventory).set({ quantity: existing[0].quantity + item.quantity, updatedAt: Date.now() })
+          await db.update(agentInventory).set({ quantity: existing[0].quantity + totalQty, updatedAt: Date.now() })
             .where(eq(agentInventory.id, existing[0].id));
         } else {
-          await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: "consumable", quantity: item.quantity, acquiredAt: Date.now(), updatedAt: Date.now() });
+          await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: "consumable", quantity: totalQty, acquiredAt: Date.now(), updatedAt: Date.now() });
         }
         await db.insert(agentEvents).values({
           agentId: agent.id, eventType: "system",
-          message: `🛒 購買了「${item.displayName}」x${item.quantity}（花費 ${item.priceCoins} 金幣）`,
-          detail: { type: "shop_buy", itemId: item.itemKey, qty: item.quantity, cost: item.priceCoins, currency: "gold" },
+          message: `🛒 購買了「${item.displayName}」x${totalQty}（花費 ${totalCost} 金幣）`,
+          detail: { type: "shop_buy", itemId: item.itemKey, qty: totalQty, cost: totalCost, currency: "gold" },
           createdAt: Date.now(),
         });
-        // 記錄購買
-        await db.insert(gameShopPurchaseLog).values({ agentId: agent.id, shopType: "coin", shopItemId: item.id, itemKey: item.itemKey, quantity: item.quantity, purchasedAt: Date.now() });
-        return { success: true, itemName: item.displayName, quantity: item.quantity, currency: "gold", cost: item.priceCoins };
+        // 記錄購買（每次購買記一筆）
+        await db.insert(gameShopPurchaseLog).values({ agentId: agent.id, shopType: "coin", shopItemId: item.id, itemKey: item.itemKey, quantity: totalQty, purchasedAt: Date.now() });
+        return { success: true, itemName: item.displayName, quantity: totalQty, currency: "gold", cost: totalCost };
       } else {
         // 靈石商店
         const [item] = await db.select().from(gameSpiritShop)
           .where(and(eq(gameSpiritShop.id, input.itemId), eq(gameSpiritShop.isOnSale, 1))).limit(1);
         if (!item) throw new TRPCError({ code: "NOT_FOUND", message: "商品不存在" });
-        // 限購檢查
+        // 每次最多購買數量限制
+        const maxPerOrder = item.maxPerOrder ?? 0;
+        const buyQty = maxPerOrder > 0 ? Math.min(input.buyQty, maxPerOrder) : input.buyQty;
+        // 限購次數檢查
         if (item.purchaseLimit > 0) {
           const [logCount] = await db.select({ cnt: count() }).from(gameShopPurchaseLog)
             .where(and(eq(gameShopPurchaseLog.agentId, agent.id), eq(gameShopPurchaseLog.shopType, "stone"), eq(gameShopPurchaseLog.shopItemId, item.id)));
-          if ((logCount?.cnt ?? 0) >= item.purchaseLimit) throw new TRPCError({ code: "BAD_REQUEST", message: `此商品限購 ${item.purchaseLimit} 次，已達上限` });
+          const alreadyBought = logCount?.cnt ?? 0;
+          if (alreadyBought >= item.purchaseLimit) throw new TRPCError({ code: "BAD_REQUEST", message: `此商品限購 ${item.purchaseLimit} 次，已達上限` });
         }
         const userRows = await db.select({ gameStones: users.gameStones, id: users.id })
           .from(users).where(eq(users.id, ctx.user.id)).limit(1);
         if (!userRows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "用戶不存在" });
-        if (userRows[0].gameStones < item.priceStones) throw new TRPCError({ code: "BAD_REQUEST", message: "靈石不足" });
+        const totalCost = item.priceStones * buyQty;
+        const totalQty = item.quantity * buyQty;
+        if (userRows[0].gameStones < totalCost) throw new TRPCError({ code: "BAD_REQUEST", message: `靈石不足（需要 ${totalCost} 靈石）` });
         // 扣除靈石
-        await db.update(users).set({ gameStones: userRows[0].gameStones - item.priceStones })
+        await db.update(users).set({ gameStones: userRows[0].gameStones - totalCost })
           .where(eq(users.id, ctx.user.id));
         // 加入背包
         const existing = await db.select().from(agentInventory)
           .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
         if (existing[0]) {
-          await db.update(agentInventory).set({ quantity: existing[0].quantity + item.quantity, updatedAt: Date.now() })
+          await db.update(agentInventory).set({ quantity: existing[0].quantity + totalQty, updatedAt: Date.now() })
             .where(eq(agentInventory.id, existing[0].id));
         } else {
-          await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: "consumable", quantity: item.quantity, acquiredAt: Date.now(), updatedAt: Date.now() });
+          await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: "consumable", quantity: totalQty, acquiredAt: Date.now(), updatedAt: Date.now() });
         }
         await db.insert(agentEvents).values({
           agentId: agent.id, eventType: "system",
-          message: `💎 購買了「${item.displayName}」x${item.quantity}（花費 ${item.priceStones} 靈石）`,
-          detail: { type: "shop_buy", itemId: item.itemKey, qty: item.quantity, cost: item.priceStones, currency: "stones" },
+          message: `💎 購買了「${item.displayName}」x${totalQty}（花費 ${totalCost} 靈石）`,
+          detail: { type: "shop_buy", itemId: item.itemKey, qty: totalQty, cost: totalCost, currency: "stones" },
           createdAt: Date.now(),
         });
-        // 記錄購買
-        await db.insert(gameShopPurchaseLog).values({ agentId: agent.id, shopType: "stone", shopItemId: item.id, itemKey: item.itemKey, quantity: item.quantity, purchasedAt: Date.now() });
-        return { success: true, itemName: item.displayName, quantity: item.quantity, currency: "stones", cost: item.priceStones };
+        // 記錄購買（每次購買記一筆）
+        await db.insert(gameShopPurchaseLog).values({ agentId: agent.id, shopType: "stone", shopItemId: item.id, itemKey: item.itemKey, quantity: totalQty, purchasedAt: Date.now() });
+        return { success: true, itemName: item.displayName, quantity: totalQty, currency: "stones", cost: totalCost };
       }
     }),
 
