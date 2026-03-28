@@ -430,6 +430,9 @@ import {
   DESTINY_AWAKENING_EFFECTS,
   petSkillsToCombatFormat,
   calcPetBattleExp,
+  calcAfkBpGain,
+  recalcReasonableBP,
+  AFK_BP_DAILY_CAP,
 } from "./services/petEngine";
 
 describe("DESTINY_AWAKENING_EFFECTS", () => {
@@ -539,5 +542,120 @@ describe("calcPetBattleExp", () => {
     const exp = calcPetBattleExp(100, 50, 1);
     // levelDiff = -49, mul = max(0.3, 1 + (-49)*0.05) = max(0.3, -1.45) = 0.3
     expect(exp).toBe(Math.max(1, Math.round(60 * 0.3)));
+  });
+});
+
+// ─── calcAfkBpGain (v2 新增) ────────────────────────────────
+
+describe("calcAfkBpGain", () => {
+  it("should return 0 when daily cap is reached", () => {
+    const result = calcAfkBpGain(1, "fighter", AFK_BP_DAILY_CAP);
+    expect(result.totalGain).toBe(0);
+    expect(Object.values(result.gains).reduce((a, b) => a + b, 0)).toBe(0);
+  });
+
+  it("should return 0 or 1 BP per tick", () => {
+    for (let i = 0; i < 100; i++) {
+      const result = calcAfkBpGain(1, "fighter", 0);
+      expect(result.totalGain).toBeLessThanOrEqual(1);
+      expect(result.totalGain).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("low level should have higher chance than high level", () => {
+    let lowLevelGains = 0, highLevelGains = 0;
+    const runs = 2000;
+    for (let i = 0; i < runs; i++) {
+      lowLevelGains += calcAfkBpGain(1, "fighter", 0).totalGain;
+      highLevelGains += calcAfkBpGain(60, "fighter", 0).totalGain;
+    }
+    // Lv1 ~50% chance, Lv60 ~10% chance
+    expect(lowLevelGains / runs).toBeGreaterThan(highLevelGains / runs);
+    expect(lowLevelGains / runs).toBeGreaterThan(0.3);
+    expect(highLevelGains / runs).toBeLessThan(0.3);
+  });
+
+  it("fighter growth type should bias toward strength", () => {
+    let strengthGains = 0, totalGains = 0;
+    const runs = 3000;
+    for (let i = 0; i < runs; i++) {
+      const result = calcAfkBpGain(1, "fighter", 0);
+      if (result.totalGain > 0) {
+        totalGains++;
+        if (result.gains.strength > 0) strengthGains++;
+      }
+    }
+    if (totalGains > 50) {
+      expect(strengthGains / totalGains).toBeGreaterThan(0.5);
+    }
+  });
+
+  it("balanced type distributes randomly across all dimensions", () => {
+    const dimCounts: Record<string, number> = { constitution: 0, strength: 0, defense: 0, agility: 0, magic: 0 };
+    let totalGains = 0;
+    const runs = 5000;
+    for (let i = 0; i < runs; i++) {
+      const result = calcAfkBpGain(1, "balanced", 0);
+      if (result.totalGain > 0) {
+        totalGains++;
+        for (const [k, v] of Object.entries(result.gains)) {
+          if (v > 0) dimCounts[k]++;
+        }
+      }
+    }
+    // balanced: each dim should get roughly 20% of gains
+    if (totalGains > 100) {
+      for (const dim of Object.keys(dimCounts)) {
+        expect(dimCounts[dim] / totalGains).toBeGreaterThan(0.05);
+        expect(dimCounts[dim] / totalGains).toBeLessThan(0.50);
+      }
+    }
+  });
+});
+
+// ─── recalcReasonableBP (v2 新增) ────────────────────────────
+
+describe("recalcReasonableBP", () => {
+  it("should scale down inflated BP for Lv30 C-tier", () => {
+    const inflated = { constitution: 500, strength: 600, defense: 400, agility: 300, magic: 200 };
+    const result = recalcReasonableBP(inflated, 30, "C");
+    const total = result.constitution + result.strength + result.defense + result.agility + result.magic;
+    expect(total).toBeLessThan(500);
+    expect(total).toBeGreaterThan(50);
+  });
+
+  it("should not scale down already reasonable BP", () => {
+    // Lv10 C-tier target: initial ~90 + 9*2 + 9*2*0.3 ≈ 113
+    // Total 50 is well below target, so should not scale
+    const reasonable = { constitution: 12, strength: 15, defense: 10, agility: 8, magic: 5 };
+    const result = recalcReasonableBP(reasonable, 10, "C");
+    expect(result.constitution).toBe(reasonable.constitution);
+    expect(result.strength).toBe(reasonable.strength);
+  });
+
+  it("should preserve proportions when scaling", () => {
+    const inflated = { constitution: 400, strength: 800, defense: 400, agility: 200, magic: 200 };
+    const result = recalcReasonableBP(inflated, 30, "C");
+    expect(result.strength).toBeGreaterThan(result.constitution);
+    expect(result.strength).toBeGreaterThan(result.magic);
+  });
+
+  it("S-tier Lv60 should allow higher BP than C-tier Lv60", () => {
+    const inflated = { constitution: 200, strength: 200, defense: 200, agility: 200, magic: 200 };
+    const resultS = recalcReasonableBP(inflated, 60, "S");
+    const resultC = recalcReasonableBP(inflated, 60, "C");
+    const totalS = resultS.constitution + resultS.strength + resultS.defense + resultS.agility + resultS.magic;
+    const totalC = resultC.constitution + resultC.strength + resultC.defense + resultC.agility + resultC.magic;
+    expect(totalS).toBeGreaterThanOrEqual(totalC);
+  });
+
+  it("all dimensions should be at least 1 after scaling", () => {
+    const inflated = { constitution: 1000, strength: 1000, defense: 1000, agility: 1000, magic: 1000 };
+    const result = recalcReasonableBP(inflated, 5, "E");
+    expect(result.constitution).toBeGreaterThanOrEqual(1);
+    expect(result.strength).toBeGreaterThanOrEqual(1);
+    expect(result.defense).toBeGreaterThanOrEqual(1);
+    expect(result.agility).toBeGreaterThanOrEqual(1);
+    expect(result.magic).toBeGreaterThanOrEqual(1);
   });
 });

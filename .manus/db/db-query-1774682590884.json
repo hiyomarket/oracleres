@@ -1,0 +1,218 @@
+{
+  "query": "DESCRIBE game_player_pets;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DESCRIBE game_player_pets;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "agent_id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pet_catalog_id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nickname",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "level",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "exp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "tier",
+      "Type": "varchar(5)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "C",
+      "Extra": ""
+    },
+    {
+      "Field": "bp_constitution",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "bp_strength",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "bp_defense",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "bp_agility",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "bp_magic",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "hp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "50",
+      "Extra": ""
+    },
+    {
+      "Field": "max_hp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "50",
+      "Extra": ""
+    },
+    {
+      "Field": "mp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "30",
+      "Extra": ""
+    },
+    {
+      "Field": "max_mp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "30",
+      "Extra": ""
+    },
+    {
+      "Field": "attack",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "10",
+      "Extra": ""
+    },
+    {
+      "Field": "defense",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "10",
+      "Extra": ""
+    },
+    {
+      "Field": "speed",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "10",
+      "Extra": ""
+    },
+    {
+      "Field": "magic_attack",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "10",
+      "Extra": ""
+    },
+    {
+      "Field": "growth_type",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "balanced",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "friendship",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "captured_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "updated_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "bp_unallocated",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nagent_id\tint\tNO\t\tNULL\t\npet_catalog_id\tint\tNO\t\tNULL\t\nnickname\tvarchar(100)\tYES\t\tNULL\t\nlevel\tint\tNO\t\t1\t\nexp\tint\tNO\t\t0\t\ntier\tvarchar(5)\tNO\t\tC\t\nbp_constitution\tint\tNO\t\t20\t\nbp_strength\tint\tNO\t\t20\t\nbp_defense\tint\tNO\t\t20\t\nbp_agility\tint\tNO\t\t20\t\nbp_magic\tint\tNO\t\t20\t\nhp\tint\tNO\t\t50\t\nmax_hp\tint\tNO\t\t50\t\nmp\tint\tNO\t\t30\t\nmax_mp\tint\tNO\t\t30\t\nattack\tint\tNO\t\t10\t\ndefense\tint\tNO\t\t10\t\nspeed\tint\tNO\t\t10\t\nmagic_attack\tint\tNO\t\t10\t\ngrowth_type\tvarchar(20)\tNO\t\tbalanced\t\nis_active\ttinyint\tNO\t\t0\t\nfriendship\tint\tNO\t\t0\t\ncaptured_at\tbigint\tNO\t\tNULL\t\nupdated_at\tbigint\tNO\t\tNULL\t\nbp_unallocated\tint\tNO\t\t0\t\n",
+  "stderr": "",
+  "execution_time_ms": 1548
+}

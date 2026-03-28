@@ -2,6 +2,14 @@
  * ═══════════════════════════════════════════════════════════════
  * 天命共振 ── 寵物系統核心計算引擎 (GD-019)
  * ═══════════════════════════════════════════════════════════════
+ *
+ * v2 重構：修正 BP 成長公式，避免 AFK 掛機導致 BP 無限膨脹
+ *
+ * 設計目標：
+ *   - C 檔 Lv60 寵物 BP 總值約 350-500（而非舊版的 4000+）
+ *   - S 檔 Lv60 寵物 BP 總值約 550-750
+ *   - AFK 掛機 BP 成長有每日上限，且隨等級遞減
+ *   - 升級 BP 成長為主要來源（約佔 70%），AFK 為輔助（約佔 30%）
  */
 
 // ─── 常量定義 ─────────────────────────────────────────────────
@@ -26,13 +34,17 @@ export const TIER_CONFIG: Record<string, { minBp: number; maxBp: number; probabi
   E: { minBp: 0,   maxBp: 29,  probability: 0.030, growthBonus: -0.20 },
 };
 
-/** BP 五維 → 戰鬥數值轉換係數 */
+/**
+ * BP 五維 → 戰鬥數值轉換係數
+ *
+ * v2 調整：降低 constitution.hp 倍率（8→5），讓 BP 數值更合理地映射到戰鬥數值
+ */
 export const BP_TO_STATS = {
-  constitution: { hp: 8, mp: 1, atk: 0.1, def: 0.1, spd: 0.1 },
-  strength:     { hp: 2, mp: 2, atk: 2.7, def: 0.3, spd: 0.2 },
-  defense:      { hp: 2, mp: 2, atk: 0.3, def: 2.7, spd: 0.2 },
-  agility:      { hp: 3, mp: 2, atk: 0.3, def: 0.3, spd: 2.0 },
-  magic:        { hp: 1, mp: 10, atk: 0.2, def: 0.2, spd: 0.1 },
+  constitution: { hp: 5,   mp: 1,   atk: 0.1, def: 0.1, spd: 0.1 },
+  strength:     { hp: 1.5, mp: 1.5, atk: 2.5, def: 0.3, spd: 0.2 },
+  defense:      { hp: 1.5, mp: 1.5, atk: 0.3, def: 2.5, spd: 0.2 },
+  agility:      { hp: 2,   mp: 1.5, atk: 0.3, def: 0.3, spd: 2.0 },
+  magic:        { hp: 1,   mp: 8,   atk: 0.2, def: 0.2, spd: 0.1 },
 };
 
 /** 成長型態 → 每級固定 BP 分配 */
@@ -109,13 +121,13 @@ export const DESTINY_AWAKENING_EFFECTS: Record<string, {
   healMagic:    { name: "補血·天恩",     description: "恢復量+40%，同時恢復 MP 10%",       damageMultiplier: 1.40, extraEffect: "mpRestore", extraValue: 10 },
 };
 
-/** 寥物升級經驗值曲線 */
+/** 寵物升級經驗值曲線 */
 export function calcPetExpToNext(level: number): number {
   // 類似角色的經驗曲線，但稍微平緩
   return Math.floor(50 + level * 30 + Math.pow(level, 1.6) * 5);
 }
 
-/** 將寥物技能轉換為戰鬥引擎可用的格式 */
+/** 將寵物技能轉換為戰鬥引擎可用的格式 */
 export function petSkillsToCombatFormat(
   innateSkills: Array<{ name: string; skillType: string; wuxing: string | null; powerPercent: number; mpCost: number; cooldown: number }>,
   learnedSkills: Array<{ skillName: string; skillType: string; skillKey: string; wuxing: string | null; powerPercent: number; mpCost: number; cooldown: number; skillLevel: number }>,
@@ -155,7 +167,7 @@ export function petSkillsToCombatFormat(
   return result;
 }
 
-/** 計算寥物戰鬥經驗獲得（基於怪物經驗的 60%） */
+/** 計算寵物戰鬥經驗獲得（基於怪物經驗的 60%） */
 export function calcPetBattleExp(monsterExpReward: number, petLevel: number, monsterLevel: number): number {
   const baseExp = Math.floor(monsterExpReward * 0.6);
   // 等級差調整：打高等怪獲得更多，打低等怪獲得更少
@@ -201,40 +213,63 @@ export function rollInitialBP(tier: string, baseBp: { constitution: number; stre
   return result;
 }
 
-/** 升級時 BP 成長（每級 3 固定 + 1 隨機） */
+/**
+ * 升級時 BP 成長（v2 重構）
+ *
+ * 設計：每級獲得 2-4 BP（依檔位），其中：
+ *   - 特化型：主屬 +1（固定），其餘 1-2 點隨機
+ *   - 均衡型：2-3 點隨機分配
+ *   - 檔位加成：S 檔每級多 1 點，D/E 檔少 1 點
+ *
+ * 預期 Lv60 總 BP：
+ *   - E 檔：15 + 59×1.5 ≈ 104
+ *   - D 檔：50 + 59×2.0 ≈ 168
+ *   - C 檔：90 + 59×3.0 ≈ 267
+ *   - B 檔：130 + 59×3.5 ≈ 337
+ *   - A 檔：175 + 59×4.0 ≈ 411
+ *   - S 檔：250 + 59×5.0 ≈ 545
+ */
 export function levelUpBP(
   currentBp: { constitution: number; strength: number; defense: number; agility: number; magic: number },
   growthType: string,
   tier: string,
 ): { constitution: number; strength: number; defense: number; agility: number; magic: number; gains: Record<string, number> } {
-  const growthBonus = 1 + (TIER_CONFIG[tier]?.growthBonus || 0);
+  const tierCfg = TIER_CONFIG[tier] || TIER_CONFIG.C;
   const fixed = GROWTH_TYPE_FIXED[growthType] || GROWTH_TYPE_FIXED.balanced;
   
   const gains: Record<string, number> = { constitution: 0, strength: 0, defense: 0, agility: 0, magic: 0 };
+  const dims = ["constitution", "strength", "defense", "agility", "magic"];
   
-  // 3 固定 BP：1 給成長型態主屬，2 平均分配
+  // 基礎每級 BP 點數：2 點（所有檔位共通）
+  const baseBpPerLevel = 2;
+  
+  // 檔位額外點數：S +2, A +1, B +0.5(50%機率+1), C +0, D -0.5, E -1
+  let bonusPoints = 0;
+  if (tier === "S") bonusPoints = 2;
+  else if (tier === "A") bonusPoints = 1;
+  else if (tier === "B") bonusPoints = Math.random() < 0.5 ? 1 : 0;
+  else if (tier === "C") bonusPoints = 0;
+  else if (tier === "D") bonusPoints = Math.random() < 0.5 ? -1 : 0;
+  else if (tier === "E") bonusPoints = -1;
+  
+  const totalPoints = Math.max(1, baseBpPerLevel + bonusPoints);
+  
   if (growthType === "balanced") {
-    // 均衡型：3 點隨機分配
-    const dims = ["constitution", "strength", "defense", "agility", "magic"];
-    for (let i = 0; i < 3; i++) {
+    // 均衡型：所有點數隨機分配
+    for (let i = 0; i < totalPoints; i++) {
       const d = dims[Math.floor(Math.random() * dims.length)];
-      gains[d] += Math.round(1 * growthBonus);
+      gains[d] += 1;
     }
   } else {
-    // 特化型：主屬 +1，其他 2 點隨機
+    // 特化型：主屬 +1（固定），其餘隨機
     const mainAttr = Object.entries(fixed).find(([, v]) => v === 1)?.[0];
-    if (mainAttr) gains[mainAttr] += Math.round(1 * growthBonus);
-    const dims = ["constitution", "strength", "defense", "agility", "magic"];
-    for (let i = 0; i < 2; i++) {
+    if (mainAttr) gains[mainAttr] += 1;
+    const remaining = Math.max(0, totalPoints - 1);
+    for (let i = 0; i < remaining; i++) {
       const d = dims[Math.floor(Math.random() * dims.length)];
-      gains[d] += Math.round(1 * growthBonus);
+      gains[d] += 1;
     }
   }
-  
-  // 1 隨機 BP
-  const dims = ["constitution", "strength", "defense", "agility", "magic"];
-  const randomDim = dims[Math.floor(Math.random() * dims.length)];
-  gains[randomDim] += Math.round(1 * growthBonus);
   
   return {
     constitution: currentBp.constitution + gains.constitution,
@@ -243,6 +278,105 @@ export function levelUpBP(
     agility: currentBp.agility + gains.agility,
     magic: currentBp.magic + gains.magic,
     gains,
+  };
+}
+
+/**
+ * AFK 掛機 BP 成長（v2 新增）
+ *
+ * 設計：
+ *   - 每次 AFK tick 獲得 0-1 BP（而非舊版的固定 3 BP）
+ *   - 機率隨等級遞減：Lv1 = 50% 機率獲得 1 BP，Lv60 = 10% 機率
+ *   - 每日 AFK BP 上限 = 20（防止無限掛機膨脹）
+ *   - 成長型態影響分配方向
+ *
+ * @param level 寵物當前等級
+ * @param growthType 成長型態
+ * @param dailyAfkBpGained 今日已獲得的 AFK BP 總量
+ * @returns BP 增量（可能為全 0）
+ */
+export const AFK_BP_DAILY_CAP = 20;
+
+export function calcAfkBpGain(
+  level: number,
+  growthType: string,
+  dailyAfkBpGained: number,
+): { gains: Record<string, number>; totalGain: number } {
+  const gains: Record<string, number> = { constitution: 0, strength: 0, defense: 0, agility: 0, magic: 0 };
+  
+  // 已達每日上限
+  if (dailyAfkBpGained >= AFK_BP_DAILY_CAP) {
+    return { gains, totalGain: 0 };
+  }
+  
+  // 獲得 BP 的機率隨等級遞減：50% at Lv1 → 10% at Lv60
+  const chance = Math.max(0.10, 0.50 - (level - 1) * (0.40 / 59));
+  if (Math.random() > chance) {
+    return { gains, totalGain: 0 };
+  }
+  
+  // 獲得 1 BP，依成長型態分配
+  const fixed = GROWTH_TYPE_FIXED[growthType] || GROWTH_TYPE_FIXED.balanced;
+  const dims = ["constitution", "strength", "defense", "agility", "magic"];
+  
+  // 70% 機率分配到主屬（特化型），30% 隨機
+  const mainAttr = Object.entries(fixed).find(([, v]) => v === 1)?.[0];
+  if (mainAttr && Math.random() < 0.7) {
+    gains[mainAttr] = 1;
+  } else {
+    const d = dims[Math.floor(Math.random() * dims.length)];
+    gains[d] = 1;
+  }
+  
+  return { gains, totalGain: 1 };
+}
+
+/**
+ * 修正現有寵物的膨脹 BP（一次性遷移用）
+ *
+ * 根據寵物等級和檔位，計算合理的 BP 總值，
+ * 然後按照當前比例縮放到合理範圍。
+ */
+export function recalcReasonableBP(
+  currentBp: { constitution: number; strength: number; defense: number; agility: number; magic: number },
+  level: number,
+  tier: string,
+  initialBpTotal?: number,
+): { constitution: number; strength: number; defense: number; agility: number; magic: number } {
+  const tierCfg = TIER_CONFIG[tier] || TIER_CONFIG.C;
+  
+  // 計算合理的初始 BP（取檔位中間值）
+  const reasonableInitial = initialBpTotal ?? Math.round((tierCfg.minBp + tierCfg.maxBp) / 2);
+  
+  // 計算升級應獲得的 BP（每級平均值 × 等級數）
+  let avgBpPerLevel = 2; // 基礎
+  if (tier === "S") avgBpPerLevel = 4;
+  else if (tier === "A") avgBpPerLevel = 3;
+  else if (tier === "B") avgBpPerLevel = 2.5;
+  else if (tier === "C") avgBpPerLevel = 2;
+  else if (tier === "D") avgBpPerLevel = 1.5;
+  else if (tier === "E") avgBpPerLevel = 1;
+  
+  // AFK 每日上限 20，假設平均每天獲得 10 BP，每 4 級約 1 天 → 每級約 2.5 AFK BP
+  // 但為了不讓 AFK 佔太大比例，限制 AFK 貢獻約 30%
+  const levelUpBpTotal = Math.round((level - 1) * avgBpPerLevel);
+  const afkBpEstimate = Math.round(levelUpBpTotal * 0.3);
+  
+  const targetTotal = reasonableInitial + levelUpBpTotal + afkBpEstimate;
+  
+  // 按照當前比例縮放
+  const currentTotal = currentBp.constitution + currentBp.strength + currentBp.defense + currentBp.agility + currentBp.magic;
+  if (currentTotal <= targetTotal || currentTotal === 0) {
+    return { ...currentBp }; // 不需要縮放
+  }
+  
+  const ratio = targetTotal / currentTotal;
+  return {
+    constitution: Math.max(1, Math.round(currentBp.constitution * ratio)),
+    strength: Math.max(1, Math.round(currentBp.strength * ratio)),
+    defense: Math.max(1, Math.round(currentBp.defense * ratio)),
+    agility: Math.max(1, Math.round(currentBp.agility * ratio)),
+    magic: Math.max(1, Math.round(currentBp.magic * ratio)),
   };
 }
 

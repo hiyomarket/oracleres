@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, pet_name, level, tier, bp_constitution + bp_strength + bp_defense + bp_agility + bp_magic as total_bp, bp_constitution, bp_strength, bp_defense, bp_agility, bp_magic FROM game_player_pets ORDER BY total_bp DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, pet_name, level, tier, bp_constitution + bp_strength + bp_defense + bp_agility + bp_magic as total_bp, bp_constitution, bp_strength, bp_defense, bp_agility, bp_magic FROM game_player_pets ORDER BY total_bp DESC LIMIT 10;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'pet_name' in 'field list'"
+  ]
+}

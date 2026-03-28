@@ -29,7 +29,7 @@ import {
 } from "../shared/monsters";
 import { getCombatMonstersForNode, invalidateMonsterCache, type CombatMonster, type MonsterSkillData } from "./monsterDataService";
 import { gamePlayerPets, gamePetCatalog, gamePetInnateSkills, gamePetLearnedSkills, gamePetBpHistory } from "../drizzle/schema";
-import { petSkillsToCombatFormat, calcPetBattleExp, calcPetExpToNext, levelUpBP, calcPetStats, RACE_HP_MULTIPLIER, calcCaptureRate } from "./services/petEngine";
+import { petSkillsToCombatFormat, calcPetBattleExp, calcPetExpToNext, levelUpBP, calcPetStats, RACE_HP_MULTIPLIER, calcCaptureRate, calcAfkBpGain, AFK_BP_DAILY_CAP, recalcReasonableBP } from "./services/petEngine";
 
 // ─── 工具函數 ───
 function randInt(min: number, max: number): number {
@@ -1352,7 +1352,7 @@ export async function processAgentTick(
       eventsCreated++;
     }
 
-    // ★ 寵物離線掛機 BP 成長：注靈期間出戰寵物獲得固定 BP + 少量經驗
+    // ★ 寵物離線掛機 BP 成長（v2 重構：有每日上限 + 機率遞減）
     try {
       const [activePet] = await db.select().from(gamePlayerPets)
         .where(and(
@@ -1360,16 +1360,22 @@ export async function processAgentTick(
           eq(gamePlayerPets.isActive, 1)
         ));
       if (activePet && activePet.level < 60) {
-        // 固定 3 BP（無隨機/成長型態加成），平均分配到五維
-        const OFFLINE_FIXED_BP = 3;
-        const dims = ["constitution", "strength", "defense", "agility", "magic"] as const;
-        const bpGains: Record<string, number> = {};
-        let remaining = OFFLINE_FIXED_BP;
-        for (let i = 0; i < OFFLINE_FIXED_BP; i++) {
-          const dim = dims[Math.floor(Math.random() * dims.length)];
-          bpGains[dim] = (bpGains[dim] || 0) + 1;
-          remaining--;
-        }
+        // 計算今日已獲得的 AFK BP（從 BP 歷史中統計）
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayBpRecords = await db.select().from(gamePetBpHistory)
+          .where(and(
+            eq(gamePetBpHistory.petId, activePet.id),
+            eq(gamePetBpHistory.source, "afk"),
+            sql`${gamePetBpHistory.createdAt} >= ${todayStart.getTime()}`
+          ));
+        const dailyAfkBpGained = todayBpRecords.reduce((sum, r) => {
+          return sum + (r.deltaConstitution || 0) + (r.deltaStrength || 0) + (r.deltaDefense || 0) + (r.deltaAgility || 0) + (r.deltaMagic || 0);
+        }, 0);
+
+        // 使用新的 calcAfkBpGain（有機率、有上限）
+        const afkResult = calcAfkBpGain(activePet.level, activePet.growthType, dailyAfkBpGained);
+        const bpGains = afkResult.gains;
 
         const newBp = {
           constitution: activePet.bpConstitution + (bpGains.constitution || 0),
@@ -1379,8 +1385,8 @@ export async function processAgentTick(
           magic: activePet.bpMagic + (bpGains.magic || 0),
         };
 
-        // 少量經驗（基礎 15 + 等級 * 2）
-        const offlineExp = 15 + activePet.level * 2;
+        // 少量經驗（基礎 10 + 等級 * 1）— v2 降低 AFK 經驗
+        const offlineExp = 10 + activePet.level;
         let currentExp = activePet.exp + offlineExp;
         let currentLevel = activePet.level;
         let bp = { ...newBp };
@@ -1391,7 +1397,6 @@ export async function processAgentTick(
           if (currentExp < expToNext) break;
           currentExp -= expToNext;
           currentLevel++;
-          // 升級時用完整的 levelUpBP
           const bpResult = levelUpBP(bp, activePet.growthType, activePet.tier);
           bp = { constitution: bpResult.constitution, strength: bpResult.strength, defense: bpResult.defense, agility: bpResult.agility, magic: bpResult.magic };
         }
@@ -1401,7 +1406,7 @@ export async function processAgentTick(
         const raceHpMul = catalog?.raceHpMultiplier ?? 1.0;
         const stats = calcPetStats(bp, currentLevel, raceHpMul);
 
-          await db.update(gamePlayerPets).set({
+        await db.update(gamePlayerPets).set({
           exp: currentExp,
           level: currentLevel,
           bpConstitution: bp.constitution,
@@ -1421,31 +1426,32 @@ export async function processAgentTick(
           updatedAt: Date.now(),
         }).where(eq(gamePlayerPets.id, activePet.id));
 
-        // 記錄 BP 歷史
-        try {
-          const totalBpGain = (bpGains.constitution || 0) + (bpGains.strength || 0) + (bpGains.defense || 0) + (bpGains.agility || 0) + (bpGains.magic || 0);
-          await db.insert(gamePetBpHistory).values({
-            petId: activePet.id,
-            source: "battle",
-            description: `戰鬥獲得 ${totalBpGain} BP${currentLevel > activePet.level ? ` + 升級至 Lv.${currentLevel}` : ""}`,
-            prevConstitution: activePet.bpConstitution,
-            prevStrength: activePet.bpStrength,
-            prevDefense: activePet.bpDefense,
-            prevAgility: activePet.bpAgility,
-            prevMagic: activePet.bpMagic,
-            newConstitution: bp.constitution,
-            newStrength: bp.strength,
-            newDefense: bp.defense,
-            newAgility: bp.agility,
-            newMagic: bp.magic,
-            deltaConstitution: bp.constitution - activePet.bpConstitution,
-            deltaStrength: bp.strength - activePet.bpStrength,
-            deltaDefense: bp.defense - activePet.bpDefense,
-            deltaAgility: bp.agility - activePet.bpAgility,
-            deltaMagic: bp.magic - activePet.bpMagic,
-            createdAt: Date.now(),
-          });
-        } catch (e) { /* BP 歷史記錄失敗不影響主流程 */ }
+        // 記錄 BP 歷史（只在有實際增長時記錄）
+        if (afkResult.totalGain > 0) {
+          try {
+            await db.insert(gamePetBpHistory).values({
+              petId: activePet.id,
+              source: "afk",
+              description: `掛機獲得 ${afkResult.totalGain} BP（今日累計 ${dailyAfkBpGained + afkResult.totalGain}/${AFK_BP_DAILY_CAP}）${currentLevel > activePet.level ? ` + 升級至 Lv.${currentLevel}` : ""}`,
+              prevConstitution: activePet.bpConstitution,
+              prevStrength: activePet.bpStrength,
+              prevDefense: activePet.bpDefense,
+              prevAgility: activePet.bpAgility,
+              prevMagic: activePet.bpMagic,
+              newConstitution: bp.constitution,
+              newStrength: bp.strength,
+              newDefense: bp.defense,
+              newAgility: bp.agility,
+              newMagic: bp.magic,
+              deltaConstitution: bp.constitution - activePet.bpConstitution,
+              deltaStrength: bp.strength - activePet.bpStrength,
+              deltaDefense: bp.defense - activePet.bpDefense,
+              deltaAgility: bp.agility - activePet.bpAgility,
+              deltaMagic: bp.magic - activePet.bpMagic,
+              createdAt: Date.now(),
+            });
+          } catch (e) { /* BP 歷史記錄失敗不影響主流程 */ }
+        }
       }
     } catch (e) {
       // 寵物掛機錯誤不影響主流程

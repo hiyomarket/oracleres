@@ -41,6 +41,7 @@ import {
   checkDestinySkillLevelUp,
   auditPetCatalog,
   TIER_CONFIG,
+  recalcReasonableBP,
 } from "../services/petEngine";
 
 // ─── 權限中間件 ───
@@ -952,6 +953,87 @@ export const gamePetRouter = router({
         bpUnallocated: (pet.bpUnallocated ?? 0) - totalAllocate,
         stats,
         totalBp: newBp.constitution + newBp.strength + newBp.defense + newBp.agility + newBp.magic,
+      };
+    }),
+
+  // ═══ 管理員專用：BP 過度膨脹修正（一次性遷移） ═══
+  adminFixInflatedBP: adminProcedure
+    .input(z.object({ dryRun: z.boolean().default(true) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const allPets = await db.select().from(gamePlayerPets);
+      const results: Array<{ id: number; nickname: string | null; level: number; tier: string; oldTotal: number; newTotal: number; changed: boolean }> = [];
+
+      for (const pet of allPets) {
+        const oldBp = {
+          constitution: pet.bpConstitution,
+          strength: pet.bpStrength,
+          defense: pet.bpDefense,
+          agility: pet.bpAgility,
+          magic: pet.bpMagic,
+        };
+        const oldTotal = oldBp.constitution + oldBp.strength + oldBp.defense + oldBp.agility + oldBp.magic;
+        const newBp = recalcReasonableBP(oldBp, pet.level, pet.tier);
+        const newTotal = newBp.constitution + newBp.strength + newBp.defense + newBp.agility + newBp.magic;
+        const changed = newTotal < oldTotal;
+
+        if (changed && !input.dryRun) {
+          // 重新計算戰鬥數值
+          const [catalog] = await db.select().from(gamePetCatalog).where(eq(gamePetCatalog.id, pet.petCatalogId));
+          const stats = calcPetStats(newBp, pet.level, catalog?.raceHpMultiplier ?? 1.0);
+
+          await db.update(gamePlayerPets).set({
+            bpConstitution: newBp.constitution,
+            bpStrength: newBp.strength,
+            bpDefense: newBp.defense,
+            bpAgility: newBp.agility,
+            bpMagic: newBp.magic,
+            bpUnallocated: 0, // 重置未分配點數
+            hp: stats.hp,
+            maxHp: stats.hp,
+            mp: stats.mp,
+            maxMp: stats.mp,
+            attack: stats.attack,
+            defense: stats.defense,
+            speed: stats.speed,
+            magicAttack: stats.magicAttack,
+            updatedAt: Date.now(),
+          }).where(eq(gamePlayerPets.id, pet.id));
+
+          // 記錄 BP 歷史
+          await db.insert(gamePetBpHistory).values({
+            petId: pet.id,
+            source: "system_migration",
+            description: `系統修正 BP 膨脹：${oldTotal} → ${newTotal}`,
+            prevConstitution: oldBp.constitution,
+            prevStrength: oldBp.strength,
+            prevDefense: oldBp.defense,
+            prevAgility: oldBp.agility,
+            prevMagic: oldBp.magic,
+            newConstitution: newBp.constitution,
+            newStrength: newBp.strength,
+            newDefense: newBp.defense,
+            newAgility: newBp.agility,
+            newMagic: newBp.magic,
+            deltaConstitution: newBp.constitution - oldBp.constitution,
+            deltaStrength: newBp.strength - oldBp.strength,
+            deltaDefense: newBp.defense - oldBp.defense,
+            deltaAgility: newBp.agility - oldBp.agility,
+            deltaMagic: newBp.magic - oldBp.magic,
+            createdAt: Date.now(),
+          });
+        }
+
+        results.push({ id: pet.id, nickname: pet.nickname, level: pet.level, tier: pet.tier, oldTotal, newTotal, changed });
+      }
+
+      return {
+        dryRun: input.dryRun,
+        totalPets: allPets.length,
+        affectedPets: results.filter(r => r.changed).length,
+        results,
       };
     }),
 });

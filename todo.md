@@ -5156,3 +5156,11 @@
 - [x] 拆分 VirtualWorldPage.tsx（4038→2333 行）為獨立組件（CharacterPanel、NamingDialog、TeleportModal、NodeInfoPanel、StatBars、constants）
 - [x] 加入 Vite manualChunks 配置（分離 react-dom、charts、cytoscape、mermaid、leaflet）
 - [x] gameBattle vitest 測試已存在且全部通過（涵蓋 sortTurnOrder、executeCommand、simulateBattle、quickBattle、calcTotalPower 等）
+
+## 優化任務（2026-03-28 第七批）
+
+- [x] 重構寵物 BP 成長公式：AFK tick 每次注靈獲得的 BP 過多（每15秒+3 BP 無上限），需加入上限和遞減機制
+- [x] 拆分 BattleWindow.tsx（1503 行→504 行）為獨立子組件（types、BattleGrid、CombatantCard、BattleLogLine、CommandPanel、ItemPanel、VictoryPanel、PetCommandPanel、ActionPreview、BattleAnimations）
+- [x] 改善戰鬥視窗寵物操控 UI：讓寵物技能選擇和攻擊目標更直觀（整合到底部指令區域）
+- [x] 新增管理員 BP 膨脹修正端點（adminFixInflatedBP，支援 dryRun 模式）
+- [x] 59 項 petEngine 測試全部通過（含新增 calcAfkBpGain、recalcReasonableBP 測試）
