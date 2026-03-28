@@ -1011,6 +1011,17 @@ export const gameAdminRouter = router({
       resistMaxPct:    z.number().min(1).max(90).optional(),
       combatAtkCoeff:  z.number().min(0.1).max(10).optional(),
       combatDefCoeff:  z.number().min(0.1).max(10).optional(),
+      // 屬性上限
+      statCapHp:    z.number().int().min(100).max(999999).optional(),
+      statCapMp:    z.number().int().min(100).max(99999).optional(),
+      statCapAtk:   z.number().int().min(100).max(99999).optional(),
+      statCapDef:   z.number().int().min(100).max(99999).optional(),
+      statCapSpd:   z.number().int().min(100).max(99999).optional(),
+      statCapMatk:  z.number().int().min(100).max(99999).optional(),
+      statCapMdef:  z.number().int().min(100).max(99999).optional(),
+      wuxingCap:    z.number().int().min(10).max(9999).optional(),
+      // 販售折扣率
+      sellDiscountRate: z.number().min(0.01).max(1).optional(),
     }))
     .mutation(({ input, ctx }) => {
       const { tickIntervalMs, ...rest } = input;

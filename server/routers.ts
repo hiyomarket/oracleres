@@ -38,6 +38,7 @@ import { auctionRouter } from './routers/auction';
 import { startTickEngine } from './tickEngine';
 import { startWorldTickEngine } from './worldTickEngine';
 import { startAfkTickEngine } from './afkTickEngine';
+import { loadEngineConfigFromDb } from './gameEngineConfig';
 import { gameGuideRouter } from './routers/gameGuide';
 import { roamingBossRouter } from './routers/roamingBoss';
 import { gamePartyRouter } from './routers/gameParty';
@@ -3569,9 +3570,17 @@ export type AppRouter = typeof appRouter;
 // Re-export for type inference
 export { accountRouter };
 
-// 啟動虛相世界 Tick 引擎
-startTickEngine();
-// 啟動世界 Tick 引擎（每 30 分鐘）
-startWorldTickEngine();
-// 啟動伺服器端掛機循環引擎（每 15 秒）
-startAfkTickEngine();
+// ★ 先從 DB 載入已保存的配置，再啟動引擎
+loadEngineConfigFromDb().then(() => {
+  // 啟動虛相世界 Tick 引擎
+  startTickEngine();
+  // 啟動世界 Tick 引擎（每 30 分鐘）
+  startWorldTickEngine();
+  // 啟動伺服器端掛機循環引擎（每 15 秒）
+  startAfkTickEngine();
+}).catch(err => {
+  console.error('[EngineConfig] 載入失敗，使用預設配置啟動:', err);
+  startTickEngine();
+  startWorldTickEngine();
+  startAfkTickEngine();
+});

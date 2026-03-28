@@ -262,7 +262,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
   const handleSubmitTurn = () => {
     if (!selectedCommand || isSubmitting) return;
     setIsSubmitting(true);
-    type CmdType = "attack" | "item" | "skill" | "defend" | "flee" | "surrender";
+    type CmdType = "attack" | "item" | "skill" | "defend" | "flee" | "surrender" | "capture";
     const commands: Array<{
       participantId: number; commandType: CmdType; targetId?: number; skillId?: string; itemId?: string;
     }> = [];
@@ -275,7 +275,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
         commandType: selectedCommand as CmdType,
         targetId: target?.id,
         skillId: selectedCommand === "skill" ? selectedSkillId ?? undefined : undefined,
-        itemId: selectedCommand === "item" ? selectedItemId ?? undefined : undefined,
+        itemId: (selectedCommand === "item" || selectedCommand === "capture") ? selectedItemId ?? undefined : undefined,
       });
     }
     // 寵物獨立指令
@@ -448,17 +448,20 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
                   timeLeft={timeLeft}
                   battleId={battleId}
                   onSelectCommand={(cmd) => {
-                    if (cmd === "skill") {
-                      setShowSkillPanel(true); setShowItemPanel(false); setSelectedCommand("skill");
-                    } else if (cmd === "item") {
-                      setShowItemPanel(true); setShowSkillPanel(false); setSelectedCommand("item");
-                    } else {
-                      setSelectedCommand(cmd); setShowSkillPanel(false); setShowItemPanel(false);
-                      setSelectedSkillId(null); setSelectedItemId(null);
-                    }
-                  }}
+                     if (cmd === "skill") {
+                       setShowSkillPanel(true); setShowItemPanel(false); setSelectedCommand("skill");
+                     } else if (cmd === "item") {
+                       setShowItemPanel(true); setShowSkillPanel(false); setSelectedCommand("item");
+                     } else if (cmd === "capture") {
+                       // 捕捉指令：顯示道具面板來選擇捕捉道具
+                       setShowItemPanel(true); setShowSkillPanel(false); setSelectedCommand("capture");
+                     } else {
+                       setSelectedCommand(cmd); setShowSkillPanel(false); setShowItemPanel(false);
+                       setSelectedSkillId(null); setSelectedItemId(null);
+                     }
+                   }}
                   onSelectSkill={(id) => { setSelectedSkillId(id); setSelectedCommand("skill"); }}
-                  onSelectItem={(id) => { setSelectedItemId(id); setSelectedCommand("item"); }}
+                  onSelectItem={(id) => { setSelectedItemId(id); if (selectedCommand !== "capture") setSelectedCommand("item"); }}
                   onCancelPanel={() => { setShowSkillPanel(false); setShowItemPanel(false); setSelectedCommand(null); }}
                   onSubmit={handleSubmitTurn}
                 />

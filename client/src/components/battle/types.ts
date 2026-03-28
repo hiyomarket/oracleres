@@ -85,5 +85,6 @@ export const COMMAND_CARDS = [
   { id: "skill" as const, icon: "✨", label: "技能", desc: "施放技能", gradient: "from-purple-600/40 to-purple-900/60", border: "border-purple-500/50", glow: "#8b5cf6" },
   { id: "defend" as const, icon: "🛡️", label: "防禦", desc: "減傷50%", gradient: "from-blue-600/40 to-blue-900/60", border: "border-blue-500/50", glow: "#3b82f6" },
   { id: "item" as const, icon: "🎒", label: "道具", desc: "使用道具", gradient: "from-emerald-600/40 to-emerald-900/60", border: "border-emerald-500/50", glow: "#22c55e" },
+  { id: "capture" as const, icon: "🩤", label: "捕捉", desc: "捕捉魔物", gradient: "from-pink-600/40 to-pink-900/60", border: "border-pink-500/50", glow: "#ec4899" },
   { id: "flee" as const, icon: "🏃", label: "逃跑", desc: "嘗試撤退", gradient: "from-amber-600/40 to-amber-900/60", border: "border-amber-500/50", glow: "#f59e0b" },
 ] as const;

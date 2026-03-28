@@ -1119,7 +1119,8 @@ export async function processAgentTick(
     const mpRestore = Math.floor(agent.maxMp * 0.15);
     const newHp = Math.min(agent.maxHp, agent.hp + hpRestore);
     const newMp = Math.min(agent.maxMp, agent.mp + mpRestore);
-    const isFullyHealed = newHp >= agent.maxHp * 0.95 && newMp >= agent.maxMp * 0.95;
+    // ★ 修正：只要 HP >= 95% 就切換，MP 不影響行動能力
+    const isFullyHealed = newHp >= agent.maxHp * 0.95;
 
     // HP 補滿後的狀態轉換邏輯
     let nextStrategy = agent.strategy;
@@ -1193,10 +1194,9 @@ export async function processAgentTick(
       const strategyLabels: Record<string, string> = { explore: "探索", combat: "戰鬥", gather: "採集", rest: "休息" };
       const autoSwitchMsg = `【體力耗盡】${agent.agentName ?? "旅人"}體力不足，自動切換為「注靈」模式，吸收節點五行能量中…`;
       await createEvent(agent.id, "system", autoSwitchMsg, { type: "stamina_depleted_auto_infuse", previousStrategy: agent.strategy }, currentNode.id);
-      // 更新 agent 引用和 strategy 變數，讓後續分支正確走到 infuse
-      agent = { ...agent, previousStrategy: agent.strategy, strategy: "infuse" };
-      strategy = "infuse";
-      // 不 return，讓下方的注靈邏輯繼續執行
+      // ★ 修正：體力耗盡切換到注靈時，本次 tick 結束，下個 tick 才開始注靈
+      // 避免同一個 tick 產生「體力耗盡」+「注靈成功/失敗」兩個事件
+      return { events: 1, levelUps: [], legendaryDrops: [] };
     } else {
       // 消耗體力
       const oldStamina = agent.stamina;

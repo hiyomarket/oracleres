@@ -941,6 +941,44 @@ function EngineControlTab() {
         rewardMultOpen: String((cfg as any).rewardMultOpen ?? 1.5),
         afkTickIntervalMs: String((cfg as any).afkTickIntervalMs ?? 15000),
         afkTickEnabled: (cfg as any).afkTickEnabled ?? true,
+        // 屬性平衡參數
+        statLvHpMult: String((cfg as any).statLvHpMult ?? 12),
+        statLvHpBase: String((cfg as any).statLvHpBase ?? 80),
+        statLvAtkMult: String((cfg as any).statLvAtkMult ?? 8),
+        statLvAtkBase: String((cfg as any).statLvAtkBase ?? 15),
+        statLvDefMult: String((cfg as any).statLvDefMult ?? 8),
+        statLvDefBase: String((cfg as any).statLvDefBase ?? 15),
+        statLvSpdMult: String((cfg as any).statLvSpdMult ?? 6),
+        statLvSpdBase: String((cfg as any).statLvSpdBase ?? 10),
+        statLvMpMult: String((cfg as any).statLvMpMult ?? 8),
+        statLvMpBase: String((cfg as any).statLvMpBase ?? 40),
+        infuseHpPer100: String((cfg as any).infuseHpPer100 ?? 30),
+        infuseAtkPer100: String((cfg as any).infuseAtkPer100 ?? 30),
+        infuseDefPer100: String((cfg as any).infuseDefPer100 ?? 30),
+        infuseSpdPer100: String((cfg as any).infuseSpdPer100 ?? 20),
+        infuseMpPer100: String((cfg as any).infuseMpPer100 ?? 20),
+        resistMaxPct: String((cfg as any).resistMaxPct ?? 50),
+        combatAtkCoeff: String((cfg as any).combatAtkCoeff ?? 1.5),
+        combatDefCoeff: String((cfg as any).combatDefCoeff ?? 0.5),
+        // 屬性上限
+        statCapHp: String((cfg as any).statCapHp ?? 99999),
+        statCapMp: String((cfg as any).statCapMp ?? 9999),
+        statCapAtk: String((cfg as any).statCapAtk ?? 1500),
+        statCapDef: String((cfg as any).statCapDef ?? 1500),
+        statCapSpd: String((cfg as any).statCapSpd ?? 1500),
+        statCapMatk: String((cfg as any).statCapMatk ?? 1500),
+        statCapMdef: String((cfg as any).statCapMdef ?? 1500),
+        wuxingCap: String((cfg as any).wuxingCap ?? 100),
+        sellDiscountRate: String((cfg as any).sellDiscountRate ?? 0.5),
+        // 戰鬥倒數計時
+        battleTurnTimerPvE: String((cfg as any).battleTurnTimerPvE ?? 30),
+        battleTurnTimerBoss: String((cfg as any).battleTurnTimerBoss ?? 20),
+        battleTurnTimerPvP: String((cfg as any).battleTurnTimerPvP ?? 15),
+        // Boss 系統
+        bossSystemEnabled: (cfg as any).bossSystemEnabled ?? true,
+        bossT1MaxCount: String((cfg as any).bossT1MaxCount ?? 5),
+        bossT1MoveInterval: String((cfg as any).bossT1MoveInterval ?? 300),
+        bossT2MoveInterval: String((cfg as any).bossT2MoveInterval ?? 600),
       });
       setIsDirty(false);
     }
@@ -991,6 +1029,44 @@ function EngineControlTab() {
       // 掛機循環
       afkTickIntervalMs: parseInt(String(localCfg.afkTickIntervalMs)) || undefined,
       afkTickEnabled: typeof localCfg.afkTickEnabled === 'boolean' ? localCfg.afkTickEnabled : undefined,
+      // 屬性平衡參數
+      statLvHpMult: parseFloat(String(localCfg.statLvHpMult)) || undefined,
+      statLvHpBase: parseFloat(String(localCfg.statLvHpBase)) || undefined,
+      statLvAtkMult: parseFloat(String(localCfg.statLvAtkMult)) || undefined,
+      statLvAtkBase: parseFloat(String(localCfg.statLvAtkBase)) || undefined,
+      statLvDefMult: parseFloat(String(localCfg.statLvDefMult)) || undefined,
+      statLvDefBase: parseFloat(String(localCfg.statLvDefBase)) || undefined,
+      statLvSpdMult: parseFloat(String(localCfg.statLvSpdMult)) || undefined,
+      statLvSpdBase: parseFloat(String(localCfg.statLvSpdBase)) || undefined,
+      statLvMpMult: parseFloat(String(localCfg.statLvMpMult)) || undefined,
+      statLvMpBase: parseFloat(String(localCfg.statLvMpBase)) || undefined,
+      infuseHpPer100: parseFloat(String(localCfg.infuseHpPer100)) || undefined,
+      infuseAtkPer100: parseFloat(String(localCfg.infuseAtkPer100)) || undefined,
+      infuseDefPer100: parseFloat(String(localCfg.infuseDefPer100)) || undefined,
+      infuseSpdPer100: parseFloat(String(localCfg.infuseSpdPer100)) || undefined,
+      infuseMpPer100: parseFloat(String(localCfg.infuseMpPer100)) || undefined,
+      resistMaxPct: parseFloat(String(localCfg.resistMaxPct)) || undefined,
+      combatAtkCoeff: parseFloat(String(localCfg.combatAtkCoeff)) || undefined,
+      combatDefCoeff: parseFloat(String(localCfg.combatDefCoeff)) || undefined,
+      // 屬性上限
+      statCapHp: parseInt(String(localCfg.statCapHp)) || undefined,
+      statCapMp: parseInt(String(localCfg.statCapMp)) || undefined,
+      statCapAtk: parseInt(String(localCfg.statCapAtk)) || undefined,
+      statCapDef: parseInt(String(localCfg.statCapDef)) || undefined,
+      statCapSpd: parseInt(String(localCfg.statCapSpd)) || undefined,
+      statCapMatk: parseInt(String(localCfg.statCapMatk)) || undefined,
+      statCapMdef: parseInt(String(localCfg.statCapMdef)) || undefined,
+      wuxingCap: parseInt(String(localCfg.wuxingCap)) || undefined,
+      sellDiscountRate: parseFloat(String(localCfg.sellDiscountRate)) || undefined,
+      // 戰鬥倒數計時
+      battleTurnTimerPvE: parseInt(String(localCfg.battleTurnTimerPvE)),
+      battleTurnTimerBoss: parseInt(String(localCfg.battleTurnTimerBoss)),
+      battleTurnTimerPvP: parseInt(String(localCfg.battleTurnTimerPvP)),
+      // Boss 系統
+      bossSystemEnabled: typeof localCfg.bossSystemEnabled === 'boolean' ? localCfg.bossSystemEnabled : undefined,
+      bossT1MaxCount: parseInt(String(localCfg.bossT1MaxCount)) || undefined,
+      bossT1MoveInterval: parseInt(String(localCfg.bossT1MoveInterval)) || undefined,
+      bossT2MoveInterval: parseInt(String(localCfg.bossT2MoveInterval)) || undefined,
     });
   };
 
@@ -1355,6 +1431,147 @@ function EngineControlTab() {
           <p className="text-xs text-muted-foreground mt-3">
             注靈指令：玩家在節點上截取屬性五行能量，每次 Tick 有失敗機率，成功則獲得 min~max 之間隨機値。
           </p>
+        </CardContent>
+      </Card>
+
+      {/* 屬性平衡參數（GD-024） */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">⚔️ 屬性平衡參數（GD-024）</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-[10px] text-muted-foreground mb-3">
+            公式：HP = Lv × 升級係數 + 基礎值 + 注靈加成。調整後立即生效，下次 AFK tick 會重新計算所有角色屬性。
+          </p>
+          <div className="space-y-4">
+            {/* 升級係數 */}
+            <div>
+              <p className="text-xs font-semibold text-amber-400 mb-2">升級係數（每級加成）</p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {[
+                  { key: "statLvHpMult", label: "❤️ HP", def: 12, min: 1, max: 50 },
+                  { key: "statLvAtkMult", label: "⚔️ ATK", def: 8, min: 1, max: 30 },
+                  { key: "statLvDefMult", label: "🛡️ DEF", def: 8, min: 1, max: 30 },
+                  { key: "statLvSpdMult", label: "💨 SPD", def: 6, min: 1, max: 30 },
+                  { key: "statLvMpMult", label: "💧 MP", def: 8, min: 1, max: 30 },
+                ].map(f => (
+                  <div key={f.key}>
+                    <p className="text-[10px] text-muted-foreground mb-1">{f.label} × Lv</p>
+                    <Input type="number" value={String(localCfg[f.key] ?? f.def)}
+                      onChange={e => handleChange(f.key, e.target.value)}
+                      min={f.min} max={f.max} step={1} className="h-7 text-xs" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* 基礎值 */}
+            <div>
+              <p className="text-xs font-semibold text-blue-400 mb-2">基礎值（初始加成）</p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {[
+                  { key: "statLvHpBase", label: "❤️ HP", def: 80, min: 0, max: 500 },
+                  { key: "statLvAtkBase", label: "⚔️ ATK", def: 15, min: 0, max: 200 },
+                  { key: "statLvDefBase", label: "🛡️ DEF", def: 15, min: 0, max: 200 },
+                  { key: "statLvSpdBase", label: "💨 SPD", def: 10, min: 0, max: 200 },
+                  { key: "statLvMpBase", label: "💧 MP", def: 40, min: 0, max: 500 },
+                ].map(f => (
+                  <div key={f.key}>
+                    <p className="text-[10px] text-muted-foreground mb-1">{f.label} 基礎</p>
+                    <Input type="number" value={String(localCfg[f.key] ?? f.def)}
+                      onChange={e => handleChange(f.key, e.target.value)}
+                      min={f.min} max={f.max} step={1} className="h-7 text-xs" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* 注靈加成（每 100 點五行） */}
+            <div>
+              <p className="text-xs font-semibold text-green-400 mb-2">注靈加成（每 100 點五行）</p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {[
+                  { key: "infuseHpPer100", label: "🌲木→HP", def: 30, min: 0, max: 200 },
+                  { key: "infuseAtkPer100", label: "🔥火→ATK", def: 30, min: 0, max: 200 },
+                  { key: "infuseDefPer100", label: "⛰️土→DEF", def: 30, min: 0, max: 200 },
+                  { key: "infuseSpdPer100", label: "🪙金→SPD", def: 20, min: 0, max: 200 },
+                  { key: "infuseMpPer100", label: "🌊水→MP", def: 20, min: 0, max: 200 },
+                ].map(f => (
+                  <div key={f.key}>
+                    <p className="text-[10px] text-muted-foreground mb-1">{f.label}</p>
+                    <Input type="number" value={String(localCfg[f.key] ?? f.def)}
+                      onChange={e => handleChange(f.key, e.target.value)}
+                      min={f.min} max={f.max} step={1} className="h-7 text-xs" />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* 戰鬥係數 & 抗性 */}
+            <div>
+              <p className="text-xs font-semibold text-red-400 mb-2">戰鬥係數 & 抗性</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1">攻擊係數 (ATK×?)</p>
+                  <Input type="number" value={String(localCfg.combatAtkCoeff ?? 1.5)}
+                    onChange={e => handleChange("combatAtkCoeff", e.target.value)}
+                    min={0.1} max={5} step={0.1} className="h-7 text-xs" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1">防禦係數 (DEF×?)</p>
+                  <Input type="number" value={String(localCfg.combatDefCoeff ?? 0.5)}
+                    onChange={e => handleChange("combatDefCoeff", e.target.value)}
+                    min={0.1} max={5} step={0.1} className="h-7 text-xs" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground mb-1">抗性上限 (%)</p>
+                  <Input type="number" value={String(localCfg.resistMaxPct ?? 50)}
+                    onChange={e => handleChange("resistMaxPct", e.target.value)}
+                    min={1} max={90} step={1} className="h-7 text-xs" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 屬性上限設定 */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm">📊 屬性上限設定</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-[10px] text-muted-foreground mb-3">
+            所有角色屬性不會超過此上限。調整後立即生效。
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { key: "statCapHp", label: "❤️ HP 上限", def: 99999 },
+              { key: "statCapMp", label: "💧 MP 上限", def: 9999 },
+              { key: "statCapAtk", label: "⚔️ ATK 上限", def: 1500 },
+              { key: "statCapDef", label: "🛡️ DEF 上限", def: 1500 },
+              { key: "statCapSpd", label: "💨 SPD 上限", def: 1500 },
+              { key: "statCapMatk", label: "✨ MATK 上限", def: 1500 },
+              { key: "statCapMdef", label: "🔮 MDEF 上限", def: 1500 },
+              { key: "wuxingCap", label: "☀️ 五行上限", def: 100 },
+            ].map(f => (
+              <div key={f.key}>
+                <p className="text-[10px] text-muted-foreground mb-1">{f.label}</p>
+                <Input type="number" value={String(localCfg[f.key] ?? f.def)}
+                  onChange={e => handleChange(f.key, e.target.value)}
+                  min={10} max={999999} step={1} className="h-7 text-xs" />
+              </div>
+            ))}
+          </div>
+          <div className="mt-3">
+            <p className="text-[10px] text-muted-foreground mb-1">💰 販售折扣率（賣出價格 = 原價 × 此值）</p>
+            <div className="flex items-center gap-2 max-w-xs">
+              <input type="range" min={0.01} max={1} step={0.01}
+                value={parseFloat(String(localCfg.sellDiscountRate ?? 0.5))}
+                onChange={e => handleChange("sellDiscountRate", e.target.value)}
+                className="flex-1 accent-amber-500" />
+              <span className="text-sm font-bold tabular-nums w-12 text-right">
+                {(parseFloat(String(localCfg.sellDiscountRate ?? 0.5)) * 100).toFixed(0)}%
+              </span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

@@ -11,7 +11,7 @@ import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattlePart
 import { sql, inArray } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
-import { calcPetStats, calcPetStatsGD024, petSkillsToCombatFormat, DESTINY_SKILLS, DESTINY_AWAKENING_EFFECTS, checkDestinySkillLevelUp, calcPetBattleExp, levelUpBP } from "../services/petEngine";
+import { calcPetStats, calcPetStatsGD024, petSkillsToCombatFormat, DESTINY_SKILLS, DESTINY_AWAKENING_EFFECTS, checkDestinySkillLevelUp, calcPetBattleExp, levelUpBP, calcCaptureRate } from "../services/petEngine";
 import {
   type BattleParticipant, type BattleMode, type BattleCommand, type BattleLogEntry,
   simulateBattle, aiDecideCommand, executeCommand, sortTurnOrder, processStatusEffects,
@@ -657,7 +657,7 @@ export const gameBattleRouter = router({
       battleId: z.string(),
       commands: z.array(z.object({
         participantId: z.number(),
-        commandType: z.enum(["attack", "skill", "defend", "item", "flee", "surrender"]),
+        commandType: z.enum(["attack", "skill", "defend", "item", "flee", "surrender", "capture"]),
         targetId: z.number().optional(),
         skillId: z.string().optional(),
         itemId: z.string().optional(),
@@ -738,6 +738,74 @@ export const gameBattleRouter = router({
         if (playerCmd && actor.side === "ally") {
           command = playerCmd as BattleCommand;
 
+          // ─── 捕捉魔物：查詢捕捉道具和目標魔物圖鑑 ───
+          if (command.commandType === "capture" && command.itemId && command.targetId) {
+            try {
+              // 查詢捕捉道具
+              const [captureItem] = await db.select({
+                name: gameItemCatalog.name,
+                useEffect: gameItemCatalog.useEffect,
+                itemType: gameItemCatalog.itemType,
+              }).from(gameItemCatalog).where(eq(gameItemCatalog.itemId, command.itemId)).limit(1);
+
+              // 找到目標魔物的參與者
+              const targetP = participants.find(p => p.id === command.targetId && p.side === "enemy" && !p.isDefeated);
+              if (!targetP || !targetP.monsterId) {
+                command.commandType = "attack" as any; // fallback
+              } else {
+                // 查詢寵物圖鑑
+                const catalogs = await db.select().from(gamePetCatalog)
+                  .where(eq(gamePetCatalog.sourceMonsterKey, targetP.monsterId))
+                  .limit(1);
+                const catalog = catalogs[0];
+
+                if (!catalog) {
+                  // 此魔物無對應圖鑑，無法捕捉
+                  command.commandType = "attack" as any; // fallback
+                } else {
+                  // 計算捕捉機率
+                  const agentP = dbParticipants.find(dp => dp.participantType === "character");
+                  const agentRow = agentP?.agentId ? await db.select().from(gameAgents).where(eq(gameAgents.id, agentP.agentId)).limit(1).then(r => r[0]) : null;
+                  const captureItemType = (captureItem?.useEffect as any)?.captureType ?? "normal";
+                  const rate = calcCaptureRate({
+                    baseCaptureRate: catalog.baseCaptureRate,
+                    monsterCurrentHp: targetP.currentHp,
+                    monsterMaxHp: targetP.maxHp,
+                    monsterLevel: targetP.level,
+                    playerLevel: agentRow?.level ?? 1,
+                    captureItemType,
+                  });
+
+                  command.captureInfo = {
+                    captureRate: rate,
+                    captureItemName: captureItem?.name ?? "捕捉道具",
+                    targetMonsterName: targetP.name,
+                    petCatalogId: catalog.id,
+                  };
+
+                  // 扣除捕捉道具
+                  if (agentP?.agentId) {
+                    const [inv] = await db.select().from(agentInventory)
+                      .where(and(
+                        eq(agentInventory.agentId, agentP.agentId),
+                        eq(agentInventory.itemId, command.itemId),
+                        sql`${agentInventory.quantity} > 0`,
+                      )).limit(1);
+                    if (inv) {
+                      await db.update(agentInventory).set({
+                        quantity: Math.max(0, inv.quantity - 1),
+                        updatedAt: Date.now(),
+                      }).where(eq(agentInventory.id, inv.id));
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+              console.error("[Battle] capture lookup error:", e);
+              command.commandType = "attack" as any; // fallback
+            }
+          }
+
           // ─── 道具使用：查詢效果並扣除背包 ───
           if (command.commandType === "item" && command.itemId) {
             try {
@@ -817,6 +885,64 @@ export const gameBattleRouter = router({
             }).where(eq(gameBattles.id, battle.id));
 
             return { state: "ended", result: "flee", round, logs: allLogs };
+          }
+        }
+
+        // 檢查捕捉成功
+        if (command.commandType === "capture") {
+          const captureLog = cmdLogs.find(l => l.logType === "capture" && l.value === 1);
+          if (captureLog && command.captureInfo?.petCatalogId) {
+            // 捕捉成功！創建寵物
+            try {
+              const [catalog] = await db.select().from(gamePetCatalog)
+                .where(eq(gamePetCatalog.id, command.captureInfo.petCatalogId)).limit(1);
+              const agentP = dbParticipants.find(dp => dp.participantType === "character");
+              if (catalog && agentP?.agentId) {
+                const newPet = await db.insert(gamePlayerPets).values({
+                  agentId: agentP.agentId,
+                  catalogId: catalog.id,
+                  nickname: catalog.name,
+                  level: 1,
+                  exp: 0,
+                  expToNext: 100,
+                  growthType: catalog.growthType ?? "balanced",
+                  bpTotal: catalog.initialBp ?? 30,
+                  bpHp: Math.floor((catalog.initialBp ?? 30) * 0.3),
+                  bpAtk: Math.floor((catalog.initialBp ?? 30) * 0.2),
+                  bpDef: Math.floor((catalog.initialBp ?? 30) * 0.2),
+                  bpSpd: Math.floor((catalog.initialBp ?? 30) * 0.15),
+                  bpMp: Math.floor((catalog.initialBp ?? 30) * 0.15),
+                  happiness: 50,
+                  hp: 100,
+                  maxHp: 100,
+                  mp: 50,
+                  maxMp: 50,
+                  attack: 20,
+                  defense: 15,
+                  speed: 15,
+                  isActive: 0,
+                  createdAt: Date.now(),
+                  updatedAt: Date.now(),
+                });
+                // 添加捕捉成功日誌
+                allLogs.push({
+                  round, actorId: actor.id, actorName: actor.name,
+                  logType: "capture_success", value: 1, isCritical: false,
+                  message: `🎉 ${command.captureInfo.targetMonsterName}已被成功捕捉，成為你的新寵物「${catalog.name}」！`,
+                });
+              }
+            } catch (e) {
+              console.error("[Battle] pet creation after capture error:", e);
+            }
+            // 捕捉成功等同勝利
+            await db.update(gameBattles).set({
+              state: "ended",
+              currentRound: round,
+              result: "win",
+              updatedAt: Date.now(),
+              endedAt: Date.now(),
+            }).where(eq(gameBattles.id, battle.id));
+            return { state: "ended", result: "win", round, logs: allLogs };
           }
         }
 

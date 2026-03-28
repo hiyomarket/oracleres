@@ -26,7 +26,7 @@ export type BattleMode = "idle" | "player_closed" | "player_open" | "pvp" | "map
 export type BattleState = "waiting" | "speed_sort" | "turn_begin" | "player_turn" | "enemy_turn" | "calculating" | "status_effect" | "check_end" | "ended";
 export type ParticipantType = "character" | "pet" | "monster";
 export type ParticipantSide = "ally" | "enemy";
-export type CommandType = "attack" | "skill" | "defend" | "item" | "flee" | "surrender" | "auto";
+export type CommandType = "attack" | "skill" | "defend" | "item" | "flee" | "surrender" | "auto" | "capture";
 
 export interface CombatSkill {
   id: string;
@@ -110,6 +110,13 @@ export interface BattleCommand {
     value: number;     // 效果數值（百分比或固定值）
     duration?: number; // 持續回合數（buff 類）
     itemName: string;  // 道具名稱
+  };
+  /** 捕捉資訊（由 gameBattle router 查詢後注入） */
+  captureInfo?: {
+    captureRate: number;    // 0-1 捕捉機率
+    captureItemName: string; // 捕捉道具名稱
+    targetMonsterName: string; // 目標魔物名稱
+    petCatalogId?: number;  // 寵物圖鑑 ID
   };
 }
 
@@ -634,6 +641,43 @@ export function executeCommand(
       break;
     }
 
+    case "capture": {
+      // 捕捉魔物指令
+      const captureTarget = participants.find(p => p.id === command.targetId && p.side === "enemy" && !p.isDefeated);
+      if (!captureTarget || !command.captureInfo) {
+        logs.push({
+          round, actorId: actor.id, actorName: actor.name,
+          logType: "capture", value: 0, isCritical: false,
+          message: `${actor.name}嘗試捕捉，但沒有有效目標！`,
+        });
+        break;
+      }
+      const captureRoll = Math.random();
+      const success = captureRoll < command.captureInfo.captureRate;
+      if (success) {
+        captureTarget.isDefeated = true;
+        captureTarget.currentHp = 0;
+        logs.push({
+          round, actorId: actor.id, actorName: actor.name,
+          logType: "capture", targetId: captureTarget.id, targetName: captureTarget.name,
+          value: 1, isCritical: false,
+          skillName: command.captureInfo.captureItemName,
+          message: `${actor.name}使用${command.captureInfo.captureItemName}，成功捕捉了${captureTarget.name}！`,
+          detail: { captureSuccess: true, petCatalogId: command.captureInfo.petCatalogId, captureRate: Math.round(command.captureInfo.captureRate * 100) },
+        });
+      } else {
+        logs.push({
+          round, actorId: actor.id, actorName: actor.name,
+          logType: "capture", targetId: captureTarget.id, targetName: captureTarget.name,
+          value: 0, isCritical: false,
+          skillName: command.captureInfo.captureItemName,
+          message: `${actor.name}使用${command.captureInfo.captureItemName}嘗試捕捉${captureTarget.name}，但失敗了！（成功率 ${Math.round(command.captureInfo.captureRate * 100)}%）`,
+          detail: { captureSuccess: false, captureRate: Math.round(command.captureInfo.captureRate * 100) },
+        });
+      }
+      break;
+    }
+
     case "item": {
       const effect = command.itemEffect;
       if (!effect) {
@@ -1010,6 +1054,24 @@ export function simulateBattle(
             }
           }
           return { result: "flee", rounds: round, logs, rewardMultiplier: 0, petDestinySkillUsage };
+        }
+      }
+
+      // 檢查捕捉成功（捕捉成功等同勝利，但標記為 capture）
+      if (command.commandType === "capture") {
+        const captureLog = commandLogs.find(l => l.logType === "capture" && l.value === 1);
+        if (captureLog) {
+          // 捕捉成功，標記為勝利（後續由 gameBattle router 處理寵物創建）
+          for (const p of participants.filter(pp => pp.type === "pet" && pp.destinySkillUsage)) {
+            for (const [k, v] of Object.entries(p.destinySkillUsage!)) {
+              petDestinySkillUsage[k] = (petDestinySkillUsage[k] || 0) + v;
+            }
+          }
+          const monsters = participants.filter(p => p.side === "enemy");
+          const totalMaxHp = monsters.reduce((s, m) => s + m.maxHp, 0);
+          const totalCurrentHp = monsters.reduce((s, m) => s + Math.max(0, m.currentHp), 0);
+          const mhp = totalMaxHp > 0 ? (totalCurrentHp / totalMaxHp) * 100 : 0;
+          return { result: "win", rounds: round, logs, rewardMultiplier: getRewardMultiplierForMode(mode), petDestinySkillUsage, monsterHpPercent: mhp };
         }
       }
 

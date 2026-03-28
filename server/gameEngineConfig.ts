@@ -1,8 +1,12 @@
 /**
  * 遊戲引擎全域動態配置
- * 所有值儲存於記憶體，管理員可即時調整，無需重啟伺服器
- * 後台遊戲劇院 → 彈性調控面板 讀寫此模組
+ * ★ V2: 持久化到 game_config DB 表，部署新版本後設定不會重置
+ * 所有值先載入記憶體快取，管理員調整時同步寫入 DB
  */
+
+import { getDb } from "./db";
+import { gameConfig } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 export interface GameEngineConfig {
   /** 伺服器端 Tick 間隔（毫秒），預設 5 分鐘 */
@@ -28,84 +32,69 @@ export interface GameEngineConfig {
   /** 最後修改者 */
   lastUpdatedBy: string;
   // ─── 注靈指令配置 ───
-  /** 注靈成功最小截取值（預設 0.1） */
   infuseMinGain: number;
-  /** 注靈成功最大截取值（預設 0.5） */
   infuseMaxGain: number;
-  /** 注靈失敗機率（0~1，預設 0.2 = 20%） */
   infuseFailRate: number;
-  /** 注靈五行值上限（預設 100） */
   infuseMaxWuxing: number;
   // ─── 戰鬥經驗倍率配置 ───
-  /** 掛機模式經驗倍率（預設 0.33） */
   rewardMultIdle: number;
-  /** 關閉戰鬥視窗經驗倍率（預設 1.0） */
   rewardMultClosed: number;
-  /** 打開戰鬥視窗經驗倍率（預設 1.5） */
   rewardMultOpen: number;
   // ─── 伺服器端掛機循環配置 ───
-  /** 掛機循環間隔（毫秒，預設 15000 = 15秒） */
   afkTickIntervalMs: number;
-  /** 是否啟用伺服器端掛機循環 */
   afkTickEnabled: boolean;
   // ─── 戰鬥倒數計時配置 ───
-  /** 個人戰回合倒數秒數（0=不限制） */
   battleTurnTimerPvE: number;
-  /** Boss 戰回合倒數秒數（0=不限制） */
   battleTurnTimerBoss: number;
-  /** PvP 戰回合倒數秒數（0=不限制） */
   battleTurnTimerPvP: number;
   // ─── Boss 系統配置 ───
-  /** 是否啟用 Boss 系統 */
   bossSystemEnabled: boolean;
-  /** T1 常駐最大數量 */
   bossT1MaxCount: number;
-  /** T1 移動間隔（秒） */
   bossT1MoveInterval: number;
-  /** T2 移動間隔（秒） */
   bossT2MoveInterval: number;
   // ─── 屬性平衡參數 ───
-  /** 等級 HP 基礎倍率（Lv × N），預設 12 */
   statLvHpMult: number;
-  /** 等級 HP 基礎常數，預設 80 */
   statLvHpBase: number;
-  /** 等級 ATK 基礎倍率（Lv × N），預設 8 */
   statLvAtkMult: number;
-  /** 等級 ATK 基礎常數，預設 15 */
   statLvAtkBase: number;
-  /** 等級 DEF 基礎倍率（Lv × N），預設 8 */
   statLvDefMult: number;
-  /** 等級 DEF 基礎常數，預設 15 */
   statLvDefBase: number;
-  /** 等級 SPD 基礎倍率（Lv × N），預設 6 */
   statLvSpdMult: number;
-  /** 等級 SPD 基礎常數，預設 10 */
   statLvSpdBase: number;
-  /** 等級 MP 基礎倍率（Lv × N），預設 8 */
   statLvMpMult: number;
-  /** 等級 MP 基礎常數，預設 40 */
   statLvMpBase: number;
-  /** 注靈 木→HP 加成（每 100 點），預設 30 */
   infuseHpPer100: number;
-  /** 注靈 火→ATK 加成（每 100 點），預設 20 */
   infuseAtkPer100: number;
-  /** 注靈 土→DEF 加成（每 100 點），預設 20 */
   infuseDefPer100: number;
-  /** 注靈 金→SPD 加成（每 100 點），預設 15 */
   infuseSpdPer100: number;
-  /** 注靈 水→MP 加成（每 100 點），預設 20 */
   infuseMpPer100: number;
-  /** 五行抗性上限（%），預設 50 */
   resistMaxPct: number;
-  /** 戰鬥公式 ATK 係數 A（預設 1.5） */
   combatAtkCoeff: number;
-  /** 戰鬥公式 DEF 係數 B（預設 0.5） */
   combatDefCoeff: number;
+  // ─── 屬性上限 ───
+  /** HP 上限（預設 99999） */
+  statCapHp: number;
+  /** MP 上限（預設 9999） */
+  statCapMp: number;
+  /** ATK 上限（預設 1500） */
+  statCapAtk: number;
+  /** DEF 上限（預設 1500） */
+  statCapDef: number;
+  /** SPD 上限（預設 1500） */
+  statCapSpd: number;
+  /** MATK 上限（預設 1500） */
+  statCapMatk: number;
+  /** MDEF 上限（預設 1500） */
+  statCapMdef: number;
+  /** 五行屬性上限（預設 100） */
+  wuxingCap: number;
+  // ─── 販售折扣率 ───
+  sellDiscountRate: number;
 }
 
 // ─── 預設值 ───
 const DEFAULT_CONFIG: GameEngineConfig = {
-  tickIntervalMs: 5 * 60 * 1000, // 5 分鐘
+  tickIntervalMs: 5 * 60 * 1000,
   expMultiplier: 1.0,
   goldMultiplier: 1.0,
   dropMultiplier: 1.0,
@@ -116,28 +105,22 @@ const DEFAULT_CONFIG: GameEngineConfig = {
   maintenanceMsg: "系統維護中，請稍後再試",
   lastUpdatedAt: Date.now(),
   lastUpdatedBy: "system",
-  // 注靈預設值
   infuseMinGain: 0.1,
   infuseMaxGain: 0.5,
   infuseFailRate: 0.2,
   infuseMaxWuxing: 100,
-  // 戰鬥經驗倍率預設值
   rewardMultIdle: 0.33,
   rewardMultClosed: 1.0,
   rewardMultOpen: 1.5,
-  // 掙機循環預設值
   afkTickIntervalMs: 15_000,
   afkTickEnabled: true,
-  // 戰鬥倒數計時預設值
-  battleTurnTimerPvE: 30,   // 個人戰 30 秒
-  battleTurnTimerBoss: 20,  // Boss 戰 20 秒
-  battleTurnTimerPvP: 15,   // PvP 戰 15 秒
-  // Boss 系統預設値
+  battleTurnTimerPvE: 30,
+  battleTurnTimerBoss: 20,
+  battleTurnTimerPvP: 15,
   bossSystemEnabled: true,
   bossT1MaxCount: 5,
   bossT1MoveInterval: 300,
   bossT2MoveInterval: 600,
-  // 屬性平衡參數預設値
   statLvHpMult: 12,
   statLvHpBase: 80,
   statLvAtkMult: 8,
@@ -149,24 +132,103 @@ const DEFAULT_CONFIG: GameEngineConfig = {
   statLvMpMult: 8,
   statLvMpBase: 40,
   infuseHpPer100: 30,
-  infuseAtkPer100: 30,  // GD-024: 30
-  infuseDefPer100: 30,  // GD-024: 30
-  infuseSpdPer100: 20,  // GD-024: 20
+  infuseAtkPer100: 30,
+  infuseDefPer100: 30,
+  infuseSpdPer100: 20,
   infuseMpPer100: 20,
   resistMaxPct: 50,
   combatAtkCoeff: 1.5,
   combatDefCoeff: 0.5,
+  // 屬性上限
+  statCapHp: 99999,
+  statCapMp: 9999,
+  statCapAtk: 1500,
+  statCapDef: 1500,
+  statCapSpd: 1500,
+  statCapMatk: 1500,
+  statCapMdef: 1500,
+  wuxingCap: 100,
+  sellDiscountRate: 0.5,
 };
 
-// ─── 單例記憶體狀態 ───
+// ─── 記憶體快取 ───
 let _config: GameEngineConfig = { ...DEFAULT_CONFIG };
+let _dbLoaded = false;
+
+// ─── DB 持久化鍵名（存入 game_config 表的 config_key） ───
+const DB_ENGINE_CONFIG_KEY = "__engine_config_v2__";
+
+/**
+ * ★ 從 DB 載入已保存的配置（伺服器啟動時呼叫一次）
+ * 如果 DB 中沒有記錄，使用預設值
+ */
+export async function loadEngineConfigFromDb(): Promise<void> {
+  try {
+    const db = await getDb();
+    if (!db) {
+      console.log("[EngineConfig] DB 不可用，使用預設配置");
+      return;
+    }
+    const rows = await db.select().from(gameConfig)
+      .where(eq(gameConfig.configKey, DB_ENGINE_CONFIG_KEY))
+      .limit(1);
+    if (rows[0]) {
+      try {
+        const saved = JSON.parse(rows[0].configValue) as Partial<GameEngineConfig>;
+        // 合併：DB 中的值覆蓋預設值，新增的欄位使用預設值
+        _config = { ...DEFAULT_CONFIG, ...saved };
+        _dbLoaded = true;
+        console.log(`[EngineConfig] ✓ 已從 DB 載入配置（最後更新：${saved.lastUpdatedBy ?? "unknown"}）`);
+      } catch (parseErr) {
+        console.error("[EngineConfig] DB 配置解析失敗，使用預設值:", parseErr);
+      }
+    } else {
+      console.log("[EngineConfig] DB 中無已保存配置，使用預設值");
+    }
+  } catch (err) {
+    console.error("[EngineConfig] 從 DB 載入配置失敗:", err);
+  }
+}
+
+/**
+ * ★ 將當前配置持久化到 DB（非同步，不阻塞主流程）
+ */
+async function persistConfigToDb(): Promise<void> {
+  try {
+    const db = await getDb();
+    if (!db) return;
+    const jsonValue = JSON.stringify(_config);
+    const rows = await db.select({ id: gameConfig.id }).from(gameConfig)
+      .where(eq(gameConfig.configKey, DB_ENGINE_CONFIG_KEY))
+      .limit(1);
+    if (rows[0]) {
+      await db.update(gameConfig).set({
+        configValue: jsonValue,
+        updatedAt: Date.now(),
+      }).where(eq(gameConfig.id, rows[0].id));
+    } else {
+      await db.insert(gameConfig).values({
+        configKey: DB_ENGINE_CONFIG_KEY,
+        configValue: jsonValue,
+        valueType: "json",
+        label: "引擎全域配置",
+        description: "遊戲引擎所有動態參數的 JSON 快照",
+        category: "system",
+        updatedAt: Date.now(),
+        createdAt: Date.now(),
+      });
+    }
+  } catch (err) {
+    console.error("[EngineConfig] 持久化到 DB 失敗:", err);
+  }
+}
 
 /** 取得當前引擎配置（唯讀快照） */
 export function getEngineConfig(): Readonly<GameEngineConfig> {
   return _config;
 }
 
-/** 更新引擎配置（部分更新，立即生效） */
+/** 更新引擎配置（部分更新，立即生效 + 持久化到 DB） */
 export function updateEngineConfig(
   patch: Partial<Omit<GameEngineConfig, "lastUpdatedAt" | "lastUpdatedBy">>,
   updatedBy: string
@@ -178,10 +240,12 @@ export function updateEngineConfig(
     lastUpdatedBy: updatedBy,
   };
   console.log(`[EngineConfig] 配置已更新 by ${updatedBy}:`, patch);
+  // ★ 非同步持久化到 DB（不阻塞返回）
+  persistConfigToDb().catch(err => console.error("[EngineConfig] 持久化失敗:", err));
   return _config;
 }
 
-/** 重置為預設值 */
+/** 重置為預設值（同時清除 DB 中的配置） */
 export function resetEngineConfig(updatedBy: string): GameEngineConfig {
   _config = {
     ...DEFAULT_CONFIG,
@@ -189,6 +253,8 @@ export function resetEngineConfig(updatedBy: string): GameEngineConfig {
     lastUpdatedBy: updatedBy,
   };
   console.log(`[EngineConfig] 配置已重置 by ${updatedBy}`);
+  // ★ 非同步持久化到 DB
+  persistConfigToDb().catch(err => console.error("[EngineConfig] 持久化失敗:", err));
   return _config;
 }
 
@@ -256,13 +322,27 @@ export function getStatBalanceConfig() {
     statLvMpMult:    _config.statLvMpMult    ?? 8,
     statLvMpBase:    _config.statLvMpBase    ?? 40,
     infuseHpPer100:  _config.infuseHpPer100  ?? 30,
-    infuseAtkPer100: _config.infuseAtkPer100 ?? 20,
-    infuseDefPer100: _config.infuseDefPer100 ?? 20,
-    infuseSpdPer100: _config.infuseSpdPer100 ?? 15,
+    infuseAtkPer100: _config.infuseAtkPer100 ?? 30,
+    infuseDefPer100: _config.infuseDefPer100 ?? 30,
+    infuseSpdPer100: _config.infuseSpdPer100 ?? 20,
     infuseMpPer100:  _config.infuseMpPer100  ?? 20,
     resistMaxPct:    _config.resistMaxPct    ?? 50,
     combatAtkCoeff:  _config.combatAtkCoeff  ?? 1.5,
     combatDefCoeff:  _config.combatDefCoeff  ?? 0.5,
+  };
+}
+
+/** 取得屬性上限配置 */
+export function getStatCaps() {
+  return {
+    hp:    _config.statCapHp    ?? 99999,
+    mp:    _config.statCapMp    ?? 9999,
+    atk:   _config.statCapAtk   ?? 1500,
+    def:   _config.statCapDef   ?? 1500,
+    spd:   _config.statCapSpd   ?? 1500,
+    matk:  _config.statCapMatk  ?? 1500,
+    mdef:  _config.statCapMdef  ?? 1500,
+    wuxing: _config.wuxingCap   ?? 100,
   };
 }
 
@@ -274,4 +354,9 @@ export function getInfuseConfig(): { minGain: number; maxGain: number; failRate:
     failRate: _config.infuseFailRate,
     maxWuxing: _config.infuseMaxWuxing,
   };
+}
+
+/** 取得預設配置（用於測試） */
+export function getDefaultConfig(): GameEngineConfig {
+  return { ...DEFAULT_CONFIG };
 }
