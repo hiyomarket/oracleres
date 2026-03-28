@@ -158,7 +158,8 @@ export function CharacterPanel({
     { wuxing: equipShopWuxing || undefined, slot: equipShopSlot || undefined },
     { enabled: showEquipShop, staleTime: 60000 }
   );
-  // 裝備槽選取 Modal 用的圖鑑查詢（提升到頂層避免違反 Hooks 規則）
+  // 裝備槽選取 Modal 用的背包裝備查詢（提升到頂層避免違反 Hooks 規則）
+  // 重要：查詢的是角色背包中的裝備道具，而非圖鑑全部裝備
   const FRONT_TO_CATALOG_MAP: Record<string, string> = {
     weapon: "weapon", offhand: "offhand",
     head: "helmet", body: "armor",
@@ -168,9 +169,10 @@ export function CharacterPanel({
   };
   const WX_ZH_TO_EN_PICKER: Record<string, string> = { "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water" };
   const pickerCatalogSlot = selectedEquipSlot ? (FRONT_TO_CATALOG_MAP[selectedEquipSlot] ?? selectedEquipSlot) : undefined;
-  const equipPickerQuery = trpc.gameWorld.getEquipmentCatalog.useQuery(
-    { slot: pickerCatalogSlot, wuxing: equipPickerWuxing ? WX_ZH_TO_EN_PICKER[equipPickerWuxing] : undefined },
-    { enabled: !!selectedEquipSlot, staleTime: 30000 }
+  // 改用 getInventoryEquipments：只顯示角色背包中實際擁有的裝備道具
+  const equipPickerQuery = trpc.gameWorld.getInventoryEquipments.useQuery(
+    { slot: pickerCatalogSlot },
+    { enabled: !!selectedEquipSlot, staleTime: 10000 }
   );
   const equipItemMutation = trpc.gameWorld.equipItem.useMutation({
     onSuccess: (data) => {
@@ -379,11 +381,41 @@ export function CharacterPanel({
                 <p className="text-xs font-bold text-slate-500">⚔️ 戰鬥系屬性</p>
                 <span className="text-[10px] text-slate-600">上限 255</span>
               </div>
-              {COMBAT_ATTRS.map(a => (
-                <MiniAttrBar key={a.key} icon={a.icon} label={a.label}
-                  value={combatValues[a.key] ?? 0}
-                  color={WX_HEX[a.wx] ?? "#888"} max={255} />
-              ))}
+              {COMBAT_ATTRS.map(a => {
+                const baseVal = (() => {
+                  switch (a.key) {
+                    case "attack": return agent?.attack ?? 10;
+                    case "defense": return agent?.defense ?? 5;
+                    case "speed": return agent?.speed ?? 8;
+                    case "healPower": return agent?.healPower ?? 20;
+                    case "magicAttack": return agent?.magicAttack ?? 20;
+                    default: return 0;
+                  }
+                })();
+                const equipBonus = (() => {
+                  switch (a.key) {
+                    case "attack": return eb.atk ?? 0;
+                    case "defense": return eb.def ?? 0;
+                    case "speed": return eb.spd ?? 0;
+                    default: return 0;
+                  }
+                })();
+                const total = combatValues[a.key] ?? 0;
+                return (
+                  <div key={a.key} className="space-y-0.5">
+                    <MiniAttrBar icon={a.icon} label={a.label}
+                      value={total}
+                      color={WX_HEX[a.wx] ?? "#888"} max={255} />
+                    {equipBonus > 0 && (
+                      <div className="flex justify-end gap-1 text-[9px] px-1">
+                        <span className="text-slate-500">{baseVal}</span>
+                        <span className="text-emerald-400 font-bold">+{equipBonus} 裝備</span>
+                        <span className="text-slate-400">= {total}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               <div className="mt-1.5 px-2 py-1.5 rounded-lg text-[10px] space-y-0.5"
                 style={{ background: "rgba(255,255,255,0.03)", borderLeft: "2px solid rgba(255,255,255,0.1)", color: "#64748b" }}>
                 <p>🌲 木屬性 × 3.0 → 最大HP</p>
@@ -713,40 +745,31 @@ export function CharacterPanel({
                   </div>
                 </div>
               )}
-              {/* 五行筛選 */}
-              <div className="flex gap-1.5 px-3 py-2 shrink-0 overflow-x-auto">
-                {["", "木", "火", "土", "金", "水"].map(w => (
-                  <button key={w} onClick={() => setEquipPickerWuxing(w)}
-                    className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-bold border transition-all"
-                    style={{
-                      background: equipPickerWuxing === w ? `${ec}20` : "rgba(255,255,255,0.04)",
-                      borderColor: equipPickerWuxing === w ? `${ec}50` : "rgba(255,255,255,0.08)",
-                      color: equipPickerWuxing === w ? ec : "#64748b",
-                    }}>{w || "全部"}</button>
-                ))}
-              </div>
-              {/* 裝備圖鑑列表 */}
+              {/* 背包裝備列表（只顯示角色實際擁有的裝備） */}
               {(() => {
-                const catalogItems = equipPickerQuery.data ?? [];
+                const invEquips = equipPickerQuery.data ?? [];
                 if (equipPickerQuery.isLoading) return <p className="text-xs text-slate-600 text-center py-8">載入中…</p>;
-                if (catalogItems.length === 0) return (
-                  <div className="text-center py-8">
-                    <p className="text-slate-600 text-sm">此槽位尚無裝備</p>
-                    <p className="text-slate-700 text-xs mt-1">擊敗怪物或到商店購買裝備</p>
+                if (invEquips.length === 0) return (
+                  <div className="text-center py-8 px-4">
+                    <p className="text-2xl mb-2">🎒</p>
+                    <p className="text-slate-400 text-sm font-bold">背包中沒有此槽位的裝備</p>
+                    <p className="text-slate-600 text-xs mt-1">擊敗怪物或到商店購買裝備後再回來選取</p>
                   </div>
                 );
                 return (
                   <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5">
-                    {catalogItems.map(eq => {
-                      const qc = QUALITY_COLOR[(eq as any).quality ?? 'common'] ?? '#94a3b8';
-                      const isCurrentlyEquipped = (eq as any).isEquipped;
+                    {invEquips.map(eq => {
+                      const qc = QUALITY_COLOR[eq.quality ?? 'common'] ?? '#94a3b8';
+                      const isCurrentlyEquipped = eq.isEquipped;
+                      const enhLv = eq.enhanceLevel ?? 0;
                       const bonusParts: string[] = [];
-                      if ((eq as any).hpBonus) bonusParts.push(`HP+${(eq as any).hpBonus}`);
-                      if ((eq as any).attackBonus) bonusParts.push(`攻+${(eq as any).attackBonus}`);
-                      if ((eq as any).defenseBonus) bonusParts.push(`防+${(eq as any).defenseBonus}`);
-                      if ((eq as any).speedBonus) bonusParts.push(`速+${(eq as any).speedBonus}`);
+                      if (eq.hpBonus) bonusParts.push(`HP+${eq.hpBonus}`);
+                      if (eq.attackBonus) bonusParts.push(`攻+${eq.attackBonus}`);
+                      if (eq.defenseBonus) bonusParts.push(`防+${eq.defenseBonus}`);
+                      if (eq.speedBonus) bonusParts.push(`速+${eq.speedBonus}`);
+                      if (eq.matkBonus) bonusParts.push(`魔攻+${eq.matkBonus}`);
                       return (
-                        <div key={(eq as any).equipId}
+                        <div key={`${eq.equipId}-${eq.invId}`}
                           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border cursor-pointer active:scale-[0.98] transition-transform"
                           style={{
                             background: isCurrentlyEquipped ? `${qc}15` : `${qc}08`,
@@ -754,15 +777,18 @@ export function CharacterPanel({
                           }}
                           onClick={() => {
                             if (!isCurrentlyEquipped) {
-                              equipItemMutation.mutate({ equipId: (eq as any).equipId, action: 'equip' });
+                              equipItemMutation.mutate({ equipId: eq.equipId, action: 'equip' });
                               setSelectedEquipSlot(null);
                             }
                           }}>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <p className="text-sm font-bold" style={{ color: qc }}>{(eq as any).name}</p>
-                              <span className="text-[9px] px-1 py-0.5 rounded" style={{ background: `${qc}20`, color: qc }}>{QUALITY_ZH[(eq as any).quality ?? 'common'] ?? (eq as any).quality}</span>
+                              <p className="text-sm font-bold" style={{ color: qc }}>
+                                {eq.name}{enhLv > 0 ? <span className="text-amber-400 ml-0.5">+{enhLv}</span> : null}
+                              </p>
+                              <span className="text-[9px] px-1 py-0.5 rounded" style={{ background: `${qc}20`, color: qc }}>{QUALITY_ZH[eq.quality ?? 'common'] ?? eq.quality}</span>
                               {isCurrentlyEquipped && <span className="text-[9px] px-1 py-0.5 rounded" style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>已裝備</span>}
+                              {eq.quantity > 1 && <span className="text-[9px] px-1 py-0.5 rounded" style={{ background: 'rgba(148,163,184,0.12)', color: '#94a3b8' }}>x{eq.quantity}</span>}
                             </div>
                             {bonusParts.length > 0 && <p className="text-[10px] text-emerald-400 mt-0.5">{bonusParts.join(' · ')}</p>}
                           </div>

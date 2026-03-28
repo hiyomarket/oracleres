@@ -2126,8 +2126,10 @@ export const gameItemCatalog = mysqlTable("game_item_catalog", {
   category: varchar("category", { length: 30 }).notNull().default("material_basic"),
   /** 稀有度：common / rare / epic / legendary */
   rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
-  /** 叠加上限（背包中同一道具最多疊幾個） */
+  /** 疊加上限（背包中同一道具最多疊幾個） */
   stackLimit: int("stack_limit").notNull().default(99),
+  /** 是否可疊加（1=可疊加, 0=不可疊加）裝備類道具應設為 0 */
+  stackable: tinyint("stackable").notNull().default(1),
   // ===== 商店系統 =====
   /** 商店售價（金幣） */
   shopPrice: int("shop_price").notNull().default(0),
@@ -2246,6 +2248,8 @@ export const gameEquipmentCatalog = mysqlTable("game_equipment_catalog", {
   tradeable: tinyint("tradeable").notNull().default(1),
   /** 是否可在拍賣行上架 */
   inAuctionHouse: tinyint("in_auction_house").notNull().default(1),
+  /** 是否可疊加（1=可疊加, 0=不可疊加）裝備預設不可疊加 */
+  stackable: tinyint("stackable").notNull().default(0),
   isActive: tinyint("is_active").default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });

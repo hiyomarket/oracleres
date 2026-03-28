@@ -501,6 +501,104 @@ function ImportDialog({ open, onClose, onImport, isLoading, catalogName }: {
   );
 }
 
+// ===== 快捷上架商店 Modal =====
+function QuickShopListModal({ open, onClose, itemKey, displayName }: {
+  open: boolean; onClose: () => void;
+  itemKey: string; displayName: string;
+}) {
+  const [shopType, setShopType] = useState<"normal" | "spirit">("normal");
+  const [priceCoins, setPriceCoins] = useState(100);
+  const [priceStones, setPriceStones] = useState(10);
+  const [stock, setStock] = useState(-1);
+  const [purchaseLimit, setPurchaseLimit] = useState(0);
+  const [maxPerOrder, setMaxPerOrder] = useState(99);
+  const [quantity, setQuantity] = useState(1);
+
+  const quickListMut = trpc.gameAdmin.quickListToShop.useMutation({
+    onSuccess: (r) => {
+      toast.success(`✅ 已上架到${r.shopType === "normal" ? "一般" : "靈石"}商店！`);
+      onClose();
+    },
+    onError: (e) => toast.error(`上架失敗：${e.message}`),
+  });
+
+  const handleSubmit = () => {
+    quickListMut.mutate({
+      shopType,
+      itemKey,
+      displayName,
+      priceCoins: shopType === "normal" ? priceCoins : 0,
+      priceStones: shopType === "spirit" ? priceStones : 0,
+      stock,
+      purchaseLimit,
+      maxPerOrder,
+      quantity,
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>🛒 快捷上架商店</DialogTitle>
+          <p className="text-xs text-muted-foreground mt-1">將「{displayName}」上架到商店</p>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="flex gap-2">
+            <button onClick={() => setShopType("normal")}
+              className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-all ${shopType === "normal" ? "bg-amber-500/20 border-amber-500 text-amber-400" : "bg-muted border-transparent text-muted-foreground"}`}>
+              💰 一般商店
+            </button>
+            <button onClick={() => setShopType("spirit")}
+              className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-all ${shopType === "spirit" ? "bg-purple-500/20 border-purple-500 text-purple-400" : "bg-muted border-transparent text-muted-foreground"}`}>
+              💎 靈石商店
+            </button>
+          </div>
+          {shopType === "normal" ? (
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">金幣售價</label>
+              <Input type="number" value={priceCoins} onChange={e => setPriceCoins(Number(e.target.value))} min={0} className="h-8 text-sm" />
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">靈石售價</label>
+              <Input type="number" value={priceStones} onChange={e => setPriceStones(Number(e.target.value))} min={0} className="h-8 text-sm" />
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">庫存（-1 = 無限）</label>
+              <Input type="number" value={stock} onChange={e => setStock(Number(e.target.value))} className="h-8 text-sm" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">每人限購</label>
+              <Input type="number" value={purchaseLimit} onChange={e => setPurchaseLimit(Number(e.target.value))} min={0} className="h-8 text-sm" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">每次最多買</label>
+              <Input type="number" value={maxPerOrder} onChange={e => setMaxPerOrder(Number(e.target.value))} min={1} className="h-8 text-sm" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">每份數量</label>
+              <Input type="number" value={quantity} onChange={e => setQuantity(Number(e.target.value))} min={1} className="h-8 text-sm" />
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-2">
+            <p>商品 ID：<span className="font-mono text-primary">{itemKey}</span></p>
+            <p className="mt-0.5">上架後可在商店管理頁面編輯或下架</p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>取消</Button>
+          <Button onClick={handleSubmit} disabled={quickListMut.isPending}>
+            {quickListMut.isPending ? "上架中…" : "確認上架"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ===== 勾選 checkbox 表頭 =====
 function SelectAllCheckbox({ checked, indeterminate, onChange }: { checked: boolean; indeterminate: boolean; onChange: () => void }) {
   return (
@@ -901,6 +999,7 @@ export function ItemCatalogV2Tab() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [batchEditOpen, setBatchEditOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [quickShopItem, setQuickShopItem] = useState<{ itemKey: string; displayName: string } | null>(null);
 
   const queryInput = useMemo(() => ({
     search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
@@ -926,6 +1025,7 @@ export function ItemCatalogV2Tab() {
     { key: "category", label: "分類", type: "select", options: ITEM_CAT_OPTS, defaultValue: "material_basic" },
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS, defaultValue: "common" },
     { key: "stackLimit", label: "疊加上限", type: "number", defaultValue: 99 },
+    { key: "stackable", label: "可疊加", type: "select", options: [{ value: "1", label: "✅ 可疊加" }, { value: "0", label: "🔒 不可疊加（裝備類）" }], defaultValue: "1" },
     { key: "shopPrice", label: "商店售價", type: "number", defaultValue: 0, group: "商店分配" },
     { key: "inNormalShop", label: "一般商店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
     { key: "inSpiritShop", label: "靈相商店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
@@ -1024,6 +1124,7 @@ export function ItemCatalogV2Tab() {
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <AiImageBtn type="item" id={m.itemId} name={m.name} hasImage={!!m.imageUrl} onSuccess={() => refetch()} />
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-amber-400" title="上架到商店" onClick={() => setQuickShopItem({ itemKey: m.itemId, displayName: m.name })}>🛒</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
@@ -1038,6 +1139,7 @@ export function ItemCatalogV2Tab() {
         selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
         isLoading={bulkImportMut.isPending} catalogName="道具圖鑑" />
+      {quickShopItem && <QuickShopListModal open={!!quickShopItem} onClose={() => setQuickShopItem(null)} itemKey={quickShopItem.itemKey} displayName={quickShopItem.displayName} />}
     </div>
   );
 }
@@ -1073,6 +1175,7 @@ export function EquipCatalogV2Tab() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [batchEditOpen, setBatchEditOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [quickShopItem, setQuickShopItem] = useState<{ itemKey: string; displayName: string } | null>(null);
 
   const queryInput = useMemo(() => ({
     search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
@@ -1133,10 +1236,11 @@ export function EquipCatalogV2Tab() {
     { key: "inSecretShop", label: "密店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
     { key: "specialEffect", label: "特殊效果", type: "textarea", group: "其他" },
     { key: "imageUrl", label: "圖片URL", type: "text", group: "其他" },
+    { key: "stackable", label: "可疊加", type: "select", options: [{ value: "0", label: "🔒 不可疊加（裝備預設）" }, { value: "1", label: "✅ 可疊加" }], defaultValue: "0", group: "其他" },
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
-  const batchEditFields = [
+  const batchEditFields: FieldDef[] = [
     { key: "wuxing", label: "五行", type: "select", options: WUXING_OPTS },
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
     { key: "slot", label: "部位", type: "select", options: SLOT_OPTS },
@@ -1145,7 +1249,7 @@ export function EquipCatalogV2Tab() {
     { key: "inNormalShop", label: "一般商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
     { key: "inSpiritShop", label: "靈相商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
     { key: "inSecretShop", label: "密店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
-     { key: "usableInBattle", label: "戰鬥可用", type: "select", options: [{ value: "1", label: "可在戰鬥中使用" }, { value: "0", label: "不可" }] },
+    { key: "stackable", label: "可疊加", type: "select", options: [{ value: "0", label: "🔒 不可疊加" }, { value: "1", label: "✅ 可疊加" }] },
     { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
   ];
 
@@ -1216,6 +1320,7 @@ export function EquipCatalogV2Tab() {
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <AiImageBtn type="equipment" id={m.equipId} name={m.name} hasImage={!!m.imageUrl} onSuccess={() => refetch()} />
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-amber-400" title="上架到商店" onClick={() => setQuickShopItem({ itemKey: m.equipId, displayName: m.name })}>🛒</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
@@ -1231,6 +1336,7 @@ export function EquipCatalogV2Tab() {
         selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
         isLoading={bulkImportMut.isPending} catalogName="裝備圖鑑" />
+      {quickShopItem && <QuickShopListModal open={!!quickShopItem} onClose={() => setQuickShopItem(null)} itemKey={quickShopItem.itemKey} displayName={quickShopItem.displayName} />}
     </div>
   );
 }
@@ -1269,6 +1375,7 @@ export function SkillCatalogV2Tab() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [batchEditOpen, setBatchEditOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [quickShopItem, setQuickShopItem] = useState<{ itemKey: string; displayName: string } | null>(null);
 
   const queryInput = useMemo(() => ({
     search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
@@ -1390,6 +1497,7 @@ export function SkillCatalogV2Tab() {
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
                     <AiImageBtn type="skill" id={m.skillId} name={m.name} hasImage={!!m.imageUrl} onSuccess={() => refetch()} />
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-amber-400" title="上架到商店" onClick={() => setQuickShopItem({ itemKey: m.skillId, displayName: m.name })}>🛒</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
@@ -1405,6 +1513,7 @@ export function SkillCatalogV2Tab() {
         selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
         isLoading={bulkImportMut.isPending} catalogName="技能圖鑑" />
+      {quickShopItem && <QuickShopListModal open={!!quickShopItem} onClose={() => setQuickShopItem(null)} itemKey={quickShopItem.itemKey} displayName={quickShopItem.displayName} />}
     </div>
   );
 }

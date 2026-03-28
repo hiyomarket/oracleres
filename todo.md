@@ -5287,3 +5287,15 @@
 - [x] 修正裝備頁面體驗（圖4）：點擊裝備槽位開啟選取 Modal，顯示背包中對應槽位的裝備，可直接點選裝備
 - [x] 撰寫 shop-equip-fixes.test.ts（16 項測試全部通過）
 - [x] TypeScript 零錯誤，1387 項測試全部通過
+
+## 修正任務（2026-03-29 第十六批）── 三大建議執行 + 緊急 bug
+
+- [x] 建議一：圖鑑 CMS 三個圖鑑（道具/裝備/技能書）加入「🛒 上架」快捷按鈕（QuickShopListModal）
+- [x] 建議一：後端 gameAdmin.ts 新增 quickListToShop procedure（支援一般/靈石/密店三種類型）
+- [x] 緊急 bug：裝備槽位 Modal 改為顯示角色背包中的裝備道具（後端新增 getInventoryEquipments procedure）
+- [x] 建議二：schema 新增 stackable 欄位到 game_item_catalog 和 game_equipment_catalog（SQL ALTER TABLE）
+- [x] 建議二：裝備圖鑑 CMS 編輯表單加入 stackable 欄位（預設不可疊加）
+- [x] 建議二：裝備圖鑑批量編輯加入 stackable 欄位
+- [x] 建議三：CharacterPanel 戰鬥屬性面板加入基礎値+裝備加成拆解顯示（有裝備加成時才顯示）
+- [x] 撰寫 three-suggestions.test.ts（15 項測試全部通過）
+- [x] TypeScript 零錯誤，1402 項測試全部通過

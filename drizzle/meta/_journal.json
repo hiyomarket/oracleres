@@ -729,6 +729,13 @@
       "when": 1774711635835,
       "tag": "0103_gigantic_toad",
       "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "5",
+      "when": 1774714110529,
+      "tag": "0104_tearful_giant_girl",
+      "breakpoints": true
     }
   ]
 }

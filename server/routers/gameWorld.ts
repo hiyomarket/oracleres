@@ -1856,6 +1856,57 @@ export const gameWorldRouter = router({
       return rows.map(r => ({ ...r, isEquipped: equippedIds.includes(r.equipId) }));
     }),
 
+  // ─── 背包中的裝備道具（含圖鑑屬性，供裝備槽選取 Modal 使用）───
+  getInventoryEquipments: protectedProcedure
+    .input(z.object({ slot: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const agents = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const agent = agents[0];
+      if (!agent) return [];
+      // 取得背包中所有 itemType = 'equipment' 的道具
+      const invItems = await db.select().from(agentInventory)
+        .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemType, 'equipment')));
+      if (invItems.length === 0) return [];
+      // 批量查詢圖鑑屬性
+      const equipIds = invItems.map(i => i.itemId);
+      const catalogRows = await db.select().from(gameEquipmentCatalog)
+        .where(inArray(gameEquipmentCatalog.equipId, equipIds));
+      const catalogMap = new Map(catalogRows.map(r => [r.equipId, r]));
+      // 已裝備的 equipId 列表
+      const equippedIds = [
+        agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
+        agent.equippedBody, agent.equippedHands, agent.equippedFeet,
+        agent.equippedRingA, agent.equippedRingB, agent.equippedNecklace, agent.equippedAmulet,
+      ].filter(Boolean) as string[];
+      // 合併背包記錄和圖鑑屬性
+      const result = invItems.map(inv => {
+        const cat = catalogMap.get(inv.itemId);
+        return {
+          invId: inv.id,
+          itemId: inv.itemId,
+          quantity: inv.quantity,
+          // 圖鑑屬性（若背包有此裝備但圖鑑已刪除則為 null）
+          equipId: cat?.equipId ?? inv.itemId,
+          name: cat?.name ?? inv.itemId,
+          slot: cat?.slot ?? null,
+          wuxing: cat?.wuxing ?? null,
+          quality: cat?.quality ?? 'common',
+          tier: cat?.tier ?? null,
+          hpBonus: cat?.hpBonus ?? 0,
+          attackBonus: cat?.attackBonus ?? 0,
+          defenseBonus: cat?.defenseBonus ?? 0,
+          speedBonus: cat?.speedBonus ?? 0,
+          matkBonus: 0,
+          enhanceLevel: 0,
+          isEquipped: equippedIds.includes(inv.itemId),
+          imageUrl: cat?.imageUrl ?? null,
+        };
+      }).filter(r => !input?.slot || r.slot === input.slot);
+      return result;
+    }),
+
   // ─── 裝備比較 ───
   getEquipCompare: protectedProcedure
     .input(z.object({ equipId: z.string() }))

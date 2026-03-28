@@ -1374,4 +1374,56 @@ export const gameAdminRouter = router({
 
       return { agents: results, total, totalPages, page: input.page, pageSize: input.pageSize };
     }),
+
+  // ─── 快捷上架到商店（從圖鑑 CMS 直接上架） ──────────────────────────
+  quickListToShop: adminProcedure
+    .input(z.object({
+      shopType: z.enum(["normal", "spirit"]),
+      itemKey: z.string().min(1),
+      displayName: z.string().min(1),
+      description: z.string().optional().default(""),
+      priceCoins: z.number().int().nonnegative().optional().default(0),
+      priceStones: z.number().int().nonnegative().optional().default(0),
+      stock: z.number().int().default(-1),
+      purchaseLimit: z.number().int().nonnegative().default(0),
+      maxPerOrder: z.number().int().nonnegative().default(99),
+      quantity: z.number().int().positive().default(1),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const now = Date.now();
+      if (input.shopType === "normal") {
+        const [result] = await db.insert(gameVirtualShop).values({
+          itemKey: input.itemKey,
+          displayName: input.displayName,
+          description: input.description,
+          priceCoins: input.priceCoins ?? 0,
+          quantity: input.quantity,
+          stock: input.stock,
+          purchaseLimit: input.purchaseLimit,
+          maxPerOrder: input.maxPerOrder,
+          isOnSale: 1,
+          nodeId: "",
+          sortOrder: 0,
+          createdAt: now,
+        });
+        return { id: (result as any).insertId, shopType: "normal" };
+      } else {
+        const [result] = await db.insert(gameSpiritShop).values({
+          itemKey: input.itemKey,
+          displayName: input.displayName,
+          description: input.description,
+          priceStones: input.priceStones ?? 0,
+          quantity: input.quantity,
+          purchaseLimit: input.purchaseLimit,
+          maxPerOrder: input.maxPerOrder,
+          rarity: "rare",
+          isOnSale: 1,
+          sortOrder: 0,
+          createdAt: now,
+        });
+        return { id: (result as any).insertId, shopType: "spirit" };
+      }
+    }),
 });
