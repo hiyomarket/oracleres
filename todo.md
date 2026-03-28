@@ -5136,3 +5136,9 @@
 - [x] 組隊面板加入隊員位置地圖縮圖（顯示各隊員所在節點）
 - [x] Boss 圖鑑前台展示頁面（玩家可查看已擊殺 Boss 的屬性/抗性/掉落物）
 - [x] 回合制戰鬥寵物行動預覽 UI（送出前顯示玩家+寵物將執行的指令）
+
+## 修復任務（2026-03-28 第四批）
+
+- [x] 修復 VirtualWorldPage ReferenceError：變數名稱衝突（m 被多次宣告）
+  - 第 409 行：monsters.map(m => ...) 改為 monsters.map(monster => ...)
+  - 第 1117 行：const m = ... 改為 const baseStatsMatch = ...

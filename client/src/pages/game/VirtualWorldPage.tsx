@@ -406,8 +406,8 @@ function NodeInfoPanel({
                 <span className="text-slate-600 font-normal ml-1">Lv.{node?.monsterLevel?.[0] ?? 1}–{node?.monsterLevel?.[1] ?? 10}</span>
               </p>
               <div className="space-y-1.5">
-                {monsters.map(m => (
-                  <BossMonsterRow key={m.id} m={m} onChallenge={onChallenge} />
+                {monsters.map(monster => (
+                  <BossMonsterRow key={monster.id} m={monster} onChallenge={onChallenge} />
                 ))}
               </div>
             </div>
@@ -1114,8 +1114,8 @@ function CharacterPanel({
                 const bonuses: { label: string; val: number; color: string }[] = [];
                 Object.values(equipped).forEach((e: any) => {
                   if (!e?.baseStats) return;
-                  const m = String(e.baseStats).match(/([\+\-]?\d+)/g);
-                  if (m) m.forEach(v => { /* 簡化展示，只展示裝備數量 */ });
+                  const baseStatsMatch = String(e.baseStats).match(/([\+\-]?\d+)/g);
+                  if (baseStatsMatch) baseStatsMatch.forEach(v => { /* 簡化展示，只展示裝備數量 */ });
                 });
                 const equippedList = Object.entries(equipped).filter(([, v]) => v != null);
                 if (equippedList.length === 0) return (
