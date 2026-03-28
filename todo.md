@@ -5142,3 +5142,11 @@
 - [x] 修復 VirtualWorldPage ReferenceError：變數名稱衝突（m 被多次宣告）
   - 第 409 行：monsters.map(m => ...) 改為 monsters.map(monster => ...)
   - 第 1117 行：const m = ... 改為 const baseStatsMatch = ...
+
+## 優化任務（2026-03-28 第五批）
+
+- [x] 修復 gameBattle.ts 的 TypeScript 錯誤（wuxing 屬性、string[] 型別、resistWood 等）
+- [x] 全面掃描單字母 prop 命名（BossTooltip m→monster，其他 map 回調為局部作用域不影響）
+- [x] 加入 GameErrorBoundary 組件（遊戲頁面渲染錯誤時顯示友善提示）
+- [x] 修復 VirtualWorldPage.tsx 的 TS 錯誤（agent TDZ、party 屬性、players 屬性）
+- [x] 徹底修復 /game 頁面 TDZ 根本問題（移動 agentData 宣告順序 + 修復所有 TS 錯誤）

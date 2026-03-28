@@ -281,14 +281,14 @@ export const gameBattleRouter = router({
           dbSkills: [],
           aiLevel: 4,
           baseMp: bossCat.baseMP ?? Math.floor((30 + bossCat.level * 2) * 2.0),
-          resistances: { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 },
+          resistances: {
+            wood:  bossCat.resistWood  ?? 0,
+            fire:  bossCat.resistFire  ?? 0,
+            earth: bossCat.resistEarth ?? 0,
+            metal: bossCat.resistMetal ?? 0,
+            water: bossCat.resistWater ?? 0,
+          },
           magicAttack: Math.floor(bossCat.baseAttack * 0.9),
-          // Boss 圖鑑的五行抗性
-          resistWood:  bossCat.resistWood  ?? 0,
-          resistFire:  bossCat.resistFire  ?? 0,
-          resistEarth: bossCat.resistEarth ?? 0,
-          resistMetal: bossCat.resistMetal ?? 0,
-          resistWater: bossCat.resistWater ?? 0,
         };
       } else {
         const monster = await getCombatMonsterById(input.monsterId);
@@ -872,7 +872,7 @@ export const gameBattleRouter = router({
                     // 記錄 Boss 擊敗日誌
                     const agentP2 = dbParticipants.find(dp => dp.participantType === "character");
                     if (agentP2?.agentId) {
-                      const [agentData] = await db.select({ name: gameAgents.agentName, wuxing: gameAgents.wuxing, level: gameAgents.level })
+                      const [agentData] = await db.select({ name: gameAgents.agentName, dominantElement: gameAgents.dominantElement, level: gameAgents.level })
                         .from(gameAgents).where(eq(gameAgents.id, agentP2.agentId));
                       await recordBossKill({
                         instanceId: bossInstanceId,
@@ -884,7 +884,7 @@ export const gameBattleRouter = router({
                         rounds: round,
                         expGained: rewards.expReward,
                         goldGained: rewards.goldReward,
-                        dropsGained: rewards.drops,
+                        dropsGained: rewards.drops.map(itemId => ({ itemId, itemName: itemId, qty: 1 })),
                         nodeId: bossInst.currentNodeId,
                       });
                       // ─── 全服公告：Boss 擊殺 ───
@@ -898,7 +898,7 @@ export const gameBattleRouter = router({
                       const isPartyKill = killerParty.length > 0;
                       broadcastBossKill({
                         agentName: agentData?.name ?? "未知冒險者",
-                        agentElement: agentData?.wuxing ?? "earth",
+                        agentElement: agentData?.dominantElement ?? "earth",
                         agentLevel: agentData?.level ?? 1,
                         bossName: bossFullName,
                         drops: rewards.drops,
@@ -935,7 +935,7 @@ export const gameBattleRouter = router({
             if (isBossWin && agentP?.agentId) {
               // 查詢角色屬性用於公告
               const [agentForBroadcast] = await db.select({
-                name: gameAgents.agentName, level: gameAgents.level, wuxing: gameAgents.wuxing,
+                name: gameAgents.agentName, level: gameAgents.level, dominantElement: gameAgents.dominantElement,
               }).from(gameAgents).where(eq(gameAgents.id, agentP.agentId));
               // 查詢是否有組隊
               const partyRows = await db.select().from(gameParties)
@@ -955,7 +955,7 @@ export const gameBattleRouter = router({
               const WUXING_EN: Record<string, string> = { "木": "wood", "火": "fire", "土": "earth", "金": "metal", "水": "water" };
               broadcastBossKill({
                 agentName: agentForBroadcast?.name ?? "冒險者",
-                agentElement: WUXING_EN[agentForBroadcast?.wuxing ?? ""] ?? "earth",
+                agentElement: agentForBroadcast?.dominantElement ?? "earth",
                 agentLevel: agentForBroadcast?.level,
                 bossName: bossDisplayName,
                 drops: rewards.drops,

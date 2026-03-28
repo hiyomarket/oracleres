@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { GameErrorBoundary } from "./components/game/GameErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AccessGate } from "@/components/AccessGate";
 import { DailySigninModal } from "./components/DailySigninModal";
@@ -148,7 +149,7 @@ function Router() {
                 <Route path={"/admin/access-tokens"} component={AdminAccessTokens} />
                 <Route path={"/admin/game"} component={GameCMS} />
                 <Route path={"/admin/game-theater"} component={AdminGameTheater} />
-                <Route path={"/game"} component={VirtualWorldPage} />
+                <Route path="/game">{() => <GameErrorBoundary><VirtualWorldPage /></GameErrorBoundary>}</Route>
                 <Route path={"/game/avatar"} component={AvatarRoom} />
                 <Route path={"/game/shop"} component={Shop} />
                 <Route path={"/game/gameshop"} component={GameShop} />

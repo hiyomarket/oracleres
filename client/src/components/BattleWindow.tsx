@@ -8,7 +8,7 @@
  * 4. 回合倒數計時器
  * 5. 五行光圈 + 暴擊震屏 + 飄字動畫
  */
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -1384,8 +1384,8 @@ function VictoryPanel({ result, round, onClose, rewards }: {
   const won = result === "win";
   const fled = result === "flee";
   // 掉落物品動畫狀態（逐個顯示）
-  const [visibleDrops, setVisibleDrops] = React.useState<number[]>([]);
-  React.useEffect(() => {
+  const [visibleDrops, setVisibleDrops] = useState<number[]>([]);
+  useEffect(() => {
     if (!won || !rewards?.drops.length) return;
     // 逐個彈出掉落物品
     rewards.drops.forEach((_, i) => {

@@ -2150,6 +2150,11 @@ export default function VirtualWorldPage() {
     startBattleMut.mutate({ mode, monsterId });
     toast.info(`向 ${monsterName} 發起挑戰！`);
   }, [playerBattleId, startBattleMut]);
+  // ── 角色資料（必須在所有依賴 agent 的 hooks 之前宣告） ──
+  const { data: agentData, isLoading: agentLoading } = trpc.gameWorld.getOrCreateAgent.useQuery(
+    undefined, { enabled: !!user, refetchInterval: 10000 });
+  const agent = agentData?.agent as AgentData | null | undefined;
+
   // 組隊面板
   const [partyPanelOpen, setPartyPanelOpen] = useState(false);
   const [onlinePanelOpen, setOnlinePanelOpen] = useState(false);
@@ -2209,8 +2214,6 @@ export default function VirtualWorldPage() {
     }, 1500);
   }, [saveWidgetLayout]);
 
-  const { data: agentData, isLoading: agentLoading } = trpc.gameWorld.getOrCreateAgent.useQuery(
-    undefined, { enabled: !!user, refetchInterval: 10000 });
   const { data: statusData, refetch: refetchStatus } = trpc.gameWorld.getAgentStatus.useQuery(
     undefined, { enabled: !!user && !agentData?.needsNaming, refetchInterval: 10000 });
   const { data: eventLog, refetch: refetchLog } = trpc.gameWorld.getEventLog.useQuery(
@@ -2222,7 +2225,6 @@ export default function VirtualWorldPage() {
   const { data: dailyData } = trpc.oracle.dailyEnergy.useQuery(undefined, { enabled: !!user, staleTime: 300000 });
   const { data: onlineStats } = trpc.gameWorld.getOnlineStats.useQuery(undefined, { refetchInterval: 60000 });
 
-  const agent = agentData?.agent as AgentData | null | undefined;
   const currentNodeId = agent?.currentNodeId ?? "tp-zhongzheng";
   // 在線玩家：靠近玩家節點，最多 50 位，每 30 秒更新
   const { data: nearbyPlayersData } = trpc.gameWorld.getNearbyPlayers.useQuery(
@@ -2695,8 +2697,8 @@ export default function VirtualWorldPage() {
       onlineCount={onlineStats?.onlineCount ?? 0}
       onOnlineClick={() => setOnlinePanelOpen(v => !v)}
       onPartyClick={() => setPartyPanelOpen(v => !v)}
-      partyMemberCount={myPartyData?.party ? (myPartyData.party.members?.length ?? 1) : 0}
-      hasParty={!!myPartyData?.party}
+      partyMemberCount={myPartyData ? (myPartyData.memberIds as any[])?.length ?? 1 : 0}
+      hasParty={!!myPartyData}
     >
       {/* Tick 進度條 */}
       {tickProgress > 0 && (
@@ -3910,15 +3912,15 @@ export default function VirtualWorldPage() {
             )}
 
             {/* 目前隊伍 */}
-            {myPartyData?.party ? (
+            {myPartyData ? (
               <div style={{ padding: "8px 12px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#22c55e" }}>🛡️ {myPartyData.party.name}</div>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#22c55e" }}>🛡️ {myPartyData.partyName}</div>
                   <div style={{ display: "flex", gap: "6px" }}>
-                    {myPartyData.party.leaderId === agent?.id ? (
-                      <button onClick={() => disbandPartyMut.mutate({ partyId: myPartyData!.party!.id })} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", cursor: "pointer" }}>解散</button>
+                    {myPartyData.leaderId === agent?.id ? (
+                      <button onClick={() => disbandPartyMut.mutate({ partyId: myPartyData!.id })} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", cursor: "pointer" }}>解散</button>
                     ) : (
-                      <button onClick={() => leavePartyMut.mutate({ partyId: myPartyData!.party!.id })} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", cursor: "pointer" }}>離開</button>
+                      <button onClick={() => leavePartyMut.mutate({ partyId: myPartyData!.id })} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", cursor: "pointer" }}>離開</button>
                     )}
                   </div>
                 </div>
@@ -3980,11 +3982,11 @@ export default function VirtualWorldPage() {
                   })}
                 </div>
                 {/* 邀請附近玩家 */}
-                {myPartyData.leaderId === agent?.id && nearbyForParty && nearbyForParty.players.length > 0 && (
+                {myPartyData.leaderId === agent?.id && nearbyForParty && nearbyForParty.length > 0 && (
                   <div style={{ marginTop: "8px" }}>
                     <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "4px" }}>邀請附近旅人：</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
-                      {nearbyForParty.players.slice(0, 6).map((p: { id: number; agentName: string }) => (
+                      {nearbyForParty.slice(0, 6).map((p: { id: number; agentName: string | null }) => (
                         <button key={p.id} onClick={() => invitePlayerMut.mutate({ partyId: myPartyData!.id, targetAgentId: p.id })} style={{ fontSize: "10px", padding: "3px 8px", borderRadius: "6px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e", cursor: "pointer" }}>
                           + {p.agentName}
                         </button>
