@@ -47,7 +47,12 @@
     "legendary_drop": "",
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 60,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 40
   },
   {
     "id": 2,
@@ -97,7 +102,12 @@
     "legendary_drop": "",
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 60,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 40
   },
   {
     "id": 3,
@@ -147,7 +157,12 @@
     "legendary_drop": "",
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 60,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 40
   },
   {
     "id": 4,
@@ -197,7 +212,12 @@
     "legendary_drop": "",
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 60,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 40
   },
   {
     "id": 5,
@@ -247,7 +267,12 @@
     "legendary_drop": "",
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 60,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 40
   },
   {
     "id": 6,
@@ -294,7 +319,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 60,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 40
   },
   {
     "id": 7,
@@ -341,7 +371,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 60,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 40
   },
   {
     "id": 8,
@@ -388,7 +423,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 60,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 40
   },
   {
     "id": 9,
@@ -435,7 +475,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 60,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 40
   },
   {
     "id": 10,
@@ -482,7 +527,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 60,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 40
   },
   {
     "id": 11,
@@ -529,7 +579,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 70,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 30
   },
   {
     "id": 12,
@@ -576,7 +631,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 70,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 30
   },
   {
     "id": 13,
@@ -623,7 +683,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 70,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 30
   },
   {
     "id": 14,
@@ -670,7 +735,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 70,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 30
   },
   {
     "id": 15,
@@ -719,7 +789,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 70,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 30
   },
   {
     "id": 16,
@@ -768,7 +843,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 70,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 30
   },
   {
     "id": 17,
@@ -817,7 +897,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 70,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 30
   },
   {
     "id": 18,
@@ -866,7 +951,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 70,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 30
   },
   {
     "id": 19,
@@ -915,7 +1005,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 70,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 30
   },
   {
     "id": 20,
@@ -962,7 +1057,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 70,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 30
   },
   {
     "id": 21,
@@ -1012,7 +1112,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 60,
+    "wuxing_earth": 0,
+    "wuxing_metal": 40,
+    "wuxing_water": 0
   },
   {
     "id": 22,
@@ -1062,7 +1167,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 60,
+    "wuxing_earth": 0,
+    "wuxing_metal": 40,
+    "wuxing_water": 0
   },
   {
     "id": 23,
@@ -1112,7 +1222,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 60,
+    "wuxing_earth": 0,
+    "wuxing_metal": 40,
+    "wuxing_water": 0
   },
   {
     "id": 24,
@@ -1162,7 +1277,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 60,
+    "wuxing_earth": 0,
+    "wuxing_metal": 40,
+    "wuxing_water": 0
   },
   {
     "id": 25,
@@ -1212,7 +1332,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 60,
+    "wuxing_earth": 0,
+    "wuxing_metal": 40,
+    "wuxing_water": 0
   },
   {
     "id": 26,
@@ -1259,7 +1384,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 60,
+    "wuxing_earth": 0,
+    "wuxing_metal": 40,
+    "wuxing_water": 0
   },
   {
     "id": 27,
@@ -1306,7 +1436,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 60,
+    "wuxing_earth": 0,
+    "wuxing_metal": 40,
+    "wuxing_water": 0
   },
   {
     "id": 28,
@@ -1353,7 +1488,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 60,
+    "wuxing_earth": 0,
+    "wuxing_metal": 40,
+    "wuxing_water": 0
   },
   {
     "id": 29,
@@ -1400,7 +1540,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 60,
+    "wuxing_earth": 0,
+    "wuxing_metal": 40,
+    "wuxing_water": 0
   },
   {
     "id": 30,
@@ -1447,7 +1592,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 60,
+    "wuxing_earth": 0,
+    "wuxing_metal": 40,
+    "wuxing_water": 0
   },
   {
     "id": 31,
@@ -1494,7 +1644,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 70,
+    "wuxing_earth": 0,
+    "wuxing_metal": 30,
+    "wuxing_water": 0
   },
   {
     "id": 32,
@@ -1541,7 +1696,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 70,
+    "wuxing_earth": 0,
+    "wuxing_metal": 30,
+    "wuxing_water": 0
   },
   {
     "id": 33,
@@ -1588,7 +1748,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 70,
+    "wuxing_earth": 0,
+    "wuxing_metal": 30,
+    "wuxing_water": 0
   },
   {
     "id": 34,
@@ -1635,7 +1800,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 70,
+    "wuxing_earth": 0,
+    "wuxing_metal": 30,
+    "wuxing_water": 0
   },
   {
     "id": 35,
@@ -1684,7 +1854,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 70,
+    "wuxing_earth": 0,
+    "wuxing_metal": 30,
+    "wuxing_water": 0
   },
   {
     "id": 36,
@@ -1733,7 +1908,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 70,
+    "wuxing_earth": 0,
+    "wuxing_metal": 30,
+    "wuxing_water": 0
   },
   {
     "id": 37,
@@ -1782,7 +1962,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 70,
+    "wuxing_earth": 0,
+    "wuxing_metal": 30,
+    "wuxing_water": 0
   },
   {
     "id": 38,
@@ -1831,7 +2016,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 70,
+    "wuxing_earth": 0,
+    "wuxing_metal": 30,
+    "wuxing_water": 0
   },
   {
     "id": 39,
@@ -1880,7 +2070,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 70,
+    "wuxing_earth": 0,
+    "wuxing_metal": 30,
+    "wuxing_water": 0
   },
   {
     "id": 40,
@@ -1927,7 +2122,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 70,
+    "wuxing_earth": 0,
+    "wuxing_metal": 30,
+    "wuxing_water": 0
   },
   {
     "id": 41,
@@ -1977,7 +2177,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 60,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 42,
@@ -2024,7 +2229,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 60,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 43,
@@ -2071,7 +2281,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 60,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 44,
@@ -2118,7 +2333,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 60,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 45,
@@ -2165,7 +2385,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 60,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 46,
@@ -2212,7 +2437,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 60,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 47,
@@ -2259,7 +2489,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 60,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 48,
@@ -2306,7 +2541,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 60,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 49,
@@ -2353,7 +2593,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 60,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 50,
@@ -2400,7 +2645,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 60,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 51,
@@ -2447,7 +2697,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 70,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 52,
@@ -2494,7 +2749,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 70,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 53,
@@ -2541,7 +2801,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 70,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 54,
@@ -2588,7 +2853,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 70,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 55,
@@ -2637,7 +2907,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 70,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 56,
@@ -2686,7 +2961,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 70,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 57,
@@ -2738,7 +3018,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 70,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 58,
@@ -2790,7 +3075,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 70,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 59,
@@ -2842,7 +3132,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 70,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 60,
@@ -2892,7 +3187,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 10,
+    "wuxing_fire": 0,
+    "wuxing_earth": 90,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 61,
@@ -2939,7 +3239,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 40,
+    "wuxing_metal": 60,
+    "wuxing_water": 0
   },
   {
     "id": 62,
@@ -2986,7 +3291,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 40,
+    "wuxing_metal": 60,
+    "wuxing_water": 0
   },
   {
     "id": 63,
@@ -3033,7 +3343,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 40,
+    "wuxing_metal": 60,
+    "wuxing_water": 0
   },
   {
     "id": 64,
@@ -3080,7 +3395,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 40,
+    "wuxing_metal": 60,
+    "wuxing_water": 0
   },
   {
     "id": 65,
@@ -3127,7 +3447,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 40,
+    "wuxing_metal": 60,
+    "wuxing_water": 0
   },
   {
     "id": 66,
@@ -3174,7 +3499,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 40,
+    "wuxing_metal": 60,
+    "wuxing_water": 0
   },
   {
     "id": 67,
@@ -3221,7 +3551,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 40,
+    "wuxing_metal": 60,
+    "wuxing_water": 0
   },
   {
     "id": 68,
@@ -3268,7 +3603,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 40,
+    "wuxing_metal": 60,
+    "wuxing_water": 0
   },
   {
     "id": 69,
@@ -3315,7 +3655,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 40,
+    "wuxing_metal": 60,
+    "wuxing_water": 0
   },
   {
     "id": 70,
@@ -3362,7 +3707,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 40,
+    "wuxing_metal": 60,
+    "wuxing_water": 0
   },
   {
     "id": 71,
@@ -3409,7 +3759,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 30,
+    "wuxing_metal": 70,
+    "wuxing_water": 0
   },
   {
     "id": 72,
@@ -3456,7 +3811,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 30,
+    "wuxing_metal": 70,
+    "wuxing_water": 0
   },
   {
     "id": 73,
@@ -3503,7 +3863,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 30,
+    "wuxing_metal": 70,
+    "wuxing_water": 0
   },
   {
     "id": 74,
@@ -3550,7 +3915,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 30,
+    "wuxing_metal": 70,
+    "wuxing_water": 0
   },
   {
     "id": 75,
@@ -3602,7 +3972,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 30,
+    "wuxing_metal": 70,
+    "wuxing_water": 0
   },
   {
     "id": 76,
@@ -3654,7 +4029,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 30,
+    "wuxing_metal": 70,
+    "wuxing_water": 0
   },
   {
     "id": 77,
@@ -3706,7 +4086,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 30,
+    "wuxing_metal": 70,
+    "wuxing_water": 0
   },
   {
     "id": 78,
@@ -3758,7 +4143,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 30,
+    "wuxing_metal": 70,
+    "wuxing_water": 0
   },
   {
     "id": 79,
@@ -3810,7 +4200,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 30,
+    "wuxing_metal": 70,
+    "wuxing_water": 0
   },
   {
     "id": 80,
@@ -3857,7 +4252,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 10,
+    "wuxing_metal": 90,
+    "wuxing_water": 0
   },
   {
     "id": 81,
@@ -3904,7 +4304,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 60
   },
   {
     "id": 82,
@@ -3951,7 +4356,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 60
   },
   {
     "id": 83,
@@ -3998,7 +4408,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 60
   },
   {
     "id": 84,
@@ -4045,7 +4460,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 85,
@@ -4092,7 +4512,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 86,
@@ -4139,7 +4564,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 87,
@@ -4186,7 +4616,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 88,
@@ -4233,7 +4668,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 89,
@@ -4280,7 +4720,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 90,
@@ -4327,7 +4772,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 20,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 80
   },
   {
     "id": 91,
@@ -4374,7 +4824,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 100
   },
   {
     "id": 92,
@@ -4421,7 +4876,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 100
   },
   {
     "id": 93,
@@ -4468,7 +4928,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 100
   },
   {
     "id": 94,
@@ -4515,7 +4980,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 100
   },
   {
     "id": 95,
@@ -4564,7 +5034,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 20,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 80
   },
   {
     "id": 96,
@@ -4613,7 +5088,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 20,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 80
   },
   {
     "id": 97,
@@ -4662,7 +5142,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 98,
@@ -4711,7 +5196,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 99,
@@ -4760,7 +5250,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 100,
@@ -4807,7 +5302,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 40,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 60
   },
   {
     "id": 211,
@@ -4857,7 +5357,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 90,
+    "wuxing_earth": 0,
+    "wuxing_metal": 10,
+    "wuxing_water": 0
   },
   {
     "id": 212,
@@ -4907,7 +5412,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 90,
+    "wuxing_earth": 0,
+    "wuxing_metal": 10,
+    "wuxing_water": 0
   },
   {
     "id": 213,
@@ -4957,7 +5467,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 90,
+    "wuxing_earth": 0,
+    "wuxing_metal": 10,
+    "wuxing_water": 0
   },
   {
     "id": 214,
@@ -5007,7 +5522,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 0,
+    "wuxing_fire": 100,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 220,
@@ -5057,7 +5577,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 10,
+    "wuxing_fire": 0,
+    "wuxing_earth": 90,
+    "wuxing_metal": 0,
+    "wuxing_water": 0
   },
   {
     "id": 226,
@@ -5107,7 +5632,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 227,
@@ -5157,7 +5687,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 228,
@@ -5207,7 +5742,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 229,
@@ -5257,7 +5797,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 230,
@@ -5307,7 +5852,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 231,
@@ -5357,7 +5907,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 232,
@@ -5407,7 +5962,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 30,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 70
   },
   {
     "id": 233,
@@ -5457,7 +6017,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 10,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 90
   },
   {
     "id": 234,
@@ -5507,7 +6072,12 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 10,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 90
   },
   {
     "id": 235,
@@ -5557,6 +6127,11 @@
     "legendary_drop": null,
     "legendary_drop_rate": 0,
     "destiny_clue": null,
-    "spawn_nodes": null
+    "spawn_nodes": null,
+    "wuxing_wood": 10,
+    "wuxing_fire": 0,
+    "wuxing_earth": 0,
+    "wuxing_metal": 0,
+    "wuxing_water": 90
   }
 ]
