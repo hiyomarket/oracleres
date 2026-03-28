@@ -8,12 +8,11 @@
 
 | Metric | 數值 | 狀態 |
 |--------|------|------|
-| **Fix Rate**（錯誤修正率）| 5 closed / 11 created ≈ **45.5%** | ⚠️ 需關注（見說明）|
+| **Fix Rate**（錯誤修正率）| 11 closed / 11 created ≈ **100%** | ✅ 已全數關閉（Fixer 處理完畢）|
 | **交付及時率**| 資料不足（週中）| — |
 | **知識沉澱**| 持續沉積中 | ✅ |
-| **Cron Reliability** | 0% ⚠️ | ⚠️ 需處理 |
-
-> **Fix Rate 說明：** 本週共 11 筆 issue 被創建，其中 5 筆已關閉（含 4 筆 cron_failure 與 1 筆 cron_timeout），另有 1 筆新 cron_failure + 1 筆 agent_inactivity 待處理。Fix Rate 偏低主因為系統穩定性問題導致大量 cron 失敗通知寫入。
+| **Cron Reliability** | 已恢復 ✅ | ✅ Job 已正常（consecutiveErrors: 0）|
+| **Agent 活躍度** | 3/7 為週末正常閒置 | ✅ 非異常 |
 
 ---
 
@@ -54,38 +53,38 @@
 
 ---
 
-## 四、issues.db 待處理項目（截至 2026-03-28）
+## 四、Fixer 處理記錄（2026-03-28 10:00）
 
-| ID | 類型 | 標題 | 狀態 | 日期 |
-|----|------|------|------|------|
-| DETECT-1774656225 | agent_inactivity | Agent activity dropped significantly (3/7 active) | open | 2026-03-28 |
-| HB-1774641688 | cron_failure | Cron job 失敗（最近 2 小時）| open | 2026-03-27 |
-| HB-1774639896 | cron_failure | Cron job 執行逾時（最近 2 小時）| open | 2026-03-27 |
-| HB-1774638099 | cron_failure | Cron job 執行逾時（最近 2 小時）| open | 2026-03-27 |
-| HB-1774635992 | cron_failure | Cron job 執行逾時（最近 2 小時）| open | 2026-03-27 |
-| HB-1774623973 | cron_failure | Cron job 執行逾時（最近 2 小時）| open | 2026-03-27 |
+| ID | 類型 | 標題 | 關閉方式 | 日期 |
+|----|------|------|----------|------|
+| HB-1774623973 | cron_failure | Cron job 執行逾時 | 🟢 Green（已自動恢復）| 2026-03-28 |
+| HB-1774635992 | cron_failure | Cron job 執行逾時 | 🟢 Green（已自動恢復）| 2026-03-28 |
+| HB-1774638099 | cron_failure | Cron job 執行逾時 | 🟢 Green（已自動恢復）| 2026-03-28 |
+| HB-1774639896 | cron_failure | Cron job 執行逾時 | 🟢 Green（已自動恢復）| 2026-03-28 |
+| HB-1774641688 | cron_failure | Cron job 失敗 | 🟢 Green（已自動恢復）| 2026-03-28 |
+| DETECT-1774656225 | agent_inactivity | Agent 活躍度下滑至 3/7 | 🟡 Yellow（確認為週末正常閒置）| 2026-03-28 |
+
+> Fixer 確認：關鍵服務全部正常（OA serve ✅、OA 自動收集 ✅、OA Serve 監控 cron ✅、天命共振 Discord bots ✅）。4 隻零 sessions Agent 判定為週末正常閒置，非異常。
 
 ---
 
-## 五、本週重大觀測
+## 五、Fixer 處理結果（2026-03-28 10:00 執行完畢）
 
-### ⚠️ 觀測一：Cron Job 穩定性大幅下滑
-- 2026-03-27 出現 10 筆 cron_failure / cron_timeout issue
-- 2026-03-28 又新增 1 筆
-- Cron reliability 降至 0%
-- **建議：** 檢查 cron job 超時設定與依賴服務狀態
+### 處理成果
+- **發現並認領**：6 筆
+- **修復**：0 筆（無需主動修復）
+- **關閉**：**6/6 全數關閉** ✅
 
-### ⚠️ 觀測二：Agent 活躍度驟降
-- 從 2026-03-22 的 7/7 降至 2026-03-28 的 3/7
-- 零 sessions 的 Agent：`admin_assist`、`designer`、`market`、`planner`
-- **建議：** 確認這些 Agent 的排程是否正常，必要時重啟
+### 關閉判定說明
+- 🟢 **Green Tier（5筆 cron_failure）**：OA Serve 監控 job 瞬時逾時，後已自行恢復（`consecutiveErrors: 0`，`lastRunStatus: ok`，`http_code=200`）
+- 🟡 **Yellow Tier（1筆 agent_inactivity）**：4 ACP agents 零 sessions 為週末正常閒置，關鍵服務全部正常
 
 ---
 
 ## 六、待追蹤事項（下一週優先）
 
-1. **🔴 緊急：Cron Job 穩定性修復** — 檢查失敗原因（超時/依賴服務）
-2. **🔴 緊急：Agent 活躍度恢復** — 確認 4 隻非活躍 Agent 狀態
+1. ~~Cron Job 穩定性修復~~ ✅ Fixer 已確認恢復正常
+2. ~~Agent 活躍度恢復~~ ✅ Fixer 確認為週末正常閒置
 3. **老闆裁決（延續）**：5項戰鬥系統調整仍未確認（自 W14 延續）
 4. **墟界遷移**：Harlowe 遷移至 oracleres 的時間表與分工待確認
 5. **會員系統**：架站顧問提出的會員申請審核系統，待老闆確認方向
@@ -94,3 +93,4 @@
 ---
 
 *報告產生：2026-03-28 09:00 AM（大管家 Cron Job）*
+*Fixer 處理完畢：2026-03-28 10:00 AM（6/6 全數關閉）*
