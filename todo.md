@@ -5299,3 +5299,19 @@
 - [x] 建議三：CharacterPanel 戰鬥屬性面板加入基礎値+裝備加成拆解顯示（有裝備加成時才顯示）
 - [x] 撰寫 three-suggestions.test.ts（15 項測試全部通過）
 - [x] TypeScript 零錯誤，1402 項測試全部通過
+
+## 修正任務（2026-03-29 第十七批）── 怪物/技能/Boss/HP 修正
+
+- [ ] Bug1：修復創建怪物時 id undefined 錯誤（圖1）
+- [ ] Bug2：Boss 掉落物改為下拉選單（和一般怪物介面相同，圖2 vs 圖3）
+- [ ] 新功能：技能圖鑑新增「傷害方式」欄位（單體/全體）
+- [ ] 新功能：戰鬥系統（單人/組隊/回合制）套用技能傷害方式（全體技能攻擊所有敵人）
+- [ ] 新功能：Boss 新增「每回合動作次數」欄位（schema + CMS + 戰鬥引擎）
+- [ ] 新功能：Boss 每回合多次動作連動到所有戰鬥系統
+- [ ] Bug3：角色面板 HP 加成和上限未正確顯示（裝備 hpBonus 和 maxHp cap 未套用）
+## 修正任務（2026-03-29 第十八批）── 圖鑑創建問題全面修復
+- [x] 修復技能圖鑑創建失敗：skillCatalogInput 的 hiddenTrigger 改為接受陣列或字串（z.union）
+- [x] 修復技能圖鑑創建失敗：createSkillCatalog insert 時將陣列轉為 JSON 字串
+- [x] 修復成就圖鑑創建失敗：achievementInput 的 conditionType 允許空字串（z.string().max(50).default("")）
+- [x] 修復成就圖鑑創建失敗：achievementInput 的 conditionValue 改為 nonnegative（允許 0）
+- [x] 修復裝備圖鑑創建失敗：equipCatalogInput 的 slot 加入 gloves 選項
