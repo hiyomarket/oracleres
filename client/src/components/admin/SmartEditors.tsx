@@ -214,12 +214,16 @@ export function ConditionEditor({ conditionType, conditionValue, conditionParams
       <div className="flex flex-wrap gap-2 items-end p-2 rounded-md border bg-muted/20">
         <div className="space-y-1 min-w-[140px] flex-1">
           <Label className="text-[10px] text-muted-foreground">條件類型</Label>
-          <Select value={conditionType} onValueChange={v => onChange("conditionType", v)}>
-            <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="選擇條件" /></SelectTrigger>
+          <Select value={conditionType || ""} onValueChange={v => onChange("conditionType", v)}>
+            <SelectTrigger className={`h-7 text-xs ${!conditionType ? 'border-destructive ring-1 ring-destructive' : ''}`}>
+              <SelectValue placeholder="請選擇條件類型（必填）" />
+            </SelectTrigger>
             <SelectContent className="max-h-60">
+              <SelectItem value="" disabled className="text-muted-foreground">— 請選擇條件類型 —</SelectItem>
               {CONDITION_TYPE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
             </SelectContent>
           </Select>
+          {!conditionType && <p className="text-[10px] text-destructive mt-0.5">條件類型為必填欄位</p>}
         </div>
         <div className="space-y-1 w-24">
           <Label className="text-[10px] text-muted-foreground">目標值</Label>

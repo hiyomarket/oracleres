@@ -723,6 +723,7 @@ export function MonsterCatalogV2Tab() {
     { key: "destinyClue", label: "天命線索", type: "textarea", group: "其他" },
     { key: "imageUrl", label: "圖片URL", type: "text", group: "其他" },
     { key: "catchRate", label: "捕獲率 (0-1)", type: "number", defaultValue: 0.1, step: 0.01, min: 0, max: 1, group: "其他" },
+    { key: "actionsPerTurn", label: "每回合動作次數", type: "number", defaultValue: 1, min: 1, max: 5, group: "其他" },
     { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
@@ -1402,15 +1403,16 @@ export function SkillCatalogV2Tab() {
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS, defaultValue: "common" },
     { key: "tier", label: "階級", type: "text", defaultValue: "初階" },
     { key: "skillType", label: "技能類型", type: "select", options: SKILL_TYPE_OPTS, defaultValue: "attack" },
-    { key: "mpCost", label: "MP消耗", type: "number", defaultValue: 0, group: "數值" },
+    { key: "damageType", label: "傷害方式", type: "select", options: [{ value: "single", label: "單體攻擊" }, { value: "aoe", label: "全體攻擊" }], defaultValue: "single" },
+    { key: "mpCost", label: "MP消耗", type: "number", defaultValue: 0, group: "數値" },
     { key: "cooldown", label: "冷卻(回合)", type: "number", defaultValue: 0, group: "數值" },
     { key: "powerPercent", label: "威力%", type: "number", defaultValue: 100, group: "數值" },
     { key: "learnLevel", label: "習得等級", type: "number", defaultValue: 1, group: "數值" },
     { key: "acquireType", label: "獲取方式", type: "select", options: ACQUIRE_TYPE_OPTS, defaultValue: "shop", group: "獲取" },
     { key: "shopPrice", label: "商店售價", type: "number", defaultValue: 0, group: "獲取" },
     { key: "dropMonsterId", label: "掉落怪物", type: "linkedSelect", linkedOptions: monsterOpts, defaultValue: "", group: "獲取" },
-    { key: "hiddenTrigger", label: "隱藏觸發條件", type: "custom", defaultValue: [], group: "獲取", skipParse: true,
-      render: (val, onChange) => <HiddenTriggerEditor value={val ?? []} onChange={onChange} />
+    { key: "hiddenTrigger", label: "隱藏觸發條件", type: "custom", defaultValue: [], group: "獲取",
+      render: (val, onChange) => <HiddenTriggerEditor value={Array.isArray(val) ? val : (typeof val === 'string' && val ? (() => { try { return JSON.parse(val); } catch { return []; } })() : [])} onChange={onChange} />
     },
     { key: "description", label: "效果說明", type: "textarea", group: "其他" },
     { key: "inNormalShop", label: "一般商店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },

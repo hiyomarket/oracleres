@@ -1,0 +1,2 @@
+ALTER TABLE `game_monster_catalog` ADD `actions_per_turn` int DEFAULT 1 NOT NULL;--> statement-breakpoint
+ALTER TABLE `game_skill_catalog` ADD `damage_type` enum('single','aoe') DEFAULT 'single' NOT NULL;

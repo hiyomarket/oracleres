@@ -48,6 +48,8 @@ export interface CombatSkill {
   awakening?: typeof DESTINY_AWAKENING_EFFECTS[string];
   /** 技能等級 */
   skillLevel?: number;
+  /** 傷害方式：single=單體, aoe=全體 */
+  damageType?: "single" | "aoe";
 }
 
 export interface StatusEffect {
@@ -96,6 +98,8 @@ export interface BattleParticipant {
   monsterId?: string;
   // 寵物天命技能使用次數追蹤
   destinySkillUsage?: Record<string, number>;
+  /** 每回合動作次數（Boss 多次行動） */
+  actionsPerTurn?: number;
 }
 
 export interface BattleCommand {
@@ -899,8 +903,51 @@ function executeSkill(
         message: `覺醒效果：${target.name}恢復 ${mpRestore} MP`,
       });
     }
+  } else if (skill.damageType === "aoe") {
+    // 全體攻擊技能：對所有敵方造成傷害
+    const aoeTargets = allParticipants.filter(p => p.side !== attacker.side && !p.isDefeated);
+    logs.push({
+      round, actorId: attacker.id, actorName: attacker.name,
+      logType: "buff", value: 0, isCritical: false,
+      skillName: skill.name,
+      message: `${attacker.name}釋放全體技能「${skill.name}」！`,
+    });
+    for (const aoeTarget of aoeTargets) {
+      if (aoeTarget.isDefeated) continue;
+      const isMagicAoe = skill.wuxing || skill.skillType === "debuff";
+      const { damage: aoeDmg, isCritical: aoeIsCrit } = isMagicAoe
+        ? calcMagicDamage(attacker, aoeTarget, skill.damageMultiplier * awakenMultiplier * 0.8)
+        : calcPhysicalDamage(attacker, aoeTarget, skill.damageMultiplier * awakenMultiplier * 0.8);
+      const aoeElementBoost = calcElementBoost(attacker.dominantElement, aoeTarget.dominantElement, skill.wuxing);
+      const aoeSkillEl = (skill.wuxing || attacker.dominantElement) as WuXing | undefined;
+      const aoeResistPct = getElementResist(aoeTarget, aoeSkillEl);
+      const aoeResistMult = 1 - aoeResistPct / 100;
+      const aoeFinalDmg = Math.max(1, Math.floor(aoeDmg * aoeElementBoost.multiplier * aoeResistMult));
+      aoeTarget.currentHp = Math.max(0, aoeTarget.currentHp - aoeFinalDmg);
+      logs.push({
+        round, actorId: attacker.id, actorName: attacker.name,
+        logType: "damage", targetId: aoeTarget.id, targetName: aoeTarget.name,
+        value: aoeFinalDmg, isCritical: aoeIsCrit,
+        skillName: skill.name,
+        elementBoostDesc: aoeElementBoost.description || undefined,
+        message: `${aoeTarget.name}受到${skill.name}全體攻擊，受到 ${aoeFinalDmg} 點${aoeIsCrit ? "暴擊" : ""}傷害${aoeElementBoost.description ? `（${aoeElementBoost.description}）` : ""}`,
+      });
+      // 附加狀態效果
+      if (skill.additionalEffect && !aoeTarget.isDefeated) {
+        const eff = skill.additionalEffect;
+        const statusResult = tryApplyStatusEffect(aoeTarget, eff.type, eff.chance, eff.duration ?? 3, eff.value ?? Math.floor(aoeFinalDmg * 0.2), attacker.name, round);
+        if (statusResult.applied) {
+          logs.push({ round, actorId: attacker.id, actorName: attacker.name, logType: "debuff", targetId: aoeTarget.id, targetName: aoeTarget.name, value: 0, isCritical: false, statusEffectDesc: statusResult.description, message: statusResult.description });
+        }
+      }
+      // 擊敗判定
+      if (aoeTarget.currentHp <= 0 && !aoeTarget.isDefeated) {
+        aoeTarget.isDefeated = true;
+        logs.push({ round, actorId: attacker.id, actorName: attacker.name, logType: "defeat", targetId: aoeTarget.id, targetName: aoeTarget.name, value: 0, isCritical: false, message: `${aoeTarget.name}被擊敗了！` });
+      }
+    }
   } else {
-    // 攻擊/Debuff 技能
+    // 攻擊/Debuff 技能（單體）
     const isMagic = skill.wuxing || skill.skillType === "debuff";
     const { damage, isCritical } = isMagic
       ? calcMagicDamage(attacker, target, skill.damageMultiplier * awakenMultiplier)
@@ -1036,32 +1083,35 @@ export function simulateBattle(
       // 重置防禦狀態
       actor.isDefending = false;
 
-      // AI 決策
+      // AI 决策
       const allies = participants.filter(p => p.side === actor.side);
       const enemies = participants.filter(p => p.side !== actor.side);
-      const command = aiDecideCommand(actor, allies, enemies, round);
-
-      // 執行指令
-      const commandLogs = executeCommand(command, participants, round);
-      logs.push(...commandLogs);
-
-      // 檢查逃跑
-      if (command.commandType === "flee") {
-        const fleeLog = commandLogs.find(l => l.logType === "flee");
-        if (fleeLog?.value === 1) {
-          // 合併寵物天命技能使用次數
-          for (const p of participants.filter(pp => pp.type === "pet" && pp.destinySkillUsage)) {
-            for (const [k, v] of Object.entries(p.destinySkillUsage!)) {
-              petDestinySkillUsage[k] = (petDestinySkillUsage[k] || 0) + v;
+      // Boss 多次行動：執行 actionsPerTurn 次
+      const numActions = actor.side === "enemy" ? Math.max(1, actor.actionsPerTurn ?? 1) : 1;
+      for (let actionIdx = 0; actionIdx < numActions; actionIdx++) {
+        const enemiesNow = participants.filter(p => p.side !== actor.side && !p.isDefeated);
+        if (enemiesNow.length === 0 || actor.isDefeated) break;
+        const command = aiDecideCommand(actor, allies, enemies, round);
+        // 執行指令
+        const commandLogs = executeCommand(command, participants, round);
+        logs.push(...commandLogs);
+        // 檢查逃跑
+        if (command.commandType === "flee") {
+          const fleeLog = commandLogs.find(l => l.logType === "flee");
+          if (fleeLog?.value === 1) {
+            for (const p of participants.filter(pp => pp.type === "pet" && pp.destinySkillUsage)) {
+              for (const [k, v] of Object.entries(p.destinySkillUsage!)) {
+                petDestinySkillUsage[k] = (petDestinySkillUsage[k] || 0) + v;
+              }
             }
+            return { result: "flee", rounds: round, logs, rewardMultiplier: 0, petDestinySkillUsage };
           }
-          return { result: "flee", rounds: round, logs, rewardMultiplier: 0, petDestinySkillUsage };
         }
       }
 
       // 檢查捕捉成功（捕捉成功等同勝利，但標記為 capture）
-      if (command.commandType === "capture") {
-        const captureLog = commandLogs.find(l => l.logType === "capture" && l.value === 1);
+      {
+        const captureLog = logs.find(l => l.logType === "capture" && l.value === 1 && l.round === round);
         if (captureLog) {
           // 捕捉成功，標記為勝利（後續由 gameBattle router 處理寵物創建）
           for (const p of participants.filter(pp => pp.type === "pet" && pp.destinySkillUsage)) {

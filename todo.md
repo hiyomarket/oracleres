@@ -5322,3 +5322,18 @@
 - [x] Bug4（圖5）：魔物技能創建時 id undefined + aiCondition expected object received string
 - [x] Bug5（圖6）：裝備圖鑑編輯表單缺少 stackable（可疊加）欄位
 - [x] Bug6（圖7）：商店管理（虛界/靈相）無法編輯商品（缺少編輯按鈕，無法修改價格/數量/maxPerOrder）
+
+## 修正任務（2026-03-29 第二十批）── HP 加成 + Boss 多次動作 + 技能傷害方式
+- [ ] Bug1：角色面板 HP 加成未顯示 + HP 上限未套用裝備加成
+- [ ] 新功能：Boss 每回合多次動作（schema actionsPerRound + CMS 欄位 + 所有戰鬥引擎套用）
+- [ ] 新功能：技能圖鑑新增「傷害方式」欄位（單體/全體），連動單人/組隊/回合制戰鬥
+- [ ] 修復：技能圖鑑 hiddenTrigger 編輯時自動 JSON.parse 預填陣列
+- [ ] 優化：成就圖鑑 ConditionEditor 加入「請選擇條件類型」必填提示
+
+## 功能修復 v5.X - 戰鬥系統五項修復
+
+- [x] 修復角色面板 HP 上限顯示：agentMaxHp 加入 equipBonus.hp，StatBar max 值正確反映裝備加成
+- [x] 新增 Boss 多次行動：gameMonsterCatalog 新增 actionsPerTurn（1-5次），gameBattleParticipants 同步新增欄位，submitCommand 和 simulateBattle 均支援 Boss 每回合多次攻擊
+- [x] 新增技能傷害方式：gameSkillCatalog 新增 damageType（single/aoe），技能圖鑑表單新增「傷害方式」欄位，戰鬥引擎 executeSkill 支援全體 AOE 傷害邏輯
+- [x] 修復技能 hiddenTrigger 編輯預填：CatalogTabs.tsx 的 render 函數自動 JSON.parse，updateSkillCatalog 確保 Array 存為 JSON 字串
+- [x] 成就條件類型必填提示：ConditionEditor 加入紅色邊框警告 + 必填文字提示，Select 加入「請選擇條件類型」預設選項

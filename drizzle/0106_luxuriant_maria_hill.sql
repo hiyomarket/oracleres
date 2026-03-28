@@ -1,0 +1,1 @@
+ALTER TABLE `game_battle_participants` ADD `actions_per_turn` int DEFAULT 1 NOT NULL;

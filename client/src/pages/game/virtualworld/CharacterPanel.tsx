@@ -41,7 +41,7 @@ export function CharacterPanel({
   const agentName = agent?.agentName ?? "旅人";
   const agentLevel = agent?.level ?? 1;
   const agentHp = agent?.hp ?? 100;
-  const agentMaxHp = agent?.maxHp ?? 100;
+  const agentMaxHp = (agent?.maxHp ?? 100) + (equippedData?.equipBonus?.hp ?? 0);
   const agentMp = agent?.mp ?? 50;
   const agentMaxMp = agent?.maxMp ?? 50;
   const agentStamina = staminaInfo?.current ?? agent?.stamina ?? 100;
@@ -368,6 +368,13 @@ export function CharacterPanel({
           <div className="space-y-2.5">
             {/* 生命/魔力/體力 */}
             <StatBar icon="❤️" label="HP"   value={agentHp}      max={agentMaxHp}      color="#ef4444" />
+            {(equippedData?.equipBonus?.hp ?? 0) > 0 && (
+              <div className="flex justify-end gap-1 text-[9px] px-1">
+                <span className="text-slate-500">基礎 {agent?.maxHp ?? 100}</span>
+                <span className="text-emerald-400 font-bold">+{equippedData?.equipBonus?.hp ?? 0} 裝備</span>
+                <span className="text-slate-400">= {agentMaxHp}</span>
+              </div>
+            )}
             <StatBar icon="💧" label="MP"   value={agentMp}      max={agentMaxMp}      color="#38bdf8" />
             <StatBar icon="🏃" label="體力" value={agentStamina} max={agentMaxStamina} color="#22c55e" />
               {staminaInfo && agentStamina < agentMaxStamina && (

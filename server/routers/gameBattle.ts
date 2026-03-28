@@ -167,6 +167,7 @@ function buildMonsterParticipant(
     wuxing: s.wuxing,
     cooldown: s.cooldown ?? 0,
     currentCooldown: 0,
+    damageType: (s as any).damageType ?? "single",
     additionalEffect: s.additionalEffect ? {
       type: s.additionalEffect.type,
       chance: s.additionalEffect.chance,
@@ -204,6 +205,8 @@ function buildMonsterParticipant(
     resistEarth: (cm as any).resistEarth ?? 0,
     resistMetal: (cm as any).resistMetal ?? 0,
     resistWater: (cm as any).resistWater ?? 0,
+    // Boss 多次行動
+    actionsPerTurn: (cm as any).actionsPerTurn ?? 1,
   };
 }
 
@@ -351,6 +354,7 @@ export const gameBattleRouter = router({
           mpCost: gameSkillCatalog.mpCost,
           cooldown: gameSkillCatalog.cooldown,
           powerPercent: gameSkillCatalog.powerPercent,
+          damageType: gameSkillCatalog.damageType,
         }).from(gameSkillCatalog).where(inArray(gameSkillCatalog.skillId, agentSkillIds));
         normalCombatSkills = skillData.map(sk => {
           const equipped = equippedAgentSkills.find(e => e.skillId === sk.skillId);
@@ -368,6 +372,7 @@ export const gameBattleRouter = router({
             cooldown: sk.cooldown ?? 3,
             currentCooldown: 0,
             skillLevel: (equipped?.awakeTier ?? 0) + 1,
+            damageType: (sk.damageType ?? "single") as "single" | "aoe",
           };
         });
       }
@@ -536,6 +541,7 @@ export const gameBattleRouter = router({
           speedScore: 0,
           skillCooldowns: {} as any,
           activeBuffs: [] as any,
+          actionsPerTurn: p.actionsPerTurn ?? 1,
         });
       }
 
@@ -759,6 +765,7 @@ export const gameBattleRouter = router({
         petId: p.petId ?? undefined,
         monsterId: p.monsterId ?? undefined,
         destinySkillUsage: p.participantType === "pet" ? {} : undefined,
+        actionsPerTurn: (p as any).actionsPerTurn ?? 1,
       }));
 
       const round = battle.currentRound + 1;
@@ -933,24 +940,45 @@ export const gameBattleRouter = router({
         } else {
           const allies = participants.filter(p => p.side === actor.side);
           const enemies = participants.filter(p => p.side !== actor.side);
-          command = aiDecideCommand(actor, allies, enemies, round);
+          // Boss 多次行動：根據 actionsPerTurn 執行多次
+          const numActions = actor.side === "enemy" ? Math.max(1, actor.actionsPerTurn ?? 1) : 1;
+          for (let actionIdx = 0; actionIdx < numActions; actionIdx++) {
+            const enemiesNow = participants.filter(p => p.side !== actor.side && !p.isDefeated);
+            if (enemiesNow.length === 0 || actor.isDefeated) break;
+            command = aiDecideCommand(actor, allies, enemies, round);
+            await db.insert(gameBattleCommands).values({
+              battleId: battle.id,
+              round,
+              participantId: pid,
+              commandType: command.commandType as any,
+              targetId: command.targetId ?? null,
+              skillId: command.skillId ?? null,
+              itemId: command.itemId ?? null,
+              isAutoDecision: 1,
+              createdAt: Date.now(),
+            });
+            const actionLogs = executeCommand(command, participants, round);
+            allLogs.push(...actionLogs);
+          }
         }
 
-        // 儲存指令
-        await db.insert(gameBattleCommands).values({
-          battleId: battle.id,
-          round,
-          participantId: pid,
-          commandType: command.commandType as any,
-          targetId: command.targetId ?? null,
-          skillId: command.skillId ?? null,
-          itemId: command.itemId ?? null,
-          isAutoDecision: playerCmd ? 0 : 1,
-          createdAt: Date.now(),
-        });
-
-        const cmdLogs = executeCommand(command, participants, round);
-        allLogs.push(...cmdLogs);
+        // 玩家指令：儲存並執行
+        let cmdLogs: any[] = [];
+        if (playerCmd && actor.side === "ally") {
+          await db.insert(gameBattleCommands).values({
+            battleId: battle.id,
+            round,
+            participantId: pid,
+            commandType: command.commandType as any,
+            targetId: command.targetId ?? null,
+            skillId: command.skillId ?? null,
+            itemId: command.itemId ?? null,
+            isAutoDecision: 0,
+            createdAt: Date.now(),
+          });
+          cmdLogs = executeCommand(command, participants, round);
+          allLogs.push(...cmdLogs);
+        }
 
         // 檢查逃跑
         if (command.commandType === "flee" || command.commandType === "surrender") {

@@ -2106,6 +2106,8 @@ export const gameMonsterCatalog = mysqlTable("game_monster_catalog", {
   baseCaptureRate: int("base_capture_rate").notNull().default(25),
   /** 基礎 BP 總值（捕捉後轉換為寵物時使用） */
   baseBp: int("base_bp").notNull().default(50),
+  /** 每回合動作次數（Boss 可設為 2~3，普通怪物為 1） */
+  actionsPerTurn: int("actions_per_turn").notNull().default(1),
   isActive: tinyint("is_active").default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
@@ -2313,6 +2315,8 @@ export const gameSkillCatalog = mysqlTable("game_skill_catalog", {
   inAuctionHouse: tinyint("in_auction_house").notNull().default(1),
   /** 圖片 URL */
   imageUrl: text("image_url").default(""),
+  /** 傷害方式： single 單體攻擊 / aoe 全體攻擊 */
+  damageType: mysqlEnum("damage_type", ["single", "aoe"]).notNull().default("single"),
   isActive: tinyint("is_active").default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
@@ -3433,7 +3437,9 @@ export const gameBattleParticipants = mysqlTable("game_battle_participants", {
   activeBuffs: json("active_buffs").$type<Array<{
     type: string; duration: number; value: number;
     source: string; appliedRound: number;
-  }>>(),
+  }>>()
+  /** 每回合動作次數（Boss 多次行動） */,
+  actionsPerTurn: int("actions_per_turn").notNull().default(1),
 });
 export type GameBattleParticipant = typeof gameBattleParticipants.$inferSelect;
 export type InsertGameBattleParticipant = typeof gameBattleParticipants.$inferInsert;

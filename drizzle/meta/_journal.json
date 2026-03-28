@@ -736,6 +736,20 @@
       "when": 1774714110529,
       "tag": "0104_tearful_giant_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "5",
+      "when": 1774722607713,
+      "tag": "0105_salty_major_mapleleaf",
+      "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "5",
+      "when": 1774723667389,
+      "tag": "0106_luxuriant_maria_hill",
+      "breakpoints": true
     }
   ]
 }

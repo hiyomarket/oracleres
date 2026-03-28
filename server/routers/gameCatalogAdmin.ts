@@ -135,6 +135,7 @@ const monsterCatalogInput = z.object({
   spawnNodes: z.array(z.string()).nullish().default([]),
   imageUrl: z.string().nullish().default(""),
   catchRate: z.number().min(0).max(1).default(0.1),
+  actionsPerTurn: z.number().int().min(1).max(5).default(1),
   isActive: z.number().int().min(0).max(1).default(1),
 });
 
@@ -207,6 +208,7 @@ const skillCatalogInput = z.object({
   hiddenTrigger: z.union([z.string(), z.array(z.any())]).nullish(),
   description: z.string().nullish(),
   skillType: z.enum(["attack", "heal", "buff", "debuff", "passive", "special"]).default("attack"),
+  damageType: z.enum(["single", "aoe"]).default("single"),
   inNormalShop: z.number().int().min(0).max(1).default(0),
   inSpiritShop: z.number().int().min(0).max(1).default(0),
   inSecretShop: z.number().int().min(0).max(1).default(0),
@@ -531,8 +533,14 @@ export const gameCatalogAdminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const safeData = { ...input.data } as any;
-      for (const k of ["tier","dropMonsterId","hiddenTrigger","description"]) {
+      for (const k of ["tier","dropMonsterId","description"]) {
         if (safeData[k] === null) safeData[k] = "";
+      }
+      // hiddenTrigger 必須儲存為 JSON 字串
+      if (safeData.hiddenTrigger !== undefined) {
+        safeData.hiddenTrigger = Array.isArray(safeData.hiddenTrigger)
+          ? JSON.stringify(safeData.hiddenTrigger)
+          : (safeData.hiddenTrigger === null ? "" : safeData.hiddenTrigger);
       }
       await db.update(gameSkillCatalog).set(safeData).where(eq(gameSkillCatalog.id, input.id));
       return { success: true };
