@@ -513,6 +513,19 @@ export default function ItemDetailModal({ itemId, itemName, emoji, rarity, onClo
                      detail.itemType === "skill_book" ? "技能書" : "特殊道具"}
                   </span>
                 )}
+                {/* 疊加標示 */}
+                {detail && (
+                  <span
+                    className="text-[10px] px-1.5 py-0.5 rounded font-bold"
+                    style={{
+                      background: detail.itemType === "equipment" ? "rgba(239,68,68,0.12)" : "rgba(34,197,94,0.12)",
+                      color: detail.itemType === "equipment" ? "#f87171" : "#4ade80",
+                      border: `1px solid ${detail.itemType === "equipment" ? "rgba(239,68,68,0.3)" : "rgba(34,197,94,0.3)"}`,
+                    }}
+                  >
+                    {detail.itemType === "equipment" ? "🚫 不可疊加" : "✅ 可疊加"}
+                  </span>
+                )}
               </div>
             </div>
             {/* 關閉按鈕 */}

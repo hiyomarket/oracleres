@@ -166,6 +166,7 @@ interface InfoCardProps {
   accentColor: string;
   textColor: string;
   natalStats: NatalStats;
+  statCaps?: { hp: number; mp: number; atk: number; def: number; spd: number; matk: number; mdef: number };
   gameWuxing?: { wood: number; fire: number; earth: number; metal: number; water: number };
   gameLevel?: number;
   gameDominantElement?: string;
@@ -174,7 +175,7 @@ interface InfoCardProps {
 
 function InfoCard({
   userName, level, gameCoins, gameStones, auraScore,
-  unlockedCount, totalAchievements, element, accentColor, textColor, natalStats,
+  unlockedCount, totalAchievements, element, accentColor, textColor, natalStats, statCaps,
   gameWuxing, gameLevel, gameDominantElement, onClose,
 }: InfoCardProps) {
   const theme = WUXING_THEMES[element];
@@ -294,29 +295,43 @@ function InfoCard({
         </div>
       )}
 
-      {/* 戰鬥數值（由五行屬性推導） */}
+      {/* 戰鬥數値（由五行屬性推導） */}
       <div className="mb-4">
-        <div className="text-gray-400 text-xs mb-2">戰鬥能力</div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-gray-400 text-xs">戰鬥能力</span>
+          {statCaps && <span className="text-gray-600" style={{ fontSize: "9px" }}>╱ 屬性上限</span>}
+        </div>
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: "HP", value: natalStats.hp, color: "#4ade80", desc: "木→體力" },
-            { label: "ATK", value: natalStats.atk, color: "#f87171", desc: "火→力量" },
-            { label: "DEF", value: natalStats.def, color: "#fbbf24", desc: "土→強度" },
-            { label: "SPD", value: natalStats.spd, color: "#e5e7eb", desc: "金→速度" },
-            { label: "MP", value: natalStats.mp, color: "#60a5fa", desc: "水→魔力" },
-            { label: "MATK", value: natalStats.matk ?? 0, color: "#818cf8", desc: "水→魔攻" },
-          ].map((stat) => (
-            <div key={stat.label} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.05)" }}>
-              <div className="w-1 h-6 rounded-full" style={{ background: stat.color }} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="text-white text-xs font-semibold">{stat.label}</span>
-                  <span className="text-white text-xs font-bold">{stat.value}</span>
+            { label: "HP", value: natalStats.hp, cap: statCaps?.hp, color: "#4ade80", desc: "木→體力" },
+            { label: "ATK", value: natalStats.atk, cap: statCaps?.atk, color: "#f87171", desc: "火→力量" },
+            { label: "DEF", value: natalStats.def, cap: statCaps?.def, color: "#fbbf24", desc: "土→強度" },
+            { label: "SPD", value: natalStats.spd, cap: statCaps?.spd, color: "#e5e7eb", desc: "金→速度" },
+            { label: "MP", value: natalStats.mp, cap: statCaps?.mp, color: "#60a5fa", desc: "水→魔力" },
+            { label: "MATK", value: natalStats.matk ?? 0, cap: statCaps?.matk, color: "#818cf8", desc: "水→魔攻" },
+          ].map((stat) => {
+            const pct = stat.cap ? Math.min(100, Math.round((stat.value / stat.cap) * 100)) : null;
+            return (
+              <div key={stat.label} className="flex items-center gap-2 px-2 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.05)" }}>
+                <div className="w-1 h-6 rounded-full" style={{ background: stat.color }} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-white text-xs font-semibold">{stat.label}</span>
+                    <span className="text-white text-xs font-bold">
+                      {stat.value}{stat.cap ? <span className="text-gray-600" style={{ fontSize: "9px" }}>/{stat.cap}</span> : ""}
+                    </span>
+                  </div>
+                  {pct !== null ? (
+                    <div className="h-0.5 rounded-full mt-0.5 overflow-hidden" style={{ background: "rgba(255,255,255,0.1)" }}>
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: stat.color, opacity: 0.7 }} />
+                    </div>
+                  ) : (
+                    <div className="text-gray-600" style={{ fontSize: "9px" }}>{stat.desc}</div>
+                  )}
                 </div>
-                <div className="text-gray-600" style={{ fontSize: "9px" }}>{stat.desc}</div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -553,6 +568,7 @@ export default function CharacterProfile() {
           accentColor={theme.accentColor}
           textColor={theme.textColor}
           natalStats={natalStats}
+          statCaps={(equippedData as any)?.statCaps}
           gameWuxing={gameWuxing}
           gameLevel={gameLevel}
           gameDominantElement={gameDominantElement}

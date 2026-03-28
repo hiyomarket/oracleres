@@ -584,6 +584,17 @@ export function CharacterPanel({
                           <p className="text-xs text-slate-700 italic">{desc}</p>
                         )}
                       </div>
+                      {/* 裝備區卸下按鈕 */}
+                      {item && item.equipId && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); equipItemMutation.mutate({ equipId: item.equipId!, action: 'unequip' }); }}
+                          disabled={equipItemMutation.isPending}
+                          className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-md border transition-colors"
+                          style={{ borderColor: 'rgba(239,68,68,0.4)', color: '#f87171', background: 'rgba(239,68,68,0.08)' }}
+                          title="卸下裝備">
+                          卸
+                        </button>
+                      )}
                     </div>
                   );
                 })}

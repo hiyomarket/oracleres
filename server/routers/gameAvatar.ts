@@ -18,6 +18,7 @@ import { router, protectedProcedure } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
 import { users, gameWardrobe, gameDailyAura, gameItems, gameAgents, gameEquipmentCatalog } from "../../drizzle/schema";
 import { calcCharacterStats } from "../tickEngine";
+import { getStatCaps } from "../gameEngineConfig";
 import { generateDailyQuest, checkQuestCompletion, QUEST_REWARD } from "../utils/questEngine";
 import {
   calculateEnvironmentElements,
@@ -406,6 +407,7 @@ export const gameAvatarRouter = router({
         }
       }
     } catch { /* fallback */ }
+    const statCaps = getStatCaps();
     return {
       items: equipped.map((item) => ({ ...item, isDefault: false })),
       isFirstTime: false,
@@ -417,6 +419,7 @@ export const gameAvatarRouter = router({
       gameLevel: revisitGameLevel,
       gameDominantElement: revisitDominantElement,
       equipped: revisitEquippedMap,
+      statCaps,
     };
   }),
 

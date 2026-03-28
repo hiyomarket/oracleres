@@ -5215,3 +5215,13 @@
 - [x] 更新 CharacterPanel 和 VirtualWorldPage 的 equippedData 型別定義
 - [x] 新增 8 項裝備系統測試（equipment-system.test.ts），全部通過
 - [x] TypeScript 編譯零錯誤，1347 項測試全部通過
+
+## 修正任務（2026-03-28 第十二批）── 裝備卸下 + 不可疊加 + 屬性上限同步 + 商城裝備加成
+
+- [x] 裝備區加入「卸下」按鈕（CharacterPanel 每個裝備槽可直接卸下，不需進道具區）
+- [x] 道具/裝備不可疊加邏輯（gameBattle.ts 單人/組隊掘落邏輯，裝備類道具每次掘落独立一筆）
+- [x] ItemDetailModal 加入「✅ 可疊加 / 🚫 不可疊加」標示
+- [x] 戰鬥屬性上限同步後台「引擎調控」設定（gameAvatar.getEquipped 返回 statCaps， CharacterProfile 戰鬥能力區顯示「當前値/上限」及進度條）
+- [x] 確認商城裝備（56 件）均有加成數値，無零値
+- [x] 裝備比較功能已完整實作（ItemDetailModal 的 EquipComparePanel + gameWorld.getEquipCompare）
+- [x] TypeScript 編譯零錯誤，1347 項測試全部通過

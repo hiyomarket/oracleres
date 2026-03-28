@@ -1309,20 +1309,28 @@ export const gameBattleRouter = router({
                   }).where(eq(gameAgents.id, memberId));
                   for (const itemId of memberDrops) {
                     try {
-                      const [ex] = await db.select().from(agentInventory)
-                        .where(and(eq(agentInventory.agentId, memberId), eq(agentInventory.itemId, itemId))).limit(1);
-                      if (ex) {
-                        await db.update(agentInventory).set({ quantity: ex.quantity + 1, updatedAt: Date.now() })
-                          .where(eq(agentInventory.id, ex.id));
-                      } else {
-                        const itemType = itemId.startsWith("equip") ? "equipment" as const
-                          : itemId.startsWith("skill") ? "skill_book" as const
-                          : itemId.startsWith("food") || itemId.startsWith("consumable") ? "consumable" as const
-                          : "material" as const;
+                      const itemType = itemId.startsWith("equip") ? "equipment" as const
+                        : itemId.startsWith("skill") ? "skill_book" as const
+                        : itemId.startsWith("food") || itemId.startsWith("consumable") ? "consumable" as const
+                        : "material" as const;
+                      // 裝備類不可疊加，每次掉落都是獨立一筆
+                      if (itemType === "equipment") {
                         await db.insert(agentInventory).values({
                           agentId: memberId, itemId, itemType, quantity: 1,
                           acquiredAt: Date.now(), updatedAt: Date.now(),
                         });
+                      } else {
+                        const [ex] = await db.select().from(agentInventory)
+                          .where(and(eq(agentInventory.agentId, memberId), eq(agentInventory.itemId, itemId))).limit(1);
+                        if (ex) {
+                          await db.update(agentInventory).set({ quantity: ex.quantity + 1, updatedAt: Date.now() })
+                            .where(eq(agentInventory.id, ex.id));
+                        } else {
+                          await db.insert(agentInventory).values({
+                            agentId: memberId, itemId, itemType, quantity: 1,
+                            acquiredAt: Date.now(), updatedAt: Date.now(),
+                          });
+                        }
                       }
                     } catch (e) { console.error("[Battle] party drop insert error:", e); }
                   }
@@ -1332,27 +1340,31 @@ export const gameBattleRouter = router({
                 // 寫入背包
                 for (const itemId of rewards.drops) {
                   try {
-                    const [existing] = await db.select().from(agentInventory)
-                      .where(and(eq(agentInventory.agentId, agentP.agentId), eq(agentInventory.itemId, itemId)))
-                      .limit(1);
-                    if (existing) {
-                      await db.update(agentInventory).set({
-                        quantity: existing.quantity + 1,
-                        updatedAt: Date.now(),
-                      }).where(eq(agentInventory.id, existing.id));
-                    } else {
-                      const itemType = itemId.startsWith("equip") ? "equipment" as const
-                        : itemId.startsWith("skill") ? "skill_book" as const
-                        : itemId.startsWith("food") || itemId.startsWith("consumable") ? "consumable" as const
-                        : "material" as const;
+                    const itemType = itemId.startsWith("equip") ? "equipment" as const
+                      : itemId.startsWith("skill") ? "skill_book" as const
+                      : itemId.startsWith("food") || itemId.startsWith("consumable") ? "consumable" as const
+                      : "material" as const;
+                    // 裝備類不可疊加，每次掉落都是獨立一筆
+                    if (itemType === "equipment") {
                       await db.insert(agentInventory).values({
-                        agentId: agentP.agentId,
-                        itemId,
-                        itemType,
-                        quantity: 1,
-                        acquiredAt: Date.now(),
-                        updatedAt: Date.now(),
+                        agentId: agentP.agentId, itemId, itemType, quantity: 1,
+                        acquiredAt: Date.now(), updatedAt: Date.now(),
                       });
+                    } else {
+                      const [existing] = await db.select().from(agentInventory)
+                        .where(and(eq(agentInventory.agentId, agentP.agentId), eq(agentInventory.itemId, itemId)))
+                        .limit(1);
+                      if (existing) {
+                        await db.update(agentInventory).set({
+                          quantity: existing.quantity + 1,
+                          updatedAt: Date.now(),
+                        }).where(eq(agentInventory.id, existing.id));
+                      } else {
+                        await db.insert(agentInventory).values({
+                          agentId: agentP.agentId, itemId, itemType, quantity: 1,
+                          acquiredAt: Date.now(), updatedAt: Date.now(),
+                        });
+                      }
                     }
                   } catch (e) { console.error("[Battle] drop insert error:", e); }
                 }

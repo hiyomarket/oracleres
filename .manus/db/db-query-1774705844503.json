@@ -1,0 +1,14 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN hp_bonus = 0 AND attack_bonus = 0 AND defense_bonus = 0 AND speed_bonus = 0 THEN 1 ELSE 0 END) as zero_bonus FROM game_equipment_catalog;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total, SUM(CASE WHEN hp_bonus = 0 AND attack_bonus = 0 AND defense_bonus = 0 AND speed_bonus = 0 THEN 1 ELSE 0 END) as zero_bonus FROM game_equipment_catalog;",
+  "rows": [
+    {
+      "total": "56",
+      "zero_bonus": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tzero_bonus\n56\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1504
+}
