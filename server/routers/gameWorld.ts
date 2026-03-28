@@ -3038,4 +3038,145 @@ export const gameWorldRouter = router({
         .where(like(gameItemCatalog.name, `%${key}%`)).limit(1);
       return { type: "item" as const, data: byName[0] ?? null };
     }),
+
+  // ═══ GD-028 潛能點數分配 API ═══
+  allocateStatPoints: protectedProcedure
+    .input(z.object({
+      hp: z.number().int().min(0).default(0),
+      mp: z.number().int().min(0).default(0),
+      atk: z.number().int().min(0).default(0),
+      def: z.number().int().min(0).default(0),
+      spd: z.number().int().min(0).default(0),
+      matk: z.number().int().min(0).default(0),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB 不可用" });
+
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const agent = agents[0];
+      if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+
+      // 計算本次分配總點數
+      const addedPoints = input.hp + input.mp + input.atk + input.def + input.spd + input.matk;
+      if (addedPoints <= 0) throw new TRPCError({ code: "BAD_REQUEST", message: "請至少分配 1 點" });
+
+      // 檢查可用點數
+      const currentUsed = (agent.potentialHp ?? 0) + (agent.potentialMp ?? 0) + (agent.potentialAtk ?? 0)
+        + (agent.potentialDef ?? 0) + (agent.potentialSpd ?? 0) + (agent.potentialMatk ?? 0);
+      const totalAvailable = agent.freeStatPoints ?? 0;
+      const remaining = totalAvailable - currentUsed;
+
+      if (addedPoints > remaining) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `可用點數不足（剩餘 ${remaining}，嘗試分配 ${addedPoints}）` });
+      }
+
+      // 更新潛能分配
+      const newPotentialHp = (agent.potentialHp ?? 0) + input.hp;
+      const newPotentialMp = (agent.potentialMp ?? 0) + input.mp;
+      const newPotentialAtk = (agent.potentialAtk ?? 0) + input.atk;
+      const newPotentialDef = (agent.potentialDef ?? 0) + input.def;
+      const newPotentialSpd = (agent.potentialSpd ?? 0) + input.spd;
+      const newPotentialMatk = (agent.potentialMatk ?? 0) + input.matk;
+
+      // 使用 statEngine 重新計算屬性
+      const { calcFullStats } = await import("../services/statEngine");
+      const newStats = calcFullStats(
+        { wood: agent.wuxingWood, fire: agent.wuxingFire, earth: agent.wuxingEarth, metal: agent.wuxingMetal, water: agent.wuxingWater },
+        agent.level,
+        { hp: newPotentialHp, mp: newPotentialMp, atk: newPotentialAtk, def: newPotentialDef, spd: newPotentialSpd, matk: newPotentialMatk },
+        (agent.fateElement as any) ?? agent.dominantElement,
+      );
+
+      // HP/MP 按比例調整
+      const hpRatio = agent.maxHp > 0 ? agent.hp / agent.maxHp : 1;
+      const mpRatio = agent.maxMp > 0 ? agent.mp / agent.maxMp : 1;
+
+      await db.update(gameAgents).set({
+        potentialHp: newPotentialHp,
+        potentialMp: newPotentialMp,
+        potentialAtk: newPotentialAtk,
+        potentialDef: newPotentialDef,
+        potentialSpd: newPotentialSpd,
+        potentialMatk: newPotentialMatk,
+        maxHp: newStats.hp,
+        maxMp: newStats.mp,
+        attack: newStats.atk,
+        defense: newStats.def,
+        speed: newStats.spd,
+        magicAttack: newStats.matk,
+        mdef: newStats.mdef,
+        spr: newStats.spr,
+        critRate: newStats.critRate,
+        critDamage: newStats.critDamage,
+        healPower: newStats.healPower,
+        hitRate: newStats.hitRate,
+        hp: Math.min(newStats.hp, Math.max(1, Math.round(newStats.hp * hpRatio))),
+        mp: Math.min(newStats.mp, Math.max(0, Math.round(newStats.mp * mpRatio))),
+        updatedAt: Date.now(),
+      }).where(eq(gameAgents.id, agent.id));
+
+      const updated = await db.select().from(gameAgents)
+        .where(eq(gameAgents.id, agent.id)).limit(1);
+
+      return {
+        success: true,
+        agent: updated[0],
+        allocated: { hp: input.hp, mp: input.mp, atk: input.atk, def: input.def, spd: input.spd, matk: input.matk },
+        remaining: remaining - addedPoints,
+      };
+    }),
+
+  // ═══ GD-028 重置潛能點數（消耗金幣） ═══
+  resetStatPoints: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB 不可用" });
+
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const agent = agents[0];
+      if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+
+      const resetCost = 500; // 重置消耗 500 金幣
+      if (agent.gold < resetCost) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `金幣不足（需要 ${resetCost}，當前 ${agent.gold}）` });
+      }
+
+      // 使用 statEngine 重新計算屬性（潛能歸零）
+      const { calcFullStats } = await import("../services/statEngine");
+      const newStats = calcFullStats(
+        { wood: agent.wuxingWood, fire: agent.wuxingFire, earth: agent.wuxingEarth, metal: agent.wuxingMetal, water: agent.wuxingWater },
+        agent.level,
+        { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 },
+        (agent.fateElement as any) ?? agent.dominantElement,
+      );
+
+      const hpRatio = agent.maxHp > 0 ? agent.hp / agent.maxHp : 1;
+      const mpRatio = agent.maxMp > 0 ? agent.mp / agent.maxMp : 1;
+
+      await db.update(gameAgents).set({
+        potentialHp: 0, potentialMp: 0, potentialAtk: 0,
+        potentialDef: 0, potentialSpd: 0, potentialMatk: 0,
+        maxHp: newStats.hp, maxMp: newStats.mp,
+        attack: newStats.atk, defense: newStats.def, speed: newStats.spd,
+        magicAttack: newStats.matk, mdef: newStats.mdef, spr: newStats.spr,
+        critRate: newStats.critRate, critDamage: newStats.critDamage,
+        healPower: newStats.healPower, hitRate: newStats.hitRate,
+        hp: Math.min(newStats.hp, Math.max(1, Math.round(newStats.hp * hpRatio))),
+        mp: Math.min(newStats.mp, Math.max(0, Math.round(newStats.mp * mpRatio))),
+        gold: agent.gold - resetCost,
+        updatedAt: Date.now(),
+      }).where(eq(gameAgents.id, agent.id));
+
+      const updated = await db.select().from(gameAgents)
+        .where(eq(gameAgents.id, agent.id)).limit(1);
+
+      return {
+        success: true,
+        agent: updated[0],
+        goldSpent: resetCost,
+      };
+    }),
 });

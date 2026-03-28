@@ -5356,3 +5356,29 @@
 - [x] 更新後台寵物圖鑑表單（GameCMS.tsx PetCatalogTab）
 - [x] DB migration 推送成功（6 張表共 66 個新欄位全部驗證到位）
 - [x] 所有後台表單可正常新增/編輯新欄位
+
+## GD-027/028 基礎改動 ── 步驟 2：角色面板骨架重構
+
+- [x] CharacterPanel 重構：基礎屬性區（HP/MP/ATK/DEF/SPD/MATK/MDEF/SPR/暴擊率/暴擊傷害/回復力）
+- [x] CharacterPanel 重構：五行屬性區（金/木/水/火/土 百分比顯示）
+- [x] CharacterPanel 重構：角色資訊區（境界/職業/命格/等級）
+- [x] CharacterPanel 重構：五行抗性區（金抗/木抗/水抗/火抗/土抗）
+- [x] CharacterPanel 重構：裝備加成明細顯示
+- [x] 後端 API 確認：getAgentStatus 返回所有新欄位
+
+## GD-027/028 基礎改動 ── 步驟 3：命格系統整合
+
+- [x] 後端：讀取 userProfiles 本命五行比例（natalWood/Fire/Earth/Metal/Water）
+- [x] 後端：按比例計算 fateElement（最高五行為主命格）
+- [x] 後端：命格影響角色屬性加成（五行→屬性對照表）
+- [x] 前端：角色面板顯示命格來源（本命五行比例）
+- [x] 角色創建時自動帶入命格
+## GD-028 屬性公式引擎 + 潛能點數分配
+- [x] 建立 statEngine.ts 核心公式引擎（GD-028 所有公式）
+- [x] 命格加成整合（青龍/朱雀/白虎/玄武/麒麟百分比加成）
+- [x] 潛能點數分配 API（allocateStatPoints tRPC procedure）
+- [x] 潛能點數分配前端 UI
+- [x] 更新 gameWorld.ts 角色創建使用 statEngine
+- [x] 更新 tickEngine.ts 升級邏輯使用 statEngine（向後相容包裝器）
+- [x] statEngine 單元測試（30+ 測試用例全通過）
+- [x] 向後相容：確保現有戰鬥系統不受影響

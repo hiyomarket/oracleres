@@ -98,6 +98,28 @@ export const EQUIP_SLOTS = [
 
 export type PanelId = "combat" | "life" | "items" | "equip" | "skill" | "natal";
 
+// GD-028 境界/職業/命格標籤
+export const REALM_LABELS: Record<string, { label: string; color: string; icon: string }> = {
+  "初界": { label: "初界", color: "#94a3b8", icon: "🌱" },
+  "中界": { label: "中界", color: "#60a5fa", icon: "⚡" },
+  "高界": { label: "高界", color: "#f59e0b", icon: "👑" },
+};
+export const PROFESSION_LABELS: Record<string, { label: string; color: string; icon: string }> = {
+  none:    { label: "無職業", color: "#64748b", icon: "🔰" },
+  hunter:  { label: "獵人",   color: "#22c55e", icon: "🏹" },
+  mage:    { label: "法師",   color: "#38bdf8", icon: "🔮" },
+  tank:    { label: "鬥士",   color: "#f59e0b", icon: "🛡️" },
+  thief:   { label: "盜賊",   color: "#a78bfa", icon: "🗡️" },
+  wizard:  { label: "巫師",   color: "#e879f9", icon: "✨" },
+};
+export const FATE_LABELS: Record<string, { label: string; color: string; icon: string; fateName: string; desc: string }> = {
+  wood:  { label: "木命", color: "#22c55e", icon: "🌿", fateName: "青龍命", desc: "HP+10%, 治癒力+5%" },
+  fire:  { label: "火命", color: "#ef4444", icon: "🔥", fateName: "朱雀命", desc: "ATK+10%, MATK+10%" },
+  earth: { label: "土命", color: "#f59e0b", icon: "🪨", fateName: "麒麟命", desc: "DEF+10%, MDEF+10%" },
+  metal: { label: "金命", color: "#e2e8f0", icon: "⚡", fateName: "白虎命", desc: "SPD+10%, 暴擊率+5%" },
+  water: { label: "水命", color: "#38bdf8", icon: "💧", fateName: "玄武命", desc: "MP+10%, 精神+5%" },
+};
+
 // ─── NodeInfoData 型別 ─────────────────────────────────────────
 export type NodeInfoData = {
   node?: { name?: string; county?: string; dangerLevel?: number; description?: string; monsterLevel?: [number, number] };
@@ -114,6 +136,10 @@ export type AgentData = {
   dominantElement?: string; currentNodeId?: string; actionPoints?: number; maxActionPoints?: number;
   exp?: number; expToNext?: number; experience?: number; attack?: number; defense?: number; speed?: number;
   healPower?: number; magicAttack?: number; hitRate?: number;
+  // GD-028 新增屬性
+  mdef?: number; spr?: number; critRate?: number; critDamage?: number;
+  realm?: string; profession?: string; professionTier?: number; fateElement?: string;
+  // 生活系
   gatherPower?: number; forgePower?: number; carryWeight?: number; refinePower?: number; treasureHunting?: number;
   wuxingWood?: number; wuxingFire?: number; wuxingEarth?: number; wuxingMetal?: number; wuxingWater?: number;
   resistWood?: number; resistFire?: number; resistEarth?: number; resistMetal?: number; resistWater?: number;
@@ -125,4 +151,8 @@ export type AgentData = {
   lastDivineStaminaDate?: string | null;
   movementMode?: string | null;
   avatarUrl?: string | null;
+  freeStatPoints?: number;
+  // 潛能點數分配
+  potentialHp?: number; potentialMp?: number; potentialAtk?: number;
+  potentialDef?: number; potentialSpd?: number; potentialMatk?: number;
 };

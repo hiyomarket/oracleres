@@ -1778,6 +1778,18 @@ export const gameAgents = mysqlTable("game_agents", {
   profession: varchar("profession", { length: 20 }).notNull().default("none"),
   /** 職業階級（0=無業, 1=初階, 2=二次進階） */
   professionTier: int("profession_tier").notNull().default(0),
+  /** 潛能點數分配：HP */
+  potentialHp: int("potential_hp").notNull().default(0),
+  /** 潛能點數分配：MP */
+  potentialMp: int("potential_mp").notNull().default(0),
+  /** 潛能點數分配：ATK */
+  potentialAtk: int("potential_atk").notNull().default(0),
+  /** 潛能點數分配：DEF */
+  potentialDef: int("potential_def").notNull().default(0),
+  /** 潛能點數分配：SPD */
+  potentialSpd: int("potential_spd").notNull().default(0),
+  /** 潛能點數分配：MATK */
+  potentialMatk: int("potential_matk").notNull().default(0),
   /** 命格主屬性（從用戶八字自動帶入：wood/fire/earth/metal/water） */
   fateElement: varchar("fate_element", { length: 10 }).notNull().default("wood"),
   /** 玩家自訂頭像（S3 URL） */

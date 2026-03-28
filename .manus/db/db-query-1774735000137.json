@@ -1,0 +1,18 @@
+{
+  "query": "SELECT potential_hp, potential_mp, potential_atk, potential_def, potential_spd, potential_matk FROM game_agents LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT potential_hp, potential_mp, potential_atk, potential_def, potential_spd, potential_matk FROM game_agents LIMIT 1;",
+  "rows": [
+    {
+      "potential_hp": "0",
+      "potential_mp": "0",
+      "potential_atk": "0",
+      "potential_def": "0",
+      "potential_spd": "0",
+      "potential_matk": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "potential_hp\tpotential_mp\tpotential_atk\tpotential_def\tpotential_spd\tpotential_matk\n0\t0\t0\t0\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1501
+}

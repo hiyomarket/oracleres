@@ -757,6 +757,13 @@
       "when": 1774733572834,
       "tag": "0107_skinny_wolverine",
       "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "5",
+      "when": 1774734827116,
+      "tag": "0108_real_kinsey_walden",
+      "breakpoints": true
     }
   ]
 }

@@ -12,9 +12,11 @@ import {
   calcExpToNextFn, WX_HEX, WX_ZH, WX_EMOJI, WX_GLOW,
   STRATEGIES, QUALITY_COLOR, QUALITY_ZH, SKILL_DEFS, WX_SKILL_ICON,
   WX_ZH_TO_EN, COMBAT_ATTRS, LIFE_ATTRS, EQUIP_SLOTS,
+  REALM_LABELS, PROFESSION_LABELS, FATE_LABELS,
   type PanelId, type AgentData,
 } from "./constants";
 import { StatBar, MiniAttrBar } from "./StatBars";
+import { PotentialAllocPanel } from "./PotentialAllocPanel";
 
 export function CharacterPanel({
   agent, staminaInfo, natalStats, equippedData, balanceData, dailyData,
@@ -77,14 +79,27 @@ export function CharacterPanel({
   const staminaUsedToday = false;
 
   // GD-002 戰鬥系屬性値（加上裝備加成）
-  const eb = equippedData?.equipBonus ?? {};
+  const eb = equippedData?.equipBonus ?? {} as Record<string, number>;
   const combatValues: Record<string, number> = {
     attack: (agent?.attack ?? 10) + (eb.atk ?? 0),
     defense: (agent?.defense ?? 5) + (eb.def ?? 0),
     speed: (agent?.speed ?? 8) + (eb.spd ?? 0),
     healPower: agent?.healPower ?? 20,
     magicAttack: agent?.magicAttack ?? 20,
+    // GD-028 新增屬性
+    mdef: agent?.mdef ?? 0,
+    spr: agent?.spr ?? 0,
+    critRate: agent?.critRate ?? 0,
+    critDamage: agent?.critDamage ?? 150,
   };
+  // 角色身份資訊
+  const agentRealm = agent?.realm ?? "初界";
+  const agentProfession = agent?.profession ?? "none";
+  const agentFateElement = agent?.fateElement ?? agentElement;
+  const agentFreePoints = agent?.freeStatPoints ?? 0;
+  const realmInfo = REALM_LABELS[agentRealm] ?? REALM_LABELS["初界"];
+  const profInfo = PROFESSION_LABELS[agentProfession] ?? PROFESSION_LABELS["none"];
+  const fateInfo = FATE_LABELS[agentFateElement] ?? FATE_LABELS["wood"];
   // GD-002 生活系屬性值
   const lifeValues: Record<string, number> = {
     gatherPower: agent?.gatherPower ?? 20,
@@ -366,6 +381,44 @@ export function CharacterPanel({
         {/* ── 戰鬥面板 ── */}
         {activePanel === "combat" && (
           <div className="space-y-2.5">
+            {/* ═══ 角色身份卡片（境界/職業/命格） ═══ */}
+            <div className="rounded-xl border p-2.5"
+              style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-bold text-slate-500">🃏 角色身份</span>
+                {agentFreePoints > 0 && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse"
+                    style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)" }}>
+                    潛能點 +{agentFreePoints}
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {/* 境界 */}
+                <div className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg"
+                  style={{ background: `${realmInfo.color}10`, border: `1px solid ${realmInfo.color}30` }}>
+                  <span className="text-lg">{realmInfo.icon}</span>
+                  <span className="text-[10px] text-slate-500">境界</span>
+                  <span className="text-xs font-bold" style={{ color: realmInfo.color }}>{realmInfo.label}</span>
+                </div>
+                {/* 職業 */}
+                <div className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg"
+                  style={{ background: `${profInfo.color}10`, border: `1px solid ${profInfo.color}30` }}>
+                  <span className="text-lg">{profInfo.icon}</span>
+                  <span className="text-[10px] text-slate-500">職業</span>
+                  <span className="text-xs font-bold" style={{ color: profInfo.color }}>{profInfo.label}</span>
+                </div>
+                {/* 命格 */}
+                <div className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg"
+                  style={{ background: `${fateInfo.color}10`, border: `1px solid ${fateInfo.color}30` }}>
+                  <span className="text-lg">{fateInfo.icon}</span>
+                  <span className="text-[10px] text-slate-500">命格</span>
+                  <span className="text-xs font-bold" style={{ color: fateInfo.color }}>{(fateInfo as any).fateName ?? fateInfo.label}</span>
+                  <span className="text-[9px] text-slate-600">{(fateInfo as any).desc ?? ""}</span>
+                </div>
+              </div>
+            </div>
+
             {/* 生命/魔力/體力 */}
             <StatBar icon="❤️" label="HP"   value={agentHp}      max={agentMaxHp}      color="#ef4444" />
             {(equippedData?.equipBonus?.hp ?? 0) > 0 && (
@@ -433,6 +486,38 @@ export function CharacterPanel({
               </div>
             </div>
 
+            {/* GD-028 進階戰鬥屬性（魔防/精神/暴擊） */}
+            <div className="rounded-xl border p-2.5 space-y-1.5"
+              style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs font-bold text-slate-500">🛡️ 進階屬性</p>
+                <span className="text-[10px] text-slate-600">GD-028</span>
+              </div>
+              {[
+                { key: "mdef",       icon: "🛡️", label: "魔法防禦", color: "#a78bfa", max: 255, desc: "減少受到的魔法傷害" },
+                { key: "spr",        icon: "✨",   label: "精神力",   color: "#e879f9", max: 255, desc: "狀態抗性與魔法回復" },
+                { key: "critRate",   icon: "🎯",   label: "暴擊率",   color: "#fb923c", max: 100, desc: "觸發暴擊的機率 %" },
+                { key: "critDamage", icon: "💥",   label: "暴擊傷害", color: "#f43f5e", max: 300, desc: "暴擊時的傷害倍率 %" },
+              ].map(a => {
+                const val = combatValues[a.key] ?? 0;
+                return (
+                  <div key={a.key} className="space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] w-4">{a.icon}</span>
+                      <span className="text-[11px] text-slate-400" style={{ minWidth: "52px" }}>{a.label}</span>
+                      <div className="flex-1 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+                        <div className="h-1.5 rounded-full transition-all" style={{ width: `${Math.min(100, (val / a.max) * 100)}%`, background: a.color }} />
+                      </div>
+                      <span className="text-[11px] font-bold w-10 text-right tabular-nums" style={{ color: val > 0 ? a.color : "#475569" }}>
+                        {a.key === "critRate" || a.key === "critDamage" ? `${val}%` : val}
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-slate-600 pl-6">{a.desc}</p>
+                  </div>
+                );
+              })}
+            </div>
+
             {/* 五行抗性顯示（由注靈計算） */}
             <div className="rounded-xl border p-2.5 space-y-1.5"
               style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
@@ -461,6 +546,9 @@ export function CharacterPanel({
               })}
               <p className="text-[10px] text-slate-600 mt-1">注靈注入對應屬性可提升抗性，最高減傷 50%</p>
             </div>
+
+            {/* GD-028 潛能點數分配 */}
+            <PotentialAllocPanel agent={agent} />
 
             {/* 提示：行動策略和靈相干預已移至地圖浮動控件 */}
             <div className="px-2.5 py-2 rounded-xl border text-xs text-slate-600"
@@ -1207,6 +1295,33 @@ export function CharacterPanel({
           });
           return (
             <div className="space-y-2.5">
+              {/* 命格身份卡片（境界/職業/命格） */}
+              <div className="rounded-xl border p-2.5"
+                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+                <p className="text-xs font-bold text-slate-500 mb-2">🃏 命格身份</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg"
+                    style={{ background: `${realmInfo.color}10`, border: `1px solid ${realmInfo.color}30` }}>
+                    <span className="text-lg">{realmInfo.icon}</span>
+                    <span className="text-[10px] text-slate-500">境界</span>
+                    <span className="text-xs font-bold" style={{ color: realmInfo.color }}>{realmInfo.label}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg"
+                    style={{ background: `${profInfo.color}10`, border: `1px solid ${profInfo.color}30` }}>
+                    <span className="text-lg">{profInfo.icon}</span>
+                    <span className="text-[10px] text-slate-500">職業</span>
+                    <span className="text-xs font-bold" style={{ color: profInfo.color }}>{profInfo.label}</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg"
+                    style={{ background: `${fateInfo.color}10`, border: `1px solid ${fateInfo.color}30` }}>
+                    <span className="text-lg">{fateInfo.icon}</span>
+                    <span className="text-[10px] text-slate-500">命格</span>
+                    <span className="text-xs font-bold" style={{ color: fateInfo.color }}>{(fateInfo as any).fateName ?? fateInfo.label}</span>
+                    <span className="text-[9px] text-slate-600">{(fateInfo as any).desc ?? ""}</span>
+                  </div>
+                </div>
+              </div>
+
               {/* 命格格局名稱 + 命格% */}
               <div className="px-2.5 py-2 rounded-xl border flex items-center gap-3"
                 style={{ background: `${ec}08`, borderColor: `${ec}28` }}>
@@ -1225,14 +1340,10 @@ export function CharacterPanel({
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-slate-500 mb-0.5">命格格局</p>
+                  <p className="text-xs text-slate-500 mb-0.5">命格格局（本命五行）</p>
                   <p className="text-sm font-bold" style={{ color: ec }}>{WX_ZH[agentElement] ?? "金"}命旅人</p>
                   <p className="text-xs text-slate-500 mt-0.5 leading-tight">
-                    {agentElement === "wood" ? "採集力強，治癒力高" :
-                     agentElement === "fire" ? "攻擊力強，鍛治力高" :
-                     agentElement === "earth" ? "防穡力強，承重力高" :
-                     agentElement === "metal" ? "命中力強，精煉力高" :
-                     "魔攻強，尋寶力高"}
+                    你的八字命格主屬性為{WX_ZH[agentElement]}，佔比 {dominantPct}%，直接影響角色全部屬性計算
                   </p>
                 </div>
               </div>
@@ -1319,13 +1430,42 @@ export function CharacterPanel({
                     更多稱號開發中…
                   </span>
                 </div>
-              </div>              {/* 加成來源說明 */}
+              </div>              {/* 命格 → 屬性對照表 */}
+              <div className="rounded-xl border p-2.5"
+                style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+                <p className="text-xs font-bold text-slate-500 mb-2">📊 命格 → 屬性對照（GD-028）</p>
+                <div className="space-y-1.5">
+                  {[
+                    { wx: "wood",  icon: "🌿", label: "木", stats: "HP上限、治癒力、採集力" },
+                    { wx: "fire",  icon: "🔥", label: "火", stats: "物理攻擊、暴擊傷害、鍛冶力" },
+                    { wx: "earth", icon: "🪨", label: "土", stats: "物理防禦、魔法防禦、承重力" },
+                    { wx: "metal", icon: "⚡",   label: "金", stats: "命中力、暴擊率、精煉力" },
+                    { wx: "water", icon: "💧", label: "水", stats: "MP上限、魔法攻擊、精神力、尋寶力" },
+                  ].map(item => {
+                    const val = wxVals[item.wx as keyof typeof wxVals] ?? 0;
+                    const isMain = item.wx === agentElement;
+                    return (
+                      <div key={item.wx} className="flex items-center gap-2 px-2 py-1.5 rounded-lg"
+                        style={{ background: isMain ? `${WX_HEX[item.wx]}10` : "transparent", border: isMain ? `1px solid ${WX_HEX[item.wx]}25` : "1px solid transparent" }}>
+                        <span className="text-sm">{item.icon}</span>
+                        <span className="text-xs font-bold w-4" style={{ color: WX_HEX[item.wx] }}>{item.label}</span>
+                        <span className="text-xs font-bold tabular-nums w-6" style={{ color: WX_HEX[item.wx] }}>{val}</span>
+                        <span className="text-[10px] text-slate-600">→</span>
+                        <span className="text-[10px] text-slate-400 flex-1">{item.stats}</span>
+                        {isMain && <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ background: `${WX_HEX[item.wx]}20`, color: WX_HEX[item.wx] }}>主命</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 加成來源說明 */}
               <div className="px-2.5 py-2 rounded-xl border"
                 style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
                 <p className="text-xs text-slate-500 mb-1.5">加成來源</p>
                 <div className="space-y-1 text-xs text-slate-600">
                   <p>🔮 八字命格 → 基礎能力値（已套用）</p>
-                  <p>⚔️ 裝備詞條 → 額外加成（開發中）</p>
+                  <p>⚔️ 裝備詞條 → 額外加成（已套用）</p>
                   <p>🎯 技能 Combo → 特殊效果（開發中）</p>
                   <p>🐾 寵物加成 → 屬性提升（開發中）</p>
                   <p>📅 流日加成 → 今日屬性浮動（已套用）</p>

@@ -1,0 +1,58 @@
+{
+  "query": "SHOW COLUMNS FROM game_agents LIKE 'potential%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW COLUMNS FROM game_agents LIKE 'potential%';",
+  "rows": [
+    {
+      "Field": "potential_hp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_mp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_atk",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_def",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_spd",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_matk",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\npotential_hp\tint\tNO\t\t0\t\npotential_mp\tint\tNO\t\t0\t\npotential_atk\tint\tNO\t\t0\t\npotential_def\tint\tNO\t\t0\t\npotential_spd\tint\tNO\t\t0\t\npotential_matk\tint\tNO\t\t0\t\n",
+  "stderr": "",
+  "execution_time_ms": 1585
+}
