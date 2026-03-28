@@ -187,6 +187,42 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
     setSkillAnnounce({ name, element });
     setTimeout(() => setSkillAnnounce(null), 1500);
   }, []);
+  // ─── 提交指令（必須在 useEffect 使用前宣告，避免 TDZ）───
+  const submitCmd = trpc.gameBattle.submitCommand.useMutation({
+    onSuccess: (data: any) => {
+      setIsSubmitting(false);
+      setSelectedCommand(null);
+      setSelectedSkillId(null);
+      setSelectedItemId(null);
+      setSelectedTargetId(null);
+      setShowSkillPanel(false);
+      setShowItemPanel(false);
+      // 寵物指令重置
+      setPetCommand(null);
+      setPetSkillId(null);
+      setPetTargetId(null);
+      setShowPetSkillPanel(false);
+      setActivePetCmdMode(false);
+      // 戰鬥結束時從 submitCommand 的返回就可取得獎勵
+      if (data?.rewards) {
+        setRewards(data.rewards);
+        // Boss 擊殺掉落動畫（有掉落物品時展示）
+        if (data.state === "ended" && data.result === "win" && data.rewards.drops?.length > 0) {
+          setAnimatedDrops(data.rewards.drops);
+          setShowDropAnimation(true);
+          setTimeout(() => setShowDropAnimation(false), 3500);
+        }
+      }
+      battleQuery.refetch();
+      setTimeout(() => {
+        if (logScrollRef.current) logScrollRef.current.scrollTop = logScrollRef.current.scrollHeight;
+      }, 100);
+    },
+    onError: (err: { message: string }) => {
+      setIsSubmitting(false);
+      toast.error(`戰鬥指令失敗：${err.message}`);
+    },
+  });
   // ─── 回合倒數 ───
   useEffect(() => {
     if (turnTimer > 0 && battleState === "active") {
@@ -283,42 +319,6 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       onBattleEnd?.(result);
     }
   }, [battleState, battleResult]);
-  // ─── 提交指令 ───
-  const submitCmd = trpc.gameBattle.submitCommand.useMutation({
-    onSuccess: (data: any) => {
-      setIsSubmitting(false);
-      setSelectedCommand(null);
-      setSelectedSkillId(null);
-      setSelectedItemId(null);
-      setSelectedTargetId(null);
-      setShowSkillPanel(false);
-      setShowItemPanel(false);
-      // 寵物指令重置
-      setPetCommand(null);
-      setPetSkillId(null);
-      setPetTargetId(null);
-      setShowPetSkillPanel(false);
-      setActivePetCmdMode(false);
-      // 戰鬥結束時從 submitCommand 的返回就可取得獎勵
-      if (data?.rewards) {
-        setRewards(data.rewards);
-        // Boss 擊殺掉落動畫（有掉落物品時展示）
-        if (data.state === "ended" && data.result === "win" && data.rewards.drops?.length > 0) {
-          setAnimatedDrops(data.rewards.drops);
-          setShowDropAnimation(true);
-          setTimeout(() => setShowDropAnimation(false), 3500);
-        }
-      }
-      battleQuery.refetch();
-      setTimeout(() => {
-        if (logScrollRef.current) logScrollRef.current.scrollTop = logScrollRef.current.scrollHeight;
-      }, 100);
-    },
-    onError: (err: { message: string }) => {
-      setIsSubmitting(false);
-      toast.error(`戰鬥指令失敗：${err.message}`);
-    },
-  });
   // 初始化
   useEffect(() => {
     if (battleQuery.data) {
