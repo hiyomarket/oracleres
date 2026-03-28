@@ -520,6 +520,8 @@ type AgentData = {
   gatherPower?: number; forgePower?: number; carryWeight?: number; refinePower?: number; treasureHunting?: number;
   // 五行比例欄位
   wuxingWood?: number; wuxingFire?: number; wuxingEarth?: number; wuxingMetal?: number; wuxingWater?: number;
+  // 五行抗性欄位（由注靈計算而來）
+  resistWood?: number; resistFire?: number; resistEarth?: number; resistMetal?: number; resistWater?: number;
   // 技能欄位
   skillSlot1?: string | null; skillSlot2?: string | null; skillSlot3?: string | null; skillSlot4?: string | null;
   passiveSlot1?: string | null; passiveSlot2?: string | null;
@@ -888,6 +890,35 @@ function CharacterPanel({
                 <p>⚔️ 金屬性 × 1.5 → 速度</p>
                 <p>💧 水屬性 × 2.0 → 法力/最大MP</p>
               </div>
+            </div>
+
+            {/* 五行抗性顯示（由注靈計算） */}
+            <div className="rounded-xl border p-2.5 space-y-1.5"
+              style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-xs font-bold text-slate-500">🛡️ 五行抗性</p>
+                <span className="text-[10px] text-slate-600">注靈每100點 +5%（上限 50%）</span>
+              </div>
+              {([
+                { key: "resistWood",  label: "抗木", icon: "🌲", color: "#22c55e" },
+                { key: "resistFire",  label: "抗火", icon: "🔥", color: "#ef4444" },
+                { key: "resistEarth", label: "抗土", icon: "🌍", color: "#f59e0b" },
+                { key: "resistMetal", label: "抗金", icon: "⚔️", color: "#94a3b8" },
+                { key: "resistWater", label: "抗水", icon: "💧", color: "#38bdf8" },
+              ] as const).map(r => {
+                const pct = (agent as any)?.[r.key] ?? 0;
+                return (
+                  <div key={r.key} className="flex items-center gap-2">
+                    <span className="text-[11px] w-4">{r.icon}</span>
+                    <span className="text-[11px] text-slate-400 w-8">{r.label}</span>
+                    <div className="flex-1 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+                      <div className="h-1.5 rounded-full transition-all" style={{ width: `${Math.min(100, pct * 2)}%`, background: r.color }} />
+                    </div>
+                    <span className="text-[11px] font-bold w-8 text-right" style={{ color: pct > 0 ? r.color : "#475569" }}>{pct}%</span>
+                  </div>
+                );
+              })}
+              <p className="text-[10px] text-slate-600 mt-1">注靈注入對應屬性可提升抗性，最高減傷 50%</p>
             </div>
 
             {/* 提示：行動策略和靈相干預已移至地圖浮動控件 */}
@@ -3891,11 +3922,48 @@ export default function VirtualWorldPage() {
                     )}
                   </div>
                 </div>
+                {/* 地圖縮圖：顯示隊員位置分布 */}
+                {mapNodeList.length > 0 && (() => {
+                  const memberIds2: number[] = Array.isArray(myPartyData.memberIds) ? (myPartyData.memberIds as number[]) : [];
+                  const nodeMap = (myPartyData as any).memberNodeMap as Record<number, { nodeId: string; status: string }> | undefined;
+                  const memberNodes = memberIds2.map((mid, idx) => {
+                    const nodeId = nodeMap?.[mid]?.nodeId ?? "";
+                    const node = mapNodeList.find(n => n.id === nodeId);
+                    const name = (myPartyData.memberNames as string[])?.[idx] ?? "旅人";
+                    return { mid, name, node, isLeader: mid === myPartyData.leaderId };
+                  });
+                  const WX_COLORS: Record<string, string> = { wood: "#22c55e", fire: "#ef4444", earth: "#f59e0b", metal: "#94a3b8", water: "#38bdf8" };
+                  return (
+                    <div style={{ position: "relative", width: "100%", height: "120px", borderRadius: "10px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", overflow: "hidden", marginBottom: "8px" }}>
+                      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#1e293b", fontSize: "80px", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>
+                        🗺️
+                      </div>
+                      <div style={{ position: "absolute", top: "4px", left: "6px", fontSize: "9px", color: "#475569", fontWeight: 700 }}>🗺️ 隊員位置</div>
+                      {memberNodes.map(({ mid, name, node, isLeader }) => {
+                        if (!node) return null;
+                        const dotColor = WX_COLORS[node.element] ?? "#94a3b8";
+                        return (
+                          <div key={mid} style={{ position: "absolute", left: `${node.x}%`, top: `${node.y}%`, transform: "translate(-50%,-50%)", zIndex: 2 }}>
+                            <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", gap: "1px" }}>
+                              <div style={{ width: isLeader ? "10px" : "8px", height: isLeader ? "10px" : "8px", borderRadius: "50%", background: dotColor, border: `1.5px solid ${isLeader ? "#f59e0b" : "rgba(255,255,255,0.6)"}`, boxShadow: `0 0 6px ${dotColor}` }} />
+                              <div style={{ fontSize: "8px", color: isLeader ? "#f59e0b" : "#e2e8f0", background: "rgba(6,10,22,0.85)", padding: "0 3px", borderRadius: "3px", whiteSpace: "nowrap", maxWidth: "50px", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+
                 {/* 隊員列表 */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                   {((myPartyData.memberIds as number[]) ?? []).map((memberId: number, idx: number) => {
                     const memberName = (myPartyData.memberNames as string[])?.[idx] ?? "旅人";
                     const isLeader = memberId === myPartyData.leaderId;
+                    const nodeMap2 = (myPartyData as any).memberNodeMap as Record<number, { nodeId: string; status: string }> | undefined;
+                    const memberNodeInfo = nodeMap2?.[memberId];
+                    const memberNode = memberNodeInfo ? mapNodeList.find(n => n.id === memberNodeInfo.nodeId) : undefined;
+                    const statusLabel = memberNodeInfo?.status === "battle" ? "⚔️ 戰鬥中" : memberNodeInfo?.status === "moving" ? "🏃 移動中" : "📍 就緒";
                     return (
                       <div key={memberId} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 8px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", border: `1px solid ${isLeader ? "rgba(245,158,11,0.3)" : "rgba(255,255,255,0.06)"}` }}>
                         <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "rgba(148,163,184,0.2)", border: "1px solid rgba(148,163,184,0.4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", flexShrink: 0 }}>
@@ -3903,6 +3971,9 @@ export default function VirtualWorldPage() {
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: "11px", fontWeight: 600, color: isLeader ? "#f59e0b" : "#e2e8f0" }}>{isLeader ? "★ " : ""}{memberName}</div>
+                          {memberNode && (
+                            <div style={{ fontSize: "9px", color: "#64748b", marginTop: "1px" }}>{statusLabel} {memberNode.name}・{memberNode.county}</div>
+                          )}
                         </div>
                       </div>
                     );

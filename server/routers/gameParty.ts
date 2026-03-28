@@ -27,7 +27,7 @@ async function isInParty(db: any, agentId: number) {
 }
 
 export const gamePartyRouter = router({
-  /** 取得目前玩家的隊伍資訊 */
+  /** 取得目前玩家的隊伍資訊（包含隊員節點位置） */
   getMyParty: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
@@ -38,7 +38,20 @@ export const gamePartyRouter = router({
         sql`JSON_CONTAINS(${gameParties.memberIds}, JSON_ARRAY(${agent.id}))`,
         or(eq(gameParties.status, "waiting"), eq(gameParties.status, "active"))
       ));
-    return parties.length > 0 ? parties[0] : null;
+    if (parties.length === 0) return null;
+    const party = parties[0];
+    // 查詢隊員的節點位置
+    const memberIds: number[] = Array.isArray(party.memberIds) ? (party.memberIds as number[]) : [];
+    const memberAgents = memberIds.length > 0
+      ? await db.select({ id: gameAgents.id, agentName: gameAgents.agentName, currentNodeId: gameAgents.currentNodeId, status: gameAgents.status })
+          .from(gameAgents)
+          .where(sql`${gameAgents.id} IN (${sql.join(memberIds.map(id => sql`${id}`), sql`, `)})`)
+      : [];
+    const memberNodeMap: Record<number, { nodeId: string; status: string }> = {};
+    for (const a of memberAgents) {
+      memberNodeMap[a.id] = { nodeId: a.currentNodeId ?? "", status: a.status ?? "idle" };
+    }
+    return { ...party, memberNodeMap };
   }),
 
   /** 建立隊伍 */

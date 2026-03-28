@@ -143,6 +143,40 @@ export const roamingBossRouter = router({
     return await db.select().from(roamingBossCatalog).orderBy(roamingBossCatalog.tier, roamingBossCatalog.id);
   }),
 
+  /** 公開 Boss 圖鑑列表（玩家可查看） */
+  getPublicCatalogList: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    return await db.select({
+      id: roamingBossCatalog.id,
+      bossCode: roamingBossCatalog.bossCode,
+      name: roamingBossCatalog.name,
+      title: roamingBossCatalog.title,
+      tier: roamingBossCatalog.tier,
+      wuxing: roamingBossCatalog.wuxing,
+      level: roamingBossCatalog.level,
+      baseHp: roamingBossCatalog.baseHp,
+      baseAttack: roamingBossCatalog.baseAttack,
+      baseDefense: roamingBossCatalog.baseDefense,
+      baseSpeed: roamingBossCatalog.baseSpeed,
+      baseMagicAttack: roamingBossCatalog.baseMagicAttack,
+      baseMagicDefense: roamingBossCatalog.baseMagicDefense,
+      baseMP: roamingBossCatalog.baseMP,
+      skills: roamingBossCatalog.skills,
+      dropTable: roamingBossCatalog.dropTable,
+      goldDrop: roamingBossCatalog.goldDrop,
+      resistWood: roamingBossCatalog.resistWood,
+      resistFire: roamingBossCatalog.resistFire,
+      resistEarth: roamingBossCatalog.resistEarth,
+      resistMetal: roamingBossCatalog.resistMetal,
+      resistWater: roamingBossCatalog.resistWater,
+      description: roamingBossCatalog.description,
+      isActive: roamingBossCatalog.isActive,
+    }).from(roamingBossCatalog)
+      .where(eq(roamingBossCatalog.isActive, 1))
+      .orderBy(roamingBossCatalog.tier, roamingBossCatalog.level);
+  }),
+
   /** 新增/更新 Boss 圖鑑 */
   upsertCatalog: protectedProcedure
     .input(z.object({
