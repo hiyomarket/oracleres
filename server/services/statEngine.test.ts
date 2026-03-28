@@ -257,3 +257,252 @@ describe("statEngine - DEFAULT_FATE_BONUSES", () => {
     expect(DEFAULT_FATE_BONUSES.water).toBeDefined();
   });
 });
+
+// ═══════════════════════════════════════════════════════════════
+// GD-028 Phase 2: 職業加成 + 戰鬥傷害公式測試
+// ═══════════════════════════════════════════════════════════════
+
+import {
+  PROFESSION_DEFS,
+  PROFESSION_CHANGE_COOLDOWN_MS,
+  calcAgentFullStats,
+  calcCombatDamage,
+  calcWuxingCombatMultiplier,
+  calcSpiritCoefficient,
+  calcDodgeRate,
+  calcBlockRate,
+  determineFirstStrike,
+  type Profession,
+} from "./statEngine";
+
+describe("statEngine - 職業系統 (PROFESSION_DEFS)", () => {
+  it("should have 6 professions including none", () => {
+    expect(Object.keys(PROFESSION_DEFS)).toHaveLength(6);
+    expect(PROFESSION_DEFS.none).toBeDefined();
+    expect(PROFESSION_DEFS.hunter).toBeDefined();
+    expect(PROFESSION_DEFS.mage).toBeDefined();
+    expect(PROFESSION_DEFS.tank).toBeDefined();
+    expect(PROFESSION_DEFS.thief).toBeDefined();
+    expect(PROFESSION_DEFS.wizard).toBeDefined();
+  });
+
+  it("none profession should have no bonuses", () => {
+    const none = PROFESSION_DEFS.none;
+    expect(Object.keys(none.bonuses)).toHaveLength(0);
+    expect(none.bonuses.hp).toBeUndefined();
+    expect(none.bonuses.atk).toBeUndefined();
+  });
+
+  it("tank should have highest HP and DEF bonuses", () => {
+    const tank = PROFESSION_DEFS.tank;
+    expect(tank.bonuses.hp).toBeGreaterThan(0);
+    expect(tank.bonuses.def).toBeGreaterThan(0);
+    // Tank should have higher HP bonus than hunter
+    expect(tank.bonuses.hp).toBeGreaterThan(PROFESSION_DEFS.hunter.bonuses.hp ?? 0);
+  });
+
+  it("thief should have highest crit bonuses", () => {
+    const thief = PROFESSION_DEFS.thief;
+    expect(thief.bonuses.critRate).toBeGreaterThan(0);
+    expect(thief.bonuses.critDamage).toBeGreaterThan(0);
+    // Thief should have higher crit than mage
+    expect(thief.bonuses.critRate!).toBeGreaterThan(PROFESSION_DEFS.mage.bonuses.critRate ?? 0);
+  });
+
+  it("mage should have highest MATK bonus", () => {
+    const mage = PROFESSION_DEFS.mage;
+    expect(mage.bonuses.matk).toBeGreaterThan(0);
+    expect(mage.bonuses.matk!).toBeGreaterThan(PROFESSION_DEFS.hunter.bonuses.matk ?? 0);
+  });
+
+  it("cooldown should be 24 hours", () => {
+    expect(PROFESSION_CHANGE_COOLDOWN_MS).toBe(24 * 60 * 60 * 1000);
+  });
+});
+
+describe("statEngine - calcAgentFullStats with profession", () => {
+  it("tank profession should boost HP compared to none", () => {
+    const noProf = calcAgentFullStats(BALANCED_WUXING, 10, "wood", ZERO_POTENTIAL, "none");
+    const tank = calcAgentFullStats(BALANCED_WUXING, 10, "wood", ZERO_POTENTIAL, "tank");
+    expect(tank.hp).toBeGreaterThan(noProf.hp);
+    expect(tank.def).toBeGreaterThan(noProf.def);
+  });
+
+  it("mage profession should boost MATK and MP", () => {
+    const noProf = calcAgentFullStats(BALANCED_WUXING, 10, "fire", ZERO_POTENTIAL, "none");
+    const mage = calcAgentFullStats(BALANCED_WUXING, 10, "fire", ZERO_POTENTIAL, "mage");
+    expect(mage.matk).toBeGreaterThan(noProf.matk);
+    expect(mage.mp).toBeGreaterThan(noProf.mp);
+  });
+
+  it("thief profession should boost critRate and critDamage", () => {
+    const noProf = calcAgentFullStats(BALANCED_WUXING, 10, "metal", ZERO_POTENTIAL, "none");
+    const thief = calcAgentFullStats(BALANCED_WUXING, 10, "metal", ZERO_POTENTIAL, "thief");
+    expect(thief.critRate).toBeGreaterThan(noProf.critRate);
+    expect(thief.critDamage).toBeGreaterThan(noProf.critDamage);
+  });
+
+  it("profession + fate + potential should all stack", () => {
+    const base = calcAgentFullStats(BALANCED_WUXING, 10, "wood", ZERO_POTENTIAL, "none");
+    const full = calcAgentFullStats(BALANCED_WUXING, 10, "wood", { hp: 5, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 }, "tank");
+    // Tank HP bonus + Wood fate HP bonus + 5 potential HP points
+    expect(full.hp).toBeGreaterThan(base.hp);
+  });
+
+  it("hunter should boost ATK and SPD", () => {
+    const noProf = calcAgentFullStats(BALANCED_WUXING, 10, "fire", ZERO_POTENTIAL, "none");
+    const hunter = calcAgentFullStats(BALANCED_WUXING, 10, "fire", ZERO_POTENTIAL, "hunter");
+    expect(hunter.atk).toBeGreaterThan(noProf.atk);
+    expect(hunter.spd).toBeGreaterThan(noProf.spd);
+  });
+
+  it("wizard should boost healPower and SPR", () => {
+    const noProf = calcAgentFullStats(BALANCED_WUXING, 10, "water", ZERO_POTENTIAL, "none");
+    const wizard = calcAgentFullStats(BALANCED_WUXING, 10, "water", ZERO_POTENTIAL, "wizard");
+    expect(wizard.healPower).toBeGreaterThan(noProf.healPower);
+    expect(wizard.spr).toBeGreaterThan(noProf.spr);
+  });
+});
+
+describe("statEngine - 五行相剋倍率 (calcWuxingCombatMultiplier)", () => {
+  it("wood overcomes earth → 1.5x", () => {
+    expect(calcWuxingCombatMultiplier("wood", "earth")).toBe(1.5);
+  });
+
+  it("fire overcomes metal → 1.5x", () => {
+    expect(calcWuxingCombatMultiplier("fire", "metal")).toBe(1.5);
+  });
+
+  it("earth overcomes water → 1.5x", () => {
+    expect(calcWuxingCombatMultiplier("earth", "water")).toBe(1.5);
+  });
+
+  it("metal overcomes wood → 1.5x", () => {
+    expect(calcWuxingCombatMultiplier("metal", "wood")).toBe(1.5);
+  });
+
+  it("water overcomes fire → 1.5x", () => {
+    expect(calcWuxingCombatMultiplier("water", "fire")).toBe(1.5);
+  });
+
+  it("wood generates fire → 0.8x (disadvantage)", () => {
+    expect(calcWuxingCombatMultiplier("wood", "fire")).toBe(0.8);
+  });
+
+  it("same element → 1.0x", () => {
+    expect(calcWuxingCombatMultiplier("fire", "fire")).toBe(1.0);
+  });
+
+  it("neutral matchup → 1.0x", () => {
+    expect(calcWuxingCombatMultiplier("wood", "water")).toBe(1.0);
+  });
+});
+
+describe("statEngine - 精神比例係數 (calcSpiritCoefficient)", () => {
+  it("high ratio (>119) → 1.1", () => {
+    expect(calcSpiritCoefficient(120)).toBe(1.1);
+    expect(calcSpiritCoefficient(200)).toBe(1.1);
+  });
+
+  it("ratio 113-119 → 1.0", () => {
+    expect(calcSpiritCoefficient(113)).toBe(1.0);
+    expect(calcSpiritCoefficient(119)).toBe(1.0);
+  });
+
+  it("ratio 105-112 → 0.9", () => {
+    expect(calcSpiritCoefficient(105)).toBe(0.9);
+    expect(calcSpiritCoefficient(112)).toBe(0.9);
+  });
+
+  it("very low ratio (<69) → 0.1", () => {
+    expect(calcSpiritCoefficient(50)).toBe(0.1);
+    expect(calcSpiritCoefficient(0)).toBe(0.1);
+  });
+});
+
+describe("statEngine - calcCombatDamage", () => {
+  const baseInput = {
+    attackerAtk: 100,
+    attackerMatk: 80,
+    attackerCritRate: 0, // no crit for deterministic test
+    attackerCritDamage: 150,
+    attackerSpr: 20,
+    attackerWuxing: BALANCED_WUXING,
+    attackerElement: "fire" as const,
+    defenderDef: 50,
+    defenderMdef: 40,
+    defenderSpr: 20,
+    defenderElement: "metal" as const,
+    defenderResistance: 0,
+    skillMultiplier: 1.0,
+    raceMultiplier: 1.0,
+    isMagic: false,
+  };
+
+  it("should return positive damage", () => {
+    const result = calcCombatDamage(baseInput);
+    expect(result.damage).toBeGreaterThan(0);
+  });
+
+  it("fire vs metal should have 1.5x wuxing multiplier", () => {
+    const result = calcCombatDamage(baseInput);
+    expect(result.wuxingMultiplier).toBe(1.5);
+  });
+
+  it("magic attack should use MATK and MDEF", () => {
+    const magicInput = { ...baseInput, isMagic: true };
+    const physResult = calcCombatDamage(baseInput);
+    const magicResult = calcCombatDamage(magicInput);
+    // Different damage because MATK != ATK and MDEF != DEF
+    expect(magicResult.damage).not.toBe(physResult.damage);
+  });
+
+  it("higher skill multiplier should increase damage", () => {
+    const normalResult = calcCombatDamage(baseInput);
+    const skillResult = calcCombatDamage({ ...baseInput, skillMultiplier: 2.0 });
+    expect(skillResult.damage).toBeGreaterThan(normalResult.damage);
+  });
+
+  it("resistance should reduce damage", () => {
+    const noResist = calcCombatDamage(baseInput);
+    const withResist = calcCombatDamage({ ...baseInput, defenderResistance: 30 });
+    expect(withResist.damage).toBeLessThan(noResist.damage);
+  });
+
+  it("100% crit rate should always crit", () => {
+    const result = calcCombatDamage({ ...baseInput, attackerCritRate: 100 });
+    expect(result.isCritical).toBe(true);
+  });
+
+  it("0% crit rate should never crit", () => {
+    const result = calcCombatDamage({ ...baseInput, attackerCritRate: 0 });
+    expect(result.isCritical).toBe(false);
+  });
+
+  it("damage should always be at least 1", () => {
+    const result = calcCombatDamage({
+      ...baseInput,
+      attackerAtk: 1,
+      defenderDef: 9999,
+    });
+    expect(result.damage).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("statEngine - combat utility functions", () => {
+  it("calcDodgeRate should be between 0 and 0.3", () => {
+    expect(calcDodgeRate(10, 10)).toBeGreaterThan(0);
+    expect(calcDodgeRate(10, 10)).toBeLessThanOrEqual(0.3);
+    expect(calcDodgeRate(100, 10)).toBeLessThan(calcDodgeRate(10, 100));
+  });
+
+  it("calcBlockRate should be 0.15", () => {
+    expect(calcBlockRate()).toBe(0.15);
+  });
+
+  it("determineFirstStrike should favor higher speed", () => {
+    expect(determineFirstStrike(100, 50)).toBe(true);
+    expect(determineFirstStrike(50, 100)).toBe(false);
+    expect(determineFirstStrike(50, 50)).toBe(true); // equal speed → agent first
+  });
+});

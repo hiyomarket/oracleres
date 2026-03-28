@@ -98,6 +98,79 @@ export const DEFAULT_FATE_BONUSES: Record<WuXingElement, FateBonus> = {
 };
 
 // ═══════════════════════════════════════════════════════════════
+// 2.5、職業加成表
+// ═══════════════════════════════════════════════════════════════
+
+export type Profession = "none" | "hunter" | "mage" | "tank" | "thief" | "wizard";
+
+export interface ProfessionDef {
+  label: string;
+  emoji: string;
+  desc: string;
+  /** 百分比加成（如 0.15 = +15%），critRate 為絕對值加成 */
+  bonuses: Partial<Record<keyof FullCharacterStats, number>>;
+  /** 轉職最低等級 */
+  minLevel: number;
+  /** 轉職金幣費用 */
+  goldCost: number;
+}
+
+/** 職業加成預設值 */
+export const PROFESSION_DEFS: Record<Profession, ProfessionDef> = {
+  none: {
+    label: "無職業",
+    emoji: "🔰",
+    desc: "尚未選擇職業，等級過 10 後可轉職",
+    bonuses: {},
+    minLevel: 0,
+    goldCost: 0,
+  },
+  hunter: {
+    label: "獵人",
+    emoji: "🏹",
+    desc: "放置效率型，採集力和尋寶力加成，對野獸系傷害提升",
+    bonuses: { atk: 0.08, spd: 0.05, critRate: 3, healPower: 0.05 },
+    minLevel: 10,
+    goldCost: 1000,
+  },
+  mage: {
+    label: "法師",
+    emoji: "🔮",
+    desc: "魔法攻擊型，元素傷害極強，但身體脆弱",
+    bonuses: { matk: 0.15, mp: 0.10, spr: 0.08, critDamage: 10 },
+    minLevel: 10,
+    goldCost: 1000,
+  },
+  tank: {
+    label: "鬥士",
+    emoji: "🛡️",
+    desc: "肉盾型，高 HP 高防禦，團隊中的守護者",
+    bonuses: { hp: 0.15, def: 0.12, mdef: 0.08 },
+    minLevel: 10,
+    goldCost: 1000,
+  },
+  thief: {
+    label: "盜賊",
+    emoji: "🗡️",
+    desc: "暴擊型，高暴擊率和暴擊傷害，適合短戰速決",
+    bonuses: { critRate: 8, critDamage: 20, spd: 0.10, atk: 0.05 },
+    minLevel: 10,
+    goldCost: 1000,
+  },
+  wizard: {
+    label: "巫師",
+    emoji: "✨",
+    desc: "輔助型，治癒力和精神力極強，可持久作戰",
+    bonuses: { healPower: 0.15, spr: 0.12, mp: 0.08, mdef: 0.05 },
+    minLevel: 10,
+    goldCost: 1000,
+  },
+};
+
+/** 轉職冷却時間（毫秒） */
+export const PROFESSION_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 小時
+
+// ═══════════════════════════════════════════════════════════════
 // 三、潛能點數每點效果（後台可調）
 // ═══════════════════════════════════════════════════════════════
 
@@ -143,6 +216,7 @@ export function calcFullStats(
   level: number,
   potential: PotentialAllocation = { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 },
   fateElement?: WuXingElement,
+  profession?: Profession,
   configOverride?: Partial<ReturnType<typeof getStatBalanceConfig>>,
 ): FullCharacterStats {
   const cfg = configOverride
@@ -213,6 +287,35 @@ export function calcFullStats(
     }
   }
 
+  // ═══ 職業加成 ═══
+  if (profession && profession !== "none") {
+    const prof = PROFESSION_DEFS[profession];
+    if (prof) {
+      for (const [stat, bonus] of Object.entries(prof.bonuses)) {
+        const key = stat as keyof FullCharacterStats;
+        const val = bonus as number;
+        if (key === "critRate") {
+          critRate += val;
+        } else if (key === "critDamage") {
+          critDamage += val;
+        } else {
+          switch (key) {
+            case "hp": hp = Math.floor(hp * (1 + val)); break;
+            case "mp": mp = Math.floor(mp * (1 + val)); break;
+            case "atk": atk = Math.floor(atk * (1 + val)); break;
+            case "def": def = Math.floor(def * (1 + val)); break;
+            case "spd": spd = Math.floor(spd * (1 + val)); break;
+            case "matk": matk = Math.floor(matk * (1 + val)); break;
+            case "mdef": mdef = Math.floor(mdef * (1 + val)); break;
+            case "spr": spr = Math.floor(spr * (1 + val)); break;
+            case "healPower": healPower = Math.floor(healPower * (1 + val)); break;
+            case "hitRate": hitRate = Math.floor(hitRate * (1 + val)); break;
+          }
+        }
+      }
+    }
+  }
+
   // ═══ 套用上限 ═══
   return {
     hp:         Math.min(hp, caps.hp),
@@ -242,8 +345,9 @@ export function calcCharacterStatsCompat(
   wuxing: WuXingValues,
   level: number,
   fateElement?: WuXingElement,
+  profession?: Profession,
 ): { hp: number; mp: number; atk: number; def: number; spd: number; matk: number; mdef: number; healPower: number; hitRate: number } {
-  const full = calcFullStats(wuxing, level, undefined, fateElement);
+  const full = calcFullStats(wuxing, level, undefined, fateElement, profession);
   return {
     hp: full.hp,
     mp: full.mp,
@@ -379,6 +483,184 @@ export function calcAgentFullStats(
   level: number,
   fateElement: WuXingElement,
   potential: PotentialAllocation = { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 },
+  profession: Profession = "none",
 ): FullCharacterStats {
-  return calcFullStats(wuxing, level, potential, fateElement);
+  return calcFullStats(wuxing, level, potential, fateElement, profession);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 九、戰鬥傷害計算（統一入口）
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 五行相剋倍率表
+ * 木剋土, 火剋金, 土剋水, 金剋木, 水剋火
+ */
+const WUXING_OVERCOME: Record<WuXingElement, WuXingElement> = {
+  wood: "earth", fire: "metal", earth: "water", metal: "wood", water: "fire",
+};
+const WUXING_GENERATE: Record<WuXingElement, WuXingElement> = {
+  wood: "fire", fire: "earth", earth: "metal", metal: "water", water: "wood",
+};
+
+/**
+ * 計算五行相剋倍率
+ * 剋制 → 1.5, 相生 → 0.8, 其他 → 1.0
+ */
+export function calcWuxingCombatMultiplier(attacker: WuXingElement, defender: WuXingElement): number {
+  if (WUXING_OVERCOME[attacker] === defender) return 1.5;
+  if (WUXING_GENERATE[attacker] === defender) return 0.8;
+  return 1.0;
+}
+
+/**
+ * 精神比例係數 A（GD-020 修正一）
+ * 用於魔法傷害計算
+ */
+export function calcSpiritCoefficient(spiritRatio: number): number {
+  if (spiritRatio > 119) return 1.1;
+  if (spiritRatio >= 113) return 1.0;
+  if (spiritRatio >= 105) return 0.9;
+  if (spiritRatio >= 97)  return 0.7;
+  if (spiritRatio >= 89)  return 0.6;
+  if (spiritRatio >= 79)  return 0.4;
+  if (spiritRatio >= 69)  return 0.3;
+  return 0.1;
+}
+
+export interface CombatDamageInput {
+  /** 攻擊方 ATK（物理攻擊力） */
+  attackerAtk: number;
+  /** 攻擊方 MATK（魔法攻擊力） */
+  attackerMatk: number;
+  /** 攻擊方暴擊率（百分比，如 15 = 15%） */
+  attackerCritRate: number;
+  /** 攻擊方暴擊傷害（百分比，如 150 = 150%） */
+  attackerCritDamage: number;
+  /** 攻擊方精神力 */
+  attackerSpr: number;
+  /** 攻擊方五行屬性值（用於精神比例計算） */
+  attackerWuxing: WuXingValues;
+  /** 攻擊方主屬性 */
+  attackerElement: WuXingElement;
+  /** 防禦方 DEF */
+  defenderDef: number;
+  /** 防禦方 MDEF */
+  defenderMdef: number;
+  /** 防禦方精神力 */
+  defenderSpr: number;
+  /** 防禦方主屬性 */
+  defenderElement: WuXingElement;
+  /** 防禦方五行抗性（百分比，如 30 = 30%） */
+  defenderResistance?: number;
+  /** 技能倍率（如 1.5 = 150%） */
+  skillMultiplier?: number;
+  /** 技能屬性（用於五行相剋判定） */
+  skillElement?: WuXingElement;
+  /** 種族剋制倍率（預設 1.0） */
+  raceMultiplier?: number;
+  /** 是否為魔法攻擊 */
+  isMagic?: boolean;
+}
+
+export interface CombatDamageResult {
+  /** 最終傷害值 */
+  damage: number;
+  /** 是否暴擊 */
+  isCritical: boolean;
+  /** 五行倍率 */
+  wuxingMultiplier: number;
+  /** 精神係數 A */
+  spiritCoeffA: number;
+  /** 種族倍率 */
+  raceMultiplier: number;
+}
+
+/**
+ * 統一傷害計算公式
+ *
+ * 物理傷害 = max(1, ATK × skillMult × spiritCoeffA × raceMult - DEF × 0.5) × wuxingMult × critMult
+ * 魔法傷害 = max(1, MATK × skillMult × spiritCoeffA × raceMult - MDEF × 0.5) × wuxingMult × critMult
+ *
+ * 暴擊判定使用 statEngine 計算的 critRate
+ * 暴擊傷害使用 statEngine 計算的 critDamage
+ */
+export function calcCombatDamage(input: CombatDamageInput): CombatDamageResult {
+  const {
+    attackerAtk,
+    attackerMatk,
+    attackerCritRate,
+    attackerCritDamage,
+    attackerWuxing,
+    attackerElement,
+    defenderDef,
+    defenderMdef,
+    defenderSpr,
+    defenderElement,
+    defenderResistance = 0,
+    skillMultiplier = 1.0,
+    skillElement,
+    raceMultiplier = 1.0,
+    isMagic = false,
+  } = input;
+
+  // 1. 五行相剋倍率（使用技能屬性，若無則使用攻擊方主屬性）
+  const effectiveElement = skillElement ?? attackerElement;
+  const wuxingMultiplier = calcWuxingCombatMultiplier(effectiveElement, defenderElement);
+
+  // 2. 精神比例係數 A
+  const attackerElementValue = attackerWuxing[effectiveElement] ?? 20;
+  const defenderResistValue = Math.max(5, defenderSpr > 0 ? defenderSpr : defenderDef);
+  const spiritRatio = (attackerElementValue / defenderResistValue) * 100;
+  const spiritCoeffA = calcSpiritCoefficient(spiritRatio);
+
+  // 3. 暴擊判定
+  const isCritical = Math.random() * 100 < attackerCritRate;
+  const critMultiplier = isCritical ? (attackerCritDamage / 100) : 1.0;
+
+  // 4. 基礎傷害計算
+  const baseAtk = isMagic ? attackerMatk : attackerAtk;
+  const baseDef = isMagic ? defenderMdef : defenderDef;
+  const rawDamage = Math.max(1, Math.round(
+    baseAtk * skillMultiplier * spiritCoeffA * raceMultiplier - baseDef * 0.5
+  ));
+
+  // 5. 套用五行倍率和暴擊
+  let finalDamage = Math.round(rawDamage * wuxingMultiplier * critMultiplier);
+
+  // 6. 套用抗性減傷
+  if (defenderResistance > 0) {
+    finalDamage = Math.round(finalDamage * (1 - Math.min(defenderResistance, 50) / 100));
+  }
+
+  return {
+    damage: Math.max(1, finalDamage),
+    isCritical,
+    wuxingMultiplier,
+    spiritCoeffA,
+    raceMultiplier,
+  };
+}
+
+/**
+ * 計算閃避率
+ * 基於速度差異
+ */
+export function calcDodgeRate(attackerSpd: number, defenderSpd: number): number {
+  return Math.min(0.3, defenderSpd / (defenderSpd + attackerSpd + 10));
+}
+
+/**
+ * 計算格擋率（固定 15%）
+ */
+export function calcBlockRate(): number {
+  return 0.15;
+}
+
+/**
+ * 判定先手
+ * 速度高者先手
+ */
+export function determineFirstStrike(agentSpd: number, monsterSpd: number): boolean {
+  return agentSpd >= monsterSpd;
 }

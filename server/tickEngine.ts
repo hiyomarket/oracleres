@@ -14,6 +14,7 @@ import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs, getInfuseConfig } from "./gameEngineConfig";
 import { eq, and, sql } from "drizzle-orm";
 import { calcCharacterStatsV2, calcLevelUpWuxingGrowth, calcResistances, type WuXingElement } from "./services/balanceFormulas";
+import { calcAgentFullStats, calcCombatDamage, calcDodgeRate, calcBlockRate, determineFirstStrike, calcSpiritCoefficient, calcWuxingCombatMultiplier, type Profession } from "./services/statEngine";
 import { getStatBalanceConfig, getStatCaps } from "./gameEngineConfig";
 import {
   MAP_NODES,
@@ -376,6 +377,13 @@ export function resolveCombat(
     wuxingMetal?: number; wuxingWater?: number;
     skillSlot1?: string | null; // 當前技能槽，用於判斷技能屬性
     agentRace?: string;  // GD-020 補充四：旅人種族（用於種族居制判斷）
+    // GD-028: statEngine 計算的暴擊率/暴擊傷害/精神/魔防
+    critRate?: number;
+    critDamage?: number;
+    spr?: number;
+    mdef?: number;
+    magicAttack?: number;
+    profession?: string;
     // 技能資訊（用於詳細戰鬥計算），M3L: 加入 wuxing 和 cooldown
     equippedSkills?: Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number; wuxing?: string; cooldown?: number }>;
     currentMp?: number;
@@ -441,14 +449,17 @@ export function resolveCombat(
       raceBoostDesc = `種族對抗！${monsterRaceStr}剋制${agentRaceStr}，傷害-15%`;
     }
   }
-  // GD-024 傷害公式：max(1, ATK×1.5 - DEF×0.5) × (1 - 抗性/100)
-  // 保留種族剣制和魔法係數修正
+  // GD-028 傷害公式：使用 statEngine 統一計算
+  // 玩家基礎傷害（含種族剣制和精神係數）
   const agentBaseDmg = Math.max(1, Math.round(
     (agent.attack * 1.5 * spiritCoeffA * raceMultiplier - monster.defense * 0.5)
   ));
   const monsterBaseDmg = Math.max(1, Math.round(
     (monster.attack * 1.5 - agent.defense * 0.5)
   ));
+  // 玩家暴擊率/暴擊傷害從 agent 屬性讀取（statEngine 已計算過命格+職業加成）
+  const agentCritRate = (agent as any).critRate ?? 10;
+  const agentCritDamage = (agent as any).critDamage ?? 150;
 
   // 回合制戰鬥模擬（最多 10 回合）
   let agentHp = agent.hp;
@@ -815,10 +826,13 @@ export function resolveCombat(
     let agentAtk = 0;
     if (!agentStunned) {
       rawAgentAtk = Math.round(agentBaseDmg * skillMultiplier * randFloat(0.8, 1.2));
-      isCritical = Math.random() < 0.1;
-      monsterDodged = Math.random() < Math.min(0.2, monster.speed / (monster.speed + agent.speed + 15));
-      monsterBlocked = !monsterDodged && Math.random() < 0.1;
-      agentAtk = monsterDodged ? 0 : monsterBlocked ? Math.round(rawAgentAtk * 0.5) : isCritical ? Math.round(rawAgentAtk * 1.8) : rawAgentAtk;
+      // GD-028: 使用 statEngine 計算的暴擊率（含命格+職業加成）
+      isCritical = Math.random() * 100 < agentCritRate;
+      monsterDodged = Math.random() < calcDodgeRate(agent.speed, monster.speed);
+      monsterBlocked = !monsterDodged && Math.random() < calcBlockRate();
+      // GD-028: 暴擊傷害使用 statEngine 計算的 critDamage（預設 150%，盜賊可達 170%）
+      const critMult = agentCritDamage / 100;
+      agentAtk = monsterDodged ? 0 : monsterBlocked ? Math.round(rawAgentAtk * 0.5) : isCritical ? Math.round(rawAgentAtk * critMult) : rawAgentAtk;
     }
 
     // M3L: 怪物技能選擇（使用真正的技能系統）
@@ -1610,6 +1624,13 @@ async function processCombatEvent(
       wuxingWater: agent.wuxingWater,
       skillSlot1:  agent.skillSlot1,
       agentRace: "人型系", // 旅人預設為人型系
+      // GD-028: 傳入 statEngine 計算的屬性
+      critRate: agent.critRate ?? 10,
+      critDamage: agent.critDamage ?? 150,
+      spr: agent.spr ?? 0,
+      mdef: agent.mdef ?? 0,
+      magicAttack: agent.magicAttack ?? 0,
+      profession: agent.profession ?? "none",
       equippedSkills: equippedSkillsForCombat,
       currentMp: agent.mp,
     },
@@ -1669,15 +1690,25 @@ async function processCombatEvent(
     combatLevelUps.push({ agentId: agent.id, agentName: agent.agentName ?? "旅人", newLevel, agentElement: agent.dominantElement ?? "wood" });
   }
 
-  // 升級後重新計算基礎屬性（maxHp/maxMp/attack/defense/speed）
-  // V2: 使用升級後的五行屬性值計算
-  const newStats = calcCharacterStats({
-    wood: accWuxingWood,
-    fire: accWuxingFire,
-    earth: accWuxingEarth,
-    metal: accWuxingMetal,
-    water: accWuxingWater,
-  }, newLevel);
+  // GD-028: 升級後使用 statEngine.calcAgentFullStats 統一計算
+  // 含命格加成 + 職業加成 + 潛能點數
+  const agentFateEl = (agent.fateElement ?? agent.dominantElement ?? "wood") as import("./services/statEngine").WuXingElement;
+  const agentProfession = (agent.profession ?? "none") as Profession;
+  const agentPotential = {
+    hp: agent.potentialHp ?? 0,
+    mp: agent.potentialMp ?? 0,
+    atk: agent.potentialAtk ?? 0,
+    def: agent.potentialDef ?? 0,
+    spd: agent.potentialSpd ?? 0,
+    matk: agent.potentialMatk ?? 0,
+  };
+  const newStats = calcAgentFullStats(
+    { wood: accWuxingWood, fire: accWuxingFire, earth: accWuxingEarth, metal: accWuxingMetal, water: accWuxingWater },
+    newLevel,
+    agentFateEl,
+    agentPotential,
+    agentProfession,
+  );
   const newMaxHp = newStats.hp;
   const newMaxMp = newStats.mp;
   // 升級後 HP/MP 按比例恢復（保持目前比例）
@@ -1707,9 +1738,10 @@ async function processCombatEvent(
     speed: newStats.spd,
     magicAttack: newStats.matk,
     mdef: newStats.mdef,
-    spr: Math.min(200, Math.floor(accWuxingWater * 1.2 + newLevel * 0.5)),
-    critRate: Math.min(100, Math.max(1, Math.floor(accWuxingMetal * 0.3 + 5))),
-    critDamage: 150,
+    // GD-028: spr/critRate/critDamage 由 statEngine 統一計算（含命格+職業加成）
+    spr: newStats.spr,
+    critRate: newStats.critRate,
+    critDamage: newStats.critDamage,
     // V2: 升級後更新五行屬性
     wuxingWood: accWuxingWood,
     wuxingFire: accWuxingFire,

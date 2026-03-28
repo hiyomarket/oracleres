@@ -1778,6 +1778,8 @@ export const gameAgents = mysqlTable("game_agents", {
   profession: varchar("profession", { length: 20 }).notNull().default("none"),
   /** 職業階級（0=無業, 1=初階, 2=二次進階） */
   professionTier: int("profession_tier").notNull().default(0),
+  /** 上次轉職時間戳（冷却判定用） */
+  professionChangedAt: bigint("profession_changed_at", { mode: "number" }).notNull().default(0),
   /** 潛能點數分配：HP */
   potentialHp: int("potential_hp").notNull().default(0),
   /** 潛能點數分配：MP */

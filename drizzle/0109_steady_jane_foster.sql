@@ -1,0 +1,1 @@
+ALTER TABLE `game_agents` ADD `profession_changed_at` bigint DEFAULT 0 NOT NULL;

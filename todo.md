@@ -5382,3 +5382,17 @@
 - [x] 更新 tickEngine.ts 升級邏輯使用 statEngine（向後相容包裝器）
 - [x] statEngine 單元測試（30+ 測試用例全通過）
 - [x] 向後相容：確保現有戰鬥系統不受影響
+## 步驟 4：職業系統實作
+- [x] statEngine 新增職業加成公式（hunter/mage/tank/thief/wizard 各有專屬屬性加成）
+- [x] 轉職 API（changeProfession tRPC procedure，含等級/金幣門檻 + 24h 冷却）
+- [x] 前端職業選擇 UI（ProfessionPanel 轉職面板 + 職業詳情卡片）
+- [x] 角色面板職業資訊完善顯示（可點擊開啟轉職）
+- [x] 職業系統單元測試（35+ 新測試全通過）
+## 步驟 5：傷害公式重構
+- [x] tickEngine 戰鬥計算遷移至使用 statEngine 數值
+- [x] 新增 MATK/MDEF/SPR/暴擊率/暴擊傷害 到戰鬥公式
+- [x] 傷害公式重構單元測試（calcCombatDamage + 五行相剣 + 精神係數）
+## tickEngine 升級流程統一
+- [x] tickEngine 升級後屬性計算改用 calcAgentFullStats（含命格+職業+潛能）
+- [x] 確保潛能點數在升級後正確反映到屬性
+- [x] 向後相容驗證（68 測試檔 1465 測試全通過）

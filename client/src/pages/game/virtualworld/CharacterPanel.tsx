@@ -17,6 +17,7 @@ import {
 } from "./constants";
 import { StatBar, MiniAttrBar } from "./StatBars";
 import { PotentialAllocPanel } from "./PotentialAllocPanel";
+import { ProfessionPanel } from "./ProfessionPanel";
 
 export function CharacterPanel({
   agent, staminaInfo, natalStats, equippedData, balanceData, dailyData,
@@ -36,6 +37,7 @@ export function CharacterPanel({
   mobileMode?: boolean;
 }) {
   const [activePanel, setActivePanel] = useState<PanelId>("combat");
+  const [showProfessionPanel, setShowProfessionPanel] = useState(false);
   // 背包道具查詢（頂層呼叫，遵守 React Hooks 規則）
   const invQuery = trpc.gameWorld.getInventory.useQuery(undefined, { staleTime: 30000 });
   const invItems = (invQuery.data ?? []) as Array<{ id: number; itemId: string; itemName: string; quantity: number; rarity?: string; itemType?: string; emoji?: string }>;
@@ -401,13 +403,15 @@ export function CharacterPanel({
                   <span className="text-[10px] text-slate-500">境界</span>
                   <span className="text-xs font-bold" style={{ color: realmInfo.color }}>{realmInfo.label}</span>
                 </div>
-                {/* 職業 */}
-                <div className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg"
+                {/* 職業（可點擊開啟轉職面板） */}
+                <button onClick={() => setShowProfessionPanel(!showProfessionPanel)}
+                  className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg transition-all hover:scale-105"
                   style={{ background: `${profInfo.color}10`, border: `1px solid ${profInfo.color}30` }}>
                   <span className="text-lg">{profInfo.icon}</span>
                   <span className="text-[10px] text-slate-500">職業</span>
                   <span className="text-xs font-bold" style={{ color: profInfo.color }}>{profInfo.label}</span>
-                </div>
+                  <span className="text-[8px] text-slate-600">點擊轉職</span>
+                </button>
                 {/* 命格 */}
                 <div className="flex flex-col items-center gap-1 px-2 py-2 rounded-lg"
                   style={{ background: `${fateInfo.color}10`, border: `1px solid ${fateInfo.color}30` }}>
@@ -546,6 +550,16 @@ export function CharacterPanel({
               })}
               <p className="text-[10px] text-slate-600 mt-1">注靈注入對應屬性可提升抗性，最高減傷 50%</p>
             </div>
+
+            {/* GD-028 職業轉職面板 */}
+            {showProfessionPanel && (
+              <ProfessionPanel
+                currentProfession={agentProfession}
+                agentLevel={agentLevel}
+                agentGold={agentGold}
+                onClose={() => setShowProfessionPanel(false)}
+              />
+            )}
 
             {/* GD-028 潛能點數分配 */}
             <PotentialAllocPanel agent={agent} />

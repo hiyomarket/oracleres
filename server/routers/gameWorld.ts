@@ -3179,4 +3179,132 @@ export const gameWorldRouter = router({
         goldSpent: resetCost,
       };
     }),
+
+  // ═══ GD-028 轉職系統 ═══
+  changeProfession: protectedProcedure
+    .input(z.object({
+      profession: z.enum(["none", "hunter", "mage", "tank", "thief", "wizard"]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { PROFESSION_DEFS, PROFESSION_CHANGE_COOLDOWN_MS, calcAgentFullStats } = await import("../services/statEngine");
+      const { determineFateElement } = await import("../services/statEngine");
+      type Profession = import("../services/statEngine").Profession;
+
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB 不可用" });
+
+      const [agent] = await db.select().from(gameAgents)
+        .where(and(eq(gameAgents.userId, ctx.user.id), eq(gameAgents.isActive, 1)))
+        .limit(1);
+      if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "找不到角色" });
+
+      const profDef = PROFESSION_DEFS[input.profession as Profession];
+      if (!profDef) throw new TRPCError({ code: "BAD_REQUEST", message: "無效職業" });
+
+      // 檢查等級需求
+      if (agent.level < profDef.minLevel) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `轉職需要等級 ${profDef.minLevel} 以上，目前等級 ${agent.level}` });
+      }
+
+      // 檢查金幣
+      if (agent.gold < profDef.goldCost) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `轉職需要 ${profDef.goldCost} 金幣，目前 ${agent.gold}` });
+      }
+
+      // 檢查冷却
+      const now = Date.now();
+      const lastChange = agent.professionChangedAt ?? 0;
+      if (now - lastChange < PROFESSION_CHANGE_COOLDOWN_MS) {
+        const remainMs = PROFESSION_CHANGE_COOLDOWN_MS - (now - lastChange);
+        const remainHrs = Math.ceil(remainMs / (60 * 60 * 1000));
+        throw new TRPCError({ code: "BAD_REQUEST", message: `轉職冷却中，請 ${remainHrs} 小時後再試` });
+      }
+
+      // 如果已經是同一職業，不要重複轉
+      if (agent.profession === input.profession) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `已經是${profDef.label}，無需重複轉職` });
+      }
+
+      // 執行轉職
+      const wuxing = {
+        wood: agent.wuxingWood,
+        fire: agent.wuxingFire,
+        earth: agent.wuxingEarth,
+        metal: agent.wuxingMetal,
+        water: agent.wuxingWater,
+      };
+      const fateEl = (agent.fateElement ?? determineFateElement(wuxing)) as import("../services/statEngine").WuXingElement;
+      const potential = {
+        hp: agent.potentialHp ?? 0,
+        mp: agent.potentialMp ?? 0,
+        atk: agent.potentialAtk ?? 0,
+        def: agent.potentialDef ?? 0,
+        spd: agent.potentialSpd ?? 0,
+        matk: agent.potentialMatk ?? 0,
+      };
+
+      // 計算新職業的屬性
+      const newStats = calcAgentFullStats(wuxing, agent.level, fateEl, potential, input.profession as Profession);
+
+      // 更新 DB
+      const hpRatio = agent.maxHp > 0 ? agent.hp / agent.maxHp : 1;
+      const mpRatio = agent.maxMp > 0 ? agent.mp / agent.maxMp : 1;
+
+      await db.update(gameAgents).set({
+        profession: input.profession,
+        professionTier: input.profession === "none" ? 0 : 1,
+        professionChangedAt: now,
+        gold: agent.gold - profDef.goldCost,
+        // 更新屬性
+        maxHp: newStats.hp,
+        maxMp: newStats.mp,
+        hp: Math.max(1, Math.round(newStats.hp * hpRatio)),
+        mp: Math.max(0, Math.round(newStats.mp * mpRatio)),
+        attack: newStats.atk,
+        defense: newStats.def,
+        speed: newStats.spd,
+        magicAttack: newStats.matk,
+        mdef: newStats.mdef,
+        spr: newStats.spr,
+        critRate: newStats.critRate,
+        critDamage: newStats.critDamage,
+        updatedAt: now,
+      }).where(eq(gameAgents.id, agent.id));
+
+      // 發送事件
+      const oldProfLabel = agent.profession === "none" ? "無職業" : (PROFESSION_DEFS[agent.profession as Profession]?.label ?? agent.profession);
+      await db.insert(agentEvents).values({
+        agentId: agent.id,
+        eventType: "system",
+        message: `✨ ${agent.agentName}從「${oldProfLabel}」轉職為「${profDef.label}」！消耗 ${profDef.goldCost} 金幣。`,
+        details: JSON.stringify({ type: "profession_change", from: agent.profession, to: input.profession, goldCost: profDef.goldCost }),
+        nodeId: agent.currentNodeId ?? "node_start",
+        createdAt: now,
+      });
+
+      const [updated] = await db.select().from(gameAgents)
+        .where(eq(gameAgents.id, agent.id)).limit(1);
+
+      return {
+        success: true,
+        agent: updated,
+        goldSpent: profDef.goldCost,
+        message: `成功轉職為${profDef.label}！`,
+      };
+    }),
+
+  // ═══ GD-028 查詢職業列表 ═══
+  getProfessionList: publicProcedure
+    .query(async () => {
+      const { PROFESSION_DEFS } = await import("../services/statEngine");
+      return Object.entries(PROFESSION_DEFS).map(([id, def]) => ({
+        id,
+        label: def.label,
+        emoji: def.emoji,
+        desc: def.desc,
+        bonuses: def.bonuses,
+        minLevel: def.minLevel,
+        goldCost: def.goldCost,
+      }));
+    }),
 });
