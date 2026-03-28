@@ -149,9 +149,9 @@ const DEFAULT_CONFIG: GameEngineConfig = {
   statLvMpMult: 8,
   statLvMpBase: 40,
   infuseHpPer100: 30,
-  infuseAtkPer100: 20,
-  infuseDefPer100: 20,
-  infuseSpdPer100: 15,
+  infuseAtkPer100: 30,  // GD-024: 30
+  infuseDefPer100: 30,  // GD-024: 30
+  infuseSpdPer100: 20,  // GD-024: 20
   infuseMpPer100: 20,
   resistMaxPct: 50,
   combatAtkCoeff: 1.5,

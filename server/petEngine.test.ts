@@ -659,3 +659,126 @@ describe("recalcReasonableBP", () => {
     expect(result.magic).toBeGreaterThanOrEqual(1);
   });
 });
+
+// ─── GD-024 calcPetStatsGD024 ────────────────────────────────
+
+import { calcPetStatsGD024 } from "./services/petEngine";
+
+describe("calcPetStatsGD024 — 寵物繼承主人屬性", () => {
+  const ownerStats = { hp: 1000, atk: 200, def: 150, spd: 100, matk: 180, mp: 300 };
+  
+  it("should calculate pet HP as ownerHP × 0.6 + petLv × 5 + BP bonus", () => {
+    const bp = { constitution: 50, strength: 50, defense: 50, agility: 50, magic: 50 };
+    const result = calcPetStatsGD024(ownerStats, 30, bp);
+    // HP = 1000 * 0.6 + 30 * 5 + bpBonus = 600 + 150 + bpBonus
+    expect(result.hp).toBeGreaterThan(600);
+    expect(result.hp).toBeLessThan(1500);
+  });
+
+  it("should calculate pet ATK as ownerATK × 0.35 + petLv × 3 + BP bonus", () => {
+    const bp = { constitution: 10, strength: 80, defense: 10, agility: 10, magic: 10 };
+    const result = calcPetStatsGD024(ownerStats, 30, bp);
+    // ATK = 200 * 0.35 + 30 * 3 + bpBonus = 70 + 90 + bpBonus
+    expect(result.attack).toBeGreaterThan(70);
+    expect(result.attack).toBeLessThan(500);
+  });
+
+  it("should calculate pet DEF as ownerDEF × 0.4 + petLv × 2 + BP bonus", () => {
+    const bp = { constitution: 10, strength: 10, defense: 80, agility: 10, magic: 10 };
+    const result = calcPetStatsGD024(ownerStats, 30, bp);
+    expect(result.defense).toBeGreaterThan(60);
+    expect(result.defense).toBeLessThan(400);
+  });
+
+  it("should calculate pet SPD as ownerSPD × 0.5 + petLv × 2 + BP bonus", () => {
+    const bp = { constitution: 10, strength: 10, defense: 10, agility: 80, magic: 10 };
+    const result = calcPetStatsGD024(ownerStats, 30, bp);
+    expect(result.speed).toBeGreaterThan(50);
+    expect(result.speed).toBeLessThan(400);
+  });
+
+  it("higher owner stats should produce higher pet stats", () => {
+    const bp = { constitution: 50, strength: 50, defense: 50, agility: 50, magic: 50 };
+    const weakOwner = { hp: 500, atk: 100, def: 80, spd: 50, matk: 90, mp: 150 };
+    const strongOwner = { hp: 2000, atk: 400, def: 300, spd: 200, matk: 360, mp: 600 };
+    
+    const weakResult = calcPetStatsGD024(weakOwner, 30, bp);
+    const strongResult = calcPetStatsGD024(strongOwner, 30, bp);
+    
+    expect(strongResult.hp).toBeGreaterThan(weakResult.hp);
+    expect(strongResult.attack).toBeGreaterThan(weakResult.attack);
+    expect(strongResult.defense).toBeGreaterThan(weakResult.defense);
+    expect(strongResult.speed).toBeGreaterThan(weakResult.speed);
+  });
+
+  it("higher BP should produce higher pet stats", () => {
+    const lowBp = { constitution: 10, strength: 10, defense: 10, agility: 10, magic: 10 };
+    const highBp = { constitution: 100, strength: 100, defense: 100, agility: 100, magic: 100 };
+    
+    const lowResult = calcPetStatsGD024(ownerStats, 30, lowBp);
+    const highResult = calcPetStatsGD024(ownerStats, 30, highBp);
+    
+    expect(highResult.hp).toBeGreaterThan(lowResult.hp);
+    expect(highResult.attack).toBeGreaterThan(lowResult.attack);
+  });
+
+  it("race HP multiplier should affect HP", () => {
+    const bp = { constitution: 50, strength: 50, defense: 50, agility: 50, magic: 50 };
+    const normalResult = calcPetStatsGD024(ownerStats, 30, bp, 1.0);
+    const dragonResult = calcPetStatsGD024(ownerStats, 30, bp, 1.3);
+    
+    expect(dragonResult.hp).toBeGreaterThan(normalResult.hp);
+  });
+
+  it("should return mdef field", () => {
+    const bp = { constitution: 50, strength: 50, defense: 50, agility: 50, magic: 50 };
+    const result = calcPetStatsGD024(ownerStats, 30, bp);
+    expect(result.mdef).toBeTypeOf("number");
+    expect(result.mdef).toBeGreaterThan(0);
+  });
+
+  it("Lv1 pet should have lower stats than Lv60 pet", () => {
+    const bp = { constitution: 50, strength: 50, defense: 50, agility: 50, magic: 50 };
+    const lv1 = calcPetStatsGD024(ownerStats, 1, bp);
+    const lv60 = calcPetStatsGD024(ownerStats, 60, bp);
+    
+    expect(lv60.hp).toBeGreaterThan(lv1.hp);
+    expect(lv60.attack).toBeGreaterThan(lv1.attack);
+    expect(lv60.defense).toBeGreaterThan(lv1.defense);
+    expect(lv60.speed).toBeGreaterThan(lv1.speed);
+  });
+});
+
+// ─── GD-024 balanceFormulas ──────────────────────────────────
+
+import { calcCharacterStatsV2 } from "./services/balanceFormulas";
+
+describe("calcCharacterStatsV2 — GD-024 屬性公式", () => {
+  it("should return mdef field", () => {
+    const wuxing = { wood: 30, fire: 20, earth: 25, metal: 15, water: 10 };
+    const result = calcCharacterStatsV2(wuxing, 30);
+    expect(result.mdef).toBeTypeOf("number");
+    expect(result.mdef).toBeGreaterThan(0);
+  });
+
+  it("higher level should produce higher stats", () => {
+    const wuxing = { wood: 30, fire: 20, earth: 25, metal: 15, water: 10 };
+    const lv1 = calcCharacterStatsV2(wuxing, 1);
+    const lv60 = calcCharacterStatsV2(wuxing, 60);
+    
+    expect(lv60.hp).toBeGreaterThan(lv1.hp);
+    expect(lv60.atk).toBeGreaterThan(lv1.atk);
+    expect(lv60.def).toBeGreaterThan(lv1.def);
+  });
+
+  it("higher wuxing totals should produce higher stats", () => {
+    const low = { wood: 5, fire: 5, earth: 5, metal: 5, water: 5 };
+    const high = { wood: 50, fire: 50, earth: 50, metal: 50, water: 50 };
+    
+    const lowResult = calcCharacterStatsV2(low, 30);
+    const highResult = calcCharacterStatsV2(high, 30);
+    
+    expect(highResult.hp).toBeGreaterThan(lowResult.hp);
+    expect(highResult.atk).toBeGreaterThan(lowResult.atk);
+  });
+});

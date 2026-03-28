@@ -1,0 +1,46 @@
+{
+  "query": "SELECT id, nickname, level, tier, bp_constitution, bp_strength, bp_defense, bp_agility, bp_magic, (bp_constitution + bp_strength + bp_defense + bp_agility + bp_magic) as total_bp, hp, max_hp, attack, defense, speed, magic_attack FROM game_player_pets;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, nickname, level, tier, bp_constitution, bp_strength, bp_defense, bp_agility, bp_magic, (bp_constitution + bp_strength + bp_defense + bp_agility + bp_magic) as total_bp, hp, max_hp, attack, defense, speed, magic_attack FROM game_player_pets;",
+  "rows": [
+    {
+      "id": "1",
+      "nickname": "幽冥蝶",
+      "level": "60",
+      "tier": "C",
+      "bp_constitution": "47",
+      "bp_strength": "48",
+      "bp_defense": "48",
+      "bp_agility": "52",
+      "bp_magic": "48",
+      "total_bp": "243",
+      "hp": "1042",
+      "max_hp": "1042",
+      "attack": "358",
+      "defense": "358",
+      "speed": "289",
+      "magic_attack": "293"
+    },
+    {
+      "id": "2",
+      "nickname": "幽冥蝶",
+      "level": "60",
+      "tier": "C",
+      "bp_constitution": "48",
+      "bp_strength": "48",
+      "bp_defense": "45",
+      "bp_agility": "53",
+      "bp_magic": "49",
+      "total_bp": "243",
+      "hp": "1049",
+      "max_hp": "1049",
+      "attack": "358",
+      "defense": "343",
+      "speed": "293",
+      "magic_attack": "298"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnickname\tlevel\ttier\tbp_constitution\tbp_strength\tbp_defense\tbp_agility\tbp_magic\ttotal_bp\thp\tmax_hp\tattack\tdefense\tspeed\tmagic_attack\n1\t幽冥蝶\t60\tC\t47\t48\t48\t52\t48\t243\t1042\t1042\t358\t358\t289\t293\n2\t幽冥蝶\t60\tC\t48\t48\t45\t53\t49\t243\t1049\t1049\t358\t343\t293\t298\n",
+  "stderr": "",
+  "execution_time_ms": 1496
+}

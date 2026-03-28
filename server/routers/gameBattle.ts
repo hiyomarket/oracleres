@@ -11,7 +11,7 @@ import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattlePart
 import { sql, inArray } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
-import { calcPetStats, petSkillsToCombatFormat, DESTINY_SKILLS, DESTINY_AWAKENING_EFFECTS, checkDestinySkillLevelUp, calcPetBattleExp, levelUpBP } from "../services/petEngine";
+import { calcPetStats, calcPetStatsGD024, petSkillsToCombatFormat, DESTINY_SKILLS, DESTINY_AWAKENING_EFFECTS, checkDestinySkillLevelUp, calcPetBattleExp, levelUpBP } from "../services/petEngine";
 import {
   type BattleParticipant, type BattleMode, type BattleCommand, type BattleLogEntry,
   simulateBattle, aiDecideCommand, executeCommand, sortTurnOrder, processStatusEffects,
@@ -58,7 +58,7 @@ function buildCharacterParticipant(
     attack: stats.atk,
     defense: stats.def,
     magicAttack: stats.matk,
-    magicDefense: Math.floor(stats.def * 0.7),
+    magicDefense: stats.mdef,
     speed: stats.spd,
     dominantElement,
     skills: equippedSkills, // 從已裝備的天命技能轉換
@@ -76,11 +76,12 @@ function buildCharacterParticipant(
   };
 }
 
-/** 從寵物數據建立戰鬥參與者 */
+/** 從寵物數據建立戰鬥參與者（GD-024: 繼承主人屬性） */
 function buildPetParticipant(
   pet: any,
   catalog: any,
   id: number,
+  ownerStats?: { hp: number; atk: number; def: number; spd: number; matk?: number; mp?: number },
 ): BattleParticipant {
   const bp = {
     constitution: pet.bpConstitution ?? 0,
@@ -90,7 +91,10 @@ function buildPetParticipant(
     magic: pet.bpMagic ?? 0,
   };
   const raceHpMul = catalog?.race ? (({ dragon: 1.3, undead: 1.2, normal: 1.0, flying: 1.0, insect: 0.9, plant: 0.8 } as any)[catalog.race] ?? 1.0) : 1.0;
-  const stats = calcPetStats(bp, pet.level ?? 1, raceHpMul);
+  // GD-024: 如果有主人數值，使用繼承公式；否則回退到舊 BP 公式
+  const stats = ownerStats
+    ? calcPetStatsGD024(ownerStats, pet.level ?? 1, bp, raceHpMul)
+    : calcPetStats(bp, pet.level ?? 1, raceHpMul);
   const rawSkills = petSkillsToCombatFormat(
     pet.innateSkills ?? [],
     pet.destinySkills ?? [],
@@ -114,7 +118,7 @@ function buildPetParticipant(
     attack: stats.attack,
     defense: stats.defense,
     magicAttack: stats.magicAttack,
-    magicDefense: Math.floor(stats.defense * 0.6),
+    magicDefense: (stats as any).mdef ?? Math.floor(stats.defense * 0.6),
     speed: stats.speed,
     dominantElement: (catalog?.wuxing || pet.dominantElement || "earth") as any,
     race: catalog?.race,
@@ -400,7 +404,9 @@ export const gameBattleRouter = router({
       participants.push(charParticipant);
 
       if (activePet && petCatalog) {
-        const petParticipant = buildPetParticipant(activePet, petCatalog, nextId++);
+        // GD-024: 傳入主人數值讓寵物繼承
+        const ownerStats = { hp: charParticipant.maxHp, atk: charParticipant.attack, def: charParticipant.defense, spd: charParticipant.speed, matk: charParticipant.magicAttack, mp: charParticipant.maxMp };
+        const petParticipant = buildPetParticipant(activePet, petCatalog, nextId++, ownerStats);
         participants.push(petParticipant);
       }
 
@@ -592,9 +598,11 @@ export const gameBattleRouter = router({
       // 建立參與者
       const participants: BattleParticipant[] = [];
       let nextId = 1;
-      participants.push(buildCharacterParticipant(agent, nextId++));
+      const charP = buildCharacterParticipant(agent, nextId++);
+      participants.push(charP);
       if (activePet && petCatalog) {
-        participants.push(buildPetParticipant(activePet, petCatalog, nextId++));
+        const ownerStats2 = { hp: charP.maxHp, atk: charP.attack, def: charP.defense, spd: charP.speed, matk: charP.magicAttack, mp: charP.maxMp };
+        participants.push(buildPetParticipant(activePet, petCatalog, nextId++, ownerStats2));
       }
       participants.push(buildMonsterParticipant(monsterData as any, nextId++, input.monsterLevelOverride));
 

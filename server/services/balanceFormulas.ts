@@ -677,6 +677,7 @@ export interface CharacterCombatStats {
   def: number;
   spd: number;
   matk: number;
+  mdef: number;
   healPower: number;
   hitRate: number;
 }
@@ -721,9 +722,9 @@ export function calcCharacterStatsV2(
   const lvMpMult   = cfg?.statLvMpMult   ?? 8;
   const lvMpBase   = cfg?.statLvMpBase   ?? 40;
   const hpPer100   = cfg?.infuseHpPer100  ?? 30;
-  const atkPer100  = cfg?.infuseAtkPer100 ?? 20;
-  const defPer100  = cfg?.infuseDefPer100 ?? 20;
-  const spdPer100  = cfg?.infuseSpdPer100 ?? 15;
+  const atkPer100  = cfg?.infuseAtkPer100 ?? 30;  // GD-024: 30
+  const defPer100  = cfg?.infuseDefPer100 ?? 30;  // GD-024: 30
+  const spdPer100  = cfg?.infuseSpdPer100 ?? 20;  // GD-024: 20
   const mpPer100   = cfg?.infuseMpPer100  ?? 20;
 
   const hp  = Math.floor(level * lvHpMult  + lvHpBase  + (wood  / 100) * hpPer100);
@@ -731,13 +732,14 @@ export function calcCharacterStatsV2(
   const atk = Math.floor(level * lvAtkMult + lvAtkBase + (fire  / 100) * atkPer100);
   const def = Math.floor(level * lvDefMult + lvDefBase + (earth / 100) * defPer100);
   const spd = Math.floor(level * lvSpdMult + lvSpdBase + (metal / 100) * spdPer100);
-  const matk = Math.floor(level * 4  + 10  + (water / 100) * 15);
+  const matk = Math.floor(level * lvAtkMult + lvAtkBase + (water / 100) * atkPer100); // GD-024: MATK = Lv×8 + 15 + 水注靈加成
+  const mdef = Math.floor(level * lvSpdMult + lvSpdBase); // GD-024: MDEF = Lv×6 + 10（無注靈加成）
 
   // 治癒力、命中率保留與五行相關
   const healPower = Math.floor(wood * 0.8 + level * 0.5);
   const hitRate   = Math.floor(metal * 0.8 + level * 0.3);
 
-  return { hp, mp, atk, def, spd, matk, healPower, hitRate };
+  return { hp, mp, atk, def, spd, matk, mdef, healPower, hitRate };
 }
 
 /**
@@ -750,12 +752,13 @@ export function calcResistances(
   maxPct: number = 50,
 ) {
   const cap = Math.max(1, maxPct);
+  // GD-024: 抗性 = min(50%, 注靈值 ÷ 15)
   return {
-    resistWood:  Math.min(cap, Math.floor(wuxing.wood  / 20)),
-    resistFire:  Math.min(cap, Math.floor(wuxing.fire  / 20)),
-    resistEarth: Math.min(cap, Math.floor(wuxing.earth / 20)),
-    resistMetal: Math.min(cap, Math.floor(wuxing.metal / 20)),
-    resistWater: Math.min(cap, Math.floor(wuxing.water / 20)),
+    resistWood:  Math.min(cap, Math.floor(wuxing.wood  / 15)),
+    resistFire:  Math.min(cap, Math.floor(wuxing.fire  / 15)),
+    resistEarth: Math.min(cap, Math.floor(wuxing.earth / 15)),
+    resistMetal: Math.min(cap, Math.floor(wuxing.metal / 15)),
+    resistWater: Math.min(cap, Math.floor(wuxing.water / 15)),
   };
 }
 

@@ -54,6 +54,7 @@ export function calcCharacterStats(natalStats: {
     def:  v2.def,
     spd:  v2.spd,
     matk: v2.matk,
+    mdef: v2.mdef,
     mp:   v2.mp,
   };
 }
@@ -439,9 +440,14 @@ export function resolveCombat(
       raceBoostDesc = `種族對抗！${monsterRaceStr}剋制${agentRaceStr}，傷害-15%`;
     }
   }
-  // 計算基礎傷害（加入魔法係數 A 修正 + 種族剋制修正）
-  const agentBaseDmg = Math.max(1, Math.round(agent.attack * atkMultiplier * spiritCoeffA * raceMultiplier - monster.defense * 0.5));
-  const monsterBaseDmg = Math.max(1, Math.round(monster.attack * defMultiplier - agent.defense * 0.5));
+  // GD-024 傷害公式：max(1, ATK×1.5 - DEF×0.5) × (1 - 抗性/100)
+  // 保留種族剣制和魔法係數修正
+  const agentBaseDmg = Math.max(1, Math.round(
+    (agent.attack * 1.5 * spiritCoeffA * raceMultiplier - monster.defense * 0.5)
+  ));
+  const monsterBaseDmg = Math.max(1, Math.round(
+    (monster.attack * 1.5 - agent.defense * 0.5)
+  ));
 
   // 回合制戰鬥模擬（最多 10 回合）
   let agentHp = agent.hp;

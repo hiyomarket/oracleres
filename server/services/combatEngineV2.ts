@@ -203,14 +203,15 @@ export function sortTurnOrder(participants: BattleParticipant[]): number[] {
 
 /**
  * 計算物理傷害
- * 公式：(ATK × 2 - DEF ÷ 2) × 隨機係數(0.85~1.15)
+ * GD-024 公式：max(1, ATK×1.5 - DEF×0.5) × 隨機係數(0.85~1.15)
  */
 export function calcPhysicalDamage(
   attacker: BattleParticipant,
   defender: BattleParticipant,
   skillMultiplier: number = 1.0,
 ): { damage: number; isCritical: boolean } {
-  const rawDamage = attacker.attack * 2 - defender.defense / 2;
+  // GD-024: 物理傷害 = max(1, ATK×1.5 - DEF×0.5)
+  const rawDamage = attacker.attack * 1.5 - defender.defense * 0.5;
   const randomFactor = 0.85 + Math.random() * 0.30; // 0.85~1.15
   // 暴擊判定：5% 基礎暴擊率，暴擊傷害 ×1.5
   const critChance = 0.05 + (attacker.speed / 500); // 速度越高暴擊率越高
@@ -224,14 +225,15 @@ export function calcPhysicalDamage(
 
 /**
  * 計算魔法傷害
- * 公式：(MAG × 2 - MDEF ÷ 2) × 隨機係數(0.85~1.15)
+ * GD-024 公式：max(1, MATK×1.5 - MDEF×0.5) × 隨機係數(0.85~1.15)
  */
 export function calcMagicDamage(
   attacker: BattleParticipant,
   defender: BattleParticipant,
   skillMultiplier: number = 1.0,
 ): { damage: number; isCritical: boolean } {
-  const rawDamage = attacker.magicAttack * 2 - defender.magicDefense / 2;
+  // GD-024: 魔法傷害 = max(1, MATK×1.5 - MDEF×0.5)
+  const rawDamage = attacker.magicAttack * 1.5 - defender.magicDefense * 0.5;
   const randomFactor = 0.85 + Math.random() * 0.30;
   const critChance = 0.03 + (attacker.speed / 600);
   const isCritical = Math.random() < critChance;

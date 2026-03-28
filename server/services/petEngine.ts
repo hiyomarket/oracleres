@@ -429,6 +429,64 @@ export function calcPetStats(
   };
 }
 
+/**
+ * GD-024 寵物屬性計算公式（繼承主人屬性版）
+ *
+ * 設計：寵物屬性主要來自主人，加上寵物等級的少量加成
+ *   HP  = 主人HP × 0.6 + 寵物Lv × 5
+ *   ATK = 主人ATK × 0.35 + 寵物Lv × 3
+ *   DEF = 主人DEF × 0.4 + 寵物Lv × 2
+ *   SPD = 主人SPD × 0.5 + 寵物Lv × 2
+ *
+ * BP 仍保留作為寵物「潛力值」，提供微調加成：
+ *   每 10 BP 點提供對應屬性 +1% 加成
+ *
+ * @param ownerStats 主人的戰鬥數值
+ * @param petLevel 寵物等級
+ * @param bp 寵物 BP 五維（可選，提供微調加成）
+ * @param raceHpMultiplier 種族 HP 倍率
+ */
+export function calcPetStatsGD024(
+  ownerStats: { hp: number; atk: number; def: number; spd: number; matk?: number; mp?: number },
+  petLevel: number,
+  bp?: { constitution: number; strength: number; defense: number; agility: number; magic: number },
+  raceHpMultiplier: number = 1.0,
+): { hp: number; mp: number; attack: number; defense: number; speed: number; magicAttack: number; mdef: number } {
+  // 基礎值：繼承主人屬性
+  let baseHp  = Math.floor(ownerStats.hp  * 0.6 + petLevel * 5);
+  let baseAtk = Math.floor(ownerStats.atk * 0.35 + petLevel * 3);
+  let baseDef = Math.floor(ownerStats.def * 0.4 + petLevel * 2);
+  let baseSpd = Math.floor(ownerStats.spd * 0.5 + petLevel * 2);
+  let baseMp  = Math.floor((ownerStats.mp ?? 50) * 0.4 + petLevel * 2);
+  let baseMatk = Math.floor((ownerStats.matk ?? 20) * 0.3 + petLevel * 2);
+  let baseMdef = Math.floor(petLevel * 3 + 5); // 寵物基礎 MDEF
+
+  // BP 微調加成（每 10 BP 點 +1%）
+  if (bp) {
+    const hpBonus  = 1 + (bp.constitution / 10) * 0.01;
+    const atkBonus = 1 + (bp.strength / 10) * 0.01;
+    const defBonus = 1 + (bp.defense / 10) * 0.01;
+    const spdBonus = 1 + (bp.agility / 10) * 0.01;
+    const magBonus = 1 + (bp.magic / 10) * 0.01;
+    baseHp  = Math.round(baseHp * hpBonus);
+    baseAtk = Math.round(baseAtk * atkBonus);
+    baseDef = Math.round(baseDef * defBonus);
+    baseSpd = Math.round(baseSpd * spdBonus);
+    baseMp  = Math.round(baseMp * magBonus);
+    baseMatk = Math.round(baseMatk * magBonus);
+  }
+
+  return {
+    hp: Math.round(baseHp * raceHpMultiplier),
+    mp: baseMp,
+    attack: baseAtk,
+    defense: baseDef,
+    speed: baseSpd,
+    magicAttack: baseMatk,
+    mdef: baseMdef,
+  };
+}
+
 /** 計算捕捉率 */
 export function calcCaptureRate(params: {
   baseCaptureRate: number;

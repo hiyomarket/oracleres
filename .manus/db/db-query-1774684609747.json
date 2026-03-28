@@ -1,0 +1,32 @@
+{
+  "query": "SELECT id, nickname, level, bp_constitution, bp_strength, bp_defense, bp_agility, bp_magic, (bp_constitution + bp_strength + bp_defense + bp_agility + bp_magic) as total_bp FROM game_player_pets ORDER BY total_bp DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, nickname, level, bp_constitution, bp_strength, bp_defense, bp_agility, bp_magic, (bp_constitution + bp_strength + bp_defense + bp_agility + bp_magic) as total_bp FROM game_player_pets ORDER BY total_bp DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "nickname": "幽冥蝶",
+      "level": "60",
+      "bp_constitution": "913",
+      "bp_strength": "926",
+      "bp_defense": "932",
+      "bp_agility": "996",
+      "bp_magic": "927",
+      "total_bp": "4694"
+    },
+    {
+      "id": "2",
+      "nickname": "幽冥蝶",
+      "level": "60",
+      "bp_constitution": "908",
+      "bp_strength": "896",
+      "bp_defense": "841",
+      "bp_agility": "992",
+      "bp_magic": "913",
+      "total_bp": "4550"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnickname\tlevel\tbp_constitution\tbp_strength\tbp_defense\tbp_agility\tbp_magic\ttotal_bp\n1\t幽冥蝶\t60\t913\t926\t932\t996\t927\t4694\n2\t幽冥蝶\t60\t908\t896\t841\t992\t913\t4550\n",
+  "stderr": "",
+  "execution_time_ms": 1751
+}

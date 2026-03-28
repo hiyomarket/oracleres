@@ -136,20 +136,20 @@ export function IdleSessionPanel({ agentId, strategy, onClose }: IdleSessionPane
           </div>
         )}
 
-        {/* 寵物 BP 成長預估 */}
+        {/* 寵物 BP 成長預估（GD-024: 機率制 + 每日上限） */}
         {session && (
           <div className="px-2 py-1.5 rounded-lg text-xs"
             style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.15)" }}>
             <div className="flex items-center justify-between">
               <span className="text-purple-400 flex items-center gap-1">
-                <span>🐾</span> 寵物 BP 成長
+                <span>🐾</span> 寵物潛力成長
               </span>
               <span className="font-bold text-purple-300">
-                +{Math.floor(idleHours * 5)} BP
+                注靈中…
               </span>
             </div>
             <div className="text-[10px] text-purple-400/60 mt-0.5">
-              每小時 +5 BP，結算時自動分配到寵物五維屬性
+              寵物注靈中，每日上限 20 BP（依等級遞減），屬性繼承主人數值
             </div>
           </div>
         )}
@@ -157,7 +157,7 @@ export function IdleSessionPanel({ agentId, strategy, onClose }: IdleSessionPane
         {/* 掛機模式說明 */}
         <div className="text-[10px] text-slate-600 text-center pt-1">
           {isInfuse
-            ? "注靈模式：五行屬性成長 + 寵物固定 BP"
+            ? "注靈模式：五行屬性成長 + 寵物潛力培養"
             : "掛機獎勵 ×0.33 | 不扣體力 | 8 小時封頂"}
         </div>
       </div>

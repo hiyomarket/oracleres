@@ -5164,3 +5164,15 @@
 - [x] 改善戰鬥視窗寵物操控 UI：讓寵物技能選擇和攻擊目標更直觀（整合到底部指令區域）
 - [x] 新增管理員 BP 膨脹修正端點（adminFixInflatedBP，支援 dryRun 模式）
 - [x] 59 項 petEngine 測試全部通過（含新增 calcAfkBpGain、recalcReasonableBP 測試）
+
+## 優化任務（2026-03-28 第八批）── GD-024 全域屬性系統統一
+
+- [x] 重構寵物屬性計算：新增 calcPetStatsGD024，繼承主人屬性（HP=主人HP×0.6+寵物Lv×5+BP加成, ATK=主人ATK×0.35+寵物Lv×3+BP加成）
+- [x] 調整玩家屬性公式：更新 balanceFormulas.ts 注靈係數和新增 MDEF
+- [x] 統一傷害公式：更新 combatEngineV2.ts 和 tickEngine.ts 為 GD-024 格式
+- [x] 注靈加成統一：木→HP+30/100, 火→ATK+30/100, 土→DEF+30/100, 金→SPD+20/100, 水→MP+20/MATK+20/100
+- [x] 五行抗性公式：抗性=min(50%, 注靈值÷15)
+- [x] 屬性上限：ATK/DEF/SPD/MATK/MDEF 上限 1500
+- [x] 更新前端 IdleSessionPanel 顯示（反映新的寵物潛力培養機制）
+- [x] 執行 BP 遷移：兩隻寵物 BP 從 ~4600 降至 243（C檔 Lv60 合理值）
+- [x] 1324 項測試全部通過（62 個測試檔案）

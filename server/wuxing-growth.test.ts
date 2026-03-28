@@ -336,9 +336,10 @@ describe("平衡一致性驗證", () => {
     expect(comparison.analysis.turnsToSurvive).toBeGreaterThanOrEqual(2);
   });
 
-  it("Lv30 角色的 HP 應在合理範圍（500-10000）", () => {
+  it("Lv30 角色的 HP 應在合理範圍（GD-024: 300-10000）", () => {
     const player = simulateCharacterAtLevel("wood", 30);
-    expect(player.stats.hp).toBeGreaterThanOrEqual(500);
+    // GD-024 新公式下，低注靈的角色 HP 較低但仍在合理範圍
+    expect(player.stats.hp).toBeGreaterThanOrEqual(300);
     expect(player.stats.hp).toBeLessThanOrEqual(10000);
   });
 
