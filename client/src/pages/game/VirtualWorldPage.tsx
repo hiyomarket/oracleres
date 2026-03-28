@@ -407,7 +407,7 @@ function NodeInfoPanel({
               </p>
               <div className="space-y-1.5">
                 {monsters.map(monster => (
-                  <BossMonsterRow key={monster.id} m={monster} onChallenge={onChallenge} />
+                  <BossMonsterRow key={monster.id} monster={monster} onChallenge={onChallenge} />
                 ))}
               </div>
             </div>

@@ -34,14 +34,14 @@ type BossMonster = {
 };
 
 export function BossMonsterRow({
-  m,
+  monster,
   onChallenge,
 }: {
-  m: BossMonster;
+  monster: BossMonster;
   onChallenge?: (monsterId: string, monsterName: string, isBoss?: boolean) => void;
 }) {
-  const mc = WX_HEX[m.element] ?? "#888";
-  const isBossMonster = m.isBoss;
+  const mc = WX_HEX[monster.element] ?? "#888";
+  const isBossMonster = monster.isBoss;
   const [showDetail, setShowDetail] = useState(false);
 
   if (!isBossMonster) {
@@ -52,17 +52,17 @@ export function BossMonsterRow({
           background: `${mc}08`,
           borderColor: `${mc}25`,
         }}>
-        <span className="text-sm shrink-0">{WX_EMOJI[m.element] ?? "👾"}</span>
+        <span className="text-sm shrink-0">{WX_EMOJI[monster.element] ?? "👾"}</span>
         <div className="flex-1 min-w-0">
-          <span className="font-bold text-sm" style={{ color: mc }}>{m.name}</span>
-          {m.description && <p className="text-xs truncate text-slate-600">{m.description}</p>}
+          <span className="font-bold text-sm" style={{ color: mc }}>{monster.name}</span>
+          {monster.description && <p className="text-xs truncate text-slate-600">{monster.description}</p>}
         </div>
         <div className="text-right shrink-0 flex flex-col items-end gap-1">
-          <p className="font-bold text-xs text-slate-300">Lv.{m.level}</p>
-          <p className="text-red-400 text-xs">HP {typeof m.hp === "number" ? m.hp.toLocaleString() : m.hp}</p>
+          <p className="font-bold text-xs text-slate-300">Lv.{monster.level}</p>
+          <p className="text-red-400 text-xs">HP {typeof monster.hp === "number" ? monster.hp.toLocaleString() : monster.hp}</p>
           {onChallenge && (
             <button
-              onClick={() => onChallenge(m.id, m.name, m.isBoss)}
+              onClick={() => onChallenge(monster.id, monster.name, monster.isBoss)}
               className="text-[10px] px-2 py-0.5 font-bold rounded-lg transition-all hover:scale-105 active:scale-95"
               style={{ background: `${mc}25`, color: mc, border: `1px solid ${mc}40` }}>
               ⚔️ 挑戰
@@ -108,7 +108,7 @@ export function BossMonsterRow({
         </div>
         <div className="flex-1 min-w-0 relative z-10">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-bold text-base" style={{ color: "#ef4444" }}>{m.name}</span>
+            <span className="font-bold text-base" style={{ color: "#ef4444" }}>{monster.name}</span>
             <span className="text-xs px-2 py-0.5 rounded font-black tracking-wider"
               style={{
                 background: "linear-gradient(135deg, rgba(220,38,38,0.3), rgba(245,158,11,0.3))",
@@ -121,14 +121,14 @@ export function BossMonsterRow({
             {/* 懸停提示 */}
             <span className="text-[9px] text-red-400/40 hidden sm:inline ml-1">(懸停查看詳情)</span>
           </div>
-          {m.description && <p className="text-xs truncate text-red-300/70">{m.description}</p>}
+          {monster.description && <p className="text-xs truncate text-red-300/70">{monster.description}</p>}
         </div>
         <div className="text-right shrink-0 flex flex-col items-end gap-1 relative z-10">
-          <p className="font-bold text-sm text-red-300">Lv.{m.level}</p>
-          <p className="text-red-400 text-sm font-bold">HP {typeof m.hp === "number" ? m.hp.toLocaleString() : m.hp}</p>
+          <p className="font-bold text-sm text-red-300">Lv.{monster.level}</p>
+          <p className="text-red-400 text-sm font-bold">HP {typeof monster.hp === "number" ? monster.hp.toLocaleString() : monster.hp}</p>
           {onChallenge && (
             <button
-              onClick={(e) => { e.stopPropagation(); onChallenge(m.id, m.name, m.isBoss); }}
+              onClick={(e) => { e.stopPropagation(); onChallenge(monster.id, monster.name, monster.isBoss); }}
               className="text-xs px-3 py-1 font-bold rounded-lg transition-all hover:scale-105 active:scale-95"
               style={{ background: `rgba(220,38,38,0.25)`, color: "#fca5a5", border: `1px solid rgba(220,38,38,0.5)` }}>
               ⚔️ 挑戰 Boss
@@ -142,13 +142,13 @@ export function BossMonsterRow({
         className="absolute left-0 right-0 top-full mt-1 z-50 hidden sm:block opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none group-hover:pointer-events-auto"
         style={{ filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.6))" }}
       >
-        <BossDetailCard m={m} mc={mc} />
+        <BossDetailCard monster={monster} mc={mc} />
       </div>
 
       {/* ═══ 點擊展開（手機端） ═══ */}
       {showDetail && (
         <div className="sm:hidden mt-1 z-50" style={{ filter: "drop-shadow(0 4px 20px rgba(0,0,0,0.6))" }}>
-          <BossDetailCard m={m} mc={mc} />
+          <BossDetailCard monster={monster} mc={mc} />
         </div>
       )}
     </div>
@@ -156,7 +156,7 @@ export function BossMonsterRow({
 }
 
 // ─── Boss 詳細資訊卡片內容 ───
-function BossDetailCard({ m, mc }: { m: BossMonster; mc: string }) {
+function BossDetailCard({ monster, mc }: { monster: BossMonster; mc: string }) {
   return (
     <div className="rounded-xl border overflow-hidden"
       style={{
@@ -169,37 +169,37 @@ function BossDetailCard({ m, mc }: { m: BossMonster; mc: string }) {
         style={{ background: "linear-gradient(90deg, rgba(220,38,38,0.2) 0%, transparent 100%)", borderBottom: "1px solid rgba(220,38,38,0.2)" }}>
         <span className="text-xl">👹</span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-black text-red-400 truncate">{m.name}</p>
+          <p className="text-sm font-black text-red-400 truncate">{monster.name}</p>
           <p className="text-[10px] text-red-300/60">
-            {m.rarity === "legendary" ? "🌟 傳說級" : "🔥 Boss級"}
-            {m.race && ` · ${m.race}`}
+            {monster.rarity === "legendary" ? "🌟 傳說級" : "🔥 Boss級"}
+            {monster.race && ` · ${monster.race}`}
           </p>
         </div>
         <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-          style={{ background: "rgba(220,38,38,0.2)", color: "#fca5a5" }}>Lv.{m.level}</span>
+          style={{ background: "rgba(220,38,38,0.2)", color: "#fca5a5" }}>Lv.{monster.level}</span>
       </div>
 
       {/* 屬性數值區 */}
       <div className="px-3 py-2.5 grid grid-cols-2 gap-x-4 gap-y-1.5">
-        <StatRow icon="❤️" label="血量" value={typeof m.hp === "number" ? m.hp.toLocaleString() : String(m.hp)} color="#fca5a5" />
-        <StatRow icon="⚔️" label="攻擊" value={m.attack != null ? String(m.attack) : "???"} color="#fdba74" />
-        <StatRow icon="🛡️" label="防禦" value={m.defense != null ? String(m.defense) : "???"} color="#93c5fd" />
-        <StatRow icon="💨" label="速度" value={m.speed != null ? String(m.speed) : "???"} color="#86efac" />
-        <StatRow icon="✨" label="經驗" value={m.expReward != null ? String(m.expReward) : "???"} color="#fde047" />
+        <StatRow icon="❤️" label="血量" value={typeof monster.hp === "number" ? monster.hp.toLocaleString() : String(monster.hp)} color="#fca5a5" />
+        <StatRow icon="⚔️" label="攻擊" value={monster.attack != null ? String(monster.attack) : "???"} color="#fdba74" />
+        <StatRow icon="🛡️" label="防禦" value={monster.defense != null ? String(monster.defense) : "???"} color="#93c5fd" />
+        <StatRow icon="💨" label="速度" value={monster.speed != null ? String(monster.speed) : "???"} color="#86efac" />
+        <StatRow icon="✨" label="經驗" value={monster.expReward != null ? String(monster.expReward) : "???"} color="#fde047" />
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-slate-500">🌊 屬性</span>
           <span className="text-xs font-bold" style={{ color: mc }}>
-            {WX_EMOJI[m.element] ?? ""} {m.element}
+            {WX_EMOJI[monster.element] ?? ""} {monster.element}
           </span>
         </div>
       </div>
 
       {/* 技能區 */}
-      {m.skills && m.skills.length > 0 && (
+      {monster.skills && monster.skills.length > 0 && (
         <div className="px-3 py-2" style={{ borderTop: "1px solid rgba(220,38,38,0.15)" }}>
           <p className="text-[10px] text-slate-500 mb-1.5">💥 Boss 技能</p>
           <div className="flex flex-wrap gap-1">
-            {m.skills.map((sk, si) => (
+            {monster.skills.map((sk, si) => (
               <span key={si} className="text-[10px] px-1.5 py-0.5 rounded-md font-medium"
                 style={{ background: "rgba(220,38,38,0.15)", color: "#fca5a5", border: "1px solid rgba(220,38,38,0.25)" }}>
                 {sk}
@@ -210,11 +210,11 @@ function BossDetailCard({ m, mc }: { m: BossMonster; mc: string }) {
       )}
 
       {/* 掉落物區 */}
-      {m.dropItems && m.dropItems.length > 0 && (
+      {monster.dropItems && monster.dropItems.length > 0 && (
         <div className="px-3 py-2" style={{ borderTop: "1px solid rgba(220,38,38,0.15)" }}>
           <p className="text-[10px] text-slate-500 mb-1.5">🎁 可能掉落</p>
           <div className="flex flex-wrap gap-1">
-            {m.dropItems.map((d, di) => (
+            {monster.dropItems.map((d, di) => (
               <span key={di} className="text-[10px] px-1.5 py-0.5 rounded-md"
                 style={{ background: "rgba(245,158,11,0.1)", color: "#fbbf24", border: "1px solid rgba(245,158,11,0.2)" }}>
                 {d.itemId} ({Math.round(d.chance * 100)}%)
@@ -225,9 +225,9 @@ function BossDetailCard({ m, mc }: { m: BossMonster; mc: string }) {
       )}
 
       {/* 描述區 */}
-      {m.description && (
+      {monster.description && (
         <div className="px-3 py-2" style={{ borderTop: "1px solid rgba(220,38,38,0.15)" }}>
-          <p className="text-[10px] text-red-300/60 italic leading-relaxed">"{m.description}"</p>
+          <p className="text-[10px] text-red-300/60 italic leading-relaxed">"{monster.description}"</p>
         </div>
       )}
 
