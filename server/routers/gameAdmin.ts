@@ -1494,4 +1494,114 @@ export const gameAdminRouter = router({
         return { id: (result as any).insertId, shopType: "spirit" };
       }
     }),
+
+  /** GM 戰鬥模擬器 ── 輸入兩個角色參數，模擬多回合戰鬥 */
+  simulateCombat: adminProcedure
+    .input(z.object({
+      agentA: z.object({
+        level: z.number().int().min(1).max(99),
+        race: z.string().default("human"),
+        profession: z.string().default("none"),
+        fateElement: z.string().default(""),
+        wuxing: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }),
+        potential: z.object({ hp: z.number(), mp: z.number(), atk: z.number(), def: z.number(), spd: z.number(), matk: z.number() }).default({ hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 }),
+      }),
+      agentB: z.object({
+        level: z.number().int().min(1).max(99),
+        race: z.string().default("human"),
+        profession: z.string().default("none"),
+        fateElement: z.string().default(""),
+        wuxing: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }),
+        potential: z.object({ hp: z.number(), mp: z.number(), atk: z.number(), def: z.number(), spd: z.number(), matk: z.number() }).default({ hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 }),
+      }),
+      rounds: z.number().int().min(1).max(100).default(10),
+    }))
+    .mutation(async ({ input }) => {
+      const { calcFullStats, calcCombatDamage, rollCrit, rollDodge, rollBlock } = await import("../services/statEngine");
+
+      function buildStats(agent: typeof input.agentA) {
+        return calcFullStats({
+          level: agent.level,
+          race: agent.race,
+          wuxing: agent.wuxing,
+          profession: agent.profession as any,
+          fateElement: agent.fateElement,
+          potential: agent.potential,
+        });
+      }
+
+      const statsA = buildStats(input.agentA);
+      const statsB = buildStats(input.agentB);
+
+      // 模擬多場戰鬥
+      let winsA = 0, winsB = 0, draws = 0;
+      const battleLogs: Array<{ winner: string; rounds: number; log: string[] }> = [];
+
+      for (let battle = 0; battle < input.rounds; battle++) {
+        let hpA = statsA.hp, hpB = statsB.hp;
+        const log: string[] = [];
+        let round = 0;
+        const maxRounds = 30;
+
+        while (hpA > 0 && hpB > 0 && round < maxRounds) {
+          round++;
+          // A 攻擊 B
+          const dodgedB = rollDodge(statsB.spd, statsA.spd);
+          if (dodgedB) {
+            log.push(`R${round}: A攻擊B → B閃避`);
+          } else {
+            const blockedB = rollBlock(statsB.def, statsA.atk);
+            const isCritA = rollCrit(statsA.critRate);
+            const dmgA = calcCombatDamage({
+              attackerAtk: statsA.atk,
+              defenderDef: statsB.def,
+              attackerLevel: input.agentA.level,
+              defenderLevel: input.agentB.level,
+              isCrit: isCritA,
+              critDamage: statsA.critDamage,
+              attackerElement: Object.entries(input.agentA.wuxing).sort((a,b) => b[1]-a[1])[0]?.[0] ?? "earth",
+              defenderElement: Object.entries(input.agentB.wuxing).sort((a,b) => b[1]-a[1])[0]?.[0] ?? "earth",
+            });
+            const finalDmg = blockedB ? Math.max(1, Math.floor(dmgA * 0.5)) : dmgA;
+            hpB -= finalDmg;
+            log.push(`R${round}: A攻擊B → ${finalDmg}${isCritA ? "暴擊" : ""}${blockedB ? "格擋" : ""} (B剩${Math.max(0,hpB)}HP)`);
+          }
+          if (hpB <= 0) break;
+
+          // B 攻擊 A
+          const dodgedA = rollDodge(statsA.spd, statsB.spd);
+          if (dodgedA) {
+            log.push(`R${round}: B攻擊A → A閃避`);
+          } else {
+            const blockedA = rollBlock(statsA.def, statsB.atk);
+            const isCritB = rollCrit(statsB.critRate);
+            const dmgB = calcCombatDamage({
+              attackerAtk: statsB.atk,
+              defenderDef: statsA.def,
+              attackerLevel: input.agentB.level,
+              defenderLevel: input.agentA.level,
+              isCrit: isCritB,
+              critDamage: statsB.critDamage,
+              attackerElement: Object.entries(input.agentB.wuxing).sort((a,b) => b[1]-a[1])[0]?.[0] ?? "earth",
+              defenderElement: Object.entries(input.agentA.wuxing).sort((a,b) => b[1]-a[1])[0]?.[0] ?? "earth",
+            });
+            const finalDmg = blockedA ? Math.max(1, Math.floor(dmgB * 0.5)) : dmgB;
+            hpA -= finalDmg;
+            log.push(`R${round}: B攻擊A → ${finalDmg}${isCritB ? "暴擊" : ""}${blockedA ? "格擋" : ""} (A剩${Math.max(0,hpA)}HP)`);
+          }
+        }
+
+        const winner = hpA > hpB ? "A" : hpB > hpA ? "B" : "draw";
+        if (winner === "A") winsA++;
+        else if (winner === "B") winsB++;
+        else draws++;
+        if (battle < 3) battleLogs.push({ winner, rounds: round, log });
+      }
+
+      return {
+        statsA, statsB,
+        summary: { total: input.rounds, winsA, winsB, draws, winRateA: Math.round(winsA / input.rounds * 100), winRateB: Math.round(winsB / input.rounds * 100) },
+        sampleBattles: battleLogs,
+      };
+    }),
 });

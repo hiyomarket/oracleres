@@ -2,10 +2,12 @@
  * VirtualWorld 共用常數、型別與工具函數
  */
 
-// ─── 經驗升級公式（和後端 tickEngine.ts 相同） ───
-export function calcExpToNextFn(level: number): number {
-  if (level >= 60) return 999999;
-  return Math.floor(100 * Math.pow(1.4, level - 1));
+// ─── 經驗升級公式 V3（和後端 statEngine.calcExpToNextV2 相同） ───
+// expToNext(lv) = floor(A × lv^(B + C × ln(lv)))
+export function calcExpToNextFn(level: number, A = 2, B = 1.6, C = 0.25): number {
+  if (level >= 99) return 999999;
+  if (level <= 0) return Math.floor(A);
+  return Math.floor(A * Math.pow(level, B + C * Math.log(level)));
 }
 
 // ─── 五行配色 ─────────────────────────────────────────────

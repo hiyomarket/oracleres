@@ -658,13 +658,13 @@ describe("statEngine - PET_SYNERGY_BONUSES", () => {
 // ═══════════════════════════════════════════════════════════════
 
 describe("statEngine - calcExpToNextV2", () => {
-  it("should return 999999 for level 60 (max level)", () => {
-    expect(calcExpToNextV2(60)).toBe(999999);
+  it("should return 999999 for level 99 (max level)", () => {
+    expect(calcExpToNextV2(99)).toBe(999999);
   });
 
-  it("should return base for level 0 or below", () => {
-    expect(calcExpToNextV2(0)).toBe(80);
-    expect(calcExpToNextV2(-1)).toBe(80);
+  it("should return A for level 0 or below", () => {
+    expect(calcExpToNextV2(0)).toBe(2);
+    expect(calcExpToNextV2(-1)).toBe(2);
   });
 
   it("should increase with level", () => {
@@ -681,20 +681,32 @@ describe("statEngine - calcExpToNextV2", () => {
     // Old: 100 * 1.4^29 = ~24,201,432 at level 30
     // New should be much lower
     const lv30 = calcExpToNextV2(30);
-    expect(lv30).toBeLessThan(100000); // Should be around 6480
+    expect(lv30).toBeLessThan(100000); // V3: around 8325
     expect(lv30).toBeGreaterThan(1000); // But still meaningful
   });
 
-  it("should respect custom base and logScale parameters", () => {
-    const defaultExp = calcExpToNextV2(10, 80, 0.5);
-    const highBase = calcExpToNextV2(10, 160, 0.5);
-    const highLog = calcExpToNextV2(10, 80, 1.0);
-    expect(highBase).toBeGreaterThan(defaultExp);
-    expect(highLog).toBeGreaterThan(defaultExp);
+  it("should respect custom A, B, C parameters", () => {
+    const defaultExp = calcExpToNextV2(10);
+    const highA = calcExpToNextV2(10, 4, 1.6, 0.25);
+    const highB = calcExpToNextV2(10, 2, 2.0, 0.25);
+    expect(highA).toBeGreaterThan(defaultExp);
+    expect(highB).toBeGreaterThan(defaultExp);
+  });
+
+  it("should match GD-028 targets: Lv.1→10 ≈ 1000, Lv.90→99 ≈ 5M", () => {
+    let sum1to10 = 0;
+    for (let i = 1; i <= 10; i++) sum1to10 += calcExpToNextV2(i);
+    expect(sum1to10).toBeGreaterThan(700);
+    expect(sum1to10).toBeLessThan(1500);
+
+    let sum90to99 = 0;
+    for (let i = 90; i <= 98; i++) sum90to99 += calcExpToNextV2(i);
+    expect(sum90to99).toBeGreaterThan(3500000);
+    expect(sum90to99).toBeLessThan(6500000);
   });
 
   it("should return positive integers for all valid levels", () => {
-    for (let lv = 1; lv <= 59; lv++) {
+    for (let lv = 1; lv <= 98; lv++) {
       const exp = calcExpToNextV2(lv);
       expect(exp).toBeGreaterThan(0);
       expect(Number.isInteger(exp)).toBe(true);

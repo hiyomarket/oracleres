@@ -18,6 +18,7 @@ import {
 import { StatBar, MiniAttrBar } from "./StatBars";
 import { PotentialAllocPanel } from "./PotentialAllocPanel";
 import { ProfessionPanel } from "./ProfessionPanel";
+import { SkillTreePanel } from "./SkillTreePanel";
 
 export function CharacterPanel({
   agent, staminaInfo, natalStats, equippedData, balanceData, dailyData,
@@ -56,10 +57,11 @@ export function CharacterPanel({
   const agentAP = agent?.actionPoints ?? 5;
   const agentMaxAP = agent?.maxActionPoints ?? 5;
   const agentExp = agent?.exp ?? 0;
-  // Bug 5 fix: 使用和後端相同的公式計算 expToNext（Math.floor(100 * 1.4^(level-1))）
+  // GD-028 V3: 使用和後端 statEngine.calcExpToNextV2 相同的變指數公式
   const calcExpToNextFn = (level: number): number => {
-    if (level >= 60) return 999999;
-    return Math.floor(100 * Math.pow(1.4, level - 1));
+    if (level >= 99) return 999999;
+    if (level <= 0) return 2;
+    return Math.floor(2 * Math.pow(level, 1.6 + 0.25 * Math.log(level)));
   };
   const agentExpToNext = calcExpToNextFn(agent?.level ?? 1);
   const userGender = equippedData?.userGender ?? "female";
@@ -1043,6 +1045,9 @@ export function CharacterPanel({
 
         {/* ── 技能面板（GD-001 + 木屬性動態擴充）── */}
         {activePanel === "skill" && (() => {
+          // 職業技能樹區塊
+          const showSkillTree = (agent?.profession ?? "none") !== "none";
+
           // 木屬性動態擴充技能槽數量
           const woodVal = agent?.wuxingWood ?? 0;
           // 主動技能槽：預設4，木屬性門檻擴充（最失8）
@@ -1067,6 +1072,10 @@ export function CharacterPanel({
           [...activeSlots, ...passiveSlots].forEach(s => { if (s) ownedSkillIds.add(s); });
           return (
             <div className="space-y-2">
+              {/* 職業技能樹 */}
+              {showSkillTree && (
+                <SkillTreePanel agent={agent} learnedSkillIds={learnedSkillIds} />
+              )}
               {/* 木屬性門檻說明 */}
               <div className="px-2.5 py-1.5 rounded-lg text-[10px]"
                 style={{ background: "rgba(34,197,94,0.06)", borderLeft: "2px solid rgba(34,197,94,0.3)", color: "#64748b" }}>

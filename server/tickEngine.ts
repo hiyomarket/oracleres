@@ -31,6 +31,8 @@ import {
 import { getCombatMonstersForNode, invalidateMonsterCache, type CombatMonster, type MonsterSkillData } from "./monsterDataService";
 import { gamePlayerPets, gamePetCatalog, gamePetInnateSkills, gamePetLearnedSkills, gamePetBpHistory } from "../drizzle/schema";
 import { petSkillsToCombatFormat, calcPetBattleExp, calcPetExpToNext, levelUpBP, calcPetStats, RACE_HP_MULTIPLIER, calcCaptureRate, calcAfkBpGain, AFK_BP_DAILY_CAP, recalcReasonableBP } from "./services/petEngine";
+import { getAutoLearnSkills, type SkillTier } from "./services/skillLearningEngine";
+import { agentSkills, gameSkillCatalog } from "../drizzle/schema";
 
 // ─── 工具函數 ───
 function randInt(min: number, max: number): number {
@@ -1379,7 +1381,7 @@ export async function processAgentTick(
           eq(gamePlayerPets.agentId, agent.id),
           eq(gamePlayerPets.isActive, 1)
         ));
-      if (activePet && activePet.level < 60) {
+      if (activePet && activePet.level < 99) {
         // 計算今日已獲得的 AFK BP（從 BP 歷史中統計）
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
@@ -1412,7 +1414,7 @@ export async function processAgentTick(
         let bp = { ...newBp };
 
         // 檢查是否升級
-        while (currentLevel < 60) {
+        while (currentLevel < 99) {
           const expToNext = calcPetExpToNext(currentLevel);
           if (currentExp < expToNext) break;
           currentExp -= expToNext;
@@ -1653,7 +1655,7 @@ async function processCombatEvent(
   let newStatus: typeof agent.status = agent.status;
   let newTotalKills = agent.totalKills + (result.won ? 1 : 0);
 
-  // 升級判斷（GD-018：等級只是地圖通行證，上限 60）
+  // 升級判斷（GD-028：滿級 Lv.99）
   // V2: 升級時自動增加五行屬性（木=體力/火=力量/土=強度/金=速度/水=魔法）
   const combatLevelUps: TickResult["levelUps"] = [];
   let accWuxingWood = agent.wuxingWood;
@@ -1663,7 +1665,7 @@ async function processCombatEvent(
   let accWuxingWater = agent.wuxingWater;
   const dominantEl = (agent.dominantElement ?? "wood") as WuXingElement;
 
-  while (newExp >= newExpToNext && newLevel < 60) {
+  while (newExp >= newExpToNext && newLevel < 99) {
     newExp -= newExpToNext;
     newLevel++;
     newExpToNext = calcExpToNext(newLevel);
@@ -1731,6 +1733,71 @@ async function processCombatEvent(
 
   if (newHp <= 1) {
     newStatus = "resting";
+  }
+
+  // GD-028 步驟 10：升級後自動學習技能
+  if (combatLevelUps.length > 0) {
+    try {
+      // 查詢所有 levelup 類型的技能
+      const allLevelupSkills = await db.select({
+        skillId: gameSkillCatalog.skillId,
+        learnLevel: gameSkillCatalog.learnLevel,
+        skillTier: gameSkillCatalog.skillTier,
+        wuxing: gameSkillCatalog.wuxing,
+        professionRequired: gameSkillCatalog.professionRequired,
+        acquireMethod: gameSkillCatalog.acquireMethod,
+      }).from(gameSkillCatalog)
+        .where(eq(gameSkillCatalog.isActive, 1));
+
+      // 查詢已學技能
+      const learnedSkills = await db.select({ skillId: agentSkills.skillId })
+        .from(agentSkills)
+        .where(eq(agentSkills.agentId, agent.id));
+      const learnedSet = new Set(learnedSkills.map(s => s.skillId));
+
+      const agentWuxingMap = {
+        wood: accWuxingWood,
+        fire: accWuxingFire,
+        earth: accWuxingEarth,
+        metal: accWuxingMetal,
+        water: accWuxingWater,
+      } as Record<import("./services/statEngine").WuXingElement, number>;
+
+      const newSkillIds = getAutoLearnSkills(
+        newLevel,
+        agentWuxingMap,
+        agentProfession,
+        allLevelupSkills as any,
+        learnedSet,
+      );
+
+      // 批量插入新學技能
+      if (newSkillIds.length > 0) {
+        await db.insert(agentSkills).values(
+          newSkillIds.map(skillId => ({
+            agentId: agent.id,
+            skillId,
+            awakeTier: 0,
+            useCount: 0,
+          }))
+        );
+
+        // 發送學技事件
+        for (const skillId of newSkillIds) {
+          const skill = allLevelupSkills.find(s => s.skillId === skillId);
+          if (skill) {
+            await createEvent(agent.id, "system",
+              `📚 升級自動習得技能「${skillId}」`,
+              { type: "skill_learn", skillId, method: "levelup" },
+              currentNode.id
+            );
+          }
+        }
+      }
+    } catch (e) {
+      // 技能學習失敗不影響主流程
+      console.error("[TickEngine] 自動學技失敗:", e);
+    }
   }
 
   await db.update(gameAgents).set({
@@ -1954,7 +2021,7 @@ async function processCombatEvent(
         };
 
         // 連續升級檢查
-        while (currentLevel < 60) {
+        while (currentLevel < 99) {
           const expToNext = calcPetExpToNext(currentLevel);
           if (currentExp < expToNext) break;
           currentExp -= expToNext;

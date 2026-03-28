@@ -5,9 +5,9 @@
 import { describe, it, expect } from "vitest";
 import { calcExpToNext, resolveCombat } from "./tickEngine";
 
-describe("calcExpToNext (GD-028 線性+對數曲線)", () => {
-  it("Lv.1 需要 80 經驗（新版曲線）", () => {
-    expect(calcExpToNext(1)).toBe(80);
+describe("calcExpToNext (GD-028 V3 變指數曲線)", () => {
+  it("Lv.1 需要 2 經驗（V3 曲線 A=2）", () => {
+    expect(calcExpToNext(1)).toBe(2);
   });
 
   it("Lv.10 需要大於 Lv.1（經驗曲線遞增）", () => {
@@ -18,12 +18,15 @@ describe("calcExpToNext (GD-028 線性+對數曲線)", () => {
     expect(calcExpToNext(30)).toBeGreaterThan(calcExpToNext(10));
   });
 
-  it("Lv.60 回傳滿級標記（999999）", () => {
-    expect(calcExpToNext(60)).toBe(999999);
+  it("Lv.99 回傳滿級標記（999999）", () => {
+    expect(calcExpToNext(99)).toBe(999999);
   });
 
-  it("超過 Lv.60 仍回傳 Lv.60 的值", () => {
-    expect(calcExpToNext(99)).toBe(calcExpToNext(60));
+  it("Lv.1→10 累計經驗接近 GD-028 目標 ~1000", () => {
+    let sum = 0;
+    for (let i = 1; i <= 10; i++) sum += calcExpToNext(i);
+    expect(sum).toBeGreaterThan(700);
+    expect(sum).toBeLessThan(1500);
   });
 });
 

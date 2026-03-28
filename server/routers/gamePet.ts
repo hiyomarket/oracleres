@@ -243,11 +243,28 @@ export const gamePetRouter = router({
     const catalogs = await db.select().from(gamePetCatalog)
       .where(sql`${gamePetCatalog.id} IN (${sql.join(catalogIds.map(id => sql`${id}`), sql`, `)})`);
     const catalogMap = new Map(catalogs.map(c => [c.id, c]));
-    return pets.map(p => ({
-      ...p,
-      catalog: catalogMap.get(p.petCatalogId) ?? null,
-      expToNext: calcPetExpToNext(p.level),
-    }));
+    // 計算協同加成
+    let calcSynergy: ((petWuxing: string) => { type: string; multiplier: number }) | null = null;
+    try {
+      const { calcPetSynergyType, PET_SYNERGY_BONUSES } = await import("../services/statEngine");
+      const ownerFate = (agent.fateElement ?? "") as string;
+      calcSynergy = (petWuxing: string) => {
+        const synType = calcPetSynergyType(petWuxing as any, ownerFate as any);
+        const bonus = PET_SYNERGY_BONUSES[synType] ?? 0;
+        return { type: synType, multiplier: 1 + bonus };
+      };
+    } catch { /* fallback */ }
+
+    return pets.map(p => {
+      const cat = catalogMap.get(p.petCatalogId) ?? null;
+      const syn = calcSynergy ? calcSynergy(cat?.wuxing ?? "earth") : { type: "none", multiplier: 1.0 };
+      return {
+        ...p,
+        catalog: cat,
+        expToNext: calcPetExpToNext(p.level),
+        synergy: syn,
+      };
+    });
   }),
 
   /** 取得單隻寵物詳情（含技能） */
@@ -276,7 +293,23 @@ export const gamePetRouter = router({
         .where(eq(gamePetLearnedSkills.playerPetId, pet.id))
         .orderBy(asc(gamePetLearnedSkills.slotIndex));
       
-      // 計算戰鬥數值
+      // 計算戰鬥數值（含主人命格協同加成）
+      let synergyInfo = { type: "none" as string, multiplier: 1.0, ownerFate: "" as string, petElement: "" as string };
+      try {
+        const { calcPetFullStats } = await import("../services/statEngine");
+        const ownerFate = (agent.fateElement ?? "") as string;
+        const petWuxing = (catalog?.wuxing ?? "earth") as string;
+        const petBp = { constitution: pet.bpConstitution, strength: pet.bpStrength, defense: pet.bpDefense, agility: pet.bpAgility, magic: pet.bpMagic };
+        const fullStats = calcPetFullStats(petBp, pet.level, catalog?.raceHpMultiplier ?? 1.0, petWuxing, ownerFate);
+        synergyInfo = {
+          type: fullStats.synergyType,
+          multiplier: fullStats.synergyMultiplier,
+          ownerFate,
+          petElement: petWuxing,
+        };
+      } catch (e) {
+        console.error("[getPetDetail] calcPetFullStats failed:", e);
+      }
       const stats = calcPetStats(
         { constitution: pet.bpConstitution, strength: pet.bpStrength, defense: pet.bpDefense, agility: pet.bpAgility, magic: pet.bpMagic },
         pet.level,
@@ -307,6 +340,7 @@ export const gamePetRouter = router({
         innateSlots,
         expToNext: calcPetExpToNext(pet.level),
         totalBp: pet.bpConstitution + pet.bpStrength + pet.bpDefense + pet.bpAgility + pet.bpMagic,
+        synergy: synergyInfo,
       };
     }),
 

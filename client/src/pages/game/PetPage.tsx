@@ -41,6 +41,18 @@ const TIER_COLOR: Record<string, string> = {
   S: "#ff6b6b", A: "#ffa502", B: "#2ed573", C: "#70a1ff", D: "#a4b0be", E: "#636e72",
 };
 
+// ─── 命格協同配置 ─────────────────────────────────────────────
+const SYNERGY_CONFIG: Record<string, { label: string; emoji: string; color: string; bg: string; border: string; desc: string }> = {
+  same:     { label: "命格共鳴", emoji: "✨", color: "#f59e0b", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.25)", desc: "寵物五行與主人命格相同，全屬性 +15%" },
+  generate: { label: "五行相生", emoji: "🌱", color: "#22c55e", bg: "rgba(34,197,94,0.08)", border: "rgba(34,197,94,0.25)", desc: "寵物五行受主人命格相生，全屬性 +8%" },
+  overcome: { label: "五行相剋", emoji: "⚠️", color: "#ef4444", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)", desc: "寵物五行受主人命格相剋，全屬性 -5%" },
+  neutral:  { label: "無協同", emoji: "➖", color: "#64748b", bg: "rgba(100,116,139,0.05)", border: "rgba(100,116,139,0.15)", desc: "寵物五行與主人命格無特殊關係" },
+  none:     { label: "無協同", emoji: "➖", color: "#64748b", bg: "rgba(100,116,139,0.05)", border: "rgba(100,116,139,0.15)", desc: "寵物五行與主人命格無特殊關係" },
+};
+const FATE_ZH: Record<string, string> = {
+  wood: "青龍命", fire: "朱雀命", earth: "麒麟命", metal: "白虎命", water: "玄武命",
+};
+
 type ViewMode = "list" | "detail" | "catalog";
 
 export default function PetPage() {
@@ -183,11 +195,22 @@ export default function PetPage() {
                 {RARITY_ZH[catalog?.rarity ?? "common"]}
               </span>
             </div>
-            <div className="flex items-center gap-3 mt-1">
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="text-gray-400 text-xs">Lv.{pet.level}</span>
               <span className="text-xs" style={{ color: wuxingColor }}>{WX_ZH[catalog?.wuxing ?? "earth"]}屬</span>
               <span className="text-gray-500 text-xs">{RACE_ZH[catalog?.race ?? "normal"]}</span>
               <span className="text-gray-500 text-xs">BP:{totalBp}</span>
+              {pet.synergy && pet.synergy.type !== "neutral" && pet.synergy.type !== "none" && (() => {
+                const syn = SYNERGY_CONFIG[pet.synergy.type];
+                if (!syn) return null;
+                const pct = Math.round((pet.synergy.multiplier - 1) * 100);
+                return (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                    style={{ color: syn.color, background: `${syn.color}15`, border: `1px solid ${syn.color}30` }}>
+                    {syn.emoji} {syn.label} {pct > 0 ? "+" : ""}{pct}%
+                  </span>
+                );
+              })()}
             </div>
             <div className="mt-1.5 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.1)" }}>
               <div className="h-full rounded-full transition-all" style={{
@@ -282,6 +305,43 @@ export default function PetPage() {
             </button>
           )}
         </div>
+
+        {/* ── 命格協同卡片 ── */}
+        {petDetail.synergy && (() => {
+          const syn = SYNERGY_CONFIG[petDetail.synergy.type] ?? SYNERGY_CONFIG.none;
+          const ownerFateLabel = FATE_ZH[petDetail.synergy.ownerFate] ?? petDetail.synergy.ownerFate;
+          const petElLabel = WX_ZH[petDetail.synergy.petElement] ?? petDetail.synergy.petElement;
+          const bonusPct = Math.round((petDetail.synergy.multiplier - 1) * 100);
+          return (
+            <div className="rounded-2xl p-3 relative overflow-hidden"
+              style={{ background: syn.bg, border: `1px solid ${syn.border}` }}>
+              <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10 blur-2xl" style={{ background: syn.color }} />
+              <div className="relative flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
+                  style={{ background: `${syn.color}15`, border: `1px solid ${syn.color}30` }}>
+                  {syn.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold" style={{ color: syn.color }}>{syn.label}</span>
+                    {bonusPct !== 0 && (
+                      <span className="text-xs px-1.5 py-0.5 rounded-full font-bold"
+                        style={{ color: bonusPct > 0 ? "#22c55e" : "#ef4444", background: bonusPct > 0 ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)" }}>
+                        {bonusPct > 0 ? "+" : ""}{bonusPct}%
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">{syn.desc}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] text-gray-500">主人：{ownerFateLabel}</span>
+                    <span className="text-[10px] text-gray-600">·</span>
+                    <span className="text-[10px]" style={{ color: WX_HEX[petDetail.synergy.petElement] ?? "#888" }}>寵物：{petElLabel}屬</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── BP 五維雷達圖 ── */}
         <SectionCard title="📊 BP 五維分佈" accentColor={wuxingColor}>

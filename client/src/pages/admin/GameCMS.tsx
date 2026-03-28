@@ -506,6 +506,7 @@ export default function GameCMS() {
             <TabsTrigger value="value-engine">💎 價值引擎</TabsTrigger>
             <TabsTrigger value="game-guide">📖 遊戲指南</TabsTrigger>
             <TabsTrigger value="roaming-boss">👹 Boss 管理</TabsTrigger>
+            <TabsTrigger value="combat-sim">⚔️ 戰鬥模擬</TabsTrigger>
           </TabsList>
 
           <Card>
@@ -534,6 +535,7 @@ export default function GameCMS() {
               <TabsContent value="value-engine"><ValueEngineTab /></TabsContent>
               <TabsContent value="game-guide"><GameGuideTab /></TabsContent>
               <TabsContent value="roaming-boss"><RoamingBossTab /></TabsContent>
+              <TabsContent value="combat-sim"><CombatSimulatorPanel /></TabsContent>
             </CardContent>
           </Card>
         </Tabs>
@@ -1956,11 +1958,10 @@ function GD028ConfigPanel() {
     </div>
   );
 
-  // 經驗值曲線預覽
-  const expPreview = [1, 5, 10, 20, 30, 40, 50, 60].map(lv => {
-    const base = form.expCurveBase ?? 80;
-    const logScale = form.expCurveLogScale ?? 0.5;
-    const exp = lv >= 60 ? 999999 : lv <= 0 ? base : Math.floor(base * lv * (1 + Math.log(lv) * logScale));
+  // 經驗值曲線預覽（V3 變指數公式）
+  const expPreview = [1, 5, 10, 20, 30, 50, 70, 90, 99].map(lv => {
+    const A = 2, B = 1.6, C = 0.25;
+    const exp = lv <= 0 ? 1 : lv >= 99 ? 999999 : Math.floor(A * Math.pow(lv, B + C * Math.log(lv)));
     return { lv, exp };
   });
 
@@ -1975,12 +1976,9 @@ function GD028ConfigPanel() {
 
       {/* 經驗值曲線 */}
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-        <h4 className="text-xs font-bold text-cyan-400 mb-3">📈 經驗值曲線（線性+對數混合）</h4>
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          {field("expCurveBase", "基礎係數", 5, 10, 500)}
-          {field("expCurveLogScale", "對數係數", 0.1, 0.1, 3.0)}
-        </div>
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 text-center">
+        <h4 className="text-xs font-bold text-cyan-400 mb-3">📈 經驗值曲線（V3 變指數公式）</h4>
+        <p className="text-[10px] text-muted-foreground mb-3">V3 公式：2 × level^(1.6 + 0.25 × ln(level))，滿級 Lv.99</p>
+        <div className="grid grid-cols-3 sm:grid-cols-9 gap-2 text-center">
           {expPreview.map(({ lv, exp }) => (
             <div key={lv} className="p-1.5 rounded bg-white/5">
               <div className="text-[10px] text-muted-foreground">Lv.{lv}</div>
@@ -1988,7 +1986,7 @@ function GD028ConfigPanel() {
             </div>
           ))}
         </div>
-        <p className="text-[10px] text-muted-foreground mt-2">公式：base × level × (1 + ln(level) × logScale)</p>
+        <p className="text-[10px] text-muted-foreground mt-2">目標：Lv.1→10 累計 ~1,000 / Lv.90→99 累計 ~5,000,000</p>
       </div>
 
       {/* 職業加成 */}
@@ -2098,7 +2096,223 @@ function GD028ConfigPanel() {
   );
 }
 
-// ─── Catalog Stats Tab ────────────────────────────────────────────────────────────────────────────────
+// ─── Combat Simulator Panel ────────────────────────────────────────────────────────────────────────────────────────────────────
+const PROFESSIONS_LIST = [
+  { value: "none", label: "無職業" },
+  { value: "hunter", label: "🏹 獵人" },
+  { value: "mage", label: "🔮 法師" },
+  { value: "tank", label: "🛡️ 鬥士" },
+  { value: "thief", label: "🗡️ 盜賊" },
+  { value: "wizard", label: "🪄 巫師" },
+];
+const FATES_LIST = [
+  { value: "", label: "無命格" },
+  { value: "wood", label: "🐲 青龍命" },
+  { value: "fire", label: "🔥 朱雀命" },
+  { value: "earth", label: "🦄 麒麟命" },
+  { value: "metal", label: "🐯 白虎命" },
+  { value: "water", label: "🐢 玄武命" },
+];
+const RACES_LIST = [
+  { value: "human", label: "人族" },
+  { value: "elf", label: "精靈" },
+  { value: "beastkin", label: "獸族" },
+  { value: "undead", label: "不死族" },
+  { value: "demon", label: "魔族" },
+];
+
+function CombatSimulatorPanel() {
+  const simMut = trpc.gameAdmin.simulateCombat.useMutation();
+  const [rounds, setRounds] = useState(10);
+  const [showLog, setShowLog] = useState(false);
+
+  const defaultAgent = {
+    level: 10,
+    race: "human",
+    profession: "none",
+    fateElement: "",
+    wuxing: { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 },
+    potential: { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 },
+  };
+  const [agentA, setAgentA] = useState({ ...defaultAgent });
+  const [agentB, setAgentB] = useState({ ...defaultAgent, level: 10 });
+
+  const handleSimulate = () => {
+    simMut.mutate({ agentA, agentB, rounds });
+  };
+
+  const AgentForm = ({ agent, setAgent, label, color }: { agent: typeof defaultAgent; setAgent: (a: typeof defaultAgent) => void; label: string; color: string }) => (
+    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
+      <h4 className="text-sm font-bold" style={{ color }}>{label}</h4>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <label className="text-[10px] text-muted-foreground">等級</label>
+          <input type="number" min={1} max={99} value={agent.level}
+            onChange={e => setAgent({ ...agent, level: parseInt(e.target.value) || 1 })}
+            className="w-full px-2 py-1 rounded bg-white/5 border border-white/10 text-sm text-white" />
+        </div>
+        <div>
+          <label className="text-[10px] text-muted-foreground">種族</label>
+          <select value={agent.race} onChange={e => setAgent({ ...agent, race: e.target.value })}
+            className="w-full px-2 py-1 rounded bg-white/5 border border-white/10 text-sm text-white">
+            {RACES_LIST.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-[10px] text-muted-foreground">職業</label>
+          <select value={agent.profession} onChange={e => setAgent({ ...agent, profession: e.target.value })}
+            className="w-full px-2 py-1 rounded bg-white/5 border border-white/10 text-sm text-white">
+            {PROFESSIONS_LIST.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+          </select>
+        </div>
+      </div>
+      <div>
+        <label className="text-[10px] text-muted-foreground">命格</label>
+        <select value={agent.fateElement} onChange={e => setAgent({ ...agent, fateElement: e.target.value })}
+          className="w-full px-2 py-1 rounded bg-white/5 border border-white/10 text-sm text-white">
+          {FATES_LIST.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+        </select>
+      </div>
+      <div>
+        <label className="text-[10px] text-muted-foreground">五行點數（合計 100）</label>
+        <div className="grid grid-cols-5 gap-1">
+          {(["wood", "fire", "earth", "metal", "water"] as const).map(el => (
+            <div key={el} className="text-center">
+              <div className="text-[9px] text-muted-foreground">{{
+                wood: "木", fire: "火", earth: "土", metal: "金", water: "水"
+              }[el]}</div>
+              <input type="number" min={0} max={100} value={agent.wuxing[el]}
+                onChange={e => setAgent({ ...agent, wuxing: { ...agent.wuxing, [el]: parseInt(e.target.value) || 0 } })}
+                className="w-full px-1 py-0.5 rounded bg-white/5 border border-white/10 text-xs text-white text-center" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="text-[10px] text-muted-foreground">潛能點數分配</label>
+        <div className="grid grid-cols-3 gap-1">
+          {(["hp", "mp", "atk", "def", "spd", "matk"] as const).map(stat => (
+            <div key={stat} className="text-center">
+              <div className="text-[9px] text-muted-foreground">{stat.toUpperCase()}</div>
+              <input type="number" min={0} max={500} value={agent.potential[stat]}
+                onChange={e => setAgent({ ...agent, potential: { ...agent.potential, [stat]: parseInt(e.target.value) || 0 } })}
+                className="w-full px-1 py-0.5 rounded bg-white/5 border border-white/10 text-xs text-white text-center" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const result = simMut.data;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold flex items-center gap-2">⚔️ GM 戰鬥模擬器</h3>
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] text-muted-foreground">模擬場數</label>
+          <input type="number" min={1} max={100} value={rounds}
+            onChange={e => setRounds(parseInt(e.target.value) || 10)}
+            className="w-16 px-2 py-1 rounded bg-white/5 border border-white/10 text-sm text-white" />
+          <Button size="sm" onClick={handleSimulate} disabled={simMut.isPending}>
+            {simMut.isPending ? "模擬中..." : "🎮 開始模擬"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <AgentForm agent={agentA} setAgent={setAgentA} label="🔵 角色 A" color="#3b82f6" />
+        <AgentForm agent={agentB} setAgent={setAgentB} label="🔴 角色 B" color="#ef4444" />
+      </div>
+
+      {result && (
+        <div className="space-y-4">
+          {/* 勝率統計 */}
+          <div className="rounded-xl border border-white/10 bg-gradient-to-r from-blue-500/10 via-transparent to-red-500/10 p-4">
+            <div className="text-center mb-3">
+              <div className="text-xs text-muted-foreground">模擬 {result.summary.total} 場戰鬥</div>
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <div className="text-center">
+                <div className="text-3xl font-black text-blue-400">{result.summary.winRateA}%</div>
+                <div className="text-xs text-blue-300">角色 A 勝率</div>
+                <div className="text-[10px] text-muted-foreground">{result.summary.winsA} 勝</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-gray-500">VS</div>
+                <div className="text-[10px] text-muted-foreground">{result.summary.draws} 平</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-black text-red-400">{result.summary.winRateB}%</div>
+                <div className="text-xs text-red-300">角色 B 勝率</div>
+                <div className="text-[10px] text-muted-foreground">{result.summary.winsB} 勝</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 屬性對比 */}
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <h4 className="text-xs font-bold text-amber-400 mb-3">📊 屬性對比</h4>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+              {([
+                { key: "hp", label: "HP", color: "#22c55e" },
+                { key: "mp", label: "MP", color: "#38bdf8" },
+                { key: "atk", label: "ATK", color: "#ef4444" },
+                { key: "def", label: "DEF", color: "#f59e0b" },
+                { key: "spd", label: "SPD", color: "#e2e8f0" },
+                { key: "matk", label: "MATK", color: "#a855f7" },
+                { key: "mdef", label: "MDEF", color: "#14b8a6" },
+                { key: "spr", label: "SPR", color: "#6366f1" },
+                { key: "critRate", label: "暴擊%", color: "#f97316" },
+                { key: "critDamage", label: "暴傷%", color: "#f97316" },
+              ] as const).map(({ key, label, color }) => {
+                const vA = (result.statsA as any)[key] ?? 0;
+                const vB = (result.statsB as any)[key] ?? 0;
+                const winner = vA > vB ? "A" : vB > vA ? "B" : "";
+                return (
+                  <div key={key} className="flex items-center justify-between py-0.5">
+                    <span className={`text-xs font-mono ${winner === "A" ? "text-blue-400 font-bold" : "text-gray-400"}`}>{vA}</span>
+                    <span className="text-[10px] px-2" style={{ color }}>{label}</span>
+                    <span className={`text-xs font-mono ${winner === "B" ? "text-red-400 font-bold" : "text-gray-400"}`}>{vB}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 戰鬥日誌 */}
+          {result.sampleBattles.length > 0 && (
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <button onClick={() => setShowLog(!showLog)}
+                className="text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors">
+                {showLog ? "▼" : "▶"} 戰鬥日誌樣本（前 {result.sampleBattles.length} 場）
+              </button>
+              {showLog && (
+                <div className="mt-3 space-y-3">
+                  {result.sampleBattles.map((b: any, i: number) => (
+                    <div key={i} className="rounded-lg bg-black/30 p-3">
+                      <div className="text-xs font-bold mb-1" style={{ color: b.winner === "A" ? "#3b82f6" : b.winner === "B" ? "#ef4444" : "#64748b" }}>
+                        第 {i + 1} 場：{b.winner === "A" ? "角色A勝" : b.winner === "B" ? "角色B勝" : "平手"}（{b.rounds} 回合）
+                      </div>
+                      <div className="space-y-0.5 max-h-40 overflow-y-auto">
+                        {b.log.map((line: string, j: number) => (
+                          <div key={j} className="text-[10px] text-gray-400 font-mono">{line}</div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Catalog Stats Tab ────────────────────────────────────────────────────────────────────────────────────────────────────
 function CatalogStatsTab() {
   const { data, isLoading } = trpc.gameCatalog.getCatalogStats.useQuery();
 

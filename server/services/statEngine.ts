@@ -832,24 +832,29 @@ export function getPetSynergyDesc(synergyType: PetFullStats["synergyType"]): str
 // ═══════════════════════════════════════════════════════════════
 // 十一、經驗值曲線（GD-028 步驟 7）
 // ═══════════════════════════════════════════════════════════════
-
 /**
- * 新版經驗值曲線（線性+對數混合）
+ * 經驗值曲線 V3 ── 變指數公式（對齊 GD-028）
  *
- * 舊版：100 × 1.4^(level-1) → 指數爆炸，Lv30 需要 2.4 億經驗
- * 新版：線性基礎 + 對數增長，更平滑
+ * 舊版 V1 使用 100 × 1.4^(level-1) 指數成長，到 Lv.30 就要 2400 萬經驗。
+ * V2 使用線性×對數，但 Lv.60 硬上限且不符合 GD-028 目標。
+ * V3 使用變指數公式，指數隨等級平滑增加：
  *
- * 公式：base × level × (1 + ln(level) × logScale)
- *   - base = 80（基礎經驗值）
- *   - logScale = 0.5（對數增長係數）
+ * expToNext(lv) = floor(A × lv^(B + C × ln(lv)))
  *
- * Lv1:  80, Lv10: 1720, Lv30: 6480, Lv60: 17280
- * 比舊版溫和很多，但仍有明顯的等級門檻感
+ * 預設 A=2, B=1.6, C=0.25 時：
+ * Lv.1→10 累計 ≈ 982（GD-028 目標 ~1,000）
+ * Lv.90→99 累計 ≈ 5,133,476（GD-028 目標 ~5,000,000）
+ * 滿級 Lv.99，無硬上限
  */
-export function calcExpToNextV2(level: number, base: number = 80, logScale: number = 0.5): number {
-  if (level >= 60) return 999999;
-  if (level <= 0) return base;
-  return Math.floor(base * level * (1 + Math.log(level) * logScale));
+export function calcExpToNextV2(
+  level: number,
+  A: number = 2,
+  B: number = 1.6,
+  C: number = 0.25
+): number {
+  if (level >= 99) return 999999; // Lv.99 滿級標記
+  if (level <= 0) return Math.floor(A);
+  return Math.floor(A * Math.pow(level, B + C * Math.log(level)));
 }
 
 /**

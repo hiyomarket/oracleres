@@ -3282,6 +3282,54 @@ export const gameWorldRouter = router({
         createdAt: now,
       });
 
+      // GD-028 步驟 10：轉職後自動解鎖職業技能
+      const unlockedSkills: string[] = [];
+      try {
+        const { getProfessionUnlockSkills } = await import("../services/skillLearningEngine");
+        const allSkills = await db.select({
+          skillId: gameSkillCatalog.skillId,
+          professionRequired: gameSkillCatalog.professionRequired,
+          acquireMethod: gameSkillCatalog.acquireMethod,
+          learnLevel: gameSkillCatalog.learnLevel,
+          skillTier: gameSkillCatalog.skillTier,
+        }).from(gameSkillCatalog).where(eq(gameSkillCatalog.isActive, 1));
+
+        const learnedSkills = await db.select({ skillId: agentSkills.skillId })
+          .from(agentSkills)
+          .where(eq(agentSkills.agentId, agent.id));
+        const learnedSet = new Set(learnedSkills.map(s => s.skillId));
+
+        const newSkillIds = getProfessionUnlockSkills(
+          input.profession as import("../services/statEngine").Profession,
+          allSkills as any,
+          agent.level,
+          learnedSet,
+        );
+
+        if (newSkillIds.length > 0) {
+          await db.insert(agentSkills).values(
+            newSkillIds.map(skillId => ({
+              agentId: agent.id,
+              skillId,
+              awakeTier: 0,
+              useCount: 0,
+            }))
+          );
+          unlockedSkills.push(...newSkillIds);
+
+          await db.insert(agentEvents).values({
+            agentId: agent.id,
+            eventType: "system",
+            message: `🌟 轉職解鎖了 ${newSkillIds.length} 個職業技能！`,
+            details: JSON.stringify({ type: "profession_skill_unlock", skills: newSkillIds }),
+            nodeId: agent.currentNodeId ?? "node_start",
+            createdAt: Date.now(),
+          });
+        }
+      } catch (e) {
+        console.error("[changeProfession] 職業技能解鎖失敗:", e);
+      }
+
       const [updated] = await db.select().from(gameAgents)
         .where(eq(gameAgents.id, agent.id)).limit(1);
 
@@ -3289,7 +3337,8 @@ export const gameWorldRouter = router({
         success: true,
         agent: updated,
         goldSpent: profDef.goldCost,
-        message: `成功轉職為${profDef.label}！`,
+        unlockedSkills,
+        message: `成功轉職為${profDef.label}！` + (unlockedSkills.length > 0 ? ` 解鎖了 ${unlockedSkills.length} 個職業技能。` : ""),
       };
     }),
 
