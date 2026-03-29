@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import ItemKeySearchSelect from "@/components/admin/ItemKeySearchSelect";
 import { useLocation } from "wouter";
 import { MonsterPreview, ItemPreview, SkillPreview, AchievementPreview } from "@/components/CatalogPreview";
 import { lazy, Suspense } from "react";
@@ -280,10 +281,12 @@ export default function GameCMS() {
                 <Tabs defaultValue="game-guide">
                   <TabsList className="mb-4 flex-wrap h-auto gap-1">
                     <TabsTrigger value="game-guide">📖 遊戲指南</TabsTrigger>
+                    <TabsTrigger value="enhance-config">⚔️ 強化設定</TabsTrigger>
                     <TabsTrigger value="broadcast">📢 全服廣播</TabsTrigger>
                     <TabsTrigger value="sys-reset" className="text-red-400">🔴 世界重置</TabsTrigger>
                   </TabsList>
                   <TabsContent value="game-guide"><GameGuideTab /></TabsContent>
+                  <TabsContent value="enhance-config"><Suspense fallback={<p className="text-muted-foreground p-4">載入中…</p>}><EnhanceConfigTab /></Suspense></TabsContent>
                   <TabsContent value="broadcast"><Suspense fallback={<p className="text-muted-foreground p-4">載入中…</p>}><AdminGameTheaterInline section="broadcast" /></Suspense></TabsContent>
                   <TabsContent value="sys-reset"><Suspense fallback={<p className="text-muted-foreground p-4">載入中…</p>}><AdminGameTheaterInline section="reset" /></Suspense></TabsContent>
                 </Tabs>
@@ -518,7 +521,7 @@ function VirtualShopTab() {
           <DialogHeader><DialogTitle>新增虛界商店商品</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="道具 Key（對應遊戲道具）" value={form.itemKey} onChange={e => setForm(f => ({ ...f, itemKey: e.target.value }))} />
+              <ItemKeySearchSelect value={form.itemKey} onChange={(key, name) => setForm(f => ({ ...f, itemKey: key, displayName: name || f.displayName }))} placeholder="搜尋道具名稱或 Key…" />
               <Input placeholder="顯示名稱" value={form.displayName} onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))} />
             </div>
             <Textarea placeholder="商品描述" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
@@ -670,7 +673,7 @@ function SpiritShopTab() {
           <DialogHeader><DialogTitle>新增靈相商店商品</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="道具 Key" value={form.itemKey} onChange={e => setForm(f => ({ ...f, itemKey: e.target.value }))} />
+              <ItemKeySearchSelect value={form.itemKey} onChange={(key, name) => setForm(f => ({ ...f, itemKey: key, displayName: name || f.displayName }))} placeholder="搜尋道具名稱或 Key…" />
               <Input placeholder="顯示名稱" value={form.displayName} onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))} />
             </div>
             <Textarea placeholder="商品描述" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
@@ -834,7 +837,7 @@ function HiddenShopTab() {
           <DialogHeader><DialogTitle>新增密店商品</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="道具 Key" value={form.itemKey} onChange={e => setForm(f => ({ ...f, itemKey: e.target.value }))} />
+              <ItemKeySearchSelect value={form.itemKey} onChange={(key, name) => setForm(f => ({ ...f, itemKey: key, displayName: name || f.displayName }))} placeholder="搜尋道具名稱或 Key…" />
               <Input placeholder="顯示名稱" value={form.displayName} onChange={e => setForm(f => ({ ...f, displayName: e.target.value }))} />
             </div>
             <Textarea placeholder="商品描述" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} />
@@ -5047,5 +5050,163 @@ function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; on
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+
+// ─── 強化系統設定面板 ─────────────────────────────────────────────
+function EnhanceConfigTab() {
+  const cfgQuery = trpc.equipEnhance.getAdminEnhanceConfig.useQuery();
+  const updateMut = trpc.equipEnhance.updateAdminEnhanceConfig.useMutation({
+    onSuccess: () => { cfgQuery.refetch(); toast.success("強化設定已更新"); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const [maxLevel, setMaxLevel] = useState(20);
+  const [rates, setRates] = useState<Record<number, { success: number; destroy: number; bonus: number }>>({});
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (cfgQuery.data && !initialized) {
+      const cfg = cfgQuery.data;
+      setMaxLevel(cfg.maxLevel);
+      const merged: Record<number, { success: number; destroy: number; bonus: number }> = {};
+      for (let i = 0; i <= cfg.maxLevel; i++) {
+        merged[i] = {
+          success: (cfg.successRates[i] ?? 0) * 100,
+          destroy: (cfg.destroyRates[i] ?? 0) * 100,
+          bonus: (cfg.statBonus[i] ?? 0) * 100,
+        };
+      }
+      setRates(merged);
+      setInitialized(true);
+    }
+  }, [cfgQuery.data, initialized]);
+
+  const handleSave = () => {
+    const successRates: Record<number, number> = {};
+    const destroyRates: Record<number, number> = {};
+    const statBonus: Record<number, number> = {};
+    for (let i = 0; i <= maxLevel; i++) {
+      const r = rates[i] ?? { success: 0, destroy: 0, bonus: 0 };
+      successRates[i] = r.success / 100;
+      destroyRates[i] = r.destroy / 100;
+      statBonus[i] = r.bonus / 100;
+    }
+    updateMut.mutate({ maxLevel, successRates, destroyRates, statBonus });
+  };
+
+  const updateRate = (level: number, field: "success" | "destroy" | "bonus", val: number) => {
+    setRates(prev => ({ ...prev, [level]: { ...(prev[level] ?? { success: 0, destroy: 0, bonus: 0 }), [field]: val } }));
+  };
+
+  if (cfgQuery.isLoading) return <p className="text-muted-foreground p-4">載入強化設定中…</p>;
+
+  // 安定值資訊
+  const safeInfo = [
+    { type: "武器", safe: 6, desc: "+0~+6 必定成功" },
+    { type: "防具", safe: 4, desc: "+0~+4 必定成功" },
+    { type: "飾品", safe: 2, desc: "+0~+2 必定成功" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-bold">裝備強化系統設定</h3>
+          <p className="text-sm text-muted-foreground">調整各等級的強化成功率、爆裝率和數值加成百分比</p>
+        </div>
+        <Button onClick={handleSave} disabled={updateMut.isPending} className="bg-orange-600 hover:bg-orange-700">
+          {updateMut.isPending ? "儲存中…" : "💾 儲存設定"}
+        </Button>
+      </div>
+
+      {/* 安定值說明 */}
+      <div className="grid grid-cols-3 gap-3">
+        {safeInfo.map(s => (
+          <div key={s.type} className="p-3 rounded-lg border bg-muted/30 text-center">
+            <div className="text-sm font-bold">{s.type}</div>
+            <div className="text-xs text-muted-foreground">安定值 +{s.safe}</div>
+            <div className="text-xs text-emerald-400">{s.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* 最大等級設定 */}
+      <div className="flex items-center gap-3">
+        <Label className="text-sm font-medium">最大強化等級</Label>
+        <Input type="number" min={1} max={20} value={maxLevel} onChange={e => setMaxLevel(Number(e.target.value))} className="w-20 h-8 text-sm" />
+      </div>
+
+      {/* 等級表格 */}
+      <div className="rounded-lg border overflow-hidden">
+        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 sticky top-0 z-10">
+              <tr>
+                <th className="px-3 py-2 text-left font-medium w-16">等級</th>
+                <th className="px-3 py-2 text-left font-medium w-20">顏色</th>
+                <th className="px-3 py-2 text-center font-medium">成功率 %</th>
+                <th className="px-3 py-2 text-center font-medium">爆裝率 %<br/><span className="text-[10px] text-muted-foreground">（白卷，黃卷減半）</span></th>
+                <th className="px-3 py-2 text-center font-medium">數值加成 %</th>
+                <th className="px-3 py-2 text-center font-medium w-24">備註</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: maxLevel + 1 }, (_, i) => {
+                const r = rates[i] ?? { success: 0, destroy: 0, bonus: 0 };
+                const colorLabels = [
+                  "白","綠","藍","紫","橙","紅","金","白金","青","天藍",
+                  "星紫","深紅","烈焰橙","熔岩金","天命黃","神器青","傳說白金","太古銀","混沌紫紅","神聖金白","絕頂彩虹"
+                ];
+                const colorHexes = [
+                  "#94a3b8","#4ade80","#60a5fa","#a78bfa","#fb923c","#ef4444","#f59e0b","#fde68a","#34d399","#38bdf8",
+                  "#8b5cf6","#dc2626","#ea580c","#d97706","#eab308","#06b6d4","#e2e8f0","#cbd5e1","#c026d3","#fef9c3","rainbow"
+                ];
+                const isSafe = i <= 6; // at least some slot is safe
+                return (
+                  <tr key={i} className={`border-t ${i <= 2 ? "bg-emerald-950/20" : i <= 4 ? "bg-emerald-950/10" : i <= 6 ? "bg-emerald-950/5" : i >= 15 ? "bg-orange-950/20" : ""}`}>
+                    <td className="px-3 py-1.5 font-mono font-bold">+{i}</td>
+                    <td className="px-3 py-1.5">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-full inline-block border" style={{ background: colorHexes[i] === "rainbow" ? "linear-gradient(90deg, red, orange, yellow, green, blue, purple)" : colorHexes[i] }} />
+                        <span className="text-xs">{colorLabels[i]}</span>
+                      </span>
+                    </td>
+                    <td className="px-3 py-1.5 text-center">
+                      {i === 0 ? <span className="text-muted-foreground text-xs">—</span> : (
+                        <Input type="number" min={0} max={100} step={0.01} value={r.success} onChange={e => updateRate(i, "success", Number(e.target.value))} className="h-7 text-xs text-center w-20 mx-auto" />
+                      )}
+                    </td>
+                    <td className="px-3 py-1.5 text-center">
+                      {i === 0 ? <span className="text-muted-foreground text-xs">—</span> : (
+                        <Input type="number" min={0} max={100} step={0.1} value={r.destroy} onChange={e => updateRate(i, "destroy", Number(e.target.value))} className="h-7 text-xs text-center w-20 mx-auto" />
+                      )}
+                    </td>
+                    <td className="px-3 py-1.5 text-center">
+                      <Input type="number" min={0} max={999} step={0.1} value={r.bonus} onChange={e => updateRate(i, "bonus", Number(e.target.value))} className="h-7 text-xs text-center w-20 mx-auto" />
+                    </td>
+                    <td className="px-3 py-1.5 text-center text-[10px] text-muted-foreground">
+                      {i <= 2 && "飾品安定"}
+                      {i > 2 && i <= 4 && "防具安定"}
+                      {i > 4 && i <= 6 && "武器安定"}
+                      {i === 10 && "驟降關卡"}
+                      {i === 15 && "神器級"}
+                      {i === 20 && "絕頂"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="p-3 rounded-lg bg-muted/30 border text-xs text-muted-foreground space-y-1">
+        <p><strong>成功率：</strong>從當前等級升到下一級的機率。安定值內自動 100%。</p>
+        <p><strong>爆裝率：</strong>強化失敗時裝備消失的機率（白卷）。黃卷自動減半。未爆裝 = 閃光失敗（裝備保留）。</p>
+        <p><strong>數值加成：</strong>該等級對裝備基礎數值（HP/ATK/DEF/SPD/MATK/抗性）的加成百分比。</p>
+      </div>
+    </div>
   );
 }

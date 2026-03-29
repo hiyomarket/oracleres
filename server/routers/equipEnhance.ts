@@ -23,6 +23,7 @@ import {
   gameItemCatalog,
   equipEnhanceLogs,
   gameConfig,
+  chatMessages,
 } from "../../drizzle/schema";
 import {
   performEnhanceWithConfig,
@@ -261,6 +262,39 @@ export const equipEnhanceRouter = router({
 
       const fromInfo = getEnhanceLevelInfo(currentLevel);
       const toInfo = result.destroyed ? null : getEnhanceLevelInfo(result.newLevel);
+
+      // ─── 全服公告：超過安定值的強化成功 ───
+      const safeLevel = getSafeLevel(catalog.slot);
+      if (result.success && result.newLevel > safeLevel) {
+        try {
+          const announceMsg = `🎉 恭喜【${agent.agentName ?? "旅人"}】成功將【${catalog.name}】強化至 +${result.newLevel}（${toInfo?.label ?? ""}色）！`;
+          await db.insert(chatMessages).values({
+            agentId: 0,
+            agentName: "系統公告",
+            agentElement: "fire",
+            agentLevel: 0,
+            content: announceMsg.slice(0, 100),
+            msgType: "system",
+            createdAt: Date.now(),
+          });
+        } catch (_) { /* 公告失敗不影響強化結果 */ }
+      }
+
+      // ─── 全服公告：爆裝也廣播（高等級裝備爆裝） ───
+      if (result.destroyed && currentLevel >= safeLevel) {
+        try {
+          const destroyMsg = `💔 【${agent.agentName ?? "旅人"}】的【${catalog.name}】+${currentLevel} 強化失敗，裝備碎裂消失...`;
+          await db.insert(chatMessages).values({
+            agentId: 0,
+            agentName: "系統公告",
+            agentElement: "fire",
+            agentLevel: 0,
+            content: destroyMsg.slice(0, 100),
+            msgType: "system",
+            createdAt: Date.now(),
+          });
+        } catch (_) { /* 公告失敗不影響強化結果 */ }
+      }
 
       return {
         success: result.success,

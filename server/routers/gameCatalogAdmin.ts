@@ -138,7 +138,7 @@ const monsterCatalogInput = z.object({
 const itemCatalogInput = z.object({
   name: z.string().min(1).max(100),
   wuxing: z.enum(["木", "火", "土", "金", "水"]),
-  category: z.enum(["material_basic", "material_drop", "consumable", "quest", "treasure", "skillbook", "equipment_material"]).default("material_basic"),
+  category: z.enum(["material_basic", "material_drop", "material", "consumable", "quest", "treasure", "skillbook", "equipment_material", "scroll"]).default("material_basic"),
   rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
   stackLimit: z.number().int().positive().default(99),
   shopPrice: z.number().int().nonnegative().default(0),
@@ -151,7 +151,7 @@ const itemCatalogInput = z.object({
   stackable: z.number().int().min(0).max(1).default(1),
   usableInBattle: z.number().int().min(0).max(1).default(0),
   gatherLocations: z.array(z.object({ nodeId: z.string(), nodeName: z.string(), rate: z.number() })).nullish().default([]),
-  useEffect: z.object({ type: z.string(), value: z.number(), duration: z.number().optional(), description: z.string() }).nullish().default(null),
+  useEffect: z.object({ type: z.string().default(""), value: z.number().nullish().default(0), duration: z.number().nullish().default(0), description: z.string().default("") }).nullish().default(null),
   source: z.string().nullish().default(""),
   effect: z.string().nullish(),
   imageUrl: z.string().nullish().default(""),

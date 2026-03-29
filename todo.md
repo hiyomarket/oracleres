@@ -5752,3 +5752,17 @@
 - [x] AI 工具區「天命考核」標籤改為「技能學習」
 - [x] 移除未使用的 QuestSkillCMSTab import
 - [x] 26 個新 vitest 測試全部通過，舊版 59 個測試無回歸
+
+## v5.15 - 強化系統改造 + 道具圖鑑 bug + 商店管理 UI
+
+- [x] 修復道具圖鑑更新/複製時 category enum 驗證錯誤（新增 material 和 scroll 兩個合法分類）
+- [x] 修復道具圖鑑 useEffect.value 類型錯誤（後端改為 optional，前端清理 undefined 為 0）
+- [x] 後台建立強化機率和增幅百分比的管理面板（系統管理 > 強化設定）
+- [x] 重設計強化頁面 /game/enhance UI（強化區置頂、卷軸選擇中間、裝備列表下方、等級表/預覽用彈窗）
+- [x] 簡化強化操作流程（選裝備+卷軸後一鍵強化，可快速連續點擊）
+- [x] 強化超過安定值成功時，在聊天大廳發送全服公告（成功/爆裝都會廣播）
+- [x] 改進虛界商店管理 UI（新增 ItemKeySearchSelect 搜尋選擇器取代手動輸入）
+- [x] 改進密店商品池管理 UI（新增 ItemKeySearchSelect 搜尋選擇器取代手動輸入）
+- [x] 靈相商店管理 UI 同步改進（ItemKeySearchSelect）
+- [x] 遊戲劇院商店管理 UI 同步改進（ItemKeySearchSelect）
+- [x] 112 個 vitest 測試全部通過（含 27 個新測試）

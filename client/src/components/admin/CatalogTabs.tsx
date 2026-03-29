@@ -1056,11 +1056,13 @@ function MonsterDetailCard({ monster: m, skillOpts, itemOpts }: { monster: any; 
 const ITEM_CAT_OPTS = [
   { value: "material_basic", label: "基礎素材" },
   { value: "material_drop", label: "怪物掉落" },
+  { value: "material", label: "一般素材" },
   { value: "consumable", label: "消耗品" },
   { value: "quest", label: "任務道具" },
   { value: "treasure", label: "珍寶天命" },
   { value: "skillbook", label: "技能書" },
   { value: "equipment_material", label: "裝備材料" },
+  { value: "scroll", label: "卷軸" },
 ];
 const ITEM_CAT_FILTER = [{ value: "", label: "全部分類" }, ...ITEM_CAT_OPTS];
 
@@ -1138,6 +1140,19 @@ export function ItemCatalogV2Tab() {
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
     ["inNormalShop", "inSpiritShop", "inSecretShop", "isMonsterDrop", "isActive", "usableInBattle", "stackable"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
+    // Sanitize useEffect: ensure value/duration are numbers, or null out empty effects
+    if (data.useEffect) {
+      if (!data.useEffect.type || data.useEffect.type === "") {
+        data.useEffect = null;
+      } else {
+        data.useEffect = {
+          type: data.useEffect.type || "",
+          value: Number(data.useEffect.value) || 0,
+          duration: Number(data.useEffect.duration) || 0,
+          description: data.useEffect.description || "",
+        };
+      }
+    }
     if (editItem && editItem.id != null) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 

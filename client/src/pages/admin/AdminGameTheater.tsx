@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import ItemKeySearchSelect from "@/components/admin/ItemKeySearchSelect";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
@@ -2371,8 +2372,8 @@ export function ShopManagementTab() {
           <CardContent>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">道具 Key（如 I_W001）</p>
-                <Input value={form.itemKey} onChange={e => setForm(f => ({ ...f, itemKey: e.target.value }))} placeholder="I_W001" />
+                <p className="text-xs text-muted-foreground mb-1">道具 Key</p>
+                <ItemKeySearchSelect value={form.itemKey} onChange={(key, name) => setForm(f => ({ ...f, itemKey: key, displayName: name || f.displayName }))} placeholder="搜尋道具名稱或 Key…" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground mb-1">顯示名稱</p>
