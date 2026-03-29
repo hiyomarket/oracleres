@@ -2035,12 +2035,15 @@ export const gameWorldRouter = router({
       if (input?.wuxing) rows = rows.filter(r => r.wuxing === input.wuxing);
       if (input?.slot) rows = rows.filter(r => r.slot === input.slot);
       if (input?.tier) rows = rows.filter(r => r.tier === input.tier);
-      const equippedIds = agent ? [
-        agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
-        agent.equippedBody, agent.equippedHands, agent.equippedFeet,
-        agent.equippedRingA, agent.equippedRingB, agent.equippedNecklace, agent.equippedAmulet,
-      ].filter(Boolean) : [];
-      return rows.map(r => ({ ...r, isEquipped: equippedIds.includes(r.equipId) }));
+      // ★ 以 agentInventory.isEquipped 為唯一真相源
+      let equippedItemIds: string[] = [];
+      if (agent) {
+        const equippedInv = await db.select({ itemId: agentInventory.itemId })
+          .from(agentInventory)
+          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.isEquipped, 1), eq(agentInventory.itemType, "equipment")));
+        equippedItemIds = equippedInv.map(i => i.itemId);
+      }
+      return rows.map(r => ({ ...r, isEquipped: equippedItemIds.includes(r.equipId) }));
     }),
 
   // ─── 背包中的裝備道具（含圖鑑屬性，供裝備槽選取 Modal 使用）───
@@ -2061,12 +2064,7 @@ export const gameWorldRouter = router({
       const catalogRows = await db.select().from(gameEquipmentCatalog)
         .where(inArray(gameEquipmentCatalog.equipId, equipIds));
       const catalogMap = new Map(catalogRows.map(r => [r.equipId, r]));
-      // 已裝備的 equipId 列表
-      const equippedIds = [
-        agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
-        agent.equippedBody, agent.equippedHands, agent.equippedFeet,
-        agent.equippedRingA, agent.equippedRingB, agent.equippedNecklace, agent.equippedAmulet,
-      ].filter(Boolean) as string[];
+      // ★ 不再依賴 gameAgents 欄位，直接用 agentInventory.isEquipped 判斷
       // 圖鑑 slot 到前端 slot 的映射（用於篩選）
       // 圖鑑中的 slot: weapon, offhand, helmet, armor, shoes, accessory
       // 前端的 slot: weapon, offhand, head(=helmet), body(=armor), hands(=gloves), feet(=shoes), ringA/ringB/necklace/amulet(=accessory)
@@ -2110,7 +2108,8 @@ export const gameWorldRouter = router({
           baseDefenseBonus: cat?.defenseBonus ?? 0,
           baseSpeedBonus: cat?.speedBonus ?? 0,
           baseMatkBonus: cat?.magicAttackBonus ?? 0,
-          isEquipped: equippedIds.includes(inv.itemId),
+          isEquipped: inv.isEquipped === 1,
+          equippedSlot: inv.equippedSlot,
           imageUrl: cat?.imageUrl ?? null,
         };
       }).filter(r => !filterCatalogSlot || r.slot === filterCatalogSlot);
@@ -2169,63 +2168,109 @@ export const gameWorldRouter = router({
 
   // ─── 裝備/卸下裝備 ───
   equipItem: protectedProcedure
-    .input(z.object({ equipId: z.string(), action: z.enum(["equip", "unequip"]) }))
+    .input(z.object({
+      inventoryId: z.number().int(),
+      action: z.enum(["equip", "unequip"]),
+      // 向後相容：舊前端可能傳 equipId，但新邏輯以 inventoryId 為主
+      equipId: z.string().optional(),
+    }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const agents = await db.select().from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
       if (!agents[0]) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
       const agent = agents[0];
-      const [equip] = await db.select().from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.equipId, input.equipId)).limit(1);
-      if (!equip) throw new TRPCError({ code: "NOT_FOUND", message: "裝備不存在" });
-      // 圖鑑 slot → 角色裝備欄位映射
-      // accessory 類型裝備會自動分配到空的飾品欄位
-      const SLOT_MAP: Record<string, string> = {
+
+      // ★ 以 inventoryId 精確定位到該件裝備實例
+      const [inv] = await db.select().from(agentInventory)
+        .where(and(
+          eq(agentInventory.id, input.inventoryId),
+          eq(agentInventory.agentId, agent.id),
+          eq(agentInventory.itemType, "equipment"),
+        )).limit(1);
+      if (!inv) throw new TRPCError({ code: "NOT_FOUND", message: "背包中找不到該裝備" });
+
+      // 查詢圖鑑以取得 slot 資訊
+      const [equip] = await db.select().from(gameEquipmentCatalog)
+        .where(eq(gameEquipmentCatalog.equipId, inv.itemId)).limit(1);
+      if (!equip) throw new TRPCError({ code: "NOT_FOUND", message: "裝備圖鑑不存在" });
+
+      // 圖鑑 slot → agentInventory equippedSlot 映射
+      const CATALOG_SLOT_TO_INV_SLOT: Record<string, string> = {
+        weapon: "weapon", offhand: "offhand",
+        helmet: "helmet", armor: "armor",
+        gloves: "gloves", shoes: "boots",
+      };
+      // 圖鑑 slot → gameAgents 欄位映射（向後相容）
+      const SLOT_TO_AGENT_FIELD: Record<string, string> = {
         weapon: "equippedWeapon", offhand: "equippedOffhand",
         helmet: "equippedHead", armor: "equippedBody",
         gloves: "equippedHands", shoes: "equippedFeet",
       };
-      let dbField = SLOT_MAP[equip.slot];
-      if (!dbField && equip.slot === "accessory") {
-        // accessory 類型裝備自動分配到空的飾品欄位（ringA → ringB → necklace → amulet）
-        const accSlots = ["equippedRingA", "equippedRingB", "equippedNecklace", "equippedAmulet"];
-        if (input.action === "equip") {
-          dbField = accSlots.find(s => !(agent as any)[s]) ?? accSlots[0];
-        } else {
-          // 卸下時找到裝備了此 equipId 的欄位
-          dbField = accSlots.find(s => (agent as any)[s] === input.equipId) ?? accSlots[0];
-        }
-      }
-      if (!dbField) dbField = "equippedWeapon";
-      await db.update(gameAgents).set({ [dbField]: input.action === "equip" ? input.equipId : null, updatedAt: Date.now() }).where(eq(gameAgents.id, agent.id));
-      // BUG-5 FIX: 同步更新 agentInventory 的 isEquipped 狀態
-      const AGENT_FIELD_TO_INV_SLOT: Record<string, string> = {
-        equippedWeapon: "weapon", equippedOffhand: "offhand",
-        equippedHead: "helmet", equippedBody: "armor",
-        equippedHands: "gloves", equippedFeet: "boots",
-        equippedRingA: "ring1", equippedRingB: "ring2",
-        equippedNecklace: "accessory1", equippedAmulet: "accessory2",
+      const ACC_INV_SLOTS = ["ring1", "ring2", "accessory1", "accessory2"];
+      const ACC_AGENT_FIELDS = ["equippedRingA", "equippedRingB", "equippedNecklace", "equippedAmulet"];
+      const INV_SLOT_TO_AGENT_FIELD: Record<string, string> = {
+        weapon: "equippedWeapon", offhand: "equippedOffhand",
+        helmet: "equippedHead", armor: "equippedBody",
+        gloves: "equippedHands", boots: "equippedFeet",
+        ring1: "equippedRingA", ring2: "equippedRingB",
+        accessory1: "equippedNecklace", accessory2: "equippedAmulet",
       };
-      const invSlot = AGENT_FIELD_TO_INV_SLOT[dbField] ?? equip.slot;
+
+      let invSlot: string;
+      let agentField: string;
+
+      if (equip.slot === "accessory") {
+        if (input.action === "equip") {
+          // 找第一個空的飾品槽位
+          const occupiedSlots = await db.select({ equippedSlot: agentInventory.equippedSlot })
+            .from(agentInventory)
+            .where(and(
+              eq(agentInventory.agentId, agent.id),
+              eq(agentInventory.isEquipped, 1),
+            ));
+          const occupiedSet = new Set(occupiedSlots.map(r => r.equippedSlot).filter(Boolean));
+          invSlot = ACC_INV_SLOTS.find(s => !occupiedSet.has(s)) ?? ACC_INV_SLOTS[0];
+        } else {
+          // 卸下時使用該裝備實例已記錄的 equippedSlot
+          invSlot = inv.equippedSlot ?? ACC_INV_SLOTS[0];
+        }
+        agentField = INV_SLOT_TO_AGENT_FIELD[invSlot] ?? "equippedRingA";
+      } else {
+        invSlot = CATALOG_SLOT_TO_INV_SLOT[equip.slot] ?? equip.slot;
+        agentField = SLOT_TO_AGENT_FIELD[equip.slot] ?? "equippedWeapon";
+      }
+
+      const enhanceData = inv.itemData ? (typeof inv.itemData === 'string' ? JSON.parse(inv.itemData) : inv.itemData) : {};
+      const enhLv = (enhanceData as any)?.enhanceLevel ?? 0;
+      const displayName = enhLv > 0 ? `${equip.name} +${enhLv}` : equip.name;
+
       if (input.action === "equip") {
-        // 先卸下同槽位的舊裝備
+        // 1. 先卸下同槽位的舊裝備（agentInventory）
         await db.update(agentInventory).set({ isEquipped: 0, equippedSlot: null, updatedAt: Date.now() })
           .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.isEquipped, 1), eq(agentInventory.equippedSlot, invSlot)));
-        // 標記新裝備
+        // 2. 標記新裝備（只更新這一件實例）
         await db.update(agentInventory).set({ isEquipped: 1, equippedSlot: invSlot, updatedAt: Date.now() })
-          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, input.equipId)));
+          .where(eq(agentInventory.id, inv.id));
+        // 3. 向後相容：同步 gameAgents 欄位（存 inventoryId 字串，方便追蹤）
+        await db.update(gameAgents).set({ [agentField]: inv.itemId, updatedAt: Date.now() })
+          .where(eq(gameAgents.id, agent.id));
       } else {
-        // 卸下裝備
+        // 1. 卸下裝備（只更新這一件實例）
         await db.update(agentInventory).set({ isEquipped: 0, equippedSlot: null, updatedAt: Date.now() })
-          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, input.equipId)));
+          .where(eq(agentInventory.id, inv.id));
+        // 2. 向後相容：清空 gameAgents 欄位
+        await db.update(gameAgents).set({ [agentField]: null, updatedAt: Date.now() })
+          .where(eq(gameAgents.id, agent.id));
       }
+
       await db.insert(agentEvents).values({
         agentId: agent.id, eventType: "system",
-        detail: { equipId: input.equipId, equipName: equip.name, action: input.action },
-        message: input.action === "equip" ? `裝備了「${equip.name}」` : `卸下了「${equip.name}」`,
+        detail: { inventoryId: inv.id, equipId: equip.equipId, equipName: displayName, action: input.action },
+        message: input.action === "equip" ? `裝備了「${displayName}」` : `卸下了「${displayName}」`,
         createdAt: Date.now(),
       });
-      return { success: true, equipName: equip.name, action: input.action };
+      return { success: true, equipName: displayName, action: input.action };
     }),
 
   // ─── Widget 位置記憶 ───

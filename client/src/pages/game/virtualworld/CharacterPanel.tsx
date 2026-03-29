@@ -712,10 +712,10 @@ export function CharacterPanel({
                         </button>
                       )}
                       {item.itemType === "equipment" && (() => {
-                        const isEquipped = Object.values(equipped).some((e: any) => e?.equipId === item.itemId || e?.id === item.itemId);
+                        const isEquipped = item.isEquipped === 1 || Object.values(equipped).some((e: any) => e?.inventoryId === item.id);
                         return (
                           <button
-                            onClick={() => equipItemMutation.mutate({ equipId: item.itemId, action: isEquipped ? 'unequip' : 'equip' })}
+                            onClick={() => equipItemMutation.mutate({ inventoryId: item.id, action: isEquipped ? 'unequip' : 'equip' })}
                             disabled={equipItemMutation.isPending}
                             className="shrink-0 px-2 py-1 rounded-lg text-xs font-bold transition-all active:scale-95"
                             style={{
@@ -773,9 +773,9 @@ export function CharacterPanel({
                         )}
                       </div>
                       {/* 裝備區卸下按鈕 */}
-                      {item && item.equipId && (
+                      {item && (item.inventoryId || item.equipId) && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); equipItemMutation.mutate({ equipId: item.equipId!, action: 'unequip' }); }}
+                          onClick={(e) => { e.stopPropagation(); equipItemMutation.mutate({ inventoryId: (item as any).inventoryId ?? 0, action: 'unequip' }); }}
                           disabled={equipItemMutation.isPending}
                           className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-md border transition-colors"
                           style={{ borderColor: 'rgba(239,68,68,0.4)', color: '#f87171', background: 'rgba(239,68,68,0.08)' }}
@@ -868,7 +868,7 @@ export function CharacterPanel({
                     style={{ background: "rgba(239,68,68,0.06)", borderColor: "rgba(239,68,68,0.2)" }}>
                     <span className="text-sm font-bold text-slate-200 flex-1">{currentEquip.name}</span>
                     <button
-                      onClick={() => { equipItemMutation.mutate({ equipId: currentEquip.equipId!, action: 'unequip' }); setSelectedEquipSlot(null); }}
+                      onClick={() => { equipItemMutation.mutate({ inventoryId: (currentEquip as any).inventoryId ?? 0, action: 'unequip' }); setSelectedEquipSlot(null); }}
                       disabled={equipItemMutation.isPending}
                       className="shrink-0 px-2 py-0.5 rounded-md text-xs font-bold"
                       style={{ background: "rgba(239,68,68,0.15)", color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}>
@@ -909,7 +909,7 @@ export function CharacterPanel({
                           }}
                           onClick={() => {
                             if (!isCurrentlyEquipped) {
-                              equipItemMutation.mutate({ equipId: eq.equipId, action: 'equip' });
+                              equipItemMutation.mutate({ inventoryId: eq.invId, action: 'equip' });
                               setSelectedEquipSlot(null);
                             }
                           }}>
@@ -1011,14 +1011,17 @@ export function CharacterPanel({
                                 border: `1px solid ${compareEquipId === equip.equipId ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.08)'}`,
                               }}>⚖️ 比較</button>
                             <button
-                              onClick={() => equipItemMutation.mutate({ equipId: equip.equipId, action: equip.isEquipped ? 'unequip' : 'equip' })}
+                              onClick={() => {
+                                // 圖鑑裝備按鈕：提示用戶到背包裝備欄位操作
+                                toast.info('請到裝備欄位選取背包中的裝備來裝備/卸下');
+                              }}
                               disabled={equipItemMutation.isPending}
                               className="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95"
                               style={{
-                                background: equip.isEquipped ? 'rgba(239,68,68,0.15)' : `${wc}20`,
-                                color: equip.isEquipped ? '#ef4444' : wc,
-                                border: `1px solid ${equip.isEquipped ? 'rgba(239,68,68,0.3)' : `${wc}40`}`,
-                              }}>{equip.isEquipped ? '卸下' : '裝備'}</button>
+                                background: equip.isEquipped ? 'rgba(74,222,128,0.15)' : `${wc}10`,
+                                color: equip.isEquipped ? '#4ade80' : '#64748b',
+                                border: `1px solid ${equip.isEquipped ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                              }}>{equip.isEquipped ? '已裝備' : '查看'}</button>
                           </div>
                         </div>
                         {/* 裝備比較面板 */}

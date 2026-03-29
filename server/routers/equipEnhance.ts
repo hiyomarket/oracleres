@@ -77,9 +77,9 @@ export const equipEnhanceRouter = router({
       const destroyRate = cfg.destroyRates[currentLevel] ?? 0;
       const canEnhance = currentLevel < cfg.maxLevel;
 
-      // 強化後加成預覽（含五行抗性）
-      const currentPreview = getEnhancedBonusPreview(catalog, currentLevel);
-      const nextPreview = canEnhance ? getEnhancedBonusPreview(catalog, currentLevel + 1) : currentPreview;
+      // 強化後加成預覽（含五行抗性）—— 使用動態設定
+      const currentPreview = getEnhancedBonusPreview(catalog, currentLevel, cfg.statBonus);
+      const nextPreview = canEnhance ? getEnhancedBonusPreview(catalog, currentLevel + 1, cfg.statBonus) : currentPreview;
 
       return {
         inventoryId: inv.id,
@@ -450,7 +450,7 @@ export const equipEnhanceRouter = router({
 
       const levels = [];
       for (let i = 0; i <= cfg.maxLevel; i++) {
-        const preview = getEnhancedBonusPreview(catalog, i);
+        const preview = getEnhancedBonusPreview(catalog, i, cfg.statBonus);
         const levelInfo = getEnhanceLevelInfo(i);
         levels.push({
           level: i,
@@ -471,6 +471,122 @@ export const equipEnhanceRouter = router({
         currentLevel,
         safeLevel,
         levels,
+      };
+    }),
+
+  /** 一鍵強化到安定值：自動消耗卷軸強化到安定值上限 */
+  batchEnhanceToSafe: protectedProcedure
+    .input(z.object({
+      inventoryId: z.number().int(),
+      scrollItemId: z.string().min(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const cfg = await getEnhanceConfig();
+
+      const [agent] = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+
+      // 1. 取得裝備
+      const [inv] = await db.select().from(agentInventory)
+        .where(and(
+          eq(agentInventory.id, input.inventoryId),
+          eq(agentInventory.agentId, agent.id),
+          eq(agentInventory.itemType, "equipment"),
+        )).limit(1);
+      if (!inv) throw new TRPCError({ code: "NOT_FOUND", message: "找不到該裝備" });
+
+      // 2. 取得裝備圖鑑
+      const [catalog] = await db.select().from(gameEquipmentCatalog)
+        .where(eq(gameEquipmentCatalog.equipId, inv.itemId)).limit(1);
+      if (!catalog) throw new TRPCError({ code: "NOT_FOUND", message: "找不到裝備圖鑑資料" });
+
+      // 3. 計算安定值和當前等級
+      const safeLevel = getSafeLevel(catalog.slot);
+      const itemData = (inv.itemData as any) ?? {};
+      const currentLevel = itemData.enhanceLevel ?? 0;
+
+      if (currentLevel >= safeLevel) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `裝備已達到或超過安定值 +${safeLevel}，無法使用一鍵強化。` });
+      }
+
+      // 4. 計算需要的卷軸數量
+      const scrollsNeeded = safeLevel - currentLevel;
+
+      // 5. 取得卷軸
+      const [scrollInv] = await db.select({
+        id: agentInventory.id,
+        quantity: agentInventory.quantity,
+        itemId: agentInventory.itemId,
+        useEffect: gameItemCatalog.useEffect,
+      }).from(agentInventory)
+        .innerJoin(gameItemCatalog, eq(agentInventory.itemId, gameItemCatalog.itemId))
+        .where(and(
+          eq(agentInventory.agentId, agent.id),
+          eq(agentInventory.itemId, input.scrollItemId),
+          sql`${agentInventory.quantity} >= ${scrollsNeeded}`,
+          sql`JSON_EXTRACT(${gameItemCatalog.useEffect}, '$.type') = 'enhance_scroll'`,
+        )).limit(1);
+      if (!scrollInv) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `卷軸數量不足，需要 ${scrollsNeeded} 個卷軸才能強化到安定值 +${safeLevel}。` });
+      }
+
+      // 6. 檢查卷軸適用性
+      const scrollType = ((scrollInv.useEffect as any)?.scrollType ?? "weapon_scroll") as ScrollType;
+      if (!isScrollApplicable(scrollType, catalog.slot)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "該卷軸不適用於此裝備類型" });
+      }
+
+      // 7. 批量扣除卷軸
+      await db.update(agentInventory)
+        .set({
+          quantity: sql`${agentInventory.quantity} - ${scrollsNeeded}`,
+          updatedAt: Date.now(),
+        })
+        .where(eq(agentInventory.id, scrollInv.id));
+
+      // 8. 直接將裝備強化到安定值（安定值內必定成功）
+      const newLevel = safeLevel;
+      const newItemData = {
+        ...itemData,
+        enhanceLevel: newLevel,
+        enhanceColor: getEnhanceLevelInfo(newLevel).color,
+      };
+      await db.update(agentInventory)
+        .set({
+          itemData: newItemData,
+          updatedAt: Date.now(),
+        })
+        .where(eq(agentInventory.id, inv.id));
+
+      // 9. 記錄日誌
+      await db.insert(equipEnhanceLogs).values({
+        agentId: agent.id,
+        inventoryId: inv.id,
+        equipId: catalog.equipId,
+        equipName: catalog.name,
+        scrollItemId: input.scrollItemId,
+        fromLevel: currentLevel,
+        toLevel: newLevel,
+        result: "success",
+        successRate: 1.0,
+        createdAt: Date.now(),
+      });
+
+      const toInfo = getEnhanceLevelInfo(newLevel);
+
+      return {
+        success: true,
+        fromLevel: currentLevel,
+        toLevel: newLevel,
+        scrollsUsed: scrollsNeeded,
+        equipName: catalog.name,
+        toColor: toInfo.label,
+        toColorHex: toInfo.colorHex,
+        message: `一鍵強化成功！裝備從 +${currentLevel} 提升至 +${newLevel}（${toInfo.label}色），消耗 ${scrollsNeeded} 個卷軸。`,
       };
     }),
 });

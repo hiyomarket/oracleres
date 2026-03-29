@@ -4,7 +4,7 @@
  * （DB 相關函數 calcEquipBonus / calcEquipBonusForAgent 需要整合測試，這裡只測純函數）
  */
 import { describe, it, expect } from "vitest";
-import { calcEnhancedStat, ENHANCE_STAT_BONUS } from "./enhanceEngine";
+import { calcEnhancedStat, ENHANCE_STAT_BONUS, getEnhancedBonusPreview } from "./enhanceEngine";
 import { getEquippedIds } from "./equipBonusCalc";
 
 describe("calcEnhancedStat — 強化屬性加成公式", () => {
@@ -121,6 +121,53 @@ describe("getEquippedIds — 從 agent 物件提取已裝備 ID", () => {
     const ids = getEquippedIds(agent);
     expect(ids).toHaveLength(1);
     expect(ids[0]).toBe("sword_01");
+  });
+});
+
+describe("getEnhancedBonusPreview — 強化預覽含 matk/mdef 和動態設定", () => {
+  it("基本預覽含所有屬性", () => {
+    const catalog = {
+      hpBonus: 100, attackBonus: 50, defenseBonus: 30, speedBonus: 10,
+      magicAttackBonus: 40, magicDefenseBonus: 20,
+    };
+    const preview = getEnhancedBonusPreview(catalog, 5); // +12%
+    expect(preview.hpBonus).toBe(112);
+    expect(preview.attackBonus).toBe(56);
+    expect(preview.defenseBonus).toBe(33);
+    expect(preview.speedBonus).toBe(11);
+    expect(preview.matkBonus).toBe(44);
+    expect(preview.mdefBonus).toBe(22);
+    expect(preview.bonusPercent).toBe(0.12);
+  });
+
+  it("當 magicAttackBonus 未定義時預設為 0", () => {
+    const catalog = {
+      hpBonus: 100, attackBonus: 50, defenseBonus: 30, speedBonus: 10,
+    };
+    const preview = getEnhancedBonusPreview(catalog, 3);
+    expect(preview.matkBonus).toBe(0);
+    expect(preview.mdefBonus).toBe(0);
+  });
+
+  it("使用動態設定的 statBonus 覆寫預設值", () => {
+    const catalog = {
+      hpBonus: 100, attackBonus: 100, defenseBonus: 100, speedBonus: 100,
+    };
+    const customBonus: Record<number, number> = { 0: 0, 1: 0.5, 2: 1.0 };
+    const preview = getEnhancedBonusPreview(catalog, 1, customBonus);
+    expect(preview.attackBonus).toBe(150); // 100 * 1.5
+    expect(preview.bonusPercent).toBe(0.5);
+  });
+
+  it("等級 0 時屬性不變", () => {
+    const catalog = {
+      hpBonus: 100, attackBonus: 50, defenseBonus: 30, speedBonus: 10,
+      magicAttackBonus: 40, magicDefenseBonus: 20,
+    };
+    const preview = getEnhancedBonusPreview(catalog, 0);
+    expect(preview.hpBonus).toBe(100);
+    expect(preview.attackBonus).toBe(50);
+    expect(preview.matkBonus).toBe(40);
   });
 });
 

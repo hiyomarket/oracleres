@@ -103,11 +103,39 @@ export default function EnhancePage() {
     },
   });
 
+  const batchEnhanceMutation = trpc.equipEnhance.batchEnhanceToSafe.useMutation({
+    onSuccess: (result) => {
+      setEnhanceResult({
+        success: true,
+        destroyed: false,
+        fromLevel: result.fromLevel,
+        toLevel: result.toLevel,
+        fromColorHex: "#94a3b8",
+        toColorHex: result.toColorHex,
+        message: result.message,
+        bonusLevels: result.toLevel - result.fromLevel,
+        isBatch: true,
+      });
+      setAnimating(true);
+      setTimeout(() => setAnimating(false), 2000);
+      utils.equipEnhance.getEnhanceInfo.invalidate();
+      utils.equipEnhance.getScrollInventory.invalidate();
+      utils.gameWorld.getInventoryEquipments.invalidate();
+      if (showLogs) utils.equipEnhance.getEnhanceLogs.invalidate();
+    },
+  });
+
   const handleEnhance = useCallback(() => {
     if (!selectedInvId || !selectedScrollId) return;
     setEnhanceResult(null);
     enhanceMutation.mutate({ inventoryId: selectedInvId, scrollItemId: selectedScrollId });
   }, [selectedInvId, selectedScrollId, enhanceMutation]);
+
+  const handleBatchEnhance = useCallback(() => {
+    if (!selectedInvId || !selectedScrollId) return;
+    setEnhanceResult(null);
+    batchEnhanceMutation.mutate({ inventoryId: selectedInvId, scrollItemId: selectedScrollId });
+  }, [selectedInvId, selectedScrollId, batchEnhanceMutation]);
 
   // 適用的卷軸
   const applicableScrolls = useMemo(() => {
@@ -215,6 +243,33 @@ export default function EnhancePage() {
                   <MiniStat label="爆裝" value={info.destroyRate > 0 ? `${Math.round(info.destroyRate * 100)}%` : "無"} color={info.destroyRate > 0 ? "#ef4444" : "#4ade80"} sub="" />
                 </div>
 
+                {/* 屬性變化預覽 */}
+                {info.currentPreview && info.nextPreview && info.canEnhance && (
+                  <div style={{
+                    display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "3px",
+                    marginBottom: "8px", padding: "6px", borderRadius: "8px",
+                    background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)",
+                  }}>
+                    {[
+                      { label: "HP", cur: info.currentPreview.hpBonus, next: info.nextPreview.hpBonus, color: "#f97316" },
+                      { label: "攻擊", cur: info.currentPreview.attackBonus, next: info.nextPreview.attackBonus, color: "#ef4444" },
+                      { label: "防禦", cur: info.currentPreview.defenseBonus, next: info.nextPreview.defenseBonus, color: "#3b82f6" },
+                      { label: "速度", cur: info.currentPreview.speedBonus, next: info.nextPreview.speedBonus, color: "#22c55e" },
+                      { label: "魔攻", cur: info.currentPreview.matkBonus ?? 0, next: info.nextPreview.matkBonus ?? 0, color: "#a78bfa" },
+                      { label: "魔防", cur: info.currentPreview.mdefBonus ?? 0, next: info.nextPreview.mdefBonus ?? 0, color: "#38bdf8" },
+                    ].filter(s => s.cur > 0 || s.next > 0).map(s => (
+                      <div key={s.label} style={{ textAlign: "center", padding: "3px 2px" }}>
+                        <div style={{ fontSize: "8px", color: "#64748b" }}>{s.label}</div>
+                        <div style={{ fontSize: "10px", fontWeight: 600 }}>
+                          <span style={{ color: "#94a3b8" }}>{s.cur}</span>
+                          <span style={{ color: "#fbbf24", margin: "0 2px" }}>→</span>
+                          <span style={{ color: s.color, fontWeight: 700 }}>{s.next}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* 危險警告（安定值外） */}
                 {!info.isSafe && (
                   <div style={{
@@ -269,19 +324,54 @@ export default function EnhancePage() {
 
                 {/* 強化按鈕 */}
                 {selectedScrollId && (
-                  <button onClick={handleEnhance} disabled={enhanceMutation.isPending} style={{
-                    width: "100%", padding: "12px", borderRadius: "10px",
-                    background: enhanceMutation.isPending
-                      ? "rgba(251,191,36,0.2)"
-                      : "linear-gradient(135deg, #fbbf24 0%, #f97316 100%)",
-                    border: "none", color: "#0a0e1a", fontSize: "14px", fontWeight: 700,
-                    cursor: enhanceMutation.isPending ? "wait" : "pointer",
-                    boxShadow: "0 3px 16px rgba(251,191,36,0.25)",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                  }}>
-                    <Flame size={16} />
-                    {enhanceMutation.isPending ? "強化中..." : "開始強化"}
-                  </button>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <button onClick={handleEnhance} disabled={enhanceMutation.isPending || batchEnhanceMutation.isPending} style={{
+                      width: "100%", padding: "12px", borderRadius: "10px",
+                      background: enhanceMutation.isPending
+                        ? "rgba(251,191,36,0.2)"
+                        : "linear-gradient(135deg, #fbbf24 0%, #f97316 100%)",
+                      border: "none", color: "#0a0e1a", fontSize: "14px", fontWeight: 700,
+                      cursor: enhanceMutation.isPending ? "wait" : "pointer",
+                      boxShadow: "0 3px 16px rgba(251,191,36,0.25)",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                    }}>
+                      <Flame size={16} />
+                      {enhanceMutation.isPending ? "強化中..." : "開始強化"}
+                    </button>
+                    {/* 一鍵強化到安定值按鈕 */}
+                    {info.isSafe && info.currentLevel < info.safeLevel && (() => {
+                      const scrollsNeeded = info.safeLevel - info.currentLevel;
+                      const selectedScroll = applicableScrolls.find(s => s.itemId === selectedScrollId);
+                      const hasEnough = selectedScroll && selectedScroll.quantity >= scrollsNeeded;
+                      return (
+                        <button
+                          onClick={handleBatchEnhance}
+                          disabled={!hasEnough || batchEnhanceMutation.isPending || enhanceMutation.isPending}
+                          style={{
+                            width: "100%", padding: "10px", borderRadius: "10px",
+                            background: !hasEnough
+                              ? "rgba(100,116,139,0.15)"
+                              : batchEnhanceMutation.isPending
+                                ? "rgba(96,165,250,0.2)"
+                                : "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+                            border: "none",
+                            color: !hasEnough ? "#475569" : "#fff",
+                            fontSize: "13px", fontWeight: 700,
+                            cursor: !hasEnough || batchEnhanceMutation.isPending ? "not-allowed" : "pointer",
+                            boxShadow: hasEnough ? "0 3px 12px rgba(59,130,246,0.25)" : "none",
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                          }}
+                        >
+                          <Zap size={14} />
+                          {batchEnhanceMutation.isPending
+                            ? "一鍵強化中..."
+                            : hasEnough
+                              ? `一鍵強化到 +${info.safeLevel}（消耗 ${scrollsNeeded} 卷軸）`
+                              : `卷軸不足（需 ${scrollsNeeded}，有 ${selectedScroll?.quantity ?? 0}）`}
+                        </button>
+                      );
+                    })()}
+                  </div>
                 )}
               </>
             ) : (
@@ -314,32 +404,66 @@ export default function EnhancePage() {
             border: `1px solid ${enhanceResult.destroyed ? "rgba(239,68,68,0.25)" : enhanceResult.success ? "rgba(74,222,128,0.25)" : "rgba(251,191,36,0.15)"}`,
             animation: animating ? "enhanceFlash 0.5s ease-out" : "none",
             boxShadow: enhanceResult.success ? `0 0 24px ${getColorInfo(enhanceResult.toColor?.toLowerCase?.() ?? "white").glow}` : enhanceResult.destroyed ? "0 0 24px rgba(239,68,68,0.2)" : "none",
+            position: "relative", overflow: "hidden",
           }}>
-            <div style={{ fontSize: "32px", marginBottom: "4px" }}>
+            {/* 慶祝粒子動畫 */}
+            {enhanceResult.success && animating && (
+              <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
+                {Array.from({ length: 20 }, (_, i) => (
+                  <div key={i} style={{
+                    position: "absolute",
+                    left: `${Math.random() * 100}%`,
+                    top: "-10px",
+                    width: `${4 + Math.random() * 6}px`,
+                    height: `${4 + Math.random() * 6}px`,
+                    borderRadius: Math.random() > 0.5 ? "50%" : "2px",
+                    background: [
+                      "#fbbf24", "#f97316", "#4ade80", "#60a5fa", "#a78bfa", "#ef4444",
+                      enhanceResult.toColorHex ?? "#fbbf24",
+                    ][Math.floor(Math.random() * 7)],
+                    animation: `confettiFall ${1.5 + Math.random() * 1.5}s ease-out forwards`,
+                    animationDelay: `${Math.random() * 0.5}s`,
+                    opacity: 0.9,
+                  }} />
+                ))}
+              </div>
+            )}
+            {/* 光暈脈衝動畫 */}
+            {enhanceResult.success && animating && (
+              <div style={{
+                position: "absolute", inset: "-50%",
+                background: `radial-gradient(circle, ${enhanceResult.toColorHex ?? "#fbbf24"}30 0%, transparent 70%)`,
+                animation: "glowPulse 1.5s ease-out forwards",
+                pointerEvents: "none",
+              }} />
+            )}
+            <div style={{ fontSize: "32px", marginBottom: "4px", position: "relative", zIndex: 1 }}>
               {enhanceResult.destroyed ? "💔" : enhanceResult.success ? "✨" : "😢"}
             </div>
             <p style={{
-              fontSize: "14px", fontWeight: 700, margin: "0 0 2px",
+              fontSize: "14px", fontWeight: 700, margin: "0 0 2px", position: "relative", zIndex: 1,
               color: enhanceResult.destroyed ? "#ef4444" : enhanceResult.success ? "#4ade80" : "#fbbf24",
+              animation: enhanceResult.success && animating ? "successBounce 0.6s ease-out" : "none",
             }}>
-              {enhanceResult.destroyed ? "裝備碎裂消失！" : enhanceResult.success ? "強化成功！" : "強化失敗（裝備保留）"}
+              {enhanceResult.destroyed ? "裝備碎裂消失！" : enhanceResult.success ? "🎉 強化成功！" : "強化失敗（裝備保留）"}
             </p>
-            <p style={{ fontSize: "11px", color: "#94a3b8", margin: "0 0 6px" }}>
+            <p style={{ fontSize: "11px", color: "#94a3b8", margin: "0 0 6px", position: "relative", zIndex: 1 }}>
               {enhanceResult.message}
             </p>
             {!enhanceResult.destroyed && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", position: "relative", zIndex: 1 }}>
                 <span style={{ fontSize: "16px", fontWeight: 700, color: enhanceResult.fromColorHex }}>+{enhanceResult.fromLevel}</span>
                 <span style={{ color: "#64748b" }}>→</span>
                 <span style={{
-                  fontSize: "16px", fontWeight: 700, color: enhanceResult.toColorHex,
-                  textShadow: enhanceResult.success ? `0 0 8px ${enhanceResult.toColorHex}60` : "none",
+                  fontSize: enhanceResult.success ? "20px" : "16px", fontWeight: 700, color: enhanceResult.toColorHex,
+                  textShadow: enhanceResult.success ? `0 0 12px ${enhanceResult.toColorHex}80, 0 0 24px ${enhanceResult.toColorHex}40` : "none",
+                  animation: enhanceResult.success && animating ? "levelPop 0.5s ease-out" : "none",
                 }}>+{enhanceResult.toLevel}</span>
               </div>
             )}
             {enhanceResult.bonusLevels > 1 && (
-              <p style={{ fontSize: "10px", color: "#fbbf24", marginTop: "4px" }}>
-                黃卷加成：一次提升了 {enhanceResult.bonusLevels} 級！
+              <p style={{ fontSize: "10px", color: "#fbbf24", marginTop: "4px", position: "relative", zIndex: 1 }}>
+                {enhanceResult.isBatch ? `一鍵強化：提升了 ${enhanceResult.bonusLevels} 級！` : `黃卷加成：一次提升了 ${enhanceResult.bonusLevels} 級！`}
               </p>
             )}
           </div>
@@ -504,6 +628,8 @@ export default function EnhancePage() {
                     <th style={{ padding: "5px 3px", textAlign: "center", color: "#3b82f6", fontWeight: 600 }}>防</th>
                     <th style={{ padding: "5px 3px", textAlign: "center", color: "#22c55e", fontWeight: 600 }}>速</th>
                     <th style={{ padding: "5px 3px", textAlign: "center", color: "#f97316", fontWeight: 600 }}>HP</th>
+                    <th style={{ padding: "5px 3px", textAlign: "center", color: "#a78bfa", fontWeight: 600 }}>魔攻</th>
+                    <th style={{ padding: "5px 3px", textAlign: "center", color: "#38bdf8", fontWeight: 600 }}>魔防</th>
                     <th style={{ padding: "5px 3px", textAlign: "center", color: "#4ade80", fontWeight: 600 }}>成功</th>
                     <th style={{ padding: "5px 3px", textAlign: "center", color: "#ef4444", fontWeight: 600 }}>爆裝</th>
                   </tr>
@@ -525,6 +651,8 @@ export default function EnhancePage() {
                         <td style={{ padding: "4px 3px", textAlign: "center", color: "#3b82f6" }}>{lv.defenseBonus}</td>
                         <td style={{ padding: "4px 3px", textAlign: "center", color: "#22c55e" }}>{lv.speedBonus}</td>
                         <td style={{ padding: "4px 3px", textAlign: "center", color: "#f97316" }}>{lv.hpBonus}</td>
+                        <td style={{ padding: "4px 3px", textAlign: "center", color: "#a78bfa" }}>{lv.matkBonus ?? 0}</td>
+                        <td style={{ padding: "4px 3px", textAlign: "center", color: "#38bdf8" }}>{lv.mdefBonus ?? 0}</td>
                         <td style={{ padding: "4px 3px", textAlign: "center", color: lv.isSafe ? "#4ade80" : "#fbbf24" }}>
                           {lv.level === 0 ? "-" : lv.isSafe ? "100%" : `${(lv.successRate * 100).toFixed(1)}%`}
                         </td>
@@ -552,6 +680,31 @@ export default function EnhancePage() {
           0% { transform: scale(0.95); opacity: 0.5; }
           50% { transform: scale(1.02); opacity: 1; }
           100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes confettiFall {
+          0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+          25% { transform: translateY(30px) rotate(90deg) scale(1.1); opacity: 0.9; }
+          50% { transform: translateY(60px) rotate(180deg) scale(0.9); opacity: 0.7; }
+          75% { transform: translateY(100px) rotate(270deg) scale(0.8); opacity: 0.4; }
+          100% { transform: translateY(150px) rotate(360deg) scale(0.5); opacity: 0; }
+        }
+        @keyframes glowPulse {
+          0% { transform: scale(0.3); opacity: 0; }
+          30% { transform: scale(1); opacity: 0.6; }
+          100% { transform: scale(1.5); opacity: 0; }
+        }
+        @keyframes successBounce {
+          0% { transform: scale(0.5); opacity: 0; }
+          50% { transform: scale(1.15); }
+          70% { transform: scale(0.95); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes levelPop {
+          0% { transform: scale(0.3); opacity: 0; }
+          40% { transform: scale(1.3); opacity: 1; }
+          60% { transform: scale(0.9); }
+          80% { transform: scale(1.1); }
+          100% { transform: scale(1); }
         }
       `}</style>
     </div>

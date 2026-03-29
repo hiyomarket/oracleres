@@ -420,7 +420,8 @@ export function calcEnhancedResistWithConfig(baseResist: number, enhanceLevel: n
 
 /**
  * 取得裝備強化後的完整加成預覽
- * 包含 HP/ATK/DEF/SPD 和五行抗性
+ * 包含 HP/ATK/DEF/SPD/MATK/MDEF 和五行抗性
+ * 支援動態設定：可傳入 configStatBonus 來覆寫預設值
  */
 export function getEnhancedBonusPreview(
   catalog: {
@@ -428,17 +429,23 @@ export function getEnhancedBonusPreview(
     attackBonus: number;
     defenseBonus: number;
     speedBonus: number;
+    magicAttackBonus?: number;
+    magicDefenseBonus?: number;
     resistBonus?: { wood: number; fire: number; earth: number; metal: number; water: number } | null;
   },
   enhanceLevel: number,
+  configStatBonus?: Record<number, number>,
 ) {
-  const bonus = ENHANCE_STAT_BONUS[enhanceLevel] ?? 0;
+  const bonusTable = configStatBonus ?? ENHANCE_STAT_BONUS;
+  const bonus = bonusTable[enhanceLevel] ?? 0;
   const resist = catalog.resistBonus ?? { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
   return {
     hpBonus: Math.floor(catalog.hpBonus * (1 + bonus)),
     attackBonus: Math.floor(catalog.attackBonus * (1 + bonus)),
     defenseBonus: Math.floor(catalog.defenseBonus * (1 + bonus)),
     speedBonus: Math.floor(catalog.speedBonus * (1 + bonus)),
+    matkBonus: Math.floor((catalog.magicAttackBonus ?? 0) * (1 + bonus)),
+    mdefBonus: Math.floor((catalog.magicDefenseBonus ?? 0) * (1 + bonus)),
     resistBonus: {
       wood:  Math.floor(resist.wood  * (1 + bonus)),
       fire:  Math.floor(resist.fire  * (1 + bonus)),

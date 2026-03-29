@@ -16,7 +16,7 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { router, protectedProcedure } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { users, gameWardrobe, gameDailyAura, gameItems, gameAgents, gameEquipmentCatalog } from "../../drizzle/schema";
+import { users, gameWardrobe, gameDailyAura, gameItems, gameAgents, gameEquipmentCatalog, agentInventory } from "../../drizzle/schema";
 import { calcCharacterStats } from "../tickEngine";
 import { getStatCaps } from "../gameEngineConfig";
 import { calcEquipBonusForAgent } from "../services/equipBonusCalc";
@@ -373,37 +373,42 @@ export const gameAvatarRouter = router({
         revisitDominantElement = agent.dominantElement;
         const stats = calcCharacterStats(revisitGameWuxing, revisitGameLevel);
         revisitStats = { hp: stats.hp, atk: stats.atk, def: stats.def, spd: stats.spd, mp: stats.mp, matk: stats.matk };
-        // 建立裝備槽位對照表（key 與前端 EQUIP_SLOTS 的 slot 一致）
-        const SLOT_MAP: Record<string, string> = {
-          equippedWeapon: "weapon", equippedOffhand: "offhand",
-          equippedHead: "head", equippedBody: "body",
-          equippedHands: "hands", equippedFeet: "feet",
-          equippedRingA: "ringA", equippedRingB: "ringB",
-          equippedNecklace: "necklace", equippedAmulet: "amulet",
-        };
-        const equippedIds = [
-          agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
-          agent.equippedBody, agent.equippedHands, agent.equippedFeet,
-          agent.equippedRingA, agent.equippedRingB, agent.equippedNecklace, agent.equippedAmulet,
-        ].filter(Boolean) as string[];
-        if (equippedIds.length > 0) {
-          const { inArray } = await import("drizzle-orm");
-          const equipRows = await db.select().from(gameEquipmentCatalog).where(inArray(gameEquipmentCatalog.equipId, equippedIds));
+        // ★ 以 agentInventory.isEquipped 為唯一真相源，不再依賴 gameAgents.equippedXxx 欄位
+        const { inArray } = await import("drizzle-orm");
+        const equippedInvItems = await db.select().from(agentInventory)
+          .where(and(
+            eq(agentInventory.agentId, agent.id),
+            eq(agentInventory.isEquipped, 1),
+            eq(agentInventory.itemType, "equipment"),
+          ));
+        if (equippedInvItems.length > 0) {
+          const equipIds = equippedInvItems.map(i => i.itemId);
+          const equipRows = await db.select().from(gameEquipmentCatalog).where(inArray(gameEquipmentCatalog.equipId, equipIds));
           const equipById: Record<string, typeof equipRows[0]> = {};
           for (const e of equipRows) equipById[e.equipId] = e;
-          for (const [agentField, slotName] of Object.entries(SLOT_MAP)) {
-            const equipId = (agent as any)[agentField] as string | null;
-            if (equipId && equipById[equipId]) {
-              const e = equipById[equipId];
-              revisitEquippedMap[slotName] = {
-                name: e.name, quality: e.quality, equipId: e.equipId, slot: e.slot,
-                hpBonus: e.hpBonus ?? 0, attackBonus: e.attackBonus ?? 0,
-                defenseBonus: e.defenseBonus ?? 0, speedBonus: e.speedBonus ?? 0,
-                baseStats: e.baseStats ?? "",
-              };
-            } else {
-              revisitEquippedMap[slotName] = null;
-            }
+          // equippedSlot → 前端 slot 名稱映射
+          const INV_SLOT_TO_FRONT: Record<string, string> = {
+            weapon: "weapon", offhand: "offhand",
+            helmet: "head", armor: "body",
+            gloves: "hands", boots: "feet",
+            ring1: "ringA", ring2: "ringB",
+            accessory1: "necklace", accessory2: "amulet",
+          };
+          for (const invItem of equippedInvItems) {
+            const e = equipById[invItem.itemId];
+            if (!e) continue;
+            const frontSlot = INV_SLOT_TO_FRONT[invItem.equippedSlot ?? ""] ?? invItem.equippedSlot ?? e.slot;
+            const enhData = invItem.itemData ? (typeof invItem.itemData === 'string' ? JSON.parse(invItem.itemData) : invItem.itemData) : {};
+            const enhLv = (enhData as any)?.enhanceLevel ?? 0;
+            revisitEquippedMap[frontSlot] = {
+              name: enhLv > 0 ? `${e.name} +${enhLv}` : e.name,
+              quality: e.quality, equipId: e.equipId, slot: e.slot,
+              hpBonus: e.hpBonus ?? 0, attackBonus: e.attackBonus ?? 0,
+              defenseBonus: e.defenseBonus ?? 0, speedBonus: e.speedBonus ?? 0,
+              baseStats: e.baseStats ?? "",
+              inventoryId: invItem.id,
+              enhanceLevel: enhLv,
+            } as any;
           }
         }
       }
