@@ -1,0 +1,4402 @@
+[
+  {
+    "element": "木",
+    "rarity": "common",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 50,
+      "火": 50,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 18,
+      "火": 18,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 30,
+    "index": 0
+  },
+  {
+    "element": "木",
+    "rarity": "common",
+    "species": "beast",
+    "wuxing": {
+      "木": 60,
+      "火": 0,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 21,
+      "火": 0,
+      "土": 14,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 32,
+    "index": 1
+  },
+  {
+    "element": "木",
+    "rarity": "common",
+    "species": "plant",
+    "wuxing": {
+      "木": 50,
+      "火": 20,
+      "土": 10,
+      "金": 0,
+      "水": 20
+    },
+    "resist": {
+      "木": 18,
+      "火": 7,
+      "土": 4,
+      "金": 0,
+      "水": 7
+    },
+    "capturable": 1,
+    "captureRate": 34,
+    "index": 2
+  },
+  {
+    "element": "木",
+    "rarity": "common",
+    "species": "undead",
+    "wuxing": {
+      "木": 50,
+      "火": 0,
+      "土": 0,
+      "金": 50,
+      "水": 0
+    },
+    "resist": {
+      "木": 18,
+      "火": 0,
+      "土": 0,
+      "金": 18,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 36,
+    "index": 3
+  },
+  {
+    "element": "木",
+    "rarity": "common",
+    "species": "dragon",
+    "wuxing": {
+      "木": 60,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 21,
+      "火": 14,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 39,
+    "index": 4
+  },
+  {
+    "element": "木",
+    "rarity": "common",
+    "species": "flying",
+    "wuxing": {
+      "木": 50,
+      "火": 20,
+      "土": 10,
+      "金": 20,
+      "水": 0
+    },
+    "resist": {
+      "木": 18,
+      "火": 7,
+      "土": 4,
+      "金": 7,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 41,
+    "index": 5
+  },
+  {
+    "element": "木",
+    "rarity": "common",
+    "species": "insect",
+    "wuxing": {
+      "木": 50,
+      "火": 0,
+      "土": 50,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 18,
+      "火": 0,
+      "土": 18,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 43,
+    "index": 6
+  },
+  {
+    "element": "木",
+    "rarity": "common",
+    "species": "special",
+    "wuxing": {
+      "木": 60,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 21,
+      "火": 14,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 45,
+    "index": 7
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "metal",
+    "wuxing": {
+      "木": 60,
+      "火": 0,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 24,
+      "火": 0,
+      "土": 16,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 20,
+    "index": 8
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "demon",
+    "wuxing": {
+      "木": 70,
+      "火": 30,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 28,
+      "火": 12,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 21,
+    "index": 9
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 60,
+      "火": 20,
+      "土": 0,
+      "金": 20,
+      "水": 0
+    },
+    "resist": {
+      "木": 24,
+      "火": 8,
+      "土": 0,
+      "金": 8,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 22,
+    "index": 10
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "beast",
+    "wuxing": {
+      "木": 60,
+      "火": 0,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 24,
+      "火": 0,
+      "土": 16,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 23,
+    "index": 11
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "plant",
+    "wuxing": {
+      "木": 70,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 30
+    },
+    "resist": {
+      "木": 28,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 12
+    },
+    "capturable": 1,
+    "captureRate": 24,
+    "index": 12
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "undead",
+    "wuxing": {
+      "木": 60,
+      "火": 0,
+      "土": 0,
+      "金": 20,
+      "水": 20
+    },
+    "resist": {
+      "木": 24,
+      "火": 0,
+      "土": 0,
+      "金": 8,
+      "水": 8
+    },
+    "capturable": 1,
+    "captureRate": 25,
+    "index": 13
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "dragon",
+    "wuxing": {
+      "木": 60,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 24,
+      "火": 16,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 25,
+    "index": 14
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "flying",
+    "wuxing": {
+      "木": 70,
+      "火": 0,
+      "土": 0,
+      "金": 30,
+      "水": 0
+    },
+    "resist": {
+      "木": 28,
+      "火": 0,
+      "土": 0,
+      "金": 12,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 26,
+    "index": 15
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "insect",
+    "wuxing": {
+      "木": 60,
+      "火": 20,
+      "土": 20,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 24,
+      "火": 8,
+      "土": 8,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 27,
+    "index": 16
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "special",
+    "wuxing": {
+      "木": 60,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 24,
+      "火": 16,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 28,
+    "index": 17
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "metal",
+    "wuxing": {
+      "木": 70,
+      "火": 0,
+      "土": 30,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 28,
+      "火": 0,
+      "土": 12,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 29,
+    "index": 18
+  },
+  {
+    "element": "木",
+    "rarity": "rare",
+    "species": "demon",
+    "wuxing": {
+      "木": 60,
+      "火": 20,
+      "土": 0,
+      "金": 0,
+      "水": 20
+    },
+    "resist": {
+      "木": 24,
+      "火": 8,
+      "土": 0,
+      "金": 0,
+      "水": 8
+    },
+    "capturable": 1,
+    "captureRate": 30,
+    "index": 19
+  },
+  {
+    "element": "木",
+    "rarity": "elite",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 70,
+      "火": 30,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 32,
+      "火": 14,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 12,
+    "index": 20
+  },
+  {
+    "element": "木",
+    "rarity": "elite",
+    "species": "beast",
+    "wuxing": {
+      "木": 80,
+      "火": 0,
+      "土": 20,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 36,
+      "火": 0,
+      "土": 9,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 13,
+    "index": 21
+  },
+  {
+    "element": "木",
+    "rarity": "elite",
+    "species": "plant",
+    "wuxing": {
+      "木": 70,
+      "火": 10,
+      "土": 0,
+      "金": 0,
+      "水": 20
+    },
+    "resist": {
+      "木": 32,
+      "火": 5,
+      "土": 0,
+      "金": 0,
+      "水": 9
+    },
+    "capturable": 1,
+    "captureRate": 14,
+    "index": 22
+  },
+  {
+    "element": "木",
+    "rarity": "elite",
+    "species": "undead",
+    "wuxing": {
+      "木": 70,
+      "火": 0,
+      "土": 0,
+      "金": 30,
+      "水": 0
+    },
+    "resist": {
+      "木": 32,
+      "火": 0,
+      "土": 0,
+      "金": 14,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 15,
+    "index": 23
+  },
+  {
+    "element": "木",
+    "rarity": "elite",
+    "species": "dragon",
+    "wuxing": {
+      "木": 80,
+      "火": 20,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 36,
+      "火": 9,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 17,
+    "index": 24
+  },
+  {
+    "element": "木",
+    "rarity": "elite",
+    "species": "flying",
+    "wuxing": {
+      "木": 70,
+      "火": 10,
+      "土": 0,
+      "金": 20,
+      "水": 0
+    },
+    "resist": {
+      "木": 32,
+      "火": 5,
+      "土": 0,
+      "金": 9,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 18,
+    "index": 25
+  },
+  {
+    "element": "木",
+    "rarity": "elite",
+    "species": "insect",
+    "wuxing": {
+      "木": 70,
+      "火": 0,
+      "土": 30,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 32,
+      "火": 0,
+      "土": 14,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 19,
+    "index": 26
+  },
+  {
+    "element": "木",
+    "rarity": "elite",
+    "species": "special",
+    "wuxing": {
+      "木": 80,
+      "火": 20,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 36,
+      "火": 9,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 20,
+    "index": 27
+  },
+  {
+    "element": "木",
+    "rarity": "epic",
+    "species": "metal",
+    "wuxing": {
+      "木": 80,
+      "火": 0,
+      "土": 20,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 40,
+      "火": 0,
+      "土": 6,
+      "金": -10,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 5,
+    "index": 28
+  },
+  {
+    "element": "木",
+    "rarity": "epic",
+    "species": "demon",
+    "wuxing": {
+      "木": 90,
+      "火": 10,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 40,
+      "火": 3,
+      "土": 0,
+      "金": -10,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 6,
+    "index": 29
+  },
+  {
+    "element": "木",
+    "rarity": "epic",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 80,
+      "火": 20,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 40,
+      "火": 6,
+      "土": 0,
+      "金": -10,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 7,
+    "index": 30
+  },
+  {
+    "element": "木",
+    "rarity": "epic",
+    "species": "beast",
+    "wuxing": {
+      "木": 90,
+      "火": 0,
+      "土": 10,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 40,
+      "火": 0,
+      "土": 3,
+      "金": -10,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 8,
+    "index": 31
+  },
+  {
+    "element": "木",
+    "rarity": "epic",
+    "species": "plant",
+    "wuxing": {
+      "木": 80,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 20
+    },
+    "resist": {
+      "木": 40,
+      "火": 0,
+      "土": 0,
+      "金": -10,
+      "水": 6
+    },
+    "capturable": 1,
+    "captureRate": 9,
+    "index": 32
+  },
+  {
+    "element": "木",
+    "rarity": "epic",
+    "species": "undead",
+    "wuxing": {
+      "木": 90,
+      "火": 0,
+      "土": 0,
+      "金": 10,
+      "水": 0
+    },
+    "resist": {
+      "木": 40,
+      "火": 0,
+      "土": 0,
+      "金": -10,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 10,
+    "index": 33
+  },
+  {
+    "element": "木",
+    "rarity": "epic",
+    "species": "dragon",
+    "wuxing": {
+      "木": 80,
+      "火": 20,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 40,
+      "火": 6,
+      "土": 0,
+      "金": -10,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 11,
+    "index": 34
+  },
+  {
+    "element": "木",
+    "rarity": "epic",
+    "species": "flying",
+    "wuxing": {
+      "木": 90,
+      "火": 0,
+      "土": 0,
+      "金": 10,
+      "水": 0
+    },
+    "resist": {
+      "木": 40,
+      "火": 0,
+      "土": 0,
+      "金": -10,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 12,
+    "index": 35
+  },
+  {
+    "element": "木",
+    "rarity": "legendary",
+    "species": "insect",
+    "wuxing": {
+      "木": 90,
+      "火": 0,
+      "土": 10,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 50,
+      "火": 0,
+      "土": 3,
+      "金": -20,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 0,
+    "index": 36
+  },
+  {
+    "element": "木",
+    "rarity": "legendary",
+    "species": "special",
+    "wuxing": {
+      "木": 100,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 50,
+      "火": 0,
+      "土": 0,
+      "金": -20,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 1,
+    "index": 37
+  },
+  {
+    "element": "木",
+    "rarity": "legendary",
+    "species": "metal",
+    "wuxing": {
+      "木": 90,
+      "火": 0,
+      "土": 10,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 50,
+      "火": 0,
+      "土": 3,
+      "金": -20,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 2,
+    "index": 38
+  },
+  {
+    "element": "木",
+    "rarity": "legendary",
+    "species": "demon",
+    "wuxing": {
+      "木": 100,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 50,
+      "火": 0,
+      "土": 0,
+      "金": -20,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 3,
+    "index": 39
+  },
+  {
+    "element": "火",
+    "rarity": "common",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 50,
+      "土": 0,
+      "金": 50,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 18,
+      "土": 0,
+      "金": 18,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 30,
+    "index": 40
+  },
+  {
+    "element": "火",
+    "rarity": "common",
+    "species": "beast",
+    "wuxing": {
+      "木": 40,
+      "火": 60,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 14,
+      "火": 21,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 32,
+    "index": 41
+  },
+  {
+    "element": "火",
+    "rarity": "common",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 50,
+      "土": 10,
+      "金": 0,
+      "水": 20
+    },
+    "resist": {
+      "木": 7,
+      "火": 18,
+      "土": 4,
+      "金": 0,
+      "水": 7
+    },
+    "capturable": 1,
+    "captureRate": 34,
+    "index": 42
+  },
+  {
+    "element": "火",
+    "rarity": "common",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 50,
+      "土": 0,
+      "金": 50,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 18,
+      "土": 0,
+      "金": 18,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 36,
+    "index": 43
+  },
+  {
+    "element": "火",
+    "rarity": "common",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 60,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 21,
+      "土": 14,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 39,
+    "index": 44
+  },
+  {
+    "element": "火",
+    "rarity": "common",
+    "species": "flying",
+    "wuxing": {
+      "木": 20,
+      "火": 50,
+      "土": 10,
+      "金": 20,
+      "水": 0
+    },
+    "resist": {
+      "木": 7,
+      "火": 18,
+      "土": 4,
+      "金": 7,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 41,
+    "index": 45
+  },
+  {
+    "element": "火",
+    "rarity": "common",
+    "species": "insect",
+    "wuxing": {
+      "木": 50,
+      "火": 50,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 18,
+      "火": 18,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 43,
+    "index": 46
+  },
+  {
+    "element": "火",
+    "rarity": "common",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 60,
+      "土": 0,
+      "金": 0,
+      "水": 40
+    },
+    "resist": {
+      "木": 0,
+      "火": 21,
+      "土": 0,
+      "金": 0,
+      "水": 14
+    },
+    "capturable": 1,
+    "captureRate": 45,
+    "index": 47
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 60,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 24,
+      "土": 16,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 20,
+    "index": 48
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 70,
+      "土": 0,
+      "金": 0,
+      "水": 30
+    },
+    "resist": {
+      "木": 0,
+      "火": 28,
+      "土": 0,
+      "金": 0,
+      "水": 12
+    },
+    "capturable": 1,
+    "captureRate": 21,
+    "index": 49
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 60,
+      "土": 20,
+      "金": 20,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 24,
+      "土": 8,
+      "金": 8,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 22,
+    "index": 50
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "beast",
+    "wuxing": {
+      "木": 40,
+      "火": 60,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 16,
+      "火": 24,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 23,
+    "index": 51
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "plant",
+    "wuxing": {
+      "木": 30,
+      "火": 70,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 12,
+      "火": 28,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 24,
+    "index": 52
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 60,
+      "土": 0,
+      "金": 20,
+      "水": 20
+    },
+    "resist": {
+      "木": 0,
+      "火": 24,
+      "土": 0,
+      "金": 8,
+      "水": 8
+    },
+    "capturable": 1,
+    "captureRate": 25,
+    "index": 53
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 60,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 24,
+      "土": 16,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 25,
+    "index": 54
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "flying",
+    "wuxing": {
+      "木": 30,
+      "火": 70,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 12,
+      "火": 28,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 26,
+    "index": 55
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "insect",
+    "wuxing": {
+      "木": 20,
+      "火": 60,
+      "土": 20,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 8,
+      "火": 24,
+      "土": 8,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 27,
+    "index": 56
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 60,
+      "土": 0,
+      "金": 0,
+      "水": 40
+    },
+    "resist": {
+      "木": 0,
+      "火": 24,
+      "土": 0,
+      "金": 0,
+      "水": 16
+    },
+    "capturable": 1,
+    "captureRate": 28,
+    "index": 57
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 70,
+      "土": 30,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 28,
+      "土": 12,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 29,
+    "index": 58
+  },
+  {
+    "element": "火",
+    "rarity": "rare",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 60,
+      "土": 20,
+      "金": 0,
+      "水": 20
+    },
+    "resist": {
+      "木": 0,
+      "火": 24,
+      "土": 8,
+      "金": 0,
+      "水": 8
+    },
+    "capturable": 1,
+    "captureRate": 30,
+    "index": 59
+  },
+  {
+    "element": "火",
+    "rarity": "elite",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 70,
+      "土": 0,
+      "金": 30,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 32,
+      "土": 0,
+      "金": 14,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 12,
+    "index": 60
+  },
+  {
+    "element": "火",
+    "rarity": "elite",
+    "species": "beast",
+    "wuxing": {
+      "木": 20,
+      "火": 80,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 9,
+      "火": 36,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 13,
+    "index": 61
+  },
+  {
+    "element": "火",
+    "rarity": "elite",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 70,
+      "土": 0,
+      "金": 0,
+      "水": 10
+    },
+    "resist": {
+      "木": 9,
+      "火": 32,
+      "土": 0,
+      "金": 0,
+      "水": 5
+    },
+    "capturable": 1,
+    "captureRate": 14,
+    "index": 62
+  },
+  {
+    "element": "火",
+    "rarity": "elite",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 70,
+      "土": 0,
+      "金": 30,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 32,
+      "土": 0,
+      "金": 14,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 15,
+    "index": 63
+  },
+  {
+    "element": "火",
+    "rarity": "elite",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 80,
+      "土": 20,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 36,
+      "土": 9,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 17,
+    "index": 64
+  },
+  {
+    "element": "火",
+    "rarity": "elite",
+    "species": "flying",
+    "wuxing": {
+      "木": 20,
+      "火": 70,
+      "土": 0,
+      "金": 10,
+      "水": 0
+    },
+    "resist": {
+      "木": 9,
+      "火": 32,
+      "土": 0,
+      "金": 5,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 18,
+    "index": 65
+  },
+  {
+    "element": "火",
+    "rarity": "elite",
+    "species": "insect",
+    "wuxing": {
+      "木": 30,
+      "火": 70,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 14,
+      "火": 32,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 19,
+    "index": 66
+  },
+  {
+    "element": "火",
+    "rarity": "elite",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 80,
+      "土": 0,
+      "金": 0,
+      "水": 20
+    },
+    "resist": {
+      "木": 0,
+      "火": 36,
+      "土": 0,
+      "金": 0,
+      "水": 9
+    },
+    "capturable": 1,
+    "captureRate": 20,
+    "index": 67
+  },
+  {
+    "element": "火",
+    "rarity": "epic",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 80,
+      "土": 20,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 40,
+      "土": 6,
+      "金": 0,
+      "水": -10
+    },
+    "capturable": 1,
+    "captureRate": 5,
+    "index": 68
+  },
+  {
+    "element": "火",
+    "rarity": "epic",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 90,
+      "土": 0,
+      "金": 0,
+      "水": 10
+    },
+    "resist": {
+      "木": 0,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": -10
+    },
+    "capturable": 1,
+    "captureRate": 6,
+    "index": 69
+  },
+  {
+    "element": "火",
+    "rarity": "epic",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 80,
+      "土": 0,
+      "金": 20,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 40,
+      "土": 0,
+      "金": 6,
+      "水": -10
+    },
+    "capturable": 1,
+    "captureRate": 7,
+    "index": 70
+  },
+  {
+    "element": "火",
+    "rarity": "epic",
+    "species": "beast",
+    "wuxing": {
+      "木": 10,
+      "火": 90,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 3,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": -10
+    },
+    "capturable": 1,
+    "captureRate": 8,
+    "index": 71
+  },
+  {
+    "element": "火",
+    "rarity": "epic",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 80,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 6,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": -10
+    },
+    "capturable": 1,
+    "captureRate": 9,
+    "index": 72
+  },
+  {
+    "element": "火",
+    "rarity": "epic",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 90,
+      "土": 0,
+      "金": 10,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 40,
+      "土": 0,
+      "金": 3,
+      "水": -10
+    },
+    "capturable": 1,
+    "captureRate": 10,
+    "index": 73
+  },
+  {
+    "element": "火",
+    "rarity": "epic",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 80,
+      "土": 20,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 40,
+      "土": 6,
+      "金": 0,
+      "水": -10
+    },
+    "capturable": 1,
+    "captureRate": 11,
+    "index": 74
+  },
+  {
+    "element": "火",
+    "rarity": "epic",
+    "species": "flying",
+    "wuxing": {
+      "木": 10,
+      "火": 90,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 3,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": -10
+    },
+    "capturable": 1,
+    "captureRate": 12,
+    "index": 75
+  },
+  {
+    "element": "火",
+    "rarity": "legendary",
+    "species": "insect",
+    "wuxing": {
+      "木": 10,
+      "火": 90,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 3,
+      "火": 50,
+      "土": 0,
+      "金": 0,
+      "水": -20
+    },
+    "capturable": 0,
+    "captureRate": 0,
+    "index": 76
+  },
+  {
+    "element": "火",
+    "rarity": "legendary",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 100,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 50,
+      "土": 0,
+      "金": 0,
+      "水": -20
+    },
+    "capturable": 0,
+    "captureRate": 1,
+    "index": 77
+  },
+  {
+    "element": "火",
+    "rarity": "legendary",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 90,
+      "土": 10,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 50,
+      "土": 3,
+      "金": 0,
+      "水": -20
+    },
+    "capturable": 0,
+    "captureRate": 2,
+    "index": 78
+  },
+  {
+    "element": "火",
+    "rarity": "legendary",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 100,
+      "土": 0,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 50,
+      "土": 0,
+      "金": 0,
+      "水": -20
+    },
+    "capturable": 0,
+    "captureRate": 3,
+    "index": 79
+  },
+  {
+    "element": "土",
+    "rarity": "common",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 50,
+      "土": 50,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 18,
+      "土": 18,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 30,
+    "index": 80
+  },
+  {
+    "element": "土",
+    "rarity": "common",
+    "species": "beast",
+    "wuxing": {
+      "木": 40,
+      "火": 0,
+      "土": 60,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 14,
+      "火": 0,
+      "土": 21,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 32,
+    "index": 81
+  },
+  {
+    "element": "土",
+    "rarity": "common",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 50,
+      "金": 10,
+      "水": 20
+    },
+    "resist": {
+      "木": 7,
+      "火": 0,
+      "土": 18,
+      "金": 4,
+      "水": 7
+    },
+    "capturable": 1,
+    "captureRate": 34,
+    "index": 82
+  },
+  {
+    "element": "土",
+    "rarity": "common",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 50,
+      "金": 50,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 18,
+      "金": 18,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 36,
+    "index": 83
+  },
+  {
+    "element": "土",
+    "rarity": "common",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 60,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 14,
+      "土": 21,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 39,
+    "index": 84
+  },
+  {
+    "element": "土",
+    "rarity": "common",
+    "species": "flying",
+    "wuxing": {
+      "木": 20,
+      "火": 10,
+      "土": 50,
+      "金": 20,
+      "水": 0
+    },
+    "resist": {
+      "木": 7,
+      "火": 4,
+      "土": 18,
+      "金": 7,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 41,
+    "index": 85
+  },
+  {
+    "element": "土",
+    "rarity": "common",
+    "species": "insect",
+    "wuxing": {
+      "木": 50,
+      "火": 0,
+      "土": 50,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 18,
+      "火": 0,
+      "土": 18,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 43,
+    "index": 86
+  },
+  {
+    "element": "土",
+    "rarity": "common",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 60,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 14,
+      "土": 21,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 45,
+    "index": 87
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 60,
+      "金": 40,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 24,
+      "金": 16,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 20,
+    "index": 88
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 30,
+      "土": 70,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 12,
+      "土": 28,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 21,
+    "index": 89
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 60,
+      "金": 20,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 8,
+      "土": 24,
+      "金": 8,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 22,
+    "index": 90
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "beast",
+    "wuxing": {
+      "木": 40,
+      "火": 0,
+      "土": 60,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 16,
+      "火": 0,
+      "土": 24,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 23,
+    "index": 91
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "plant",
+    "wuxing": {
+      "木": 30,
+      "火": 0,
+      "土": 70,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 12,
+      "火": 0,
+      "土": 28,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 24,
+    "index": 92
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 60,
+      "金": 20,
+      "水": 20
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 24,
+      "金": 8,
+      "水": 8
+    },
+    "capturable": 1,
+    "captureRate": 25,
+    "index": 93
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 60,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 16,
+      "土": 24,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 25,
+    "index": 94
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "flying",
+    "wuxing": {
+      "木": 30,
+      "火": 0,
+      "土": 70,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 12,
+      "火": 0,
+      "土": 28,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 26,
+    "index": 95
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "insect",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 60,
+      "金": 20,
+      "水": 0
+    },
+    "resist": {
+      "木": 8,
+      "火": 0,
+      "土": 24,
+      "金": 8,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 27,
+    "index": 96
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 60,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 16,
+      "土": 24,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 28,
+    "index": 97
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 70,
+      "金": 30,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 28,
+      "金": 12,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 29,
+    "index": 98
+  },
+  {
+    "element": "土",
+    "rarity": "rare",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 60,
+      "金": 0,
+      "水": 20
+    },
+    "resist": {
+      "木": 0,
+      "火": 8,
+      "土": 24,
+      "金": 0,
+      "水": 8
+    },
+    "capturable": 1,
+    "captureRate": 30,
+    "index": 99
+  },
+  {
+    "element": "土",
+    "rarity": "elite",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 30,
+      "土": 70,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 14,
+      "土": 32,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 12,
+    "index": 100
+  },
+  {
+    "element": "土",
+    "rarity": "elite",
+    "species": "beast",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 80,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 9,
+      "火": 0,
+      "土": 36,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 13,
+    "index": 101
+  },
+  {
+    "element": "土",
+    "rarity": "elite",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 70,
+      "金": 0,
+      "水": 10
+    },
+    "resist": {
+      "木": 9,
+      "火": 0,
+      "土": 32,
+      "金": 0,
+      "水": 5
+    },
+    "capturable": 1,
+    "captureRate": 14,
+    "index": 102
+  },
+  {
+    "element": "土",
+    "rarity": "elite",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 70,
+      "金": 30,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 32,
+      "金": 14,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 15,
+    "index": 103
+  },
+  {
+    "element": "土",
+    "rarity": "elite",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 80,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 9,
+      "土": 36,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 17,
+    "index": 104
+  },
+  {
+    "element": "土",
+    "rarity": "elite",
+    "species": "flying",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 70,
+      "金": 10,
+      "水": 0
+    },
+    "resist": {
+      "木": 9,
+      "火": 0,
+      "土": 32,
+      "金": 5,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 18,
+    "index": 105
+  },
+  {
+    "element": "土",
+    "rarity": "elite",
+    "species": "insect",
+    "wuxing": {
+      "木": 30,
+      "火": 0,
+      "土": 70,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 14,
+      "火": 0,
+      "土": 32,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 19,
+    "index": 106
+  },
+  {
+    "element": "土",
+    "rarity": "elite",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 80,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 9,
+      "土": 36,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 20,
+    "index": 107
+  },
+  {
+    "element": "土",
+    "rarity": "epic",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 80,
+      "金": 20,
+      "水": 0
+    },
+    "resist": {
+      "木": -10,
+      "火": 0,
+      "土": 40,
+      "金": 6,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 5,
+    "index": 108
+  },
+  {
+    "element": "土",
+    "rarity": "epic",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 10,
+      "土": 90,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": -10,
+      "火": 3,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 6,
+    "index": 109
+  },
+  {
+    "element": "土",
+    "rarity": "epic",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 80,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": -10,
+      "火": 6,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 7,
+    "index": 110
+  },
+  {
+    "element": "土",
+    "rarity": "epic",
+    "species": "beast",
+    "wuxing": {
+      "木": 10,
+      "火": 0,
+      "土": 90,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": -10,
+      "火": 0,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 8,
+    "index": 111
+  },
+  {
+    "element": "土",
+    "rarity": "epic",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 80,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": -10,
+      "火": 0,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 9,
+    "index": 112
+  },
+  {
+    "element": "土",
+    "rarity": "epic",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 90,
+      "金": 10,
+      "水": 0
+    },
+    "resist": {
+      "木": -10,
+      "火": 0,
+      "土": 40,
+      "金": 3,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 10,
+    "index": 113
+  },
+  {
+    "element": "土",
+    "rarity": "epic",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 80,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": -10,
+      "火": 6,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 11,
+    "index": 114
+  },
+  {
+    "element": "土",
+    "rarity": "epic",
+    "species": "flying",
+    "wuxing": {
+      "木": 10,
+      "火": 0,
+      "土": 90,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": -10,
+      "火": 0,
+      "土": 40,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 12,
+    "index": 115
+  },
+  {
+    "element": "土",
+    "rarity": "legendary",
+    "species": "insect",
+    "wuxing": {
+      "木": 10,
+      "火": 0,
+      "土": 90,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": -20,
+      "火": 0,
+      "土": 50,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 0,
+    "index": 116
+  },
+  {
+    "element": "土",
+    "rarity": "legendary",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 100,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": -20,
+      "火": 0,
+      "土": 50,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 1,
+    "index": 117
+  },
+  {
+    "element": "土",
+    "rarity": "legendary",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 90,
+      "金": 10,
+      "水": 0
+    },
+    "resist": {
+      "木": -20,
+      "火": 0,
+      "土": 50,
+      "金": 3,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 2,
+    "index": 118
+  },
+  {
+    "element": "土",
+    "rarity": "legendary",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 100,
+      "金": 0,
+      "水": 0
+    },
+    "resist": {
+      "木": -20,
+      "火": 0,
+      "土": 50,
+      "金": 0,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 3,
+    "index": 119
+  },
+  {
+    "element": "金",
+    "rarity": "common",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 50,
+      "土": 0,
+      "金": 50,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 18,
+      "土": 0,
+      "金": 18,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 30,
+    "index": 120
+  },
+  {
+    "element": "金",
+    "rarity": "common",
+    "species": "beast",
+    "wuxing": {
+      "木": 40,
+      "火": 0,
+      "土": 0,
+      "金": 60,
+      "水": 0
+    },
+    "resist": {
+      "木": 14,
+      "火": 0,
+      "土": 0,
+      "金": 21,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 32,
+    "index": 121
+  },
+  {
+    "element": "金",
+    "rarity": "common",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 10,
+      "土": 0,
+      "金": 50,
+      "水": 20
+    },
+    "resist": {
+      "木": 7,
+      "火": 4,
+      "土": 0,
+      "金": 18,
+      "水": 7
+    },
+    "capturable": 1,
+    "captureRate": 34,
+    "index": 122
+  },
+  {
+    "element": "金",
+    "rarity": "common",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 50,
+      "水": 50
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 18,
+      "水": 18
+    },
+    "capturable": 1,
+    "captureRate": 36,
+    "index": 123
+  },
+  {
+    "element": "金",
+    "rarity": "common",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 0,
+      "金": 60,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 14,
+      "土": 0,
+      "金": 21,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 39,
+    "index": 124
+  },
+  {
+    "element": "金",
+    "rarity": "common",
+    "species": "flying",
+    "wuxing": {
+      "木": 20,
+      "火": 10,
+      "土": 0,
+      "金": 50,
+      "水": 20
+    },
+    "resist": {
+      "木": 7,
+      "火": 4,
+      "土": 0,
+      "金": 18,
+      "水": 7
+    },
+    "capturable": 1,
+    "captureRate": 41,
+    "index": 125
+  },
+  {
+    "element": "金",
+    "rarity": "common",
+    "species": "insect",
+    "wuxing": {
+      "木": 50,
+      "火": 0,
+      "土": 0,
+      "金": 50,
+      "水": 0
+    },
+    "resist": {
+      "木": 18,
+      "火": 0,
+      "土": 0,
+      "金": 18,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 43,
+    "index": 126
+  },
+  {
+    "element": "金",
+    "rarity": "common",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 0,
+      "金": 60,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 14,
+      "土": 0,
+      "金": 21,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 45,
+    "index": 127
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 40,
+      "金": 60,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 16,
+      "金": 24,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 20,
+    "index": 128
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 30,
+      "土": 0,
+      "金": 70,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 12,
+      "土": 0,
+      "金": 28,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 21,
+    "index": 129
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 0,
+      "金": 60,
+      "水": 20
+    },
+    "resist": {
+      "木": 0,
+      "火": 8,
+      "土": 0,
+      "金": 24,
+      "水": 8
+    },
+    "capturable": 1,
+    "captureRate": 22,
+    "index": 130
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "beast",
+    "wuxing": {
+      "木": 40,
+      "火": 0,
+      "土": 0,
+      "金": 60,
+      "水": 0
+    },
+    "resist": {
+      "木": 16,
+      "火": 0,
+      "土": 0,
+      "金": 24,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 23,
+    "index": 131
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "plant",
+    "wuxing": {
+      "木": 30,
+      "火": 0,
+      "土": 0,
+      "金": 70,
+      "水": 0
+    },
+    "resist": {
+      "木": 12,
+      "火": 0,
+      "土": 0,
+      "金": 28,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 24,
+    "index": 132
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "undead",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 0,
+      "金": 60,
+      "水": 20
+    },
+    "resist": {
+      "木": 8,
+      "火": 0,
+      "土": 0,
+      "金": 24,
+      "水": 8
+    },
+    "capturable": 1,
+    "captureRate": 25,
+    "index": 133
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 0,
+      "金": 60,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 16,
+      "土": 0,
+      "金": 24,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 25,
+    "index": 134
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "flying",
+    "wuxing": {
+      "木": 30,
+      "火": 0,
+      "土": 0,
+      "金": 70,
+      "水": 0
+    },
+    "resist": {
+      "木": 12,
+      "火": 0,
+      "土": 0,
+      "金": 28,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 26,
+    "index": 135
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "insect",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 20,
+      "金": 60,
+      "水": 0
+    },
+    "resist": {
+      "木": 8,
+      "火": 0,
+      "土": 8,
+      "金": 24,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 27,
+    "index": 136
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 0,
+      "金": 60,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 16,
+      "土": 0,
+      "金": 24,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 28,
+    "index": 137
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 30,
+      "金": 70,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 12,
+      "金": 28,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 29,
+    "index": 138
+  },
+  {
+    "element": "金",
+    "rarity": "rare",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 0,
+      "金": 60,
+      "水": 20
+    },
+    "resist": {
+      "木": 0,
+      "火": 8,
+      "土": 0,
+      "金": 24,
+      "水": 8
+    },
+    "capturable": 1,
+    "captureRate": 30,
+    "index": 139
+  },
+  {
+    "element": "金",
+    "rarity": "elite",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 30,
+      "土": 0,
+      "金": 70,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 14,
+      "土": 0,
+      "金": 32,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 12,
+    "index": 140
+  },
+  {
+    "element": "金",
+    "rarity": "elite",
+    "species": "beast",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 0,
+      "金": 80,
+      "水": 0
+    },
+    "resist": {
+      "木": 9,
+      "火": 0,
+      "土": 0,
+      "金": 36,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 13,
+    "index": 141
+  },
+  {
+    "element": "金",
+    "rarity": "elite",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 0,
+      "金": 70,
+      "水": 10
+    },
+    "resist": {
+      "木": 9,
+      "火": 0,
+      "土": 0,
+      "金": 32,
+      "水": 5
+    },
+    "capturable": 1,
+    "captureRate": 14,
+    "index": 142
+  },
+  {
+    "element": "金",
+    "rarity": "elite",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 70,
+      "水": 30
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 32,
+      "水": 14
+    },
+    "capturable": 1,
+    "captureRate": 15,
+    "index": 143
+  },
+  {
+    "element": "金",
+    "rarity": "elite",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 0,
+      "金": 80,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 9,
+      "土": 0,
+      "金": 36,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 17,
+    "index": 144
+  },
+  {
+    "element": "金",
+    "rarity": "elite",
+    "species": "flying",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 0,
+      "金": 70,
+      "水": 10
+    },
+    "resist": {
+      "木": 9,
+      "火": 0,
+      "土": 0,
+      "金": 32,
+      "水": 5
+    },
+    "capturable": 1,
+    "captureRate": 18,
+    "index": 145
+  },
+  {
+    "element": "金",
+    "rarity": "elite",
+    "species": "insect",
+    "wuxing": {
+      "木": 30,
+      "火": 0,
+      "土": 0,
+      "金": 70,
+      "水": 0
+    },
+    "resist": {
+      "木": 14,
+      "火": 0,
+      "土": 0,
+      "金": 32,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 19,
+    "index": 146
+  },
+  {
+    "element": "金",
+    "rarity": "elite",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 0,
+      "金": 80,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": 9,
+      "土": 0,
+      "金": 36,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 20,
+    "index": 147
+  },
+  {
+    "element": "金",
+    "rarity": "epic",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 20,
+      "金": 80,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": -10,
+      "土": 6,
+      "金": 40,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 5,
+    "index": 148
+  },
+  {
+    "element": "金",
+    "rarity": "epic",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 10,
+      "土": 0,
+      "金": 90,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": -10,
+      "土": 0,
+      "金": 40,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 6,
+    "index": 149
+  },
+  {
+    "element": "金",
+    "rarity": "epic",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 0,
+      "金": 80,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": -10,
+      "土": 0,
+      "金": 40,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 7,
+    "index": 150
+  },
+  {
+    "element": "金",
+    "rarity": "epic",
+    "species": "beast",
+    "wuxing": {
+      "木": 10,
+      "火": 0,
+      "土": 0,
+      "金": 90,
+      "水": 0
+    },
+    "resist": {
+      "木": 3,
+      "火": -10,
+      "土": 0,
+      "金": 40,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 8,
+    "index": 151
+  },
+  {
+    "element": "金",
+    "rarity": "epic",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 0,
+      "金": 80,
+      "水": 0
+    },
+    "resist": {
+      "木": 6,
+      "火": -10,
+      "土": 0,
+      "金": 40,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 9,
+    "index": 152
+  },
+  {
+    "element": "金",
+    "rarity": "epic",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 90,
+      "水": 10
+    },
+    "resist": {
+      "木": 0,
+      "火": -10,
+      "土": 0,
+      "金": 40,
+      "水": 3
+    },
+    "capturable": 1,
+    "captureRate": 10,
+    "index": 153
+  },
+  {
+    "element": "金",
+    "rarity": "epic",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 0,
+      "金": 80,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": -10,
+      "土": 0,
+      "金": 40,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 11,
+    "index": 154
+  },
+  {
+    "element": "金",
+    "rarity": "epic",
+    "species": "flying",
+    "wuxing": {
+      "木": 10,
+      "火": 0,
+      "土": 0,
+      "金": 90,
+      "水": 0
+    },
+    "resist": {
+      "木": 3,
+      "火": -10,
+      "土": 0,
+      "金": 40,
+      "水": 0
+    },
+    "capturable": 1,
+    "captureRate": 12,
+    "index": 155
+  },
+  {
+    "element": "金",
+    "rarity": "legendary",
+    "species": "insect",
+    "wuxing": {
+      "木": 10,
+      "火": 0,
+      "土": 0,
+      "金": 90,
+      "水": 0
+    },
+    "resist": {
+      "木": 3,
+      "火": -20,
+      "土": 0,
+      "金": 50,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 0,
+    "index": 156
+  },
+  {
+    "element": "金",
+    "rarity": "legendary",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 100,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": -20,
+      "土": 0,
+      "金": 50,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 1,
+    "index": 157
+  },
+  {
+    "element": "金",
+    "rarity": "legendary",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 10,
+      "金": 90,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": -20,
+      "土": 3,
+      "金": 50,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 2,
+    "index": 158
+  },
+  {
+    "element": "金",
+    "rarity": "legendary",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 100,
+      "水": 0
+    },
+    "resist": {
+      "木": 0,
+      "火": -20,
+      "土": 0,
+      "金": 50,
+      "水": 0
+    },
+    "capturable": 0,
+    "captureRate": 3,
+    "index": 159
+  },
+  {
+    "element": "水",
+    "rarity": "common",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 50,
+      "土": 0,
+      "金": 0,
+      "水": 50
+    },
+    "resist": {
+      "木": 0,
+      "火": 18,
+      "土": 0,
+      "金": 0,
+      "水": 18
+    },
+    "capturable": 1,
+    "captureRate": 30,
+    "index": 160
+  },
+  {
+    "element": "水",
+    "rarity": "common",
+    "species": "beast",
+    "wuxing": {
+      "木": 40,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 60
+    },
+    "resist": {
+      "木": 14,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 21
+    },
+    "capturable": 1,
+    "captureRate": 32,
+    "index": 161
+  },
+  {
+    "element": "水",
+    "rarity": "common",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 20,
+      "土": 10,
+      "金": 0,
+      "水": 50
+    },
+    "resist": {
+      "木": 7,
+      "火": 7,
+      "土": 4,
+      "金": 0,
+      "水": 18
+    },
+    "capturable": 1,
+    "captureRate": 34,
+    "index": 162
+  },
+  {
+    "element": "水",
+    "rarity": "common",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 50,
+      "水": 50
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 18,
+      "水": 18
+    },
+    "capturable": 1,
+    "captureRate": 36,
+    "index": 163
+  },
+  {
+    "element": "水",
+    "rarity": "common",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": 60
+    },
+    "resist": {
+      "木": 0,
+      "火": 14,
+      "土": 0,
+      "金": 0,
+      "水": 21
+    },
+    "capturable": 1,
+    "captureRate": 39,
+    "index": 164
+  },
+  {
+    "element": "水",
+    "rarity": "common",
+    "species": "flying",
+    "wuxing": {
+      "木": 20,
+      "火": 10,
+      "土": 0,
+      "金": 20,
+      "水": 50
+    },
+    "resist": {
+      "木": 7,
+      "火": 4,
+      "土": 0,
+      "金": 7,
+      "水": 18
+    },
+    "capturable": 1,
+    "captureRate": 41,
+    "index": 165
+  },
+  {
+    "element": "水",
+    "rarity": "common",
+    "species": "insect",
+    "wuxing": {
+      "木": 50,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 50
+    },
+    "resist": {
+      "木": 18,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 18
+    },
+    "capturable": 1,
+    "captureRate": 43,
+    "index": 166
+  },
+  {
+    "element": "水",
+    "rarity": "common",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": 60
+    },
+    "resist": {
+      "木": 0,
+      "火": 14,
+      "土": 0,
+      "金": 0,
+      "水": 21
+    },
+    "capturable": 1,
+    "captureRate": 45,
+    "index": 167
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 40,
+      "金": 0,
+      "水": 60
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 16,
+      "金": 0,
+      "水": 24
+    },
+    "capturable": 1,
+    "captureRate": 20,
+    "index": 168
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 30,
+      "土": 0,
+      "金": 0,
+      "水": 70
+    },
+    "resist": {
+      "木": 0,
+      "火": 12,
+      "土": 0,
+      "金": 0,
+      "水": 28
+    },
+    "capturable": 1,
+    "captureRate": 21,
+    "index": 169
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 0,
+      "金": 20,
+      "水": 60
+    },
+    "resist": {
+      "木": 0,
+      "火": 8,
+      "土": 0,
+      "金": 8,
+      "水": 24
+    },
+    "capturable": 1,
+    "captureRate": 22,
+    "index": 170
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "beast",
+    "wuxing": {
+      "木": 40,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 60
+    },
+    "resist": {
+      "木": 16,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 24
+    },
+    "capturable": 1,
+    "captureRate": 23,
+    "index": 171
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "plant",
+    "wuxing": {
+      "木": 30,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 70
+    },
+    "resist": {
+      "木": 12,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 28
+    },
+    "capturable": 1,
+    "captureRate": 24,
+    "index": 172
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "undead",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 0,
+      "金": 20,
+      "水": 60
+    },
+    "resist": {
+      "木": 8,
+      "火": 0,
+      "土": 0,
+      "金": 8,
+      "水": 24
+    },
+    "capturable": 1,
+    "captureRate": 25,
+    "index": 173
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": 60
+    },
+    "resist": {
+      "木": 0,
+      "火": 16,
+      "土": 0,
+      "金": 0,
+      "水": 24
+    },
+    "capturable": 1,
+    "captureRate": 25,
+    "index": 174
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "flying",
+    "wuxing": {
+      "木": 30,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 70
+    },
+    "resist": {
+      "木": 12,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 28
+    },
+    "capturable": 1,
+    "captureRate": 26,
+    "index": 175
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "insect",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 20,
+      "金": 0,
+      "水": 60
+    },
+    "resist": {
+      "木": 8,
+      "火": 0,
+      "土": 8,
+      "金": 0,
+      "水": 24
+    },
+    "capturable": 1,
+    "captureRate": 27,
+    "index": 176
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 40,
+      "土": 0,
+      "金": 0,
+      "水": 60
+    },
+    "resist": {
+      "木": 0,
+      "火": 16,
+      "土": 0,
+      "金": 0,
+      "水": 24
+    },
+    "capturable": 1,
+    "captureRate": 28,
+    "index": 177
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 30,
+      "金": 0,
+      "水": 70
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 12,
+      "金": 0,
+      "水": 28
+    },
+    "capturable": 1,
+    "captureRate": 29,
+    "index": 178
+  },
+  {
+    "element": "水",
+    "rarity": "rare",
+    "species": "demon",
+    "wuxing": {
+      "木": 20,
+      "火": 20,
+      "土": 0,
+      "金": 0,
+      "水": 60
+    },
+    "resist": {
+      "木": 8,
+      "火": 8,
+      "土": 0,
+      "金": 0,
+      "水": 24
+    },
+    "capturable": 1,
+    "captureRate": 30,
+    "index": 179
+  },
+  {
+    "element": "水",
+    "rarity": "elite",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 30,
+      "土": 0,
+      "金": 0,
+      "水": 70
+    },
+    "resist": {
+      "木": 0,
+      "火": 14,
+      "土": 0,
+      "金": 0,
+      "水": 32
+    },
+    "capturable": 1,
+    "captureRate": 12,
+    "index": 180
+  },
+  {
+    "element": "水",
+    "rarity": "elite",
+    "species": "beast",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 80
+    },
+    "resist": {
+      "木": 9,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 36
+    },
+    "capturable": 1,
+    "captureRate": 13,
+    "index": 181
+  },
+  {
+    "element": "水",
+    "rarity": "elite",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 10,
+      "土": 0,
+      "金": 0,
+      "水": 70
+    },
+    "resist": {
+      "木": 9,
+      "火": 5,
+      "土": 0,
+      "金": 0,
+      "水": 32
+    },
+    "capturable": 1,
+    "captureRate": 14,
+    "index": 182
+  },
+  {
+    "element": "水",
+    "rarity": "elite",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 30,
+      "水": 70
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 14,
+      "水": 32
+    },
+    "capturable": 1,
+    "captureRate": 15,
+    "index": 183
+  },
+  {
+    "element": "水",
+    "rarity": "elite",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 0,
+      "金": 0,
+      "水": 80
+    },
+    "resist": {
+      "木": 0,
+      "火": 9,
+      "土": 0,
+      "金": 0,
+      "水": 36
+    },
+    "capturable": 1,
+    "captureRate": 17,
+    "index": 184
+  },
+  {
+    "element": "水",
+    "rarity": "elite",
+    "species": "flying",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 0,
+      "金": 10,
+      "水": 70
+    },
+    "resist": {
+      "木": 9,
+      "火": 0,
+      "土": 0,
+      "金": 5,
+      "水": 32
+    },
+    "capturable": 1,
+    "captureRate": 18,
+    "index": 185
+  },
+  {
+    "element": "水",
+    "rarity": "elite",
+    "species": "insect",
+    "wuxing": {
+      "木": 30,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 70
+    },
+    "resist": {
+      "木": 14,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 32
+    },
+    "capturable": 1,
+    "captureRate": 19,
+    "index": 186
+  },
+  {
+    "element": "水",
+    "rarity": "elite",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 0,
+      "金": 0,
+      "水": 80
+    },
+    "resist": {
+      "木": 0,
+      "火": 9,
+      "土": 0,
+      "金": 0,
+      "水": 36
+    },
+    "capturable": 1,
+    "captureRate": 20,
+    "index": 187
+  },
+  {
+    "element": "水",
+    "rarity": "epic",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 20,
+      "金": 0,
+      "水": 80
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": -10,
+      "金": 0,
+      "水": 40
+    },
+    "capturable": 1,
+    "captureRate": 5,
+    "index": 188
+  },
+  {
+    "element": "水",
+    "rarity": "epic",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 10,
+      "土": 0,
+      "金": 0,
+      "水": 90
+    },
+    "resist": {
+      "木": 0,
+      "火": 3,
+      "土": -10,
+      "金": 0,
+      "水": 40
+    },
+    "capturable": 1,
+    "captureRate": 6,
+    "index": 189
+  },
+  {
+    "element": "水",
+    "rarity": "epic",
+    "species": "humanoid",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 0,
+      "金": 0,
+      "水": 80
+    },
+    "resist": {
+      "木": 0,
+      "火": 6,
+      "土": -10,
+      "金": 0,
+      "水": 40
+    },
+    "capturable": 1,
+    "captureRate": 7,
+    "index": 190
+  },
+  {
+    "element": "水",
+    "rarity": "epic",
+    "species": "beast",
+    "wuxing": {
+      "木": 10,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 90
+    },
+    "resist": {
+      "木": 3,
+      "火": 0,
+      "土": -10,
+      "金": 0,
+      "水": 40
+    },
+    "capturable": 1,
+    "captureRate": 8,
+    "index": 191
+  },
+  {
+    "element": "水",
+    "rarity": "epic",
+    "species": "plant",
+    "wuxing": {
+      "木": 20,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 80
+    },
+    "resist": {
+      "木": 6,
+      "火": 0,
+      "土": -10,
+      "金": 0,
+      "水": 40
+    },
+    "capturable": 1,
+    "captureRate": 9,
+    "index": 192
+  },
+  {
+    "element": "水",
+    "rarity": "epic",
+    "species": "undead",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 10,
+      "水": 90
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": -10,
+      "金": 3,
+      "水": 40
+    },
+    "capturable": 1,
+    "captureRate": 10,
+    "index": 193
+  },
+  {
+    "element": "水",
+    "rarity": "epic",
+    "species": "dragon",
+    "wuxing": {
+      "木": 0,
+      "火": 20,
+      "土": 0,
+      "金": 0,
+      "水": 80
+    },
+    "resist": {
+      "木": 0,
+      "火": 6,
+      "土": -10,
+      "金": 0,
+      "水": 40
+    },
+    "capturable": 1,
+    "captureRate": 11,
+    "index": 194
+  },
+  {
+    "element": "水",
+    "rarity": "epic",
+    "species": "flying",
+    "wuxing": {
+      "木": 10,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 90
+    },
+    "resist": {
+      "木": 3,
+      "火": 0,
+      "土": -10,
+      "金": 0,
+      "水": 40
+    },
+    "capturable": 1,
+    "captureRate": 12,
+    "index": 195
+  },
+  {
+    "element": "水",
+    "rarity": "legendary",
+    "species": "insect",
+    "wuxing": {
+      "木": 10,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 90
+    },
+    "resist": {
+      "木": 3,
+      "火": 0,
+      "土": -20,
+      "金": 0,
+      "水": 50
+    },
+    "capturable": 0,
+    "captureRate": 0,
+    "index": 196
+  },
+  {
+    "element": "水",
+    "rarity": "legendary",
+    "species": "special",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 100
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": -20,
+      "金": 0,
+      "水": 50
+    },
+    "capturable": 0,
+    "captureRate": 1,
+    "index": 197
+  },
+  {
+    "element": "水",
+    "rarity": "legendary",
+    "species": "metal",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 10,
+      "金": 0,
+      "水": 90
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": -20,
+      "金": 0,
+      "水": 50
+    },
+    "capturable": 0,
+    "captureRate": 2,
+    "index": 198
+  },
+  {
+    "element": "水",
+    "rarity": "legendary",
+    "species": "demon",
+    "wuxing": {
+      "木": 0,
+      "火": 0,
+      "土": 0,
+      "金": 0,
+      "水": 100
+    },
+    "resist": {
+      "木": 0,
+      "火": 0,
+      "土": -20,
+      "金": 0,
+      "水": 50
+    },
+    "capturable": 0,
+    "captureRate": 3,
+    "index": 199
+  }
+]

@@ -1,0 +1,352 @@
+{
+  "query": "SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_W%' ORDER BY monster_id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_W%' ORDER BY monster_id;",
+  "rows": [
+    {
+      "monster_id": "M_W001"
+    },
+    {
+      "monster_id": "M_W002"
+    },
+    {
+      "monster_id": "M_W003"
+    },
+    {
+      "monster_id": "M_W004"
+    },
+    {
+      "monster_id": "M_W005"
+    },
+    {
+      "monster_id": "M_W006"
+    },
+    {
+      "monster_id": "M_W007"
+    },
+    {
+      "monster_id": "M_W008"
+    },
+    {
+      "monster_id": "M_W009"
+    },
+    {
+      "monster_id": "M_W010"
+    },
+    {
+      "monster_id": "M_W011"
+    },
+    {
+      "monster_id": "M_W012"
+    },
+    {
+      "monster_id": "M_W013"
+    },
+    {
+      "monster_id": "M_W014"
+    },
+    {
+      "monster_id": "M_W015"
+    },
+    {
+      "monster_id": "M_W016"
+    },
+    {
+      "monster_id": "M_W017"
+    },
+    {
+      "monster_id": "M_W018"
+    },
+    {
+      "monster_id": "M_W019"
+    },
+    {
+      "monster_id": "M_W020"
+    },
+    {
+      "monster_id": "M_W021"
+    },
+    {
+      "monster_id": "M_W022"
+    },
+    {
+      "monster_id": "M_W023"
+    },
+    {
+      "monster_id": "M_W024"
+    },
+    {
+      "monster_id": "M_W025"
+    },
+    {
+      "monster_id": "M_W051"
+    },
+    {
+      "monster_id": "M_W052"
+    },
+    {
+      "monster_id": "M_W053"
+    },
+    {
+      "monster_id": "M_W054"
+    },
+    {
+      "monster_id": "M_W055"
+    },
+    {
+      "monster_id": "M_W056"
+    },
+    {
+      "monster_id": "M_W057"
+    },
+    {
+      "monster_id": "M_W058"
+    },
+    {
+      "monster_id": "M_W059"
+    },
+    {
+      "monster_id": "M_W060"
+    },
+    {
+      "monster_id": "M_W061"
+    },
+    {
+      "monster_id": "M_W062"
+    },
+    {
+      "monster_id": "M_W063"
+    },
+    {
+      "monster_id": "M_W064"
+    },
+    {
+      "monster_id": "M_W065"
+    },
+    {
+      "monster_id": "M_W066"
+    },
+    {
+      "monster_id": "M_W067"
+    },
+    {
+      "monster_id": "M_W068"
+    },
+    {
+      "monster_id": "M_W069"
+    },
+    {
+      "monster_id": "M_W070"
+    },
+    {
+      "monster_id": "M_Wt001"
+    },
+    {
+      "monster_id": "M_Wt002"
+    },
+    {
+      "monster_id": "M_Wt003"
+    },
+    {
+      "monster_id": "M_Wt004"
+    },
+    {
+      "monster_id": "M_Wt005"
+    },
+    {
+      "monster_id": "M_Wt006"
+    },
+    {
+      "monster_id": "M_Wt007"
+    },
+    {
+      "monster_id": "M_Wt008"
+    },
+    {
+      "monster_id": "M_Wt009"
+    },
+    {
+      "monster_id": "M_Wt010"
+    },
+    {
+      "monster_id": "M_Wt011"
+    },
+    {
+      "monster_id": "M_Wt012"
+    },
+    {
+      "monster_id": "M_Wt013"
+    },
+    {
+      "monster_id": "M_Wt014"
+    },
+    {
+      "monster_id": "M_Wt015"
+    },
+    {
+      "monster_id": "M_Wt016"
+    },
+    {
+      "monster_id": "M_Wt017"
+    },
+    {
+      "monster_id": "M_Wt018"
+    },
+    {
+      "monster_id": "M_Wt019"
+    },
+    {
+      "monster_id": "M_Wt020"
+    },
+    {
+      "monster_id": "M_Wt021"
+    },
+    {
+      "monster_id": "M_Wt022"
+    },
+    {
+      "monster_id": "M_Wt023"
+    },
+    {
+      "monster_id": "M_Wt024"
+    },
+    {
+      "monster_id": "M_Wt025"
+    },
+    {
+      "monster_id": "M_Wt026"
+    },
+    {
+      "monster_id": "M_Wt027"
+    },
+    {
+      "monster_id": "M_Wt028"
+    },
+    {
+      "monster_id": "M_Wt029"
+    },
+    {
+      "monster_id": "M_Wt030"
+    },
+    {
+      "monster_id": "M_Wt031"
+    },
+    {
+      "monster_id": "M_Wt032"
+    },
+    {
+      "monster_id": "M_Wt033"
+    },
+    {
+      "monster_id": "M_Wt034"
+    },
+    {
+      "monster_id": "M_Wt035"
+    },
+    {
+      "monster_id": "M_Wt036"
+    },
+    {
+      "monster_id": "M_Wt037"
+    },
+    {
+      "monster_id": "M_Wt038"
+    },
+    {
+      "monster_id": "M_Wt039"
+    },
+    {
+      "monster_id": "M_Wt040"
+    },
+    {
+      "monster_id": "M_Wt041"
+    },
+    {
+      "monster_id": "M_Wt042"
+    },
+    {
+      "monster_id": "M_Wt043"
+    },
+    {
+      "monster_id": "M_Wt044"
+    },
+    {
+      "monster_id": "M_Wt045"
+    },
+    {
+      "monster_id": "M_Wt046"
+    },
+    {
+      "monster_id": "M_Wt047"
+    },
+    {
+      "monster_id": "M_Wt048"
+    },
+    {
+      "monster_id": "M_Wt049"
+    },
+    {
+      "monster_id": "M_Wt050"
+    },
+    {
+      "monster_id": "M_Wt051"
+    },
+    {
+      "monster_id": "M_Wt052"
+    },
+    {
+      "monster_id": "M_Wt053"
+    },
+    {
+      "monster_id": "M_Wt054"
+    },
+    {
+      "monster_id": "M_Wt055"
+    },
+    {
+      "monster_id": "M_Wt056"
+    },
+    {
+      "monster_id": "M_Wt057"
+    },
+    {
+      "monster_id": "M_Wt058"
+    },
+    {
+      "monster_id": "M_Wt059"
+    },
+    {
+      "monster_id": "M_Wt060"
+    },
+    {
+      "monster_id": "M_Wt061"
+    },
+    {
+      "monster_id": "M_Wt062"
+    },
+    {
+      "monster_id": "M_Wt063"
+    },
+    {
+      "monster_id": "M_Wt064"
+    },
+    {
+      "monster_id": "M_Wt065"
+    },
+    {
+      "monster_id": "M_Wt066"
+    },
+    {
+      "monster_id": "M_Wt067"
+    },
+    {
+      "monster_id": "M_Wt068"
+    },
+    {
+      "monster_id": "M_Wt069"
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_id\nM_W001\nM_W002\nM_W003\nM_W004\nM_W005\nM_W006\nM_W007\nM_W008\nM_W009\nM_W010\nM_W011\nM_W012\nM_W013\nM_W014\nM_W015\nM_W016\nM_W017\nM_W018\nM_W019\nM_W020\nM_W021\nM_W022\nM_W023\nM_W024\nM_W025\nM_W051\nM_W052\nM_W053\nM_W054\nM_W055\nM_W056\nM_W057\nM_W058\nM_W059\nM_W060\nM_W061\nM_W062\nM_W063\nM_W064\nM_W065\nM_W066\nM_W067\nM_W068\nM_W069\nM_W070\nM_Wt001\nM_Wt002\nM_Wt003\nM_Wt004\nM_Wt005\nM_Wt006\nM_Wt007\nM_Wt008\nM_Wt009\nM_Wt010\nM_Wt011\nM_Wt012\nM_Wt013\nM_Wt014\nM_Wt015\nM_Wt016\nM_Wt017\nM_Wt018\nM_Wt019\nM_Wt020\nM_Wt021\nM_Wt022\nM_Wt023\nM_Wt024\nM_Wt025\nM_Wt026\nM_Wt027\nM_Wt028\nM_Wt029\nM_Wt030\nM_Wt031\nM_Wt032\nM_Wt033\nM_Wt034\nM_Wt035\nM_Wt036\nM_Wt037\nM_Wt038\nM_Wt039\nM_Wt040\nM_Wt041\nM_Wt042\nM_Wt043\nM_Wt044\nM_Wt045\nM_Wt046\nM_Wt047\nM_Wt048\nM_Wt049\nM_Wt050\nM_Wt051\nM_Wt052\nM_Wt053\nM_Wt054\nM_Wt055\nM_Wt056\nM_Wt057\nM_Wt058\nM_Wt059\nM_Wt060\nM_Wt061\nM_Wt062\nM_Wt063\nM_Wt064\nM_Wt065\nM_Wt066\nM_Wt067\nM_Wt068\nM_Wt069\n",
+  "stderr": "",
+  "execution_time_ms": 1520
+}

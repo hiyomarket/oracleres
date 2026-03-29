@@ -54,13 +54,60 @@ const WUXING_OPTS = [
 
 const RARITY_OPTS = [
   { value: "common", label: "普通" },
-  { value: "rare", label: "稀有" },
+  { value: "uncommon", label: "稀有" },
+  { value: "rare", label: "精良" },
   { value: "epic", label: "史詩" },
   { value: "legendary", label: "傳說" },
 ];
 
 const WUXING_FILTER = [{ value: "", label: "全部" }, ...WUXING_OPTS];
 const RARITY_FILTER = [{ value: "", label: "全部稀有度" }, ...RARITY_OPTS];
+
+// 種族中文標籤
+const SPECIES_LABELS: Record<string, string> = {
+  beast: "獸類", humanoid: "人形", plant: "植物", undead: "不死",
+  dragon: "龍族", flying: "飛行", insect: "蟲類", special: "特殊",
+  metal: "金屬", demon: "邪魔",
+};
+
+// 五行分配條形圖組件
+function WuxingBar({ wood = 0, fire = 0, earth = 0, metal = 0, water = 0 }: {
+  wood?: number; fire?: number; earth?: number; metal?: number; water?: number;
+}) {
+  const bars = [
+    { val: wood, color: "#22C55E", label: "木" },
+    { val: fire, color: "#EF4444", label: "火" },
+    { val: earth, color: "#D97706", label: "土" },
+    { val: metal, color: "#9CA3AF", label: "金" },
+    { val: water, color: "#3B82F6", label: "水" },
+  ].filter(b => b.val > 0);
+  return (
+    <div className="flex h-3 w-24 rounded-sm overflow-hidden" title={bars.map(b => `${b.label}${b.val}%`).join(" ")}>
+      {bars.map(b => (
+        <div key={b.label} style={{ width: `${b.val}%`, backgroundColor: b.color }} className="h-full" />
+      ))}
+    </div>
+  );
+}
+
+// 稀有度徽章組件
+function RarityBadge({ rarity }: { rarity: string }) {
+  const styles: Record<string, string> = {
+    common: "bg-gray-500/20 text-gray-400",
+    uncommon: "bg-green-500/20 text-green-400",
+    rare: "bg-blue-500/20 text-blue-400",
+    epic: "bg-purple-500/20 text-purple-400",
+    legendary: "bg-amber-500/20 text-amber-400",
+  };
+  const labels: Record<string, string> = {
+    common: "普通", uncommon: "稀有", rare: "精良", epic: "史詩", legendary: "傳說",
+  };
+  return (
+    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${styles[rarity] || "bg-muted text-muted-foreground"}`}>
+      {labels[rarity] || rarity}
+    </span>
+  );
+}
 
 const PAGE_SIZE_OPTIONS = [20, 50, 100, 200];
 
@@ -856,12 +903,13 @@ export function MonsterCatalogV2Tab() {
                   <th className="text-left py-2 px-2 whitespace-nowrap">ID</th>
                   <th className="text-left py-2 px-2 whitespace-nowrap">名稱</th>
                   <th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">種族</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">五行分配</th>
                   <th className="text-left py-2 px-2 whitespace-nowrap">等級</th>
                   <th className="text-left py-2 px-2 whitespace-nowrap">HP</th>
                   <th className="text-left py-2 px-2 whitespace-nowrap">攻</th>
-                  <th className="text-left py-2 px-2 whitespace-nowrap">防</th>
-                  <th className="text-left py-2 px-2 whitespace-nowrap">速</th>
                   <th className="text-left py-2 px-2 whitespace-nowrap">稀有度</th>
+                  <th className="text-left py-2 px-2 whitespace-nowrap">捕捉</th>
                   <th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
                 </tr>
               </thead>
@@ -873,12 +921,13 @@ export function MonsterCatalogV2Tab() {
                       <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.monsterId}</td>
                       <td className="py-2 px-2 font-medium">{m.name}</td>
                       <td className="py-2 px-2 text-xs">{m.wuxing}</td>
+                      <td className="py-2 px-2 text-xs">{SPECIES_LABELS[m.species] || m.species}</td>
+                      <td className="py-2 px-2"><WuxingBar wood={m.wuxingWood} fire={m.wuxingFire} earth={m.wuxingEarth} metal={m.wuxingMetal} water={m.wuxingWater} /></td>
                       <td className="py-2 px-2 text-xs">{m.levelRange}</td>
                       <td className="py-2 px-2">{m.baseHp}</td>
                       <td className="py-2 px-2">{m.baseAttack}</td>
-                      <td className="py-2 px-2">{m.baseDefense}</td>
-                      <td className="py-2 px-2">{m.baseSpeed}</td>
-                      <td className="py-2 px-2 text-xs">{m.rarity}</td>
+                      <td className="py-2 px-2 text-xs"><RarityBadge rarity={m.rarity} /></td>
+                      <td className="py-2 px-2 text-xs">{m.isCapturable ? `${m.baseCaptureRate}%` : '❌'}</td>
                       <td className="py-2 px-2 space-x-1" onClick={e => e.stopPropagation()}>
                         <AiImageBtn type="monster" id={m.monsterId} name={m.name} hasImage={!!m.imageUrl} onSuccess={() => refetch()} />
                         <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
@@ -888,7 +937,7 @@ export function MonsterCatalogV2Tab() {
                     </tr>
                     {expandedId === m.id && (
                       <tr className="bg-muted/20">
-                        <td colSpan={11} className="p-4">
+                        <td colSpan={13} className="p-4">
                           <MonsterDetailCard monster={m} skillOpts={skillOpts} itemOpts={itemOpts} />
                         </td>
                       </tr>

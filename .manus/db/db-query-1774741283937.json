@@ -1,0 +1,55 @@
+{
+  "query": "\nSELECT wuxing, COUNT(*) as total,\n  SUM(CASE WHEN rarity='common' THEN 1 ELSE 0 END) as common_cnt,\n  SUM(CASE WHEN rarity='rare' THEN 1 ELSE 0 END) as rare_cnt,\n  SUM(CASE WHEN rarity='elite' THEN 1 ELSE 0 END) as elite_cnt,\n  SUM(CASE WHEN rarity='epic' THEN 1 ELSE 0 END) as epic_cnt,\n  SUM(CASE WHEN rarity='legendary' THEN 1 ELSE 0 END) as legendary_cnt\nFROM game_monster_catalog WHERE is_active = 1\nGROUP BY wuxing ORDER BY total DESC;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nSELECT wuxing, COUNT(*) as total,\n  SUM(CASE WHEN rarity='common' THEN 1 ELSE 0 END) as common_cnt,\n  SUM(CASE WHEN rarity='rare' THEN 1 ELSE 0 END) as rare_cnt,\n  SUM(CASE WHEN rarity='elite' THEN 1 ELSE 0 END) as elite_cnt,\n  SUM(CASE WHEN rarity='epic' THEN 1 ELSE 0 END) as epic_cnt,\n  SUM(CASE WHEN rarity='legendary' THEN 1 ELSE 0 END) as legendary_cnt\nFROM game_monster_catalog WHERE is_active = 1\nGROUP BY wuxing ORDER BY total DESC;\n",
+  "rows": [
+    {
+      "wuxing": "水",
+      "total": "89",
+      "common_cnt": "25",
+      "rare_cnt": "39",
+      "elite_cnt": "9",
+      "epic_cnt": "3",
+      "legendary_cnt": "13"
+    },
+    {
+      "wuxing": "火",
+      "total": "30",
+      "common_cnt": "13",
+      "rare_cnt": "13",
+      "elite_cnt": "0",
+      "epic_cnt": "3",
+      "legendary_cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "total": "28",
+      "common_cnt": "13",
+      "rare_cnt": "9",
+      "elite_cnt": "0",
+      "epic_cnt": "5",
+      "legendary_cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "total": "28",
+      "common_cnt": "13",
+      "rare_cnt": "9",
+      "elite_cnt": "0",
+      "epic_cnt": "2",
+      "legendary_cnt": "4"
+    },
+    {
+      "wuxing": "木",
+      "total": "25",
+      "common_cnt": "10",
+      "rare_cnt": "10",
+      "elite_cnt": "0",
+      "epic_cnt": "4",
+      "legendary_cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "wuxing\ttotal\tcommon_cnt\trare_cnt\telite_cnt\tepic_cnt\tlegendary_cnt\n水\t89\t25\t39\t9\t3\t13\n火\t30\t13\t13\t0\t3\t1\n土\t28\t13\t9\t0\t5\t1\n金\t28\t13\t9\t0\t2\t4\n木\t25\t10\t10\t0\t4\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1537
+}

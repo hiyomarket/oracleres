@@ -1,0 +1,13 @@
+{
+  "query": "\nSELECT COUNT(*) as total_monsters FROM game_monster_catalog WHERE is_active = 1;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nSELECT COUNT(*) as total_monsters FROM game_monster_catalog WHERE is_active = 1;\n",
+  "rows": [
+    {
+      "total_monsters": "200"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_monsters\n200\n",
+  "stderr": "",
+  "execution_time_ms": 1582
+}

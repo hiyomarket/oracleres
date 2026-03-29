@@ -1,0 +1,26 @@
+{
+  "query": "SELECT LEFT(monster_id, 3) as prefix, COUNT(*) as cnt FROM game_monster_catalog GROUP BY LEFT(monster_id, 3) ORDER BY prefix;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT LEFT(monster_id, 3) as prefix, COUNT(*) as cnt FROM game_monster_catalog GROUP BY LEFT(monster_id, 3) ORDER BY prefix;",
+  "rows": [
+    {
+      "prefix": "M_E",
+      "cnt": "28"
+    },
+    {
+      "prefix": "M_F",
+      "cnt": "30"
+    },
+    {
+      "prefix": "M_M",
+      "cnt": "28"
+    },
+    {
+      "prefix": "M_W",
+      "cnt": "114"
+    }
+  ],
+  "messages": [],
+  "stdout": "prefix\tcnt\nM_E\t28\nM_F\t30\nM_M\t28\nM_W\t114\n",
+  "stderr": "",
+  "execution_time_ms": 1491
+}

@@ -140,26 +140,83 @@ The magical effect should be visually stunning and dynamic within the ornate car
 
 /**
  * 魔物圖鑑 prompt（也用於 Boss）
+ * 已更新：支援 species 欄位（10 種族）+ 五行百分比色彩混合
  */
 export function monsterCardPrompt(monster: {
   name: string;
   description?: string | null;
   wuxing?: string | null;
   race?: string | null;
+  species?: string | null;
   rarity?: string | null;
   tier?: number | null;
+  wuxingWood?: number | null;
+  wuxingFire?: number | null;
+  wuxingEarth?: number | null;
+  wuxingMetal?: number | null;
+  wuxingWater?: number | null;
 }): string {
+  // 10 種族視覺描述（對應 GD-028 新種族系統）
+  const speciesVisual: Record<string, string> = {
+    beast: "fearsome magical beast with primal power, muscular body and sharp claws",
+    humanoid: "powerful humanoid warrior with magical armor and intelligent eyes",
+    plant: "ancient sentient plant creature with thorny vines and blooming flowers",
+    undead: "terrifying spectral undead with ghostly flames and skeletal features",
+    dragon: "mighty dragon creature with shimmering scales and elemental breath",
+    flying: "graceful winged creature soaring with feathered or membranous wings",
+    insect: "giant mystical insect with crystalline carapace and compound eyes",
+    special: "enigmatic magical entity made of pure crystallized energy",
+    metal: "imposing metallic construct with gleaming armor plating and gear joints",
+    demon: "menacing dark demon with horns, dark energy aura and glowing eyes",
+  };
+
+  // 舊版 race 欄位向下相容
   const raceVisual: Record<string, string> = {
-    beast: "fearsome magical beast with primal power",
-    undead: "terrifying spectral undead with ghostly flames",
-    demon: "menacing dark demon with horns and dark energy",
-    dragon: "mighty dragon creature with scales and elemental breath",
+    beast: speciesVisual.beast,
+    undead: speciesVisual.undead,
+    demon: speciesVisual.demon,
+    dragon: speciesVisual.dragon,
     elemental: "pure elemental being made of raw magical energy",
-    humanoid: "powerful humanoid warrior with magical armor",
-    insect: "giant mystical insect with crystalline carapace",
-    plant: "ancient sentient plant creature with thorny vines",
+    humanoid: speciesVisual.humanoid,
+    insect: speciesVisual.insect,
+    plant: speciesVisual.plant,
     spirit: "ethereal spirit being with translucent magical form",
   };
+
+  // 五行色彩混合：根據五行百分比生成混合色彩描述
+  const WUXING_COLOR_KEYWORDS: Record<string, string> = {
+    wood: "emerald green, jade, forest tones",
+    fire: "ruby red, crimson, amber flame tones",
+    earth: "golden amber, earth brown, ochre tones",
+    metal: "platinum silver, white gold, steel tones",
+    water: "sapphire blue, aquamarine, deep ocean tones",
+  };
+
+  let colorDesc = "";
+  const wuxingValues = [
+    { key: "wood", val: monster.wuxingWood ?? 0 },
+    { key: "fire", val: monster.wuxingFire ?? 0 },
+    { key: "earth", val: monster.wuxingEarth ?? 0 },
+    { key: "metal", val: monster.wuxingMetal ?? 0 },
+    { key: "water", val: monster.wuxingWater ?? 0 },
+  ].filter(w => w.val > 0).sort((a, b) => b.val - a.val);
+
+  if (wuxingValues.length > 0) {
+    const parts = wuxingValues.map(w => {
+      if (w.val >= 80) return `Dominant ${WUXING_COLOR_KEYWORDS[w.key]} (${w.val}% intensity)`;
+      if (w.val >= 50) return `Primary ${WUXING_COLOR_KEYWORDS[w.key]} (${w.val}%)`;
+      if (w.val >= 30) return `Secondary ${WUXING_COLOR_KEYWORDS[w.key]} (${w.val}%)`;
+      return `Accent ${WUXING_COLOR_KEYWORDS[w.key]} (${w.val}%)`;
+    });
+    colorDesc = parts.join(". ") + ".";
+  } else {
+    colorDesc = WUXING_PALETTE[monster.wuxing || "火"] || "dark crimson and shadow tones";
+  }
+
+  // 使用 species 優先，fallback 到 race
+  const creatureType = monster.species
+    ? speciesVisual[monster.species] || "terrifying magical creature"
+    : raceVisual[monster.race || "beast"] || "terrifying magical creature";
 
   const tierDesc = monster.tier && monster.tier >= 3
     ? "Boss-level creature — extra imposing and terrifying, with a dark menacing aura"
@@ -167,12 +224,23 @@ export function monsterCardPrompt(monster: {
     ? "Elite creature — powerful and intimidating with visible magical energy"
     : "Regular creature — dangerous but not overwhelming";
 
+  // 稀有度增強描述
+  const rarityEnhance: Record<string, string> = {
+    common: "Simple design, natural appearance",
+    uncommon: "Slightly enhanced features with faint magical markings",
+    rare: "Distinct magical markings, glowing eyes, visible elemental energy",
+    epic: "Elaborate magical patterns across body, intense elemental aura, larger and more imposing",
+    legendary: "Transcendent divine creature, reality-warping presence, celestial markings, overwhelming power",
+  };
+
   return `${BASE_STYLE}
-Subject: A single fearsome monster centered on the card — ${raceVisual[monster.race || "beast"] || "terrifying magical creature"}.
+Subject: A single fearsome monster centered on the card — ${creatureType}.
 Monster name inspiration: "${monster.name}" (${monster.description || "dangerous magical beast"}).
-Color palette: ${WUXING_PALETTE[monster.wuxing || "火"] || "dark crimson and shadow tones"}.
+Color palette: ${colorDesc}
+Frame ornaments: ${WUXING_PALETTE[monster.wuxing || "火"] || "mystical ornaments"}.
 Card quality: ${RARITY_GLOW[monster.rarity || "rare"] || "ominous glow"}.
 Power level: ${tierDesc}.
+Visual enhancement: ${rarityEnhance[monster.rarity || "common"] || "natural appearance"}.
 The monster should look menacing yet beautifully illustrated in the ornate card frame, conveying danger and power.`;
 }
 

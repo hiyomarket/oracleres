@@ -1,0 +1,70 @@
+{
+  "query": "SELECT monster_id FROM game_monster_catalog ORDER BY monster_id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id FROM game_monster_catalog ORDER BY monster_id LIMIT 20;",
+  "rows": [
+    {
+      "monster_id": "M_E001"
+    },
+    {
+      "monster_id": "M_E002"
+    },
+    {
+      "monster_id": "M_E003"
+    },
+    {
+      "monster_id": "M_E004"
+    },
+    {
+      "monster_id": "M_E005"
+    },
+    {
+      "monster_id": "M_E006"
+    },
+    {
+      "monster_id": "M_E007"
+    },
+    {
+      "monster_id": "M_E008"
+    },
+    {
+      "monster_id": "M_E009"
+    },
+    {
+      "monster_id": "M_E010"
+    },
+    {
+      "monster_id": "M_E011"
+    },
+    {
+      "monster_id": "M_E012"
+    },
+    {
+      "monster_id": "M_E013"
+    },
+    {
+      "monster_id": "M_E014"
+    },
+    {
+      "monster_id": "M_E015"
+    },
+    {
+      "monster_id": "M_E016"
+    },
+    {
+      "monster_id": "M_E017"
+    },
+    {
+      "monster_id": "M_E018"
+    },
+    {
+      "monster_id": "M_E019"
+    },
+    {
+      "monster_id": "M_E020"
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_id\nM_E001\nM_E002\nM_E003\nM_E004\nM_E005\nM_E006\nM_E007\nM_E008\nM_E009\nM_E010\nM_E011\nM_E012\nM_E013\nM_E014\nM_E015\nM_E016\nM_E017\nM_E018\nM_E019\nM_E020\n",
+  "stderr": "",
+  "execution_time_ms": 1583
+}

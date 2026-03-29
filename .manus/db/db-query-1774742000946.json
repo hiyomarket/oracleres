@@ -1,0 +1,61 @@
+{
+  "query": "SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_F%' ORDER BY monster_id LIMIT 5; SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_D%' ORDER BY monster_id LIMIT 5; SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_M%' ORDER BY monster_id LIMIT 5; SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_W%' ORDER BY monster_id LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_F%' ORDER BY monster_id LIMIT 5; SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_D%' ORDER BY monster_id LIMIT 5; SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_M%' ORDER BY monster_id LIMIT 5; SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_W%' ORDER BY monster_id LIMIT 5;",
+  "rows": [
+    {
+      "monster_id": "M_F001"
+    },
+    {
+      "monster_id": "M_F002"
+    },
+    {
+      "monster_id": "M_F003"
+    },
+    {
+      "monster_id": "M_F004"
+    },
+    {
+      "monster_id": "M_F005"
+    },
+    {
+      "monster_id": "monster_id"
+    },
+    {
+      "monster_id": "M_M001"
+    },
+    {
+      "monster_id": "M_M002"
+    },
+    {
+      "monster_id": "M_M003"
+    },
+    {
+      "monster_id": "M_M004"
+    },
+    {
+      "monster_id": "M_M005"
+    },
+    {
+      "monster_id": "monster_id"
+    },
+    {
+      "monster_id": "M_W001"
+    },
+    {
+      "monster_id": "M_W002"
+    },
+    {
+      "monster_id": "M_W003"
+    },
+    {
+      "monster_id": "M_W004"
+    },
+    {
+      "monster_id": "M_W005"
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_id\nM_F001\nM_F002\nM_F003\nM_F004\nM_F005\nmonster_id\nM_M001\nM_M002\nM_M003\nM_M004\nM_M005\nmonster_id\nM_W001\nM_W002\nM_W003\nM_W004\nM_W005\n",
+  "stderr": "",
+  "execution_time_ms": 2251
+}

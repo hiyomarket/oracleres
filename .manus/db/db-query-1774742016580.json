@@ -1,0 +1,70 @@
+{
+  "query": "SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_W%' ORDER BY monster_id DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_W%' ORDER BY monster_id DESC LIMIT 20;",
+  "rows": [
+    {
+      "monster_id": "M_Wt069"
+    },
+    {
+      "monster_id": "M_Wt068"
+    },
+    {
+      "monster_id": "M_Wt067"
+    },
+    {
+      "monster_id": "M_Wt066"
+    },
+    {
+      "monster_id": "M_Wt065"
+    },
+    {
+      "monster_id": "M_Wt064"
+    },
+    {
+      "monster_id": "M_Wt063"
+    },
+    {
+      "monster_id": "M_Wt062"
+    },
+    {
+      "monster_id": "M_Wt061"
+    },
+    {
+      "monster_id": "M_Wt060"
+    },
+    {
+      "monster_id": "M_Wt059"
+    },
+    {
+      "monster_id": "M_Wt058"
+    },
+    {
+      "monster_id": "M_Wt057"
+    },
+    {
+      "monster_id": "M_Wt056"
+    },
+    {
+      "monster_id": "M_Wt055"
+    },
+    {
+      "monster_id": "M_Wt054"
+    },
+    {
+      "monster_id": "M_Wt053"
+    },
+    {
+      "monster_id": "M_Wt052"
+    },
+    {
+      "monster_id": "M_Wt051"
+    },
+    {
+      "monster_id": "M_Wt050"
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_id\nM_Wt069\nM_Wt068\nM_Wt067\nM_Wt066\nM_Wt065\nM_Wt064\nM_Wt063\nM_Wt062\nM_Wt061\nM_Wt060\nM_Wt059\nM_Wt058\nM_Wt057\nM_Wt056\nM_Wt055\nM_Wt054\nM_Wt053\nM_Wt052\nM_Wt051\nM_Wt050\n",
+  "stderr": "",
+  "execution_time_ms": 1561
+}

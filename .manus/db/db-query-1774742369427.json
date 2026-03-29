@@ -1,0 +1,70 @@
+{
+  "query": "SELECT CONCAT(\n  CASE WHEN wuxing_wood > 0 THEN CONCAT('木:', wuxing_wood, ' ') ELSE '' END,\n  CASE WHEN wuxing_fire > 0 THEN CONCAT('火:', wuxing_fire, ' ') ELSE '' END,\n  CASE WHEN wuxing_earth > 0 THEN CONCAT('土:', wuxing_earth, ' ') ELSE '' END,\n  CASE WHEN wuxing_metal > 0 THEN CONCAT('金:', wuxing_metal, ' ') ELSE '' END,\n  CASE WHEN wuxing_water > 0 THEN CONCAT('水:', wuxing_water) ELSE '' END\n) as pattern, COUNT(*) as cnt FROM game_monster_catalog GROUP BY pattern ORDER BY cnt DESC LIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT CONCAT(\n  CASE WHEN wuxing_wood > 0 THEN CONCAT('木:', wuxing_wood, ' ') ELSE '' END,\n  CASE WHEN wuxing_fire > 0 THEN CONCAT('火:', wuxing_fire, ' ') ELSE '' END,\n  CASE WHEN wuxing_earth > 0 THEN CONCAT('土:', wuxing_earth, ' ') ELSE '' END,\n  CASE WHEN wuxing_metal > 0 THEN CONCAT('金:', wuxing_metal, ' ') ELSE '' END,\n  CASE WHEN wuxing_water > 0 THEN CONCAT('水:', wuxing_water) ELSE '' END\n) as pattern, COUNT(*) as cnt FROM game_monster_catalog GROUP BY pattern ORDER BY cnt DESC LIMIT 15;",
+  "rows": [
+    {
+      "pattern": "木:20 金:80 ",
+      "cnt": "3"
+    },
+    {
+      "pattern": "木:20 水:80",
+      "cnt": "3"
+    },
+    {
+      "pattern": "木:80 火:20 ",
+      "cnt": "3"
+    },
+    {
+      "pattern": "木:20 土:80 ",
+      "cnt": "3"
+    },
+    {
+      "pattern": "木:20 火:80 ",
+      "cnt": "3"
+    },
+    {
+      "pattern": "金:40 水:60",
+      "cnt": "2"
+    },
+    {
+      "pattern": "土:20 水:80",
+      "cnt": "2"
+    },
+    {
+      "pattern": "木:70 水:30",
+      "cnt": "2"
+    },
+    {
+      "pattern": "金:10 水:90",
+      "cnt": "2"
+    },
+    {
+      "pattern": "土:90 水:10",
+      "cnt": "2"
+    },
+    {
+      "pattern": "木:40 火:60 ",
+      "cnt": "2"
+    },
+    {
+      "pattern": "木:40 土:60 ",
+      "cnt": "2"
+    },
+    {
+      "pattern": "金:50 水:50",
+      "cnt": "2"
+    },
+    {
+      "pattern": "火:70 水:30",
+      "cnt": "2"
+    },
+    {
+      "pattern": "土:40 金:60 ",
+      "cnt": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "pattern\tcnt\n木:20 金:80 \t3\n木:20 水:80\t3\n木:80 火:20 \t3\n木:20 土:80 \t3\n木:20 火:80 \t3\n金:40 水:60\t2\n土:20 水:80\t2\n木:70 水:30\t2\n金:10 水:90\t2\n土:90 水:10\t2\n木:40 火:60 \t2\n木:40 土:60 \t2\n金:50 水:50\t2\n火:70 水:30\t2\n土:40 金:60 \t2\n",
+  "stderr": "",
+  "execution_time_ms": 1518
+}

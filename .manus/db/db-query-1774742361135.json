@@ -1,0 +1,40 @@
+{
+  "query": "SELECT rarity, COUNT(*) as cnt, AVG(base_capture_rate) as avg_cap, SUM(is_capturable) as capturable FROM game_monster_catalog GROUP BY rarity ORDER BY FIELD(rarity, 'common', 'uncommon', 'rare', 'epic', 'legendary');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT rarity, COUNT(*) as cnt, AVG(base_capture_rate) as avg_cap, SUM(is_capturable) as capturable FROM game_monster_catalog GROUP BY rarity ORDER BY FIELD(rarity, 'common', 'uncommon', 'rare', 'epic', 'legendary');",
+  "rows": [
+    {
+      "rarity": "common",
+      "cnt": "60",
+      "avg_cap": "32.5000",
+      "capturable": "60"
+    },
+    {
+      "rarity": "uncommon",
+      "cnt": "50",
+      "avg_cap": "21.0000",
+      "capturable": "50"
+    },
+    {
+      "rarity": "rare",
+      "cnt": "50",
+      "avg_cap": "12.0000",
+      "capturable": "50"
+    },
+    {
+      "rarity": "epic",
+      "cnt": "25",
+      "avg_cap": "0.0000",
+      "capturable": "0"
+    },
+    {
+      "rarity": "legendary",
+      "cnt": "15",
+      "avg_cap": "0.0000",
+      "capturable": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "rarity\tcnt\tavg_cap\tcapturable\ncommon\t60\t32.5000\t60\nuncommon\t50\t21.0000\t50\nrare\t50\t12.0000\t50\nepic\t25\t0.0000\t0\nlegendary\t15\t0.0000\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1570
+}
