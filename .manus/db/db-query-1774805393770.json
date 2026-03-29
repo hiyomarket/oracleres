@@ -1,0 +1,66 @@
+{
+  "query": "SELECT item_id, name, category, stackable, use_effect, effect FROM game_item_catalog WHERE name LIKE '%補%' OR name LIKE '%復%' OR name LIKE '%卷軸%' OR name LIKE '%藥%' OR name LIKE '%生命%' OR name LIKE '%強化%' ORDER BY item_id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, category, stackable, use_effect, effect FROM game_item_catalog WHERE name LIKE '%補%' OR name LIKE '%復%' OR name LIKE '%卷軸%' OR name LIKE '%藥%' OR name LIKE '%生命%' OR name LIKE '%強化%' ORDER BY item_id LIMIT 20;",
+  "rows": [
+    {
+      "item_id": "I_M027",
+      "name": "疾風藥劑",
+      "category": "material_basic",
+      "stackable": "1",
+      "use_effect": "NULL",
+      "effect": "速度提升 30%，持續 3 回合"
+    },
+    {
+      "item_id": "I_MAT_HERB",
+      "name": "草藥",
+      "category": "material",
+      "stackable": "1",
+      "use_effect": "NULL",
+      "effect": "NULL"
+    },
+    {
+      "item_id": "I_QST_LIFEDEW",
+      "name": "生命露珠",
+      "category": "quest",
+      "stackable": "1",
+      "use_effect": "NULL",
+      "effect": "蘊含強大生命力的露珠，學習超強補血魔法的必要材料"
+    },
+    {
+      "item_id": "I_SCR_ARM",
+      "name": "防具強化卷軸",
+      "category": "material_basic",
+      "stackable": "1",
+      "use_effect": "NULL",
+      "effect": "用於強化防具與飾品的神秘卷軸。防具安定值+4以下必定成功，飾品安定值+2以下必定成功，超過安定值有機率失敗退階，極小機率裝備消失。"
+    },
+    {
+      "item_id": "I_SCR_WPN",
+      "name": "武器強化卷軸",
+      "category": "quest",
+      "stackable": "1",
+      "use_effect": "NULL",
+      "effect": "用於強化武器的神秘卷軸。安定值+6以下必定成功，超過安定值有機率裝備消失。"
+    },
+    {
+      "item_id": "I_W033",
+      "name": "復甦之風",
+      "category": "material_basic",
+      "stackable": "1",
+      "use_effect": "NULL",
+      "effect": "全體恢復 100 點 HP"
+    },
+    {
+      "item_id": "I_W035",
+      "name": "生命之水",
+      "category": "material_basic",
+      "stackable": "1",
+      "use_effect": "NULL",
+      "effect": "復活一名隊友並恢復 30% HP"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\tcategory\tstackable\tuse_effect\teffect\nI_M027\t疾風藥劑\tmaterial_basic\t1\tNULL\t速度提升 30%，持續 3 回合\nI_MAT_HERB\t草藥\tmaterial\t1\tNULL\tNULL\nI_QST_LIFEDEW\t生命露珠\tquest\t1\tNULL\t蘊含強大生命力的露珠，學習超強補血魔法的必要材料\nI_SCR_ARM\t防具強化卷軸\tmaterial_basic\t1\tNULL\t用於強化防具與飾品的神秘卷軸。防具安定值+4以下必定成功，飾品安定值+2以下必定成功，超過安定值有機率失敗退階，極小機率裝備消失。\nI_SCR_WPN\t武器強化卷軸\tquest\t1\tNULL\t用於強化武器的神秘卷軸。安定值+6以下必定成功，超過安定值有機率裝備消失。\nI_W033\t復甦之風\tmaterial_basic\t1\tNULL\t全體恢復 100 點 HP\nI_W035\t生命之水\tmaterial_basic\t1\tNULL\t復活一名隊友並恢復 30% HP\n",
+  "stderr": "",
+  "execution_time_ms": 1575
+}

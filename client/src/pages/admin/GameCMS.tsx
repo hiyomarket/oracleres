@@ -1543,6 +1543,17 @@ function StatBalancePanel() {
         resistMaxPct:    cfg.resistMaxPct    ?? 50,
         combatAtkCoeff:  cfg.combatAtkCoeff  ?? 1.5,
         combatDefCoeff:  cfg.combatDefCoeff  ?? 0.5,
+        // 屬性上限
+        statCapHp:       cfg.statCapHp       ?? 99999,
+        statCapMp:       cfg.statCapMp       ?? 9999,
+        statCapAtk:      cfg.statCapAtk      ?? 1500,
+        statCapDef:      cfg.statCapDef      ?? 1500,
+        statCapSpd:      cfg.statCapSpd      ?? 1500,
+        statCapMatk:     cfg.statCapMatk     ?? 1500,
+        statCapMdef:     cfg.statCapMdef     ?? 1500,
+        wuxingCap:       cfg.wuxingCap       ?? 100,
+        // 潛能點數
+        potentialPointsPerLevel: cfg.potentialPointsPerLevel ?? 5,
       });
     }
   }, [cfg]);
@@ -1624,6 +1635,30 @@ function StatBalancePanel() {
         <p className="text-[10px] text-muted-foreground mt-2">公式：傷害 = ATK × A - DEF × B，抗性上限為注靈最高可獲得的抗性%</p>
       </div>
 
+      {/* 屬性上限 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-amber-400 mb-3">🛡️ 屬性上限</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {field("statCapHp",   "HP 上限", 1000, 1000, 999999)}
+          {field("statCapMp",   "MP 上限", 100, 100, 99999)}
+          {field("statCapAtk",  "ATK 上限", 100, 100, 99999)}
+          {field("statCapDef",  "DEF 上限", 100, 100, 99999)}
+          {field("statCapSpd",  "SPD 上限", 100, 100, 99999)}
+          {field("statCapMatk", "MATK 上限", 100, 100, 99999)}
+          {field("statCapMdef", "MDEF 上限", 100, 100, 99999)}
+          {field("wuxingCap",   "五行上限", 10, 10, 1000)}
+        </div>
+      </div>
+
+      {/* 潛能點數 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-amber-400 mb-3">⭐ 潛能配置</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {field("potentialPointsPerLevel", "每級獲得潛能點數", 1, 1, 50)}
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2">每次升級獲得的自由潛能點數，可分配到五行元素</p>
+      </div>
+
       {/* 預覽計算結果 */}
       {cfg && (
         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
@@ -1663,6 +1698,24 @@ function GD028ConfigPanel() {
       setForm({
         expCurveBase: cfg.expCurveBase ?? 80,
         expCurveLogScale: cfg.expCurveLogScale ?? 0.5,
+        // V3 經驗曲線可調參數
+        expCurveA: cfg.expCurveA ?? 2,
+        expCurveB: cfg.expCurveB ?? 1.6,
+        expCurveC: cfg.expCurveC ?? 0.25,
+        maxLevel: cfg.maxLevel ?? 99,
+        // 五行潛能加成
+        potWoodHp: cfg.potWoodHp ?? 2,
+        potWoodHeal: cfg.potWoodHeal ?? 0.5,
+        potFireAtk: cfg.potFireAtk ?? 0.5,
+        potFireMatk: cfg.potFireMatk ?? 0.5,
+        potFireCritDmg: cfg.potFireCritDmg ?? 0.2,
+        potEarthDef: cfg.potEarthDef ?? 0.5,
+        potEarthMdef: cfg.potEarthMdef ?? 0.3,
+        potMetalSpd: cfg.potMetalSpd ?? 0.3,
+        potMetalCrit: cfg.potMetalCrit ?? 0.1,
+        potMetalHit: cfg.potMetalHit ?? 0.3,
+        potWaterMp: cfg.potWaterMp ?? 1,
+        potWaterSpr: cfg.potWaterSpr ?? 0.3,
         profHunterAtk: cfg.profHunterAtk ?? 0.12,
         profHunterSpd: cfg.profHunterSpd ?? 0.08,
         profMageMatk: cfg.profMageMatk ?? 0.15,
@@ -1712,10 +1765,13 @@ function GD028ConfigPanel() {
     </div>
   );
 
-  // 經驗值曲線預覽（V3 變指數公式）
-  const expPreview = [1, 5, 10, 20, 30, 50, 70, 90, 99].map(lv => {
-    const A = 2, B = 1.6, C = 0.25;
-    const exp = lv <= 0 ? 1 : lv >= 99 ? 999999 : Math.floor(A * Math.pow(lv, B + C * Math.log(lv)));
+  // 經驗值曲線預覽（使用可調參數）
+  const expA = form.expCurveA ?? 2;
+  const expB = form.expCurveB ?? 1.6;
+  const expC = form.expCurveC ?? 0.25;
+  const maxLv = form.maxLevel ?? 99;
+  const expPreview = [1, 5, 10, 20, 30, 50, 70, 90, Math.floor(maxLv)].map(lv => {
+    const exp = lv <= 0 ? 1 : lv >= maxLv ? 999999 : Math.floor(expA * Math.pow(lv, expB + expC * Math.log(lv)));
     return { lv, exp };
   });
 
@@ -1728,10 +1784,16 @@ function GD028ConfigPanel() {
         </Button>
       </div>
 
-      {/* 經驗值曲線 */}
+      {/* 經驗值曲線可調參數 */}
       <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
         <h4 className="text-xs font-bold text-cyan-400 mb-3">📈 經驗值曲線（V3 變指數公式）</h4>
-        <p className="text-[10px] text-muted-foreground mb-3">V3 公式：2 × level^(1.6 + 0.25 × ln(level))，滿級 Lv.99</p>
+        <p className="text-[10px] text-muted-foreground mb-3">公式：A × level^(B + C × ln(level))，滿級 Lv.{Math.floor(maxLv)}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+          {field("expCurveA", "A 係數", 0.1, 0.1, 100)}
+          {field("expCurveB", "B 指數", 0.1, 0.1, 10)}
+          {field("expCurveC", "C 對數係數", 0.01, 0, 5)}
+          {field("maxLevel", "最高等級", 1, 10, 999)}
+        </div>
         <div className="grid grid-cols-3 sm:grid-cols-9 gap-2 text-center">
           {expPreview.map(({ lv, exp }) => (
             <div key={lv} className="p-1.5 rounded bg-white/5">
@@ -1741,6 +1803,51 @@ function GD028ConfigPanel() {
           ))}
         </div>
         <p className="text-[10px] text-muted-foreground mt-2">目標：Lv.1→10 累計 ~1,000 / Lv.90→99 累計 ~5,000,000</p>
+      </div>
+
+      {/* 五行潛能加成參數 */}
+      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+        <h4 className="text-xs font-bold text-emerald-400 mb-3">✨ 五行潛能加成（每點效果）</h4>
+        <div className="space-y-3">
+          <div>
+            <div className="text-[10px] text-green-300 mb-1">🌿 木（生命系）</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("potWoodHp", "HP +", 0.1, 0, 50)}
+              {field("potWoodHeal", "治癒力 +", 0.1, 0, 20)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-red-300 mb-1">🔥 火（攻擊系）</div>
+            <div className="grid grid-cols-3 gap-3">
+              {field("potFireAtk", "ATK +", 0.1, 0, 20)}
+              {field("potFireMatk", "MATK +", 0.1, 0, 20)}
+              {field("potFireCritDmg", "暴擊傷害 +%", 0.01, 0, 5)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-yellow-300 mb-1">⛰️ 土（防禦系）</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("potEarthDef", "DEF +", 0.1, 0, 20)}
+              {field("potEarthMdef", "MDEF +", 0.1, 0, 20)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-gray-300 mb-1">⚔️ 金（速度系）</div>
+            <div className="grid grid-cols-3 gap-3">
+              {field("potMetalSpd", "SPD +", 0.1, 0, 20)}
+              {field("potMetalCrit", "暴擊率 +%", 0.01, 0, 5)}
+              {field("potMetalHit", "命中率 +", 0.1, 0, 20)}
+            </div>
+          </div>
+          <div>
+            <div className="text-[10px] text-blue-300 mb-1">💧 水（魔力系）</div>
+            <div className="grid grid-cols-2 gap-3">
+              {field("potWaterMp", "MP +", 0.1, 0, 50)}
+              {field("potWaterSpr", "SPR +", 0.1, 0, 20)}
+            </div>
+          </div>
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2">每點潛能分配到該五行元素時的屬性加成量，例如：10點火 = ATK+{(10 * (form.potFireAtk ?? 0.5)).toFixed(1)}, MATK+{(10 * (form.potFireMatk ?? 0.5)).toFixed(1)}</p>
       </div>
 
       {/* 職業加成 */}

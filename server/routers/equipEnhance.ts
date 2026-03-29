@@ -385,4 +385,58 @@ export const equipEnhanceRouter = router({
 
       return { success: true, updated: updates.length };
     }),
+
+  /** 取得裝備完整強化路線預覽（+0 ~ +20 每級的屬性加成） */
+  getFullEnhancePreview: protectedProcedure
+    .input(z.object({ inventoryId: z.number().int() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const cfg = await getEnhanceConfig();
+
+      const [agent] = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+
+      const [inv] = await db.select().from(agentInventory)
+        .where(and(
+          eq(agentInventory.id, input.inventoryId),
+          eq(agentInventory.agentId, agent.id),
+          eq(agentInventory.itemType, "equipment"),
+        )).limit(1);
+      if (!inv) throw new TRPCError({ code: "NOT_FOUND", message: "找不到該裝備" });
+
+      const [catalog] = await db.select().from(gameEquipmentCatalog)
+        .where(eq(gameEquipmentCatalog.equipId, inv.itemId)).limit(1);
+      if (!catalog) throw new TRPCError({ code: "NOT_FOUND", message: "找不到裝備圖鑑資料" });
+
+      const currentLevel = ((inv.itemData as any) ?? {}).enhanceLevel ?? 0;
+      const safeLevel = getSafeLevel(catalog.slot);
+
+      const levels = [];
+      for (let i = 0; i <= cfg.maxLevel; i++) {
+        const preview = getEnhancedBonusPreview(catalog, i);
+        const levelInfo = getEnhanceLevelInfo(i);
+        levels.push({
+          level: i,
+          color: levelInfo.color,
+          colorLabel: levelInfo.label,
+          colorHex: levelInfo.colorHex,
+          successRate: i === 0 ? 1 : (cfg.successRates[i - 1] ?? 0),
+          destroyRate: (i - 1) >= safeLevel ? (cfg.destroyRates[i - 1] ?? 0) : 0,
+          isSafe: i <= safeLevel,
+          isCurrent: i === currentLevel,
+          ...preview,
+        });
+      }
+
+      return {
+        equipName: catalog.name,
+        slot: catalog.slot,
+        currentLevel,
+        safeLevel,
+        levels,
+      };
+    }),
 });

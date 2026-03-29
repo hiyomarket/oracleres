@@ -1,0 +1,37 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_item_catalog' AND ORDINAL_POSITION > 20 ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_item_catalog' AND ORDINAL_POSITION > 20 ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "use_effect"
+    },
+    {
+      "COLUMN_NAME": "value_score"
+    },
+    {
+      "COLUMN_NAME": "quality_grade"
+    },
+    {
+      "COLUMN_NAME": "drop_level_min"
+    },
+    {
+      "COLUMN_NAME": "drop_level_max"
+    },
+    {
+      "COLUMN_NAME": "tradeable"
+    },
+    {
+      "COLUMN_NAME": "in_auction_house"
+    },
+    {
+      "COLUMN_NAME": "usable_in_battle"
+    },
+    {
+      "COLUMN_NAME": "stackable"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nuse_effect\nvalue_score\nquality_grade\ndrop_level_min\ndrop_level_max\ntradeable\nin_auction_house\nusable_in_battle\nstackable\n",
+  "stderr": "",
+  "execution_time_ms": 1525
+}

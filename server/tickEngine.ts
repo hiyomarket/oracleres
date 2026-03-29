@@ -2114,8 +2114,8 @@ async function processCombatEvent(
     wuxingWater: accWuxingWater,
     // 自動更新五行抗性
     ...calcResistances({ wood: accWuxingWood, fire: accWuxingFire, earth: accWuxingEarth, metal: accWuxingMetal, water: accWuxingWater }, getStatBalanceConfig().resistMaxPct),
-    // 升級自由點數（每級 +5 點）
-    freeStatPoints: combatLevelUps.length > 0 ? sql`free_stat_points + ${combatLevelUps.length * 5}` : agent.freeStatPoints ?? 0,
+    // 升級自由點數（每級 +N 點，從後台配置讀取）
+    freeStatPoints: combatLevelUps.length > 0 ? sql`free_stat_points + ${combatLevelUps.length * (getEngineConfig().potentialPointsPerLevel ?? 5)}` : agent.freeStatPoints ?? 0,
     exp: newExp,
     level: newLevel,
     gold: newGold,

@@ -1,0 +1,9 @@
+{
+  "query": "\nUPDATE game_item_catalog SET \n  use_effect = '{\"type\":\"enhance_scroll\",\"scrollType\":\"weapon_scroll\",\"description\":\"武器強化卷軸（白武卷）：標準強化+1\"}',\n  category = 'scroll',\n  stackable = 1,\n  stack_limit = 99\nWHERE item_id = 'I_SCR_WPN';\n\nUPDATE game_item_catalog SET \n  use_effect = '{\"type\":\"enhance_scroll\",\"scrollType\":\"armor_scroll\",\"description\":\"防具強化卷軸（白防卷）：標準強化+1\"}',\n  category = 'scroll',\n  stackable = 1,\n  stack_limit = 99\nWHERE item_id = 'I_SCR_ARM';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute \nUPDATE game_item_catalog SET \n  use_effect = '{\"type\":\"enhance_scroll\",\"scrollType\":\"weapon_scroll\",\"description\":\"武器強化卷軸（白武卷）：標準強化+1\"}',\n  category = 'scroll',\n  stackable = 1,\n  stack_limit = 99\nWHERE item_id = 'I_SCR_WPN';\n\nUPDATE game_item_catalog SET \n  use_effect = '{\"type\":\"enhance_scroll\",\"scrollType\":\"armor_scroll\",\"description\":\"防具強化卷軸（白防卷）：標準強化+1\"}',\n  category = 'scroll',\n  stackable = 1,\n  stack_limit = 99\nWHERE item_id = 'I_SCR_ARM';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1812
+}

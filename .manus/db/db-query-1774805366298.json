@@ -1,0 +1,9 @@
+{
+  "query": "SELECT item_id, name, category, stackable, use_effect FROM game_item_catalog WHERE category IN ('consumable', 'material_basic') AND (use_effect IS NOT NULL AND use_effect != 'null') ORDER BY item_id LIMIT 30;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, category, stackable, use_effect FROM game_item_catalog WHERE category IN ('consumable', 'material_basic') AND (use_effect IS NOT NULL AND use_effect != 'null') ORDER BY item_id LIMIT 30;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1523
+}

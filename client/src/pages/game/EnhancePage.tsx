@@ -6,7 +6,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { ArrowLeft, Sparkles, Shield, Swords, Heart, Zap, AlertTriangle, History, ChevronRight, Star, Flame, Skull } from "lucide-react";
+import { ArrowLeft, Sparkles, Shield, Swords, Heart, Zap, AlertTriangle, History, ChevronRight, Star, Flame, Skull, Eye } from "lucide-react";
 import { Link } from "wouter";
 
 // ─── 21 色等級映射（對應 enhanceEngine 的 ENHANCE_LEVELS） ─────
@@ -55,6 +55,7 @@ export default function EnhancePage() {
   const [showLogs, setShowLogs] = useState(false);
   const [animating, setAnimating] = useState(false);
   const [showLevelGuide, setShowLevelGuide] = useState(false);
+  const [showFullPreview, setShowFullPreview] = useState(false);
 
   // ─── 查詢背包裝備（使用 getInventoryEquipments 取得完整圖鑑資料） ───
   const equipQuery = trpc.gameWorld.getInventoryEquipments.useQuery(
@@ -84,6 +85,12 @@ export default function EnhancePage() {
   const logsQuery = trpc.equipEnhance.getEnhanceLogs.useQuery(
     { limit: 20 },
     { enabled: showLogs, staleTime: 5000 }
+  );
+
+  // ─── 完整強化預覽 ───
+  const fullPreviewQuery = trpc.equipEnhance.getFullEnhancePreview.useQuery(
+    { inventoryId: selectedInvId! },
+    { enabled: !!selectedInvId && showFullPreview, staleTime: 10000 }
   );
 
   // ─── 強化 mutation ───
@@ -161,6 +168,21 @@ export default function EnhancePage() {
           >
             <Star size={12} /> 等級表
           </button>
+          {selectedInvId && (
+            <button
+              onClick={() => setShowFullPreview(!showFullPreview)}
+              style={{
+                background: showFullPreview ? "rgba(96,165,250,0.15)" : "rgba(255,255,255,0.06)",
+                border: `1px solid ${showFullPreview ? "rgba(96,165,250,0.3)" : "rgba(255,255,255,0.1)"}`,
+                borderRadius: "8px", padding: "6px 10px",
+                color: showFullPreview ? "#60a5fa" : "#94a3b8",
+                fontSize: "11px", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: "4px",
+              }}
+            >
+              <Eye size={12} /> 預覽
+            </button>
+          )}
           <button
             onClick={() => setShowLogs(!showLogs)}
             style={{
@@ -217,6 +239,89 @@ export default function EnhancePage() {
                 <span style={{ color: "#ef4444" }}>天堂模式</span>：失敗=爆裝（無退階）
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ═══ 完整強化路線預覽 ═══ */}
+        {showFullPreview && selectedInvId && (
+          <div style={{
+            marginBottom: "16px", padding: "12px", borderRadius: "12px",
+            background: "rgba(96,165,250,0.04)", border: "1px solid rgba(96,165,250,0.15)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
+              <Eye size={14} style={{ color: "#60a5fa" }} />
+              <p style={{ fontSize: "12px", color: "#60a5fa", margin: 0, fontWeight: 600 }}>
+                強化路線預覽 {fullPreviewQuery.data ? `— ${fullPreviewQuery.data.equipName}` : ""}
+              </p>
+            </div>
+            {fullPreviewQuery.isLoading ? (
+              <p style={{ fontSize: "11px", color: "#475569", textAlign: "center", padding: "16px 0" }}>載入中...</p>
+            ) : fullPreviewQuery.data ? (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "10px" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                      <th style={{ padding: "6px 4px", textAlign: "center", color: "#94a3b8", fontWeight: 600 }}>等級</th>
+                      <th style={{ padding: "6px 4px", textAlign: "center", color: "#94a3b8", fontWeight: 600 }}>色階</th>
+                      <th style={{ padding: "6px 4px", textAlign: "center", color: "#94a3b8", fontWeight: 600 }}>加成%</th>
+                      <th style={{ padding: "6px 4px", textAlign: "center", color: "#ef4444", fontWeight: 600 }}>攻擊</th>
+                      <th style={{ padding: "6px 4px", textAlign: "center", color: "#3b82f6", fontWeight: 600 }}>防禦</th>
+                      <th style={{ padding: "6px 4px", textAlign: "center", color: "#22c55e", fontWeight: 600 }}>速度</th>
+                      <th style={{ padding: "6px 4px", textAlign: "center", color: "#f97316", fontWeight: 600 }}>生命</th>
+                      <th style={{ padding: "6px 4px", textAlign: "center", color: "#4ade80", fontWeight: 600 }}>成功率</th>
+                      <th style={{ padding: "6px 4px", textAlign: "center", color: "#ef4444", fontWeight: 600 }}>爆裝</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fullPreviewQuery.data.levels.map((lv: any) => {
+                      const c = getColorInfo(lv.color);
+                      return (
+                        <tr key={lv.level} style={{
+                          borderBottom: "1px solid rgba(255,255,255,0.04)",
+                          background: lv.isCurrent ? `${c.hex}12` : "transparent",
+                        }}>
+                          <td style={{ padding: "5px 4px", textAlign: "center", fontWeight: lv.isCurrent ? 700 : 400, color: c.hex }}>
+                            +{lv.level} {lv.isCurrent ? "◀" : ""}
+                          </td>
+                          <td style={{ padding: "5px 4px", textAlign: "center", color: c.hex, fontWeight: 600 }}>
+                            {lv.colorLabel}
+                          </td>
+                          <td style={{ padding: "5px 4px", textAlign: "center", color: "#e2e8f0" }}>
+                            +{Math.round(lv.bonusPercent * 100)}%
+                          </td>
+                          <td style={{ padding: "5px 4px", textAlign: "center", color: "#ef4444" }}>
+                            {lv.attackBonus}
+                          </td>
+                          <td style={{ padding: "5px 4px", textAlign: "center", color: "#3b82f6" }}>
+                            {lv.defenseBonus}
+                          </td>
+                          <td style={{ padding: "5px 4px", textAlign: "center", color: "#22c55e" }}>
+                            {lv.speedBonus}
+                          </td>
+                          <td style={{ padding: "5px 4px", textAlign: "center", color: "#f97316" }}>
+                            {lv.hpBonus}
+                          </td>
+                          <td style={{ padding: "5px 4px", textAlign: "center", color: lv.isSafe ? "#4ade80" : "#fbbf24" }}>
+                            {lv.level === 0 ? "-" : lv.isSafe ? "100%" : `${(lv.successRate * 100).toFixed(1)}%`}
+                          </td>
+                          <td style={{ padding: "5px 4px", textAlign: "center", color: lv.destroyRate > 0 ? "#ef4444" : "#4ade80" }}>
+                            {lv.level === 0 ? "-" : lv.destroyRate > 0 ? `${Math.round(lv.destroyRate * 100)}%` : "無"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <div style={{ marginTop: "8px", display: "flex", gap: "8px", fontSize: "9px", color: "#64748b", flexWrap: "wrap" }}>
+                  <span>◀ = 當前等級</span>
+                  <span style={{ color: "#4ade80" }}>綠字 = 安定範圍內</span>
+                  <span style={{ color: "#fbbf24" }}>黃字 = 有風險</span>
+                  <span>安定值：武器+{fullPreviewQuery.data.slot === "weapon" || fullPreviewQuery.data.slot === "offhand" ? 6 : fullPreviewQuery.data.slot === "accessory" ? 2 : 4}</span>
+                </div>
+              </div>
+            ) : (
+              <p style={{ fontSize: "11px", color: "#475569", textAlign: "center", padding: "16px 0" }}>無法載入預覽資料</p>
+            )}
           </div>
         )}
 

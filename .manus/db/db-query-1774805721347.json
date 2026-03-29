@@ -1,0 +1,22 @@
+{
+  "query": "SELECT item_id, name, category, use_effect FROM game_item_catalog WHERE name LIKE '%卷軸%' OR name LIKE '%強化%' OR category = 'scroll';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, category, use_effect FROM game_item_catalog WHERE name LIKE '%卷軸%' OR name LIKE '%強化%' OR category = 'scroll';",
+  "rows": [
+    {
+      "item_id": "I_SCR_WPN",
+      "name": "武器強化卷軸",
+      "category": "scroll",
+      "use_effect": "NULL"
+    },
+    {
+      "item_id": "I_SCR_ARM",
+      "name": "防具強化卷軸",
+      "category": "scroll",
+      "use_effect": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\tcategory\tuse_effect\nI_SCR_WPN\t武器強化卷軸\tscroll\tNULL\nI_SCR_ARM\t防具強化卷軸\tscroll\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1511
+}

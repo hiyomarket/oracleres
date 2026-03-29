@@ -1,0 +1,320 @@
+{
+  "query": "SELECT item_id, name, category FROM game_item_catalog ORDER BY category, item_id LIMIT 100;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, category FROM game_item_catalog ORDER BY category, item_id LIMIT 100;",
+  "rows": [
+    {
+      "item_id": "I_MAT_ASH",
+      "name": "灰燼",
+      "category": "material"
+    },
+    {
+      "item_id": "I_MAT_CLAY",
+      "name": "黏土",
+      "category": "material"
+    },
+    {
+      "item_id": "I_MAT_DEW",
+      "name": "露珠",
+      "category": "material"
+    },
+    {
+      "item_id": "I_MAT_EMBER",
+      "name": "餘燼",
+      "category": "material"
+    },
+    {
+      "item_id": "I_MAT_HERB",
+      "name": "草藥",
+      "category": "material"
+    },
+    {
+      "item_id": "I_MAT_ORE",
+      "name": "礦石",
+      "category": "material"
+    },
+    {
+      "item_id": "I_MAT_PEARL",
+      "name": "珍珠",
+      "category": "material"
+    },
+    {
+      "item_id": "I_MAT_SHARD",
+      "name": "碎片",
+      "category": "material"
+    },
+    {
+      "item_id": "I_MAT_STONE",
+      "name": "石塊",
+      "category": "material"
+    },
+    {
+      "item_id": "I_MAT_WOOD",
+      "name": "木材",
+      "category": "material"
+    },
+    {
+      "item_id": "capture_normal",
+      "name": "寵物封印石",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_M026",
+      "name": "磨刀石",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_M027",
+      "name": "疾風藥劑",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_SCR_ARM",
+      "name": "防具強化卷軸",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W030",
+      "name": "疾風草",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W033",
+      "name": "復甦之風",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_W035",
+      "name": "生命之水",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774723587844-0",
+      "name": "測試道具_M3E_1774723587843",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774733106085-0",
+      "name": "測試道具_M3E_1774733106084",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774734329097-0",
+      "name": "測試道具_M3E_1774734329097",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774735364982-0",
+      "name": "測試道具_M3E_1774735364981",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774736296127-0",
+      "name": "測試道具_M3E_1774736296126",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774736343080-0",
+      "name": "測試道具_M3E_1774736343080",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774737752177-0",
+      "name": "測試道具_M3E_1774737752176",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774737821267-0",
+      "name": "測試道具_M3E_1774737821266",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774740022787-0",
+      "name": "測試道具_M3E_1774740022786",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774742567873-0",
+      "name": "測試道具_M3E_1774742567873",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774745336731-0",
+      "name": "測試道具_M3E_1774745336730",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "item-1774773421659-0",
+      "name": "測試道具_M3E_1774773421659",
+      "category": "material_basic"
+    },
+    {
+      "item_id": "I_QST_ASSASSIN_A",
+      "name": "影之契約",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_ASSASSIN_B",
+      "name": "無聲之刃",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_BASTION",
+      "name": "堡壘之盾碎片",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_BLOODGEM",
+      "name": "血魔寶石",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_CHAOS",
+      "name": "混沌碎片",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_COSMOS_A",
+      "name": "乾之精華",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_COSMOS_B",
+      "name": "坤之精華",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_DIVINE",
+      "name": "天罰聖光石",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_FATE_A",
+      "name": "天命之書",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_FATE_B",
+      "name": "共振水晶",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_FATE_C",
+      "name": "命運碎片×5",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_FROSTCORE",
+      "name": "極寒之心",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_HELLFIRE",
+      "name": "獄焰精華",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_HOLYSHIELD_A",
+      "name": "聖盾核心",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_HOLYSHIELD_B",
+      "name": "永恆誓約書",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_HOLYSHIELD_C",
+      "name": "聖光精華×3",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_HONOR",
+      "name": "騎士勳章",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_LIFEDEW",
+      "name": "生命露珠",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_MEDUSA",
+      "name": "蛇髮女妖之瞳",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_MIRROR",
+      "name": "明鏡碎片",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_OBLIVION",
+      "name": "遺忘之沙",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_PHOENIX",
+      "name": "鳳凰羽毛",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_PURIFY",
+      "name": "淨化聖水",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_QUAKE",
+      "name": "地脈碎片",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_SACRIFICE_A",
+      "name": "犧牲之心",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_SACRIFICE_B",
+      "name": "不滅之魂",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_SEAL_CORE",
+      "name": "五行封印核心",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_SEAL_FIRE",
+      "name": "火行封印符",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_SEAL_WOOD",
+      "name": "木行封印符",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_SHATTER",
+      "name": "碎岩之核",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_TORNADO",
+      "name": "風暴之眼",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_QST_WARCRY",
+      "name": "戰吼號角",
+      "category": "quest"
+    },
+    {
+      "item_id": "I_SCR_WPN",
+      "name": "武器強化卷軸",
+      "category": "quest"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\tcategory\nI_MAT_ASH\t灰燼\tmaterial\nI_MAT_CLAY\t黏土\tmaterial\nI_MAT_DEW\t露珠\tmaterial\nI_MAT_EMBER\t餘燼\tmaterial\nI_MAT_HERB\t草藥\tmaterial\nI_MAT_ORE\t礦石\tmaterial\nI_MAT_PEARL\t珍珠\tmaterial\nI_MAT_SHARD\t碎片\tmaterial\nI_MAT_STONE\t石塊\tmaterial\nI_MAT_WOOD\t木材\tmaterial\ncapture_normal\t寵物封印石\tmaterial_basic\nI_M026\t磨刀石\tmaterial_basic\nI_M027\t疾風藥劑\tmaterial_basic\nI_SCR_ARM\t防具強化卷軸\tmaterial_basic\nI_W030\t疾風草\tmaterial_basic\nI_W033\t復甦之風\tmaterial_basic\nI_W035\t生命之水\tmaterial_basic\nitem-1774723587844-0\t測試道具_M3E_1774723587843\tmaterial_basic\nitem-1774733106085-0\t測試道具_M3E_1774733106084\tmaterial_basic\nitem-1774734329097-0\t測試道具_M3E_1774734329097\tmaterial_basic\nitem-1774735364982-0\t測試道具_M3E_1774735364981\tmaterial_basic\nitem-1774736296127-0\t測試道具_M3E_1774736296126\tmaterial_basic\nitem-1774736343080-0\t測試道具_M3E_1774736343080\tmaterial_basic\nitem-1774737752177-0\t測試道具_M3E_1774737752176\tmaterial_basic\nitem-1774737821267-0\t測試道具_M3E_1774737821266\tmaterial_basic\nitem-1774740022787-0\t測試道具_M3E_1774740022786\tmaterial_basic\nitem-1774742567873-0\t測試道具_M3E_1774742567873\tmaterial_basic\nitem-1774745336731-0\t測試道具_M3E_1774745336730\tmaterial_basic\nitem-1774773421659-0\t測試道具_M3E_1774773421659\tmaterial_basic\nI_QST_ASSASSIN_A\t影之契約\tquest\nI_QST_ASSASSIN_B\t無聲之刃\tquest\nI_QST_BASTION\t堡壘之盾碎片\tquest\nI_QST_BLOODGEM\t血魔寶石\tquest\nI_QST_CHAOS\t混沌碎片\tquest\nI_QST_COSMOS_A\t乾之精華\tquest\nI_QST_COSMOS_B\t坤之精華\tquest\nI_QST_DIVINE\t天罰聖光石\tquest\nI_QST_FATE_A\t天命之書\tquest\nI_QST_FATE_B\t共振水晶\tquest\nI_QST_FATE_C\t命運碎片×5\tquest\nI_QST_FROSTCORE\t極寒之心\tquest\nI_QST_HELLFIRE\t獄焰精華\tquest\nI_QST_HOLYSHIELD_A\t聖盾核心\tquest\nI_QST_HOLYSHIELD_B\t永恆誓約書\tquest\nI_QST_HOLYSHIELD_C\t聖光精華×3\tquest\nI_QST_HONOR\t騎士勳章\tquest\nI_QST_LIFEDEW\t生命露珠\tquest\nI_QST_MEDUSA\t蛇髮女妖之瞳\tquest\nI_QST_MIRROR\t明鏡碎片\tquest\nI_QST_OBLIVION\t遺忘之沙\tquest\nI_QST_PHOENIX\t鳳凰羽毛\tquest\nI_QST_PURIFY\t淨化聖水\tquest\nI_QST_QUAKE\t地脈碎片\tquest\nI_QST_SACRIFICE_A\t犧牲之心\tquest\nI_QST_SACRIFICE_B\t不滅之魂\tquest\nI_QST_SEAL_CORE\t五行封印核心\tquest\nI_QST_SEAL_FIRE\t火行封印符\tquest\nI_QST_SEAL_WOOD\t木行封印符\tquest\nI_QST_SHATTER\t碎岩之核\tquest\nI_QST_TORNADO\t風暴之眼\tquest\nI_QST_WARCRY\t戰吼號角\tquest\nI_SCR_WPN\t武器強化卷軸\tquest\n",
+  "stderr": "",
+  "execution_time_ms": 1571
+}

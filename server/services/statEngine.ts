@@ -15,7 +15,7 @@
  * 5. 裝備加成在此引擎之外疊加（戰鬥時額外計算）
  */
 
-import { getStatBalanceConfig, getStatCaps, getEngineConfig } from "../gameEngineConfig";
+import { getStatBalanceConfig, getStatCaps, getEngineConfig, getPotentialWuxingConfig, getExpCurveConfig } from "../gameEngineConfig";
 
 // ═══════════════════════════════════════════════════════════════
 // 一、型別定義
@@ -192,6 +192,12 @@ export const PROFESSION_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 小時
  * 金：+0.3 SPD, +0.1% 暴擊率, +0.3 命中率
  * 水：+1 MP, +0.3 SPR
  */
+/** 五行潛能加成（從後台配置讀取） */
+export function getPotentialWuxingBonus() {
+  return getPotentialWuxingConfig();
+}
+
+/** 靜態預設值（用於導入時的型別推斷） */
 export const POTENTIAL_WUXING_BONUS = {
   wood: { hp: 2, healPower: 0.5 },
   fire: { atk: 0.5, matk: 0.5, critDamage: 0.2 },
@@ -253,7 +259,8 @@ export function calcFullStats(
   const { wood, fire, earth, metal, water } = wuxing;
 
   // 潛能五行加成（每點效果温和，避免低等級碾壓）
-  const pwb = POTENTIAL_WUXING_BONUS;
+  // 從後台配置讀取五行潛能加成參數
+  const pwb = getPotentialWuxingBonus();
   const pBonus = {
     hp:        Math.floor(potential.wood * pwb.wood.hp),
     mp:        Math.floor(potential.water * pwb.water.mp),
@@ -442,7 +449,7 @@ export function validatePotentialAllocation(
  * @returns 各屬性的增量
  */
 export function calcPotentialBonus(allocation: PotentialAllocation): Partial<FullCharacterStats> {
-  const pwb = POTENTIAL_WUXING_BONUS;
+  const pwb = getPotentialWuxingBonus();
   return {
     hp:        Math.floor(allocation.wood * pwb.wood.hp),
     mp:        Math.floor(allocation.water * pwb.water.mp),
@@ -889,13 +896,18 @@ export function getPetSynergyDesc(synergyType: PetFullStats["synergyType"]): str
  */
 export function calcExpToNextV2(
   level: number,
-  A: number = 2,
-  B: number = 1.6,
-  C: number = 0.25
+  A?: number,
+  B?: number,
+  C?: number
 ): number {
-  if (level >= 99) return 999999; // Lv.99 滿級標記
-  if (level <= 0) return Math.floor(A);
-  return Math.floor(A * Math.pow(level, B + C * Math.log(level)));
+  const expCfg = getExpCurveConfig();
+  const a = A ?? expCfg.A;
+  const b = B ?? expCfg.B;
+  const c = C ?? expCfg.C;
+  const maxLv = expCfg.maxLevel;
+  if (level >= maxLv) return 999999; // 滿級標記
+  if (level <= 0) return Math.floor(a);
+  return Math.floor(a * Math.pow(level, b + c * Math.log(level)));
 }
 
 /**

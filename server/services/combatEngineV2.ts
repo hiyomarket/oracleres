@@ -699,9 +699,25 @@ export function executeCommand(
         break;
       }
 
-      const target = command.targetId
-        ? participants.find(p => p.id === command.targetId) ?? actor
-        : actor;
+      // 道具目標限制：補血/補魔/復活/buff 只能對己方使用
+      const friendlyTypes = ["heal_hp", "heal_mp", "revive", "atk_boost", "def_boost", "cure_status"];
+      let target: BattleParticipant;
+      if (command.targetId) {
+        const candidate = participants.find(p => p.id === command.targetId);
+        if (candidate && friendlyTypes.includes(effect.type) && candidate.team !== actor.team) {
+          // 目標是敵方但道具只能對己方使用，強制改為自己
+          target = actor;
+          logs.push({
+            round, actorId: actor.id, actorName: actor.name,
+            logType: "buff", value: 0, isCritical: false,
+            message: `${actor.name}的${effect.itemName}只能對己方使用，自動轉向自己`,
+          });
+        } else {
+          target = candidate ?? actor;
+        }
+      } else {
+        target = actor;
+      }
 
       switch (effect.type) {
         case "heal_hp": {

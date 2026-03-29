@@ -1331,14 +1331,40 @@ export const gameWorldRouter = router({
       "skill-water-001":   { name: "水靈術·初",  rarity: "uncommon", emoji: "📘" },
       "skill-water-002":   { name: "水靈術·進",  rarity: "rare",     emoji: "📘" },
     };
+    // 優先從資料庫圖鑑讀取名稱（最正確）
+    const allItemIds = items.map(i => i.itemId).filter(Boolean);
+    const catalogItems = allItemIds.length > 0
+      ? await db.select({ itemId: gameItemCatalog.itemId, name: gameItemCatalog.name, rarity: gameItemCatalog.rarity, category: gameItemCatalog.category })
+          .from(gameItemCatalog).where(inArray(gameItemCatalog.itemId, allItemIds))
+      : [];
+    const catalogNameMap = new Map(catalogItems.map(c => [c.itemId, c]));
+    // 裝備圖鑑名稱
+    const equipItemIds = items.filter(i => i.itemType === 'equipment').map(i => i.itemId);
+    const equipCatalogItems = equipItemIds.length > 0
+      ? await db.select({ equipId: gameEquipmentCatalog.equipId, name: gameEquipmentCatalog.name, rarity: gameEquipmentCatalog.rarity })
+          .from(gameEquipmentCatalog).where(inArray(gameEquipmentCatalog.equipId, equipItemIds))
+      : [];
+    const equipNameMap = new Map(equipCatalogItems.map(c => [c.equipId, c]));
+
+    const RARITY_EMOJI: Record<string, string> = { common: "🟢", uncommon: "🔵", rare: "🟣", epic: "🟠", legendary: "🔴" };
+
     return items.map(item => {
-      // 優先查 shared/itemNames（含新格式 I_W001 等），再 fallback 到舊版 ITEM_NAMES_LEGACY
+      // 1. 優先查資料庫圖鑑（道具圖鑑 + 裝備圖鑑）
+      const dbItem = catalogNameMap.get(item.itemId);
+      if (dbItem) {
+        return { ...item, itemName: dbItem.name, rarity: dbItem.rarity ?? "common", emoji: RARITY_EMOJI[dbItem.rarity ?? "common"] ?? "📦" };
+      }
+      const dbEquip = equipNameMap.get(item.itemId);
+      if (dbEquip) {
+        return { ...item, itemName: dbEquip.name, rarity: dbEquip.rarity ?? "common", emoji: RARITY_EMOJI[dbEquip.rarity ?? "common"] ?? "⚔️" };
+      }
+      // 2. fallback 到 shared/itemNames 靜態映射
       const sharedInfo = getSharedItemInfo(item.itemId);
-      const isKnown = sharedInfo.name !== item.itemId; // getItemInfo fallback 會返回 itemId 本身
+      const isKnown = sharedInfo.name !== item.itemId;
       if (isKnown) {
         return { ...item, itemName: sharedInfo.name, rarity: sharedInfo.rarity, emoji: sharedInfo.emoji };
       }
-      // fallback 到舊版本地映射
+      // 3. fallback 到舊版本地映射
       const legacy = ITEM_NAMES_LEGACY[item.itemId];
       return {
         ...item,
@@ -1888,22 +1914,46 @@ export const gameWorldRouter = router({
       // 查詢圖鑑效果
       const [catalog] = await db.select().from(gameItemCatalog)
         .where(eq(gameItemCatalog.itemId, invItem.itemId)).limit(1);
-      const effect = catalog?.effect ?? "";
       let newHp = agent.hp;
       let newMp = agent.mp;
       let newStamina = agent.stamina;
-      // 解析效果字串：hp+50% / hp+100 / mp+50 / stamina+50
-      const hpPctM = effect.match(/hp\+(\d+)%/);
-      const hpFlatM = effect.match(/hp\+(\d+)(?!%)/);
-      const mpFlatM = effect.match(/mp\+(\d+)/);
-      const staminaM = effect.match(/stamina\+(\d+)/);
-      if (hpPctM) newHp = Math.min(agent.maxHp, agent.hp + Math.floor(agent.maxHp * parseInt(hpPctM[1]) / 100));
-      else if (hpFlatM) newHp = Math.min(agent.maxHp, agent.hp + parseInt(hpFlatM[1]));
-      if (mpFlatM) newMp = Math.min(agent.maxMp, agent.mp + parseInt(mpFlatM[1]));
-      if (staminaM) newStamina = Math.min(100, agent.stamina + parseInt(staminaM[1]));
-      // 預設效果（無圖鑑記錄）
-      if (!catalog && invItem.itemId.includes("potion")) newHp = Math.min(agent.maxHp, agent.hp + 50);
-      if (!catalog && invItem.itemId.includes("elixir")) { newHp = Math.min(agent.maxHp, agent.hp + 100); newMp = Math.min(agent.maxMp, agent.mp + 50); }
+      // 優先使用結構化 use_effect JSON
+      const useEff = catalog?.useEffect as { type: string; value: number; duration?: number; description?: string } | null;
+      if (useEff) {
+        switch (useEff.type) {
+          case "heal_hp":
+            newHp = Math.min(agent.maxHp, agent.hp + Math.floor(agent.maxHp * useEff.value / 100));
+            break;
+          case "heal_mp":
+            newMp = Math.min(agent.maxMp, agent.mp + Math.floor(agent.maxMp * useEff.value / 100));
+            break;
+          case "revive":
+            // 地圖上復活僅恢復 HP
+            newHp = Math.min(agent.maxHp, Math.floor(agent.maxHp * useEff.value / 100));
+            break;
+          case "cure_status":
+            // 非戰鬥中無異常狀態可清除，僅消耗道具
+            break;
+          default:
+            // 未知類型 fallback 補血 20%
+            newHp = Math.min(agent.maxHp, agent.hp + Math.floor(agent.maxHp * 0.2));
+            break;
+        }
+      } else {
+        // 回退：解析文字效果欄位
+        const effect = catalog?.effect ?? "";
+        const hpPctM = effect.match(/hp\+(\d+)%/);
+        const hpFlatM = effect.match(/hp\+(\d+)(?!%)/);
+        const mpFlatM = effect.match(/mp\+(\d+)/);
+        const staminaM = effect.match(/stamina\+(\d+)/);
+        if (hpPctM) newHp = Math.min(agent.maxHp, agent.hp + Math.floor(agent.maxHp * parseInt(hpPctM[1]) / 100));
+        else if (hpFlatM) newHp = Math.min(agent.maxHp, agent.hp + parseInt(hpFlatM[1]));
+        if (mpFlatM) newMp = Math.min(agent.maxMp, agent.mp + parseInt(mpFlatM[1]));
+        if (staminaM) newStamina = Math.min(100, agent.stamina + parseInt(staminaM[1]));
+        // 預設效果（無圖鑑記錄）
+        if (!catalog && invItem.itemId.includes("potion")) newHp = Math.min(agent.maxHp, agent.hp + 50);
+        if (!catalog && invItem.itemId.includes("elixir")) { newHp = Math.min(agent.maxHp, agent.hp + 100); newMp = Math.min(agent.maxMp, agent.mp + 50); }
+      }
       await db.update(gameAgents).set({ hp: newHp, mp: newMp, stamina: newStamina, updatedAt: Date.now() }).where(eq(gameAgents.id, agent.id));
       if (invItem.quantity > 1) {
         await db.update(agentInventory).set({ quantity: invItem.quantity - 1, updatedAt: Date.now() }).where(eq(agentInventory.id, invItem.id));

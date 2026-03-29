@@ -1,0 +1,19 @@
+{
+  "query": "SELECT DISTINCT category FROM game_item_catalog ORDER BY category;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT DISTINCT category FROM game_item_catalog ORDER BY category;",
+  "rows": [
+    {
+      "category": "material"
+    },
+    {
+      "category": "material_basic"
+    },
+    {
+      "category": "quest"
+    }
+  ],
+  "messages": [],
+  "stdout": "category\nmaterial\nmaterial_basic\nquest\n",
+  "stderr": "",
+  "execution_time_ms": 1517
+}

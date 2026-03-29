@@ -147,6 +147,42 @@ export interface GameEngineConfig {
   wuxingOvercomeMult: number;
   /** 五行相生傷害倍率（預設 0.8） */
   wuxingGenerateMult: number;
+  // ─── 經驗值曲線 V3 可調參數 ───
+  /** V3 經驗公式 A 係數（預設 2） */
+  expCurveA: number;
+  /** V3 經驗公式 B 指數（預設 1.6） */
+  expCurveB: number;
+  /** V3 經驗公式 C 對數係數（預設 0.25） */
+  expCurveC: number;
+  /** 最高等級（預設 99） */
+  maxLevel: number;
+  /** 每級獲得的潛能點數（預設 5） */
+  potentialPointsPerLevel: number;
+  // ─── 五行潛能加成參數 ───
+  /** 木→HP 每點加成（預設 2） */
+  potWoodHp: number;
+  /** 木→治癒力 每點加成（預設 0.5） */
+  potWoodHeal: number;
+  /** 火→ATK 每點加成（預設 0.5） */
+  potFireAtk: number;
+  /** 火→MATK 每點加成（預設 0.5） */
+  potFireMatk: number;
+  /** 火→暴擊傷害 每點加成%（預設 0.2） */
+  potFireCritDmg: number;
+  /** 土→DEF 每點加成（預設 0.5） */
+  potEarthDef: number;
+  /** 土→MDEF 每點加成（預設 0.3） */
+  potEarthMdef: number;
+  /** 金→SPD 每點加成（預設 0.3） */
+  potMetalSpd: number;
+  /** 金→暴擊率 每點加成%（預設 0.1） */
+  potMetalCrit: number;
+  /** 金→命中率 每點加成（預設 0.3） */
+  potMetalHit: number;
+  /** 水→MP 每點加成（預設 1） */
+  potWaterMp: number;
+  /** 水→SPR 每點加成（預設 0.3） */
+  potWaterSpr: number;
 }
 
 // ─── 預設值 ───
@@ -237,6 +273,25 @@ const DEFAULT_CONFIG: GameEngineConfig = {
   // GD-028 戰鬥傷害
   wuxingOvercomeMult: 1.5,
   wuxingGenerateMult: 0.8,
+  // 經驗值曲線 V3
+  expCurveA: 2,
+  expCurveB: 1.6,
+  expCurveC: 0.25,
+  maxLevel: 99,
+  potentialPointsPerLevel: 5,
+  // 五行潛能加成
+  potWoodHp: 2,
+  potWoodHeal: 0.5,
+  potFireAtk: 0.5,
+  potFireMatk: 0.5,
+  potFireCritDmg: 0.2,
+  potEarthDef: 0.5,
+  potEarthMdef: 0.3,
+  potMetalSpd: 0.3,
+  potMetalCrit: 0.1,
+  potMetalHit: 0.3,
+  potWaterMp: 1,
+  potWaterSpr: 0.3,
 };
 
 // ─── 記憶體快取 ───
@@ -441,6 +496,28 @@ export function getInfuseConfig(): { minGain: number; maxGain: number; failRate:
     maxGain: _config.infuseMaxGain,
     failRate: _config.infuseFailRate,
     maxWuxing: _config.infuseMaxWuxing,
+  };
+}
+
+/** 取得五行潛能加成配置 */
+export function getPotentialWuxingConfig() {
+  return {
+    wood: { hp: _config.potWoodHp ?? 2, healPower: _config.potWoodHeal ?? 0.5 },
+    fire: { atk: _config.potFireAtk ?? 0.5, matk: _config.potFireMatk ?? 0.5, critDamage: _config.potFireCritDmg ?? 0.2 },
+    earth: { def: _config.potEarthDef ?? 0.5, mdef: _config.potEarthMdef ?? 0.3 },
+    metal: { spd: _config.potMetalSpd ?? 0.3, critRate: _config.potMetalCrit ?? 0.1, hitRate: _config.potMetalHit ?? 0.3 },
+    water: { mp: _config.potWaterMp ?? 1, spr: _config.potWaterSpr ?? 0.3 },
+  };
+}
+
+/** 取得經驗值曲線配置 */
+export function getExpCurveConfig() {
+  return {
+    A: _config.expCurveA ?? 2,
+    B: _config.expCurveB ?? 1.6,
+    C: _config.expCurveC ?? 0.25,
+    maxLevel: _config.maxLevel ?? 99,
+    potentialPointsPerLevel: _config.potentialPointsPerLevel ?? 5,
   };
 }
 
