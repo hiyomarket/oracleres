@@ -643,12 +643,7 @@ const questProgressRouter = router({
             sql`UPDATE game_agents SET gold = gold - ${learnCost.gold} WHERE id = ${agentId} AND gold >= ${learnCost.gold}`
           );
         }
-        // 扣除靈晶
-        if (learnCost.soulCrystal && learnCost.soulCrystal > 0) {
-          await db!.execute(
-            sql`UPDATE game_agents SET soul_crystal = soul_crystal - ${learnCost.soulCrystal} WHERE id = ${agentId} AND soul_crystal >= ${learnCost.soulCrystal}`
-          );
-        }
+        // 靈晶欄位已移除，跳過 soulCrystal 扣除
         // 扣除道具
         if (learnCost.items && Array.isArray(learnCost.items)) {
           for (const item of learnCost.items) {
@@ -784,11 +779,12 @@ const questProgressRouter = router({
       // 4. 解析 learnCost
       const learnCost = typeof skill.learnCost === 'string' ? JSON.parse(skill.learnCost as string) : skill.learnCost;
 
-      // 5. 取得角色資料
-      const [agentRow] = await db!.execute(
-        sql`SELECT gold, soul_crystal FROM game_agents WHERE id = ${agentId} LIMIT 1`
-      ) as any;
-      const agent = Array.isArray(agentRow) && agentRow.length > 0 ? agentRow[0] : { gold: 0, soul_crystal: 0 };
+      // 5. 取得角色資料（使用 Drizzle ORM）
+      const [agentData] = await db!.select({ gold: gameAgents.gold })
+        .from(gameAgents)
+        .where(eq(gameAgents.id, agentId))
+        .limit(1);
+      const agent = agentData ?? { gold: 0 };
 
       // 6. 檢查金幣
       const requiredGold = learnCost?.gold ?? 0;
@@ -830,14 +826,7 @@ const questProgressRouter = router({
         if (result?.affectedRows === 0) throw new Error("金幣扣除失敗，請重試");
       }
 
-      // 9. 扣除靈晶
-      const requiredSoulCrystal = learnCost?.soulCrystal ?? 0;
-      if (requiredSoulCrystal > 0) {
-        const [result] = await db!.execute(
-          sql`UPDATE game_agents SET soul_crystal = soul_crystal - ${requiredSoulCrystal} WHERE id = ${agentId} AND soul_crystal >= ${requiredSoulCrystal}`
-        ) as any;
-        if (result?.affectedRows === 0) throw new Error("靈晶扣除失敗，請重試");
-      }
+      // 9. 靈晶扣除（目前系統暫無靈晶欄位，跳過）
 
       // 10. 扣除道具
       if (learnCost?.items && Array.isArray(learnCost.items)) {
@@ -985,18 +974,54 @@ async function checkPrerequisites(agentId: number, skillId: number): Promise<{ p
   // === 3. 檢查習得代價是否足夠（learnCost 欄位） ===
   const learnCost = typeof skill.learnCost === 'string' ? JSON.parse(skill.learnCost) : skill.learnCost;
   if (learnCost) {
-    const [agent] = await db!.execute(
-      sql`SELECT gold, soul_crystal FROM game_agents WHERE id = ${agentId} LIMIT 1`
-    ) as any;
-    const agentData = Array.isArray(agent) && agent.length > 0 ? agent[0] : { gold: 0, soul_crystal: 0 };
+    const [agentData] = await db!.select({ gold: gameAgents.gold })
+      .from(gameAgents)
+      .where(eq(gameAgents.id, agentId))
+      .limit(1);
+    const agent = agentData ?? { gold: 0 };
     
-    if (learnCost.gold && agentData.gold < learnCost.gold) {
-      return { passed: false, reason: `金幣不足（需要 ${learnCost.gold}，目前 ${agentData.gold}）` };
+    if (learnCost.gold && agent.gold < learnCost.gold) {
+      return { passed: false, reason: `金幣不足（需要 ${learnCost.gold}，目前 ${agent.gold}）` };
     }
-    if (learnCost.soulCrystal && agentData.soul_crystal < learnCost.soulCrystal) {
-      return { passed: false, reason: `靈晶不足（需要 ${learnCost.soulCrystal}，目前 ${agentData.soul_crystal}）` };
+    // 檢查道具數量
+    if (learnCost.items && Array.isArray(learnCost.items)) {
+      for (const reqItem of learnCost.items) {
+        const itemId = reqItem.itemId;
+        const reqQty = reqItem.qty ?? reqItem.count ?? 1;
+        if (itemId) {
+          const [inv] = await db!.select({ quantity: agentInventory.quantity })
+            .from(agentInventory)
+            .where(and(eq(agentInventory.agentId, agentId), eq(agentInventory.itemId, String(itemId))))
+            .limit(1);
+          const have = inv?.quantity ?? 0;
+          if (have < reqQty) {
+            // 嘗試查詢道具名稱
+            const [catalogItem] = await db!.select({ name: gameItemCatalog.name })
+              .from(gameItemCatalog)
+              .where(eq(gameItemCatalog.itemId, String(itemId)))
+              .limit(1);
+            const itemName = catalogItem?.name ?? itemId;
+            return { passed: false, reason: `道具不足：${itemName} 需要 ${reqQty} 個，目前 ${have} 個` };
+          }
+        } else if (reqItem.name) {
+          // 舊格式：用名稱查詢
+          const [catalogItem] = await db!.select({ itemId: gameItemCatalog.itemId })
+            .from(gameItemCatalog)
+            .where(eq(gameItemCatalog.name, reqItem.name))
+            .limit(1);
+          if (catalogItem) {
+            const [inv] = await db!.select({ quantity: agentInventory.quantity })
+              .from(agentInventory)
+              .where(and(eq(agentInventory.agentId, agentId), eq(agentInventory.itemId, catalogItem.itemId)))
+              .limit(1);
+            const have = inv?.quantity ?? 0;
+            if (have < reqQty) {
+              return { passed: false, reason: `道具不足：${reqItem.name} 需要 ${reqQty} 個，目前 ${have} 個` };
+            }
+          }
+        }
+      }
     }
-    // TODO: 檢查道具數量（items）和聲望（reputation）
   }
 
   return { passed: true, reason: "" };

@@ -82,7 +82,7 @@ const monsterCatalogInput = z.object({
   name: z.string().min(1).max(100),
   wuxing: z.enum(["木", "火", "土", "金", "水"]),
   levelRange: z.string().nullish().default("1-5"),
-  rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
+  rarity: z.enum(["common", "uncommon", "rare", "epic", "legendary"]).default("common"),
   baseHp: z.number().int().positive().default(100),
   baseAttack: z.number().int().positive().default(10),
   baseDefense: z.number().int().nonnegative().default(5),
@@ -98,7 +98,7 @@ const monsterCatalogInput = z.object({
   skillId1: z.string().nullish().default(""),
   skillId2: z.string().nullish().default(""),
   skillId3: z.string().nullish().default(""),
-  aiLevel: z.number().int().min(1).max(4).default(1),
+  aiLevel: z.number().int().min(0).max(4).default(1),
   growthRate: z.number().positive().default(1.0),
   dropItem1: z.string().nullish().default(""),
   dropRate1: z.number().min(0).max(100).default(0),
@@ -139,7 +139,7 @@ const itemCatalogInput = z.object({
   name: z.string().min(1).max(100),
   wuxing: z.enum(["木", "火", "土", "金", "水"]),
   category: z.enum(["material_basic", "material_drop", "material", "consumable", "quest", "treasure", "skillbook", "equipment_material", "scroll"]).default("material_basic"),
-  rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
+  rarity: z.enum(["common", "uncommon", "rare", "epic", "legendary"]).default("common"),
   stackLimit: z.number().int().positive().default(99),
   shopPrice: z.number().int().nonnegative().default(0),
   inNormalShop: z.number().int().min(0).max(1).default(0),
@@ -181,7 +181,7 @@ const equipCatalogInput = z.object({
   affix3: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullish().default(null),
   affix4: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullish().default(null),
   affix5: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullish().default(null),
-  rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
+  rarity: z.enum(["common", "uncommon", "rare", "epic", "legendary"]).default("common"),
   setId: z.string().nullish().default(""),
   specialEffect: z.string().nullish().default(""),
   shopPrice: z.number().int().nonnegative().default(0),
@@ -324,7 +324,7 @@ const achievementInput = z.object({
   category: z.enum(["avatar", "explore", "combat", "oracle", "social", "collection"]),
   title: z.string().min(1).max(100),
   description: z.string().min(1),
-  rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
+  rarity: z.enum(["common", "uncommon", "rare", "epic", "legendary"]).default("common"),
   conditionType: z.string().max(50).default(""),
   conditionValue: z.number().int().nonnegative().default(1),
   conditionParams: z.record(z.string(), z.any()).nullish().default({}),
@@ -1207,6 +1207,13 @@ export const gameCatalogAdminRouter = router({
 
     const achieveTotal = await db.select({ count: sql<number>`count(*)` }).from(gameAchievements);
 
+    // 魔物技能統計（從統一技能圖鑑中篩選 usableByMonster = 1）
+    const monsterSkillTotal = await db.select({ count: sql<number>`count(*)` }).from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.usableByMonster, 1));
+    const monsterSkillByWuxing = await db.select({
+      wuxing: gameUnifiedSkillCatalog.wuxing,
+      count: sql<number>`count(*)`,
+    }).from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.usableByMonster, 1)).groupBy(gameUnifiedSkillCatalog.wuxing);
+
     return {
       monsters: {
         total: monsterTotal[0]?.count ?? 0,
@@ -1228,6 +1235,10 @@ export const gameCatalogAdminRouter = router({
         byWuxing: skillByWuxing,
         byCategory: skillByCategory,
         byUsability: skillByUsability,
+      },
+      monsterSkills: {
+        total: monsterSkillTotal[0]?.count ?? 0,
+        byWuxing: monsterSkillByWuxing,
       },
       achievements: {
         total: achieveTotal[0]?.count ?? 0,

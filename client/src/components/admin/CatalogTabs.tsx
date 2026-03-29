@@ -23,6 +23,39 @@ import {
   SpawnNodeEditor,
 } from "./SmartEditors";
 
+/** 解析 tRPC/zod 錯誤訊息為友善的中文提示 */
+function friendlyError(e: { message: string }): string {
+  const msg = e.message;
+  // 嘗試解析 zod 驗證錯誤 JSON
+  try {
+    const arr = JSON.parse(msg);
+    if (Array.isArray(arr)) {
+      const labels: Record<string, string> = {
+        too_small: "值太小", too_big: "值太大", invalid_type: "類型錯誤",
+        invalid_enum_value: "不合法的選項", invalid_string: "格式錯誤",
+      };
+      const fieldMap: Record<string, string> = {
+        baseHp: "HP", baseAttack: "攻擊", baseDefense: "防禦", baseSpeed: "速度",
+        aiLevel: "AI等級", growthRate: "成長率", rarity: "稀有度",
+        wuxing: "五行", name: "名稱", shopPrice: "售價", mpCost: "MP消耗",
+        powerPercent: "威力%", cooldown: "冷卻", isActive: "啟用狀態",
+        catchRate: "捕獲率", actionsPerTurn: "每回合行動數",
+      };
+      return arr.map((err: any) => {
+        const field = err.path?.join(".") ?? "";
+        const fieldLabel = fieldMap[field.replace("data.", "")] ?? field;
+        const codeLabel = labels[err.code] ?? err.code;
+        if (err.code === "too_small") return `${fieldLabel} ${codeLabel}（最小 ${err.minimum}）`;
+        if (err.code === "too_big") return `${fieldLabel} ${codeLabel}（最大 ${err.maximum}）`;
+        if (err.code === "invalid_enum_value") return `${fieldLabel} ${codeLabel}：${err.received}`;
+        return `${fieldLabel} ${codeLabel}`;
+      }).join("；");
+    }
+  } catch {}
+  // 非 JSON 錯誤，直接回傳
+  return msg;
+}
+
 /** 通用 AI 生圖按鈕 */
 function AiImageBtn({ type, id, name, hasImage, onSuccess }: { type: "item" | "equipment" | "skill" | "monster" | "achievement" | "boss"; id: string | number; name: string; hasImage: boolean; onSuccess: () => void }) {
   const itemMut = trpc.gameAI.aiGenerateItemImage.useMutation({ onSuccess: (r: any) => { toast.success(`✅ ${r.name} 圖片已生成`); onSuccess(); }, onError: (e: any) => toast.error(`生圖失敗: ${e.message}`) });
@@ -689,22 +722,22 @@ export function MonsterCatalogV2Tab() {
 
   const createMut = trpc.gameCatalog.createMonsterCatalog.useMutation({
     onSuccess: (r) => { toast.success(`建立成功 (${r.monsterId})`); setFormOpen(false); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
+    onError: (e) => toast.error(friendlyError(e)),
   });
   const updateMut = trpc.gameCatalog.updateMonsterCatalog.useMutation({
     onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
+    onError: (e) => toast.error(friendlyError(e)),
   });
   const deleteMut = trpc.gameCatalog.deleteMonsterCatalog.useMutation({
     onSuccess: () => { toast.success("已刪除"); refetch(); },
   });
   const batchDeleteMut = trpc.gameCatalog.batchDeleteMonsters.useMutation({
     onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
+    onError: (e) => toast.error(friendlyError(e)),
   });
   const batchUpdateMut = trpc.gameCatalog.batchUpdateMonsters.useMutation({
     onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); },
-    onError: (e) => toast.error(`${e.message}`),
+    onError: (e) => toast.error(friendlyError(e)),
   });
   const bulkImportMut = trpc.gameCatalog.bulkImportMonsters.useMutation({
     onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆魔物`); setImportOpen(false); refetch(); },
@@ -1090,11 +1123,11 @@ export function ItemCatalogV2Tab() {
   const { data: allMonsters } = trpc.gameCatalog.getAllMonsters.useQuery();
   const exportQuery = trpc.gameCatalog.exportItemCatalog.useQuery(undefined, { enabled: false });
 
-  const createMut = trpc.gameCatalog.createItemCatalog.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.itemId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const updateMut = trpc.gameCatalog.updateItemCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const createMut = trpc.gameCatalog.createItemCatalog.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.itemId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
+  const updateMut = trpc.gameCatalog.updateItemCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
   const deleteMut = trpc.gameCatalog.deleteItemCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
-  const batchDeleteMut = trpc.gameCatalog.batchDeleteItems.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const batchUpdateMut = trpc.gameCatalog.batchUpdateItems.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const batchDeleteMut = trpc.gameCatalog.batchDeleteItems.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
+  const batchUpdateMut = trpc.gameCatalog.batchUpdateItems.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
   const bulkImportMut = trpc.gameCatalog.bulkImportItems.useMutation({ onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆道具`); setImportOpen(false); refetch(); }, onError: (e) => toast.error(`匯入失敗：${e.message}`) });
 
   const monsterOpts = (allMonsters ?? []).map((m: any) => ({ value: m.monsterId, label: `${m.monsterId} ${m.name}（${m.wuxing}）` }));
@@ -1279,11 +1312,11 @@ export function EquipCatalogV2Tab() {
   const { data: allItems } = trpc.gameCatalog.getAllItems.useQuery();
   const exportQuery = trpc.gameCatalog.exportEquipCatalog.useQuery(undefined, { enabled: false });
 
-  const createMut = trpc.gameCatalog.createEquipCatalog.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.equipId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const updateMut = trpc.gameCatalog.updateEquipCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const createMut = trpc.gameCatalog.createEquipCatalog.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.equipId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
+  const updateMut = trpc.gameCatalog.updateEquipCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
   const deleteMut = trpc.gameCatalog.deleteEquipCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
-  const batchDeleteMut = trpc.gameCatalog.batchDeleteEquips.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const batchUpdateMut = trpc.gameCatalog.batchUpdateEquips.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const batchDeleteMut = trpc.gameCatalog.batchDeleteEquips.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
+  const batchUpdateMut = trpc.gameCatalog.batchUpdateEquips.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
   const bulkImportMut = trpc.gameCatalog.bulkImportEquipments.useMutation({ onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆裝備`); setImportOpen(false); refetch(); }, onError: (e) => toast.error(`匯入失敗：${e.message}`) });
 
   const fields: FieldDef[] = [
@@ -1774,11 +1807,11 @@ export function SkillCatalogV2Tab() {
   const { data, isLoading, refetch } = trpc.gameCatalog.getSkillCatalog.useQuery(queryInput);
   const exportQuery = trpc.gameCatalog.exportSkillCatalog.useQuery(undefined, { enabled: false });
 
-  const createMut = trpc.gameCatalog.createSkillCatalog.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.skillId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const updateMut = trpc.gameCatalog.updateSkillCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const createMut = trpc.gameCatalog.createSkillCatalog.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.skillId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
+  const updateMut = trpc.gameCatalog.updateSkillCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
   const deleteMut = trpc.gameCatalog.deleteSkillCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
-  const batchDeleteMut = trpc.gameCatalog.batchDeleteSkills.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const batchUpdateMut = trpc.gameCatalog.batchUpdateSkills.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const batchDeleteMut = trpc.gameCatalog.batchDeleteSkills.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
+  const batchUpdateMut = trpc.gameCatalog.batchUpdateSkills.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
   const bulkImportMut = trpc.gameCatalog.bulkImportSkills.useMutation({ onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆技能`); setImportOpen(false); refetch(); }, onError: (e) => toast.error(`匯入失敗：${e.message}`) });
 
   // ===== 統一技能圖鑑全表單化欄位定義 =====
@@ -2055,11 +2088,11 @@ export function AchievementCatalogTab() {
   const { data, isLoading, refetch } = trpc.gameCatalog.getAchievementCatalog.useQuery(queryInput);
   const exportQuery = trpc.gameCatalog.exportAchievementCatalog.useQuery(undefined, { enabled: false });
 
-  const createMut = trpc.gameCatalog.createAchievement.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.achId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const updateMut = trpc.gameCatalog.updateAchievementCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const createMut = trpc.gameCatalog.createAchievement.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.achId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
+  const updateMut = trpc.gameCatalog.updateAchievementCatalog.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
   const deleteMut = trpc.gameCatalog.deleteAchievementCatalog.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
-  const batchDeleteMut = trpc.gameCatalog.batchDeleteAchievements.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const batchUpdateMut = trpc.gameCatalog.batchUpdateAchievements.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
+  const batchDeleteMut = trpc.gameCatalog.batchDeleteAchievements.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
+  const batchUpdateMut = trpc.gameCatalog.batchUpdateAchievements.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(friendlyError(e)) });
   const bulkImportMut = trpc.gameCatalog.bulkImportAchievements.useMutation({ onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆成就`); setImportOpen(false); refetch(); }, onError: (e) => toast.error(`匯入失敗：${e.message}`) });
 
   const fields: FieldDef[] = [

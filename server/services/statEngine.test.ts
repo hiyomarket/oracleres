@@ -13,6 +13,7 @@ import {
   DEFAULT_FATE_BONUSES,
   DEFAULT_POTENTIAL_PER_POINT,
   POTENTIAL_POINTS_PER_LEVEL,
+  POTENTIAL_WUXING_BONUS,
   calcPetFullStats,
   calcPetSynergyType,
   getPetSynergyDesc,
@@ -29,7 +30,7 @@ import {
 const BALANCED_WUXING: WuXingValues = { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 };
 const FIRE_DOMINANT: WuXingValues = { wood: 10, fire: 40, earth: 15, metal: 15, water: 20 };
 const WATER_DOMINANT: WuXingValues = { wood: 10, fire: 10, earth: 10, metal: 10, water: 60 };
-const ZERO_POTENTIAL: PotentialAllocation = { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 };
+const ZERO_POTENTIAL: PotentialAllocation = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
 
 describe("statEngine - calcFullStats", () => {
   it("should return all stat fields", () => {
@@ -135,60 +136,60 @@ describe("statEngine - 命格加成", () => {
 });
 
 describe("statEngine - 潛能點數", () => {
-  it("potential HP allocation should increase HP", () => {
+  it("potential wood allocation should increase HP", () => {
     const base = calcFullStats(BALANCED_WUXING, 10, ZERO_POTENTIAL);
-    const withPot = calcFullStats(BALANCED_WUXING, 10, { ...ZERO_POTENTIAL, hp: 10 });
-    expect(withPot.hp).toBe(base.hp + 10 * DEFAULT_POTENTIAL_PER_POINT.hp);
+    const withPot = calcFullStats(BALANCED_WUXING, 10, { ...ZERO_POTENTIAL, wood: 10 });
+    expect(withPot.hp).toBe(base.hp + Math.floor(10 * POTENTIAL_WUXING_BONUS.wood.hp));
   });
 
-  it("potential ATK allocation should increase ATK", () => {
+  it("potential fire allocation should increase ATK", () => {
     const base = calcFullStats(BALANCED_WUXING, 10, ZERO_POTENTIAL);
-    const withPot = calcFullStats(BALANCED_WUXING, 10, { ...ZERO_POTENTIAL, atk: 5 });
-    expect(withPot.atk).toBe(base.atk + 5 * DEFAULT_POTENTIAL_PER_POINT.atk);
+    const withPot = calcFullStats(BALANCED_WUXING, 10, { ...ZERO_POTENTIAL, fire: 5 });
+    expect(withPot.atk).toBe(base.atk + Math.floor(5 * POTENTIAL_WUXING_BONUS.fire.atk));
   });
 
   it("potential + fate should stack", () => {
     const base = calcFullStats(BALANCED_WUXING, 10, ZERO_POTENTIAL);
-    const withBoth = calcFullStats(BALANCED_WUXING, 10, { ...ZERO_POTENTIAL, hp: 5 }, "wood");
-    // 木命 HP +10%, 加上潛能 +5*20=100
-    expect(withBoth.hp).toBeGreaterThan(base.hp + 5 * DEFAULT_POTENTIAL_PER_POINT.hp);
+    const withBoth = calcFullStats(BALANCED_WUXING, 10, { ...ZERO_POTENTIAL, wood: 5 }, "wood");
+    // 木命 HP +10%, 加上潛能 wood 加成
+    expect(withBoth.hp).toBeGreaterThan(base.hp + Math.floor(5 * POTENTIAL_WUXING_BONUS.wood.hp));
   });
 });
 
 describe("statEngine - validatePotentialAllocation", () => {
   it("should return null for valid allocation", () => {
-    const result = validatePotentialAllocation({ hp: 3, mp: 2, atk: 0, def: 0, spd: 0, matk: 0 }, 10);
+    const result = validatePotentialAllocation({ wood: 3, fire: 2, earth: 0, metal: 0, water: 0 }, 10);
     expect(result).toBeNull();
   });
 
   it("should reject allocation exceeding max points", () => {
-    const result = validatePotentialAllocation({ hp: 6, mp: 5, atk: 0, def: 0, spd: 0, matk: 0 }, 10);
+    const result = validatePotentialAllocation({ wood: 6, fire: 5, earth: 0, metal: 0, water: 0 }, 10);
     expect(result).not.toBeNull();
     expect(result).toContain("超過");
   });
 
   it("should reject negative values", () => {
-    const result = validatePotentialAllocation({ hp: -1, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 }, 10);
+    const result = validatePotentialAllocation({ wood: -1, fire: 0, earth: 0, metal: 0, water: 0 }, 10);
     expect(result).not.toBeNull();
     expect(result).toContain("負數");
   });
 
   it("should reject non-integer values", () => {
-    const result = validatePotentialAllocation({ hp: 1.5, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 }, 10);
+    const result = validatePotentialAllocation({ wood: 1.5, fire: 0, earth: 0, metal: 0, water: 0 }, 10);
     expect(result).not.toBeNull();
     expect(result).toContain("整數");
   });
 });
 
 describe("statEngine - calcPotentialBonus", () => {
-  it("should correctly calculate bonus values", () => {
-    const bonus = calcPotentialBonus({ hp: 5, mp: 3, atk: 2, def: 1, spd: 4, matk: 0 });
-    expect(bonus.hp).toBe(5 * DEFAULT_POTENTIAL_PER_POINT.hp);
-    expect(bonus.mp).toBe(3 * DEFAULT_POTENTIAL_PER_POINT.mp);
-    expect(bonus.atk).toBe(2 * DEFAULT_POTENTIAL_PER_POINT.atk);
-    expect(bonus.def).toBe(1 * DEFAULT_POTENTIAL_PER_POINT.def);
-    expect(bonus.spd).toBe(4 * DEFAULT_POTENTIAL_PER_POINT.spd);
-    expect(bonus.matk).toBe(0);
+  it("should correctly calculate bonus values using wuxing format", () => {
+    const bonus = calcPotentialBonus({ wood: 5, fire: 3, earth: 2, metal: 4, water: 1 });
+    expect(bonus.hp).toBe(Math.floor(5 * POTENTIAL_WUXING_BONUS.wood.hp));
+    expect(bonus.mp).toBe(Math.floor(1 * POTENTIAL_WUXING_BONUS.water.mp));
+    expect(bonus.atk).toBe(Math.floor(3 * POTENTIAL_WUXING_BONUS.fire.atk));
+    expect(bonus.def).toBe(Math.floor(2 * POTENTIAL_WUXING_BONUS.earth.def));
+    expect(bonus.spd).toBe(Math.floor(4 * POTENTIAL_WUXING_BONUS.metal.spd));
+    expect(bonus.matk).toBe(Math.floor(3 * POTENTIAL_WUXING_BONUS.fire.matk));
   });
 });
 
@@ -240,7 +241,8 @@ describe("statEngine - calcCharacterStatsCompat", () => {
   });
 
   it("should produce same values as calcFullStats for shared fields", () => {
-    const full = calcFullStats(BALANCED_WUXING, 10, ZERO_POTENTIAL, "fire");
+    // calcCharacterStatsCompat uses undefined potential (defaults to zero)
+    const full = calcFullStats(BALANCED_WUXING, 10, undefined, "fire");
     const compat = calcCharacterStatsCompat(BALANCED_WUXING, 10, "fire");
     expect(compat.hp).toBe(full.hp);
     expect(compat.atk).toBe(full.atk);
@@ -351,8 +353,8 @@ describe("statEngine - calcAgentFullStats with profession", () => {
 
   it("profession + fate + potential should all stack", () => {
     const base = calcAgentFullStats(BALANCED_WUXING, 10, "wood", ZERO_POTENTIAL, "none");
-    const full = calcAgentFullStats(BALANCED_WUXING, 10, "wood", { hp: 5, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 }, "tank");
-    // Tank HP bonus + Wood fate HP bonus + 5 potential HP points
+    const full = calcAgentFullStats(BALANCED_WUXING, 10, "wood", { wood: 5, fire: 0, earth: 0, metal: 0, water: 0 }, "tank");
+    // Tank HP bonus + Wood fate HP bonus + wood potential HP bonus
     expect(full.hp).toBeGreaterThan(base.hp);
   });
 

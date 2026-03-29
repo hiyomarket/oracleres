@@ -5766,3 +5766,19 @@
 - [x] 靈相商店管理 UI 同步改進（ItemKeySearchSelect）
 - [x] 遊戲劇院商店管理 UI 同步改進（ItemKeySearchSelect）
 - [x] 112 個 vitest 測試全部通過（含 27 個新測試）
+
+## v5.16 - 多項 bug 修復 + 數值平衡擴展
+
+- [x] 修復魔物圖鑑批量修改稀有度 rarity enum 不匹配（後端 zod 加入 uncommon）
+- [x] 修復 statEngine 測試（ZERO_POTENTIAL 改為五行格式 wood/fire/earth/metal/water）
+- [x] 修復 gameCatalogBatch 測試（移除已合併的 monsterSkill 端點引用）
+- [x] 修復 gameCatalogFilter 測試（移除已合併的 monsterSkill 端點引用）
+- [x] 修復 directLearn/checkPrerequisites 查詢 game_agents 表失敗（移除 soul_crystal 欄位，改用 Drizzle ORM，加入道具數量檢查）
+- [x] 修復強化設定 aiLevel 驗證錯誤（將 min(1) 放寬為 min(0)）
+- [x] 修復圖鑑總計頁面崩潰（後端加入 monsterSkills 統計欄位）
+- [x] 修復一鍵全圖鑑平衡掃描崩潰（加入 Label 組件 import）
+- [x] 修復價值引擎預覽崩潰（前端 item.evaluation.* 改為 item.*，summary 欄位加入 .total）
+- [x] 修復 gameQuestSkillCatalog is not defined 錯誤（替換為 gameUnifiedSkillCatalog）
+- [x] 通盤檢測魔物圖鑑批量編輯（全圖鑑 onError 改用 friendlyError 解析 zod 錯誤為中文）
+- [x] 擴展數值平衡規則：加入魔物圖鑑所有戰鬥數值欄位（含等級、魔攻、魔防、MP、命中、暴擊率、暴擊傷害、成長率、行動數、反擊加成）
+- [x] AI 平衡掃描：魔物部分加入五行屬性判定（依稀有度/危險度分配五行百分比，五行相生副屬性）

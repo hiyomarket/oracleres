@@ -148,25 +148,6 @@ describe("gameCatalog filter & export", () => {
     });
   });
 
-  // ===== 魔物技能圖鑑篩選 =====
-  describe("getMonsterSkillCatalog filters", () => {
-    it("returns results with no filters", async () => {
-      const result = await caller.gameCatalog.getMonsterSkillCatalog({ page: 1, pageSize: 10 });
-      expect(result).toHaveProperty("items");
-      expect(result).toHaveProperty("total");
-    });
-
-    it("filters by skillType", async () => {
-      const result = await caller.gameCatalog.getMonsterSkillCatalog({ page: 1, pageSize: 200, skillType: "attack" });
-      expect(result.items.every((s: any) => s.skillType === "attack")).toBe(true);
-    });
-
-    it("filters by wuxing", async () => {
-      const result = await caller.gameCatalog.getMonsterSkillCatalog({ page: 1, pageSize: 200, wuxing: "水" });
-      expect(result.items.every((s: any) => s.wuxing === "水")).toBe(true);
-    });
-  });
-
   // ===== 匯出端點 =====
   describe("export endpoints", () => {
     it("exportMonsterCatalog returns array", async () => {
@@ -194,9 +175,5 @@ describe("gameCatalog filter & export", () => {
       expect(Array.isArray(result)).toBe(true);
     });
 
-    it("exportMonsterSkillCatalog returns array", async () => {
-      const result = await caller.gameCatalog.exportMonsterSkillCatalog();
-      expect(Array.isArray(result)).toBe(true);
-    });
   });
 });

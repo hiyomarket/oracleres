@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_agents' AND COLUMN_NAME IN ('gold', 'soul_crystal', 'spirit_power');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_agents' AND COLUMN_NAME IN ('gold', 'soul_crystal', 'spirit_power');",
+  "rows": [
+    {
+      "COLUMN_NAME": "gold"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\ngold\n",
+  "stderr": "",
+  "execution_time_ms": 1577
+}

@@ -4,6 +4,7 @@ import { MonsterCatalogV2Tab, ItemCatalogV2Tab, EquipCatalogV2Tab, SkillCatalogV
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -3749,9 +3750,9 @@ function ValueEngineTab() {
               <div className="flex items-center justify-between">
                 <h3 className="font-bold">📊 評估預覽</h3>
                 <div className="flex gap-4 text-sm text-muted-foreground">
-                  <span>道具：{previewData.summary.items} 件</span>
-                  <span>裝備：{previewData.summary.equipment} 件</span>
-                  <span>技能：{previewData.summary.skills} 件</span>
+                  <span>道具：{previewData.summary.items?.total ?? previewData.summary.items} 件</span>
+                  <span>裝備：{previewData.summary.equipment?.total ?? previewData.summary.equipment} 件</span>
+                  <span>技能：{previewData.summary.skills?.total ?? previewData.summary.skills} 件</span>
                 </div>
               </div>
 
@@ -3777,9 +3778,9 @@ function ValueEngineTab() {
                       ...(previewData.equipment || []),
                       ...(previewData.skills || []),
                     ]
-                      .sort((a: any, b: any) => b.evaluation.valueScore - a.evaluation.valueScore)
+                      .sort((a: any, b: any) => (b.valueScore ?? 0) - (a.valueScore ?? 0))
                       .map((item: any, i: number) => {
-                        const e = item.evaluation;
+                        const e = item;
                         return (
                           <tr key={`${item.type}-${item.id}-${i}`} className="border-b hover:bg-muted/30">
                             <td className="py-1.5 px-3">

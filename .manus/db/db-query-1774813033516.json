@@ -1,0 +1,65 @@
+{
+  "query": "SELECT 'item' as tbl, rarity, COUNT(*) as cnt FROM game_item_catalog GROUP BY rarity UNION ALL SELECT 'equip', rarity, COUNT(*) FROM game_equipment_catalog GROUP BY rarity UNION ALL SELECT 'skill', rarity, COUNT(*) FROM game_unified_skill_catalog GROUP BY rarity;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT 'item' as tbl, rarity, COUNT(*) as cnt FROM game_item_catalog GROUP BY rarity UNION ALL SELECT 'equip', rarity, COUNT(*) FROM game_equipment_catalog GROUP BY rarity UNION ALL SELECT 'skill', rarity, COUNT(*) FROM game_unified_skill_catalog GROUP BY rarity;",
+  "rows": [
+    {
+      "tbl": "equip",
+      "rarity": "common",
+      "cnt": "49"
+    },
+    {
+      "tbl": "equip",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "tbl": "skill",
+      "rarity": "legendary",
+      "cnt": "16"
+    },
+    {
+      "tbl": "item",
+      "rarity": "common",
+      "cnt": "19"
+    },
+    {
+      "tbl": "skill",
+      "rarity": "epic",
+      "cnt": "28"
+    },
+    {
+      "tbl": "skill",
+      "rarity": "rare",
+      "cnt": "72"
+    },
+    {
+      "tbl": "item",
+      "rarity": "epic",
+      "cnt": "21"
+    },
+    {
+      "tbl": "item",
+      "rarity": "legendary",
+      "cnt": "11"
+    },
+    {
+      "tbl": "item",
+      "rarity": "rare",
+      "cnt": "2"
+    },
+    {
+      "tbl": "skill",
+      "rarity": "common",
+      "cnt": "43"
+    },
+    {
+      "tbl": "skill",
+      "rarity": "uncommon",
+      "cnt": "15"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\trarity\tcnt\nequip\tcommon\t49\nequip\trare\t1\nskill\tlegendary\t16\nitem\tcommon\t19\nskill\tepic\t28\nskill\trare\t72\nitem\tepic\t21\nitem\tlegendary\t11\nitem\trare\t2\nskill\tcommon\t43\nskill\tuncommon\t15\n",
+  "stderr": "",
+  "execution_time_ms": 1581
+}

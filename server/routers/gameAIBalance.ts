@@ -114,34 +114,39 @@ export const gameAIBalanceRouter = router({
       const monsters = await db.select().from(gameMonsterCatalog).where(sql`is_active = 1`);
       const changes: BalanceChange[] = [];
 
+      // 欄位對照表：規則field -> DB欄位 -> 中文名
+      const MONSTER_FIELD_MAP: Array<{ ruleField: string; dbField: string; label: string; getter: (m: any) => number }> = [
+        { ruleField: "hp",  dbField: "baseHp",           label: "HP",           getter: m => m.baseHp },
+        { ruleField: "atk", dbField: "baseAttack",       label: "攻擊",         getter: m => m.baseAttack },
+        { ruleField: "def", dbField: "baseDefense",      label: "防禦",         getter: m => m.baseDefense },
+        { ruleField: "spd", dbField: "baseSpeed",        label: "速度",         getter: m => m.baseSpeed },
+        { ruleField: "matk", dbField: "baseMagicAttack", label: "魔攻",         getter: m => m.baseMagicAttack },
+        { ruleField: "mdef", dbField: "baseMagicDefense",label: "魔防",         getter: m => m.baseMagicDefense },
+        { ruleField: "mp",  dbField: "baseMp",           label: "MP",           getter: m => m.baseMp },
+        { ruleField: "accuracy", dbField: "baseAccuracy",label: "命中",         getter: m => m.baseAccuracy },
+        { ruleField: "critRate", dbField: "baseCritRate",label: "暴擊率",       getter: m => m.baseCritRate },
+        { ruleField: "critDamage", dbField: "baseCritDamage", label: "暴擊傷害", getter: m => m.baseCritDamage },
+        { ruleField: "growthRate", dbField: "growthRate", label: "成長率",       getter: m => m.growthRate },
+        { ruleField: "actionsPerTurn", dbField: "actionsPerTurn", label: "每回合行動數", getter: m => m.actionsPerTurn },
+        { ruleField: "counterBonus", dbField: "counterBonus", label: "反擊加成", getter: m => m.counterBonus },
+      ];
+
       for (const m of monsters) {
         const fixes: Partial<Record<string, number>> = {};
-        const hpR = getRange(monsterRules, m.rarity, "hp");
-        const atkR = getRange(monsterRules, m.rarity, "atk");
-        const defR = getRange(monsterRules, m.rarity, "def");
-        const spdR = getRange(monsterRules, m.rarity, "spd");
-        const expectedAi = getAiLevel(monsterRules, m.rarity);
 
-        if (isOutOfRange(m.baseHp, hpR)) {
-          const nv = balanceFix(m.baseHp, hpR[0], hpR[1]);
-          changes.push({ id: m.id, name: m.name, field: "HP", oldValue: m.baseHp, newValue: nv, reason: `${m.rarity} HP 應在 ${hpR[0]}-${hpR[1]}` });
-          fixes.baseHp = nv;
+        // 通用數值欄位檢查
+        for (const fm of MONSTER_FIELD_MAP) {
+          const range = getRange(monsterRules, m.rarity, fm.ruleField);
+          const val = fm.getter(m);
+          if (val != null && isOutOfRange(val, range)) {
+            const nv = balanceFix(val, range[0], range[1]);
+            changes.push({ id: m.id, name: m.name, field: fm.label, oldValue: val, newValue: nv, reason: `${m.rarity} ${fm.label} 應在 ${range[0]}-${range[1]}` });
+            fixes[fm.dbField] = nv;
+          }
         }
-        if (isOutOfRange(m.baseAttack, atkR)) {
-          const nv = balanceFix(m.baseAttack, atkR[0], atkR[1]);
-          changes.push({ id: m.id, name: m.name, field: "攻擊", oldValue: m.baseAttack, newValue: nv, reason: `${m.rarity} ATK 應在 ${atkR[0]}-${atkR[1]}` });
-          fixes.baseAttack = nv;
-        }
-        if (isOutOfRange(m.baseDefense, defR)) {
-          const nv = balanceFix(m.baseDefense, defR[0], defR[1]);
-          changes.push({ id: m.id, name: m.name, field: "防禦", oldValue: m.baseDefense, newValue: nv, reason: `${m.rarity} DEF 應在 ${defR[0]}-${defR[1]}` });
-          fixes.baseDefense = nv;
-        }
-        if (isOutOfRange(m.baseSpeed, spdR)) {
-          const nv = balanceFix(m.baseSpeed, spdR[0], spdR[1]);
-          changes.push({ id: m.id, name: m.name, field: "速度", oldValue: m.baseSpeed, newValue: nv, reason: `${m.rarity} SPD 應在 ${spdR[0]}-${spdR[1]}` });
-          fixes.baseSpeed = nv;
-        }
+
+        // AI等級特殊處理（固定值）
+        const expectedAi = getAiLevel(monsterRules, m.rarity);
         if (m.aiLevel !== expectedAi) {
           changes.push({ id: m.id, name: m.name, field: "AI等級", oldValue: m.aiLevel, newValue: expectedAi, reason: `${m.rarity} AI 等級應為 ${expectedAi}` });
           fixes.aiLevel = expectedAi;
@@ -317,7 +322,7 @@ export const gameAIBalanceRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      const skills = await db.select().from(gameQuestSkillCatalog).where(sql`is_active = 1`);
+      const skills = await db.select().from(gameUnifiedSkillCatalog).where(sql`is_active = 1`);
       const changes: BalanceChange[] = [];
 
       const allRules = await loadBalanceRulesGrouped();
@@ -345,7 +350,7 @@ export const gameAIBalanceRouter = router({
         }
 
         if (!input.dryRun && Object.keys(fixes).length > 0) {
-          await db.update(gameQuestSkillCatalog).set(fixes).where(eq(gameQuestSkillCatalog.id, s.id));
+          await db.update(gameUnifiedSkillCatalog).set(fixes).where(eq(gameUnifiedSkillCatalog.id, s.id));
         }
       }
 
@@ -424,20 +429,107 @@ export const gameAIBalanceRouter = router({
       const allChanges: Record<string, BalanceChange[]> = {};
       const summary: { catalog: string; scanned: number; changes: number }[] = [];
 
-      // 怪物
+      // 怪物（擴展版：所有戰鬥數值 + AI 五行屬性判定）
       const monsters = await db.select().from(gameMonsterCatalog).where(sql`is_active = 1`);
       const monsterChanges: BalanceChange[] = [];
+      const MONSTER_FIELD_MAP_ALL: Array<{ ruleField: string; dbField: string; label: string; getter: (m: any) => number }> = [
+        { ruleField: "hp",  dbField: "baseHp",           label: "HP",           getter: m => m.baseHp },
+        { ruleField: "atk", dbField: "baseAttack",       label: "攻擊",         getter: m => m.baseAttack },
+        { ruleField: "def", dbField: "baseDefense",      label: "防禦",         getter: m => m.baseDefense },
+        { ruleField: "spd", dbField: "baseSpeed",        label: "速度",         getter: m => m.baseSpeed },
+        { ruleField: "matk", dbField: "baseMagicAttack", label: "魔攻",         getter: m => m.baseMagicAttack },
+        { ruleField: "mdef", dbField: "baseMagicDefense",label: "魔防",         getter: m => m.baseMagicDefense },
+        { ruleField: "mp",  dbField: "baseMp",           label: "MP",           getter: m => m.baseMp },
+        { ruleField: "accuracy", dbField: "baseAccuracy",label: "命中",         getter: m => m.baseAccuracy },
+        { ruleField: "critRate", dbField: "baseCritRate",label: "暴擊率",       getter: m => m.baseCritRate },
+        { ruleField: "critDamage", dbField: "baseCritDamage", label: "暴擊傷害", getter: m => m.baseCritDamage },
+        { ruleField: "growthRate", dbField: "growthRate", label: "成長率",       getter: m => m.growthRate },
+        { ruleField: "actionsPerTurn", dbField: "actionsPerTurn", label: "每回合行動數", getter: m => m.actionsPerTurn },
+        { ruleField: "counterBonus", dbField: "counterBonus", label: "反擊加成", getter: m => m.counterBonus },
+      ];
+
+      // AI 五行屬性判定：根據稀有度（危險度）分配五行百分比
+      // 規則：主屬性佔比隨稀有度提升而集中
+      const WUXING_DISTRIBUTION: Record<string, { primary: number; secondary: number; rest: number }> = {
+        common:    { primary: 40, secondary: 20, rest: 40 },  // 主40% 副20% 其餘各13%
+        uncommon:  { primary: 50, secondary: 20, rest: 30 },  // 主50% 副20% 其餘各10%
+        rare:      { primary: 55, secondary: 20, rest: 25 },  // 主55% 副20% 其餘各8%
+        epic:      { primary: 65, secondary: 15, rest: 20 },  // 主65% 副15% 其餘各7%
+        legendary: { primary: 75, secondary: 15, rest: 10 },  // 主75% 副15% 其餘各3%
+      };
+
+      const WUXING_LIST = ["木", "火", "土", "金", "水"] as const;
+      const WUXING_DB_MAP: Record<string, string> = { "木": "wuxingWood", "火": "wuxingFire", "土": "wuxingEarth", "金": "wuxingMetal", "水": "wuxingWater" };
+      // 五行相生：木→火→土→金→水→木（副屬性取相生方向）
+      const WUXING_SECONDARY: Record<string, string> = { "木": "火", "火": "土", "土": "金", "金": "水", "水": "木" };
+
       for (const m of monsters) {
-        const hpR = getRange(monRules, m.rarity, "hp");
-        const atkR = getRange(monRules, m.rarity, "atk");
-        const defR = getRange(monRules, m.rarity, "def");
-        const spdR = getRange(monRules, m.rarity, "spd");
+        const fixes: Partial<Record<string, any>> = {};
+
+        // 通用數值欄位檢查
+        for (const fm of MONSTER_FIELD_MAP_ALL) {
+          const range = getRange(monRules, m.rarity, fm.ruleField);
+          const val = fm.getter(m);
+          if (val != null && isOutOfRange(val, range)) {
+            const nv = balanceFix(val, range[0], range[1]);
+            monsterChanges.push({ id: m.id, name: m.name, field: fm.label, oldValue: val, newValue: nv, reason: `${m.rarity} ${fm.label} 應在 ${range[0]}-${range[1]}` });
+            fixes[fm.dbField] = nv;
+          }
+        }
+
+        // AI 等級
         const expectedAi = getAiLevel(monRules, m.rarity);
-        if (isOutOfRange(m.baseHp, hpR)) monsterChanges.push({ id: m.id, name: m.name, field: "HP", oldValue: m.baseHp, newValue: balanceFix(m.baseHp, hpR[0], hpR[1]), reason: `${m.rarity}` });
-        if (isOutOfRange(m.baseAttack, atkR)) monsterChanges.push({ id: m.id, name: m.name, field: "ATK", oldValue: m.baseAttack, newValue: balanceFix(m.baseAttack, atkR[0], atkR[1]), reason: `${m.rarity}` });
-        if (isOutOfRange(m.baseDefense, defR)) monsterChanges.push({ id: m.id, name: m.name, field: "DEF", oldValue: m.baseDefense, newValue: balanceFix(m.baseDefense, defR[0], defR[1]), reason: `${m.rarity}` });
-        if (isOutOfRange(m.baseSpeed, spdR)) monsterChanges.push({ id: m.id, name: m.name, field: "SPD", oldValue: m.baseSpeed, newValue: balanceFix(m.baseSpeed, spdR[0], spdR[1]), reason: `${m.rarity}` });
-        if (m.aiLevel !== expectedAi) monsterChanges.push({ id: m.id, name: m.name, field: "AI等級", oldValue: m.aiLevel, newValue: expectedAi, reason: `${m.rarity}` });
+        if (m.aiLevel !== expectedAi) {
+          monsterChanges.push({ id: m.id, name: m.name, field: "AI等級", oldValue: m.aiLevel, newValue: expectedAi, reason: `${m.rarity} AI 等級應為 ${expectedAi}` });
+          fixes.aiLevel = expectedAi;
+        }
+
+        // AI 五行屬性分配（依稀有度/危險度）
+        const primaryWuxing = m.wuxing; // 主五行（已設定）
+        if (primaryWuxing && WUXING_LIST.includes(primaryWuxing as any)) {
+          const dist = WUXING_DISTRIBUTION[m.rarity] ?? WUXING_DISTRIBUTION.common;
+          const secondaryWuxing = WUXING_SECONDARY[primaryWuxing];
+          const otherCount = WUXING_LIST.length - 2; // 3
+          const restEach = Math.floor(dist.rest / otherCount);
+          const remainder = dist.rest - restEach * otherCount;
+
+          const newAlloc: Record<string, number> = {};
+          let idx = 0;
+          for (const w of WUXING_LIST) {
+            if (w === primaryWuxing) {
+              newAlloc[WUXING_DB_MAP[w]] = dist.primary;
+            } else if (w === secondaryWuxing) {
+              newAlloc[WUXING_DB_MAP[w]] = dist.secondary;
+            } else {
+              // 分配剩餘，第一個多拿餘數
+              newAlloc[WUXING_DB_MAP[w]] = restEach + (idx === 0 ? remainder : 0);
+              idx++;
+            }
+          }
+
+          // 檢查是否需要更新
+          const currentAlloc: Record<string, number> = {
+            wuxingWood: m.wuxingWood, wuxingFire: m.wuxingFire,
+            wuxingEarth: m.wuxingEarth, wuxingMetal: m.wuxingMetal, wuxingWater: m.wuxingWater,
+          };
+          let wuxingChanged = false;
+          for (const [key, val] of Object.entries(newAlloc)) {
+            if (currentAlloc[key] !== val) {
+              wuxingChanged = true;
+              break;
+            }
+          }
+          if (wuxingChanged) {
+            const oldStr = `木${currentAlloc.wuxingWood}/火${currentAlloc.wuxingFire}/土${currentAlloc.wuxingEarth}/金${currentAlloc.wuxingMetal}/水${currentAlloc.wuxingWater}`;
+            const newStr = `木${newAlloc.wuxingWood}/火${newAlloc.wuxingFire}/土${newAlloc.wuxingEarth}/金${newAlloc.wuxingMetal}/水${newAlloc.wuxingWater}`;
+            monsterChanges.push({ id: m.id, name: m.name, field: "五行分配", oldValue: 0, newValue: 0, reason: `主屬${primaryWuxing} ${m.rarity}: ${oldStr} → ${newStr}` });
+            Object.assign(fixes, newAlloc);
+          }
+        }
+
+        if (!input.dryRun && Object.keys(fixes).length > 0) {
+          await db.update(gameMonsterCatalog).set(fixes).where(eq(gameMonsterCatalog.id, m.id));
+        }
       }
       allChanges["怪物"] = monsterChanges;
       summary.push({ catalog: "怪物", scanned: monsters.length, changes: monsterChanges.length });
@@ -484,7 +576,7 @@ export const gameAIBalanceRouter = router({
       summary.push({ catalog: "裝備", scanned: equips.length, changes: equipChanges.length });
 
       // 人物技能
-      const skills = await db.select().from(gameQuestSkillCatalog).where(sql`is_active = 1`);
+      const skills = await db.select().from(gameUnifiedSkillCatalog).where(sql`is_active = 1`);
       const skillChanges: BalanceChange[] = [];
       for (const s of skills) {
         const powerR = getRange(skRules, s.rarity, "power");
@@ -529,7 +621,7 @@ export const gameAIBalanceRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      const skills = await db.select().from(gameQuestSkillCatalog);
+      const skills = await db.select().from(gameUnifiedSkillCatalog);
       const changes: BalanceChange[] = [];
 
       const allRules = await loadBalanceRulesGrouped();
@@ -587,7 +679,7 @@ export const gameAIBalanceRouter = router({
         }
 
         if (!input.dryRun && Object.keys(fixes).length > 0) {
-          await db.update(gameQuestSkillCatalog).set({ ...fixes, updatedAt: Date.now() }).where(eq(gameQuestSkillCatalog.id, s.id));
+          await db.update(gameUnifiedSkillCatalog).set({ ...fixes, updatedAt: Date.now() }).where(eq(gameUnifiedSkillCatalog.id, s.id));
         }
       }
 

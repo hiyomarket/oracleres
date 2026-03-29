@@ -72,11 +72,6 @@ describe("gameCatalog pagination & batch operations", () => {
       expect(typeof result.total).toBe("number");
     });
 
-    it("monster skill catalog respects pageSize", async () => {
-      const result = await caller.gameCatalog.getMonsterSkillCatalog({ page: 1, pageSize: 3 });
-      expect(result.items.length).toBeLessThanOrEqual(3);
-      expect(typeof result.total).toBe("number");
-    });
   });
 
   // ===== 批量刪除 API 存在性測試 =====
@@ -123,13 +118,6 @@ describe("gameCatalog pagination & batch operations", () => {
       }
     });
 
-    it("batchDeleteMonsterSkills rejects empty ids", async () => {
-      try {
-        await caller.gameCatalog.batchDeleteMonsterSkills({ ids: [] });
-      } catch (e: any) {
-        expect(e.message).toBeDefined();
-      }
-    });
   });
 
   // ===== 批量更新 API 存在性測試 =====
@@ -174,13 +162,6 @@ describe("gameCatalog pagination & batch operations", () => {
       }
     });
 
-    it("batchUpdateMonsterSkills rejects empty ids", async () => {
-      try {
-        await caller.gameCatalog.batchUpdateMonsterSkills({ ids: [], data: { rarity: "common" } });
-      } catch (e: any) {
-        expect(e.message).toBeDefined();
-      }
-    });
   });
 
   // ===== 批量更新功能測試（返回結構驗證） =====
@@ -215,11 +196,6 @@ describe("gameCatalog pagination & batch operations", () => {
       expect(typeof result.updated).toBe("number");
     });
 
-    it("batchUpdateMonsterSkills returns { updated: number }", async () => {
-      const result = await caller.gameCatalog.batchUpdateMonsterSkills({ ids: [999999], data: { rarity: "common" } });
-      expect(result).toHaveProperty("updated");
-      expect(typeof result.updated).toBe("number");
-    });
   });
 
   // ===== 批量刪除功能測試（返回結構驗證） =====
@@ -254,10 +230,5 @@ describe("gameCatalog pagination & batch operations", () => {
       expect(typeof result.deleted).toBe("number");
     });
 
-    it("batchDeleteMonsterSkills returns { deleted: number }", async () => {
-      const result = await caller.gameCatalog.batchDeleteMonsterSkills({ ids: [999999] });
-      expect(result).toHaveProperty("deleted");
-      expect(typeof result.deleted).toBe("number");
-    });
   });
 });

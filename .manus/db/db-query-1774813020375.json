@@ -1,0 +1,26 @@
+{
+  "query": "SELECT DISTINCT rarity, COUNT(*) as cnt FROM game_monster_catalog GROUP BY rarity ORDER BY cnt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT DISTINCT rarity, COUNT(*) as cnt FROM game_monster_catalog GROUP BY rarity ORDER BY cnt DESC;",
+  "rows": [
+    {
+      "rarity": "common",
+      "cnt": "109"
+    },
+    {
+      "rarity": "rare",
+      "cnt": "51"
+    },
+    {
+      "rarity": "epic",
+      "cnt": "25"
+    },
+    {
+      "rarity": "legendary",
+      "cnt": "15"
+    }
+  ],
+  "messages": [],
+  "stdout": "rarity\tcnt\ncommon\t109\nrare\t51\nepic\t25\nlegendary\t15\n",
+  "stderr": "",
+  "execution_time_ms": 1583
+}

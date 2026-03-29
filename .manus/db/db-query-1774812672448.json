@@ -1,0 +1,706 @@
+{
+  "query": "DESCRIBE game_agents;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DESCRIBE game_agents;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "user_id",
+      "Type": "varchar(255)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "agent_name",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "is_named",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "level",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "exp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "current_node_id",
+      "Type": "varchar(50)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "taipei-zhongzheng",
+      "Extra": ""
+    },
+    {
+      "Field": "target_node_id",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "strategy",
+      "Type": "enum('explore','gather','rest','combat','infuse')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "explore",
+      "Extra": ""
+    },
+    {
+      "Field": "previous_strategy",
+      "Type": "enum('explore','gather','rest','combat','infuse')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "movement_mode",
+      "Type": "enum('roaming','stationary')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "roaming",
+      "Extra": ""
+    },
+    {
+      "Field": "status",
+      "Type": "enum('idle','moving','resting','combat','dead')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "idle",
+      "Extra": ""
+    },
+    {
+      "Field": "dominant_element",
+      "Type": "enum('wood','fire','earth','metal','water')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "wood",
+      "Extra": ""
+    },
+    {
+      "Field": "hp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "100",
+      "Extra": ""
+    },
+    {
+      "Field": "max_hp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "100",
+      "Extra": ""
+    },
+    {
+      "Field": "mp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "50",
+      "Extra": ""
+    },
+    {
+      "Field": "max_mp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "50",
+      "Extra": ""
+    },
+    {
+      "Field": "attack",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "10",
+      "Extra": ""
+    },
+    {
+      "Field": "defense",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "5",
+      "Extra": ""
+    },
+    {
+      "Field": "speed",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "8",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing_wood",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing_fire",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing_earth",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing_metal",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing_water",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "gold",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "total_kills",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "total_steps",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "stamina",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "100",
+      "Extra": ""
+    },
+    {
+      "Field": "max_stamina",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "100",
+      "Extra": ""
+    },
+    {
+      "Field": "stamina_last_regen",
+      "Type": "bigint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "action_points",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "5",
+      "Extra": ""
+    },
+    {
+      "Field": "max_action_points",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "5",
+      "Extra": ""
+    },
+    {
+      "Field": "action_points_last_regen",
+      "Type": "bigint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equipped_head",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equipped_body",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equipped_hands",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equipped_feet",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equipped_weapon",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equipped_offhand",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equipped_ring_a",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equipped_ring_b",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "skill_slot_1",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "skill_slot_2",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "skill_slot_3",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "skill_slot_4",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "passive_slot_1",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "passive_slot_2",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "updated_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "gather_power",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "forge_power",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "carry_weight",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "refine_power",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "treasure_hunting",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "heal_power",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "magic_attack",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "hit_rate",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "equipped_necklace",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "equipped_amulet",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "last_divine_heal_date",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "last_divine_eye_date",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "last_divine_stamina_date",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "widget_layout",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "avatar_url",
+      "Type": "varchar(500)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "infuse_points_used",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "resist_wood",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "resist_fire",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "resist_earth",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "resist_metal",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "resist_water",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "free_stat_points",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "mdef",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "10",
+      "Extra": ""
+    },
+    {
+      "Field": "spr",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "10",
+      "Extra": ""
+    },
+    {
+      "Field": "crit_rate",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "5",
+      "Extra": ""
+    },
+    {
+      "Field": "crit_damage",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "150",
+      "Extra": ""
+    },
+    {
+      "Field": "realm",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "初界",
+      "Extra": ""
+    },
+    {
+      "Field": "profession",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "none",
+      "Extra": ""
+    },
+    {
+      "Field": "profession_tier",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "fate_element",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "wood",
+      "Extra": ""
+    },
+    {
+      "Field": "profession_changed_at",
+      "Type": "bigint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_wood",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_fire",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_earth",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_metal",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_water",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nuser_id\tvarchar(255)\tNO\tUNI\tNULL\t\nagent_name\tvarchar(50)\tYES\t\tNULL\t\nis_named\ttinyint\tNO\t\t0\t\nlevel\tint\tNO\t\t1\t\nexp\tint\tNO\t\t0\t\ncurrent_node_id\tvarchar(50)\tNO\t\ttaipei-zhongzheng\t\ntarget_node_id\tvarchar(50)\tYES\t\tNULL\t\nstrategy\tenum('explore','gather','rest','combat','infuse')\tNO\t\texplore\t\nprevious_strategy\tenum('explore','gather','rest','combat','infuse')\tYES\t\tNULL\t\nmovement_mode\tenum('roaming','stationary')\tNO\t\troaming\t\nstatus\tenum('idle','moving','resting','combat','dead')\tNO\t\tidle\t\ndominant_element\tenum('wood','fire','earth','metal','water')\tNO\t\twood\t\nhp\tint\tNO\t\t100\t\nmax_hp\tint\tNO\t\t100\t\nmp\tint\tNO\t\t50\t\nmax_mp\tint\tNO\t\t50\t\nattack\tint\tNO\t\t10\t\ndefense\tint\tNO\t\t5\t\nspeed\tint\tNO\t\t8\t\nwuxing_wood\tint\tNO\t\t20\t\nwuxing_fire\tint\tNO\t\t20\t\nwuxing_earth\tint\tNO\t\t20\t\nwuxing_metal\tint\tNO\t\t20\t\nwuxing_water\tint\tNO\t\t20\t\ngold\tint\tNO\t\t0\t\ntotal_kills\tint\tNO\t\t0\t\ntotal_steps\tint\tNO\t\t0\t\nstamina\tint\tNO\t\t100\t\nmax_stamina\tint\tNO\t\t100\t\nstamina_last_regen\tbigint\tYES\t\tNULL\t\naction_points\tint\tNO\t\t5\t\nmax_action_points\tint\tNO\t\t5\t\naction_points_last_regen\tbigint\tYES\t\tNULL\t\nequipped_head\tvarchar(100)\tYES\t\tNULL\t\nequipped_body\tvarchar(100)\tYES\t\tNULL\t\nequipped_hands\tvarchar(100)\tYES\t\tNULL\t\nequipped_feet\tvarchar(100)\tYES\t\tNULL\t\nequipped_weapon\tvarchar(100)\tYES\t\tNULL\t\nequipped_offhand\tvarchar(100)\tYES\t\tNULL\t\nequipped_ring_a\tvarchar(100)\tYES\t\tNULL\t\nequipped_ring_b\tvarchar(100)\tYES\t\tNULL\t\nskill_slot_1\tvarchar(100)\tYES\t\tNULL\t\nskill_slot_2\tvarchar(100)\tYES\t\tNULL\t\nskill_slot_3\tvarchar(100)\tYES\t\tNULL\t\nskill_slot_4\tvarchar(100)\tYES\t\tNULL\t\npassive_slot_1\tvarchar(100)\tYES\t\tNULL\t\npassive_slot_2\tvarchar(100)\tYES\t\tNULL\t\nis_active\ttinyint\tNO\t\t1\t\ncreated_at\tbigint\tNO\t\tNULL\t\nupdated_at\tbigint\tNO\t\tNULL\t\ngather_power\tint\tNO\t\t20\t\nforge_power\tint\tNO\t\t20\t\ncarry_weight\tint\tNO\t\t20\t\nrefine_power\tint\tNO\t\t20\t\ntreasure_hunting\tint\tNO\t\t20\t\nheal_power\tint\tNO\t\t20\t\nmagic_attack\tint\tNO\t\t20\t\nhit_rate\tint\tNO\t\t20\t\nequipped_necklace\tvarchar(100)\tYES\t\tNULL\t\nequipped_amulet\tvarchar(100)\tYES\t\tNULL\t\nlast_divine_heal_date\tvarchar(10)\tYES\t\tNULL\t\nlast_divine_eye_date\tvarchar(10)\tYES\t\tNULL\t\nlast_divine_stamina_date\tvarchar(10)\tYES\t\tNULL\t\nwidget_layout\tjson\tYES\t\tNULL\t\navatar_url\tvarchar(500)\tYES\t\tNULL\t\ninfuse_points_used\tint\tNO\t\t0\t\nresist_wood\tint\tNO\t\t0\t\nresist_fire\tint\tNO\t\t0\t\nresist_earth\tint\tNO\t\t0\t\nresist_metal\tint\tNO\t\t0\t\nresist_water\tint\tNO\t\t0\t\nfree_stat_points\tint\tNO\t\t0\t\nmdef\tint\tNO\t\t10\t\nspr\tint\tNO\t\t10\t\ncrit_rate\tfloat\tNO\t\t5\t\ncrit_damage\tfloat\tNO\t\t150\t\nrealm\tvarchar(10)\tNO\t\t初界\t\nprofession\tvarchar(20)\tNO\t\tnone\t\nprofession_tier\tint\tNO\t\t0\t\nfate_element\tvarchar(10)\tNO\t\twood\t\nprofession_changed_at\tbigint\tYES\t\t0\t\npotential_wood\tint\tNO\t\t0\t\npotential_fire\tint\tNO\t\t0\t\npotential_earth\tint\tNO\t\t0\t\npotential_metal\tint\tNO\t\t0\t\npotential_water\tint\tNO\t\t0\t\n",
+  "stderr": "",
+  "execution_time_ms": 1785
+}
