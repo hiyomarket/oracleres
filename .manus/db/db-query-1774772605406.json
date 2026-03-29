@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, name, skill_type, wuxing FROM game_monster_skill_catalog ORDER BY id LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, skill_type, wuxing FROM game_monster_skill_catalog ORDER BY id LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "泡沫凍結",
+      "skill_type": "attack",
+      "wuxing": "水"
+    },
+    {
+      "id": "2",
+      "name": "冰牙撕咬",
+      "skill_type": "attack",
+      "wuxing": "水"
+    },
+    {
+      "id": "3",
+      "name": "貝殼撞擊",
+      "skill_type": "attack",
+      "wuxing": "水"
+    },
+    {
+      "id": "4",
+      "name": "深海潮汐",
+      "skill_type": "attack",
+      "wuxing": "水"
+    },
+    {
+      "id": "5",
+      "name": "鯨靈庇護",
+      "skill_type": "support",
+      "wuxing": "水"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tskill_type\twuxing\n1\t泡沫凍結\tattack\t水\n2\t冰牙撕咬\tattack\t水\n3\t貝殼撞擊\tattack\t水\n4\t深海潮汐\tattack\t水\n5\t鯨靈庇護\tsupport\t水\n",
+  "stderr": "",
+  "execution_time_ms": 1561
+}

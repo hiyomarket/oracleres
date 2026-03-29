@@ -1,0 +1,76 @@
+{
+  "query": "SELECT monster_skill_id, name, wuxing, skill_type FROM game_monster_skill_catalog WHERE wuxing != '水' ORDER BY monster_skill_id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_skill_id, name, wuxing, skill_type FROM game_monster_skill_catalog WHERE wuxing != '水' ORDER BY monster_skill_id;",
+  "rows": [
+    {
+      "monster_skill_id": "SK_M083",
+      "name": "火星噴射",
+      "wuxing": "火",
+      "skill_type": "attack"
+    },
+    {
+      "monster_skill_id": "SK_M084",
+      "name": "烈焰撕咬",
+      "wuxing": "火",
+      "skill_type": "attack"
+    },
+    {
+      "monster_skill_id": "SK_M085",
+      "name": "群體圍攻",
+      "wuxing": "火",
+      "skill_type": "attack"
+    },
+    {
+      "monster_skill_id": "SK_M086",
+      "name": "堅硬撞擊",
+      "wuxing": "土",
+      "skill_type": "attack"
+    },
+    {
+      "monster_skill_id": "SK_M087",
+      "name": "巨石投擲",
+      "wuxing": "土",
+      "skill_type": "attack"
+    },
+    {
+      "monster_skill_id": "SK_M088",
+      "name": "山崩地裂",
+      "wuxing": "土",
+      "skill_type": "attack"
+    },
+    {
+      "monster_skill_id": "SK_M089",
+      "name": "大地護甲",
+      "wuxing": "土",
+      "skill_type": "defense"
+    },
+    {
+      "monster_skill_id": "SK_M090",
+      "name": "金屬啃咬",
+      "wuxing": "金",
+      "skill_type": "attack"
+    },
+    {
+      "monster_skill_id": "SK_M091",
+      "name": "金剛重擊",
+      "wuxing": "金",
+      "skill_type": "attack"
+    },
+    {
+      "monster_skill_id": "SK_M092",
+      "name": "震盪波",
+      "wuxing": "金",
+      "skill_type": "attack"
+    },
+    {
+      "monster_skill_id": "SK_M093",
+      "name": "自我修復",
+      "wuxing": "金",
+      "skill_type": "heal"
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_skill_id\tname\twuxing\tskill_type\nSK_M083\t火星噴射\t火\tattack\nSK_M084\t烈焰撕咬\t火\tattack\nSK_M085\t群體圍攻\t火\tattack\nSK_M086\t堅硬撞擊\t土\tattack\nSK_M087\t巨石投擲\t土\tattack\nSK_M088\t山崩地裂\t土\tattack\nSK_M089\t大地護甲\t土\tdefense\nSK_M090\t金屬啃咬\t金\tattack\nSK_M091\t金剛重擊\t金\tattack\nSK_M092\t震盪波\t金\tattack\nSK_M093\t自我修復\t金\theal\n",
+  "stderr": "",
+  "execution_time_ms": 1517
+}

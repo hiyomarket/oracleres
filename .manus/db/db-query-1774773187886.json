@@ -1,0 +1,130 @@
+{
+  "query": "SELECT id, name, prerequisites, prerequisite_level FROM game_quest_skill_catalog WHERE prerequisite_level IS NOT NULL ORDER BY id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, prerequisites, prerequisite_level FROM game_quest_skill_catalog WHERE prerequisite_level IS NOT NULL ORDER BY id LIMIT 20;",
+  "rows": [
+    {
+      "id": "66",
+      "name": "諸刃",
+      "prerequisites": "[65]",
+      "prerequisite_level": "3"
+    },
+    {
+      "id": "67",
+      "name": "反擊",
+      "prerequisites": "NULL",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "68",
+      "name": "崩擊",
+      "prerequisites": "[65]",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "69",
+      "name": "亂射",
+      "prerequisites": "[65]",
+      "prerequisite_level": "3"
+    },
+    {
+      "id": "70",
+      "name": "乾坤一擲",
+      "prerequisites": "[68]",
+      "prerequisite_level": "10"
+    },
+    {
+      "id": "71",
+      "name": "迅速果斷",
+      "prerequisites": "[65]",
+      "prerequisite_level": "8"
+    },
+    {
+      "id": "72",
+      "name": "毒擊",
+      "prerequisites": "[65]",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "73",
+      "name": "氣功彈",
+      "prerequisites": "[65]",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "74",
+      "name": "吸血攻擊",
+      "prerequisites": "[65]",
+      "prerequisite_level": "8"
+    },
+    {
+      "id": "75",
+      "name": "雙重斬",
+      "prerequisites": "[65]",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "76",
+      "name": "戰慄襲心",
+      "prerequisites": "[66, 68]",
+      "prerequisite_level": "15"
+    },
+    {
+      "id": "77",
+      "name": "護衛",
+      "prerequisites": "NULL",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "78",
+      "name": "陽炎",
+      "prerequisites": "[67]",
+      "prerequisite_level": "10"
+    },
+    {
+      "id": "79",
+      "name": "騎士之譽",
+      "prerequisites": "[77, 78]",
+      "prerequisite_level": "20"
+    },
+    {
+      "id": "81",
+      "name": "烈焰魔法",
+      "prerequisites": "[80]",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "82",
+      "name": "業火魔法",
+      "prerequisites": "[81]",
+      "prerequisite_level": "12"
+    },
+    {
+      "id": "84",
+      "name": "暴風雪魔法",
+      "prerequisites": "[83]",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "85",
+      "name": "極寒魔法",
+      "prerequisites": "[84]",
+      "prerequisite_level": "12"
+    },
+    {
+      "id": "87",
+      "name": "暴風魔法",
+      "prerequisites": "[86]",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "88",
+      "name": "龍捲魔法",
+      "prerequisites": "[87]",
+      "prerequisite_level": "12"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tprerequisites\tprerequisite_level\n66\t諸刃\t[65]\t3\n67\t反擊\tNULL\t5\n68\t崩擊\t[65]\t5\n69\t亂射\t[65]\t3\n70\t乾坤一擲\t[68]\t10\n71\t迅速果斷\t[65]\t8\n72\t毒擊\t[65]\t5\n73\t氣功彈\t[65]\t5\n74\t吸血攻擊\t[65]\t8\n75\t雙重斬\t[65]\t5\n76\t戰慄襲心\t[66, 68]\t15\n77\t護衛\tNULL\t5\n78\t陽炎\t[67]\t10\n79\t騎士之譽\t[77, 78]\t20\n81\t烈焰魔法\t[80]\t5\n82\t業火魔法\t[81]\t12\n84\t暴風雪魔法\t[83]\t5\n85\t極寒魔法\t[84]\t12\n87\t暴風魔法\t[86]\t5\n88\t龍捲魔法\t[87]\t12\n",
+  "stderr": "",
+  "execution_time_ms": 1595
+}

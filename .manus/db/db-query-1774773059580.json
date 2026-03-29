@@ -1,0 +1,380 @@
+{
+  "query": "SELECT id, name, category FROM game_quest_skill_catalog ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, category FROM game_quest_skill_catalog ORDER BY id;",
+  "rows": [
+    {
+      "id": "65",
+      "name": "連擊",
+      "category": "physical"
+    },
+    {
+      "id": "66",
+      "name": "諸刃",
+      "category": "physical"
+    },
+    {
+      "id": "67",
+      "name": "反擊",
+      "category": "physical"
+    },
+    {
+      "id": "68",
+      "name": "崩擊",
+      "category": "physical"
+    },
+    {
+      "id": "69",
+      "name": "亂射",
+      "category": "physical"
+    },
+    {
+      "id": "70",
+      "name": "乾坤一擲",
+      "category": "physical"
+    },
+    {
+      "id": "71",
+      "name": "迅速果斷",
+      "category": "physical"
+    },
+    {
+      "id": "72",
+      "name": "毒擊",
+      "category": "physical"
+    },
+    {
+      "id": "73",
+      "name": "氣功彈",
+      "category": "physical"
+    },
+    {
+      "id": "74",
+      "name": "吸血攻擊",
+      "category": "physical"
+    },
+    {
+      "id": "75",
+      "name": "雙重斬",
+      "category": "physical"
+    },
+    {
+      "id": "76",
+      "name": "戰慄襲心",
+      "category": "physical"
+    },
+    {
+      "id": "77",
+      "name": "護衛",
+      "category": "physical"
+    },
+    {
+      "id": "78",
+      "name": "陽炎",
+      "category": "physical"
+    },
+    {
+      "id": "79",
+      "name": "騎士之譽",
+      "category": "physical"
+    },
+    {
+      "id": "80",
+      "name": "火焰魔法",
+      "category": "magic"
+    },
+    {
+      "id": "81",
+      "name": "烈焰魔法",
+      "category": "magic"
+    },
+    {
+      "id": "82",
+      "name": "業火魔法",
+      "category": "magic"
+    },
+    {
+      "id": "83",
+      "name": "冰凍魔法",
+      "category": "magic"
+    },
+    {
+      "id": "84",
+      "name": "暴風雪魔法",
+      "category": "magic"
+    },
+    {
+      "id": "85",
+      "name": "極寒魔法",
+      "category": "magic"
+    },
+    {
+      "id": "86",
+      "name": "風刃魔法",
+      "category": "magic"
+    },
+    {
+      "id": "87",
+      "name": "暴風魔法",
+      "category": "magic"
+    },
+    {
+      "id": "88",
+      "name": "龍捲魔法",
+      "category": "magic"
+    },
+    {
+      "id": "89",
+      "name": "隕石魔法",
+      "category": "magic"
+    },
+    {
+      "id": "90",
+      "name": "地裂魔法",
+      "category": "magic"
+    },
+    {
+      "id": "91",
+      "name": "天崩地裂",
+      "category": "magic"
+    },
+    {
+      "id": "92",
+      "name": "金光斬",
+      "category": "magic"
+    },
+    {
+      "id": "93",
+      "name": "金光陣",
+      "category": "magic"
+    },
+    {
+      "id": "94",
+      "name": "金光天罰",
+      "category": "magic"
+    },
+    {
+      "id": "95",
+      "name": "吸血魔法",
+      "category": "magic"
+    },
+    {
+      "id": "96",
+      "name": "超強吸血魔法",
+      "category": "magic"
+    },
+    {
+      "id": "97",
+      "name": "昏睡魔法",
+      "category": "status"
+    },
+    {
+      "id": "98",
+      "name": "昏睡群體",
+      "category": "status"
+    },
+    {
+      "id": "99",
+      "name": "石化魔法",
+      "category": "status"
+    },
+    {
+      "id": "100",
+      "name": "石化群體",
+      "category": "status"
+    },
+    {
+      "id": "101",
+      "name": "混亂魔法",
+      "category": "status"
+    },
+    {
+      "id": "102",
+      "name": "混亂群體",
+      "category": "status"
+    },
+    {
+      "id": "103",
+      "name": "中毒魔法",
+      "category": "status"
+    },
+    {
+      "id": "104",
+      "name": "中毒群體",
+      "category": "status"
+    },
+    {
+      "id": "105",
+      "name": "遺忘魔法",
+      "category": "status"
+    },
+    {
+      "id": "106",
+      "name": "遺忘群體",
+      "category": "status"
+    },
+    {
+      "id": "107",
+      "name": "酒醉魔法",
+      "category": "status"
+    },
+    {
+      "id": "108",
+      "name": "酒醉群體",
+      "category": "status"
+    },
+    {
+      "id": "109",
+      "name": "補血魔法",
+      "category": "support"
+    },
+    {
+      "id": "110",
+      "name": "強效補血魔法",
+      "category": "support"
+    },
+    {
+      "id": "111",
+      "name": "超強補血魔法",
+      "category": "support"
+    },
+    {
+      "id": "112",
+      "name": "氣絕回復",
+      "category": "support"
+    },
+    {
+      "id": "113",
+      "name": "恢復魔法",
+      "category": "support"
+    },
+    {
+      "id": "114",
+      "name": "潔淨魔法",
+      "category": "support"
+    },
+    {
+      "id": "115",
+      "name": "全體潔淨",
+      "category": "support"
+    },
+    {
+      "id": "116",
+      "name": "攻擊吸收",
+      "category": "support"
+    },
+    {
+      "id": "117",
+      "name": "魔法吸收",
+      "category": "support"
+    },
+    {
+      "id": "118",
+      "name": "明鏡止水",
+      "category": "support"
+    },
+    {
+      "id": "119",
+      "name": "攻擊增幅",
+      "category": "support"
+    },
+    {
+      "id": "120",
+      "name": "防禦增幅",
+      "category": "support"
+    },
+    {
+      "id": "121",
+      "name": "魔力增幅",
+      "category": "support"
+    },
+    {
+      "id": "122",
+      "name": "速度增幅",
+      "category": "support"
+    },
+    {
+      "id": "123",
+      "name": "全體攻擊增幅",
+      "category": "support"
+    },
+    {
+      "id": "124",
+      "name": "全體防禦增幅",
+      "category": "support"
+    },
+    {
+      "id": "125",
+      "name": "魔法恢復",
+      "category": "support"
+    },
+    {
+      "id": "126",
+      "name": "聖盾",
+      "category": "support"
+    },
+    {
+      "id": "127",
+      "name": "暗殺",
+      "category": "special"
+    },
+    {
+      "id": "128",
+      "name": "偷竊",
+      "category": "special"
+    },
+    {
+      "id": "129",
+      "name": "挑釁",
+      "category": "special"
+    },
+    {
+      "id": "130",
+      "name": "捨身",
+      "category": "special"
+    },
+    {
+      "id": "131",
+      "name": "五行封印",
+      "category": "special"
+    },
+    {
+      "id": "132",
+      "name": "天命共振",
+      "category": "special"
+    },
+    {
+      "id": "133",
+      "name": "石化抵抗",
+      "category": "resistance"
+    },
+    {
+      "id": "134",
+      "name": "昏睡抵抗",
+      "category": "resistance"
+    },
+    {
+      "id": "135",
+      "name": "混亂抵抗",
+      "category": "resistance"
+    },
+    {
+      "id": "136",
+      "name": "中毒抵抗",
+      "category": "resistance"
+    },
+    {
+      "id": "137",
+      "name": "遺忘抵抗",
+      "category": "resistance"
+    },
+    {
+      "id": "138",
+      "name": "酒醉抵抗",
+      "category": "resistance"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tcategory\n65\t連擊\tphysical\n66\t諸刃\tphysical\n67\t反擊\tphysical\n68\t崩擊\tphysical\n69\t亂射\tphysical\n70\t乾坤一擲\tphysical\n71\t迅速果斷\tphysical\n72\t毒擊\tphysical\n73\t氣功彈\tphysical\n74\t吸血攻擊\tphysical\n75\t雙重斬\tphysical\n76\t戰慄襲心\tphysical\n77\t護衛\tphysical\n78\t陽炎\tphysical\n79\t騎士之譽\tphysical\n80\t火焰魔法\tmagic\n81\t烈焰魔法\tmagic\n82\t業火魔法\tmagic\n83\t冰凍魔法\tmagic\n84\t暴風雪魔法\tmagic\n85\t極寒魔法\tmagic\n86\t風刃魔法\tmagic\n87\t暴風魔法\tmagic\n88\t龍捲魔法\tmagic\n89\t隕石魔法\tmagic\n90\t地裂魔法\tmagic\n91\t天崩地裂\tmagic\n92\t金光斬\tmagic\n93\t金光陣\tmagic\n94\t金光天罰\tmagic\n95\t吸血魔法\tmagic\n96\t超強吸血魔法\tmagic\n97\t昏睡魔法\tstatus\n98\t昏睡群體\tstatus\n99\t石化魔法\tstatus\n100\t石化群體\tstatus\n101\t混亂魔法\tstatus\n102\t混亂群體\tstatus\n103\t中毒魔法\tstatus\n104\t中毒群體\tstatus\n105\t遺忘魔法\tstatus\n106\t遺忘群體\tstatus\n107\t酒醉魔法\tstatus\n108\t酒醉群體\tstatus\n109\t補血魔法\tsupport\n110\t強效補血魔法\tsupport\n111\t超強補血魔法\tsupport\n112\t氣絕回復\tsupport\n113\t恢復魔法\tsupport\n114\t潔淨魔法\tsupport\n115\t全體潔淨\tsupport\n116\t攻擊吸收\tsupport\n117\t魔法吸收\tsupport\n118\t明鏡止水\tsupport\n119\t攻擊增幅\tsupport\n120\t防禦增幅\tsupport\n121\t魔力增幅\tsupport\n122\t速度增幅\tsupport\n123\t全體攻擊增幅\tsupport\n124\t全體防禦增幅\tsupport\n125\t魔法恢復\tsupport\n126\t聖盾\tsupport\n127\t暗殺\tspecial\n128\t偷竊\tspecial\n129\t挑釁\tspecial\n130\t捨身\tspecial\n131\t五行封印\tspecial\n132\t天命共振\tspecial\n133\t石化抵抗\tresistance\n134\t昏睡抵抗\tresistance\n135\t混亂抵抗\tresistance\n136\t中毒抵抗\tresistance\n137\t遺忘抵抗\tresistance\n138\t酒醉抵抗\tresistance\n",
+  "stderr": "",
+  "execution_time_ms": 1537
+}

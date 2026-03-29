@@ -778,6 +778,13 @@
       "when": 1774744364912,
       "tag": "0110_burly_triton",
       "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "5",
+      "when": 1774773548320,
+      "tag": "0111_tricky_black_bolt",
+      "breakpoints": true
     }
   ]
 }

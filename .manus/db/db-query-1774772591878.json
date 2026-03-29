@@ -1,0 +1,30 @@
+{
+  "query": "SELECT monster_id, name, wuxing, species, rarity, skill_id_1, skill_id_2, skill_id_3 FROM game_monster_catalog WHERE skill_id_1 IS NOT NULL LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id, name, wuxing, species, rarity, skill_id_1, skill_id_2, skill_id_3 FROM game_monster_catalog WHERE skill_id_1 IS NOT NULL LIMIT 10;",
+  "rows": [
+    {
+      "monster_id": "M_W041",
+      "name": "測試怪物_M3E_1774742567211",
+      "wuxing": "木",
+      "species": "beast",
+      "rarity": "common",
+      "skill_id_1": "SK_M030",
+      "skill_id_2": "",
+      "skill_id_3": ""
+    },
+    {
+      "monster_id": "M_W042",
+      "name": "測試怪物_M3E_1774745336045",
+      "wuxing": "木",
+      "species": "beast",
+      "rarity": "common",
+      "skill_id_1": "SK_M013",
+      "skill_id_2": "",
+      "skill_id_3": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_id\tname\twuxing\tspecies\trarity\tskill_id_1\tskill_id_2\tskill_id_3\nM_W041\t測試怪物_M3E_1774742567211\t木\tbeast\tcommon\tSK_M030\t\t\nM_W042\t測試怪物_M3E_1774745336045\t木\tbeast\tcommon\tSK_M013\t\t\n",
+  "stderr": "",
+  "execution_time_ms": 1502
+}

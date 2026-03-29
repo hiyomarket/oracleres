@@ -1,0 +1,130 @@
+{
+  "query": "SHOW COLUMNS FROM game_monster_skill_catalog;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW COLUMNS FROM game_monster_skill_catalog;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "monster_skill_id",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "skill_type",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "attack",
+      "Extra": ""
+    },
+    {
+      "Field": "rarity",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "common",
+      "Extra": ""
+    },
+    {
+      "Field": "power_percent",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "100",
+      "Extra": ""
+    },
+    {
+      "Field": "mp_cost",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "cooldown",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "accuracy_mod",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "100",
+      "Extra": ""
+    },
+    {
+      "Field": "additional_effect",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "ai_condition",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nmonster_skill_id\tvarchar(20)\tNO\tUNI\tNULL\t\nname\tvarchar(100)\tNO\t\tNULL\t\nwuxing\tvarchar(10)\tNO\t\tNULL\t\nskill_type\tvarchar(20)\tNO\t\tattack\t\nrarity\tvarchar(20)\tNO\t\tcommon\t\npower_percent\tint\tNO\t\t100\t\nmp_cost\tint\tNO\t\t0\t\ncooldown\tint\tNO\t\t0\t\naccuracy_mod\tint\tNO\t\t100\t\nadditional_effect\tjson\tYES\t\tNULL\t\nai_condition\tjson\tYES\t\tNULL\t\ndescription\ttext\tYES\t\tNULL\t\nis_active\ttinyint\tYES\t\t1\t\ncreated_at\tbigint\tNO\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 1582
+}

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, name, skill_type, wuxing, power_percent, mp_cost, cooldown, target_type, additional_effect FROM game_monster_skill_catalog LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, skill_type, wuxing, power_percent, mp_cost, cooldown, target_type, additional_effect FROM game_monster_skill_catalog LIMIT 20;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'target_type' in 'field list'"
+  ]
+}

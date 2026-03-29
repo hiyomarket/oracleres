@@ -1,0 +1,260 @@
+{
+  "query": "SELECT wuxing, species, COUNT(*) as cnt FROM game_monster_catalog WHERE monster_id NOT LIKE 'M_W04%' GROUP BY wuxing, species ORDER BY wuxing, species;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT wuxing, species, COUNT(*) as cnt FROM game_monster_catalog WHERE monster_id NOT LIKE 'M_W04%' GROUP BY wuxing, species ORDER BY wuxing, species;",
+  "rows": [
+    {
+      "wuxing": "土",
+      "species": "beast",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "土",
+      "species": "demon",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "土",
+      "species": "dragon",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "土",
+      "species": "flying",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "土",
+      "species": "humanoid",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "土",
+      "species": "insect",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "土",
+      "species": "metal",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "土",
+      "species": "plant",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "土",
+      "species": "special",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "土",
+      "species": "undead",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "木",
+      "species": "beast",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "木",
+      "species": "demon",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "木",
+      "species": "dragon",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "木",
+      "species": "flying",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "木",
+      "species": "humanoid",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "木",
+      "species": "insect",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "木",
+      "species": "metal",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "木",
+      "species": "plant",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "木",
+      "species": "special",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "木",
+      "species": "undead",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "水",
+      "species": "beast",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "水",
+      "species": "demon",
+      "cnt": "3"
+    },
+    {
+      "wuxing": "水",
+      "species": "dragon",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "水",
+      "species": "flying",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "水",
+      "species": "humanoid",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "水",
+      "species": "insect",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "水",
+      "species": "metal",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "水",
+      "species": "plant",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "水",
+      "species": "special",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "水",
+      "species": "undead",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "火",
+      "species": "beast",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "火",
+      "species": "demon",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "火",
+      "species": "dragon",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "火",
+      "species": "flying",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "火",
+      "species": "humanoid",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "火",
+      "species": "insect",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "火",
+      "species": "metal",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "火",
+      "species": "plant",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "火",
+      "species": "special",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "火",
+      "species": "undead",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "金",
+      "species": "beast",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "金",
+      "species": "demon",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "金",
+      "species": "dragon",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "金",
+      "species": "flying",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "金",
+      "species": "humanoid",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "金",
+      "species": "insect",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "金",
+      "species": "metal",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "金",
+      "species": "plant",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "金",
+      "species": "special",
+      "cnt": "4"
+    },
+    {
+      "wuxing": "金",
+      "species": "undead",
+      "cnt": "4"
+    }
+  ],
+  "messages": [],
+  "stdout": "wuxing\tspecies\tcnt\n土\tbeast\t4\n土\tdemon\t4\n土\tdragon\t4\n土\tflying\t4\n土\thumanoid\t4\n土\tinsect\t4\n土\tmetal\t4\n土\tplant\t4\n土\tspecial\t4\n土\tundead\t4\n木\tbeast\t4\n木\tdemon\t4\n木\tdragon\t4\n木\tflying\t4\n木\thumanoid\t4\n木\tinsect\t4\n木\tmetal\t4\n木\tplant\t4\n木\tspecial\t4\n木\tundead\t4\n水\tbeast\t4\n水\tdemon\t3\n水\tdragon\t4\n水\tflying\t4\n水\thumanoid\t4\n水\tinsect\t4\n水\tmetal\t4\n水\tplant\t4\n水\tspecial\t4\n水\tundead\t4\n火\tbeast\t4\n火\tdemon\t4\n火\tdragon\t4\n火\tflying\t4\n火\thumanoid\t4\n火\tinsect\t4\n火\tmetal\t4\n火\tplant\t4\n火\tspecial\t4\n火\tundead\t4\n金\tbeast\t4\n金\tdemon\t4\n金\tdragon\t4\n金\tflying\t4\n金\thumanoid\t4\n金\tinsect\t4\n金\tmetal\t4\n金\tplant\t4\n金\tspecial\t4\n金\tundead\t4\n",
+  "stderr": "",
+  "execution_time_ms": 1518
+}

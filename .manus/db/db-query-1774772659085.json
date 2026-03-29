@@ -1,0 +1,130 @@
+{
+  "query": "SELECT monster_id, wuxing, species, rarity FROM game_monster_catalog WHERE monster_id NOT LIKE 'M_W04%' ORDER BY monster_id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id, wuxing, species, rarity FROM game_monster_catalog WHERE monster_id NOT LIKE 'M_W04%' ORDER BY monster_id LIMIT 20;",
+  "rows": [
+    {
+      "monster_id": "M_D001",
+      "wuxing": "土",
+      "species": "beast",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D002",
+      "wuxing": "土",
+      "species": "humanoid",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D003",
+      "wuxing": "土",
+      "species": "plant",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D004",
+      "wuxing": "土",
+      "species": "undead",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D005",
+      "wuxing": "土",
+      "species": "dragon",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D006",
+      "wuxing": "土",
+      "species": "flying",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D007",
+      "wuxing": "土",
+      "species": "insect",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D008",
+      "wuxing": "土",
+      "species": "special",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D009",
+      "wuxing": "土",
+      "species": "metal",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D010",
+      "wuxing": "土",
+      "species": "demon",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D011",
+      "wuxing": "土",
+      "species": "beast",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D012",
+      "wuxing": "土",
+      "species": "humanoid",
+      "rarity": "common"
+    },
+    {
+      "monster_id": "M_D013",
+      "wuxing": "土",
+      "species": "plant",
+      "rarity": "uncommon"
+    },
+    {
+      "monster_id": "M_D014",
+      "wuxing": "土",
+      "species": "undead",
+      "rarity": "uncommon"
+    },
+    {
+      "monster_id": "M_D015",
+      "wuxing": "土",
+      "species": "dragon",
+      "rarity": "uncommon"
+    },
+    {
+      "monster_id": "M_D016",
+      "wuxing": "土",
+      "species": "flying",
+      "rarity": "uncommon"
+    },
+    {
+      "monster_id": "M_D017",
+      "wuxing": "土",
+      "species": "insect",
+      "rarity": "uncommon"
+    },
+    {
+      "monster_id": "M_D018",
+      "wuxing": "土",
+      "species": "special",
+      "rarity": "uncommon"
+    },
+    {
+      "monster_id": "M_D019",
+      "wuxing": "土",
+      "species": "metal",
+      "rarity": "uncommon"
+    },
+    {
+      "monster_id": "M_D020",
+      "wuxing": "土",
+      "species": "demon",
+      "rarity": "uncommon"
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_id\twuxing\tspecies\trarity\nM_D001\t土\tbeast\tcommon\nM_D002\t土\thumanoid\tcommon\nM_D003\t土\tplant\tcommon\nM_D004\t土\tundead\tcommon\nM_D005\t土\tdragon\tcommon\nM_D006\t土\tflying\tcommon\nM_D007\t土\tinsect\tcommon\nM_D008\t土\tspecial\tcommon\nM_D009\t土\tmetal\tcommon\nM_D010\t土\tdemon\tcommon\nM_D011\t土\tbeast\tcommon\nM_D012\t土\thumanoid\tcommon\nM_D013\t土\tplant\tuncommon\nM_D014\t土\tundead\tuncommon\nM_D015\t土\tdragon\tuncommon\nM_D016\t土\tflying\tuncommon\nM_D017\t土\tinsect\tuncommon\nM_D018\t土\tspecial\tuncommon\nM_D019\t土\tmetal\tuncommon\nM_D020\t土\tdemon\tuncommon\n",
+  "stderr": "",
+  "execution_time_ms": 1605
+}

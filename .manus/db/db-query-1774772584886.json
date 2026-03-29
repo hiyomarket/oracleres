@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_monster_catalog' AND COLUMN_NAME LIKE '%skill%' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_monster_catalog' AND COLUMN_NAME LIKE '%skill%' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "skill_id_1"
+    },
+    {
+      "COLUMN_NAME": "skill_id_2"
+    },
+    {
+      "COLUMN_NAME": "skill_id_3"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nskill_id_1\nskill_id_2\nskill_id_3\n",
+  "stderr": "",
+  "execution_time_ms": 1584
+}

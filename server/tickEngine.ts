@@ -291,7 +291,7 @@ function formatMessage(template: string, vars: Record<string, string | number>):
 // ─── 戰鬥結算（詳細回合制） ───
 // ─── 附加效果實例（戰鬥中追蹤） ───
 export interface StatusEffect {
-  type: "poison" | "burn" | "freeze" | "stun" | "slow";
+  type: "poison" | "burn" | "freeze" | "stun" | "slow" | "petrify" | "sleep" | "confuse" | "forget" | "drunk";
   source: "agent" | "monster";  // 誰施加的
   remainingTurns: number;        // 剩餘回合數
   value: number;                 // 每回合傷害值（poison/burn）或速度降低值（slow）
@@ -325,6 +325,28 @@ export type CombatRound = {
   dotDamageToMonster?: number;  // 本回合 DoT 對怪物造成的傷害
   agentStunned?: boolean;       // 玩家本回合是否被眩暈/冰凍
   monsterStunned?: boolean;     // 怪物本回合是否被眩暈/冰凍
+  // v2.0: 擴展戰鬥機制欄位
+  agentLifesteal?: number;      // 玩家本回合吸血量
+  monsterLifesteal?: number;    // 怪物本回合吸血量
+  agentHitCount?: number;       // 玩家多段攻擊次數
+  agentHitDetails?: number[];   // 玩家每段傷害明細
+  monsterHitCount?: number;     // 怪物多段攻擊次數
+  monsterHitDetails?: number[]; // 怪物每段傷害明細
+  agentShieldAbsorbed?: number; // 護盾吸收傷害量
+  monsterShieldAbsorbed?: number;
+  agentReflected?: number;      // 反射/吸收反彈傷害
+  monsterReflected?: number;
+  agentMpRestored?: number;     // MP 恢復量
+  monsterMpRestored?: number;
+  agentBuffApplied?: string;    // 本回合施加的增益描述
+  monsterBuffApplied?: string;
+  agentPassiveTriggered?: string; // 被動技能觸發描述
+  monsterPassiveTriggered?: string;
+  agentConfusedSelfHit?: boolean; // 混亂自擊
+  monsterConfusedSelfHit?: boolean;
+  agentSelfDamage?: number;     // 自傷（乾坤一擲等）
+  monsterSelfDamage?: number;
+  cleansedEffects?: string[];   // 潔淨清除的效果
 };
 
 // GD-020 補充四：種族剋制對照表
@@ -574,7 +596,7 @@ export function resolveCombat(
     if (!effect) return;
     const { type, chance, duration = 2, value = 5 } = effect;
     if (Math.random() * 100 >= chance) return; // 未觸發
-    const validTypes = ["poison", "burn", "freeze", "stun", "slow"];
+    const validTypes = ["poison", "burn", "freeze", "stun", "slow", "petrify", "sleep", "confuse", "forget", "drunk"];
     if (!validTypes.includes(type)) return;
     // 檢查是否已存在同類型效果（不疊加，但刷新持續時間）
     const target = source === "agent" ? "monster" : "agent";
@@ -591,7 +613,7 @@ export function resolveCombat(
       chance,
     });
     const targetName = target === "agent" ? "旅人" : monster.name;
-    const effectNames: Record<string, string> = { poison: "中毒", burn: "灼燒", freeze: "冰凍", stun: "眩暈", slow: "減速" };
+    const effectNames: Record<string, string> = { poison: "中毒", burn: "灼燒", freeze: "冰凍", stun: "眩暈", slow: "減速", petrify: "石化", sleep: "昆睡", confuse: "混亂", forget: "遺忘", drunk: "酒醉" };
     statusEffectsSummary.push(`${targetName}被施加了${effectNames[type] ?? type}效果（${duration}回合）`);
   }
 
@@ -619,9 +641,18 @@ export function resolveCombat(
           if (target === "agent") agentStunned = true;
           else monsterStunned = true;
         }
+      } else if (eff.type === "petrify") {
+        // 石化：100% 無法行動
+        if (target === "agent") agentStunned = true;
+        else monsterStunned = true;
+      } else if (eff.type === "sleep") {
+        // 昆睡：100% 無法行動（受攻擊時解除，在攻擊階段處理）
+        if (target === "agent") agentStunned = true;
+        else monsterStunned = true;
       } else if (eff.type === "slow") {
         // 減速效果在先手判定時已處理（簡化處理）
       }
+      // confuse/forget/drunk 不導致完全無法行動，在攻擊階段處理
 
       eff.remainingTurns--;
       if (eff.remainingTurns <= 0) {
@@ -702,8 +733,9 @@ export function resolveCombat(
     let chosenSkill: typeof equippedSkills[0] | null = null;
     const hpRatio = agentHp / agent.maxHp;
     const availableSkills = equippedSkills.filter(sk => agentMp >= sk.mpCost && !(skillCooldowns[sk.id] > 0));
-    const healSkills = availableSkills.filter(sk => sk.skillType === "heal");
-    const attackSkills = availableSkills.filter(sk => sk.skillType === "attack");
+    const healSkills = availableSkills.filter(sk => sk.skillType === "heal" || sk.skillType === "support");
+    const attackSkills = availableSkills.filter(sk => sk.skillType === "attack" || sk.skillType === "magic" || sk.skillType === "status");
+    const debuffSkills = availableSkills.filter(sk => sk.skillType === "status" || sk.skillType === "debuff");
 
     // 策略 1：生存危機（HP < 30%）→ 強制治癒
     if (hpRatio < 0.3 && healSkills.length > 0) {
@@ -713,7 +745,11 @@ export function resolveCombat(
     else if (hpRatio < 0.5 && healSkills.length > 0 && Math.random() < 0.5) {
       chosenSkill = healSkills[0];
     }
-    // 策略 3：五行相剋判定 → 優先使用剋制怪物屬性的技能
+    // v2.0 策略 2.5：第一回合優先使用狀態技能（石化/昆睡/混亂等）
+    else if (debuffSkills.length > 0 && rounds.length < 2 && Math.random() < 0.6) {
+      chosenSkill = debuffSkills[Math.floor(Math.random() * debuffSkills.length)];
+    }
+    // 策略 3：五行相剫判定 → 優先使用剫制怪物屬性的技能
     else if (attackSkills.length > 0) {
       // 找出剋制怪物屬性的技能
       const counterElement = Object.entries(WUXING_COUNTER).find(([k]) => k === monsterElement)?.[1];
@@ -758,13 +794,78 @@ export function resolveCombat(
       }
     }
 
-    // 治癒技能處理
-    if (skillType === "heal") {
-      const healAmount = Math.round(agent.maxHp * 0.2 * skillMultiplier);
-      agentHp = Math.min(agent.maxHp, agentHp + healAmount);
+    // v2.0: 治療/輔助技能處理（支援多種治療類型）
+    if (skillType === "heal" || skillType === "support") {
+      const agentMtk = (agent as any).magicAttack ?? agent.attack;
+      const healType = chosenSkill?.healType ?? "instant";
+      let healAmount = 0;
+      let mpRestored = 0;
+
+      if (healType === "mpRestore") {
+        // MP 恢復
+        mpRestored = Math.round(agentMtk * 0.3 * skillMultiplier);
+        agentMp = Math.min(agent.maxHp, agentMp + mpRestored); // maxMp 用 maxHp 估算
+        roundData.agentMpRestored = mpRestored;
+      } else if (healType === "cleanse") {
+        // 潔淨：清除異常狀態 + 小量治療
+        healAmount = Math.round((agentMtk * 0.2 + agent.maxHp * 0.05) * skillMultiplier);
+        agentHp = Math.min(agent.maxHp, agentHp + healAmount);
+        // 清除玩家身上的異常狀態
+        const cleansed: string[] = [];
+        const effectNames: Record<string, string> = { poison: "中毒", burn: "灼燒", freeze: "冰凍", stun: "眩暈", slow: "減速", petrify: "石化", sleep: "昆睡", confuse: "混亂", forget: "遺忘", drunk: "酒醉" };
+        for (let i = activeEffects.length - 1; i >= 0; i--) {
+          if (activeEffects[i].source === "monster") {
+            cleansed.push(effectNames[activeEffects[i].type] ?? activeEffects[i].type);
+            activeEffects.splice(i, 1);
+          }
+        }
+        if (cleansed.length > 0) roundData.cleansedEffects = cleansed;
+      } else if (healType === "hot") {
+        // 持續治療（即時回復一次 + 後續回合自動回復）
+        healAmount = Math.round((agentMtk * 0.2 + agent.maxHp * 0.05) * skillMultiplier);
+        agentHp = Math.min(agent.maxHp, agentHp + healAmount);
+        // 加入 HoT 狀態效果（用 burn 的反向邏輯）
+        const hotDuration = chosenSkill?.hotDuration ?? 3;
+        // 每回合回復量記錄在 value 中（負數表示回復）
+        activeEffects.push({ type: "burn" as any, source: "agent", remainingTurns: hotDuration, value: -healAmount, chance: 0 });
+      } else {
+        // 立即治療（instant/revive）
+        healAmount = Math.round((agentMtk * 0.5 + agent.maxHp * 0.1) * skillMultiplier);
+        agentHp = Math.min(agent.maxHp, agentHp + healAmount);
+      }
+
+      // v2.0: 輔助技能可能附帶 buff
+      if (chosenSkill?.buff) {
+        const b = chosenSkill.buff;
+        const stats = b.stats ?? [b.stat];
+        const buffDescs: string[] = [];
+        for (const stat of stats) {
+          if (stat) {
+            // 簡化 buff 記錄（在回合描述中顯示）
+            const statName = stat.toUpperCase();
+            const pct = b.percent > 0 ? `+${b.percent}%` : `${b.percent}%`;
+            buffDescs.push(`${statName}${pct}`);
+          }
+        }
+        if (buffDescs.length > 0) roundData.agentBuffApplied = buffDescs.join(", ") + `（${b.duration ?? 3}回合）`;
+      }
+
+      // v2.0: 護盾技能
+      if (chosenSkill?.shield) {
+        const s = chosenSkill.shield;
+        roundData.agentBuffApplied = (roundData.agentBuffApplied ?? "") + ` 護盾（吸收${Math.round((s.absorbPercent ?? 0.3) * 100)}%傷害，${s.duration ?? 3}回合）`;
+      }
+
+      // v2.0: 吸收技能（攻擊吸收/魔法吸收）
+      if (chosenSkill?.absorb) {
+        const a = chosenSkill.absorb;
+        const typeName = a.type === "physical" ? "物理" : "魔法";
+        roundData.agentBuffApplied = (roundData.agentBuffApplied ?? "") + ` ${typeName}吸收（反彈${Math.round((a.reflectPercent ?? 0.2) * 100)}%，${a.duration ?? 3}回合）`;
+      }
+
       totalHealAmount += healAmount;
       roundData.agentHealAmount = healAmount;
-      roundData.agentSkillType = "heal";
+      roundData.agentSkillType = skillType;
       roundData.agentSkillName = skillName;
       roundData.agentAtk = 0;
       // M3L: 治癒回合不攻擊怪物，但怪物使用真正技能攻擊
@@ -821,7 +922,21 @@ export function resolveCombat(
       roundData.monsterIsCritical = monsterIsCritical;
       roundData.agentHpAfter = agentHp;
       roundData.monsterHpAfter = monsterHp;
-      const healDesc = `${skillName}治癒了 ${healAmount} HP`;
+      // v2.0: 豐富的治療描述
+      let healDesc = "";
+      if (healType === "mpRestore") {
+        healDesc = `${skillName}恢復了 ${mpRestored} MP`;
+      } else if (healType === "cleanse") {
+        healDesc = `${skillName}治療了 ${healAmount} HP`;
+        if (roundData.cleansedEffects && roundData.cleansedEffects.length > 0) {
+          healDesc += `，清除了${roundData.cleansedEffects.join("、")}效果`;
+        }
+      } else if (healType === "hot") {
+        healDesc = `${skillName}治療了 ${healAmount} HP（持續回復中）`;
+      } else {
+        healDesc = `${skillName}治癒了 ${healAmount} HP`;
+      }
+      if (roundData.agentBuffApplied) healDesc += `，${roundData.agentBuffApplied}`;
       const defDesc = monsterStunned ? `${monster.name}眩暈中，無法行動` : agentDodged ? `閃避了${monsterSkillName}` : agentBlocked ? `格擋了${monsterSkillName}（傷害減半）` : monsterIsCritical ? `被${monsterSkillName}暴擊！受到 ${actualMonsterAtk} 傷害` : `受到${monsterSkillName}攻擊，受到 ${actualMonsterAtk} 傷害`;
       roundData.description = `第${roundNum}回合：${healDesc}。${monster.name}${defDesc}`;
       rounds.push(roundData);
@@ -829,22 +944,108 @@ export function resolveCombat(
       continue;
     }
 
-    // ─── M3L: 攻擊回合（加入眩暈判定、怪物技能、附加效果） ───
-    // 玩家攻擊（如果沒被眩暈）
+    // ─── v2.0: 攻擊回合（支援 ATK/MTK 基礎、多段攻擊、吸血、混亂自擊、醉酒命中降低、穿透防禦、自傷） ───
     let rawAgentAtk = 0;
     let isCritical = false;
     let monsterDodged = false;
     let monsterBlocked = false;
     let agentAtk = 0;
-    if (!agentStunned) {
-      rawAgentAtk = Math.round(agentBaseDmg * skillMultiplier * randFloat(0.8, 1.2));
-      // GD-028: 使用 statEngine 計算的暴擊率（含命格+職業加成）
+    let agentConfusedSelfHit = false;
+
+    // v2.0: 混亂判定（50% 機率攻擊自己）
+    const isAgentConfused = activeEffects.some(e => e.type === "confuse" && e.source === "monster");
+    if (isAgentConfused && !agentStunned && Math.random() < 0.5) {
+      agentConfusedSelfHit = true;
+      rawAgentAtk = Math.round(agentBaseDmg * 0.5 * randFloat(0.8, 1.2));
+      agentHp = Math.max(0, agentHp - rawAgentAtk);
+      roundData.agentConfusedSelfHit = true;
+      roundData.agentSelfDamage = rawAgentAtk;
+    }
+
+    // v2.0: 遺忘判定（無法使用技能，只能普攻）
+    const isAgentForgotten = activeEffects.some(e => e.type === "forget" && e.source === "monster");
+
+    if (!agentStunned && !agentConfusedSelfHit) {
+      // v2.0: 根據 scaleStat 決定傷害基礎
+      const scaleStat = (chosenSkill?.scaleStat ?? "atk");
+      const agentMtk = (agent as any).magicAttack ?? agent.attack;
+      const agentMdef = (agent as any).mdef ?? Math.round(agent.defense * 0.5);
+      const monsterMdef = (monster as any).mdef ?? Math.round(monster.defense * 0.5);
+      const ignoreDefPct = chosenSkill?.ignoreDefPercent ?? 0;
+
+      if (scaleStat === "mtk" && !isAgentForgotten) {
+        // 魔法傷害：MTK vs MDEF
+        const effectiveMdef = Math.round(monsterMdef * (1 - ignoreDefPct / 100));
+        rawAgentAtk = Math.max(1, Math.round(
+          (agentMtk * 1.5 * spiritCoeffA - effectiveMdef * 0.5) * skillMultiplier * randFloat(0.8, 1.2)
+        ));
+      } else {
+        // 物理傷害：ATK vs DEF
+        const effectiveDef = Math.round(monster.defense * (1 - ignoreDefPct / 100));
+        rawAgentAtk = Math.max(1, Math.round(
+          (agent.attack * 1.5 - effectiveDef * 0.5) * skillMultiplier * randFloat(0.8, 1.2)
+        ));
+      }
+
+      // v2.0: 酒醉命中率降低
+      const isAgentDrunk = activeEffects.some(e => e.type === "drunk" && e.source === "monster");
+      const drunkMissMod = isAgentDrunk ? 0.35 : 0; // 酒醉時 35% 額外失誤率
+      const accuracyMod = chosenSkill?.accuracyMod ?? 0;
+
       isCritical = Math.random() * 100 < agentCritRate;
-      monsterDodged = Math.random() < calcDodgeRate(agent.speed, monster.speed);
+      monsterDodged = Math.random() < (calcDodgeRate(agent.speed, monster.speed) + drunkMissMod - accuracyMod / 100);
       monsterBlocked = !monsterDodged && Math.random() < calcBlockRate();
-      // GD-028: 暴擊傷害使用 statEngine 計算的 critDamage（預設 150%，盜賊可達 170%）
       const critMult = agentCritDamage / 100;
-      agentAtk = monsterDodged ? 0 : monsterBlocked ? Math.round(rawAgentAtk * 0.5) : isCritical ? Math.round(rawAgentAtk * critMult) : rawAgentAtk;
+
+      // v2.0: 多段攻擊處理
+      if (chosenSkill?.hitCount && chosenSkill.hitCount.length >= 2 && !isAgentForgotten) {
+        const min = chosenSkill.hitCount[0];
+        const max = chosenSkill.hitCount[1];
+        const actualHits = Math.floor(Math.random() * (max - min + 1)) + min;
+        const hitDetails: number[] = [];
+        let totalMultiDmg = 0;
+        for (let h = 0; h < actualHits; h++) {
+          let hitDmg = Math.round(rawAgentAtk * (0.9 + Math.random() * 0.2) / actualHits);
+          if (monsterDodged) hitDmg = 0;
+          else if (monsterBlocked) hitDmg = Math.round(hitDmg * 0.5);
+          else if (isCritical && h === 0) hitDmg = Math.round(hitDmg * critMult); // 只有第一段暴擊
+          hitDetails.push(hitDmg);
+          totalMultiDmg += hitDmg;
+        }
+        agentAtk = totalMultiDmg;
+        roundData.agentHitCount = actualHits;
+        roundData.agentHitDetails = hitDetails;
+      } else {
+        agentAtk = monsterDodged ? 0 : monsterBlocked ? Math.round(rawAgentAtk * 0.5) : isCritical ? Math.round(rawAgentAtk * critMult) : rawAgentAtk;
+      }
+
+      // v2.0: 吸血處理
+      if (chosenSkill?.lifesteal && chosenSkill.lifesteal > 0 && agentAtk > 0) {
+        const lifestealAmount = Math.round(agentAtk * chosenSkill.lifesteal / 100);
+        agentHp = Math.min(agent.maxHp, agentHp + lifestealAmount);
+        roundData.agentLifesteal = lifestealAmount;
+      }
+
+      // v2.0: 自傷處理（乾坤一擲等）
+      if (chosenSkill?.selfDamagePercent && chosenSkill.selfDamagePercent > 0) {
+        const selfDmg = Math.round(agent.maxHp * chosenSkill.selfDamagePercent / 100);
+        agentHp = Math.max(1, agentHp - selfDmg); // 自傷不會殺死自己
+        roundData.agentSelfDamage = selfDmg;
+      }
+
+      // v2.0: 攻擊技能附帶的狀態異常
+      if (!monsterDodged && agentAtk > 0 && chosenSkill?.additionalEffect) {
+        tryApplyEffect(chosenSkill.additionalEffect, "agent");
+      }
+
+      // v2.0: 昆睡解除（怪物被攻擊後從昆睡中醒來）
+      if (agentAtk > 0) {
+        const sleepIdx = activeEffects.findIndex(e => e.type === "sleep" && e.source === "agent");
+        if (sleepIdx >= 0) {
+          activeEffects.splice(sleepIdx, 1);
+          statusEffectsSummary.push(`${monster.name}被攻擊後從昆睡中醒來！`);
+        }
+      }
     }
 
     // M3L: 怪物技能選擇（使用真正的技能系統）
@@ -900,8 +1101,18 @@ export function resolveCombat(
       if (monsterHp <= 0) {
         roundData.monsterAtk = 0;
         roundData.agentHpAfter = agentHp;
-        const atkDesc = agentStunned ? "眩暈中，無法攻擊" : monsterDodged ? `${monster.name}閃避了${skillName}` : monsterBlocked ? `${monster.name}格擋了${skillName}（傷害減半）` : isCritical ? `${skillName}暴擊！造成 ${agentAtk} 傷害` : `${skillName}造成 ${agentAtk} 傷害`;
-        roundData.description = `第${roundNum}回合：${atkDesc}，${monster.name}倒下！`;
+        let killDesc = "";
+        if (agentConfusedSelfHit) {
+          killDesc = `混亂中攻擊自己，但${monster.name}已倒下！`;
+        } else if (roundData.agentHitCount && roundData.agentHitCount > 1) {
+          killDesc = `${skillName}${roundData.agentHitCount}段攻擊！總計 ${agentAtk} 傷害，${monster.name}倒下！`;
+        } else if (isCritical) {
+          killDesc = `${skillName}暴擊！造成 ${agentAtk} 傷害，${monster.name}倒下！`;
+        } else {
+          killDesc = `${skillName}造成 ${agentAtk} 傷害，${monster.name}倒下！`;
+        }
+        if (roundData.agentLifesteal) killDesc += ` 吸取 ${roundData.agentLifesteal} HP`;
+        roundData.description = `第${roundNum}回合：${killDesc}`;
         rounds.push(roundData);
         break;
       }
@@ -933,8 +1144,37 @@ export function resolveCombat(
       roundData.monsterHpAfter = monsterHp;
     }
 
-    // 回合描述
-    const atkDesc = agentStunned ? "眩暈中，無法攻擊" : monsterDodged ? `${monster.name}閃避了${skillName}` : monsterBlocked ? `${monster.name}格擋了${skillName}（傷害減半）` : isCritical ? `${skillName}暴擊！造成 ${agentAtk} 傷害` : `${skillName}造成 ${agentAtk} 傷害`;
+    // v2.0: 豐富的回合描述
+    let atkDesc = "";
+    if (agentConfusedSelfHit) {
+      atkDesc = `混亂中，攻擊了自己！受到 ${roundData.agentSelfDamage ?? rawAgentAtk} 傷害`;
+    } else if (agentStunned) {
+      // 檢查是哪種控制狀態
+      const ctrlEffect = activeEffects.find(e => (e.type === "petrify" || e.type === "sleep" || e.type === "stun" || e.type === "freeze") && e.source === "monster");
+      const ctrlName = ctrlEffect ? ({ petrify: "石化", sleep: "昆睡", stun: "眩暈", freeze: "冰凍" } as Record<string, string>)[ctrlEffect.type] ?? "眩暈" : "眩暈";
+      atkDesc = `${ctrlName}中，無法行動`;
+    } else if (monsterDodged) {
+      atkDesc = `${monster.name}閃避了${skillName}`;
+    } else if (monsterBlocked) {
+      atkDesc = `${monster.name}格擋了${skillName}（傷害減半）`;
+    } else {
+      // 多段攻擊描述
+      if (roundData.agentHitCount && roundData.agentHitCount > 1) {
+        atkDesc = `${skillName}${roundData.agentHitCount}段攻擊！總計造成 ${agentAtk} 傷害`;
+      } else if (isCritical) {
+        atkDesc = `${skillName}暴擊！造成 ${agentAtk} 傷害`;
+      } else {
+        atkDesc = `${skillName}造成 ${agentAtk} 傷害`;
+      }
+      // 吸血描述
+      if (roundData.agentLifesteal && roundData.agentLifesteal > 0) {
+        atkDesc += `，吸取 ${roundData.agentLifesteal} HP`;
+      }
+      // 自傷描述
+      if (roundData.agentSelfDamage && roundData.agentSelfDamage > 0) {
+        atkDesc += `，自傷 ${roundData.agentSelfDamage} HP`;
+      }
+    }
     const defDesc = monsterStunned ? `${monster.name}眩暈中，無法行動` : monsterSkillType === "heal" ? `${monster.name}使用${monsterSkillName}恢復了 ${roundData.monsterHealAmount ?? 0} HP` : agentDodged ? `閃避了${monsterSkillName}` : agentBlocked ? `格擋了${monsterSkillName}（傷害減半）` : monsterIsCritical ? `被${monsterSkillName}暴擊！受到 ${monsterAtk} 傷害` : `受到${monsterSkillName}攻擊，受到 ${monsterAtk} 傷害`;
     roundData.description = `第${roundNum}回合：${atkDesc}。${defDesc}`;
     rounds.push(roundData);

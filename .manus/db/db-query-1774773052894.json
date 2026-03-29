@@ -1,0 +1,528 @@
+{
+  "query": "SELECT id, name, category, skill_type, rarity FROM game_quest_skill_catalog ORDER BY category, id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, category, skill_type, rarity FROM game_quest_skill_catalog ORDER BY category, id;",
+  "rows": [
+    {
+      "id": "80",
+      "name": "火焰魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "common"
+    },
+    {
+      "id": "81",
+      "name": "烈焰魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "rare"
+    },
+    {
+      "id": "82",
+      "name": "業火魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "epic"
+    },
+    {
+      "id": "83",
+      "name": "冰凍魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "common"
+    },
+    {
+      "id": "84",
+      "name": "暴風雪魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "rare"
+    },
+    {
+      "id": "85",
+      "name": "極寒魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "epic"
+    },
+    {
+      "id": "86",
+      "name": "風刃魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "common"
+    },
+    {
+      "id": "87",
+      "name": "暴風魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "rare"
+    },
+    {
+      "id": "88",
+      "name": "龍捲魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "epic"
+    },
+    {
+      "id": "89",
+      "name": "隕石魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "common"
+    },
+    {
+      "id": "90",
+      "name": "地裂魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "rare"
+    },
+    {
+      "id": "91",
+      "name": "天崩地裂",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "epic"
+    },
+    {
+      "id": "92",
+      "name": "金光斬",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "common"
+    },
+    {
+      "id": "93",
+      "name": "金光陣",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "rare"
+    },
+    {
+      "id": "94",
+      "name": "金光天罰",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "epic"
+    },
+    {
+      "id": "95",
+      "name": "吸血魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "rare"
+    },
+    {
+      "id": "96",
+      "name": "超強吸血魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "rarity": "epic"
+    },
+    {
+      "id": "65",
+      "name": "連擊",
+      "category": "physical",
+      "skill_type": "attack",
+      "rarity": "common"
+    },
+    {
+      "id": "66",
+      "name": "諸刃",
+      "category": "physical",
+      "skill_type": "attack",
+      "rarity": "rare"
+    },
+    {
+      "id": "67",
+      "name": "反擊",
+      "category": "physical",
+      "skill_type": "passive",
+      "rarity": "rare"
+    },
+    {
+      "id": "68",
+      "name": "崩擊",
+      "category": "physical",
+      "skill_type": "attack",
+      "rarity": "epic"
+    },
+    {
+      "id": "69",
+      "name": "亂射",
+      "category": "physical",
+      "skill_type": "attack",
+      "rarity": "rare"
+    },
+    {
+      "id": "70",
+      "name": "乾坤一擲",
+      "category": "physical",
+      "skill_type": "attack",
+      "rarity": "legendary"
+    },
+    {
+      "id": "71",
+      "name": "迅速果斷",
+      "category": "physical",
+      "skill_type": "attack",
+      "rarity": "rare"
+    },
+    {
+      "id": "72",
+      "name": "毒擊",
+      "category": "physical",
+      "skill_type": "attack",
+      "rarity": "common"
+    },
+    {
+      "id": "73",
+      "name": "氣功彈",
+      "category": "physical",
+      "skill_type": "attack",
+      "rarity": "common"
+    },
+    {
+      "id": "74",
+      "name": "吸血攻擊",
+      "category": "physical",
+      "skill_type": "attack",
+      "rarity": "rare"
+    },
+    {
+      "id": "75",
+      "name": "雙重斬",
+      "category": "physical",
+      "skill_type": "attack",
+      "rarity": "common"
+    },
+    {
+      "id": "76",
+      "name": "戰慄襲心",
+      "category": "physical",
+      "skill_type": "attack",
+      "rarity": "rare"
+    },
+    {
+      "id": "77",
+      "name": "護衛",
+      "category": "physical",
+      "skill_type": "passive",
+      "rarity": "rare"
+    },
+    {
+      "id": "78",
+      "name": "陽炎",
+      "category": "physical",
+      "skill_type": "passive",
+      "rarity": "rare"
+    },
+    {
+      "id": "79",
+      "name": "騎士之譽",
+      "category": "physical",
+      "skill_type": "passive",
+      "rarity": "epic"
+    },
+    {
+      "id": "133",
+      "name": "石化抵抗",
+      "category": "resistance",
+      "skill_type": "passive",
+      "rarity": "common"
+    },
+    {
+      "id": "134",
+      "name": "昏睡抵抗",
+      "category": "resistance",
+      "skill_type": "passive",
+      "rarity": "common"
+    },
+    {
+      "id": "135",
+      "name": "混亂抵抗",
+      "category": "resistance",
+      "skill_type": "passive",
+      "rarity": "common"
+    },
+    {
+      "id": "136",
+      "name": "中毒抵抗",
+      "category": "resistance",
+      "skill_type": "passive",
+      "rarity": "common"
+    },
+    {
+      "id": "137",
+      "name": "遺忘抵抗",
+      "category": "resistance",
+      "skill_type": "passive",
+      "rarity": "common"
+    },
+    {
+      "id": "138",
+      "name": "酒醉抵抗",
+      "category": "resistance",
+      "skill_type": "passive",
+      "rarity": "common"
+    },
+    {
+      "id": "127",
+      "name": "暗殺",
+      "category": "special",
+      "skill_type": "attack",
+      "rarity": "legendary"
+    },
+    {
+      "id": "128",
+      "name": "偷竊",
+      "category": "special",
+      "skill_type": "utility",
+      "rarity": "rare"
+    },
+    {
+      "id": "129",
+      "name": "挑釁",
+      "category": "special",
+      "skill_type": "utility",
+      "rarity": "common"
+    },
+    {
+      "id": "130",
+      "name": "捨身",
+      "category": "special",
+      "skill_type": "attack",
+      "rarity": "legendary"
+    },
+    {
+      "id": "131",
+      "name": "五行封印",
+      "category": "special",
+      "skill_type": "debuff",
+      "rarity": "legendary"
+    },
+    {
+      "id": "132",
+      "name": "天命共振",
+      "category": "special",
+      "skill_type": "buff",
+      "rarity": "legendary"
+    },
+    {
+      "id": "97",
+      "name": "昏睡魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "common"
+    },
+    {
+      "id": "98",
+      "name": "昏睡群體",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "rare"
+    },
+    {
+      "id": "99",
+      "name": "石化魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "rare"
+    },
+    {
+      "id": "100",
+      "name": "石化群體",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "epic"
+    },
+    {
+      "id": "101",
+      "name": "混亂魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "rare"
+    },
+    {
+      "id": "102",
+      "name": "混亂群體",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "epic"
+    },
+    {
+      "id": "103",
+      "name": "中毒魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "common"
+    },
+    {
+      "id": "104",
+      "name": "中毒群體",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "rare"
+    },
+    {
+      "id": "105",
+      "name": "遺忘魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "rare"
+    },
+    {
+      "id": "106",
+      "name": "遺忘群體",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "epic"
+    },
+    {
+      "id": "107",
+      "name": "酒醉魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "common"
+    },
+    {
+      "id": "108",
+      "name": "酒醉群體",
+      "category": "status",
+      "skill_type": "debuff",
+      "rarity": "rare"
+    },
+    {
+      "id": "109",
+      "name": "補血魔法",
+      "category": "support",
+      "skill_type": "heal",
+      "rarity": "common"
+    },
+    {
+      "id": "110",
+      "name": "強效補血魔法",
+      "category": "support",
+      "skill_type": "heal",
+      "rarity": "rare"
+    },
+    {
+      "id": "111",
+      "name": "超強補血魔法",
+      "category": "support",
+      "skill_type": "heal",
+      "rarity": "epic"
+    },
+    {
+      "id": "112",
+      "name": "氣絕回復",
+      "category": "support",
+      "skill_type": "heal",
+      "rarity": "epic"
+    },
+    {
+      "id": "113",
+      "name": "恢復魔法",
+      "category": "support",
+      "skill_type": "heal",
+      "rarity": "rare"
+    },
+    {
+      "id": "114",
+      "name": "潔淨魔法",
+      "category": "support",
+      "skill_type": "buff",
+      "rarity": "rare"
+    },
+    {
+      "id": "115",
+      "name": "全體潔淨",
+      "category": "support",
+      "skill_type": "buff",
+      "rarity": "epic"
+    },
+    {
+      "id": "116",
+      "name": "攻擊吸收",
+      "category": "support",
+      "skill_type": "buff",
+      "rarity": "rare"
+    },
+    {
+      "id": "117",
+      "name": "魔法吸收",
+      "category": "support",
+      "skill_type": "buff",
+      "rarity": "rare"
+    },
+    {
+      "id": "118",
+      "name": "明鏡止水",
+      "category": "support",
+      "skill_type": "heal",
+      "rarity": "epic"
+    },
+    {
+      "id": "119",
+      "name": "攻擊增幅",
+      "category": "support",
+      "skill_type": "buff",
+      "rarity": "common"
+    },
+    {
+      "id": "120",
+      "name": "防禦增幅",
+      "category": "support",
+      "skill_type": "buff",
+      "rarity": "common"
+    },
+    {
+      "id": "121",
+      "name": "魔力增幅",
+      "category": "support",
+      "skill_type": "buff",
+      "rarity": "common"
+    },
+    {
+      "id": "122",
+      "name": "速度增幅",
+      "category": "support",
+      "skill_type": "buff",
+      "rarity": "common"
+    },
+    {
+      "id": "123",
+      "name": "全體攻擊增幅",
+      "category": "support",
+      "skill_type": "buff",
+      "rarity": "epic"
+    },
+    {
+      "id": "124",
+      "name": "全體防禦增幅",
+      "category": "support",
+      "skill_type": "buff",
+      "rarity": "epic"
+    },
+    {
+      "id": "125",
+      "name": "魔法恢復",
+      "category": "support",
+      "skill_type": "heal",
+      "rarity": "rare"
+    },
+    {
+      "id": "126",
+      "name": "聖盾",
+      "category": "support",
+      "skill_type": "buff",
+      "rarity": "legendary"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tcategory\tskill_type\trarity\n80\t火焰魔法\tmagic\tattack\tcommon\n81\t烈焰魔法\tmagic\tattack\trare\n82\t業火魔法\tmagic\tattack\tepic\n83\t冰凍魔法\tmagic\tattack\tcommon\n84\t暴風雪魔法\tmagic\tattack\trare\n85\t極寒魔法\tmagic\tattack\tepic\n86\t風刃魔法\tmagic\tattack\tcommon\n87\t暴風魔法\tmagic\tattack\trare\n88\t龍捲魔法\tmagic\tattack\tepic\n89\t隕石魔法\tmagic\tattack\tcommon\n90\t地裂魔法\tmagic\tattack\trare\n91\t天崩地裂\tmagic\tattack\tepic\n92\t金光斬\tmagic\tattack\tcommon\n93\t金光陣\tmagic\tattack\trare\n94\t金光天罰\tmagic\tattack\tepic\n95\t吸血魔法\tmagic\tattack\trare\n96\t超強吸血魔法\tmagic\tattack\tepic\n65\t連擊\tphysical\tattack\tcommon\n66\t諸刃\tphysical\tattack\trare\n67\t反擊\tphysical\tpassive\trare\n68\t崩擊\tphysical\tattack\tepic\n69\t亂射\tphysical\tattack\trare\n70\t乾坤一擲\tphysical\tattack\tlegendary\n71\t迅速果斷\tphysical\tattack\trare\n72\t毒擊\tphysical\tattack\tcommon\n73\t氣功彈\tphysical\tattack\tcommon\n74\t吸血攻擊\tphysical\tattack\trare\n75\t雙重斬\tphysical\tattack\tcommon\n76\t戰慄襲心\tphysical\tattack\trare\n77\t護衛\tphysical\tpassive\trare\n78\t陽炎\tphysical\tpassive\trare\n79\t騎士之譽\tphysical\tpassive\tepic\n133\t石化抵抗\tresistance\tpassive\tcommon\n134\t昏睡抵抗\tresistance\tpassive\tcommon\n135\t混亂抵抗\tresistance\tpassive\tcommon\n136\t中毒抵抗\tresistance\tpassive\tcommon\n137\t遺忘抵抗\tresistance\tpassive\tcommon\n138\t酒醉抵抗\tresistance\tpassive\tcommon\n127\t暗殺\tspecial\tattack\tlegendary\n128\t偷竊\tspecial\tutility\trare\n129\t挑釁\tspecial\tutility\tcommon\n130\t捨身\tspecial\tattack\tlegendary\n131\t五行封印\tspecial\tdebuff\tlegendary\n132\t天命共振\tspecial\tbuff\tlegendary\n97\t昏睡魔法\tstatus\tdebuff\tcommon\n98\t昏睡群體\tstatus\tdebuff\trare\n99\t石化魔法\tstatus\tdebuff\trare\n100\t石化群體\tstatus\tdebuff\tepic\n101\t混亂魔法\tstatus\tdebuff\trare\n102\t混亂群體\tstatus\tdebuff\tepic\n103\t中毒魔法\tstatus\tdebuff\tcommon\n104\t中毒群體\tstatus\tdebuff\trare\n105\t遺忘魔法\tstatus\tdebuff\trare\n106\t遺忘群體\tstatus\tdebuff\tepic\n107\t酒醉魔法\tstatus\tdebuff\tcommon\n108\t酒醉群體\tstatus\tdebuff\trare\n109\t補血魔法\tsupport\theal\tcommon\n110\t強效補血魔法\tsupport\theal\trare\n111\t超強補血魔法\tsupport\theal\tepic\n112\t氣絕回復\tsupport\theal\tepic\n113\t恢復魔法\tsupport\theal\trare\n114\t潔淨魔法\tsupport\tbuff\trare\n115\t全體潔淨\tsupport\tbuff\tepic\n116\t攻擊吸收\tsupport\tbuff\trare\n117\t魔法吸收\tsupport\tbuff\trare\n118\t明鏡止水\tsupport\theal\tepic\n119\t攻擊增幅\tsupport\tbuff\tcommon\n120\t防禦增幅\tsupport\tbuff\tcommon\n121\t魔力增幅\tsupport\tbuff\tcommon\n122\t速度增幅\tsupport\tbuff\tcommon\n123\t全體攻擊增幅\tsupport\tbuff\tepic\n124\t全體防禦增幅\tsupport\tbuff\tepic\n125\t魔法恢復\tsupport\theal\trare\n126\t聖盾\tsupport\tbuff\tlegendary\n",
+  "stderr": "",
+  "execution_time_ms": 1584
+}

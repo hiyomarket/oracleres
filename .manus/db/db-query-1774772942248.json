@@ -1,0 +1,25 @@
+{
+  "query": "SELECT COUNT(*) as total FROM game_monster_catalog; SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_W04%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total FROM game_monster_catalog; SELECT monster_id FROM game_monster_catalog WHERE monster_id LIKE 'M_W04%';",
+  "rows": [
+    {
+      "total": "202"
+    },
+    {
+      "total": "monster_id"
+    },
+    {
+      "total": "M_W040"
+    },
+    {
+      "total": "M_W041"
+    },
+    {
+      "total": "M_W042"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n202\nmonster_id\nM_W040\nM_W041\nM_W042\n",
+  "stderr": "",
+  "execution_time_ms": 1789
+}

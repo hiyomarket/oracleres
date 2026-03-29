@@ -1,0 +1,1 @@
+ALTER TABLE `game_quest_skill_catalog` ADD `prerequisite_level` int;

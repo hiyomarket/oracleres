@@ -17,8 +17,10 @@ import { Link } from "wouter";
 import {
   ArrowLeft, Star, Zap, Shield, Sword, Hammer, Eye, Heart,
   Leaf, Flame, Mountain, Droplets, Lock, CheckCircle2, Circle,
-  ChevronRight, Sparkles, BookOpen, Play, Award, Loader2
+  ChevronRight, Sparkles, BookOpen, Play, Award, Loader2,
+  Wand2, GitBranch, LayoutGrid, TreePine
 } from "lucide-react";
+import { SkillTree } from "@/components/game/SkillTree";
 
 // ─── 常量定義 ─────────────────────────────────────────────────────────────
 const WUXING_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
@@ -89,6 +91,7 @@ export default function QuestSkillPage() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSkillId, setSelectedSkillId] = useState<number | null>(null);
   const [showQuestDetail, setShowQuestDetail] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "tree">("grid");
 
   // 取得玩家角色
   const { data: agentData } = trpc.gameWorld.getOrCreateAgent.useQuery(undefined, { enabled: !!user });
@@ -179,12 +182,35 @@ export default function QuestSkillPage() {
               </p>
             </div>
           </div>
-          <Link href="/game/skills">
-            <Button variant="outline" size="sm" className="border-gray-700 text-gray-300">
-              <BookOpen className="w-4 h-4 mr-1" />
-              一般技能圖鑑
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {/* 視圖切換 */}
+            <div className="flex rounded-md border border-gray-700 overflow-hidden">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`px-2.5 py-1.5 text-xs flex items-center gap-1 transition-colors ${
+                  viewMode === "grid" ? "bg-gray-700 text-white" : "bg-transparent text-gray-400 hover:text-white"
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                圖鑑
+              </button>
+              <button
+                onClick={() => setViewMode("tree")}
+                className={`px-2.5 py-1.5 text-xs flex items-center gap-1 transition-colors ${
+                  viewMode === "tree" ? "bg-gray-700 text-white" : "bg-transparent text-gray-400 hover:text-white"
+                }`}
+              >
+                <GitBranch className="w-3.5 h-3.5" />
+                技能樹
+              </button>
+            </div>
+            <Link href="/game/skills">
+              <Button variant="outline" size="sm" className="border-gray-700 text-gray-300">
+                <BookOpen className="w-4 h-4 mr-1" />
+                一般技能圖鑑
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -214,68 +240,91 @@ export default function QuestSkillPage() {
           </CardContent>
         </Card>
 
-        {/* 分類篩選 */}
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
-          <TabsList className="grid grid-cols-4 sm:grid-cols-7 bg-gray-900 border border-gray-700 mb-6 h-auto p-1">
-            <TabsTrigger value="all" className="text-xs py-2 data-[state=active]:bg-gray-700">全部</TabsTrigger>
-            {Object.entries(CATEGORY_CONFIG).filter(([k]) => !["attack"].includes(k)).map(([key, cfg]) => {
-              const Icon = cfg.icon;
-              return (
-                <TabsTrigger key={key} value={key} className={`text-xs py-2 data-[state=active]:${cfg.bg}`}>
-                  <Icon className={`w-3 h-3 mr-1 ${cfg.color}`} />
-                  <span className="hidden sm:inline">{cfg.label}</span>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-
-          <TabsContent value={selectedCategory}>
+        {/* 技能樹視圖 */}
+        {viewMode === "tree" ? (
+          <div>
             {skillsLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-40 bg-gray-800/50 rounded-lg animate-pulse" />
+              <div className="space-y-3">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="h-12 bg-gray-800/50 rounded-lg animate-pulse" />
                 ))}
               </div>
             ) : (
-              <>
-                {Object.entries(groupedSkills).map(([cat, skills]) => {
-                  const catCfg = CATEGORY_CONFIG[cat] ?? CATEGORY_CONFIG.physical;
-                  const CatIcon = catCfg.icon;
-                  return (
-                    <div key={cat} className="mb-8">
-                      <h2 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${catCfg.color}`}>
-                        <CatIcon className="w-4 h-4" />
-                        {catCfg.label}
-                        <span className="text-gray-500 font-normal">({skills.length})</span>
-                      </h2>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {skills.map((skill: any) => (
-                          <QuestSkillCard
-                            key={skill.id}
-                            skill={skill}
-                            status={getSkillStatus(skill.id)}
-                            progress={progressMap.get(skill.id)}
-                            learned={learnedMap.get(skill.id)}
-                            onSelect={() => {
-                              setSelectedSkillId(skill.id);
-                              setShowQuestDetail(true);
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-                {filteredSkills.length === 0 && (
-                  <div className="text-center py-16 text-gray-500">
-                    <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>此分類暫無天命考核技能</p>
-                  </div>
-                )}
-              </>
+              <SkillTree
+                skills={allSkills ?? []}
+                learnedMap={learnedMap}
+                agentLevel={agentData?.agent?.level ?? 1}
+                onSkillSelect={(id) => {
+                  setSelectedSkillId(id);
+                  setShowQuestDetail(true);
+                }}
+              />
             )}
-          </TabsContent>
-        </Tabs>
+          </div>
+        ) : (
+          /* 圖鑑視圖 */
+          <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
+            <TabsList className="grid grid-cols-4 sm:grid-cols-7 bg-gray-900 border border-gray-700 mb-6 h-auto p-1">
+              <TabsTrigger value="all" className="text-xs py-2 data-[state=active]:bg-gray-700">全部</TabsTrigger>
+              {Object.entries(CATEGORY_CONFIG).filter(([k]) => !["attack"].includes(k)).map(([key, cfg]) => {
+                const Icon = cfg.icon;
+                return (
+                  <TabsTrigger key={key} value={key} className={`text-xs py-2 data-[state=active]:${cfg.bg}`}>
+                    <Icon className={`w-3 h-3 mr-1 ${cfg.color}`} />
+                    <span className="hidden sm:inline">{cfg.label}</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+
+            <TabsContent value={selectedCategory}>
+              {skillsLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-40 bg-gray-800/50 rounded-lg animate-pulse" />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {Object.entries(groupedSkills).map(([cat, skills]) => {
+                    const catCfg = CATEGORY_CONFIG[cat] ?? CATEGORY_CONFIG.physical;
+                    const CatIcon = catCfg.icon;
+                    return (
+                      <div key={cat} className="mb-8">
+                        <h2 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${catCfg.color}`}>
+                          <CatIcon className="w-4 h-4" />
+                          {catCfg.label}
+                          <span className="text-gray-500 font-normal">({skills.length})</span>
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {skills.map((skill: any) => (
+                            <QuestSkillCard
+                              key={skill.id}
+                              skill={skill}
+                              status={getSkillStatus(skill.id)}
+                              progress={progressMap.get(skill.id)}
+                              learned={learnedMap.get(skill.id)}
+                              onSelect={() => {
+                                setSelectedSkillId(skill.id);
+                                setShowQuestDetail(true);
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {filteredSkills.length === 0 && (
+                    <div className="text-center py-16 text-gray-500">
+                      <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                      <p>此分類暫無天命考核技能</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
 
       {/* 任務鏈詳情對話框 */}

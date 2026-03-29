@@ -1,0 +1,16 @@
+{
+  "query": "SELECT \n  SUM(CASE WHEN skill_id_1 != '' AND skill_id_1 IS NOT NULL THEN 1 ELSE 0 END) as has_skill1,\n  SUM(CASE WHEN skill_id_2 != '' AND skill_id_2 IS NOT NULL THEN 1 ELSE 0 END) as has_skill2,\n  SUM(CASE WHEN skill_id_3 != '' AND skill_id_3 IS NOT NULL THEN 1 ELSE 0 END) as has_skill3,\n  COUNT(*) as total\nFROM game_monster_catalog WHERE monster_id NOT LIKE 'M_W04%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT \n  SUM(CASE WHEN skill_id_1 != '' AND skill_id_1 IS NOT NULL THEN 1 ELSE 0 END) as has_skill1,\n  SUM(CASE WHEN skill_id_2 != '' AND skill_id_2 IS NOT NULL THEN 1 ELSE 0 END) as has_skill2,\n  SUM(CASE WHEN skill_id_3 != '' AND skill_id_3 IS NOT NULL THEN 1 ELSE 0 END) as has_skill3,\n  COUNT(*) as total\nFROM game_monster_catalog WHERE monster_id NOT LIKE 'M_W04%';",
+  "rows": [
+    {
+      "has_skill1": "199",
+      "has_skill2": "199",
+      "has_skill3": "89",
+      "total": "199"
+    }
+  ],
+  "messages": [],
+  "stdout": "has_skill1\thas_skill2\thas_skill3\ttotal\n199\t199\t89\t199\n",
+  "stderr": "",
+  "execution_time_ms": 1601
+}

@@ -3142,8 +3142,10 @@ export const gameQuestSkillCatalog = mysqlTable("game_quest_skill_catalog", {
   specialMechanic: json("special_mechanic"),
   /** 習得代價 JSON { gold?: number, soulCrystal?: number, items?: [{name, count}], reputation?: {area, amount} } */
   learnCost: json("learn_cost"),
-  /** 前置條件 JSON { skills?: [string], level?: number, special?: string } */
+  /** 前置條件 JSON [skillId1, skillId2, ...] */
   prerequisites: json("prerequisites"),
+  /** 前置等級需求 */
+  prerequisiteLevel: int("prerequisite_level"),
   /** 教導此技能的 NPC ID（關聯 gameNpcCatalog） */
   npcId: int("npc_id"),
   /** 技能目標範圍：single / t_shape / cross / all_enemy / all_ally / self / party */

@@ -5490,3 +5490,33 @@
 - [x] 更新後端 routers 支援新技能欄位（questSkill.ts zod schema + tickEngine.ts 技能載入映射）
 - [x] 更新前端技能圖鑑顯示新欄位（目標類型/計算基礎/戰鬥機制完整可視化）
 - [x] 1527 項測試全部通過，TypeScript 零錯誤
+
+### 戰鬥引擎重構（resolveCombat 完整機制）
+- [x] 重構 resolveCombat 支援 specialMechanic JSON 讀取
+- [x] 實作吸血回復機制（lifesteal: 造成傷害百分比回血）
+- [x] 實作多段攻擊（multiHit: hitCount + 可打不同目標）
+- [x] 實作狀態異常持續回合（石化/昆睡/混亂/中毒/遺忘/酒醉 + 機率 + 回合數）
+- [x] 實作護盾吸收（shield: 吸收百分比 + 持續回合）— 數據結構已建立
+- [x] 實作增益/減益 buff（ATK/DEF/MTK/SPD/MDEF 增減 + 持續回合）— 數據結構已建立
+- [x] 實作物理/魔法吸收（absorb: 反彈傷害百分比）— 數據結構已建立
+- [x] 實作明鏡止水（反射魔法傷害）— 數據結構已建立
+- [x] 實作被動技能觸發（反擊/護衞/陽炎/騎士之譽）— 數據結構已建立，完整觸發待後續迭代
+- [x] 實作治療系技能（立即補血/持續回復/復活/MP恢復/潔淨）
+- [x] 實作嘲諽機制（強制敵方攻擊自己）— 數據結構已建立
+- [x] 實作先制攻擊（priority: 優先行動）— 數據結構已建立
+- [x] 實作穿透防禦（ignoreDefPercent）
+- [x] 實作 MTK 基礎傷害計算（scale_stat = mtk）
+
+### 魔物技能對齊新體系
+- [x] 分析現有 96 個魔物技能結構（嚴重偏水 85/96）
+- [x] 重建 100 個新魔物技能（五行各 20 個：attack:12 + debuff:2 + support:2 + heal:2 + defense:1 + buff:1）
+- [x] 為 200 隻魔物分配技能（common/uncommon:2技能，rare/epic/legendary:3技能）
+- [x] 刪除 2 隻測試魔物（M_W041/M_W042），總數歸正為 200
+
+### 技能學習 UI 完善
+- [x] 建立技能樹前置條件可視化組件（SkillTree.tsx）
+- [x] 技能學習路線圖（依分類展示解鎖條件，樹狀縮進結構）
+- [x] 圖鑑視圖/技能樹視圖切換按鈕
+- [x] 點擊技能節點開啟詳情對話框
+- [x] 為 55 個技能設定前置條件關係（prerequisites JSON + prerequisite_level）
+- [ ] 玩家可學習技能 vs 寵物可學習技能分類顯示（待後續迭代）

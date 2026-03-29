@@ -1,0 +1,160 @@
+{
+  "query": "SELECT wuxing, skill_type, COUNT(*) as cnt FROM game_monster_skill_catalog GROUP BY wuxing, skill_type ORDER BY wuxing, skill_type;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT wuxing, skill_type, COUNT(*) as cnt FROM game_monster_skill_catalog GROUP BY wuxing, skill_type ORDER BY wuxing, skill_type;",
+  "rows": [
+    {
+      "wuxing": "土",
+      "skill_type": "attack",
+      "cnt": "12"
+    },
+    {
+      "wuxing": "土",
+      "skill_type": "buff",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "skill_type": "debuff",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "土",
+      "skill_type": "defense",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "skill_type": "heal",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "土",
+      "skill_type": "support",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "木",
+      "skill_type": "attack",
+      "cnt": "12"
+    },
+    {
+      "wuxing": "木",
+      "skill_type": "buff",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "skill_type": "debuff",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "木",
+      "skill_type": "defense",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "skill_type": "heal",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "木",
+      "skill_type": "support",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "水",
+      "skill_type": "attack",
+      "cnt": "12"
+    },
+    {
+      "wuxing": "水",
+      "skill_type": "buff",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "skill_type": "debuff",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "水",
+      "skill_type": "defense",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "skill_type": "heal",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "水",
+      "skill_type": "support",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "火",
+      "skill_type": "attack",
+      "cnt": "12"
+    },
+    {
+      "wuxing": "火",
+      "skill_type": "buff",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "skill_type": "debuff",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "火",
+      "skill_type": "defense",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "skill_type": "heal",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "火",
+      "skill_type": "support",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "金",
+      "skill_type": "attack",
+      "cnt": "12"
+    },
+    {
+      "wuxing": "金",
+      "skill_type": "buff",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "skill_type": "debuff",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "金",
+      "skill_type": "defense",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "skill_type": "heal",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "金",
+      "skill_type": "support",
+      "cnt": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "wuxing\tskill_type\tcnt\n土\tattack\t12\n土\tbuff\t1\n土\tdebuff\t2\n土\tdefense\t1\n土\theal\t2\n土\tsupport\t2\n木\tattack\t12\n木\tbuff\t1\n木\tdebuff\t2\n木\tdefense\t1\n木\theal\t2\n木\tsupport\t2\n水\tattack\t12\n水\tbuff\t1\n水\tdebuff\t2\n水\tdefense\t1\n水\theal\t2\n水\tsupport\t2\n火\tattack\t12\n火\tbuff\t1\n火\tdebuff\t2\n火\tdefense\t1\n火\theal\t2\n火\tsupport\t2\n金\tattack\t12\n金\tbuff\t1\n金\tdebuff\t2\n金\tdefense\t1\n金\theal\t2\n金\tsupport\t2\n",
+  "stderr": "",
+  "execution_time_ms": 1560
+}

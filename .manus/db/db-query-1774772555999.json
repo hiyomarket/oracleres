@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, name, skill_type, wuxing, power_percent, mp_cost, cooldown, additional_effect FROM game_monster_skill_catalog LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, skill_type, wuxing, power_percent, mp_cost, cooldown, additional_effect FROM game_monster_skill_catalog LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "泡沫凍結",
+      "skill_type": "attack",
+      "wuxing": "水",
+      "power_percent": "90",
+      "mp_cost": "5",
+      "cooldown": "0",
+      "additional_effect": "{\"chance\": 20, \"duration\": 1, \"type\": \"freeze\"}"
+    },
+    {
+      "id": "2",
+      "name": "冰牙撕咬",
+      "skill_type": "attack",
+      "wuxing": "水",
+      "power_percent": "110",
+      "mp_cost": "6",
+      "cooldown": "0",
+      "additional_effect": "{\"chance\": 25, \"duration\": 1, \"type\": \"freeze\"}"
+    },
+    {
+      "id": "3",
+      "name": "貝殼撞擊",
+      "skill_type": "attack",
+      "wuxing": "水",
+      "power_percent": "85",
+      "mp_cost": "4",
+      "cooldown": "0",
+      "additional_effect": "NULL"
+    },
+    {
+      "id": "4",
+      "name": "深海潮汐",
+      "skill_type": "attack",
+      "wuxing": "水",
+      "power_percent": "130",
+      "mp_cost": "15",
+      "cooldown": "3",
+      "additional_effect": "{\"chance\": 50, \"duration\": 2, \"type\": \"slow\"}"
+    },
+    {
+      "id": "5",
+      "name": "鯨靈庇護",
+      "skill_type": "support",
+      "wuxing": "水",
+      "power_percent": "90",
+      "mp_cost": "15",
+      "cooldown": "3",
+      "additional_effect": "{\"duration\": 3, \"type\": \"shield\", \"value\": \"def_based\"}"
+    },
+    {
+      "id": "6",
+      "name": "冰霜群襲",
+      "skill_type": "attack",
+      "wuxing": "水",
+      "power_percent": "120",
+      "mp_cost": "15",
+      "cooldown": "3",
+      "additional_effect": "{\"chance\": 30, \"duration\": 1, \"type\": \"freeze\"}"
+    },
+    {
+      "id": "7",
+      "name": "極寒嚎叫",
+      "skill_type": "debuff",
+      "wuxing": "水",
+      "power_percent": "90",
+      "mp_cost": "12",
+      "cooldown": "3",
+      "additional_effect": "{\"duration\": 2, \"type\": \"atk_down\", \"value\": 20}"
+    },
+    {
+      "id": "8",
+      "name": "多重觸手打擊",
+      "skill_type": "attack",
+      "wuxing": "水",
+      "power_percent": "115",
+      "mp_cost": "15",
+      "cooldown": "3",
+      "additional_effect": "NULL"
+    },
+    {
+      "id": "9",
+      "name": "墨汁迷霧",
+      "skill_type": "debuff",
+      "wuxing": "水",
+      "power_percent": "90",
+      "mp_cost": "15",
+      "cooldown": "3",
+      "additional_effect": "{\"duration\": 2, \"type\": \"accuracy_down\", \"value\": 30}"
+    },
+    {
+      "id": "10",
+      "name": "冰錐術",
+      "skill_type": "attack",
+      "wuxing": "水",
+      "power_percent": "140",
+      "mp_cost": "15",
+      "cooldown": "3",
+      "additional_effect": "{\"chance\": 40, \"duration\": 1, \"type\": \"freeze\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tskill_type\twuxing\tpower_percent\tmp_cost\tcooldown\tadditional_effect\n1\t泡沫凍結\tattack\t水\t90\t5\t0\t{\"chance\": 20, \"duration\": 1, \"type\": \"freeze\"}\n2\t冰牙撕咬\tattack\t水\t110\t6\t0\t{\"chance\": 25, \"duration\": 1, \"type\": \"freeze\"}\n3\t貝殼撞擊\tattack\t水\t85\t4\t0\tNULL\n4\t深海潮汐\tattack\t水\t130\t15\t3\t{\"chance\": 50, \"duration\": 2, \"type\": \"slow\"}\n5\t鯨靈庇護\tsupport\t水\t90\t15\t3\t{\"duration\": 3, \"type\": \"shield\", \"value\": \"def_based\"}\n6\t冰霜群襲\tattack\t水\t120\t15\t3\t{\"chance\": 30, \"duration\": 1, \"type\": \"freeze\"}\n7\t極寒嚎叫\tdebuff\t水\t90\t12\t3\t{\"duration\": 2, \"type\": \"atk_down\", \"value\": 20}\n8\t多重觸手打擊\tattack\t水\t115\t15\t3\tNULL\n9\t墨汁迷霧\tdebuff\t水\t90\t15\t3\t{\"duration\": 2, \"type\": \"accuracy_down\", \"value\": 30}\n10\t冰錐術\tattack\t水\t140\t15\t3\t{\"chance\": 40, \"duration\": 1, \"type\": \"freeze\"}\n",
+  "stderr": "",
+  "execution_time_ms": 1611
+}

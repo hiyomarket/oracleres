@@ -1,0 +1,70 @@
+{
+  "query": "SELECT skill_type, wuxing, COUNT(*) as cnt FROM game_monster_skill_catalog GROUP BY skill_type, wuxing ORDER BY skill_type, wuxing;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_type, wuxing, COUNT(*) as cnt FROM game_monster_skill_catalog GROUP BY skill_type, wuxing ORDER BY skill_type, wuxing;",
+  "rows": [
+    {
+      "skill_type": "attack",
+      "wuxing": "土",
+      "cnt": "3"
+    },
+    {
+      "skill_type": "attack",
+      "wuxing": "水",
+      "cnt": "56"
+    },
+    {
+      "skill_type": "attack",
+      "wuxing": "火",
+      "cnt": "3"
+    },
+    {
+      "skill_type": "attack",
+      "wuxing": "金",
+      "cnt": "3"
+    },
+    {
+      "skill_type": "buff",
+      "wuxing": "水",
+      "cnt": "5"
+    },
+    {
+      "skill_type": "debuff",
+      "wuxing": "水",
+      "cnt": "8"
+    },
+    {
+      "skill_type": "defense",
+      "wuxing": "土",
+      "cnt": "1"
+    },
+    {
+      "skill_type": "defense",
+      "wuxing": "水",
+      "cnt": "4"
+    },
+    {
+      "skill_type": "heal",
+      "wuxing": "水",
+      "cnt": "4"
+    },
+    {
+      "skill_type": "heal",
+      "wuxing": "金",
+      "cnt": "1"
+    },
+    {
+      "skill_type": "support",
+      "wuxing": "水",
+      "cnt": "6"
+    },
+    {
+      "skill_type": "utility",
+      "wuxing": "水",
+      "cnt": "2"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_type\twuxing\tcnt\nattack\t土\t3\nattack\t水\t56\nattack\t火\t3\nattack\t金\t3\nbuff\t水\t5\ndebuff\t水\t8\ndefense\t土\t1\ndefense\t水\t4\nheal\t水\t4\nheal\t金\t1\nsupport\t水\t6\nutility\t水\t2\n",
+  "stderr": "",
+  "execution_time_ms": 1575
+}

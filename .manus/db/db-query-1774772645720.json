@@ -1,0 +1,1144 @@
+{
+  "query": "SELECT wuxing, species, rarity, COUNT(*) as cnt FROM game_monster_catalog WHERE monster_id NOT LIKE 'M_W04%' GROUP BY wuxing, species, rarity ORDER BY wuxing, species, rarity;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT wuxing, species, rarity, COUNT(*) as cnt FROM game_monster_catalog WHERE monster_id NOT LIKE 'M_W04%' GROUP BY wuxing, species, rarity ORDER BY wuxing, species, rarity;",
+  "rows": [
+    {
+      "wuxing": "土",
+      "species": "beast",
+      "rarity": "common",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "土",
+      "species": "beast",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "beast",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "demon",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "demon",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "demon",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "demon",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "dragon",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "dragon",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "dragon",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "dragon",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "flying",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "flying",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "flying",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "flying",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "humanoid",
+      "rarity": "common",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "土",
+      "species": "humanoid",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "humanoid",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "insect",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "insect",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "insect",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "insect",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "metal",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "metal",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "metal",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "metal",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "plant",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "plant",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "plant",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "plant",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "special",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "special",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "special",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "special",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "undead",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "undead",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "undead",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "土",
+      "species": "undead",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "beast",
+      "rarity": "common",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "木",
+      "species": "beast",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "beast",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "demon",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "demon",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "demon",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "demon",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "dragon",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "dragon",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "dragon",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "dragon",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "flying",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "flying",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "flying",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "flying",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "humanoid",
+      "rarity": "common",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "木",
+      "species": "humanoid",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "humanoid",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "insect",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "insect",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "insect",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "insect",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "metal",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "metal",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "metal",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "metal",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "plant",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "plant",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "plant",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "plant",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "special",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "special",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "special",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "special",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "undead",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "undead",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "undead",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "木",
+      "species": "undead",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "beast",
+      "rarity": "common",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "水",
+      "species": "beast",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "beast",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "demon",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "demon",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "demon",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "dragon",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "dragon",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "dragon",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "dragon",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "flying",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "flying",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "flying",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "flying",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "humanoid",
+      "rarity": "common",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "水",
+      "species": "humanoid",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "humanoid",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "insect",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "insect",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "insect",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "insect",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "metal",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "metal",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "metal",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "metal",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "plant",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "plant",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "plant",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "plant",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "special",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "special",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "special",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "special",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "undead",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "undead",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "undead",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "水",
+      "species": "undead",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "beast",
+      "rarity": "common",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "火",
+      "species": "beast",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "beast",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "demon",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "demon",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "demon",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "demon",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "dragon",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "dragon",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "dragon",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "dragon",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "flying",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "flying",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "flying",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "flying",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "humanoid",
+      "rarity": "common",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "火",
+      "species": "humanoid",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "humanoid",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "insect",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "insect",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "insect",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "insect",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "metal",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "metal",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "metal",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "metal",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "plant",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "plant",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "plant",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "plant",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "special",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "special",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "special",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "special",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "undead",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "undead",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "undead",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "火",
+      "species": "undead",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "beast",
+      "rarity": "common",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "金",
+      "species": "beast",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "beast",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "demon",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "demon",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "demon",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "demon",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "dragon",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "dragon",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "dragon",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "dragon",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "flying",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "flying",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "flying",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "flying",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "humanoid",
+      "rarity": "common",
+      "cnt": "2"
+    },
+    {
+      "wuxing": "金",
+      "species": "humanoid",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "humanoid",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "insect",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "insect",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "insect",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "insect",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "metal",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "metal",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "metal",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "metal",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "plant",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "plant",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "plant",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "plant",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "special",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "special",
+      "rarity": "legendary",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "special",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "special",
+      "rarity": "uncommon",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "undead",
+      "rarity": "common",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "undead",
+      "rarity": "epic",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "undead",
+      "rarity": "rare",
+      "cnt": "1"
+    },
+    {
+      "wuxing": "金",
+      "species": "undead",
+      "rarity": "uncommon",
+      "cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "wuxing\tspecies\trarity\tcnt\n土\tbeast\tcommon\t2\n土\tbeast\trare\t1\n土\tbeast\tuncommon\t1\n土\tdemon\tcommon\t1\n土\tdemon\tlegendary\t1\n土\tdemon\trare\t1\n土\tdemon\tuncommon\t1\n土\tdragon\tcommon\t1\n土\tdragon\tepic\t1\n土\tdragon\trare\t1\n土\tdragon\tuncommon\t1\n土\tflying\tcommon\t1\n土\tflying\tepic\t1\n土\tflying\trare\t1\n土\tflying\tuncommon\t1\n土\thumanoid\tcommon\t2\n土\thumanoid\trare\t1\n土\thumanoid\tuncommon\t1\n土\tinsect\tcommon\t1\n土\tinsect\tepic\t1\n土\tinsect\trare\t1\n土\tinsect\tuncommon\t1\n土\tmetal\tcommon\t1\n土\tmetal\tlegendary\t1\n土\tmetal\trare\t1\n土\tmetal\tuncommon\t1\n土\tplant\tcommon\t1\n土\tplant\tepic\t1\n土\tplant\trare\t1\n土\tplant\tuncommon\t1\n土\tspecial\tcommon\t1\n土\tspecial\tlegendary\t1\n土\tspecial\trare\t1\n土\tspecial\tuncommon\t1\n土\tundead\tcommon\t1\n土\tundead\tepic\t1\n土\tundead\trare\t1\n土\tundead\tuncommon\t1\n木\tbeast\tcommon\t2\n木\tbeast\trare\t1\n木\tbeast\tuncommon\t1\n木\tdemon\tcommon\t1\n木\tdemon\tlegendary\t1\n木\tdemon\trare\t1\n木\tdemon\tuncommon\t1\n木\tdragon\tcommon\t1\n木\tdragon\tepic\t1\n木\tdragon\trare\t1\n木\tdragon\tuncommon\t1\n木\tflying\tcommon\t1\n木\tflying\tepic\t1\n木\tflying\trare\t1\n木\tflying\tuncommon\t1\n木\thumanoid\tcommon\t2\n木\thumanoid\trare\t1\n木\thumanoid\tuncommon\t1\n木\tinsect\tcommon\t1\n木\tinsect\tepic\t1\n木\tinsect\trare\t1\n木\tinsect\tuncommon\t1\n木\tmetal\tcommon\t1\n木\tmetal\tlegendary\t1\n木\tmetal\trare\t1\n木\tmetal\tuncommon\t1\n木\tplant\tcommon\t1\n木\tplant\tepic\t1\n木\tplant\trare\t1\n木\tplant\tuncommon\t1\n木\tspecial\tcommon\t1\n木\tspecial\tlegendary\t1\n木\tspecial\trare\t1\n木\tspecial\tuncommon\t1\n木\tundead\tcommon\t1\n木\tundead\tepic\t1\n木\tundead\trare\t1\n木\tundead\tuncommon\t1\n水\tbeast\tcommon\t2\n水\tbeast\trare\t1\n水\tbeast\tuncommon\t1\n水\tdemon\tcommon\t1\n水\tdemon\trare\t1\n水\tdemon\tuncommon\t1\n水\tdragon\tcommon\t1\n水\tdragon\tepic\t1\n水\tdragon\trare\t1\n水\tdragon\tuncommon\t1\n水\tflying\tcommon\t1\n水\tflying\tepic\t1\n水\tflying\trare\t1\n水\tflying\tuncommon\t1\n水\thumanoid\tcommon\t2\n水\thumanoid\trare\t1\n水\thumanoid\tuncommon\t1\n水\tinsect\tcommon\t1\n水\tinsect\tepic\t1\n水\tinsect\trare\t1\n水\tinsect\tuncommon\t1\n水\tmetal\tcommon\t1\n水\tmetal\tlegendary\t1\n水\tmetal\trare\t1\n水\tmetal\tuncommon\t1\n水\tplant\tcommon\t1\n水\tplant\tepic\t1\n水\tplant\trare\t1\n水\tplant\tuncommon\t1\n水\tspecial\tcommon\t1\n水\tspecial\tlegendary\t1\n水\tspecial\trare\t1\n水\tspecial\tuncommon\t1\n水\tundead\tcommon\t1\n水\tundead\tepic\t1\n水\tundead\trare\t1\n水\tundead\tuncommon\t1\n火\tbeast\tcommon\t2\n火\tbeast\trare\t1\n火\tbeast\tuncommon\t1\n火\tdemon\tcommon\t1\n火\tdemon\tlegendary\t1\n火\tdemon\trare\t1\n火\tdemon\tuncommon\t1\n火\tdragon\tcommon\t1\n火\tdragon\tepic\t1\n火\tdragon\trare\t1\n火\tdragon\tuncommon\t1\n火\tflying\tcommon\t1\n火\tflying\tepic\t1\n火\tflying\trare\t1\n火\tflying\tuncommon\t1\n火\thumanoid\tcommon\t2\n火\thumanoid\trare\t1\n火\thumanoid\tuncommon\t1\n火\tinsect\tcommon\t1\n火\tinsect\tepic\t1\n火\tinsect\trare\t1\n火\tinsect\tuncommon\t1\n火\tmetal\tcommon\t1\n火\tmetal\tlegendary\t1\n火\tmetal\trare\t1\n火\tmetal\tuncommon\t1\n火\tplant\tcommon\t1\n火\tplant\tepic\t1\n火\tplant\trare\t1\n火\tplant\tuncommon\t1\n火\tspecial\tcommon\t1\n火\tspecial\tlegendary\t1\n火\tspecial\trare\t1\n火\tspecial\tuncommon\t1\n火\tundead\tcommon\t1\n火\tundead\tepic\t1\n火\tundead\trare\t1\n火\tundead\tuncommon\t1\n金\tbeast\tcommon\t2\n金\tbeast\trare\t1\n金\tbeast\tuncommon\t1\n金\tdemon\tcommon\t1\n金\tdemon\tlegendary\t1\n金\tdemon\trare\t1\n金\tdemon\tuncommon\t1\n金\tdragon\tcommon\t1\n金\tdragon\tepic\t1\n金\tdragon\trare\t1\n金\tdragon\tuncommon\t1\n金\tflying\tcommon\t1\n金\tflying\tepic\t1\n金\tflying\trare\t1\n金\tflying\tuncommon\t1\n金\thumanoid\tcommon\t2\n金\thumanoid\trare\t1\n金\thumanoid\tuncommon\t1\n金\tinsect\tcommon\t1\n金\tinsect\tepic\t1\n金\tinsect\trare\t1\n金\tinsect\tuncommon\t1\n金\tmetal\tcommon\t1\n金\tmetal\tlegendary\t1\n金\tmetal\trare\t1\n金\tmetal\tuncommon\t1\n金\tplant\tcommon\t1\n金\tplant\tepic\t1\n金\tplant\trare\t1\n金\tplant\tuncommon\t1\n金\tspecial\tcommon\t1\n金\tspecial\tlegendary\t1\n金\tspecial\trare\t1\n金\tspecial\tuncommon\t1\n金\tundead\tcommon\t1\n金\tundead\tepic\t1\n金\tundead\trare\t1\n金\tundead\tuncommon\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1550
+}

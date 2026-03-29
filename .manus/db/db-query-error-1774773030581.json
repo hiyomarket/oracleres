@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, name, category, prerequisite_skill_ids, prerequisite_level FROM game_quest_skill_catalog WHERE prerequisite_skill_ids IS NOT NULL AND prerequisite_skill_ids != '[]' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, category, prerequisite_skill_ids, prerequisite_level FROM game_quest_skill_catalog WHERE prerequisite_skill_ids IS NOT NULL AND prerequisite_skill_ids != '[]' LIMIT 20;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'prerequisite_skill_ids' in 'where clause'"
+  ]
+}
