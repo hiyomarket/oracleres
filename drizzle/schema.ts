@@ -1525,16 +1525,34 @@ export type InsertGameSkill = typeof gameSkills.$inferInsert;
 /**
  * 地圖節點表
  * 大地圖上的 LBS 打卡節點（對應 GD-003）
+ * v5.6: 增強欄位 - region/subRegion/description/levelRange/realWorldName
  */
 export const gameMapNodes = mysqlTable("game_map_nodes", {
   id: int("id").autoincrement().primaryKey(),
+  /** 節點名稱（遊戲內名稱，如「迷霧城・戰士公會大廳」） */
   name: varchar("name", { length: 100 }).notNull(),
+  /** 緯度（真實世界座標） */
   lat: float("lat").notNull(),
+  /** 經度（真實世界座標） */
   lng: float("lng").notNull(),
-  /** 節點類型：forest / water / market / temple / mountain */
+  /** 節點類型：city / guild / tower / dungeon / forest / water / market / temple / mountain / village / camp / lab / academy */
   nodeType: varchar("node_type", { length: 50 }).notNull(),
   /** 五行屬性 */
   wuxing: varchar("wuxing", { length: 10 }).notNull(),
+  /** 所屬大區域（初界/中界/高界/迷霧城/試煉之塔/碎影深淵） */
+  region: varchar("region", { length: 30 }).notNull().default("初界"),
+  /** 子區域/地標名稱（如「戰士公會大廳」「東門箭塔」） */
+  subRegion: varchar("sub_region", { length: 100 }),
+  /** 節點描述 */
+  description: text("description"),
+  /** 建議等級下限 */
+  levelMin: int("level_min").default(1),
+  /** 建議等級上限 */
+  levelMax: int("level_max").default(99),
+  /** 真實世界地名（如「台北市信義區」「阿爾卑斯山少女峰」） */
+  realWorldName: varchar("real_world_name", { length: 200 }),
+  /** 排序權重 */
+  sortOrder: int("sort_order").notNull().default(0),
   isActive: tinyint("is_active").default(1),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -2977,6 +2995,8 @@ export const gameNpcCatalog = mysqlTable("game_npc_catalog", {
   description: text("description"),
   /** 是否為隱藏 NPC（需要特殊條件才能看到） */
   isHidden: tinyint("is_hidden").notNull().default(0),
+  /** 關聯地圖節點 ID（對應 gameMapNodes.id） */
+  mapNodeId: int("map_node_id"),
   /** 排序權重 */
   sortOrder: int("sort_order").notNull().default(0),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),

@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE game_map_nodes \n  ADD COLUMN region varchar(30) NOT NULL DEFAULT '初界' AFTER wuxing,\n  ADD COLUMN sub_region varchar(100) NULL AFTER region,\n  ADD COLUMN description text NULL AFTER sub_region,\n  ADD COLUMN level_min int DEFAULT 1 AFTER description,\n  ADD COLUMN level_max int DEFAULT 99 AFTER level_min,\n  ADD COLUMN real_world_name varchar(200) NULL AFTER level_max,\n  ADD COLUMN sort_order int NOT NULL DEFAULT 0 AFTER real_world_name",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute ALTER TABLE game_map_nodes \n  ADD COLUMN region varchar(30) NOT NULL DEFAULT '初界' AFTER wuxing,\n  ADD COLUMN sub_region varchar(100) NULL AFTER region,\n  ADD COLUMN description text NULL AFTER sub_region,\n  ADD COLUMN level_min int DEFAULT 1 AFTER description,\n  ADD COLUMN level_max int DEFAULT 99 AFTER level_min,\n  ADD COLUMN real_world_name varchar(200) NULL AFTER level_max,\n  ADD COLUMN sort_order int NOT NULL DEFAULT 0 AFTER real_world_name",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'region' in 'game_map_nodes'"
+  ]
+}

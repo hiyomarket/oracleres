@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE game_map_nodes ADD COLUMN `sub_region` varchar(100) NULL;\nALTER TABLE game_map_nodes ADD COLUMN `description` text NULL;\nALTER TABLE game_map_nodes ADD COLUMN `level_min` int DEFAULT 1;\nALTER TABLE game_map_nodes ADD COLUMN `level_max` int DEFAULT 99;\nALTER TABLE game_map_nodes ADD COLUMN `real_world_name` varchar(200) NULL;\nALTER TABLE game_map_nodes ADD COLUMN `sort_order` int NOT NULL DEFAULT 0",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute ALTER TABLE game_map_nodes ADD COLUMN `sub_region` varchar(100) NULL;\nALTER TABLE game_map_nodes ADD COLUMN `description` text NULL;\nALTER TABLE game_map_nodes ADD COLUMN `level_min` int DEFAULT 1;\nALTER TABLE game_map_nodes ADD COLUMN `level_max` int DEFAULT 99;\nALTER TABLE game_map_nodes ADD COLUMN `real_world_name` varchar(200) NULL;\nALTER TABLE game_map_nodes ADD COLUMN `sort_order` int NOT NULL DEFAULT 0",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3935
+}

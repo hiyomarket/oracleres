@@ -1,0 +1,52 @@
+{
+  "query": "SELECT id, name, rarity, npc_id, learn_cost FROM game_unified_skill_catalog WHERE usable_by_player = 1 AND rarity = 'legendary' ORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, rarity, npc_id, learn_cost FROM game_unified_skill_catalog WHERE usable_by_player = 1 AND rarity = 'legendary' ORDER BY id",
+  "rows": [
+    {
+      "id": "160",
+      "name": "乾坤一擲",
+      "rarity": "legendary",
+      "npc_id": "39",
+      "learn_cost": "{\"gold\": 8800, \"items\": [], \"reputation\": 870, \"stones\": 342}"
+    },
+    {
+      "id": "216",
+      "name": "聖盾",
+      "rarity": "legendary",
+      "npc_id": "64",
+      "learn_cost": "{\"gold\": 12450, \"items\": [], \"reputation\": 917, \"stones\": 383}"
+    },
+    {
+      "id": "217",
+      "name": "暗殺",
+      "rarity": "legendary",
+      "npc_id": "59",
+      "learn_cost": "{\"gold\": 14450, \"items\": [], \"reputation\": 946, \"stones\": 435}"
+    },
+    {
+      "id": "220",
+      "name": "捨身",
+      "rarity": "legendary",
+      "npc_id": "38",
+      "learn_cost": "{\"gold\": 13450, \"items\": [], \"reputation\": 602, \"stones\": 242}"
+    },
+    {
+      "id": "221",
+      "name": "五行封印",
+      "rarity": "legendary",
+      "npc_id": "59",
+      "learn_cost": "{\"gold\": 8850, \"items\": [], \"reputation\": 650, \"stones\": 306}"
+    },
+    {
+      "id": "222",
+      "name": "天命共振",
+      "rarity": "legendary",
+      "npc_id": "38",
+      "learn_cost": "{\"gold\": 13000, \"items\": [], \"reputation\": 666, \"stones\": 239}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trarity\tnpc_id\tlearn_cost\n160\t乾坤一擲\tlegendary\t39\t{\"gold\": 8800, \"items\": [], \"reputation\": 870, \"stones\": 342}\n216\t聖盾\tlegendary\t64\t{\"gold\": 12450, \"items\": [], \"reputation\": 917, \"stones\": 383}\n217\t暗殺\tlegendary\t59\t{\"gold\": 14450, \"items\": [], \"reputation\": 946, \"stones\": 435}\n220\t捨身\tlegendary\t38\t{\"gold\": 13450, \"items\": [], \"reputation\": 602, \"stones\": 242}\n221\t五行封印\tlegendary\t59\t{\"gold\": 8850, \"items\": [], \"reputation\": 650, \"stones\": 306}\n222\t天命共振\tlegendary\t38\t{\"gold\": 13000, \"items\": [], \"reputation\": 666, \"stones\": 239}\n",
+  "stderr": "",
+  "execution_time_ms": 1524
+}

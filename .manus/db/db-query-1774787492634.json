@@ -1,0 +1,30 @@
+{
+  "query": "SELECT rarity, COUNT(*) as cnt, SUM(CASE WHEN npc_id IS NOT NULL THEN 1 ELSE 0 END) as has_npc FROM game_unified_skill_catalog WHERE usable_by_player = 1 GROUP BY rarity",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT rarity, COUNT(*) as cnt, SUM(CASE WHEN npc_id IS NOT NULL THEN 1 ELSE 0 END) as has_npc FROM game_unified_skill_catalog WHERE usable_by_player = 1 GROUP BY rarity",
+  "rows": [
+    {
+      "rarity": "common",
+      "cnt": "24",
+      "has_npc": "24"
+    },
+    {
+      "rarity": "legendary",
+      "cnt": "6",
+      "has_npc": "6"
+    },
+    {
+      "rarity": "epic",
+      "cnt": "17",
+      "has_npc": "17"
+    },
+    {
+      "rarity": "rare",
+      "cnt": "27",
+      "has_npc": "27"
+    }
+  ],
+  "messages": [],
+  "stdout": "rarity\tcnt\thas_npc\ncommon\t24\t24\nlegendary\t6\t6\nepic\t17\t17\nrare\t27\t27\n",
+  "stderr": "",
+  "execution_time_ms": 1494
+}

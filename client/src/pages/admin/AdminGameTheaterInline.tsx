@@ -21,6 +21,7 @@ import {
   BroadcastTab,
   WorldResetTab,
 } from "./AdminGameTheater";
+import { MapNodesTab } from "@/components/admin/MapNodesTab";
 
 export default function AdminGameTheaterInline({ section }: { section: "world" | "shop" | "broadcast" | "reset" }) {
   if (section === "world") return <WorldSection />;
@@ -32,8 +33,9 @@ export default function AdminGameTheaterInline({ section }: { section: "world" |
 
 function WorldSection() {
   return (
-    <Tabs defaultValue="agents">
+    <Tabs defaultValue="map-nodes">
       <TabsList className="mb-4 flex-wrap h-auto gap-1">
+        <TabsTrigger value="map-nodes">🗺️ 地圖節點</TabsTrigger>
         <TabsTrigger value="agents">👤 角色管理</TabsTrigger>
         <TabsTrigger value="configs">⚙️ 全域參數</TabsTrigger>
         <TabsTrigger value="tick">⚡ Tick 引擎</TabsTrigger>
@@ -41,6 +43,7 @@ function WorldSection() {
         <TabsTrigger value="world">🌍 世界事件</TabsTrigger>
         <TabsTrigger value="rogue">🎲 奇遇事件</TabsTrigger>
       </TabsList>
+      <TabsContent value="map-nodes"><MapNodesTab /></TabsContent>
       <TabsContent value="agents"><AgentManagementTab /></TabsContent>
       <TabsContent value="configs"><GameConfigTab /></TabsContent>
       <TabsContent value="tick"><TickEngineTab /></TabsContent>

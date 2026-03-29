@@ -1,0 +1,266 @@
+{
+  "query": "SELECT id, code, name, title, location, region FROM game_npc_catalog ORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, code, name, title, location, region FROM game_npc_catalog ORDER BY id",
+  "rows": [
+    {
+      "id": "36",
+      "code": "NPC_SILA",
+      "name": "席拉",
+      "title": "連擊導師",
+      "location": "迷霧城・戰士公會大廳",
+      "region": "迷霧城"
+    },
+    {
+      "id": "37",
+      "code": "NPC_WOKEN",
+      "name": "沃克恩",
+      "title": "武器評議官",
+      "location": "迷霧城・武器評議塔",
+      "region": "迷霧城"
+    },
+    {
+      "id": "38",
+      "code": "NPC_FELINA",
+      "name": "費蓮娜",
+      "title": "反擊女劍士",
+      "location": "碎影深淵・入口營地",
+      "region": "碎影深淵"
+    },
+    {
+      "id": "39",
+      "code": "NPC_HEGMOS",
+      "name": "赫格莫斯",
+      "title": "崩擊大師",
+      "location": "試煉之塔・地下訓練場",
+      "region": "試煉之塔"
+    },
+    {
+      "id": "40",
+      "code": "NPC_ELLA",
+      "name": "艾拉",
+      "title": "箭塔守衛",
+      "location": "迷霧城・東門箭塔",
+      "region": "迷霧城"
+    },
+    {
+      "id": "41",
+      "code": "NPC_TORIGO",
+      "name": "托里戈",
+      "title": "賭徒鬥士",
+      "location": "迷霧城・地下競技場",
+      "region": "迷霧城"
+    },
+    {
+      "id": "42",
+      "code": "NPC_MU",
+      "name": "暮",
+      "title": "暗影刺客",
+      "location": "迷霧城・黑市後巷",
+      "region": "迷霧城"
+    },
+    {
+      "id": "43",
+      "code": "NPC_VICTOR",
+      "name": "維克多・奈斯特",
+      "title": "毒術師",
+      "location": "迷霧城・荒廢藥房",
+      "region": "迷霧城"
+    },
+    {
+      "id": "44",
+      "code": "NPC_ELVEN_FIRE",
+      "name": "艾爾文・赤焰",
+      "title": "火焰導師",
+      "location": "初界・試煉廣場",
+      "region": "初界"
+    },
+    {
+      "id": "45",
+      "code": "NPC_FILIA",
+      "name": "菲莉亞・霜語",
+      "title": "冰霜魔女",
+      "location": "初界・霜語小屋",
+      "region": "初界"
+    },
+    {
+      "id": "46",
+      "code": "NPC_RAND",
+      "name": "嵐德・虛空旅人",
+      "title": "風之旅者",
+      "location": "初界・迷跡驛站",
+      "region": "初界"
+    },
+    {
+      "id": "47",
+      "code": "NPC_STARFALL",
+      "name": "星見・隕晨",
+      "title": "隕石召喚師",
+      "location": "中界・墜星高地",
+      "region": "中界"
+    },
+    {
+      "id": "48",
+      "code": "NPC_HARALD",
+      "name": "哈拉爾德",
+      "title": "催眠學者",
+      "location": "初界・學術廢墟",
+      "region": "初界"
+    },
+    {
+      "id": "49",
+      "code": "NPC_GREY",
+      "name": "格雷",
+      "title": "石化術士",
+      "location": "初界・岩骨村",
+      "region": "初界"
+    },
+    {
+      "id": "50",
+      "code": "NPC_NICK",
+      "name": "尼克",
+      "title": "混亂實驗家",
+      "location": "中界・混沌實驗室",
+      "region": "中界"
+    },
+    {
+      "id": "51",
+      "code": "NPC_MILIA",
+      "name": "米莉亞",
+      "title": "毒沼女巫",
+      "location": "初界・濕毒沼澤",
+      "region": "初界"
+    },
+    {
+      "id": "52",
+      "code": "NPC_ELVEN_GHOST",
+      "name": "艾爾文（幽靈）",
+      "title": "遺忘之魂",
+      "location": "初界・回憶沙漠",
+      "region": "初界"
+    },
+    {
+      "id": "53",
+      "code": "NPC_CARLOS",
+      "name": "卡洛斯",
+      "title": "醉拳大師",
+      "location": "初界・葡萄酒莊",
+      "region": "初界"
+    },
+    {
+      "id": "54",
+      "code": "NPC_EVAN",
+      "name": "艾文",
+      "title": "聖光修士",
+      "location": "初界・聖光修道院",
+      "region": "初界"
+    },
+    {
+      "id": "55",
+      "code": "NPC_LINA",
+      "name": "琳娜",
+      "title": "高階治癒師",
+      "location": "初界・聖光修道院二層",
+      "region": "初界"
+    },
+    {
+      "id": "56",
+      "code": "NPC_MATTHEW",
+      "name": "馬修",
+      "title": "復活祭司",
+      "location": "中界・永恆教堂",
+      "region": "中界"
+    },
+    {
+      "id": "57",
+      "code": "NPC_SOPHIA",
+      "name": "索菲亞",
+      "title": "淨化聖女",
+      "location": "初界・泉水聖所",
+      "region": "初界"
+    },
+    {
+      "id": "58",
+      "code": "NPC_RENA",
+      "name": "蓮娜",
+      "title": "森林治癒者",
+      "location": "中界・古老森林",
+      "region": "中界"
+    },
+    {
+      "id": "59",
+      "code": "NPC_TALOS",
+      "name": "塔洛斯",
+      "title": "影之吸收者",
+      "location": "中界・影之山谷",
+      "region": "中界"
+    },
+    {
+      "id": "60",
+      "code": "NPC_ALICE",
+      "name": "艾莉絲",
+      "title": "虛空法師",
+      "location": "中界・虛空法塔",
+      "region": "中界"
+    },
+    {
+      "id": "61",
+      "code": "NPC_JINGEN",
+      "name": "靜源",
+      "title": "鏡之修行者",
+      "location": "中界・鏡之修行場",
+      "region": "中界"
+    },
+    {
+      "id": "62",
+      "code": "NPC_NIGHTSONG",
+      "name": "夜歌",
+      "title": "暗殺大師",
+      "location": "中界・暗影公會",
+      "region": "中界"
+    },
+    {
+      "id": "63",
+      "code": "NPC_LOCKS",
+      "name": "洛克斯",
+      "title": "盜賊首領",
+      "location": "初界・迷霧城盜賊公會",
+      "region": "初界"
+    },
+    {
+      "id": "64",
+      "code": "NPC_RENARD",
+      "name": "雷納德",
+      "title": "聖盾騎士",
+      "location": "中界・永恆殿堂",
+      "region": "中界"
+    },
+    {
+      "id": "65",
+      "code": "NPC_GREEN",
+      "name": "格林",
+      "title": "採集者公會長",
+      "location": "初界・迷霧城採集者工會",
+      "region": "初界"
+    },
+    {
+      "id": "66",
+      "code": "NPC_HANS",
+      "name": "漢斯",
+      "title": "工匠大師",
+      "location": "初界・迷霧城工匠街",
+      "region": "初界"
+    },
+    {
+      "id": "67",
+      "code": "NPC_MADELINE",
+      "name": "瑪德琳",
+      "title": "鑑定師",
+      "location": "初界・迷霧城鑑定商店",
+      "region": "初界"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcode\tname\ttitle\tlocation\tregion\n36\tNPC_SILA\t席拉\t連擊導師\t迷霧城・戰士公會大廳\t迷霧城\n37\tNPC_WOKEN\t沃克恩\t武器評議官\t迷霧城・武器評議塔\t迷霧城\n38\tNPC_FELINA\t費蓮娜\t反擊女劍士\t碎影深淵・入口營地\t碎影深淵\n39\tNPC_HEGMOS\t赫格莫斯\t崩擊大師\t試煉之塔・地下訓練場\t試煉之塔\n40\tNPC_ELLA\t艾拉\t箭塔守衛\t迷霧城・東門箭塔\t迷霧城\n41\tNPC_TORIGO\t托里戈\t賭徒鬥士\t迷霧城・地下競技場\t迷霧城\n42\tNPC_MU\t暮\t暗影刺客\t迷霧城・黑市後巷\t迷霧城\n43\tNPC_VICTOR\t維克多・奈斯特\t毒術師\t迷霧城・荒廢藥房\t迷霧城\n44\tNPC_ELVEN_FIRE\t艾爾文・赤焰\t火焰導師\t初界・試煉廣場\t初界\n45\tNPC_FILIA\t菲莉亞・霜語\t冰霜魔女\t初界・霜語小屋\t初界\n46\tNPC_RAND\t嵐德・虛空旅人\t風之旅者\t初界・迷跡驛站\t初界\n47\tNPC_STARFALL\t星見・隕晨\t隕石召喚師\t中界・墜星高地\t中界\n48\tNPC_HARALD\t哈拉爾德\t催眠學者\t初界・學術廢墟\t初界\n49\tNPC_GREY\t格雷\t石化術士\t初界・岩骨村\t初界\n50\tNPC_NICK\t尼克\t混亂實驗家\t中界・混沌實驗室\t中界\n51\tNPC_MILIA\t米莉亞\t毒沼女巫\t初界・濕毒沼澤\t初界\n52\tNPC_ELVEN_GHOST\t艾爾文（幽靈）\t遺忘之魂\t初界・回憶沙漠\t初界\n53\tNPC_CARLOS\t卡洛斯\t醉拳大師\t初界・葡萄酒莊\t初界\n54\tNPC_EVAN\t艾文\t聖光修士\t初界・聖光修道院\t初界\n55\tNPC_LINA\t琳娜\t高階治癒師\t初界・聖光修道院二層\t初界\n56\tNPC_MATTHEW\t馬修\t復活祭司\t中界・永恆教堂\t中界\n57\tNPC_SOPHIA\t索菲亞\t淨化聖女\t初界・泉水聖所\t初界\n58\tNPC_RENA\t蓮娜\t森林治癒者\t中界・古老森林\t中界\n59\tNPC_TALOS\t塔洛斯\t影之吸收者\t中界・影之山谷\t中界\n60\tNPC_ALICE\t艾莉絲\t虛空法師\t中界・虛空法塔\t中界\n61\tNPC_JINGEN\t靜源\t鏡之修行者\t中界・鏡之修行場\t中界\n62\tNPC_NIGHTSONG\t夜歌\t暗殺大師\t中界・暗影公會\t中界\n63\tNPC_LOCKS\t洛克斯\t盜賊首領\t初界・迷霧城盜賊公會\t初界\n64\tNPC_RENARD\t雷納德\t聖盾騎士\t中界・永恆殿堂\t中界\n65\tNPC_GREEN\t格林\t採集者公會長\t初界・迷霧城採集者工會\t初界\n66\tNPC_HANS\t漢斯\t工匠大師\t初界・迷霧城工匠街\t初界\n67\tNPC_MADELINE\t瑪德琳\t鑑定師\t初界・迷霧城鑑定商店\t初界\n",
+  "stderr": "",
+  "execution_time_ms": 1537
+}

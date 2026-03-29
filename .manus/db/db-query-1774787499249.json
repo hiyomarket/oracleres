@@ -1,0 +1,150 @@
+{
+  "query": "SELECT id, name, rarity, npc_id, learn_cost FROM game_unified_skill_catalog WHERE usable_by_player = 1 AND rarity IN ('epic', 'legendary') ORDER BY rarity, id LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, rarity, npc_id, learn_cost FROM game_unified_skill_catalog WHERE usable_by_player = 1 AND rarity IN ('epic', 'legendary') ORDER BY rarity, id LIMIT 20",
+  "rows": [
+    {
+      "id": "158",
+      "name": "崩擊",
+      "rarity": "epic",
+      "npc_id": "37",
+      "learn_cost": "{\"gold\": 3850, \"items\": [], \"reputation\": 491, \"stones\": 80}"
+    },
+    {
+      "id": "169",
+      "name": "騎士之譽",
+      "rarity": "epic",
+      "npc_id": "41",
+      "learn_cost": "{\"gold\": 3400, \"items\": [], \"reputation\": 375, \"stones\": 179}"
+    },
+    {
+      "id": "172",
+      "name": "業火魔法",
+      "rarity": "epic",
+      "npc_id": "60",
+      "learn_cost": "{\"gold\": 3750, \"items\": [], \"reputation\": 320, \"stones\": 194}"
+    },
+    {
+      "id": "175",
+      "name": "極寒魔法",
+      "rarity": "epic",
+      "npc_id": "58",
+      "learn_cost": "{\"gold\": 4000, \"items\": [], \"reputation\": 263, \"stones\": 89}"
+    },
+    {
+      "id": "178",
+      "name": "龍捲魔法",
+      "rarity": "epic",
+      "npc_id": "60",
+      "learn_cost": "{\"gold\": 2550, \"items\": [], \"reputation\": 432, \"stones\": 69}"
+    },
+    {
+      "id": "181",
+      "name": "天崩地裂",
+      "rarity": "epic",
+      "npc_id": "58",
+      "learn_cost": "{\"gold\": 3700, \"items\": [], \"reputation\": 400, \"stones\": 88}"
+    },
+    {
+      "id": "184",
+      "name": "金光天罰",
+      "rarity": "epic",
+      "npc_id": "60",
+      "learn_cost": "{\"gold\": 4700, \"items\": [], \"reputation\": 419, \"stones\": 102}"
+    },
+    {
+      "id": "186",
+      "name": "超強吸血魔法",
+      "rarity": "epic",
+      "npc_id": "60",
+      "learn_cost": "{\"gold\": 4200, \"items\": [], \"reputation\": 279, \"stones\": 133}"
+    },
+    {
+      "id": "190",
+      "name": "石化群體",
+      "rarity": "epic",
+      "npc_id": "62",
+      "learn_cost": "{\"gold\": 3700, \"items\": [], \"reputation\": 480, \"stones\": 131}"
+    },
+    {
+      "id": "192",
+      "name": "混亂群體",
+      "rarity": "epic",
+      "npc_id": "62",
+      "learn_cost": "{\"gold\": 4050, \"items\": [], \"reputation\": 259, \"stones\": 143}"
+    },
+    {
+      "id": "196",
+      "name": "遺忘群體",
+      "rarity": "epic",
+      "npc_id": "62",
+      "learn_cost": "{\"gold\": 3550, \"items\": [], \"reputation\": 320, \"stones\": 156}"
+    },
+    {
+      "id": "201",
+      "name": "超強補血魔法",
+      "rarity": "epic",
+      "npc_id": "61",
+      "learn_cost": "{\"gold\": 2750, \"items\": [], \"reputation\": 481, \"stones\": 74}"
+    },
+    {
+      "id": "202",
+      "name": "氣絕回復",
+      "rarity": "epic",
+      "npc_id": "56",
+      "learn_cost": "{\"gold\": 2050, \"items\": [], \"reputation\": 418, \"stones\": 147}"
+    },
+    {
+      "id": "205",
+      "name": "全體潔淨",
+      "rarity": "epic",
+      "npc_id": "61",
+      "learn_cost": "{\"gold\": 3750, \"items\": [], \"reputation\": 268, \"stones\": 105}"
+    },
+    {
+      "id": "208",
+      "name": "明鏡止水",
+      "rarity": "epic",
+      "npc_id": "56",
+      "learn_cost": "{\"gold\": 4050, \"items\": [], \"reputation\": 463, \"stones\": 89}"
+    },
+    {
+      "id": "213",
+      "name": "全體攻擊增幅",
+      "rarity": "epic",
+      "npc_id": "61",
+      "learn_cost": "{\"gold\": 2600, \"items\": [], \"reputation\": 293, \"stones\": 194}"
+    },
+    {
+      "id": "214",
+      "name": "全體防禦增幅",
+      "rarity": "epic",
+      "npc_id": "56",
+      "learn_cost": "{\"gold\": 2950, \"items\": [], \"reputation\": 440, \"stones\": 67}"
+    },
+    {
+      "id": "160",
+      "name": "乾坤一擲",
+      "rarity": "legendary",
+      "npc_id": "39",
+      "learn_cost": "{\"gold\": 8800, \"items\": [], \"reputation\": 870, \"stones\": 342}"
+    },
+    {
+      "id": "216",
+      "name": "聖盾",
+      "rarity": "legendary",
+      "npc_id": "64",
+      "learn_cost": "{\"gold\": 12450, \"items\": [], \"reputation\": 917, \"stones\": 383}"
+    },
+    {
+      "id": "217",
+      "name": "暗殺",
+      "rarity": "legendary",
+      "npc_id": "59",
+      "learn_cost": "{\"gold\": 14450, \"items\": [], \"reputation\": 946, \"stones\": 435}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trarity\tnpc_id\tlearn_cost\n158\t崩擊\tepic\t37\t{\"gold\": 3850, \"items\": [], \"reputation\": 491, \"stones\": 80}\n169\t騎士之譽\tepic\t41\t{\"gold\": 3400, \"items\": [], \"reputation\": 375, \"stones\": 179}\n172\t業火魔法\tepic\t60\t{\"gold\": 3750, \"items\": [], \"reputation\": 320, \"stones\": 194}\n175\t極寒魔法\tepic\t58\t{\"gold\": 4000, \"items\": [], \"reputation\": 263, \"stones\": 89}\n178\t龍捲魔法\tepic\t60\t{\"gold\": 2550, \"items\": [], \"reputation\": 432, \"stones\": 69}\n181\t天崩地裂\tepic\t58\t{\"gold\": 3700, \"items\": [], \"reputation\": 400, \"stones\": 88}\n184\t金光天罰\tepic\t60\t{\"gold\": 4700, \"items\": [], \"reputation\": 419, \"stones\": 102}\n186\t超強吸血魔法\tepic\t60\t{\"gold\": 4200, \"items\": [], \"reputation\": 279, \"stones\": 133}\n190\t石化群體\tepic\t62\t{\"gold\": 3700, \"items\": [], \"reputation\": 480, \"stones\": 131}\n192\t混亂群體\tepic\t62\t{\"gold\": 4050, \"items\": [], \"reputation\": 259, \"stones\": 143}\n196\t遺忘群體\tepic\t62\t{\"gold\": 3550, \"items\": [], \"reputation\": 320, \"stones\": 156}\n201\t超強補血魔法\tepic\t61\t{\"gold\": 2750, \"items\": [], \"reputation\": 481, \"stones\": 74}\n202\t氣絕回復\tepic\t56\t{\"gold\": 2050, \"items\": [], \"reputation\": 418, \"stones\": 147}\n205\t全體潔淨\tepic\t61\t{\"gold\": 3750, \"items\": [], \"reputation\": 268, \"stones\": 105}\n208\t明鏡止水\tepic\t56\t{\"gold\": 4050, \"items\": [], \"reputation\": 463, \"stones\": 89}\n213\t全體攻擊增幅\tepic\t61\t{\"gold\": 2600, \"items\": [], \"reputation\": 293, \"stones\": 194}\n214\t全體防禦增幅\tepic\t56\t{\"gold\": 2950, \"items\": [], \"reputation\": 440, \"stones\": 67}\n160\t乾坤一擲\tlegendary\t39\t{\"gold\": 8800, \"items\": [], \"reputation\": 870, \"stones\": 342}\n216\t聖盾\tlegendary\t64\t{\"gold\": 12450, \"items\": [], \"reputation\": 917, \"stones\": 383}\n217\t暗殺\tlegendary\t59\t{\"gold\": 14450, \"items\": [], \"reputation\": 946, \"stones\": 435}\n",
+  "stderr": "",
+  "execution_time_ms": 1613
+}

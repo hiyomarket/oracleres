@@ -1,0 +1,106 @@
+{
+  "query": "SELECT id, code, name, title, location, region FROM game_npc_catalog WHERE id > 55 ORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, code, name, title, location, region FROM game_npc_catalog WHERE id > 55 ORDER BY id",
+  "rows": [
+    {
+      "id": "56",
+      "code": "NPC_MATTHEW",
+      "name": "馬修",
+      "title": "復活祭司",
+      "location": "中界・永恆教堂",
+      "region": "中界"
+    },
+    {
+      "id": "57",
+      "code": "NPC_SOPHIA",
+      "name": "索菲亞",
+      "title": "淨化聖女",
+      "location": "初界・泉水聖所",
+      "region": "初界"
+    },
+    {
+      "id": "58",
+      "code": "NPC_RENA",
+      "name": "蓮娜",
+      "title": "森林治癒者",
+      "location": "中界・古老森林",
+      "region": "中界"
+    },
+    {
+      "id": "59",
+      "code": "NPC_TALOS",
+      "name": "塔洛斯",
+      "title": "影之吸收者",
+      "location": "中界・影之山谷",
+      "region": "中界"
+    },
+    {
+      "id": "60",
+      "code": "NPC_ALICE",
+      "name": "艾莉絲",
+      "title": "虛空法師",
+      "location": "中界・虛空法塔",
+      "region": "中界"
+    },
+    {
+      "id": "61",
+      "code": "NPC_JINGEN",
+      "name": "靜源",
+      "title": "鏡之修行者",
+      "location": "中界・鏡之修行場",
+      "region": "中界"
+    },
+    {
+      "id": "62",
+      "code": "NPC_NIGHTSONG",
+      "name": "夜歌",
+      "title": "暗殺大師",
+      "location": "中界・暗影公會",
+      "region": "中界"
+    },
+    {
+      "id": "63",
+      "code": "NPC_LOCKS",
+      "name": "洛克斯",
+      "title": "盜賊首領",
+      "location": "初界・迷霧城盜賊公會",
+      "region": "初界"
+    },
+    {
+      "id": "64",
+      "code": "NPC_RENARD",
+      "name": "雷納德",
+      "title": "聖盾騎士",
+      "location": "中界・永恆殿堂",
+      "region": "中界"
+    },
+    {
+      "id": "65",
+      "code": "NPC_GREEN",
+      "name": "格林",
+      "title": "採集者公會長",
+      "location": "初界・迷霧城採集者工會",
+      "region": "初界"
+    },
+    {
+      "id": "66",
+      "code": "NPC_HANS",
+      "name": "漢斯",
+      "title": "工匠大師",
+      "location": "初界・迷霧城工匠街",
+      "region": "初界"
+    },
+    {
+      "id": "67",
+      "code": "NPC_MADELINE",
+      "name": "瑪德琳",
+      "title": "鑑定師",
+      "location": "初界・迷霧城鑑定商店",
+      "region": "初界"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcode\tname\ttitle\tlocation\tregion\n56\tNPC_MATTHEW\t馬修\t復活祭司\t中界・永恆教堂\t中界\n57\tNPC_SOPHIA\t索菲亞\t淨化聖女\t初界・泉水聖所\t初界\n58\tNPC_RENA\t蓮娜\t森林治癒者\t中界・古老森林\t中界\n59\tNPC_TALOS\t塔洛斯\t影之吸收者\t中界・影之山谷\t中界\n60\tNPC_ALICE\t艾莉絲\t虛空法師\t中界・虛空法塔\t中界\n61\tNPC_JINGEN\t靜源\t鏡之修行者\t中界・鏡之修行場\t中界\n62\tNPC_NIGHTSONG\t夜歌\t暗殺大師\t中界・暗影公會\t中界\n63\tNPC_LOCKS\t洛克斯\t盜賊首領\t初界・迷霧城盜賊公會\t初界\n64\tNPC_RENARD\t雷納德\t聖盾騎士\t中界・永恆殿堂\t中界\n65\tNPC_GREEN\t格林\t採集者公會長\t初界・迷霧城採集者工會\t初界\n66\tNPC_HANS\t漢斯\t工匠大師\t初界・迷霧城工匠街\t初界\n67\tNPC_MADELINE\t瑪德琳\t鑑定師\t初界・迷霧城鑑定商店\t初界\n",
+  "stderr": "",
+  "execution_time_ms": 1526
+}

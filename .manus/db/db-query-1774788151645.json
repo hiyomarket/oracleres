@@ -1,0 +1,130 @@
+{
+  "query": "SELECT id, name, rarity, JSON_EXTRACT(learn_cost, '$.items') as items FROM game_unified_skill_catalog WHERE usable_by_player = 1 AND rarity IN ('epic', 'legendary') ORDER BY rarity, id LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, rarity, JSON_EXTRACT(learn_cost, '$.items') as items FROM game_unified_skill_catalog WHERE usable_by_player = 1 AND rarity IN ('epic', 'legendary') ORDER BY rarity, id LIMIT 20",
+  "rows": [
+    {
+      "id": "158",
+      "name": "崩擊",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_SHATTER\", \"qty\": 1}]"
+    },
+    {
+      "id": "169",
+      "name": "騎士之譽",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_HONOR\", \"qty\": 1}]"
+    },
+    {
+      "id": "172",
+      "name": "業火魔法",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_HELLFIRE\", \"qty\": 1}]"
+    },
+    {
+      "id": "175",
+      "name": "極寒魔法",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_FROSTCORE\", \"qty\": 1}]"
+    },
+    {
+      "id": "178",
+      "name": "龍捲魔法",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_TORNADO\", \"qty\": 1}]"
+    },
+    {
+      "id": "181",
+      "name": "天崩地裂",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_QUAKE\", \"qty\": 1}]"
+    },
+    {
+      "id": "184",
+      "name": "金光天罰",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_DIVINE\", \"qty\": 1}]"
+    },
+    {
+      "id": "186",
+      "name": "超強吸血魔法",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_BLOODGEM\", \"qty\": 1}]"
+    },
+    {
+      "id": "190",
+      "name": "石化群體",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_MEDUSA\", \"qty\": 1}]"
+    },
+    {
+      "id": "192",
+      "name": "混亂群體",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_CHAOS\", \"qty\": 1}]"
+    },
+    {
+      "id": "196",
+      "name": "遺忘群體",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_OBLIVION\", \"qty\": 1}]"
+    },
+    {
+      "id": "201",
+      "name": "超強補血魔法",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_LIFEDEW\", \"qty\": 1}]"
+    },
+    {
+      "id": "202",
+      "name": "氣絕回復",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_PHOENIX\", \"qty\": 1}]"
+    },
+    {
+      "id": "205",
+      "name": "全體潔淨",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_PURIFY\", \"qty\": 1}]"
+    },
+    {
+      "id": "208",
+      "name": "明鏡止水",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_MIRROR\", \"qty\": 1}]"
+    },
+    {
+      "id": "213",
+      "name": "全體攻擊增幅",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_WARCRY\", \"qty\": 1}]"
+    },
+    {
+      "id": "214",
+      "name": "全體防禦增幅",
+      "rarity": "epic",
+      "items": "[{\"itemId\": \"I_QST_BASTION\", \"qty\": 1}]"
+    },
+    {
+      "id": "160",
+      "name": "乾坤一擲",
+      "rarity": "legendary",
+      "items": "[{\"itemId\": \"I_QST_COSMOS_A\", \"qty\": 1}, {\"itemId\": \"I_QST_COSMOS_B\", \"qty\": 1}]"
+    },
+    {
+      "id": "216",
+      "name": "聖盾",
+      "rarity": "legendary",
+      "items": "[{\"itemId\": \"I_QST_HOLYSHIELD_A\", \"qty\": 1}, {\"itemId\": \"I_QST_HOLYSHIELD_B\", \"qty\": 1}, {\"itemId\": \"I_QST_HOLYSHIELD_C\", \"qty\": 3}]"
+    },
+    {
+      "id": "217",
+      "name": "暗殺",
+      "rarity": "legendary",
+      "items": "[{\"itemId\": \"I_QST_ASSASSIN_A\", \"qty\": 1}, {\"itemId\": \"I_QST_ASSASSIN_B\", \"qty\": 1}]"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\trarity\titems\n158\t崩擊\tepic\t[{\"itemId\": \"I_QST_SHATTER\", \"qty\": 1}]\n169\t騎士之譽\tepic\t[{\"itemId\": \"I_QST_HONOR\", \"qty\": 1}]\n172\t業火魔法\tepic\t[{\"itemId\": \"I_QST_HELLFIRE\", \"qty\": 1}]\n175\t極寒魔法\tepic\t[{\"itemId\": \"I_QST_FROSTCORE\", \"qty\": 1}]\n178\t龍捲魔法\tepic\t[{\"itemId\": \"I_QST_TORNADO\", \"qty\": 1}]\n181\t天崩地裂\tepic\t[{\"itemId\": \"I_QST_QUAKE\", \"qty\": 1}]\n184\t金光天罰\tepic\t[{\"itemId\": \"I_QST_DIVINE\", \"qty\": 1}]\n186\t超強吸血魔法\tepic\t[{\"itemId\": \"I_QST_BLOODGEM\", \"qty\": 1}]\n190\t石化群體\tepic\t[{\"itemId\": \"I_QST_MEDUSA\", \"qty\": 1}]\n192\t混亂群體\tepic\t[{\"itemId\": \"I_QST_CHAOS\", \"qty\": 1}]\n196\t遺忘群體\tepic\t[{\"itemId\": \"I_QST_OBLIVION\", \"qty\": 1}]\n201\t超強補血魔法\tepic\t[{\"itemId\": \"I_QST_LIFEDEW\", \"qty\": 1}]\n202\t氣絕回復\tepic\t[{\"itemId\": \"I_QST_PHOENIX\", \"qty\": 1}]\n205\t全體潔淨\tepic\t[{\"itemId\": \"I_QST_PURIFY\", \"qty\": 1}]\n208\t明鏡止水\tepic\t[{\"itemId\": \"I_QST_MIRROR\", \"qty\": 1}]\n213\t全體攻擊增幅\tepic\t[{\"itemId\": \"I_QST_WARCRY\", \"qty\": 1}]\n214\t全體防禦增幅\tepic\t[{\"itemId\": \"I_QST_BASTION\", \"qty\": 1}]\n160\t乾坤一擲\tlegendary\t[{\"itemId\": \"I_QST_COSMOS_A\", \"qty\": 1}, {\"itemId\": \"I_QST_COSMOS_B\", \"qty\": 1}]\n216\t聖盾\tlegendary\t[{\"itemId\": \"I_QST_HOLYSHIELD_A\", \"qty\": 1}, {\"itemId\": \"I_QST_HOLYSHIELD_B\", \"qty\": 1}, {\"itemId\": \"I_QST_HOLYSHIELD_C\", \"qty\": 3}]\n217\t暗殺\tlegendary\t[{\"itemId\": \"I_QST_ASSASSIN_A\", \"qty\": 1}, {\"itemId\": \"I_QST_ASSASSIN_B\", \"qty\": 1}]\n",
+  "stderr": "",
+  "execution_time_ms": 1568
+}

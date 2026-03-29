@@ -33,6 +33,7 @@ import {
   gameBroadcast,
   worldEvents,
   gameRogueEvents,
+  gameNpcCatalog,
 } from "../../drizzle/schema";
 import { sql, like, or, eq, desc, lt, and, gte, asc } from "drizzle-orm";
 import {
@@ -89,8 +90,15 @@ const mapNodeSchema = z.object({
   name: z.string().min(1).max(100),
   lat: z.number(),
   lng: z.number(),
-  nodeType: z.enum(["forest", "water", "market", "temple", "mountain"]),
+  nodeType: z.string().min(1).max(50),
   wuxing: z.enum(["木", "火", "土", "金", "水"]),
+  region: z.string().max(30).default("初界"),
+  subRegion: z.string().max(100).nullish(),
+  description: z.string().nullish(),
+  levelMin: z.number().int().min(1).max(99).default(1),
+  levelMax: z.number().int().min(1).max(99).default(99),
+  realWorldName: z.string().max(200).nullish(),
+  sortOrder: z.number().int().default(0),
   isActive: z.number().int().min(0).max(1).default(1),
 });
 
@@ -199,7 +207,20 @@ export const gameAdminRouter = router({
   getMapNodes: adminProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-    return db.select().from(gameMapNodes).orderBy(gameMapNodes.id);
+    const nodes = await db.select().from(gameMapNodes).orderBy(gameMapNodes.sortOrder, gameMapNodes.id);
+    // 加入每個節點的 NPC 數量
+    const npcs = await db.select({ mapNodeId: gameNpcCatalog.mapNodeId }).from(gameNpcCatalog);
+    const npcCountMap: Record<number, number> = {};
+    for (const n of npcs) {
+      if (n.mapNodeId) npcCountMap[n.mapNodeId] = (npcCountMap[n.mapNodeId] || 0) + 1;
+    }
+    return nodes.map(node => ({ ...node, npcCount: npcCountMap[node.id] || 0 }));
+  }),
+
+  getNpcsByNode: adminProcedure.input(z.object({ nodeId: z.number().int() })).query(async ({ input }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select().from(gameNpcCatalog).where(eq(gameNpcCatalog.mapNodeId, input.nodeId));
   }),
 
   createMapNode: adminProcedure.input(mapNodeSchema).mutation(async ({ input }) => {
