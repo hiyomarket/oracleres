@@ -1,0 +1,31 @@
+{
+  "query": "SELECT COUNT(*) as total FROM game_quest_skill_catalog; SELECT id, name, prerequisites, prerequisite_level FROM game_quest_skill_catalog WHERE prerequisites IS NOT NULL AND prerequisites != 'null' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total FROM game_quest_skill_catalog; SELECT id, name, prerequisites, prerequisite_level FROM game_quest_skill_catalog WHERE prerequisites IS NOT NULL AND prerequisites != 'null' LIMIT 5;",
+  "rows": [
+    {
+      "total": "74"
+    },
+    {
+      "total": "id\tname\tprerequisites\tprerequisite_level"
+    },
+    {
+      "total": "66\t諸刃\t[65]\t3"
+    },
+    {
+      "total": "68\t崩擊\t[65]\t5"
+    },
+    {
+      "total": "69\t亂射\t[65]\t3"
+    },
+    {
+      "total": "70\t乾坤一擲\t[68]\t10"
+    },
+    {
+      "total": "71\t迅速果斷\t[65]\t8"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n74\nid\tname\tprerequisites\tprerequisite_level\n66\t諸刃\t[65]\t3\n68\t崩擊\t[65]\t5\n69\t亂射\t[65]\t3\n70\t乾坤一擲\t[68]\t10\n71\t迅速果斷\t[65]\t8\n",
+  "stderr": "",
+  "execution_time_ms": 1816
+}

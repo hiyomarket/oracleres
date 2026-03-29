@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, name, code, learn_cost FROM game_quest_skill_catalog WHERE learn_cost IS NOT NULL LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, code, learn_cost FROM game_quest_skill_catalog WHERE learn_cost IS NOT NULL LIMIT 10;",
+  "rows": [
+    {
+      "id": "65",
+      "name": "連擊",
+      "code": "P01",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}"
+    },
+    {
+      "id": "66",
+      "name": "諸刃",
+      "code": "P02",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}"
+    },
+    {
+      "id": "67",
+      "name": "反擊",
+      "code": "P03",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}"
+    },
+    {
+      "id": "68",
+      "name": "崩擊",
+      "code": "P04",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}"
+    },
+    {
+      "id": "69",
+      "name": "亂射",
+      "code": "P05",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}"
+    },
+    {
+      "id": "70",
+      "name": "乾坤一擲",
+      "code": "P06",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}"
+    },
+    {
+      "id": "71",
+      "name": "迅速果斷",
+      "code": "P07",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}"
+    },
+    {
+      "id": "72",
+      "name": "毒擊",
+      "code": "P08",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}"
+    },
+    {
+      "id": "73",
+      "name": "氣功彈",
+      "code": "P09",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}"
+    },
+    {
+      "id": "74",
+      "name": "吸血攻擊",
+      "code": "P10",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tcode\tlearn_cost\n65\t連擊\tP01\t{\"gold\": 500, \"soulCrystal\": 10}\n66\t諸刃\tP02\t{\"gold\": 500, \"soulCrystal\": 10}\n67\t反擊\tP03\t{\"gold\": 500, \"soulCrystal\": 10}\n68\t崩擊\tP04\t{\"gold\": 500, \"soulCrystal\": 10}\n69\t亂射\tP05\t{\"gold\": 500, \"soulCrystal\": 10}\n70\t乾坤一擲\tP06\t{\"gold\": 500, \"soulCrystal\": 10}\n71\t迅速果斷\tP07\t{\"gold\": 500, \"soulCrystal\": 10}\n72\t毒擊\tP08\t{\"gold\": 500, \"soulCrystal\": 10}\n73\t氣功彈\tP09\t{\"gold\": 500, \"soulCrystal\": 10}\n74\t吸血攻擊\tP10\t{\"gold\": 500, \"soulCrystal\": 10}\n",
+  "stderr": "",
+  "execution_time_ms": 1573
+}

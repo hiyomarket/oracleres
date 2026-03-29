@@ -1,0 +1,82 @@
+{
+  "query": "SELECT ai.item_id, ai.item_type, ai.quantity, ai.agent_id\nFROM agent_inventory ai\nWHERE ai.item_id NOT IN (SELECT item_id FROM game_item_catalog) \n  AND ai.item_id NOT IN (SELECT equip_id FROM game_equipment_catalog)\nORDER BY ai.item_id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT ai.item_id, ai.item_type, ai.quantity, ai.agent_id\nFROM agent_inventory ai\nWHERE ai.item_id NOT IN (SELECT item_id FROM game_item_catalog) \n  AND ai.item_id NOT IN (SELECT equip_id FROM game_equipment_catalog)\nORDER BY ai.item_id",
+  "rows": [
+    {
+      "item_id": "food-earth-001",
+      "item_type": "material",
+      "quantity": "15",
+      "agent_id": "16"
+    },
+    {
+      "item_id": "herb-001",
+      "item_type": "material",
+      "quantity": "2",
+      "agent_id": "16"
+    },
+    {
+      "item_id": "herb-002",
+      "item_type": "material",
+      "quantity": "6",
+      "agent_id": "16"
+    },
+    {
+      "item_id": "herb-fire-001",
+      "item_type": "material",
+      "quantity": "1",
+      "agent_id": "16"
+    },
+    {
+      "item_id": "mat-earth-001",
+      "item_type": "material",
+      "quantity": "3",
+      "agent_id": "16"
+    },
+    {
+      "item_id": "mat-earth-002",
+      "item_type": "material",
+      "quantity": "7",
+      "agent_id": "16"
+    },
+    {
+      "item_id": "mat-fire-001",
+      "item_type": "material",
+      "quantity": "1",
+      "agent_id": "16"
+    },
+    {
+      "item_id": "mat-metal-001",
+      "item_type": "material",
+      "quantity": "11",
+      "agent_id": "16"
+    },
+    {
+      "item_id": "mat-metal-002",
+      "item_type": "material",
+      "quantity": "8",
+      "agent_id": "16"
+    },
+    {
+      "item_id": "mat-metal-003",
+      "item_type": "material",
+      "quantity": "3",
+      "agent_id": "16"
+    },
+    {
+      "item_id": "mat-wood-001",
+      "item_type": "material",
+      "quantity": "5",
+      "agent_id": "16"
+    },
+    {
+      "item_id": "mat-wood-002",
+      "item_type": "material",
+      "quantity": "5",
+      "agent_id": "16"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\titem_type\tquantity\tagent_id\nfood-earth-001\tmaterial\t15\t16\nherb-001\tmaterial\t2\t16\nherb-002\tmaterial\t6\t16\nherb-fire-001\tmaterial\t1\t16\nmat-earth-001\tmaterial\t3\t16\nmat-earth-002\tmaterial\t7\t16\nmat-fire-001\tmaterial\t1\t16\nmat-metal-001\tmaterial\t11\t16\nmat-metal-002\tmaterial\t8\t16\nmat-metal-003\tmaterial\t3\t16\nmat-wood-001\tmaterial\t5\t16\nmat-wood-002\tmaterial\t5\t16\n",
+  "stderr": "",
+  "execution_time_ms": 1551
+}

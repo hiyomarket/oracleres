@@ -1,0 +1,8 @@
+{
+  "query": "SELECT ai.item_id, ai.item_type, ai.quantity, ai.agent_id, \n  (SELECT name FROM game_item_catalog WHERE item_id = ai.item_id LIMIT 1) as catalog_name,\n  (SELECT name FROM game_equipment_catalog WHERE equipment_id = ai.item_id LIMIT 1) as equip_name\nFROM agent_inventory ai\nWHERE ai.item_id NOT IN (SELECT item_id FROM game_item_catalog) \n  AND ai.item_id NOT IN (SELECT equipment_id FROM game_equipment_catalog)\nORDER BY ai.item_id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT ai.item_id, ai.item_type, ai.quantity, ai.agent_id, \n  (SELECT name FROM game_item_catalog WHERE item_id = ai.item_id LIMIT 1) as catalog_name,\n  (SELECT name FROM game_equipment_catalog WHERE equipment_id = ai.item_id LIMIT 1) as equip_name\nFROM agent_inventory ai\nWHERE ai.item_id NOT IN (SELECT item_id FROM game_item_catalog) \n  AND ai.item_id NOT IN (SELECT equipment_id FROM game_equipment_catalog)\nORDER BY ai.item_id",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'equipment_id' in 'field list'"
+  ]
+}

@@ -755,6 +755,143 @@ const questProgressRouter = router({
       if (!agentId) return { passed: false, reason: "找不到你的角色" };
       return checkPrerequisites(agentId, input.skillId);
     }),
+
+  /** 一鍵學習技能（簡化版：只檢查金幣 + 道具） */
+  directLearn: protectedProcedure
+    .input(z.object({ skillId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      const agentId = await getAgentId(ctx.user.id);
+      if (!agentId) throw new Error("找不到你的角色");
+
+      // 1. 檢查是否已習得
+      const [existing] = await db!.select().from(gameLearnedQuestSkills)
+        .where(and(
+          eq(gameLearnedQuestSkills.agentId, agentId),
+          eq(gameLearnedQuestSkills.skillId, input.skillId),
+        ));
+      if (existing) throw new Error("你已經習得此技能");
+
+      // 2. 取得技能資料
+      const [skill] = await db!.select().from(gameUnifiedSkillCatalog)
+        .where(eq(gameUnifiedSkillCatalog.id, input.skillId));
+      if (!skill) throw new Error("找不到技能資料");
+
+      // 3. 檢查前置技能（保留前置技能檢查，但移除任務鏈）
+      const prereqCheck = await checkPrerequisites(agentId, input.skillId);
+      if (!prereqCheck.passed) throw new Error(prereqCheck.reason);
+
+      // 4. 解析 learnCost
+      const learnCost = typeof skill.learnCost === 'string' ? JSON.parse(skill.learnCost as string) : skill.learnCost;
+
+      // 5. 取得角色資料
+      const [agentRow] = await db!.execute(
+        sql`SELECT gold, soul_crystal FROM game_agents WHERE id = ${agentId} LIMIT 1`
+      ) as any;
+      const agent = Array.isArray(agentRow) && agentRow.length > 0 ? agentRow[0] : { gold: 0, soul_crystal: 0 };
+
+      // 6. 檢查金幣
+      const requiredGold = learnCost?.gold ?? 0;
+      if (requiredGold > 0 && agent.gold < requiredGold) {
+        throw new Error(`金幣不足（需要 ${requiredGold}，目前 ${agent.gold}）`);
+      }
+
+      // 7. 檢查道具
+      if (learnCost?.items && Array.isArray(learnCost.items)) {
+        for (const item of learnCost.items) {
+          const itemId = item.itemId;
+          const qty = item.qty ?? item.count ?? 1;
+          if (!itemId) continue;
+          const [inv] = await db!.select({ quantity: agentInventory.quantity })
+            .from(agentInventory)
+            .where(and(
+              eq(agentInventory.agentId, agentId),
+              eq(agentInventory.itemId, itemId),
+            ))
+            .limit(1);
+          const held = inv?.quantity ?? 0;
+          // 查道具名稱
+          const [catalogItem] = await db!.select({ name: gameItemCatalog.name })
+            .from(gameItemCatalog)
+            .where(eq(gameItemCatalog.itemId, itemId))
+            .limit(1);
+          const itemName = catalogItem?.name ?? item.name ?? itemId;
+          if (held < qty) {
+            throw new Error(`道具不足：${itemName}（需要 ${qty}，持有 ${held}）`);
+          }
+        }
+      }
+
+      // 8. 扣除金幣
+      if (requiredGold > 0) {
+        const [result] = await db!.execute(
+          sql`UPDATE game_agents SET gold = gold - ${requiredGold} WHERE id = ${agentId} AND gold >= ${requiredGold}`
+        ) as any;
+        if (result?.affectedRows === 0) throw new Error("金幣扣除失敗，請重試");
+      }
+
+      // 9. 扣除靈晶
+      const requiredSoulCrystal = learnCost?.soulCrystal ?? 0;
+      if (requiredSoulCrystal > 0) {
+        const [result] = await db!.execute(
+          sql`UPDATE game_agents SET soul_crystal = soul_crystal - ${requiredSoulCrystal} WHERE id = ${agentId} AND soul_crystal >= ${requiredSoulCrystal}`
+        ) as any;
+        if (result?.affectedRows === 0) throw new Error("靈晶扣除失敗，請重試");
+      }
+
+      // 10. 扣除道具
+      if (learnCost?.items && Array.isArray(learnCost.items)) {
+        for (const item of learnCost.items) {
+          const itemId = item.itemId;
+          const qty = item.qty ?? item.count ?? 1;
+          if (!itemId) continue;
+          await db!.execute(
+            sql`UPDATE agent_inventory SET quantity = quantity - ${qty}, updated_at = ${Date.now()} WHERE agent_id = ${agentId} AND item_id = ${itemId} AND quantity >= ${qty}`
+          );
+          await db!.execute(
+            sql`DELETE FROM agent_inventory WHERE agent_id = ${agentId} AND item_id = ${itemId} AND quantity <= 0`
+          );
+        }
+      }
+
+      // 11. 新增已習得技能
+      const now = Date.now();
+      await db!.insert(gameLearnedQuestSkills).values({
+        agentId,
+        skillId: input.skillId,
+        level: 1,
+        exp: 0,
+        isEquipped: 0,
+        slotIndex: 0,
+        learnedAt: now,
+        updatedAt: now,
+      });
+
+      // 12. 同時在 gameQuestProgress 標記為完成（相容舊邏輯）
+      const [existingProgress] = await db!.select().from(gameQuestProgress)
+        .where(and(
+          eq(gameQuestProgress.agentId, agentId),
+          eq(gameQuestProgress.skillId, input.skillId),
+        ));
+      if (existingProgress) {
+        await db!.update(gameQuestProgress)
+          .set({ status: "completed", currentStep: 100, completedAt: now, skillLevel: 1, updatedAt: now })
+          .where(eq(gameQuestProgress.id, existingProgress.id));
+      } else {
+        await db!.insert(gameQuestProgress).values({
+          agentId,
+          skillId: input.skillId,
+          currentStep: 100,
+          status: "completed",
+          startedAt: now,
+          completedAt: now,
+          skillLevel: 1,
+          updatedAt: now,
+        });
+      }
+
+      return { success: true, message: `恭喜！你已習得「${skill.name}」！` };
+    }),
 });
 
 // ═══════════════════════════════════════════════════════════════════════

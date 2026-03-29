@@ -1,6 +1,6 @@
 /**
- * M3P: 天命考核技能列表頁 + 任務鏈詳情頁
- * 玩家可以瀏覽所有天命考核技能、查看任務鏈進度、推進任務、習得和裝備技能
+ * v5.14: 技能學習頁面（簡化版）
+ * 移除任務鏈流程，改為一鍵學習：檢查金幣 + 道具 → 扣除 → 習得
  */
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
@@ -10,15 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import {
   ArrowLeft, Star, Zap, Shield, Sword, Hammer, Eye, Heart,
-  Leaf, Flame, Mountain, Droplets, Lock, CheckCircle2, Circle,
-  ChevronRight, Sparkles, BookOpen, Play, Award, Loader2,
-  Wand2, GitBranch, LayoutGrid, TreePine
+  Leaf, Flame, Mountain, Droplets, Lock, CheckCircle2,
+  Sparkles, BookOpen, Award, Loader2,
+  GitBranch, LayoutGrid, Coins, Gem
 } from "lucide-react";
 import { SkillTree } from "@/components/game/SkillTree";
 
@@ -81,8 +81,6 @@ const EFFECT_LABELS: Record<string, string> = {
   drunk: "醉酒", forget: "遺忘", defDown: "降防", spdDown: "降速",
 };
 
-type SkillStatus = "locked" | "available" | "in_progress" | "ready_to_confirm" | "completed";
-
 // ═══════════════════════════════════════════════════════════════════════
 // 主頁面
 // ═══════════════════════════════════════════════════════════════════════
@@ -90,32 +88,19 @@ export default function QuestSkillPage() {
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedSkillId, setSelectedSkillId] = useState<number | null>(null);
-  const [showQuestDetail, setShowQuestDetail] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "tree">("grid");
 
   // 取得玩家角色
   const { data: agentData } = trpc.gameWorld.getOrCreateAgent.useQuery(undefined, { enabled: !!user });
-  const agentId = agentData?.agent?.id;
 
-  // 取得所有天命考核技能
+  // 取得所有技能
   const { data: allSkills, isLoading: skillsLoading } = trpc.questSkillCatalog.list.useQuery();
-
-  // 取得玩家任務進度
-  const { data: myProgress, refetch: refetchProgress } = trpc.questSkillProgress.myProgress.useQuery(
-    undefined, { enabled: !!user }
-  );
 
   // 取得玩家已習得技能
   const { data: myLearned, refetch: refetchLearned } = trpc.questSkillProgress.myLearnedSkills.useQuery(
     undefined, { enabled: !!user }
   );
-
-  // 建立進度 Map
-  const progressMap = useMemo(() => {
-    const m = new Map<number, any>();
-    for (const p of myProgress ?? []) m.set(p.skillId, p);
-    return m;
-  }, [myProgress]);
 
   // 建立已習得 Map
   const learnedMap = useMemo(() => {
@@ -124,15 +109,9 @@ export default function QuestSkillPage() {
     return m;
   }, [myLearned]);
 
-  // 取得技能狀態
-  const getSkillStatus = (skillId: number): SkillStatus => {
-    if (learnedMap.has(skillId)) return "completed";
-    const p = progressMap.get(skillId);
-    if (!p) return "available";
-    if (p.status === "ready_to_confirm") return "ready_to_confirm";
-    if (p.status === "in_progress") return "in_progress";
-    if (p.status === "completed") return "completed";
-    return "available";
+  // 取得技能狀態（簡化：只有 available 和 completed）
+  const getSkillStatus = (skillId: number): "available" | "completed" => {
+    return learnedMap.has(skillId) ? "completed" : "available";
   };
 
   // 按分類篩選
@@ -156,7 +135,6 @@ export default function QuestSkillPage() {
   // 統計
   const totalSkills = allSkills?.length ?? 0;
   const completedCount = (myLearned ?? []).length;
-  const inProgressCount = (myProgress ?? []).filter((p: any) => p.status === "in_progress").length;
 
   const selectedSkill = allSkills?.find((s: any) => s.id === selectedSkillId);
 
@@ -175,10 +153,10 @@ export default function QuestSkillPage() {
             <div>
               <h1 className="text-lg font-bold flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-400" />
-                天命考核
+                技能學習
               </h1>
               <p className="text-xs text-gray-400">
-                已習得 {completedCount}/{totalSkills} · 進行中 {inProgressCount}
+                已習得 {completedCount}/{totalSkills}
               </p>
             </div>
           </div>
@@ -219,22 +197,21 @@ export default function QuestSkillPage() {
         <Card className="bg-gradient-to-r from-amber-950/30 to-purple-950/30 border-amber-700/30 mb-6">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-amber-300 font-medium">天命考核總進度</span>
+              <span className="text-sm text-amber-300 font-medium">技能學習總進度</span>
               <span className="text-xs text-gray-400">{completedCount}/{totalSkills}</span>
             </div>
-            <Progress value={totalSkills > 0 ? (completedCount / totalSkills) * 100 : 0} className="h-2 bg-gray-800" />
-            <div className="grid grid-cols-3 gap-4 mt-3">
+            <Progress
+              value={totalSkills > 0 ? (completedCount / totalSkills) * 100 : 0}
+              className="h-2 bg-gray-800"
+            />
+            <div className="flex justify-between mt-3">
               <div className="text-center">
                 <p className="text-lg font-bold text-green-400">{completedCount}</p>
                 <p className="text-[10px] text-gray-500">已習得</p>
               </div>
               <div className="text-center">
-                <p className="text-lg font-bold text-blue-400">{inProgressCount}</p>
-                <p className="text-[10px] text-gray-500">進行中</p>
-              </div>
-              <div className="text-center">
-                <p className="text-lg font-bold text-gray-400">{totalSkills - completedCount - inProgressCount}</p>
-                <p className="text-[10px] text-gray-500">待開啟</p>
+                <p className="text-lg font-bold text-gray-400">{totalSkills - completedCount}</p>
+                <p className="text-[10px] text-gray-500">未學習</p>
               </div>
             </div>
           </CardContent>
@@ -256,7 +233,7 @@ export default function QuestSkillPage() {
                 agentLevel={agentData?.agent?.level ?? 1}
                 onSkillSelect={(id) => {
                   setSelectedSkillId(id);
-                  setShowQuestDetail(true);
+                  setShowDetail(true);
                 }}
               />
             )}
@@ -298,15 +275,14 @@ export default function QuestSkillPage() {
                         </h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           {skills.map((skill: any) => (
-                            <QuestSkillCard
+                            <SkillCard
                               key={skill.id}
                               skill={skill}
-                              status={getSkillStatus(skill.id)}
-                              progress={progressMap.get(skill.id)}
+                              isLearned={learnedMap.has(skill.id)}
                               learned={learnedMap.get(skill.id)}
                               onSelect={() => {
                                 setSelectedSkillId(skill.id);
-                                setShowQuestDetail(true);
+                                setShowDetail(true);
                               }}
                             />
                           ))}
@@ -317,7 +293,7 @@ export default function QuestSkillPage() {
                   {filteredSkills.length === 0 && (
                     <div className="text-center py-16 text-gray-500">
                       <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                      <p>此分類暫無天命考核技能</p>
+                      <p>此分類暫無技能</p>
                     </div>
                   )}
                 </>
@@ -327,16 +303,15 @@ export default function QuestSkillPage() {
         )}
       </div>
 
-      {/* 任務鏈詳情對話框 */}
+      {/* 技能詳情對話框 */}
       {selectedSkill && (
-        <QuestDetailDialog
+        <SkillDetailDialog
           skill={selectedSkill}
-          status={getSkillStatus(selectedSkill.id)}
-          progress={progressMap.get(selectedSkill.id)}
+          isLearned={learnedMap.has(selectedSkill.id)}
           learned={learnedMap.get(selectedSkill.id)}
-          open={showQuestDetail}
-          onOpenChange={setShowQuestDetail}
-          onRefresh={() => { refetchProgress(); refetchLearned(); }}
+          open={showDetail}
+          onOpenChange={setShowDetail}
+          onRefresh={() => { refetchLearned(); }}
         />
       )}
     </div>
@@ -344,12 +319,11 @@ export default function QuestSkillPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// 天命技能卡片
+// 技能卡片（簡化版）
 // ═══════════════════════════════════════════════════════════════════════
-function QuestSkillCard({ skill, status, progress, learned, onSelect }: {
+function SkillCard({ skill, isLearned, learned, onSelect }: {
   skill: any;
-  status: SkillStatus;
-  progress?: any;
+  isLearned: boolean;
   learned?: any;
   onSelect: () => void;
 }) {
@@ -357,16 +331,7 @@ function QuestSkillCard({ skill, status, progress, learned, onSelect }: {
   const wuxing = WUXING_CONFIG[skill.wuxing] ?? { label: "無", color: "text-gray-400", bg: "bg-gray-800/40", border: "border-gray-600/50", icon: Star };
   const category = CATEGORY_CONFIG[skill.category] ?? CATEGORY_CONFIG.physical;
   const WuxingIcon = wuxing.icon;
-
-  const statusConfig = {
-    locked: { label: "未開啟", color: "text-gray-500", icon: Lock, bg: "bg-gray-800/20" },
-    available: { label: "可開始", color: "text-cyan-400", icon: Play, bg: "bg-cyan-950/20" },
-    in_progress: { label: "進行中", color: "text-blue-400", icon: Loader2, bg: "bg-blue-950/20" },
-    ready_to_confirm: { label: "待確認", color: "text-amber-400", icon: Award, bg: "bg-amber-950/20" },
-    completed: { label: "已習得", color: "text-green-400", icon: CheckCircle2, bg: "bg-green-950/20" },
-  };
-  const st = statusConfig[status];
-  const StIcon = st.icon;
+  const learnCost = skill.learnCost as any;
 
   return (
     <Card
@@ -376,13 +341,18 @@ function QuestSkillCard({ skill, status, progress, learned, onSelect }: {
       <CardContent className="p-4">
         {/* 頂部：狀態 + 稀有度 */}
         <div className="flex items-center justify-between mb-2">
-          <Badge className={`${st.bg} ${st.color} border-current text-[10px]`} variant="outline">
-            <StIcon className={`w-3 h-3 mr-1 ${status === "in_progress" ? "animate-spin" : ""}`} />
-            {st.label}
-          </Badge>
-          <div className="flex items-center gap-1">
-            <Badge className={`${rarity.bg} ${rarity.color} border ${rarity.border} text-[10px]`}>{rarity.label}</Badge>
-          </div>
+          {isLearned ? (
+            <Badge className="bg-green-950/40 text-green-400 border-green-700/50 text-[10px]" variant="outline">
+              <CheckCircle2 className="w-3 h-3 mr-1" />
+              已習得
+            </Badge>
+          ) : (
+            <Badge className="bg-cyan-950/20 text-cyan-400 border-cyan-700/50 text-[10px]" variant="outline">
+              <BookOpen className="w-3 h-3 mr-1" />
+              可學習
+            </Badge>
+          )}
+          <Badge className={`${rarity.bg} ${rarity.color} border ${rarity.border} text-[10px]`}>{rarity.label}</Badge>
         </div>
 
         {/* 名稱和屬性 */}
@@ -431,14 +401,16 @@ function QuestSkillCard({ skill, status, progress, learned, onSelect }: {
           </div>
         </div>
 
-        {/* 進度條（進行中時顯示） */}
-        {status === "in_progress" && progress && (
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-[10px] text-gray-500 mb-1">
-              <span>步驟 {progress.currentStep}</span>
-              <span>進行中</span>
-            </div>
-            <Progress value={33} className="h-1.5 bg-gray-800" />
+        {/* 學習費用（未習得時顯示） */}
+        {!isLearned && learnCost && (
+          <div className="mt-3 flex items-center gap-2 text-[10px] text-amber-400/80">
+            <Coins className="w-3 h-3" />
+            <span>
+              {learnCost.gold ? `${learnCost.gold.toLocaleString()} 金幣` : ""}
+              {learnCost.gold && learnCost.soulCrystal ? " + " : ""}
+              {learnCost.soulCrystal ? `${learnCost.soulCrystal} 靈晶` : ""}
+              {learnCost.items?.length > 0 ? ` + ${learnCost.items.length} 種道具` : ""}
+            </span>
           </div>
         )}
 
@@ -455,55 +427,36 @@ function QuestSkillCard({ skill, status, progress, learned, onSelect }: {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// 任務鏈詳情對話框
+// 技能詳情對話框（簡化版 — 一鍵學習）
 // ═══════════════════════════════════════════════════════════════════════
-function QuestDetailDialog({ skill, status, progress, learned, open, onOpenChange, onRefresh }: {
+function SkillDetailDialog({ skill, isLearned, learned, open, onOpenChange, onRefresh }: {
   skill: any;
-  status: SkillStatus;
-  progress?: any;
+  isLearned: boolean;
   learned?: any;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRefresh: () => void;
 }) {
   const [equipSlot, setEquipSlot] = useState<string>("1");
-
-  // 取得任務步驟
-  const { data: steps } = trpc.questSkillStep.listBySkill.useQuery(
-    { skillId: skill.id },
-    { enabled: open }
-  );
-
-  // 取得 NPC 列表
-  const { data: npcs } = trpc.questSkillNpc.list.useQuery(undefined, { enabled: open });
-  const npcMap = useMemo(() => {
-    const m: Record<number, any> = {};
-    for (const n of npcs ?? []) m[n.id] = n;
-    return m;
-  }, [npcs]);
+  const utils = trpc.useUtils();
 
   // 前置條件檢查
   const { data: prereqCheck } = trpc.questSkillProgress.checkPrereqs.useQuery(
     { skillId: skill.id },
-    { enabled: open && status === "available" }
+    { enabled: open && !isLearned }
   );
 
-  // Mutations
-  const startQuest = trpc.questSkillProgress.startQuest.useMutation({
-    onSuccess: (data) => { toast.success(data.message); onRefresh(); },
+  // 一鍵學習
+  const directLearn = trpc.questSkillProgress.directLearn.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      onRefresh();
+      utils.gameWorld.getOrCreateAgent.invalidate();
+    },
     onError: (err) => toast.error(err.message),
   });
 
-  const advanceStep = trpc.questSkillProgress.advanceStep.useMutation({
-    onSuccess: (data) => { toast.success(data.message); onRefresh(); },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const confirmLearn = trpc.questSkillProgress.confirmLearn.useMutation({
-    onSuccess: (data) => { toast.success(data.message); onRefresh(); },
-    onError: (err) => toast.error(err.message),
-  });
-
+  // 裝備/卸下
   const equipSkill = trpc.questSkillProgress.equipSkill.useMutation({
     onSuccess: () => { toast.success("技能已裝備！"); onRefresh(); },
     onError: (err) => toast.error(err.message),
@@ -518,11 +471,6 @@ function QuestDetailDialog({ skill, status, progress, learned, open, onOpenChang
   const wuxing = WUXING_CONFIG[skill.wuxing] ?? { label: "無", color: "text-gray-400", bg: "bg-gray-800/40", border: "border-gray-600/50", icon: Star };
   const category = CATEGORY_CONFIG[skill.category] ?? CATEGORY_CONFIG.physical;
   const WuxingIcon = wuxing.icon;
-  const CategoryIcon = category.icon;
-
-  const sortedSteps = useMemo(() => {
-    return [...(steps ?? [])].sort((a: any, b: any) => (a.stepNumber ?? 0) - (b.stepNumber ?? 0));
-  }, [steps]);
 
   const additionalEffect = skill.additionalEffect as any;
   const specialMechanic = skill.specialMechanic as any;
@@ -538,12 +486,12 @@ function QuestDetailDialog({ skill, status, progress, learned, open, onOpenChang
             <Badge className={`${rarity.bg} ${rarity.color} border ${rarity.border} text-[10px]`}>{rarity.label}</Badge>
           </DialogTitle>
           <DialogDescription className="text-gray-400 text-sm">
-            {skill.questTitle ?? `${category.label} · ${SKILL_TYPE_LABELS[skill.skillType] ?? skill.skillType}`}
+            {category.label} · {SKILL_TYPE_LABELS[skill.skillType] ?? skill.skillType}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* 技能基本資訊 */}
+          {/* 技能基本資訊標籤 */}
           <div className="flex gap-1.5 mb-3 flex-wrap">
             {skill.targetType && TARGET_TYPE_LABELS[skill.targetType] && (
               <Badge variant="outline" className={`${TARGET_TYPE_LABELS[skill.targetType].color} border-current text-[10px]`}>
@@ -595,62 +543,47 @@ function QuestDetailDialog({ skill, status, progress, learned, open, onOpenChang
             </div>
           )}
 
-          {/* 特殊機制（v2.0 完整戰鬥機制顯示） */}
+          {/* 特殊機制 */}
           {specialMechanic && Object.keys(specialMechanic).length > 0 && (
             <div className="rounded-md bg-purple-950/30 border border-purple-800/40 p-3">
               <p className="text-xs font-semibold text-purple-400 mb-2">戰鬥機制</p>
               <div className="text-sm text-gray-300 space-y-1.5">
-                {/* 被動技能 */}
                 {specialMechanic.isPassive && (
                   <div className="flex items-center gap-2">
                     <Shield className="w-3.5 h-3.5 text-green-400" />
                     <span className="text-green-400">被動技能（自動生效）</span>
                   </div>
                 )}
-                {specialMechanic.passiveType && (
-                  <p className="text-gray-400 text-xs ml-5">觸發類型：{specialMechanic.passiveType === 'on_hit' ? '被攻擊時' : specialMechanic.passiveType === 'on_attack' ? '攻擊時' : specialMechanic.passiveType === 'on_defend' ? '防禦時' : specialMechanic.passiveType}</p>
-                )}
-                {specialMechanic.passiveTriggerChance && (
-                  <p className="text-gray-400 text-xs ml-5">觸發機率：{specialMechanic.passiveTriggerChance}%{specialMechanic.passiveChancePerLevel ? ` (+${specialMechanic.passiveChancePerLevel}%/級)` : ''}</p>
-                )}
-                {/* 連擊 */}
                 {specialMechanic.hitCount && (
                   <div className="flex items-center gap-2">
                     <Sword className="w-3.5 h-3.5 text-red-400" />
                     <span>連擊 {specialMechanic.hitCount[0]}~{specialMechanic.hitCount[1]} 次</span>
-                    {specialMechanic.multiTargetHit && <span className="text-amber-400 text-xs">(每段可打不同目標)</span>}
                   </div>
                 )}
-                {/* 吸血 */}
                 {specialMechanic.lifesteal && (
                   <div className="flex items-center gap-2">
                     <Heart className="w-3.5 h-3.5 text-pink-400" />
                     <span className="text-pink-400">吸血 {specialMechanic.lifesteal}% 傷害轉化為HP</span>
                   </div>
                 )}
-                {/* 穿透防禦 */}
                 {specialMechanic.ignoreDefPercent && (
                   <div className="flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5 text-amber-400" />
                     <span>穿透 {specialMechanic.ignoreDefPercent}% 防禦</span>
                   </div>
                 )}
-                {/* 命中率修正 */}
                 {specialMechanic.accuracyMod && (
                   <p>命中率修正：{specialMechanic.accuracyMod > 0 ? '+' : ''}{specialMechanic.accuracyMod}%</p>
                 )}
-                {/* 先制攻擊 */}
                 {specialMechanic.priority && (
                   <div className="flex items-center gap-2">
                     <Zap className="w-3.5 h-3.5 text-yellow-400" />
                     <span className="text-yellow-400">先制攻擊（忽略速度判定）</span>
                   </div>
                 )}
-                {/* 自傷 */}
                 {specialMechanic.selfDamagePercent && (
                   <p className="text-red-400">自傷：損失自身 {specialMechanic.selfDamagePercent}% 最大HP</p>
                 )}
-                {/* 治療類型 */}
                 {specialMechanic.healType && (
                   <div className="flex items-center gap-2">
                     <Heart className="w-3.5 h-3.5 text-green-400" />
@@ -659,24 +592,12 @@ function QuestDetailDialog({ skill, status, progress, learned, open, onOpenChang
                     </span>
                   </div>
                 )}
-                {/* 護盾 */}
                 {specialMechanic.shield && (
                   <div className="flex items-center gap-2">
                     <Shield className="w-3.5 h-3.5 text-cyan-400" />
                     <span className="text-cyan-400">護盾：吸收 {specialMechanic.shield.percent}% 傷害，持續 {specialMechanic.shield.duration} 回合</span>
                   </div>
                 )}
-                {/* 吸收 */}
-                {specialMechanic.absorb && (
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-3.5 h-3.5 text-blue-400" />
-                    <span className="text-blue-400">
-                      {specialMechanic.absorb.type === 'physical' ? '物理吸收' : specialMechanic.absorb.type === 'magic' ? '魔法吸收' : '吸收'}
-                      ：{specialMechanic.absorb.percent}%，持續 {specialMechanic.absorb.duration} 回合
-                    </span>
-                  </div>
-                )}
-                {/* 增益/減益 */}
                 {specialMechanic.buff && (
                   <div className="rounded bg-gray-800/50 p-2 mt-1">
                     <p className="text-xs text-amber-400 mb-1">{specialMechanic.buff.target === 'self' ? '自身增益' : specialMechanic.buff.target === 'ally' ? '友方增益' : '敵方減益'}</p>
@@ -685,30 +606,20 @@ function QuestDetailDialog({ skill, status, progress, learned, open, onOpenChang
                       {specialMechanic.buff.def && <span className="text-blue-300">DEF {specialMechanic.buff.def > 0 ? '+' : ''}{specialMechanic.buff.def}%</span>}
                       {specialMechanic.buff.mtk && <span className="text-purple-300">MTK {specialMechanic.buff.mtk > 0 ? '+' : ''}{specialMechanic.buff.mtk}%</span>}
                       {specialMechanic.buff.spd && <span className="text-cyan-300">SPD {specialMechanic.buff.spd > 0 ? '+' : ''}{specialMechanic.buff.spd}%</span>}
-                      {specialMechanic.buff.mdef && <span className="text-green-300">MDEF {specialMechanic.buff.mdef > 0 ? '+' : ''}{specialMechanic.buff.mdef}%</span>}
                       {specialMechanic.buff.duration && <span className="text-gray-400">持續 {specialMechanic.buff.duration} 回合</span>}
                     </div>
                   </div>
                 )}
-                {/* 嘲諽 */}
                 {specialMechanic.taunt && (
                   <div className="flex items-center gap-2">
                     <Eye className="w-3.5 h-3.5 text-orange-400" />
                     <span className="text-orange-400">嘲諽：強制敵方攻擊自己，持續 {specialMechanic.taunt.duration} 回合</span>
                   </div>
                 )}
-                {/* 消除異常 */}
                 {specialMechanic.cleanse && (
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-green-400" />
                     <span className="text-green-400">消除{specialMechanic.cleanse === 'all' ? '所有' : specialMechanic.cleanse}狀態異常</span>
-                  </div>
-                )}
-                {/* 明鏡止水 */}
-                {specialMechanic.onDefend && (
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-3.5 h-3.5 text-indigo-400" />
-                    <span className="text-indigo-400">明鏡止水：防禦姿態，大幅提升防禦力</span>
                   </div>
                 )}
               </div>
@@ -718,92 +629,47 @@ function QuestDetailDialog({ skill, status, progress, learned, open, onOpenChang
           {/* 習得代價 */}
           {learnCost && Object.keys(learnCost).length > 0 && (
             <div className="rounded-md bg-cyan-950/30 border border-cyan-800/40 p-3">
-              <p className="text-xs font-semibold text-cyan-400 mb-1">習得代價</p>
-              <div className="text-sm text-gray-300 flex flex-wrap gap-3">
-                {learnCost.gold && <span>金幣 {learnCost.gold.toLocaleString()}</span>}
-                {learnCost.soulCrystal && <span>魂晶 {learnCost.soulCrystal.toLocaleString()}</span>}
+              <p className="text-xs font-semibold text-cyan-400 mb-2">習得代價</p>
+              <div className="text-sm text-gray-300 space-y-1.5">
+                {learnCost.gold > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-yellow-400" />
+                    <span>金幣 {learnCost.gold.toLocaleString()}</span>
+                  </div>
+                )}
+                {learnCost.soulCrystal > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Gem className="w-4 h-4 text-purple-400" />
+                    <span>靈晶 {learnCost.soulCrystal.toLocaleString()}</span>
+                  </div>
+                )}
                 {learnCost.items?.map((item: any, i: number) => (
-                  <span key={i}>{item.name} x{item.count}</span>
+                  <div key={i} className="flex items-center gap-2">
+                    <Star className="w-4 h-4 text-amber-400" />
+                    <span>{item.name ?? item.itemId} x{item.qty ?? item.count ?? 1}</span>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* 任務鏈步驟 */}
-          <div className="border-t border-gray-700 pt-4">
-            <h3 className="text-sm font-semibold text-amber-400 mb-3 flex items-center gap-2">
-              <BookOpen className="w-4 h-4" />
-              任務鏈步驟
-            </h3>
-            {sortedSteps.length === 0 ? (
-              <p className="text-sm text-gray-500">此技能尚未設定任務步驟</p>
-            ) : (
-              <div className="space-y-3">
-                {sortedSteps.map((step: any, idx: number) => {
-                  const isCurrentStep = progress?.currentStep === step.stepNumber && status === "in_progress";
-                  const isCompleted = progress && (
-                    (progress.currentStep > step.stepNumber) ||
-                    status === "completed" ||
-                    status === "ready_to_confirm"
-                  );
-                  const npc = step.npcId ? npcMap[step.npcId] : null;
-
-                  return (
-                    <div key={step.id}>
-                      <div className={`flex items-start gap-3 rounded-lg p-3 transition-colors ${
-                        isCurrentStep ? "bg-blue-950/40 border border-blue-700/50" :
-                        isCompleted ? "bg-green-950/20 border border-green-800/30" :
-                        "bg-gray-800/30 border border-gray-700/30"
-                      }`}>
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                          isCompleted ? "bg-green-600 text-white" :
-                          isCurrentStep ? "bg-blue-600 text-white animate-pulse" :
-                          "bg-gray-700 text-gray-400"
-                        }`}>
-                          {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : step.stepNumber}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className={`font-medium text-sm ${isCurrentStep ? "text-blue-300" : isCompleted ? "text-green-300" : "text-gray-300"}`}>
-                              {step.title}
-                            </span>
-                            {isCurrentStep && <Badge className="bg-blue-900 text-blue-200 text-[10px]">目前步驟</Badge>}
-                          </div>
-                          {step.objective && <p className="text-xs text-gray-400 mt-1">{step.objective}</p>}
-                          {step.dialogue && (
-                            <p className="text-xs italic text-amber-400/70 mt-1">「{step.dialogue}」</p>
-                          )}
-                          {step.location && (
-                            <p className="text-xs text-gray-500 mt-1">地點：{step.location}</p>
-                          )}
-                          {npc && (
-                            <div className="flex items-center gap-2 mt-1">
-                              {npc.avatarUrl ? (
-                                <img src={npc.avatarUrl} alt={npc.name} className="w-5 h-5 rounded-full" />
-                              ) : (
-                                <Circle className="w-5 h-5 text-gray-600" />
-                              )}
-                              <span className="text-xs text-gray-400">{npc.name}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {idx < sortedSteps.length - 1 && (
-                        <div className="flex justify-center py-1">
-                          <ChevronRight className="w-4 h-4 text-gray-600 rotate-90" />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+          {/* NPC 資訊 */}
+          {skill.npc && (
+            <div className="flex items-center gap-3 rounded-md bg-muted/30 p-3">
+              {skill.npc.avatarUrl && (
+                <img src={skill.npc.avatarUrl} alt={skill.npc.name} className="w-10 h-10 rounded-full border border-border" />
+              )}
+              <div>
+                <p className="text-sm font-semibold">{skill.npc.name}</p>
+                {skill.npc.location && <p className="text-xs text-muted-foreground">{skill.npc.location}</p>}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* 操作按鈕 */}
           <div className="border-t border-gray-700 pt-4 space-y-3">
-            {/* 可開始 */}
-            {status === "available" && (
+            {/* 未習得 — 一鍵學習 */}
+            {!isLearned && (
               <>
                 {prereqCheck && !prereqCheck.passed && (
                   <div className="rounded-md bg-red-950/30 border border-red-800/40 p-3">
@@ -811,42 +677,22 @@ function QuestDetailDialog({ skill, status, progress, learned, open, onOpenChang
                   </div>
                 )}
                 <Button
-                  className="w-full bg-cyan-600 hover:bg-cyan-700"
-                  onClick={() => startQuest.mutate({ skillId: skill.id })}
-                  disabled={startQuest.isPending || (prereqCheck && !prereqCheck.passed)}
+                  className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold"
+                  onClick={() => directLearn.mutate({ skillId: skill.id })}
+                  disabled={directLearn.isPending || (prereqCheck && !prereqCheck.passed)}
                 >
-                  {startQuest.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
-                  開始天命考核
+                  {directLearn.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Award className="w-4 h-4 mr-2" />
+                  )}
+                  學習技能
                 </Button>
               </>
             )}
 
-            {/* 進行中 — 推進步驟 */}
-            {status === "in_progress" && (
-              <Button
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                onClick={() => advanceStep.mutate({ skillId: skill.id })}
-                disabled={advanceStep.isPending}
-              >
-                {advanceStep.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ChevronRight className="w-4 h-4 mr-2" />}
-                完成當前步驟
-              </Button>
-            )}
-
-            {/* 待確認 — 最終習得 */}
-            {status === "ready_to_confirm" && (
-              <Button
-                className="w-full bg-amber-600 hover:bg-amber-700"
-                onClick={() => confirmLearn.mutate({ skillId: skill.id })}
-                disabled={confirmLearn.isPending}
-              >
-                {confirmLearn.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Award className="w-4 h-4 mr-2" />}
-                確認習得技能
-              </Button>
-            )}
-
-            {/* 已完成 — 裝備/卸下 */}
-            {status === "completed" && learned && (
+            {/* 已習得 — 裝備/卸下 */}
+            {isLearned && learned && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm text-green-400">
                   <CheckCircle2 className="w-4 h-4" />

@@ -277,14 +277,12 @@ export default function GameCMS() {
           <TabsContent value="system">
             <Card>
               <CardContent className="pt-6">
-                <Tabs defaultValue="quest-skills">
+                <Tabs defaultValue="game-guide">
                   <TabsList className="mb-4 flex-wrap h-auto gap-1">
-                    <TabsTrigger value="quest-skills">🌟 天命考核</TabsTrigger>
                     <TabsTrigger value="game-guide">📖 遊戲指南</TabsTrigger>
                     <TabsTrigger value="broadcast">📢 全服廣播</TabsTrigger>
                     <TabsTrigger value="sys-reset" className="text-red-400">🔴 世界重置</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="quest-skills"><QuestSkillCMSTab /></TabsContent>
                   <TabsContent value="game-guide"><GameGuideTab /></TabsContent>
                   <TabsContent value="broadcast"><Suspense fallback={<p className="text-muted-foreground p-4">載入中…</p>}><AdminGameTheaterInline section="broadcast" /></Suspense></TabsContent>
                   <TabsContent value="sys-reset"><Suspense fallback={<p className="text-muted-foreground p-4">載入中…</p>}><AdminGameTheaterInline section="reset" /></Suspense></TabsContent>
@@ -1226,7 +1224,6 @@ function SkillCatalogTab() {
 
 // ─── Balance Dashboard Tab ───────────────────────────────────────────────────────────────────
 import BalanceRulesEditor from "@/components/admin/BalanceRulesEditor";
-import { QuestSkillCMSTab } from "@/components/admin/QuestSkillCMS";
 
 function BalanceDashboardTab() {
   const { data, isLoading, refetch } = trpc.gameCatalog.getBalanceAnalysis.useQuery();
@@ -2822,10 +2819,10 @@ function AIToolsTab() {
   // AI 天命考核技能生成
   const aiGenQuestSkill = trpc.gameAI.aiGenerateQuestSkill.useMutation({
     onSuccess: (data) => { toast.success(data.message); utils.questSkillNpc.invalidate(); },
-    onError: (e) => toast.error(e.message || "AI 天命考核技能生成失敗"),
+    onError: (e) => toast.error(e.message || "AI 技能學習技能生成失敗"),
   });
 
-  // AI 天命考核技能平衡
+  // AI 技能學習技能平衡
   const balanceQuestSkills = trpc.gameAIBalance.balanceQuestSkills.useMutation({
     onSuccess: (data) => { setBalanceResults(prev => ({ ...prev, questSkills: data })); data.dryRun ? toast.success(`預覽：發現 ${data.totalChanges} 項需修正`) : toast.success(data.message); utils.questSkillNpc.invalidate(); },
     onError: (e) => toast.error(e.message),
@@ -2878,7 +2875,7 @@ function AIToolsTab() {
     { key: "equipment", label: "裝備", icon: "⚔️", color: "#C9A227", desc: "ATK/DEF/HP/SPD加成", mutate: balanceEquipment },
     { key: "skills", label: "人物技能", icon: "✨", color: "#8B5CF6", desc: "威力%/MP/冷卻/售價", mutate: balanceSkills },
     { key: "achievements", label: "成就", icon: "🏆", color: "#F59E0B", desc: "獎勵數量校準", mutate: balanceAchievements },
-    { key: "questSkills", label: "天命考核技能", icon: "🌟", color: "#EC4899", desc: "威力/MP/冷卻/金幣/魂晶", mutate: balanceQuestSkills },
+    { key: "questSkills", label: "技能學習技能", icon: "🌟", color: "#EC4899", desc: "威力/MP/冷却/金幣/魂晶", mutate: balanceQuestSkills },
   ];
 
   const isGenerating = aiBatchGenerate.isPending;
@@ -3043,11 +3040,11 @@ function AIToolsTab() {
 
       <hr className="border-border" />
 
-      {/* === 區塊 3.5：AI 天命考核技能生成 === */}
+      {/* === 區塊 3.5：AI 技能學習技能生成 === */}
       <div>
-        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">🌟 AI 天命考核技能生成</h3>
+        <h3 className="text-lg font-bold mb-1 flex items-center gap-2">🌟 AI 技能學習技能生成</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          AI 根據遊戲世界觀和五行屬性，自動生成天命考核專屬技能。按技能類型分類生成，稀有度由 AI 自動分配。
+          AI 根據遊戲世界觀和五行屬性，自動生成技能學習專屬技能。按技能類型分類生成，稀有度由 AI 自動分配。
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {(["physical", "magic", "status", "support", "special", "production"] as const).map((cat) => {

@@ -1,0 +1,19 @@
+{
+  "query": "SELECT COUNT(*) as total_progress FROM game_quest_progress; SELECT COUNT(*) as total_learned FROM game_learned_quest_skills;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total_progress FROM game_quest_progress; SELECT COUNT(*) as total_learned FROM game_learned_quest_skills;",
+  "rows": [
+    {
+      "total_progress": "0"
+    },
+    {
+      "total_progress": "total_learned"
+    },
+    {
+      "total_progress": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_progress\n0\ntotal_learned\n0\n",
+  "stderr": "",
+  "execution_time_ms": 1797
+}

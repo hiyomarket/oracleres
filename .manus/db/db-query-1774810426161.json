@@ -1,0 +1,25 @@
+{
+  "query": "SELECT COUNT(*) as total_with_prereqs FROM game_quest_skill_catalog WHERE prerequisites IS NOT NULL AND prerequisites != 'null'; SELECT COUNT(*) as total_steps FROM game_quest_steps; SELECT COUNT(DISTINCT skill_id) as skills_with_steps FROM game_quest_steps;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total_with_prereqs FROM game_quest_skill_catalog WHERE prerequisites IS NOT NULL AND prerequisites != 'null'; SELECT COUNT(*) as total_steps FROM game_quest_steps; SELECT COUNT(DISTINCT skill_id) as skills_with_steps FROM game_quest_steps;",
+  "rows": [
+    {
+      "total_with_prereqs": "46"
+    },
+    {
+      "total_with_prereqs": "total_steps"
+    },
+    {
+      "total_with_prereqs": "133"
+    },
+    {
+      "total_with_prereqs": "skills_with_steps"
+    },
+    {
+      "total_with_prereqs": "32"
+    }
+  ],
+  "messages": [],
+  "stdout": "total_with_prereqs\n46\ntotal_steps\n133\nskills_with_steps\n32\n",
+  "stderr": "",
+  "execution_time_ms": 1921
+}
