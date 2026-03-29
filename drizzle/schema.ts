@@ -2331,7 +2331,9 @@ export type GameEquipmentCatalog = typeof gameEquipmentCatalog.$inferSelect;
 export type InsertGameEquipmentCatalog = typeof gameEquipmentCatalog.$inferInsert;
 
 /**
- * 技能圖鑑表（對應 GD-016 完整技能資料庫，250 種）
+ * @deprecated 已棄用 - 請使用 gameUnifiedSkillCatalog
+ * 舊技能圖鑑表（對應 GD-016 完整技能資料庫，250 種）
+ * 保留定義以防需要回溯，但不再有任何程式碼引用此表
  */
 export const gameSkillCatalog = mysqlTable("game_skill_catalog", {
   id: int("id").autoincrement().primaryKey(),
@@ -2999,9 +3001,9 @@ export type InsertAuctionListing = typeof auctionListings.$inferInsert;
 
 
 /**
- * 魔物技能圖鑑表（M3D 新增）
- * 定義魔物專屬技能，與玩家技能分開管理
- * ID 格式：SK_M001, SK_M002, ...
+ * @deprecated 已棄用 - 請使用 gameUnifiedSkillCatalog（usable_by_monster = 1）
+ * 舊魔物技能圖鑑表（M3D 新增）
+ * 保留定義以防需要回溯，但不再有任何程式碼引用此表
  */
 export const gameMonsterSkillCatalog = mysqlTable("game_monster_skill_catalog", {
   id: int("id").autoincrement().primaryKey(),

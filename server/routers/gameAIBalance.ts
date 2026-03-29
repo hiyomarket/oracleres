@@ -18,8 +18,7 @@ import {
   gameItemCatalog,
   gameEquipmentCatalog,
   gameAchievements,
-  gameMonsterSkillCatalog,
-  gameQuestSkillCatalog,
+  gameUnifiedSkillCatalog,
 } from "../../drizzle/schema";
 import { eq, sql } from "drizzle-orm";
 import { loadBalanceRulesGrouped } from "./balanceRules";
@@ -144,7 +143,7 @@ export const gameAIBalanceRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      const skills = await db.select().from(gameMonsterSkillCatalog);
+      const skills = await db.select().from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.usableByMonster, 1));
       const changes: BalanceChange[] = [];
 
       const allRules = await loadBalanceRulesGrouped();
@@ -172,7 +171,7 @@ export const gameAIBalanceRouter = router({
         }
 
         if (!input.dryRun && Object.keys(fixes).length > 0) {
-          await db.update(gameMonsterSkillCatalog).set(fixes).where(eq(gameMonsterSkillCatalog.id, s.id));
+          await db.update(gameUnifiedSkillCatalog).set(fixes).where(eq(gameUnifiedSkillCatalog.id, s.id));
         }
       }
 
@@ -416,7 +415,7 @@ export const gameAIBalanceRouter = router({
       summary.push({ catalog: "怪物", scanned: monsters.length, changes: monsterChanges.length });
 
       // 怪物技能
-      const mSkills = await db.select().from(gameMonsterSkillCatalog);
+      const mSkills = await db.select().from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.usableByMonster, 1));
       const mSkillChanges: BalanceChange[] = [];
       for (const s of mSkills) {
         const powerR = getRange(msRules, s.rarity, "power");

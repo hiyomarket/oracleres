@@ -48,7 +48,8 @@ const AiEntry = lazy(() => import("./pages/AiEntry"));
 const AvatarRoom = lazy(() => import("./pages/game/AvatarRoom"));
 const VirtualWorldPage = lazy(() => import("./pages/game/VirtualWorldPage"));
 const GameCMS = lazy(() => import("./pages/admin/GameCMS"));
-const AdminGameTheater = lazy(() => import("./pages/admin/AdminGameTheater"));
+// AdminGameTheater is now integrated into GameCMS
+// const AdminGameTheater = lazy(() => import("./pages/admin/AdminGameTheater"));
 const Shop = lazy(() => import("./pages/game/Shop"));
 const GameShop = lazy(() => import("./pages/game/GameShop"));
 const CombatRoom = lazy(() => import("./pages/game/CombatRoom"));
@@ -148,7 +149,7 @@ function Router() {
                 <Route path={"/admin/theme"} component={AdminTheme} />
                 <Route path={"/admin/access-tokens"} component={AdminAccessTokens} />
                 <Route path={"/admin/game"} component={GameCMS} />
-                <Route path={"/admin/game-theater"} component={AdminGameTheater} />
+                <Route path="/admin/game-theater">{() => { window.location.replace("/admin/game"); return null; }}</Route>
                 <Route path="/game">{() => <GameErrorBoundary><VirtualWorldPage /></GameErrorBoundary>}</Route>
                 <Route path={"/game/avatar"} component={AvatarRoom} />
                 <Route path={"/game/shop"} component={Shop} />

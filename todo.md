@@ -5543,3 +5543,18 @@
 - [x] 後台篩選器支援五行/分類/稀有度/技能類型/可用性（玩家/寵物/魔物）
 - [x] TypeScript 零錯誤，伺服器正常啟動
 - [ ] 測試通過
+
+## 功能整理 v5.3 - 後台大整理 + 技能系統收尾
+
+### 技能系統收尾
+- [x] 移除舊的「魔物技能(已合併)」Tab（從 GameCMS 移除引用，CatalogTabs 保留提示訊息）
+- [x] 清理舊 schema 表（gameSkillCatalog / gameMonsterSkillCatalog 標記 @deprecated，所有引用改為 gameUnifiedSkillCatalog）
+- [x] 前端玩家技能頁面已確認使用統一技能表（gameSkillSystem.ts 已遷移）
+
+### 後台大整理（/admin/game + /game-theater 統合）
+- [x] 分析現有所有 Tab 和路由，列出使用中/未使用項目
+- [x] 移除未使用的 Tab 和組件（MonstersTab/SkillsTab/AchievementsTab 共 320 行）
+- [x] 將相關功能歸類到同一類別（📚圖鑑/🏪商店/🤖AI/⚔️戰鬥/🌍世界/⚙️系統）
+- [x] AI 工具全部集中到「🤖 AI 工具」分類（AI 圖鑑工具/寵物 AI/AI 商店佈局）
+- [x] 統合 /admin/game 與 /game-theater 路由（AdminGameTheaterInline 嵌入 GameCMS，/game-theater 重導向）
+- [x] TypeScript 零錯誤，LSP 零錯誤，伺服器正常啟動

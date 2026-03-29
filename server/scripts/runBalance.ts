@@ -18,7 +18,6 @@ import { eq, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import {
   gameMonsterCatalog,
-  gameMonsterSkillCatalog,
   gameUnifiedSkillCatalog,
   gameEquipmentCatalog,
   equipmentTemplates,
@@ -94,7 +93,7 @@ export async function runFullBalance(): Promise<BalanceResult> {
   // 2. 怪物技能校準
   // ═══════════════════════════════════════════════════════════════
   try {
-    const mSkills = await db.select().from(gameMonsterSkillCatalog).where(sql`is_active = 1`);
+    const mSkills = await db.select().from(gameUnifiedSkillCatalog).where(sql`is_active = 1 AND usable_by_monster = 1`);
     for (const sk of mSkills) {
       const base = MONSTER_SKILL_RARITY_BASE[sk.rarity] || MONSTER_SKILL_RARITY_BASE["common"];
       const typeMod = SKILL_TYPE_MODIFIER[sk.skillType] || SKILL_TYPE_MODIFIER["attack"];
@@ -103,13 +102,13 @@ export async function runFullBalance(): Promise<BalanceResult> {
       const midMp = Math.round((base.mpRange[0] + base.mpRange[1]) / 2 * typeMod.mpMod);
       const midCd = Math.round((base.cdRange[0] + base.cdRange[1]) / 2 * typeMod.cdMod);
 
-      await db.update(gameMonsterSkillCatalog)
+      await db.update(gameUnifiedSkillCatalog)
         .set({
           powerPercent: Math.max(midPower, 10),
           mpCost: Math.max(midMp, 0),
           cooldown: Math.max(midCd, 0),
         })
-        .where(eq(gameMonsterSkillCatalog.id, sk.id));
+        .where(eq(gameUnifiedSkillCatalog.id, sk.id));
       result.monsterSkillsUpdated++;
     }
     console.log(`[Balance] 怪物技能校準完成：${result.monsterSkillsUpdated} 個`);
