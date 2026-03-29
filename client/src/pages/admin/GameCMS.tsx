@@ -1994,6 +1994,7 @@ function CombatSimulatorPanel() {
     fateElement: "",
     wuxing: { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 },
     potential: { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 },
+    equipBonus: { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0, mdef: 0, spr: 0, healPower: 0, hitRate: 0, critRate: 0, critDamage: 0 },
   };
   const [agentA, setAgentA] = useState({ ...defaultAgent });
   const [agentB, setAgentB] = useState({ ...defaultAgent, level: 10 });
@@ -2065,6 +2066,24 @@ function CombatSimulatorPanel() {
           })}
         </div>
       </div>
+      <div>
+        <label className="text-[10px] text-muted-foreground">裝備加成（模擬裝備提供的額外屬性）</label>
+        <div className="grid grid-cols-4 gap-1">
+          {([
+            { k: "hp", l: "HP" }, { k: "mp", l: "MP" }, { k: "atk", l: "ATK" }, { k: "def", l: "DEF" },
+            { k: "spd", l: "SPD" }, { k: "matk", l: "MATK" }, { k: "mdef", l: "MDEF" }, { k: "spr", l: "SPR" },
+            { k: "healPower", l: "回復力" }, { k: "hitRate", l: "命中%" }, { k: "critRate", l: "暴擊%" }, { k: "critDamage", l: "暴傷%" },
+          ] as { k: keyof typeof agent.equipBonus; l: string }[]).map(({ k, l }) => (
+            <div key={k} className="text-center">
+              <div className="text-[9px] text-muted-foreground">{l}</div>
+              <input type="number" min={0} max={9999}
+                value={agent.equipBonus[k]}
+                onChange={e => setAgent({ ...agent, equipBonus: { ...agent.equipBonus, [k]: parseInt(e.target.value) || 0 } })}
+                className="w-full px-1 py-0.5 rounded bg-white/5 border border-white/10 text-xs text-white text-center" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 
@@ -2130,6 +2149,8 @@ function CombatSimulatorPanel() {
                 { key: "spr", label: "SPR", color: "#6366f1" },
                 { key: "critRate", label: "暴擊%", color: "#f97316" },
                 { key: "critDamage", label: "暴傷%", color: "#f97316" },
+                { key: "healPower", label: "回復力", color: "#10b981" },
+                { key: "hitRate", label: "命中%", color: "#84cc16" },
               ] as const).map(({ key, label, color }) => {
                 const vA = (result.statsA as any)[key] ?? 0;
                 const vB = (result.statsB as any)[key] ?? 0;

@@ -130,6 +130,17 @@ export interface MonsterStats {
   baseAccuracy: number;
 }
 
+/** 隨機浮動工具：在基準值上 ±variancePct% 浮動，增加多樣性 */
+function randVariance(base: number, variancePct: number = 10): number {
+  const factor = 1 + (Math.random() * 2 - 1) * (variancePct / 100);
+  return Math.max(1, Math.round(base * factor));
+}
+
+/** 在範圍內隨機取值（而非取中間值） */
+function randInRange(min: number, max: number): number {
+  return Math.round(min + Math.random() * (max - min));
+}
+
 export function calculateMonsterStats(
   levelRange: string,
   rarity: string,
@@ -141,20 +152,23 @@ export function calculateMonsterStats(
   const archetype = inferArchetype(rarity, race);
   const ratios = ARCHETYPE_RATIOS[archetype];
 
-  const hp = Math.round(baseHp * raceMultiplier * rarityMultiplier);
-  const atk = Math.round(hp * ratios.atkRatio);
-  const def = Math.round(hp * ratios.defRatio);
+  const hpBase = Math.round(baseHp * raceMultiplier * rarityMultiplier);
+  const hp = randVariance(hpBase, 12);   // ±12% HP 浮動
+  const atk = randVariance(Math.round(hpBase * ratios.atkRatio), 15); // ±15% ATK
+  const def = randVariance(Math.round(hpBase * ratios.defRatio), 15); // ±15% DEF
 
   // 魔法攻擊：魔法型怪物 magicAtk = atk * 1.3，其他 = atk * 0.6
   const isMagic = archetype === "magic" || archetype === "glass";
-  const magicAtk = Math.round(atk * (isMagic ? 1.3 : 0.6));
+  const magicAtk = randVariance(Math.round(atk * (isMagic ? 1.3 : 0.6)), 10);
 
   const parts = levelRange.split("-").map(Number);
   const midLv = Math.round(((parts[0] || 1) + (parts[1] || parts[0] || 1)) / 2);
-  const spd = getBaseSpdForLevel(midLv, archetype);
+  const spdBase = getBaseSpdForLevel(midLv, archetype);
+  const spd = randVariance(spdBase, 8); // ±8% SPD
 
-  // 命中率：基礎 80，高等級和高稀有度提升
-  const accuracy = Math.min(95, 80 + Math.floor(midLv / 10) * 3 + (rarity === "legendary" ? 10 : rarity === "epic" ? 5 : 0));
+  // 命中率：基礎 80，高等級和高稀有度提升，±3% 浮動
+  const accBase = Math.min(95, 80 + Math.floor(midLv / 10) * 3 + (rarity === "legendary" ? 10 : rarity === "epic" ? 5 : 0));
+  const accuracy = Math.min(99, Math.max(70, randVariance(accBase, 3)));
 
   return { baseHp: hp, baseAttack: atk, baseDefense: def, baseSpeed: spd, baseMagicAttack: magicAtk, baseAccuracy: accuracy };
 }
@@ -230,18 +244,19 @@ export function calculateSkillStats(tier: string, skillType: string): SkillBalan
   const base = SKILL_TIER_BASE[tier] || SKILL_TIER_BASE["初階"];
   const mod = SKILL_TYPE_MODIFIER[skillType] || SKILL_TYPE_MODIFIER["attack"];
 
-  const midPower = Math.round((base.powerRange[0] + base.powerRange[1]) / 2 * mod.powerMod);
-  const midMp = Math.round((base.mpRange[0] + base.mpRange[1]) / 2 * mod.mpMod);
-  const midCd = Math.round((base.cdRange[0] + base.cdRange[1]) / 2 * mod.cdMod);
-  const midLv = Math.round((base.learnLvRange[0] + base.learnLvRange[1]) / 2);
-  const midPrice = Math.round((base.priceRange[0] + base.priceRange[1]) / 2);
+  // 在範圍內隨機取值，而非取中間值
+  const power = Math.round(randInRange(base.powerRange[0], base.powerRange[1]) * mod.powerMod);
+  const mp = Math.round(randInRange(base.mpRange[0], base.mpRange[1]) * mod.mpMod);
+  const cd = Math.round(randInRange(base.cdRange[0], base.cdRange[1]) * mod.cdMod);
+  const lv = randInRange(base.learnLvRange[0], base.learnLvRange[1]);
+  const price = randVariance(randInRange(base.priceRange[0], base.priceRange[1]), 15);
 
   return {
-    powerPercent: Math.max(midPower, 10),
-    mpCost: Math.max(midMp, 0),
-    cooldown: Math.max(midCd, 0),
-    learnLevel: midLv,
-    shopPrice: midPrice,
+    powerPercent: Math.max(power, 10),
+    mpCost: Math.max(mp, 0),
+    cooldown: Math.max(cd, 0),
+    learnLevel: lv,
+    shopPrice: price,
   };
 }
 
@@ -313,13 +328,14 @@ export function calculateEquipStats(tier: string, slot: string) {
   const base = EQUIP_TIER_BASE[tier] || EQUIP_TIER_BASE["初階"];
   const slotMod = EQUIP_SLOT_MODIFIER[slot] || EQUIP_SLOT_MODIFIER["weapon"];
 
-  const midHp = Math.round((base.hpRange[0] + base.hpRange[1]) / 2 * slotMod.hpMod);
-  const midAtk = Math.round((base.atkRange[0] + base.atkRange[1]) / 2 * slotMod.atkMod);
-  const midDef = Math.round((base.defRange[0] + base.defRange[1]) / 2 * slotMod.defMod);
-  const midSpd = Math.round((base.spdRange[0] + base.spdRange[1]) / 2 * slotMod.spdMod);
-  const midPrice = Math.round((base.priceRange[0] + base.priceRange[1]) / 2);
+  // 在範圍內隨機取值，而非取中間值，增加裝備多樣性
+  const hp = Math.round(randInRange(base.hpRange[0], base.hpRange[1]) * slotMod.hpMod);
+  const atk = Math.round(randInRange(base.atkRange[0], base.atkRange[1]) * slotMod.atkMod);
+  const def = Math.round(randInRange(base.defRange[0], base.defRange[1]) * slotMod.defMod);
+  const spd = Math.round(randInRange(base.spdRange[0], base.spdRange[1]) * slotMod.spdMod);
+  const price = randVariance(randInRange(base.priceRange[0], base.priceRange[1]), 15);
 
-  return { hpBonus: midHp, attackBonus: midAtk, defenseBonus: midDef, speedBonus: midSpd, shopPrice: midPrice };
+  return { hpBonus: hp, attackBonus: atk, defenseBonus: def, speedBonus: spd, shopPrice: price };
 }
 
 // ═══════════════════════════════════════════════════════════════

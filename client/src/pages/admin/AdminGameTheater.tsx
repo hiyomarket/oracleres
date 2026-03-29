@@ -289,19 +289,19 @@ export function AgentManagementTab() {
       pointsBalance: String(agent.pointsBalance ?? 0),
       gameCoins: String(agent.gameCoins ?? 0),
       gameStones: String(agent.gameStones ?? 0),
-      // GD-028 新增
-      attack: String((agent as any).attack ?? 0),
-      defense: String((agent as any).defense ?? 0),
-      speed: String((agent as any).speed ?? 0),
-      magicAttack: String((agent as any).magicAttack ?? 0),
-      mdef: String((agent as any).mdef ?? 0),
-      spr: String((agent as any).spr ?? 0),
-      critRate: String((agent as any).critRate ?? 5),
-      critDamage: String((agent as any).critDamage ?? 150),
-      maxHp: String((agent as any).maxHp ?? 100),
-      maxMp: String((agent as any).maxMp ?? 50),
-      healPower: String((agent as any).healPower ?? 0),
-      hitRate: String((agent as any).hitRate ?? 0),
+      // 計算後的戰鬥屬性（從 computedStats 讀取）
+      attack: String((agent as any).computedStats?.attack ?? 0),
+      defense: String((agent as any).computedStats?.defense ?? 0),
+      speed: String((agent as any).computedStats?.speed ?? 0),
+      magicAttack: String((agent as any).computedStats?.magicAttack ?? 0),
+      mdef: String((agent as any).computedStats?.magicDefense ?? 0),
+      spr: String((agent as any).computedStats?.spiritRestore ?? 0),
+      critRate: String((agent as any).computedStats?.critRate ?? 5),
+      critDamage: String((agent as any).computedStats?.critDamage ?? 150),
+      maxHp: String((agent as any).computedStats?.calcMaxHp ?? agent.maxHp ?? 100),
+      maxMp: String((agent as any).computedStats?.calcMaxMp ?? agent.maxMp ?? 50),
+      healPower: String((agent as any).computedStats?.healPower ?? 0),
+      hitRate: String((agent as any).computedStats?.hitRate ?? 0),
       realm: String((agent as any).realm ?? "初界"),
       profession: String((agent as any).profession ?? "none"),
       professionTier: String((agent as any).professionTier ?? 0),
@@ -436,6 +436,52 @@ export function AgentManagementTab() {
                         </span>
                       ))}
                     </div>
+
+                    {/* 計算後戰鬥屬性 */}
+                    {(agent as any).computedStats && Object.keys((agent as any).computedStats).length > 0 && (
+                      <div className="grid grid-cols-4 gap-x-3 gap-y-0.5 mt-2 text-xs border-t border-border/30 pt-1.5">
+                        <span className="text-muted-foreground">攻擊: <span className="text-red-400">{(agent as any).computedStats.attack}</span></span>
+                        <span className="text-muted-foreground">防禦: <span className="text-blue-400">{(agent as any).computedStats.defense}</span></span>
+                        <span className="text-muted-foreground">魔攻: <span className="text-purple-400">{(agent as any).computedStats.magicAttack}</span></span>
+                        <span className="text-muted-foreground">魔防: <span className="text-indigo-400">{(agent as any).computedStats.magicDefense}</span></span>
+                        <span className="text-muted-foreground">速度: <span className="text-green-400">{(agent as any).computedStats.speed}</span></span>
+                        <span className="text-muted-foreground">回復: <span className="text-pink-400">{(agent as any).computedStats.healPower}</span></span>
+                        <span className="text-muted-foreground">暴擊: <span className="text-orange-400">{(agent as any).computedStats.critRate}%</span></span>
+                        <span className="text-muted-foreground">命中: <span className="text-cyan-400">{(agent as any).computedStats.hitRate}%</span></span>
+                      </div>
+                    )}
+
+                    {/* 裝備欄 */}
+                    {(agent as any).equipped && (agent as any).equipped.length > 0 && (
+                      <div className="mt-1.5 border-t border-border/30 pt-1.5">
+                        <span className="text-[10px] text-muted-foreground font-semibold">裝備欄:</span>
+                        <div className="flex gap-1 flex-wrap mt-0.5">
+                          {(agent as any).equipped.map((eq: any) => (
+                            <Badge key={eq.invId} variant="secondary" className="text-[10px] py-0 h-5">
+                              {eq.slot}: {eq.itemId}{eq.enhanceLevel > 0 ? ` +${eq.enhanceLevel}` : ""}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 道具欄摘要 */}
+                    {(agent as any).bagItems && (agent as any).bagItems.length > 0 && (
+                      <details className="mt-1.5 border-t border-border/30 pt-1.5">
+                        <summary className="text-[10px] text-muted-foreground font-semibold cursor-pointer hover:text-foreground">
+                          道具欄 ({(agent as any).bagItems.length} 種)
+                        </summary>
+                        <div className="flex gap-1 flex-wrap mt-0.5 max-h-24 overflow-y-auto">
+                          {(agent as any).bagItems.map((item: any) => (
+                            <Badge key={item.invId} variant="outline" className="text-[10px] py-0 h-5">
+                              {item.itemId} x{item.quantity}
+                              {item.itemType === "equipment" && item.enhanceLevel > 0 ? ` +${item.enhanceLevel}` : ""}
+                              {item.isEquipped ? " [已裝]" : ""}
+                            </Badge>
+                          ))}
+                        </div>
+                      </details>
+                    )}
 
                     {/* 永久滿值開關 */}
                     <div className="flex gap-4 mt-2 flex-wrap">

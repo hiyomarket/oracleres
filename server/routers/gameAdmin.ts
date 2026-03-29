@@ -34,6 +34,7 @@ import {
   worldEvents,
   gameRogueEvents,
   gameNpcCatalog,
+  agentInventory,
 } from "../../drizzle/schema";
 import { sql, like, or, eq, desc, lt, and, gte, asc } from "drizzle-orm";
 import {
@@ -53,6 +54,8 @@ import {
   stopWorldTickEngine,
 } from "../worldTickEngine";
 import { resetWorld, triggerHiddenShop, cleanExpiredHiddenShops } from "../worldResetEngine";
+import { calcAgentFullStats } from "../services/statEngine";
+
 
 // Admin guard middleware
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -1529,6 +1532,14 @@ export const gameAdminRouter = router({
         currentNodeId: gameAgents.currentNodeId,
         isActive: gameAgents.isActive,
         createdAt: gameAgents.createdAt,
+        potentialWood: gameAgents.potentialWood,
+        potentialFire: gameAgents.potentialFire,
+        potentialEarth: gameAgents.potentialEarth,
+        potentialMetal: gameAgents.potentialMetal,
+        potentialWater: gameAgents.potentialWater,
+        fateElement: gameAgents.fateElement,
+        profession: gameAgents.profession,
+        freeStatPoints: gameAgents.freeStatPoints,
       })
         .from(gameAgents)
         .where(whereClause)
@@ -1536,7 +1547,7 @@ export const gameAdminRouter = router({
         .limit(input.pageSize)
         .offset(offset);
 
-      // 補充 users 表的 pointsBalance、gameCoins、gameStones
+      // 補充 users 表、計算屬性、裝備和道具
       const results = await Promise.all(agents.map(async (agent) => {
         const userRows = await db.select({
           pointsBalance: users.pointsBalance,
@@ -1544,12 +1555,76 @@ export const gameAdminRouter = router({
           gameStones: users.gameStones,
         }).from(users).where(eq(users.openId, agent.userId)).limit(1);
         const control = await db.select().from(adminGameControl).where(eq(adminGameControl.agentId, agent.id)).limit(1);
+
+        // 計算完整戰鬥屬性
+        let computedStats: Record<string, number> = {};
+        try {
+          const wuxing = {
+            wood: (agent as any).wuxingWood ?? 20,
+            fire: (agent as any).wuxingFire ?? 20,
+            earth: (agent as any).wuxingEarth ?? 20,
+            metal: (agent as any).wuxingMetal ?? 20,
+            water: (agent as any).wuxingWater ?? 20,
+          };
+          const potential = {
+            wood: (agent as any).potentialWood ?? 0,
+            fire: (agent as any).potentialFire ?? 0,
+            earth: (agent as any).potentialEarth ?? 0,
+            metal: (agent as any).potentialMetal ?? 0,
+            water: (agent as any).potentialWater ?? 0,
+          };
+          const stats = calcAgentFullStats(
+            wuxing,
+            agent.level,
+            ((agent as any).fateElement || "wood") as any,
+            potential,
+            ((agent as any).profession || "none") as any,
+          );
+          computedStats = {
+            attack: stats.attack,
+            defense: stats.defense,
+            speed: stats.speed,
+            magicAttack: stats.magicAttack,
+            magicDefense: stats.magicDefense,
+            spiritRestore: stats.spiritRestore,
+            healPower: stats.healPower,
+            critRate: stats.critRate,
+            critDamage: stats.critDamage,
+            dodgeRate: stats.dodgeRate,
+            blockRate: stats.blockRate,
+            hitRate: stats.hitRate,
+            calcMaxHp: stats.maxHp,
+            calcMaxMp: stats.maxMp,
+          };
+        } catch { /* 計算失敗時返回空屬性 */ }
+
+        // 查詢裝備和道具
+        const inventoryItems = await db.select().from(agentInventory).where(eq(agentInventory.agentId, agent.id));
+        const equipped = inventoryItems.filter(i => i.isEquipped === 1).map(i => ({
+          invId: i.id,
+          itemId: i.itemId,
+          slot: i.equippedSlot || "",
+          enhanceLevel: ((i.itemData as any) ?? {}).enhanceLevel ?? 0,
+        }));
+        const bagItems = inventoryItems.map(i => ({
+          invId: i.id,
+          itemId: i.itemId,
+          itemType: i.itemType,
+          quantity: i.quantity,
+          isEquipped: i.isEquipped === 1,
+          equippedSlot: i.equippedSlot || "",
+          enhanceLevel: ((i.itemData as any) ?? {}).enhanceLevel ?? 0,
+        }));
+
         return {
           ...agent,
           pointsBalance: userRows[0]?.pointsBalance ?? 0,
           gameCoins: userRows[0]?.gameCoins ?? 0,
           gameStones: userRows[0]?.gameStones ?? 0,
           control: control[0] ?? null,
+          computedStats,
+          equipped,
+          bagItems,
         };
       }));
 
@@ -1618,6 +1693,15 @@ export const gameAdminRouter = router({
         fateElement: z.string().default(""),
         wuxing: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }),
         potential: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }).default({ wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }),
+        // 裝備加成
+        equipBonus: z.object({
+          hp: z.number().default(0), mp: z.number().default(0),
+          atk: z.number().default(0), def: z.number().default(0),
+          spd: z.number().default(0), matk: z.number().default(0),
+          mdef: z.number().default(0), spr: z.number().default(0),
+          healPower: z.number().default(0), hitRate: z.number().default(0),
+          critRate: z.number().default(0), critDamage: z.number().default(0),
+        }).default({ hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0, mdef: 0, spr: 0, healPower: 0, hitRate: 0, critRate: 0, critDamage: 0 }),
       }),
       agentB: z.object({
         level: z.number().int().min(1).max(99),
@@ -1626,6 +1710,15 @@ export const gameAdminRouter = router({
         fateElement: z.string().default(""),
         wuxing: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }),
         potential: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }).default({ wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }),
+        // 裝備加成
+        equipBonus: z.object({
+          hp: z.number().default(0), mp: z.number().default(0),
+          atk: z.number().default(0), def: z.number().default(0),
+          spd: z.number().default(0), matk: z.number().default(0),
+          mdef: z.number().default(0), spr: z.number().default(0),
+          healPower: z.number().default(0), hitRate: z.number().default(0),
+          critRate: z.number().default(0), critDamage: z.number().default(0),
+        }).default({ hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0, mdef: 0, spr: 0, healPower: 0, hitRate: 0, critRate: 0, critDamage: 0 }),
       }),
       rounds: z.number().int().min(1).max(100).default(10),
     }))
@@ -1633,13 +1726,28 @@ export const gameAdminRouter = router({
       const { calcFullStats, calcCombatDamage, rollCrit, rollDodge, rollBlock } = await import("../services/statEngine");
 
       function buildStats(agent: typeof input.agentA) {
-        return calcFullStats(
+        const base = calcFullStats(
           agent.wuxing,
           agent.level,
           agent.potential,
           (agent.fateElement || undefined) as any,
           (agent.profession || undefined) as any,
         );
+        const eb = agent.equipBonus;
+        return {
+          hp: base.hp + eb.hp,
+          mp: base.mp + eb.mp,
+          atk: base.atk + eb.atk,
+          def: base.def + eb.def,
+          spd: base.spd + eb.spd,
+          matk: base.matk + eb.matk,
+          mdef: base.mdef + eb.mdef,
+          spr: base.spr + eb.spr,
+          critRate: Math.min(base.critRate + eb.critRate, 100),
+          critDamage: Math.min(base.critDamage + eb.critDamage, 500),
+          healPower: base.healPower + eb.healPower,
+          hitRate: Math.min(base.hitRate + eb.hitRate, 100),
+        };
       }
 
       const statsA = buildStats(input.agentA);
