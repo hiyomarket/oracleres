@@ -382,15 +382,17 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
 
         const isCurrent = node.id === currentNodeId;
         const isHidden = hiddenNodeIds.includes(node.id);
-        const color = WX_COLOR[node.element] ?? "#888";
+        const isNpcNode = node.terrain === "NPC據點" || node.id.startsWith("npc-");
+        const color = isNpcNode ? "#c084fc" : (WX_COLOR[node.element] ?? "#888");
         const terrainIcon = TERRAIN_ICON[node.terrain] ?? "📍";
 
         // 自訂 SVG 圖示
         // 玩家標記大小：現在位置放大2倍（56px）
         const currentSize = 56;
+        const npcSize = 32;
         const hiddenSize = 22;
         const normalSize = 18;
-        const markerSize = isCurrent ? currentSize : isHidden ? hiddenSize : normalSize;
+        const markerSize = isCurrent ? currentSize : isNpcNode ? npcSize : isHidden ? hiddenSize : normalSize;
         const markerAnchor = markerSize / 2;
 
         const svgIcon = L.divIcon({
@@ -437,6 +439,24 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
                 ">
                   <img src="${agentAvatarUrl}" style="width:100%;height:100%;object-fit:cover;" />
                 </div>
+              ` : isNpcNode && !isCurrent ? `
+                <div style="
+                  position:absolute;inset:-6px;
+                  border-radius:50%;
+                  background:radial-gradient(circle, rgba(192,132,252,0.3) 0%, transparent 70%);
+                  animation:pulse 2s ease-in-out infinite;
+                "></div>
+                <div style="
+                  width:100%;height:100%;
+                  border-radius:8px;
+                  background:linear-gradient(135deg, #7c3aed, #a855f7);
+                  border:2px solid #c084fc;
+                  box-shadow:0 0 12px 4px rgba(168,85,247,0.5);
+                  display:flex;align-items:center;justify-content:center;
+                  font-size:16px;
+                  cursor:pointer;
+                  position:relative;
+                ">❓</div>
               ` : `
                 <div style="
                   width:100%;height:100%;
@@ -481,7 +501,16 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
               <span style="background:${color}22;color:${color};border:1px solid ${color}44;border-radius:4px;padding:2px 6px;font-size:10px;">${node.terrain}</span>
               <span style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);border-radius:4px;padding:2px 6px;font-size:10px;">危險 Lv.${node.dangerLevel}</span>
             </div>
-            ${node.landmarks.length > 0 ? `
+            ${isNpcNode ? `
+              <div style="border-top:1px solid rgba(192,132,252,0.2);padding-top:6px;margin-bottom:8px;">
+                <div style="font-size:10px;color:#c084fc;margin-bottom:4px;">\uD83D\uDDE3\uFE0F NPC 據點</div>
+                <div style="font-size:11px;color:#e9d5ff;line-height:1.6;">
+                  此地有 NPC 可以互動\u2026\u2026<br/>
+                  <span style="font-size:10px;color:#a78bfa;">前往此地後可查看 NPC 並學習技能</span>
+                </div>
+              </div>
+            ` : ""}
+            ${node.landmarks.length > 0 && !isNpcNode ? `
               <div style="font-size:10px;color:#64748b;border-top:1px solid rgba(255,255,255,0.07);padding-top:6px;margin-bottom:8px;">
                 📍 ${node.landmarks.slice(0, 3).join(" · ")}
               </div>
@@ -593,11 +622,13 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
         if (!node) return;
         const isCurrent = nodeId === currentNodeId;
         const isHiddenNode = hiddenNodeIds.includes(nodeId);
-        const color = WX_COLOR[node.element] ?? "#888";
+        const isNpc = node.terrain === "NPC據點" || nodeId.startsWith("npc-");
+        const color = isNpc ? "#c084fc" : (WX_COLOR[node.element] ?? "#888");
         const curSize = 56;
+        const npcSz = 32;
         const hidSize = 22;
         const norSize = 18;
-        const mSize = isCurrent ? curSize : isHiddenNode ? hidSize : norSize;
+        const mSize = isCurrent ? curSize : isNpc ? npcSz : isHiddenNode ? hidSize : norSize;
         const mAnchor = mSize / 2;
         const svgIcon = L.divIcon({
           className: "",
@@ -615,6 +646,9 @@ const LeafletMap = forwardRef<LeafletMapHandle, LeafletMapProps>(function Leafle
                 <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;border:3px solid ${color};box-shadow:0 0 16px 6px ${color}88;cursor:pointer;">
                   <img src="${agentAvatarUrl}" style="width:100%;height:100%;object-fit:cover;" />
                 </div>
+              ` : isNpc && !isCurrent ? `
+                <div style="position:absolute;inset:-6px;border-radius:50%;background:radial-gradient(circle, rgba(192,132,252,0.3) 0%, transparent 70%);animation:pulse 2s ease-in-out infinite;"></div>
+                <div style="width:100%;height:100%;border-radius:8px;background:linear-gradient(135deg, #7c3aed, #a855f7);border:2px solid #c084fc;box-shadow:0 0 12px 4px rgba(168,85,247,0.5);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;">❓</div>
               ` : `
                 <div style="
                   width:100%;height:100%;border-radius:50%;

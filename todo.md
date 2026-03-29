@@ -5632,3 +5632,24 @@
 - [x] 跨區域傳送費用（divineTransport：初界 2 AP、中界 4 AP、試煉之塔 6 AP、碎影深淵 8 AP）
 - [x] 海外節點體力消耗倍率（setTeleport：初界 x1、中界 x1.5、試煉之塔 x2、碎影深淵 x3）
 - [x] 29 個 vitest 測試全部通過（v5.6: 12 + v5.7: 17）
+
+## v5.8 - NPC 節點視覺標記 + 組隊系統檢查 + 組隊戰鬥系統
+
+### NPC 節點視覺標記
+- [x] 為 NPC 據點節點設計專屬地圖圖標（紫色光暈 + 問號標記 + 更大尺寸）
+- [x] 在 LeafletMap 中為 NPC 節點使用獨特標記樣式（徑向漸層 + 脈動動畫 + 問號圖標）
+- [x] NPC 節點 popup 增強（顯示 NPC 數量和「前往互動」按鈕）
+
+### 組隊系統檢查
+- [x] 審計現有組隊系統邏輯（完整 CRUD + 公開隊伍搜尋）
+- [x] 確認組隊後各自進行各自的 tick（afkTickEngine 獨立處理每個 agent）
+- [x] 隊長發起 boss 戰→成員自動彈出 PartyBattleInviteModal 確認
+- [x] 新增「發起組隊戰鬥」按鈕（隊長專屬，需 ≥2 人）
+
+### 回合制戰鬥系統（組隊版）
+- [x] 前後排定位（gameBattleParticipants 新增 rowPosition: front/back）
+- [x] 寵物在前排承受攻擊，玩家在後排進行指揮
+- [x] 組隊戰鬥時每個玩家 30 秒思考時間（後台可調）
+- [x] 後台管理已有回合計時器設定（PvE: 30s, Boss: 20s, PvP: 15s）
+- [x] party_battle_invites 表 + initiateBossBattle/respondBattleInvite/startPartyBattle 程序
+- [x] 18 個 vitest 測試全部通過

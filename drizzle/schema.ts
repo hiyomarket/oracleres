@@ -3549,6 +3549,8 @@ export const gameBattles = mysqlTable("game_battles", {
   settlementData: json("settlement_data").$type<Record<string, unknown>>(),
   /** 每回合思考時間限制（秒） */
   turnTimeLimit: int("turn_time_limit").notNull().default(20),
+  /** 組隊戰鬥：關聯的隊伍 ID */
+  partyId: int("party_id"),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
   updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
   endedAt: bigint("ended_at", { mode: "number" }),
@@ -3619,6 +3621,8 @@ export const gameBattleParticipants = mysqlTable("game_battle_participants", {
   }>>()
   /** 每回合動作次數（Boss 多次行動） */,
   actionsPerTurn: int("actions_per_turn").notNull().default(1),
+  /** 前後排定位：front（前排）/ back（後排） */
+  rowPosition: varchar("row_position", { length: 10 }).notNull().default("front"),
 });
 export type GameBattleParticipant = typeof gameBattleParticipants.$inferSelect;
 export type InsertGameBattleParticipant = typeof gameBattleParticipants.$inferInsert;
@@ -4077,3 +4081,31 @@ export const gamePartyInvites = mysqlTable("game_party_invites", {
 });
 export type GamePartyInvite = typeof gamePartyInvites.$inferSelect;
 export type InsertGamePartyInvite = typeof gamePartyInvites.$inferInsert;
+
+/**
+ * 組隊戰鬥邀請表
+ * 隊長發起 Boss 挑戰時，通知所有隊員確認參戰
+ */
+export const partyBattleInvites = mysqlTable("party_battle_invites", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 隊伍 ID */
+  partyId: int("party_id").notNull(),
+  /** 戰鬥 UUID */
+  battleId: varchar("battle_id", { length: 64 }).notNull(),
+  /** 發起者 agent ID */
+  initiatorAgentId: int("initiator_agent_id").notNull(),
+  /** 挑戰的怪物/Boss ID */
+  monsterId: varchar("monster_id", { length: 128 }).notNull(),
+  /** 怪物名稱（快取） */
+  monsterName: varchar("monster_name", { length: 100 }).notNull(),
+  /** 狀態：pending/started/expired/cancelled */
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  /** 隊員回應（JSON: { agentId: "accepted"|"declined" } */
+  responses: json("responses").$type<Record<string, string>>(),
+  /** 過期時間 */
+  expiresAt: bigint("expires_at", { mode: "number" }).notNull(),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type PartyBattleInvite = typeof partyBattleInvites.$inferSelect;
+export type InsertPartyBattleInvite = typeof partyBattleInvites.$inferInsert;

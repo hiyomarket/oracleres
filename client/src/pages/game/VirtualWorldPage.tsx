@@ -32,6 +32,7 @@ import { NamingDialog } from "./virtualworld/NamingDialog";
 import { TeleportModal } from "./virtualworld/TeleportModal";
 import { NodeInfoPanel } from "./virtualworld/NodeInfoPanel";
 import { NpcDialogueModal } from "@/components/game/NpcDialogueModal";
+import PartyBattleInviteModal from "@/components/game/PartyBattleInviteModal";
 import { CharacterPanel } from "./virtualworld/CharacterPanel";
 
 
@@ -454,6 +455,7 @@ export default function VirtualWorldPage() {
 
   // 組隊面板
   const [partyPanelOpen, setPartyPanelOpen] = useState(false);
+  const [partyBattleModalOpen, setPartyBattleModalOpen] = useState(false);
   const [onlinePanelOpen, setOnlinePanelOpen] = useState(false);
   const { data: myPartyData, refetch: refetchParty } = trpc.gameParty.getMyParty.useQuery(undefined, { enabled: !!user, refetchInterval: 15000 });
   const { data: pendingInvites, refetch: refetchInvites } = trpc.gameParty.getPendingInvites.useQuery(undefined, { enabled: !!user, refetchInterval: 10000 });
@@ -464,6 +466,16 @@ export default function VirtualWorldPage() {
   const rejectInviteMut = trpc.gameParty.rejectInvite.useMutation({ onSuccess: () => { refetchInvites(); } });
   const invitePlayerMut = trpc.gameParty.invitePlayer.useMutation({ onSuccess: (d) => { toast.success(d.message); } });
   const joinPublicPartyMut = trpc.gameParty.joinPublicParty.useMutation({ onSuccess: (d) => { refetchParty(); toast.success(d.message); } });
+  // 自動偵測戰鬥邀請（非隊長隊員）
+  const { data: pendingBattleInvite } = trpc.gameParty.getPendingBattleInvite.useQuery(undefined, {
+    enabled: !!myPartyData && myPartyData.leaderId !== agent?.id,
+    refetchInterval: 5000,
+  });
+  useEffect(() => {
+    if (pendingBattleInvite && !partyBattleModalOpen && pendingBattleInvite.myResponse === undefined) {
+      setPartyBattleModalOpen(true);
+    }
+  }, [pendingBattleInvite]);
   const { data: publicParties } = trpc.gameParty.searchPublicParties.useQuery(undefined, { enabled: partyPanelOpen, refetchInterval: partyPanelOpen ? 10000 : false });
   const { data: nearbyForParty } = trpc.gameParty.getNearbyPlayers.useQuery(
     { nodeId: agent?.currentNodeId ?? "tp-zhongzheng" },
@@ -2262,6 +2274,17 @@ export default function VirtualWorldPage() {
                   })}
                 </div>
                 {/* 邀請附近玩家 */}
+                {/* 隊長發起 Boss 戰按鈕 */}
+                {myPartyData.leaderId === agent?.id && (myPartyData.memberIds as number[])?.length >= 2 && (
+                  <div style={{ marginTop: "8px" }}>
+                    <button
+                      onClick={() => setPartyBattleModalOpen(true)}
+                      style={{ width: "100%", padding: "8px", borderRadius: "8px", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.4)", color: "#ef4444", fontSize: "12px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+                    >
+                      ⚔️ 發起組隊戰鬥
+                    </button>
+                  </div>
+                )}
                 {myPartyData.leaderId === agent?.id && nearbyForParty && nearbyForParty.length > 0 && (
                   <div style={{ marginTop: "8px" }}>
                     <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "4px" }}>邀請附近旅人：</div>
@@ -2317,6 +2340,16 @@ export default function VirtualWorldPage() {
       {npcDialogueId !== null && (
         <NpcDialogueModal npcId={npcDialogueId} onClose={() => setNpcDialogueId(null)} />
       )}
+      {/* 組隊戰鬥邀請模態 */}
+      <PartyBattleInviteModal
+        open={partyBattleModalOpen}
+        onClose={() => setPartyBattleModalOpen(false)}
+        onBattleStarted={(battleId) => {
+          setPartyBattleModalOpen(false);
+          // 導航到戰鬥畫面
+          toast.success(`組隊戰鬥開始！`);
+        }}
+      />
     </GameTabLayout>
   );
 }
