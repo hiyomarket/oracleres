@@ -315,6 +315,49 @@ export function CombatWindow({ data, onClose, enabled = true }: CombatWindowProp
           </div>
         </div>
 
+        {/* 戰鬥場景視覺區（角色前排 + 寵物後排 vs 怪物） */}
+        <div className="relative px-4 py-3 border-b border-indigo-900/20 overflow-hidden"
+          style={{ background: "linear-gradient(180deg, rgba(15,23,42,0.4) 0%, rgba(30,27,75,0.3) 100%)", minHeight: "72px" }}>
+          {/* 地面線 */}
+          <div className="absolute bottom-2 left-4 right-4 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent)" }} />
+          <div className="flex items-end justify-between">
+            {/* 我方：角色(前排) + 寵物(後排) */}
+            <div className="flex items-end gap-1">
+              {/* 寵物（後排，較小，稍微偏左上） */}
+              {data.petInfo && (
+                <div className="flex flex-col items-center mb-1 opacity-90" style={{ transform: "translateY(-4px)" }}>
+                  <span className="text-lg">🐾</span>
+                  <span className="text-[8px] text-purple-300 font-bold mt-0.5 whitespace-nowrap">{data.petInfo.petName}</span>
+                  <span className="text-[7px] text-purple-400/60">Lv.{data.petInfo.petLevel}</span>
+                </div>
+              )}
+              {/* 角色（前排，較大） */}
+              <div className="flex flex-col items-center">
+                <div className="relative">
+                  <span className="text-2xl" style={{ filter: isShaking ? "drop-shadow(0 0 6px rgba(239,68,68,0.6))" : "drop-shadow(0 0 4px rgba(56,189,248,0.4))" }}>🧙</span>
+                  {isShaking && <span className="absolute -top-1 -right-1 text-xs animate-ping">💥</span>}
+                </div>
+                <span className="text-[8px] text-cyan-300 font-bold mt-0.5 whitespace-nowrap max-w-[60px] truncate">{displayAgentName}</span>
+              </div>
+            </div>
+            {/* VS 標記 */}
+            <div className="flex flex-col items-center px-2 mb-2">
+              <span className="text-[10px] font-black text-indigo-400/60 tracking-widest">VS</span>
+            </div>
+            {/* 敵方：怪物 */}
+            <div className="flex flex-col items-center">
+              <div className="relative">
+                <span className="text-2xl" style={{ filter: "drop-shadow(0 0 4px rgba(239,68,68,0.4))", transform: "scaleX(-1)", display: "inline-block" }}>👹</span>
+                {!isShaking && visibleRounds.length > 0 && visibleRounds[visibleRounds.length - 1]?.monsterAtk > 0 && (
+                  <span className="absolute -top-1 -left-1 text-xs" style={{ animation: "combatGlow 0.6s ease-out forwards" }}>⚡</span>
+                )}
+              </div>
+              <span className="text-[8px] text-red-300 font-bold mt-0.5 whitespace-nowrap max-w-[70px] truncate">{data.monsterName}</span>
+              {data.monsterLevel && <span className="text-[7px] text-red-400/60">Lv.{data.monsterLevel}</span>}
+            </div>
+          </div>
+        </div>
+
         {/* 回合記錄 */}
         <div ref={scrollRef} className="overflow-y-auto max-h-56 px-3 py-2 space-y-1.5">
           {visibleRounds.map((r, i) => (

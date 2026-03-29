@@ -185,29 +185,47 @@ export const auctionRouter = router({
         .limit(1);
       if (!listing) throw new TRPCError({ code: "NOT_FOUND", message: "上架記錄不存在或已售出" });
 
-      // 退回背包
-      const [existing] = await db.select().from(agentInventory)
-        .where(and(
-          eq(agentInventory.agentId, agent.id),
-          eq(agentInventory.itemId, listing.itemId)
-        ))
-        .limit(1);
-
+      // 退回背包（裝備獨立存儲，其他可疊加）
       const now = Date.now();
-      if (existing) {
-        await db.update(agentInventory)
-          .set({ quantity: existing.quantity + listing.quantity, updatedAt: now })
-          .where(eq(agentInventory.id, existing.id));
+      const isEquipment = listing.itemId.startsWith("E_") || listing.itemId.startsWith("equip");
+      if (isEquipment) {
+        // 裝備每件獨立存儲
+        for (let i = 0; i < listing.quantity; i++) {
+          await db.insert(agentInventory).values({
+            agentId: agent.id,
+            itemId: listing.itemId,
+            itemType: "equipment",
+            quantity: 1,
+            obtainedAt: now,
+            acquiredAt: now,
+            updatedAt: now,
+          });
+        }
       } else {
-        await db.insert(agentInventory).values({
-          agentId: agent.id,
-          itemId: listing.itemId,
-          itemType: "material",
-          quantity: listing.quantity,
-          obtainedAt: now,
-          acquiredAt: now,
-          updatedAt: now,
-        });
+        const [existing] = await db.select().from(agentInventory)
+          .where(and(
+            eq(agentInventory.agentId, agent.id),
+            eq(agentInventory.itemId, listing.itemId)
+          ))
+          .limit(1);
+        if (existing) {
+          await db.update(agentInventory)
+            .set({ quantity: existing.quantity + listing.quantity, updatedAt: now })
+            .where(eq(agentInventory.id, existing.id));
+        } else {
+          const itemType = listing.itemId.startsWith("skill") ? "skill_book" as const
+            : listing.itemId.startsWith("food") || listing.itemId.startsWith("consumable") ? "consumable" as const
+            : "material" as const;
+          await db.insert(agentInventory).values({
+            agentId: agent.id,
+            itemId: listing.itemId,
+            itemType,
+            quantity: listing.quantity,
+            obtainedAt: now,
+            acquiredAt: now,
+            updatedAt: now,
+          });
+        }
       }
 
       await db.update(auctionListings)
@@ -271,28 +289,45 @@ export const auctionRouter = router({
       }
       // 手續費 feeAmount 入系統金庫（不分配給任何玩家，直接消耗）
 
-      // 道具加入買家背包
-      const [existing] = await db.select().from(agentInventory)
-        .where(and(
-          eq(agentInventory.agentId, buyer.id),
-          eq(agentInventory.itemId, listing.itemId)
-        ))
-        .limit(1);
-
-      if (existing) {
-        await db.update(agentInventory)
-          .set({ quantity: existing.quantity + listing.quantity, updatedAt: now })
-          .where(eq(agentInventory.id, existing.id));
+      // 道具加入買家背包（裝備獨立存儲，其他可疊加）
+      const isEquipmentBuy = listing.itemId.startsWith("E_") || listing.itemId.startsWith("equip");
+      if (isEquipmentBuy) {
+        for (let i = 0; i < listing.quantity; i++) {
+          await db.insert(agentInventory).values({
+            agentId: buyer.id,
+            itemId: listing.itemId,
+            itemType: "equipment",
+            quantity: 1,
+            obtainedAt: now,
+            acquiredAt: now,
+            updatedAt: now,
+          });
+        }
       } else {
-        await db.insert(agentInventory).values({
-          agentId: buyer.id,
-          itemId: listing.itemId,
-          itemType: "material",
-          quantity: listing.quantity,
-          obtainedAt: now,
-          acquiredAt: now,
-          updatedAt: now,
-        });
+        const [existing] = await db.select().from(agentInventory)
+          .where(and(
+            eq(agentInventory.agentId, buyer.id),
+            eq(agentInventory.itemId, listing.itemId)
+          ))
+          .limit(1);
+        if (existing) {
+          await db.update(agentInventory)
+            .set({ quantity: existing.quantity + listing.quantity, updatedAt: now })
+            .where(eq(agentInventory.id, existing.id));
+        } else {
+          const itemType = listing.itemId.startsWith("skill") ? "skill_book" as const
+            : listing.itemId.startsWith("food") || listing.itemId.startsWith("consumable") ? "consumable" as const
+            : "material" as const;
+          await db.insert(agentInventory).values({
+            agentId: buyer.id,
+            itemId: listing.itemId,
+            itemType,
+            quantity: listing.quantity,
+            obtainedAt: now,
+            acquiredAt: now,
+            updatedAt: now,
+          });
+        }
       }
 
       // 更新拍賣記錄

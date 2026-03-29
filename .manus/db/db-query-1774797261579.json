@@ -1,0 +1,55 @@
+{
+  "query": "SELECT id, node_key, region FROM game_map_nodes WHERE node_key LIKE 'npc-realm2%' LIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, node_key, region FROM game_map_nodes WHERE node_key LIKE 'npc-realm2%' LIMIT 15;",
+  "rows": [
+    {
+      "id": "21",
+      "node_key": "npc-realm2-21",
+      "region": "中界"
+    },
+    {
+      "id": "22",
+      "node_key": "npc-realm2-22",
+      "region": "中界"
+    },
+    {
+      "id": "23",
+      "node_key": "npc-realm2-23",
+      "region": "中界"
+    },
+    {
+      "id": "24",
+      "node_key": "npc-realm2-24",
+      "region": "中界"
+    },
+    {
+      "id": "25",
+      "node_key": "npc-realm2-25",
+      "region": "中界"
+    },
+    {
+      "id": "26",
+      "node_key": "npc-realm2-26",
+      "region": "中界"
+    },
+    {
+      "id": "27",
+      "node_key": "npc-realm2-27",
+      "region": "中界"
+    },
+    {
+      "id": "28",
+      "node_key": "npc-realm2-28",
+      "region": "中界"
+    },
+    {
+      "id": "29",
+      "node_key": "npc-realm2-29",
+      "region": "中界"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnode_key\tregion\n21\tnpc-realm2-21\t中界\n22\tnpc-realm2-22\t中界\n23\tnpc-realm2-23\t中界\n24\tnpc-realm2-24\t中界\n25\tnpc-realm2-25\t中界\n26\tnpc-realm2-26\t中界\n27\tnpc-realm2-27\t中界\n28\tnpc-realm2-28\t中界\n29\tnpc-realm2-29\t中界\n",
+  "stderr": "",
+  "execution_time_ms": 1564
+}

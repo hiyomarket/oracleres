@@ -1,0 +1,196 @@
+{
+  "query": "SELECT id, node_key, name, region FROM game_map_nodes ORDER BY id LIMIT 35;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, node_key, name, region FROM game_map_nodes ORDER BY id LIMIT 35;",
+  "rows": [
+    {
+      "id": "1",
+      "node_key": "npc-fogcity-1",
+      "name": "迷霧城・戰士公會大廳",
+      "region": "迷霧城"
+    },
+    {
+      "id": "2",
+      "node_key": "npc-fogcity-2",
+      "name": "迷霧城・武器評議塔",
+      "region": "迷霧城"
+    },
+    {
+      "id": "3",
+      "node_key": "npc-fogcity-3",
+      "name": "迷霧城・東門箭塔",
+      "region": "迷霧城"
+    },
+    {
+      "id": "4",
+      "node_key": "npc-fogcity-4",
+      "name": "迷霧城・地下競技場",
+      "region": "迷霧城"
+    },
+    {
+      "id": "5",
+      "node_key": "npc-fogcity-5",
+      "name": "迷霧城・黑市後巷",
+      "region": "迷霧城"
+    },
+    {
+      "id": "6",
+      "node_key": "npc-fogcity-6",
+      "name": "迷霧城・荒廢藥房",
+      "region": "迷霧城"
+    },
+    {
+      "id": "7",
+      "node_key": "npc-fogcity-7",
+      "name": "迷霧城・盜賊公會",
+      "region": "迷霧城"
+    },
+    {
+      "id": "8",
+      "node_key": "npc-fogcity-8",
+      "name": "迷霧城・採集者工會",
+      "region": "迷霧城"
+    },
+    {
+      "id": "9",
+      "node_key": "npc-fogcity-9",
+      "name": "迷霧城・工匠街",
+      "region": "迷霧城"
+    },
+    {
+      "id": "10",
+      "node_key": "npc-fogcity-10",
+      "name": "迷霧城・鑑定商店",
+      "region": "迷霧城"
+    },
+    {
+      "id": "11",
+      "node_key": "npc-realm1-11",
+      "name": "初界・試煉廣場",
+      "region": "初界"
+    },
+    {
+      "id": "12",
+      "node_key": "npc-realm1-12",
+      "name": "初界・霜語小屋",
+      "region": "初界"
+    },
+    {
+      "id": "13",
+      "node_key": "npc-realm1-13",
+      "name": "初界・迷跡驛站",
+      "region": "初界"
+    },
+    {
+      "id": "14",
+      "node_key": "npc-realm1-14",
+      "name": "初界・學術廢墟",
+      "region": "初界"
+    },
+    {
+      "id": "15",
+      "node_key": "npc-realm1-15",
+      "name": "初界・岩骨村",
+      "region": "初界"
+    },
+    {
+      "id": "16",
+      "node_key": "npc-realm1-16",
+      "name": "初界・濕毒沼澤",
+      "region": "初界"
+    },
+    {
+      "id": "17",
+      "node_key": "npc-realm1-17",
+      "name": "初界・回憶沙漠",
+      "region": "初界"
+    },
+    {
+      "id": "18",
+      "node_key": "npc-realm1-18",
+      "name": "初界・葡萄酒莊",
+      "region": "初界"
+    },
+    {
+      "id": "19",
+      "node_key": "npc-realm1-19",
+      "name": "初界・聖光修道院",
+      "region": "初界"
+    },
+    {
+      "id": "20",
+      "node_key": "npc-realm1-20",
+      "name": "初界・泉水聖所",
+      "region": "初界"
+    },
+    {
+      "id": "21",
+      "node_key": "npc-realm2-21",
+      "name": "中界・墜星高地",
+      "region": "中界"
+    },
+    {
+      "id": "22",
+      "node_key": "npc-realm2-22",
+      "name": "中界・混沌實驗室",
+      "region": "中界"
+    },
+    {
+      "id": "23",
+      "node_key": "npc-realm2-23",
+      "name": "中界・永恆教堂",
+      "region": "中界"
+    },
+    {
+      "id": "24",
+      "node_key": "npc-realm2-24",
+      "name": "中界・古老森林",
+      "region": "中界"
+    },
+    {
+      "id": "25",
+      "node_key": "npc-realm2-25",
+      "name": "中界・影之山谷",
+      "region": "中界"
+    },
+    {
+      "id": "26",
+      "node_key": "npc-realm2-26",
+      "name": "中界・虛空法塔",
+      "region": "中界"
+    },
+    {
+      "id": "27",
+      "node_key": "npc-realm2-27",
+      "name": "中界・鏡之修行場",
+      "region": "中界"
+    },
+    {
+      "id": "28",
+      "node_key": "npc-realm2-28",
+      "name": "中界・暗影公會",
+      "region": "中界"
+    },
+    {
+      "id": "29",
+      "node_key": "npc-realm2-29",
+      "name": "中界・永恆殿堂",
+      "region": "中界"
+    },
+    {
+      "id": "30",
+      "node_key": "npc-tower-30",
+      "name": "試煉之塔・地下訓練場",
+      "region": "試煉之塔"
+    },
+    {
+      "id": "31",
+      "node_key": "npc-abyss-31",
+      "name": "碎影深淵・入口營地",
+      "region": "碎影深淵"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnode_key\tname\tregion\n1\tnpc-fogcity-1\t迷霧城・戰士公會大廳\t迷霧城\n2\tnpc-fogcity-2\t迷霧城・武器評議塔\t迷霧城\n3\tnpc-fogcity-3\t迷霧城・東門箭塔\t迷霧城\n4\tnpc-fogcity-4\t迷霧城・地下競技場\t迷霧城\n5\tnpc-fogcity-5\t迷霧城・黑市後巷\t迷霧城\n6\tnpc-fogcity-6\t迷霧城・荒廢藥房\t迷霧城\n7\tnpc-fogcity-7\t迷霧城・盜賊公會\t迷霧城\n8\tnpc-fogcity-8\t迷霧城・採集者工會\t迷霧城\n9\tnpc-fogcity-9\t迷霧城・工匠街\t迷霧城\n10\tnpc-fogcity-10\t迷霧城・鑑定商店\t迷霧城\n11\tnpc-realm1-11\t初界・試煉廣場\t初界\n12\tnpc-realm1-12\t初界・霜語小屋\t初界\n13\tnpc-realm1-13\t初界・迷跡驛站\t初界\n14\tnpc-realm1-14\t初界・學術廢墟\t初界\n15\tnpc-realm1-15\t初界・岩骨村\t初界\n16\tnpc-realm1-16\t初界・濕毒沼澤\t初界\n17\tnpc-realm1-17\t初界・回憶沙漠\t初界\n18\tnpc-realm1-18\t初界・葡萄酒莊\t初界\n19\tnpc-realm1-19\t初界・聖光修道院\t初界\n20\tnpc-realm1-20\t初界・泉水聖所\t初界\n21\tnpc-realm2-21\t中界・墜星高地\t中界\n22\tnpc-realm2-22\t中界・混沌實驗室\t中界\n23\tnpc-realm2-23\t中界・永恆教堂\t中界\n24\tnpc-realm2-24\t中界・古老森林\t中界\n25\tnpc-realm2-25\t中界・影之山谷\t中界\n26\tnpc-realm2-26\t中界・虛空法塔\t中界\n27\tnpc-realm2-27\t中界・鏡之修行場\t中界\n28\tnpc-realm2-28\t中界・暗影公會\t中界\n29\tnpc-realm2-29\t中界・永恆殿堂\t中界\n30\tnpc-tower-30\t試煉之塔・地下訓練場\t試煉之塔\n31\tnpc-abyss-31\t碎影深淵・入口營地\t碎影深淵\n",
+  "stderr": "",
+  "execution_time_ms": 1574
+}

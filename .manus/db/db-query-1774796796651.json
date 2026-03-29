@@ -1,0 +1,50 @@
+{
+  "query": "SHOW COLUMNS FROM game_agents LIKE 'potential%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW COLUMNS FROM game_agents LIKE 'potential%';",
+  "rows": [
+    {
+      "Field": "potential_wood",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_fire",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_earth",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_metal",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "potential_water",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\npotential_wood\tint\tNO\t\t0\t\npotential_fire\tint\tNO\t\t0\t\npotential_earth\tint\tNO\t\t0\t\npotential_metal\tint\tNO\t\t0\t\npotential_water\tint\tNO\t\t0\t\n",
+  "stderr": "",
+  "execution_time_ms": 1585
+}

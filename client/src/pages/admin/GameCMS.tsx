@@ -1886,7 +1886,7 @@ function CombatSimulatorPanel() {
     profession: "none",
     fateElement: "",
     wuxing: { wood: 20, fire: 20, earth: 20, metal: 20, water: 20 },
-    potential: { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 },
+    potential: { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 },
   };
   const [agentA, setAgentA] = useState({ ...defaultAgent });
   const [agentB, setAgentB] = useState({ ...defaultAgent, level: 10 });
@@ -1943,16 +1943,19 @@ function CombatSimulatorPanel() {
         </div>
       </div>
       <div>
-        <label className="text-[10px] text-muted-foreground">潛能點數分配</label>
-        <div className="grid grid-cols-3 gap-1">
-          {(["hp", "mp", "atk", "def", "spd", "matk"] as const).map(stat => (
-            <div key={stat} className="text-center">
-              <div className="text-[9px] text-muted-foreground">{stat.toUpperCase()}</div>
-              <input type="number" min={0} max={500} value={agent.potential[stat]}
-                onChange={e => setAgent({ ...agent, potential: { ...agent.potential, [stat]: parseInt(e.target.value) || 0 } })}
-                className="w-full px-1 py-0.5 rounded bg-white/5 border border-white/10 text-xs text-white text-center" />
-            </div>
-          ))}
+        <label className="text-[10px] text-muted-foreground">潛能五行分配</label>
+        <div className="grid grid-cols-5 gap-1">
+          {(["wood", "fire", "earth", "metal", "water"] as const).map(el => {
+            const labels: Record<string, string> = { wood: "木", fire: "火", earth: "土", metal: "金", water: "水" };
+            return (
+              <div key={el} className="text-center">
+                <div className="text-[9px] text-muted-foreground">{labels[el]}</div>
+                <input type="number" min={0} max={500} value={agent.potential[el]}
+                  onChange={e => setAgent({ ...agent, potential: { ...agent.potential, [el]: parseInt(e.target.value) || 0 } })}
+                  className="w-full px-1 py-0.5 rounded bg-white/5 border border-white/10 text-xs text-white text-center" />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

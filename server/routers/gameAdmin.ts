@@ -1617,7 +1617,7 @@ export const gameAdminRouter = router({
         profession: z.string().default("none"),
         fateElement: z.string().default(""),
         wuxing: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }),
-        potential: z.object({ hp: z.number(), mp: z.number(), atk: z.number(), def: z.number(), spd: z.number(), matk: z.number() }).default({ hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 }),
+        potential: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }).default({ wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }),
       }),
       agentB: z.object({
         level: z.number().int().min(1).max(99),
@@ -1625,7 +1625,7 @@ export const gameAdminRouter = router({
         profession: z.string().default("none"),
         fateElement: z.string().default(""),
         wuxing: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }),
-        potential: z.object({ hp: z.number(), mp: z.number(), atk: z.number(), def: z.number(), spd: z.number(), matk: z.number() }).default({ hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 }),
+        potential: z.object({ wood: z.number(), fire: z.number(), earth: z.number(), metal: z.number(), water: z.number() }).default({ wood: 0, fire: 0, earth: 0, metal: 0, water: 0 }),
       }),
       rounds: z.number().int().min(1).max(100).default(10),
     }))
@@ -1633,14 +1633,13 @@ export const gameAdminRouter = router({
       const { calcFullStats, calcCombatDamage, rollCrit, rollDodge, rollBlock } = await import("../services/statEngine");
 
       function buildStats(agent: typeof input.agentA) {
-        return calcFullStats({
-          level: agent.level,
-          race: agent.race,
-          wuxing: agent.wuxing,
-          profession: agent.profession as any,
-          fateElement: agent.fateElement,
-          potential: agent.potential,
-        });
+        return calcFullStats(
+          agent.wuxing,
+          agent.level,
+          agent.potential,
+          (agent.fateElement || undefined) as any,
+          (agent.profession || undefined) as any,
+        );
       }
 
       const statsA = buildStats(input.agentA);

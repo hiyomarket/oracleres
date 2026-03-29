@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `game_agents` ADD `potential_wood` int DEFAULT 0 NOT NULL;\nALTER TABLE `game_agents` ADD `potential_fire` int DEFAULT 0 NOT NULL;\nALTER TABLE `game_agents` ADD `potential_earth` int DEFAULT 0 NOT NULL;\nALTER TABLE `game_agents` ADD `potential_metal` int DEFAULT 0 NOT NULL;\nALTER TABLE `game_agents` ADD `potential_water` int DEFAULT 0 NOT NULL;\nALTER TABLE `game_agents` DROP COLUMN `potential_hp`;\nALTER TABLE `game_agents` DROP COLUMN `potential_mp`;\nALTER TABLE `game_agents` DROP COLUMN `potential_atk`;\nALTER TABLE `game_agents` DROP COLUMN `potential_def`;\nALTER TABLE `game_agents` DROP COLUMN `potential_spd`;\nALTER TABLE `game_agents` DROP COLUMN `potential_matk`;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute ALTER TABLE `game_agents` ADD `potential_wood` int DEFAULT 0 NOT NULL;\nALTER TABLE `game_agents` ADD `potential_fire` int DEFAULT 0 NOT NULL;\nALTER TABLE `game_agents` ADD `potential_earth` int DEFAULT 0 NOT NULL;\nALTER TABLE `game_agents` ADD `potential_metal` int DEFAULT 0 NOT NULL;\nALTER TABLE `game_agents` ADD `potential_water` int DEFAULT 0 NOT NULL;\nALTER TABLE `game_agents` DROP COLUMN `potential_hp`;\nALTER TABLE `game_agents` DROP COLUMN `potential_mp`;\nALTER TABLE `game_agents` DROP COLUMN `potential_atk`;\nALTER TABLE `game_agents` DROP COLUMN `potential_def`;\nALTER TABLE `game_agents` DROP COLUMN `potential_spd`;\nALTER TABLE `game_agents` DROP COLUMN `potential_matk`;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 6166
+}

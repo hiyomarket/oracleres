@@ -155,7 +155,7 @@ export type AgentData = {
   movementMode?: string | null;
   avatarUrl?: string | null;
   freeStatPoints?: number;
-  // 潛能點數分配
-  potentialHp?: number; potentialMp?: number; potentialAtk?: number;
-  potentialDef?: number; potentialSpd?: number; potentialMatk?: number;
+  // 潛能五行分配
+  potentialWood?: number; potentialFire?: number; potentialEarth?: number;
+  potentialMetal?: number; potentialWater?: number;
 };

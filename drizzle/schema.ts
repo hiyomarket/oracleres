@@ -1553,6 +1553,8 @@ export const gameMapNodes = mysqlTable("game_map_nodes", {
   realWorldName: varchar("real_world_name", { length: 200 }),
   /** 排序權重 */
   sortOrder: int("sort_order").notNull().default(0),
+  /** 前端地圖節點 ID（如 npc-fogcity-1），用於與 shared/mapNodes.ts 對應 */
+  nodeKey: varchar("node_key", { length: 100 }),
   isActive: tinyint("is_active").default(1),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -1798,18 +1800,16 @@ export const gameAgents = mysqlTable("game_agents", {
   professionTier: int("profession_tier").notNull().default(0),
   /** 上次轉職時間戳（冷却判定用） */
   professionChangedAt: bigint("profession_changed_at", { mode: "number" }).notNull().default(0),
-  /** 潛能點數分配：HP */
-  potentialHp: int("potential_hp").notNull().default(0),
-  /** 潛能點數分配：MP */
-  potentialMp: int("potential_mp").notNull().default(0),
-  /** 潛能點數分配：ATK */
-  potentialAtk: int("potential_atk").notNull().default(0),
-  /** 潛能點數分配：DEF */
-  potentialDef: int("potential_def").notNull().default(0),
-  /** 潛能點數分配：SPD */
-  potentialSpd: int("potential_spd").notNull().default(0),
-  /** 潛能點數分配：MATK */
-  potentialMatk: int("potential_matk").notNull().default(0),
+  /** 潛能點數分配：木（影響 HP、治癒力） */
+  potentialWood: int("potential_wood").notNull().default(0),
+  /** 潛能點數分配：火（影響 ATK、MATK、暴擊傷害） */
+  potentialFire: int("potential_fire").notNull().default(0),
+  /** 潛能點數分配：土（影響 DEF、MDEF） */
+  potentialEarth: int("potential_earth").notNull().default(0),
+  /** 潛能點數分配：金（影響 SPD、暴擊率、命中率） */
+  potentialMetal: int("potential_metal").notNull().default(0),
+  /** 潛能點數分配：水（影響 MP、SPR） */
+  potentialWater: int("potential_water").notNull().default(0),
   /** 命格主屬性（從用戶八字自動帶入：wood/fire/earth/metal/water） */
   fateElement: varchar("fate_element", { length: 10 }).notNull().default("wood"),
   /** 玩家自訂頭像（S3 URL） */

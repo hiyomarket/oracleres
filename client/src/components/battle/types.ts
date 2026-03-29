@@ -31,6 +31,7 @@ export interface BattleParticipantUI {
   petId?: number | null;
   monsterId?: string | null;
   avatarUrl?: string | null;
+  rowPosition?: "front" | "back" | null;
 }
 
 export interface BattleLogUI {

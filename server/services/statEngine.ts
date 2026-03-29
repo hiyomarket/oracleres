@@ -31,8 +31,17 @@ export interface WuXingValues {
   water: number;
 }
 
-/** 潛能點數分配 */
+/** 潛能點數分配（五行元素） */
 export interface PotentialAllocation {
+  wood: number;
+  fire: number;
+  earth: number;
+  metal: number;
+  water: number;
+}
+
+/** 舊版潛能分配（向後相容用） */
+export interface LegacyPotentialAllocation {
   hp: number;
   mp: number;
   atk: number;
@@ -171,10 +180,27 @@ export const PROFESSION_DEFS: Record<Profession, ProfessionDef> = {
 export const PROFESSION_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 小時
 
 // ═══════════════════════════════════════════════════════════════
-// 三、潛能點數每點效果（後台可調）
+// 三、潛能點數每點效果（五行元素加成）
 // ═══════════════════════════════════════════════════════════════
 
-/** 每點潛能效果預設值 */
+/**
+ * 潛能五行加成表（每點效果）
+ *
+ * 木：+2 HP, +0.5 治癒力
+ * 火：+0.5 ATK, +0.5 MATK, +0.2% 暴擊傷害
+ * 土：+0.5 DEF, +0.3 MDEF
+ * 金：+0.3 SPD, +0.1% 暴擊率, +0.3 命中率
+ * 水：+1 MP, +0.3 SPR
+ */
+export const POTENTIAL_WUXING_BONUS = {
+  wood: { hp: 2, healPower: 0.5 },
+  fire: { atk: 0.5, matk: 0.5, critDamage: 0.2 },
+  earth: { def: 0.5, mdef: 0.3 },
+  metal: { spd: 0.3, critRate: 0.1, hitRate: 0.3 },
+  water: { mp: 1, spr: 0.3 },
+} as const;
+
+/** 舊版相容：每點潛能效果預設值（已廢棄） */
 export const DEFAULT_POTENTIAL_PER_POINT = {
   hp: 20,
   mp: 10,
@@ -214,7 +240,7 @@ export const DEFAULT_POTENTIAL_PER_POINT = {
 export function calcFullStats(
   wuxing: WuXingValues,
   level: number,
-  potential: PotentialAllocation = { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 },
+  potential: PotentialAllocation = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 },
   fateElement?: WuXingElement,
   profession?: Profession,
   configOverride?: Partial<ReturnType<typeof getStatBalanceConfig>>,
@@ -226,36 +252,50 @@ export function calcFullStats(
 
   const { wood, fire, earth, metal, water } = wuxing;
 
-  // 潛能效果（後台可調，目前使用預設值）
-  const pp = DEFAULT_POTENTIAL_PER_POINT;
+  // 潛能五行加成（每點效果温和，避免低等級碾壓）
+  const pwb = POTENTIAL_WUXING_BONUS;
+  const pBonus = {
+    hp:        Math.floor(potential.wood * pwb.wood.hp),
+    mp:        Math.floor(potential.water * pwb.water.mp),
+    atk:       Math.floor(potential.fire * pwb.fire.atk),
+    def:       Math.floor(potential.earth * pwb.earth.def),
+    spd:       Math.floor(potential.metal * pwb.metal.spd),
+    matk:      Math.floor(potential.fire * pwb.fire.matk),
+    mdef:      Math.floor(potential.earth * pwb.earth.mdef),
+    spr:       potential.water * pwb.water.spr,
+    critRate:  potential.metal * pwb.metal.critRate,
+    critDamage: potential.fire * pwb.fire.critDamage,
+    healPower: Math.floor(potential.wood * pwb.wood.healPower),
+    hitRate:   Math.floor(potential.metal * pwb.metal.hitRate),
+  };
 
-  // ═══ 基礎公式計算 ═══
-  let hp   = Math.floor(level * cfg.statLvHpMult  + cfg.statLvHpBase  + (wood  / 100) * cfg.infuseHpPer100  + potential.hp  * pp.hp);
-  let mp   = Math.floor(level * cfg.statLvMpMult  + cfg.statLvMpBase  + (water / 100) * cfg.infuseMpPer100  + potential.mp  * pp.mp);
-  let atk  = Math.floor(level * cfg.statLvAtkMult + cfg.statLvAtkBase + (fire  / 100) * cfg.infuseAtkPer100 + potential.atk * pp.atk);
-  let def  = Math.floor(level * cfg.statLvDefMult + cfg.statLvDefBase + (earth / 100) * cfg.infuseDefPer100 + potential.def * pp.def);
-  let spd  = Math.floor(level * cfg.statLvSpdMult + cfg.statLvSpdBase + (metal / 100) * cfg.infuseSpdPer100 + potential.spd * pp.spd);
+  // ═══ 基礎公式計算（五行加成替代舊的直接屬性加點） ═══
+  let hp   = Math.floor(level * cfg.statLvHpMult  + cfg.statLvHpBase  + (wood  / 100) * cfg.infuseHpPer100  + pBonus.hp);
+  let mp   = Math.floor(level * cfg.statLvMpMult  + cfg.statLvMpBase  + (water / 100) * cfg.infuseMpPer100  + pBonus.mp);
+  let atk  = Math.floor(level * cfg.statLvAtkMult + cfg.statLvAtkBase + (fire  / 100) * cfg.infuseAtkPer100 + pBonus.atk);
+  let def  = Math.floor(level * cfg.statLvDefMult + cfg.statLvDefBase + (earth / 100) * cfg.infuseDefPer100 + pBonus.def);
+  let spd  = Math.floor(level * cfg.statLvSpdMult + cfg.statLvSpdBase + (metal / 100) * cfg.infuseSpdPer100 + pBonus.spd);
 
-  // MATK = Lv×8 + 15 + (火÷100)×25 + (水÷100)×10 + 潛能分配×3
-  let matk = Math.floor(level * cfg.statLvAtkMult + cfg.statLvAtkBase + (fire / 100) * 25 + (water / 100) * 10 + potential.matk * pp.matk);
+  // MATK = Lv×8 + 15 + (火÷100)×25 + (水÷100)×10 + 潛能火加成
+  let matk = Math.floor(level * cfg.statLvAtkMult + cfg.statLvAtkBase + (fire / 100) * 25 + (water / 100) * 10 + pBonus.matk);
 
-  // MDEF = Lv×6 + 10 + (土÷100)×20 + (水÷100)×10（無潛能分配）
-  let mdef = Math.floor(level * cfg.statLvSpdMult + cfg.statLvSpdBase + (earth / 100) * 20 + (water / 100) * 10);
+  // MDEF = Lv×6 + 10 + (土÷100)×20 + (水÷100)×10 + 潛能土加成
+  let mdef = Math.floor(level * cfg.statLvSpdMult + cfg.statLvSpdBase + (earth / 100) * 20 + (water / 100) * 10 + pBonus.mdef);
 
-  // SPR = Lv×4 + 10 + (水÷100)×15
-  let spr = Math.floor(level * 4 + 10 + (water / 100) * 15);
+  // SPR = Lv×4 + 10 + (水÷100)×15 + 潛能水加成
+  let spr = Math.floor(level * 4 + 10 + (water / 100) * 15 + pBonus.spr);
 
-  // 暴擊率 = 5 + (金÷100)×2
-  let critRate = 5 + (metal / 100) * 2;
+  // 暴擊率 = 5 + (金÷100)×2 + 潛能金加成
+  let critRate = 5 + (metal / 100) * 2 + pBonus.critRate;
 
-  // 暴擊傷害 = 150 + (火÷100)×10
-  let critDamage = 150 + (fire / 100) * 10;
+  // 暴擊傷害 = 150 + (火÷100)×10 + 潛能火加成
+  let critDamage = 150 + (fire / 100) * 10 + pBonus.critDamage;
 
-  // 治癒力 = Lv×2 + (木÷100)×20
-  let healPower = Math.floor(level * 2 + (wood / 100) * 20);
+  // 治癒力 = Lv×2 + (木÷100)×20 + 潛能木加成
+  let healPower = Math.floor(level * 2 + (wood / 100) * 20 + pBonus.healPower);
 
-  // 命中率 = 80 + (金÷100)×15 + Lv×0.3
-  let hitRate = Math.floor(80 + (metal / 100) * 15 + level * 0.3);
+  // 命中率 = 80 + (金÷100)×15 + Lv×0.3 + 潛能金加成
+  let hitRate = Math.floor(80 + (metal / 100) * 15 + level * 0.3 + pBonus.hitRate);
 
   // ═══ 命格加成 ═══
   if (fateElement) {
@@ -369,8 +409,8 @@ export function calcCharacterStatsCompat(
 export const POTENTIAL_POINTS_PER_LEVEL = 5;
 
 /**
- * 驗證潛能分配是否合法
- * @param allocation 分配方案
+ * 驗證潛能分配是否合法（五行元素）
+ * @param allocation 五行分配方案
  * @param maxPoints 可用總點數
  * @returns 錯誤訊息，null 表示合法
  */
@@ -378,7 +418,7 @@ export function validatePotentialAllocation(
   allocation: PotentialAllocation,
   maxPoints: number,
 ): string | null {
-  const total = allocation.hp + allocation.mp + allocation.atk + allocation.def + allocation.spd + allocation.matk;
+  const total = allocation.wood + allocation.fire + allocation.earth + allocation.metal + allocation.water;
 
   if (total > maxPoints) {
     return `分配點數 (${total}) 超過可用點數 (${maxPoints})`;
@@ -397,19 +437,20 @@ export function validatePotentialAllocation(
 }
 
 /**
- * 計算潛能分配後的屬性增量
- * @param allocation 分配方案
+ * 計算潛能五行分配後的屬性增量
+ * @param allocation 五行分配方案
  * @returns 各屬性的增量
  */
 export function calcPotentialBonus(allocation: PotentialAllocation): Partial<FullCharacterStats> {
-  const pp = DEFAULT_POTENTIAL_PER_POINT;
+  const pwb = POTENTIAL_WUXING_BONUS;
   return {
-    hp: allocation.hp * pp.hp,
-    mp: allocation.mp * pp.mp,
-    atk: allocation.atk * pp.atk,
-    def: allocation.def * pp.def,
-    spd: allocation.spd * pp.spd,
-    matk: allocation.matk * pp.matk,
+    hp:        Math.floor(allocation.wood * pwb.wood.hp),
+    mp:        Math.floor(allocation.water * pwb.water.mp),
+    atk:       Math.floor(allocation.fire * pwb.fire.atk),
+    def:       Math.floor(allocation.earth * pwb.earth.def),
+    spd:       Math.floor(allocation.metal * pwb.metal.spd),
+    matk:      Math.floor(allocation.fire * pwb.fire.matk),
+    healPower: Math.floor(allocation.wood * pwb.wood.healPower),
   };
 }
 
@@ -482,7 +523,7 @@ export function calcAgentFullStats(
   wuxing: WuXingValues,
   level: number,
   fateElement: WuXingElement,
-  potential: PotentialAllocation = { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 },
+  potential: PotentialAllocation = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 },
   profession: Profession = "none",
 ): FullCharacterStats {
   return calcFullStats(wuxing, level, potential, fateElement, profession);

@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE game_map_nodes SET node_key = CONCAT('npc-fogcity-', id) WHERE region = '迷霧城';\nUPDATE game_map_nodes SET node_key = CONCAT('npc-realm1-', id) WHERE region = '初界';\nUPDATE game_map_nodes SET node_key = CONCAT('npc-realm2-', id) WHERE region = '中界';\nUPDATE game_map_nodes SET node_key = CONCAT('npc-tower-', id) WHERE region = '試煉之塔';\nUPDATE game_map_nodes SET node_key = CONCAT('npc-abyss-', id) WHERE region = '碎影深淵';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute UPDATE game_map_nodes SET node_key = CONCAT('npc-fogcity-', id) WHERE region = '迷霧城';\nUPDATE game_map_nodes SET node_key = CONCAT('npc-realm1-', id) WHERE region = '初界';\nUPDATE game_map_nodes SET node_key = CONCAT('npc-realm2-', id) WHERE region = '中界';\nUPDATE game_map_nodes SET node_key = CONCAT('npc-tower-', id) WHERE region = '試煉之塔';\nUPDATE game_map_nodes SET node_key = CONCAT('npc-abyss-', id) WHERE region = '碎影深淵';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2394
+}

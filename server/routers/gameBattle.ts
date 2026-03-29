@@ -542,6 +542,7 @@ export const gameBattleRouter = router({
           skillCooldowns: {} as any,
           activeBuffs: [] as any,
           actionsPerTurn: p.actionsPerTurn ?? 1,
+          rowPosition: p.type === "pet" ? "front" : p.type === "character" ? "back" : "front",
         });
       }
 
@@ -1566,6 +1567,8 @@ export const gameBattleRouter = router({
           agentId: p.agentId ?? null,
           petId: p.petId ?? null,
           monsterId: p.monsterId ?? null,
+          avatarUrl: (p as any).avatarUrl ?? null,
+          rowPosition: (p as any).rowPosition ?? null,
           skills: ((p.equippedSkills ?? []) as any[]).map((s: any) => {
             const cdMap = (p.skillCooldowns ?? {}) as Record<string, number>;
             return {

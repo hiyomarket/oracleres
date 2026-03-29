@@ -575,7 +575,7 @@ export const gameWorldRouter = router({
         // 查詢 NPC 節點的區域
         const [nodeRow] = await db.select({ region: gameMapNodes.region })
           .from(gameMapNodes)
-          .where(eq(gameMapNodes.nodeId, input.targetNodeId))
+          .where(eq(gameMapNodes.nodeKey, input.targetNodeId))
           .limit(1);
         if (nodeRow?.region) apCost = regionCostMap[nodeRow.region] ?? 3;
       }
@@ -1620,7 +1620,7 @@ export const gameWorldRouter = router({
         };
         const [nodeRow] = await db.select({ region: gameMapNodes.region })
           .from(gameMapNodes)
-          .where(eq(gameMapNodes.nodeId, input.targetNodeId))
+          .where(eq(gameMapNodes.nodeKey, input.targetNodeId))
           .limit(1);
         const regionMult = nodeRow?.region ? (regionStaminaMap[nodeRow.region] ?? 1.5) : 1.5;
         moveStaminaCost = Math.ceil(moveStaminaCost * regionMult);
@@ -1963,14 +1963,32 @@ export const gameWorldRouter = router({
         agent.equippedBody, agent.equippedHands, agent.equippedFeet,
         agent.equippedRingA, agent.equippedRingB, agent.equippedNecklace, agent.equippedAmulet,
       ].filter(Boolean) as string[];
+      // 圖鑑 slot 到前端 slot 的映射（用於篩選）
+      // 圖鑑中的 slot: weapon, offhand, helmet, armor, shoes, accessory
+      // 前端的 slot: weapon, offhand, head(=helmet), body(=armor), hands(=gloves), feet(=shoes), ringA/ringB/necklace/amulet(=accessory)
+      const CATALOG_TO_FRONT_SLOTS: Record<string, string[]> = {
+        weapon: ["weapon"],
+        offhand: ["offhand"],
+        helmet: ["helmet", "head"],
+        armor: ["armor", "body"],
+        shoes: ["shoes", "feet"],
+        gloves: ["gloves", "hands"],
+        accessory: ["accessory", "ringA", "ringB", "necklace", "amulet"],
+      };
+      // 反向映射：前端 slot → 圖鑑 slot
+      const FRONT_TO_CATALOG: Record<string, string> = {};
+      for (const [catSlot, frontSlots] of Object.entries(CATALOG_TO_FRONT_SLOTS)) {
+        for (const fs of frontSlots) FRONT_TO_CATALOG[fs] = catSlot;
+      }
+      const filterCatalogSlot = input?.slot ? (FRONT_TO_CATALOG[input.slot] ?? input.slot) : undefined;
       // 合併背包記錄和圖鑑屬性
       const result = invItems.map(inv => {
         const cat = catalogMap.get(inv.itemId);
+        const enhanceData = inv.itemData ? (typeof inv.itemData === 'string' ? JSON.parse(inv.itemData) : inv.itemData) : null;
         return {
           invId: inv.id,
           itemId: inv.itemId,
           quantity: inv.quantity,
-          // 圖鑑屬性（若背包有此裝備但圖鑑已刪除則為 null）
           equipId: cat?.equipId ?? inv.itemId,
           name: cat?.name ?? inv.itemId,
           slot: cat?.slot ?? null,
@@ -1981,12 +1999,12 @@ export const gameWorldRouter = router({
           attackBonus: cat?.attackBonus ?? 0,
           defenseBonus: cat?.defenseBonus ?? 0,
           speedBonus: cat?.speedBonus ?? 0,
-          matkBonus: 0,
-          enhanceLevel: 0,
+          matkBonus: cat?.magicAttackBonus ?? 0,
+          enhanceLevel: enhanceData?.enhanceLevel ?? 0,
           isEquipped: equippedIds.includes(inv.itemId),
           imageUrl: cat?.imageUrl ?? null,
         };
-      }).filter(r => !input?.slot || r.slot === input.slot);
+      }).filter(r => !filterCatalogSlot || r.slot === filterCatalogSlot);
       return result;
     }),
 
@@ -2051,14 +2069,25 @@ export const gameWorldRouter = router({
       const agent = agents[0];
       const [equip] = await db.select().from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.equipId, input.equipId)).limit(1);
       if (!equip) throw new TRPCError({ code: "NOT_FOUND", message: "裝備不存在" });
+      // 圖鑑 slot → 角色裝備欄位映射
+      // accessory 類型裝備會自動分配到空的飾品欄位
       const SLOT_MAP: Record<string, string> = {
         weapon: "equippedWeapon", offhand: "equippedOffhand",
         helmet: "equippedHead", armor: "equippedBody",
         gloves: "equippedHands", shoes: "equippedFeet",
-        ringA: "equippedRingA", ringB: "equippedRingB",
-        necklace: "equippedNecklace", amulet: "equippedAmulet",
       };
-      const dbField = SLOT_MAP[equip.slot] ?? "equippedWeapon";
+      let dbField = SLOT_MAP[equip.slot];
+      if (!dbField && equip.slot === "accessory") {
+        // accessory 類型裝備自動分配到空的飾品欄位（ringA → ringB → necklace → amulet）
+        const accSlots = ["equippedRingA", "equippedRingB", "equippedNecklace", "equippedAmulet"];
+        if (input.action === "equip") {
+          dbField = accSlots.find(s => !(agent as any)[s]) ?? accSlots[0];
+        } else {
+          // 卸下時找到裝備了此 equipId 的欄位
+          dbField = accSlots.find(s => (agent as any)[s] === input.equipId) ?? accSlots[0];
+        }
+      }
+      if (!dbField) dbField = "equippedWeapon";
       await db.update(gameAgents).set({ [dbField]: input.action === "equip" ? input.equipId : null, updatedAt: Date.now() }).where(eq(gameAgents.id, agent.id));
       // BUG-5 FIX: 同步更新 agentInventory 的 isEquipped 狀態
       const AGENT_FIELD_TO_INV_SLOT: Record<string, string> = {
@@ -2338,16 +2367,23 @@ export const gameWorldRouter = router({
         await db.update(users).set({ gameStones: userRows[0].gameStones - item.price })
           .where(eq(users.id, ctx.user.id));
       }
-      // 判斷道具類型（技能書需要特殊處理）
-      const isSkillBook = item.itemKey.startsWith("skill-");
-      const resolvedItemType = isSkillBook ? "skill_book" : "consumable";
-      const existing = await db.select().from(agentInventory)
-        .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
-      if (existing[0]) {
-        await db.update(agentInventory).set({ quantity: existing[0].quantity + item.quantity, updatedAt: Date.now() })
-          .where(eq(agentInventory.id, existing[0].id));
+      // 判斷道具類型（裝備獨立存儲，其他可疊加）
+      const isSkillBook = item.itemKey.startsWith("skill-") || item.itemKey.startsWith("skill_book");
+      const isEquipment = item.itemKey.startsWith("E_") || item.itemKey.startsWith("equip");
+      const resolvedItemType = isEquipment ? "equipment" as const : isSkillBook ? "skill_book" as const : "consumable" as const;
+      if (isEquipment) {
+        for (let i = 0; i < item.quantity; i++) {
+          await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: resolvedItemType, quantity: 1, acquiredAt: Date.now(), updatedAt: Date.now() });
+        }
       } else {
-        await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: resolvedItemType, quantity: item.quantity, acquiredAt: Date.now(), updatedAt: Date.now() });
+        const existing = await db.select().from(agentInventory)
+          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
+        if (existing[0]) {
+          await db.update(agentInventory).set({ quantity: existing[0].quantity + item.quantity, updatedAt: Date.now() })
+            .where(eq(agentInventory.id, existing[0].id));
+        } else {
+          await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: resolvedItemType, quantity: item.quantity, acquiredAt: Date.now(), updatedAt: Date.now() });
+        }
       }
       const currencyLabel = item.currencyType === "coins" ? "金幣" : "靈石";
       await db.insert(agentEvents).values({
@@ -3107,12 +3143,11 @@ export const gameWorldRouter = router({
   // ═══ GD-028 潛能點數分配 API ═══
   allocateStatPoints: protectedProcedure
     .input(z.object({
-      hp: z.number().int().min(0).default(0),
-      mp: z.number().int().min(0).default(0),
-      atk: z.number().int().min(0).default(0),
-      def: z.number().int().min(0).default(0),
-      spd: z.number().int().min(0).default(0),
-      matk: z.number().int().min(0).default(0),
+      wood: z.number().int().min(0).default(0),
+      fire: z.number().int().min(0).default(0),
+      earth: z.number().int().min(0).default(0),
+      metal: z.number().int().min(0).default(0),
+      water: z.number().int().min(0).default(0),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -3124,12 +3159,12 @@ export const gameWorldRouter = router({
       if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
 
       // 計算本次分配總點數
-      const addedPoints = input.hp + input.mp + input.atk + input.def + input.spd + input.matk;
+      const addedPoints = input.wood + input.fire + input.earth + input.metal + input.water;
       if (addedPoints <= 0) throw new TRPCError({ code: "BAD_REQUEST", message: "請至少分配 1 點" });
 
       // 檢查可用點數
-      const currentUsed = (agent.potentialHp ?? 0) + (agent.potentialMp ?? 0) + (agent.potentialAtk ?? 0)
-        + (agent.potentialDef ?? 0) + (agent.potentialSpd ?? 0) + (agent.potentialMatk ?? 0);
+      const currentUsed = (agent.potentialWood ?? 0) + (agent.potentialFire ?? 0) + (agent.potentialEarth ?? 0)
+        + (agent.potentialMetal ?? 0) + (agent.potentialWater ?? 0);
       const totalAvailable = agent.freeStatPoints ?? 0;
       const remaining = totalAvailable - currentUsed;
 
@@ -3137,20 +3172,19 @@ export const gameWorldRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: `可用點數不足（剩餘 ${remaining}，嘗試分配 ${addedPoints}）` });
       }
 
-      // 更新潛能分配
-      const newPotentialHp = (agent.potentialHp ?? 0) + input.hp;
-      const newPotentialMp = (agent.potentialMp ?? 0) + input.mp;
-      const newPotentialAtk = (agent.potentialAtk ?? 0) + input.atk;
-      const newPotentialDef = (agent.potentialDef ?? 0) + input.def;
-      const newPotentialSpd = (agent.potentialSpd ?? 0) + input.spd;
-      const newPotentialMatk = (agent.potentialMatk ?? 0) + input.matk;
+      // 更新潛能五行分配
+      const newPotentialWood = (agent.potentialWood ?? 0) + input.wood;
+      const newPotentialFire = (agent.potentialFire ?? 0) + input.fire;
+      const newPotentialEarth = (agent.potentialEarth ?? 0) + input.earth;
+      const newPotentialMetal = (agent.potentialMetal ?? 0) + input.metal;
+      const newPotentialWater = (agent.potentialWater ?? 0) + input.water;
 
       // 使用 statEngine 重新計算屬性
       const { calcFullStats } = await import("../services/statEngine");
       const newStats = calcFullStats(
         { wood: agent.wuxingWood, fire: agent.wuxingFire, earth: agent.wuxingEarth, metal: agent.wuxingMetal, water: agent.wuxingWater },
         agent.level,
-        { hp: newPotentialHp, mp: newPotentialMp, atk: newPotentialAtk, def: newPotentialDef, spd: newPotentialSpd, matk: newPotentialMatk },
+        { wood: newPotentialWood, fire: newPotentialFire, earth: newPotentialEarth, metal: newPotentialMetal, water: newPotentialWater },
         (agent.fateElement as any) ?? agent.dominantElement,
       );
 
@@ -3159,12 +3193,11 @@ export const gameWorldRouter = router({
       const mpRatio = agent.maxMp > 0 ? agent.mp / agent.maxMp : 1;
 
       await db.update(gameAgents).set({
-        potentialHp: newPotentialHp,
-        potentialMp: newPotentialMp,
-        potentialAtk: newPotentialAtk,
-        potentialDef: newPotentialDef,
-        potentialSpd: newPotentialSpd,
-        potentialMatk: newPotentialMatk,
+        potentialWood: newPotentialWood,
+        potentialFire: newPotentialFire,
+        potentialEarth: newPotentialEarth,
+        potentialMetal: newPotentialMetal,
+        potentialWater: newPotentialWater,
         maxHp: newStats.hp,
         maxMp: newStats.mp,
         attack: newStats.atk,
@@ -3188,7 +3221,7 @@ export const gameWorldRouter = router({
       return {
         success: true,
         agent: updated[0],
-        allocated: { hp: input.hp, mp: input.mp, atk: input.atk, def: input.def, spd: input.spd, matk: input.matk },
+        allocated: input,
         remaining: remaining - addedPoints,
       };
     }),
@@ -3214,7 +3247,7 @@ export const gameWorldRouter = router({
       const newStats = calcFullStats(
         { wood: agent.wuxingWood, fire: agent.wuxingFire, earth: agent.wuxingEarth, metal: agent.wuxingMetal, water: agent.wuxingWater },
         agent.level,
-        { hp: 0, mp: 0, atk: 0, def: 0, spd: 0, matk: 0 },
+        { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 },
         (agent.fateElement as any) ?? agent.dominantElement,
       );
 
@@ -3222,8 +3255,8 @@ export const gameWorldRouter = router({
       const mpRatio = agent.maxMp > 0 ? agent.mp / agent.maxMp : 1;
 
       await db.update(gameAgents).set({
-        potentialHp: 0, potentialMp: 0, potentialAtk: 0,
-        potentialDef: 0, potentialSpd: 0, potentialMatk: 0,
+        potentialWood: 0, potentialFire: 0, potentialEarth: 0,
+        potentialMetal: 0, potentialWater: 0,
         maxHp: newStats.hp, maxMp: newStats.mp,
         attack: newStats.atk, defense: newStats.def, speed: newStats.spd,
         magicAttack: newStats.matk, mdef: newStats.mdef, spr: newStats.spr,
@@ -3300,12 +3333,11 @@ export const gameWorldRouter = router({
       };
       const fateEl = (agent.fateElement ?? determineFateElement(wuxing)) as import("../services/statEngine").WuXingElement;
       const potential = {
-        hp: agent.potentialHp ?? 0,
-        mp: agent.potentialMp ?? 0,
-        atk: agent.potentialAtk ?? 0,
-        def: agent.potentialDef ?? 0,
-        spd: agent.potentialSpd ?? 0,
-        matk: agent.potentialMatk ?? 0,
+        wood: agent.potentialWood ?? 0,
+        fire: agent.potentialFire ?? 0,
+        earth: agent.potentialEarth ?? 0,
+        metal: agent.potentialMetal ?? 0,
+        water: agent.potentialWater ?? 0,
       };
 
       // 計算新職業的屬性

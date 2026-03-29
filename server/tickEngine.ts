@@ -1995,12 +1995,11 @@ async function processCombatEvent(
   const agentFateEl = (agent.fateElement ?? agent.dominantElement ?? "wood") as import("./services/statEngine").WuXingElement;
   const agentProfession = (agent.profession ?? "none") as Profession;
   const agentPotential = {
-    hp: agent.potentialHp ?? 0,
-    mp: agent.potentialMp ?? 0,
-    atk: agent.potentialAtk ?? 0,
-    def: agent.potentialDef ?? 0,
-    spd: agent.potentialSpd ?? 0,
-    matk: agent.potentialMatk ?? 0,
+    wood: agent.potentialWood ?? 0,
+    fire: agent.potentialFire ?? 0,
+    earth: agent.potentialEarth ?? 0,
+    metal: agent.potentialMetal ?? 0,
+    water: agent.potentialWater ?? 0,
   };
   const newStats = calcAgentFullStats(
     { wood: accWuxingWood, fire: accWuxingFire, earth: accWuxingEarth, metal: accWuxingMetal, water: accWuxingWater },
@@ -2195,26 +2194,16 @@ async function processCombatEvent(
       if (tier === "legendary" || tier === "high") {
         combatLegendaryDrops.push({ agentId: agent.id, agentName: agent.agentName ?? "旅人", equipId, tier, agentElement: agent.dominantElement ?? "wood", agentLevel: agent.level, itemName: equipId });
       }
-      // 寫入背包（裝備類型）
+      // 寫入背包（裝備類型）—— 裝備永遠獨立存儲，不疊加（每件裝備可有不同強化等級/詞條）
       try {
-        const [existingEquip] = await db.select().from(agentInventory)
-          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, equipId)))
-          .limit(1);
-        if (existingEquip) {
-          await db.update(agentInventory).set({
-            quantity: existingEquip.quantity + 1,
-            updatedAt: Date.now(),
-          }).where(eq(agentInventory.id, existingEquip.id));
-        } else {
-          await db.insert(agentInventory).values({
-            agentId: agent.id,
-            itemId: equipId,
-            itemType: "equipment" as const,
-            quantity: 1,
-            acquiredAt: Date.now(),
-            updatedAt: Date.now(),
-          });
-        }
+        await db.insert(agentInventory).values({
+          agentId: agent.id,
+          itemId: equipId,
+          itemType: "equipment" as const,
+          quantity: 1,
+          acquiredAt: Date.now(),
+          updatedAt: Date.now(),
+        });
       } catch (e) {
         console.error("[Tick] Failed to insert equipment drop:", e);
       }
@@ -2229,25 +2218,18 @@ async function processCombatEvent(
       monster: monster.name,
     });
     await createEvent(agent.id, "gather", lootMsg, { itemId }, currentNode.id);
-    // 寫入背包（如果已有相同道具則隨數量）
+    // 寫入背包（裝備獨立存儲，其他道具可疊加）
     try {
-      const existing = await db.select().from(agentInventory)
-        .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, itemId)))
-        .limit(1);
-      if (existing[0]) {
-        await db.update(agentInventory).set({
-          quantity: existing[0].quantity + 1,
-          updatedAt: Date.now(),
-        }).where(eq(agentInventory.id, existing[0].id));
-      } else {
-        // 判斷道具類型
-        const itemType = itemId.startsWith("herb") ? "material" as const
-          : itemId.startsWith("mat") ? "material" as const
-          : itemId.startsWith("food") ? "consumable" as const
-          : itemId.startsWith("consumable") ? "consumable" as const
-          : itemId.startsWith("equip") ? "equipment" as const
-          : itemId.startsWith("skill") ? "skill_book" as const
-          : "material" as const;
+      // 判斷道具類型
+      const itemType = itemId.startsWith("herb") ? "material" as const
+        : itemId.startsWith("mat") ? "material" as const
+        : itemId.startsWith("food") ? "consumable" as const
+        : itemId.startsWith("consumable") ? "consumable" as const
+        : itemId.startsWith("equip") ? "equipment" as const
+        : itemId.startsWith("skill") ? "skill_book" as const
+        : "material" as const;
+      // 裝備永遠獨立存儲（每件可有不同強化等級/詞條）
+      if (itemType === "equipment") {
         await db.insert(agentInventory).values({
           agentId: agent.id,
           itemId,
@@ -2256,6 +2238,26 @@ async function processCombatEvent(
           acquiredAt: Date.now(),
           updatedAt: Date.now(),
         });
+      } else {
+        // 非裝備道具可疊加
+        const existing = await db.select().from(agentInventory)
+          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, itemId)))
+          .limit(1);
+        if (existing[0]) {
+          await db.update(agentInventory).set({
+            quantity: existing[0].quantity + 1,
+            updatedAt: Date.now(),
+          }).where(eq(agentInventory.id, existing[0].id));
+        } else {
+          await db.insert(agentInventory).values({
+            agentId: agent.id,
+            itemId,
+            itemType,
+            quantity: 1,
+            acquiredAt: Date.now(),
+            updatedAt: Date.now(),
+          });
+        }
       }
     } catch (e) {
       console.error("[Tick] Failed to update inventory:", e);

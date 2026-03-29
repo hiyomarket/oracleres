@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, node_key, region FROM game_map_nodes WHERE node_key LIKE 'npc-%' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, node_key, region FROM game_map_nodes WHERE node_key LIKE 'npc-%' LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "node_key": "npc-fogcity-1",
+      "region": "迷霧城"
+    },
+    {
+      "id": "2",
+      "node_key": "npc-fogcity-2",
+      "region": "迷霧城"
+    },
+    {
+      "id": "3",
+      "node_key": "npc-fogcity-3",
+      "region": "迷霧城"
+    },
+    {
+      "id": "4",
+      "node_key": "npc-fogcity-4",
+      "region": "迷霧城"
+    },
+    {
+      "id": "5",
+      "node_key": "npc-fogcity-5",
+      "region": "迷霧城"
+    },
+    {
+      "id": "6",
+      "node_key": "npc-fogcity-6",
+      "region": "迷霧城"
+    },
+    {
+      "id": "7",
+      "node_key": "npc-fogcity-7",
+      "region": "迷霧城"
+    },
+    {
+      "id": "8",
+      "node_key": "npc-fogcity-8",
+      "region": "迷霧城"
+    },
+    {
+      "id": "9",
+      "node_key": "npc-fogcity-9",
+      "region": "迷霧城"
+    },
+    {
+      "id": "10",
+      "node_key": "npc-fogcity-10",
+      "region": "迷霧城"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tnode_key\tregion\n1\tnpc-fogcity-1\t迷霧城\n2\tnpc-fogcity-2\t迷霧城\n3\tnpc-fogcity-3\t迷霧城\n4\tnpc-fogcity-4\t迷霧城\n5\tnpc-fogcity-5\t迷霧城\n6\tnpc-fogcity-6\t迷霧城\n7\tnpc-fogcity-7\t迷霧城\n8\tnpc-fogcity-8\t迷霧城\n9\tnpc-fogcity-9\t迷霧城\n10\tnpc-fogcity-10\t迷霧城\n",
+  "stderr": "",
+  "execution_time_ms": 1583
+}

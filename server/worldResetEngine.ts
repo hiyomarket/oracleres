@@ -24,14 +24,39 @@ import {
   agentEvents,
   agentInventory,
   agentDropCounters,
+  agentTitles,
+  agentAchievements,
+  agentSkills,
+  agentSetProgress,
+  agentPvpStats,
   worldEvents,
   chatMessages,
   pvpChallenges,
-  agentPvpStats,
   weeklyChampions,
   hiddenShopInstances,
+  hiddenSkillTrackers,
   gameVirtualShop,
   gameHiddenShopPool,
+  gameSpiritShop,
+  gameShopPurchaseLog,
+  auctionListings,
+  gameQuestProgress,
+  gameLearnedQuestSkills,
+  gamePlayerPets,
+  gamePetLearnedSkills,
+  gamePetBpHistory,
+  gameBattles,
+  gameBattleParticipants,
+  gameBattleCommands,
+  gameBattleLogs,
+  gameIdleSessions,
+  equipEnhanceLogs,
+  gameParties,
+  gamePartyInvites,
+  partyBattleInvites,
+  roamingBossInstances,
+  roamingBossKillLog,
+  skillBooks,
 } from "../drizzle/schema";
 import { sql } from "drizzle-orm";
 import { stopWorldTickEngine, startWorldTickEngine } from "./worldTickEngine";
@@ -548,15 +573,49 @@ export async function resetWorld(): Promise<WorldResetResult> {
     errors.push(`停止 Tick 引擎失敗: ${e}`);
   }
 
-  // 2. 清除所有角色資料（保留 users 帳號）
+  // 2. 清除所有角色相關資料（保留 users 帳號、保留管理員設定的圖鑑/模板資料）
   try {
     const agents = await db.select({ id: gameAgents.id }).from(gameAgents);
     agentsCleared = agents.length;
-    // 清除角色相關資料
+
+    // 2a. 清除戰鬥記錄（有外鍵依賴，先刪子表）
+    await db.delete(gameBattleCommands);
+    await db.delete(gameBattleLogs);
+    await db.delete(gameBattleParticipants);
+    await db.delete(gameBattles);
+
+    // 2b. 清除寵物相關（子表先刪）
+    await db.delete(gamePetLearnedSkills);
+    await db.delete(gamePetBpHistory);
+    await db.delete(gamePlayerPets);
+
+    // 2c. 清除組隊相關
+    await db.delete(partyBattleInvites);
+    await db.delete(gamePartyInvites);
+    await db.delete(gameParties);
+
+    // 2d. 清除角色道具、裝備、技能、成就、稱號、套裝進度
     await db.delete(agentInventory);
-    await db.delete(agentEvents);
+    await db.delete(agentSkills);
+    await db.delete(agentAchievements);
+    await db.delete(agentTitles);
+    await db.delete(agentSetProgress);
     await db.delete(agentDropCounters);
-    // 清除角色本身（玩家重新登入時會自動重新建立）
+    await db.delete(equipEnhanceLogs);
+    await db.delete(hiddenSkillTrackers);
+    await db.delete(skillBooks);
+
+    // 2e. 清除任務進度和已學天命技能
+    await db.delete(gameLearnedQuestSkills);
+    await db.delete(gameQuestProgress);
+
+    // 2f. 清除掛機記錄
+    await db.delete(gameIdleSessions);
+
+    // 2g. 清除角色事件日誌
+    await db.delete(agentEvents);
+
+    // 2h. 清除角色本身（玩家重新登入時會自動重新建立）
     await db.delete(gameAgents);
   } catch (e) {
     errors.push(`清除角色失敗: ${e}`);
@@ -588,9 +647,25 @@ export async function resetWorld(): Promise<WorldResetResult> {
     errors.push(`清除 PvP 資料失敗: ${e}`);
   }
 
-  // 6. 清除隱藏商店實例
+  // 6. 清除拍賣行物品
+  try {
+    await db.delete(auctionListings);
+  } catch (e) {
+    errors.push(`清除拍賣行失敗: ${e}`);
+  }
+
+  // 6b. 清除流浪 Boss 實例和擊殺紀錄
+  try {
+    await db.delete(roamingBossKillLog);
+    await db.delete(roamingBossInstances);
+  } catch (e) {
+    errors.push(`清除流浪 Boss 失敗: ${e}`);
+  }
+
+  // 7. 清除隱藏商店實例和商店購買紀錄
   try {
     await db.delete(hiddenShopInstances);
+    await db.delete(gameShopPurchaseLog);
   } catch (e) {
     errors.push(`清除隱藏商店失敗: ${e}`);
   }

@@ -1,5 +1,5 @@
 /**
- * battle/BattleGrid.tsx — 6v6 戰鬥格子佈局
+ * battle/BattleGrid.tsx — 6v6 戰鬥格子佈局（前後排分組）
  */
 import React from "react";
 import { BattleParticipantUI } from "./types";
@@ -14,13 +14,19 @@ export function BattleGrid({ participants, isEnemy, attackingId, hitId, maxSlots
   selectedTargetId?: number | null;
   onTargetSelect?: (id: number) => void;
 }) {
-  const frontRow = participants.slice(0, 3);
-  const backRow = participants.slice(3, 6);
+  // 按 rowPosition 分組：前排（寵物/怪物）和後排（玩家角色）
+  const frontRow = participants.filter(p => p.rowPosition === "front" || (!p.rowPosition && (p.type === "pet" || p.type === "monster")));
+  const backRow = participants.filter(p => p.rowPosition === "back" || (!p.rowPosition && p.type === "character"));
 
-  const renderSlot = (p: BattleParticipantUI | undefined, slotIdx: number) => {
+  // 如果沒有任何 rowPosition 資料（舊戰鬥），fallback 到原本的 slice 邏輯
+  const hasRowData = participants.some(p => p.rowPosition);
+  const displayFront = hasRowData ? frontRow : participants.slice(0, 3);
+  const displayBack = hasRowData ? backRow : participants.slice(3, 6);
+
+  const renderSlot = (p: BattleParticipantUI | undefined, slotIdx: number, rowLabel?: string) => {
     if (!p) {
       return (
-        <div key={`empty-${slotIdx}`} className="flex-1 min-w-0 rounded-xl border border-dashed border-white/5 flex items-center justify-center"
+        <div key={`empty-${rowLabel}-${slotIdx}`} className="flex-1 min-w-0 rounded-xl border border-dashed border-white/5 flex items-center justify-center"
           style={{ minHeight: "72px", background: "rgba(255,255,255,0.01)" }}>
           <span className="text-[10px] text-white/10">空</span>
         </div>
@@ -53,14 +59,54 @@ export function BattleGrid({ participants, isEnemy, attackingId, hitId, maxSlots
     );
   };
 
+  // 敵方：前排在上，後排在下
+  // 我方：前排在上（靠近敵方），後排在下（靠近指令面板）
+  const frontLabel = isEnemy ? "前排" : "前排（護衛）";
+  const backLabel = isEnemy ? "後排" : "後排（指揮）";
+
   return (
     <div className="space-y-1">
-      <div className="flex gap-1.5">
-        {Array.from({ length: 3 }, (_, i) => renderSlot(frontRow[i], i))}
-      </div>
-      {(participants.length > 3 || maxSlots > 3) && (
+      {/* 前排 */}
+      <div>
+        {hasRowData && displayFront.length > 0 && (
+          <div className="flex items-center gap-1 mb-0.5">
+            <span className="text-[8px] font-bold tracking-wider" style={{
+              color: isEnemy ? "rgba(239,68,68,0.4)" : "rgba(34,211,238,0.4)",
+            }}>
+              {isEnemy ? "▼" : "▲"} {frontLabel}
+            </span>
+            <div className="flex-1 h-[1px]" style={{
+              background: isEnemy
+                ? "linear-gradient(90deg, rgba(239,68,68,0.15), transparent)"
+                : "linear-gradient(90deg, rgba(34,211,238,0.15), transparent)",
+            }} />
+          </div>
+        )}
         <div className="flex gap-1.5">
-          {Array.from({ length: 3 }, (_, i) => renderSlot(backRow[i], i + 3))}
+          {Array.from({ length: 3 }, (_, i) => renderSlot(displayFront[i], i, "front"))}
+        </div>
+      </div>
+
+      {/* 後排 */}
+      {(displayBack.length > 0 || maxSlots > 3) && (
+        <div>
+          {hasRowData && displayBack.length > 0 && (
+            <div className="flex items-center gap-1 mb-0.5">
+              <span className="text-[8px] font-bold tracking-wider" style={{
+                color: isEnemy ? "rgba(239,68,68,0.3)" : "rgba(34,211,238,0.3)",
+              }}>
+                {isEnemy ? "▼" : "▲"} {backLabel}
+              </span>
+              <div className="flex-1 h-[1px]" style={{
+                background: isEnemy
+                  ? "linear-gradient(90deg, rgba(239,68,68,0.1), transparent)"
+                  : "linear-gradient(90deg, rgba(34,211,238,0.1), transparent)",
+              }} />
+            </div>
+          )}
+          <div className="flex gap-1.5">
+            {Array.from({ length: 3 }, (_, i) => renderSlot(displayBack[i], i, "back"))}
+          </div>
         </div>
       )}
     </div>
