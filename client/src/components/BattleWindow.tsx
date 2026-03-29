@@ -78,6 +78,15 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
 
   const allies = participants.filter(p => p.side === "ally");
   const enemies = participants.filter(p => p.side === "enemy");
+
+  // 判斷當前選擇的技能是否需要選擇己方目標
+  const currentSelectedSkill = selectedCommand === "skill" && selectedSkillId
+    ? (character?.skills.find(s => s.id === selectedSkillId))
+    : null;
+  const isAllyTargeting = currentSelectedSkill && (
+    currentSelectedSkill.skillType === "heal" || currentSelectedSkill.skillType === "buff" ||
+    currentSelectedSkill.targetType === "ally" || currentSelectedSkill.targetType === "self"
+  );
   const character = allies.find(p => p.type === "character");
   const pet = allies.find(p => p.type === "pet");
 
@@ -267,9 +276,23 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       participantId: number; commandType: CmdType; targetId?: number; skillId?: string; itemId?: string;
     }> = [];
     if (character && !character.isDefeated) {
-      const target = selectedTargetId
-        ? enemies.find(e => e.id === selectedTargetId && !e.isDefeated) ?? enemies.find(e => !e.isDefeated)
-        : enemies.find(e => !e.isDefeated);
+      // 根據技能類型決定目標來源：治療/增益技能選己方，攻擊技能選敵方
+      const selectedSkill = selectedCommand === "skill" && selectedSkillId
+        ? character.skills.find(s => s.id === selectedSkillId)
+        : null;
+      const isAllyTargetSkill = selectedSkill && (selectedSkill.skillType === "heal" || selectedSkill.skillType === "buff" || selectedSkill.targetType === "ally" || selectedSkill.targetType === "self");
+      let target;
+      if (isAllyTargetSkill) {
+        // 治療/增益技能：從己方找目標
+        target = selectedTargetId
+          ? allies.find(a => a.id === selectedTargetId && !a.isDefeated) ?? character
+          : character; // 預設治療自己
+      } else {
+        // 攻擊技能：從敵方找目標
+        target = selectedTargetId
+          ? enemies.find(e => e.id === selectedTargetId && !e.isDefeated) ?? enemies.find(e => !e.isDefeated)
+          : enemies.find(e => !e.isDefeated);
+      }
       commands.push({
         participantId: character.id,
         commandType: selectedCommand as CmdType,
@@ -280,9 +303,20 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
     }
     // 寵物獨立指令
     if (pet && !pet.isDefeated && petCommand) {
-      const petTarget = petTargetId
-        ? enemies.find(e => e.id === petTargetId && !e.isDefeated) ?? enemies.find(e => !e.isDefeated)
-        : enemies.find(e => !e.isDefeated);
+      const petSkill = petCommand === "skill" && petSkillId
+        ? pet.skills.find(s => s.id === petSkillId)
+        : null;
+      const isPetAllySkill = petSkill && (petSkill.skillType === "heal" || petSkill.skillType === "buff" || petSkill.targetType === "ally" || petSkill.targetType === "self");
+      let petTarget;
+      if (isPetAllySkill) {
+        petTarget = petTargetId
+          ? allies.find(a => a.id === petTargetId && !a.isDefeated) ?? pet
+          : character ?? pet; // 寵物治療預設選擇角色
+      } else {
+        petTarget = petTargetId
+          ? enemies.find(e => e.id === petTargetId && !e.isDefeated) ?? enemies.find(e => !e.isDefeated)
+          : enemies.find(e => !e.isDefeated);
+      }
       commands.push({
         participantId: pet.id,
         commandType: petCommand as CmdType,
@@ -424,9 +458,21 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
             </div>
 
             {/* 我方區域 */}
-            <div className="shrink-0 px-3 pt-1 pb-2" style={{ background: "rgba(30,58,138,0.06)" }}>
-              <p className="text-[9px] font-bold text-cyan-400/50 tracking-widest mb-1.5">▲ ALLY</p>
-              <BattleGrid participants={allies} attackingId={attackingId} hitId={hitId} maxSlots={6} />
+            <div className="shrink-0 px-3 pt-1 pb-2" style={{ background: isAllyTargeting ? "rgba(34,197,94,0.08)" : "rgba(30,58,138,0.06)" }}>
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[9px] font-bold text-cyan-400/50 tracking-widest">▲ ALLY</p>
+                {isAllyTargeting && battleState === "active" && (
+                  <p className="text-[8px] text-emerald-400/80 animate-pulse">
+                    💚 點擊己方選擇治療/增益目標
+                  </p>
+                )}
+              </div>
+              <BattleGrid participants={allies} attackingId={attackingId} hitId={hitId} maxSlots={6}
+                selectedTargetId={isAllyTargeting ? selectedTargetId : undefined}
+                onTargetSelect={isAllyTargeting ? (id) => {
+                  setSelectedTargetId(prev => prev === id ? null : id);
+                } : undefined}
+                isEnemy={false} />
             </div>
           </div>
 

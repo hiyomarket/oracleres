@@ -23,6 +23,8 @@ import { storagePut } from "../storage";
 import type { WuXing } from "../../shared/types";
 import { grantStarterPack } from "../services/starterPackEngine";
 import { resolveItemType } from "../resolveItemType";
+import { calcEnhancedStat } from "../services/enhanceEngine";
+import { calcEquipBonusForAgent } from "../services/equipBonusCalc";
 
 // ─── GD-020 補充二：從命格資料計算角色初始屬性（使用統一公式） ───
 // V2: 五行主導版 — 五行屬性佔 70%+，等級只是輔助加成
@@ -343,11 +345,16 @@ export const gameWorldRouter = router({
     const currentStamina = Math.min(agent.maxStamina, agent.stamina + pendingRegen);
     const nextRegenMs = regenIntervalMs - (elapsed % regenIntervalMs);
 
+    // ★ 計算裝備加成（含強化等級）
+    const equipBonus = await calcEquipBonusForAgent(agent.id);
+
     return {
       agent: {
         ...agent,
         stamina: currentStamina,
       },
+      // ★ 裝備加成（含強化等級，前端自行加總）
+      equipBonus,
       currentNode,
       targetNode,
       staminaInfo: {
@@ -2092,12 +2099,17 @@ export const gameWorldRouter = router({
           wuxing: cat?.wuxing ?? null,
           quality: cat?.quality ?? 'common',
           tier: cat?.tier ?? null,
-          hpBonus: cat?.hpBonus ?? 0,
-          attackBonus: cat?.attackBonus ?? 0,
-          defenseBonus: cat?.defenseBonus ?? 0,
-          speedBonus: cat?.speedBonus ?? 0,
-          matkBonus: cat?.magicAttackBonus ?? 0,
           enhanceLevel: enhanceData?.enhanceLevel ?? 0,
+          hpBonus: calcEnhancedStat(cat?.hpBonus ?? 0, enhanceData?.enhanceLevel ?? 0),
+          attackBonus: calcEnhancedStat(cat?.attackBonus ?? 0, enhanceData?.enhanceLevel ?? 0),
+          defenseBonus: calcEnhancedStat(cat?.defenseBonus ?? 0, enhanceData?.enhanceLevel ?? 0),
+          speedBonus: calcEnhancedStat(cat?.speedBonus ?? 0, enhanceData?.enhanceLevel ?? 0),
+          matkBonus: calcEnhancedStat(cat?.magicAttackBonus ?? 0, enhanceData?.enhanceLevel ?? 0),
+          baseHpBonus: cat?.hpBonus ?? 0,
+          baseAttackBonus: cat?.attackBonus ?? 0,
+          baseDefenseBonus: cat?.defenseBonus ?? 0,
+          baseSpeedBonus: cat?.speedBonus ?? 0,
+          baseMatkBonus: cat?.magicAttackBonus ?? 0,
           isEquipped: equippedIds.includes(inv.itemId),
           imageUrl: cat?.imageUrl ?? null,
         };

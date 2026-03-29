@@ -19,6 +19,7 @@ import { getDb, getUserProfileForEngine } from "../db";
 import { users, gameWardrobe, gameDailyAura, gameItems, gameAgents, gameEquipmentCatalog } from "../../drizzle/schema";
 import { calcCharacterStats } from "../tickEngine";
 import { getStatCaps } from "../gameEngineConfig";
+import { calcEquipBonusForAgent } from "../services/equipBonusCalc";
 import { generateDailyQuest, checkQuestCompletion, QUEST_REWARD } from "../utils/questEngine";
 import {
   calculateEnvironmentElements,
@@ -408,16 +409,9 @@ export const gameAvatarRouter = router({
       }
     } catch { /* fallback */ }
     const statCaps = getStatCaps();
-    // 計算裝備加成總和（用於前端戰鬥屬性顯示）
-    const equipBonus = { hp: 0, atk: 0, def: 0, spd: 0 };
-    for (const slot of Object.values(revisitEquippedMap)) {
-      if (slot) {
-        equipBonus.hp  += (slot as any).hpBonus      ?? 0;
-        equipBonus.atk += (slot as any).attackBonus  ?? 0;
-        equipBonus.def += (slot as any).defenseBonus ?? 0;
-        equipBonus.spd += (slot as any).speedBonus   ?? 0;
-      }
-    }
+    // 計算裝備加成總和（★ 含強化等級加成）
+    const agentRows = await db.select({ id: gameAgents.id }).from(gameAgents).where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+    const equipBonus = agentRows[0] ? await calcEquipBonusForAgent(agentRows[0].id) : { hp: 0, atk: 0, def: 0, spd: 0, matk: 0, mdef: 0 };
     return {
       items: equipped.map((item) => ({ ...item, isDefault: false })),
       isFirstTime: false,

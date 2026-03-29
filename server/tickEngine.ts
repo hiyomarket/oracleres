@@ -33,8 +33,8 @@ import { gamePlayerPets, gamePetCatalog, gamePetInnateSkills, gamePetLearnedSkil
 import { petSkillsToCombatFormat, calcPetBattleExp, calcPetExpToNext, levelUpBP, calcPetStats, RACE_HP_MULTIPLIER, calcCaptureRate, calcAfkBpGain, AFK_BP_DAILY_CAP, recalcReasonableBP } from "./services/petEngine";
 import { getAutoLearnSkills, type SkillTier } from "./services/skillLearningEngine";
 import { agentSkills, gameUnifiedSkillCatalog } from "../drizzle/schema";
-
-// ─── 工具函數 ───
+import { calcEquipBonusForAgent } from "./services/equipBonusCalc";
+// ─── 工具函數 ────
 function randInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -1678,7 +1678,9 @@ export async function processAgentTick(
         const raceHpMul = catalog?.raceHpMultiplier ?? 1.0;
         const petWuxing = (catalog?.wuxing ?? "earth") as StatWuXingElement;
         const ownerFateEl = (agent.fateElement ?? agent.dominantElement ?? "wood") as StatWuXingElement;
-        const ownerStats = { hp: agent.maxHp, atk: agent.attack, def: agent.defense, spd: agent.speed, matk: agent.magicAttack ?? 0, mp: agent.maxMp };
+        // ★ 寵物屬性計算也需要含裝備加成的主人屬性
+        const petEquipBonus = await calcEquipBonusForAgent(agent.id);
+        const ownerStats = { hp: agent.maxHp + petEquipBonus.hp, atk: agent.attack + petEquipBonus.atk, def: agent.defense + petEquipBonus.def, spd: agent.speed + petEquipBonus.spd, matk: (agent.magicAttack ?? 0) + petEquipBonus.matk, mp: agent.maxMp };
         const stats = calcPetFullStats(ownerStats, currentLevel, bp, raceHpMul, petWuxing, ownerFateEl);
 
         await db.update(gamePlayerPets).set({
@@ -1779,6 +1781,9 @@ async function processCombatEvent(
     (agent.dominantElement ?? "wood") as WuXing,
     agent.skillSlot1 ?? null
   );
+
+  // ★ 裝備加成：查詢已裝備裝備的強化加成
+  const equipBonus = await calcEquipBonusForAgent(agent.id);
 
   // 取得玩家已裝備技能資訊（用於詳細戰鬥計算）
   // M3L: 取得玩家已裝備技能資訊（加入 wuxing 和 cooldown）
@@ -1906,14 +1911,14 @@ async function processCombatEvent(
     // 天命考核技能載入失敗不影響戰鬥
   }
 
-  // 結算戰鬥
+  // 結算戰鬥（★ 加入裝備加成）
   const result = resolveCombat(
     {
-      attack: Math.round(agent.attack * comboResult.damageMultiplier),
-      defense: agent.defense,
-      speed: agent.speed,
+      attack: Math.round((agent.attack + equipBonus.atk) * comboResult.damageMultiplier),
+      defense: agent.defense + equipBonus.def,
+      speed: agent.speed + equipBonus.spd,
       hp: agent.hp,
-      maxHp: agent.maxHp,
+      maxHp: agent.maxHp + equipBonus.hp,
       dominantElement: agent.dominantElement ?? "wood",
       level: agent.level,
       // GD-020 修正一：傳入五行屬性數値
@@ -1924,12 +1929,12 @@ async function processCombatEvent(
       wuxingWater: agent.wuxingWater,
       skillSlot1:  agent.skillSlot1,
       agentRace: "人型系", // 旅人預設為人型系
-      // GD-028: 傳入 statEngine 計算的屬性
+      // GD-028: 傳入 statEngine 計算的屬性（★ 加入裝備加成）
       critRate: agent.critRate ?? 10,
       critDamage: agent.critDamage ?? 150,
       spr: agent.spr ?? 0,
-      mdef: agent.mdef ?? 0,
-      magicAttack: agent.magicAttack ?? 0,
+      mdef: (agent.mdef ?? 0) + equipBonus.mdef,
+      magicAttack: (agent.magicAttack ?? 0) + equipBonus.matk,
       profession: agent.profession ?? "none",
       equippedSkills: equippedSkillsForCombat,
       currentMp: agent.mp,

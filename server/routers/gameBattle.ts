@@ -23,6 +23,7 @@ import { getCombatMonsterById, type CombatMonster, type MonsterSkillData } from 
 import { randomUUID } from "crypto";
 import { getEngineConfig } from "../gameEngineConfig";
 import { recordBossKill } from "../services/roamingBossEngine";
+import { calcEquipBonusForAgent } from "../services/equipBonusCalc";
 import { broadcastLiveFeed, broadcastBossKill } from "../liveFeedBroadcast";
 
 // ─── 輔助函數 ───
@@ -32,7 +33,7 @@ function buildCharacterParticipant(
   agent: any,
   id: number,
   equippedSkills: import("../services/combatEngineV2").CombatSkill[] = [],
-  equipBonus: { hp: number; atk: number; def: number; spd: number; resistWood?: number; resistFire?: number; resistEarth?: number; resistMetal?: number; resistWater?: number } = { hp: 0, atk: 0, def: 0, spd: 0 },
+  equipBonus: { hp: number; atk: number; def: number; spd: number; matk?: number; mdef?: number; resistWood?: number; resistFire?: number; resistEarth?: number; resistMetal?: number; resistWater?: number } = { hp: 0, atk: 0, def: 0, spd: 0 },
 ): BattleParticipant {
   const wuxing = {
     wood: agent.wuxingWood ?? 0,
@@ -50,8 +51,8 @@ function buildCharacterParticipant(
     atk: Math.min(rawStats.atk + equipBonus.atk, caps.atk),
     def: Math.min(rawStats.def + equipBonus.def, caps.def),
     spd: Math.min(rawStats.spd + equipBonus.spd, caps.spd),
-    matk: Math.min(rawStats.matk, caps.matk),
-    mdef: Math.min(rawStats.mdef, caps.mdef),
+    matk: Math.min(rawStats.matk + (equipBonus.matk ?? 0), caps.matk),
+    mdef: Math.min(rawStats.mdef + (equipBonus.mdef ?? 0), caps.mdef),
     healPower: rawStats.healPower,
     hitRate: rawStats.hitRate,
   };
@@ -168,6 +169,8 @@ function buildMonsterParticipant(
     cooldown: s.cooldown ?? 0,
     currentCooldown: 0,
     damageType: (s as any).damageType ?? "single",
+    targetType: (s as any).targetType ?? undefined,
+    lifestealPercent: (s as any).lifestealPercent ?? 0,
     additionalEffect: s.additionalEffect ? {
       type: s.additionalEffect.type,
       chance: s.additionalEffect.chance,
@@ -355,6 +358,7 @@ export const gameBattleRouter = router({
           cooldown: gameUnifiedSkillCatalog.cooldown,
           powerPercent: gameUnifiedSkillCatalog.powerPercent,
           targetType: gameUnifiedSkillCatalog.targetType,
+          lifestealPercent: gameUnifiedSkillCatalog.lifestealPercent,
         }).from(gameUnifiedSkillCatalog).where(inArray(gameUnifiedSkillCatalog.skillId, agentSkillIds));
         normalCombatSkills = skillData.map(sk => {
           const equipped = equippedAgentSkills.find(e => e.skillId === sk.skillId);
@@ -373,6 +377,8 @@ export const gameBattleRouter = router({
             currentCooldown: 0,
             skillLevel: (equipped?.awakeTier ?? 0) + 1,
             damageType: (sk.damageType ?? "single") as "single" | "aoe",
+            targetType: sk.targetType ?? undefined,
+            lifestealPercent: sk.lifestealPercent ?? 0,
           };
         });
       }
@@ -396,6 +402,8 @@ export const gameBattleRouter = router({
           cooldown: gameQuestSkillCatalog.cooldown,
           wuxing: gameQuestSkillCatalog.wuxing,
           additionalEffect: gameQuestSkillCatalog.additionalEffect,
+          targetType: gameQuestSkillCatalog.targetType,
+          lifestealPercent: gameQuestSkillCatalog.lifestealPercent,
         }).from(gameQuestSkillCatalog).where(inArray(gameQuestSkillCatalog.id, questSkillIds));
         questCombatSkills = questSkillData.map(qs => {
           const learned = equippedQuestSkills.find(e => e.skillId === qs.id);
@@ -413,6 +421,8 @@ export const gameBattleRouter = router({
             currentCooldown: 0,
             additionalEffect: qs.additionalEffect as any ?? undefined,
             skillLevel: learned?.level ?? 1,
+            targetType: qs.targetType ?? undefined,
+            lifestealPercent: qs.lifestealPercent ?? 0,
           };
         });
       }
@@ -420,8 +430,18 @@ export const gameBattleRouter = router({
       // ─── 合併所有技能 ───
       const charCombatSkills = [...normalCombatSkills, ...questCombatSkills];
 
-      // ─── 計算裝備加成 ───
-      const equipBonus = { hp: 0, atk: 0, def: 0, spd: 0, resistWood: 0, resistFire: 0, resistEarth: 0, resistMetal: 0, resistWater: 0 };
+      // ─── 計算裝備加成（★ 含強化等級加成） ───
+      const rawEquipBonus = await calcEquipBonusForAgent(agent.id);
+      const equipBonus = {
+        hp: rawEquipBonus.hp,
+        atk: rawEquipBonus.atk,
+        def: rawEquipBonus.def,
+        spd: rawEquipBonus.spd,
+        matk: rawEquipBonus.matk,
+        mdef: rawEquipBonus.mdef,
+        resistWood: 0, resistFire: 0, resistEarth: 0, resistMetal: 0, resistWater: 0,
+      };
+      // 五行抗性加成（從 resistBonus JSON 欄位解析）
       const equippedIds = [
         agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
         agent.equippedBody, agent.equippedHands, agent.equippedFeet,
@@ -429,13 +449,8 @@ export const gameBattleRouter = router({
       ].filter(Boolean) as string[];
       if (equippedIds.length > 0) {
         const equips = await db.select().from(gameEquipmentCatalog).where(inArray(gameEquipmentCatalog.equipId, equippedIds));
-        for (const eq of equips) {
-          equipBonus.hp  += eq.hpBonus       ?? 0;
-          equipBonus.atk += eq.attackBonus   ?? 0;
-          equipBonus.def += eq.defenseBonus  ?? 0;
-          equipBonus.spd += eq.speedBonus    ?? 0;
-          // 五行抗性加成（從 resistBonus JSON 欄位解析）
-          const rb = (eq.resistBonus as any) ?? {};
+        for (const eqItem of equips) {
+          const rb = (eqItem.resistBonus as any) ?? {};
           equipBonus.resistWood  += rb.wood  ?? 0;
           equipBonus.resistFire  += rb.fire  ?? 0;
           equipBonus.resistEarth += rb.earth ?? 0;
@@ -581,7 +596,7 @@ export const gameBattleRouter = router({
           defense: p.defense,
           speed: p.speed,
           dominantElement: p.dominantElement,
-          skills: p.skills.map(s => ({ id: s.id, name: s.name, mpCost: s.mpCost, cooldown: s.cooldown })),
+          skills: p.skills.map(s => ({ id: s.id, name: s.name, mpCost: s.mpCost, cooldown: s.cooldown, skillType: s.skillType, targetType: s.targetType })),
         })),
         mode: input.mode,
         rewardMultiplier: rewardMult,
@@ -641,22 +656,16 @@ export const gameBattleRouter = router({
       const monsterData = combatMonster || staticMonster;
       if (!monsterData) throw new TRPCError({ code: "NOT_FOUND", message: "怪物不存在" });
 
-      // ─── 計算裝備加成 ───
-      const simEquipBonus = { hp: 0, atk: 0, def: 0, spd: 0 };
-      const simEquippedIds = [
-        agent.equippedWeapon, agent.equippedOffhand, agent.equippedHead,
-        agent.equippedBody, agent.equippedHands, agent.equippedFeet,
-        agent.equippedRingA, agent.equippedRingB, agent.equippedNecklace, agent.equippedAmulet,
-      ].filter(Boolean) as string[];
-      if (simEquippedIds.length > 0) {
-        const simEquips = await db.select().from(gameEquipmentCatalog).where(inArray(gameEquipmentCatalog.equipId, simEquippedIds));
-        for (const eq of simEquips) {
-          simEquipBonus.hp  += eq.hpBonus       ?? 0;
-          simEquipBonus.atk += eq.attackBonus   ?? 0;
-          simEquipBonus.def += eq.defenseBonus  ?? 0;
-          simEquipBonus.spd += eq.speedBonus    ?? 0;
-        }
-      }
+      // ─── 計算裝備加成（★ 含強化等級加成） ───
+      const rawSimBonus = await calcEquipBonusForAgent(agent.id);
+      const simEquipBonus = {
+        hp: rawSimBonus.hp,
+        atk: rawSimBonus.atk,
+        def: rawSimBonus.def,
+        spd: rawSimBonus.spd,
+        matk: rawSimBonus.matk,
+        mdef: rawSimBonus.mdef,
+      };
 
       // 建立參與者
       const participants: BattleParticipant[] = [];
@@ -1504,6 +1513,7 @@ export const gameBattleRouter = router({
           skills: p.skills.map(s => ({
             id: s.id, name: s.name, mpCost: s.mpCost,
             cooldown: s.cooldown ?? 0, currentCooldown: s.currentCooldown ?? 0,
+            skillType: s.skillType, targetType: s.targetType,
           })),
         })),
       };
@@ -1575,6 +1585,7 @@ export const gameBattleRouter = router({
               id: s.id, name: s.name, mpCost: s.mpCost,
               cooldown: s.cooldown ?? 0,
               currentCooldown: cdMap[s.id] ?? s.currentCooldown ?? 0,
+              skillType: s.skillType, targetType: s.targetType,
             };
           }),
         })),

@@ -27,7 +27,7 @@ export function CharacterPanel({
   agent: AgentData | null | undefined;
   staminaInfo: { current?: number; max?: number; nextRegenMin?: number; regenAmount?: number; regenMinutes?: number; staminaPerTick?: number; moveStaminaCost?: number; sellDiscountRate?: number } | null | undefined;
   natalStats: { hp?: number; atk?: number; def?: number; spd?: number; mp?: number } | null | undefined;
-  equippedData: { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string; equipId?: string; hpBonus?: number; attackBonus?: number; defenseBonus?: number; speedBonus?: number } | null>; equipBonus?: { hp?: number; atk?: number; def?: number; spd?: number }; statCaps?: { hp?: number; mp?: number; atk?: number; def?: number; spd?: number; matk?: number; mdef?: number; wuxing?: number } } | null | undefined;
+  equippedData: { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string; equipId?: string; hpBonus?: number; attackBonus?: number; defenseBonus?: number; speedBonus?: number } | null>; equipBonus?: { hp?: number; atk?: number; def?: number; spd?: number; matk?: number; mdef?: number }; statCaps?: { hp?: number; mp?: number; atk?: number; def?: number; spd?: number; matk?: number; mdef?: number; wuxing?: number } } | null | undefined;
   balanceData: { gameCoins?: number; gameStones?: number } | null | undefined;
   dailyData: { dayPillar?: { stem?: string; branch?: string; stemElement?: string } } | null | undefined;
   divineHeal: { mutate: () => void; isPending: boolean };
@@ -99,9 +99,9 @@ export function CharacterPanel({
     defense: (agent?.defense ?? 5) + (eb.def ?? 0),
     speed: (agent?.speed ?? 8) + (eb.spd ?? 0),
     healPower: agent?.healPower ?? 20,
-    magicAttack: agent?.magicAttack ?? 20,
-    // GD-028 新增屬性
-    mdef: agent?.mdef ?? 0,
+    magicAttack: (agent?.magicAttack ?? 20) + (eb.matk ?? 0),
+    // GD-028 新增屬性（★ 加入裝備加成）
+    mdef: (agent?.mdef ?? 0) + (eb.mdef ?? 0),
     spr: agent?.spr ?? 0,
     critRate: agent?.critRate ?? 0,
     critDamage: agent?.critDamage ?? 150,
@@ -482,6 +482,8 @@ export function CharacterPanel({
                     case "attack": return eb.atk ?? 0;
                     case "defense": return eb.def ?? 0;
                     case "speed": return eb.spd ?? 0;
+                    case "magicAttack": return eb.matk ?? 0;
+                    case "mdef": return eb.mdef ?? 0;
                     default: return 0;
                   }
                 })();

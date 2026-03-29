@@ -26,6 +26,8 @@ export interface BattleParticipantUI {
     mpCost: number;
     cooldown: number;
     currentCooldown: number;
+    skillType?: string;
+    targetType?: string;
   }>;
   agentId?: number | null;
   petId?: number | null;

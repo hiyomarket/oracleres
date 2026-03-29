@@ -55,6 +55,7 @@ import {
 } from "../worldTickEngine";
 import { resetWorld, triggerHiddenShop, cleanExpiredHiddenShops } from "../worldResetEngine";
 import { calcAgentFullStats } from "../services/statEngine";
+import { calcEquipBonusForAgent } from "../services/equipBonusCalc";
 
 
 // Admin guard middleware
@@ -659,6 +660,20 @@ export const gameAdminRouter = router({
       if (input.search) result = result.filter(r => r.name.includes(input.search!));
       return result;
     }),
+
+  getAllItems: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    const rows = await db.select({ itemId: gameItemCatalog.itemId, name: gameItemCatalog.name, category: gameItemCatalog.category }).from(gameItemCatalog).orderBy(gameItemCatalog.name);
+    return rows;
+  }),
+
+  getAllEquipments: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    const rows = await db.select({ equipId: gameEquipmentCatalog.equipId, name: gameEquipmentCatalog.name, slot: gameEquipmentCatalog.slot }).from(gameEquipmentCatalog).orderBy(gameEquipmentCatalog.name);
+    return rows;
+  }),
 
   getItemCatalog: adminProcedure
     .input(z.object({ wuxing: z.string().optional(), category: z.string().optional(), search: z.string().optional() }))
@@ -1616,6 +1631,9 @@ export const gameAdminRouter = router({
           enhanceLevel: ((i.itemData as any) ?? {}).enhanceLevel ?? 0,
         }));
 
+        // ★ 計算裝備加成（含強化等級）
+        const eqBonus = await calcEquipBonusForAgent(agent.id);
+
         return {
           ...agent,
           pointsBalance: userRows[0]?.pointsBalance ?? 0,
@@ -1623,6 +1641,7 @@ export const gameAdminRouter = router({
           gameStones: userRows[0]?.gameStones ?? 0,
           control: control[0] ?? null,
           computedStats,
+          equipBonus: eqBonus,
           equipped,
           bagItems,
         };

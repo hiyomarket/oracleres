@@ -48,6 +48,10 @@ export interface CombatSkill {
   awakening?: typeof DESTINY_AWAKENING_EFFECTS[string];
   /** 技能等級 */
   skillLevel?: number;
+  /** 吸血百分比（造成傷害的 X% 回復 HP，0 = 無吸血） */
+  lifestealPercent?: number;
+  /** 目標類型：enemy=敵方, ally=己方, self=自身 */
+  targetType?: string;
   /** 傷害方式：single=單體, aoe=全體 */
   damageType?: "single" | "aoe";
 }
@@ -1036,6 +1040,19 @@ function executeSkill(
           message: statusResult.description,
         });
       }
+    }
+
+    // 吸血效果
+    if (skill.lifestealPercent && skill.lifestealPercent > 0 && finalDamage > 0) {
+      const lifestealAmount = Math.max(1, Math.floor(finalDamage * skill.lifestealPercent / 100));
+      attacker.currentHp = Math.min(attacker.maxHp, attacker.currentHp + lifestealAmount);
+      logs.push({
+        round, actorId: attacker.id, actorName: attacker.name,
+        logType: "heal", targetId: attacker.id, targetName: attacker.name,
+        value: lifestealAmount, isCritical: false,
+        skillName: skill.name,
+        message: `${attacker.name}的${skill.name}吸取了 ${lifestealAmount} HP`,
+      });
     }
 
     // 擊敗判定

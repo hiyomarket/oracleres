@@ -32,23 +32,24 @@ export function BattleGrid({ participants, isEnemy, attackingId, hitId, maxSlots
         </div>
       );
     }
-    const isSelected = isEnemy && selectedTargetId === p.id;
+    const canSelect = onTargetSelect && !p.isDefeated;
+    const isSelected = selectedTargetId === p.id && canSelect;
     return (
       <div key={p.id} className="flex-1 min-w-0 relative"
-        style={{ cursor: isEnemy && onTargetSelect && !p.isDefeated ? "crosshair" : undefined }}
+        style={{ cursor: canSelect ? "crosshair" : undefined }}
         onClick={() => {
-          if (isEnemy && onTargetSelect && !p.isDefeated) onTargetSelect(p.id);
+          if (canSelect) onTargetSelect(p.id);
         }}>
         {isSelected && (
           <div className="absolute -top-1 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-            <span className="text-[10px] animate-bounce" style={{ filter: "drop-shadow(0 0 4px #ef4444)" }}>🔻</span>
+            <span className="text-[10px] animate-bounce" style={{ filter: isEnemy ? "drop-shadow(0 0 4px #ef4444)" : "drop-shadow(0 0 4px #22c55e)" }}>{isEnemy ? "🔻" : "💚"}</span>
           </div>
         )}
         <div style={{
           borderRadius: "12px",
-          outline: isSelected ? "2px solid rgba(239,68,68,0.7)" : "none",
+          outline: isSelected ? `2px solid ${isEnemy ? "rgba(239,68,68,0.7)" : "rgba(34,197,94,0.7)"}` : "none",
           outlineOffset: "2px",
-          boxShadow: isSelected ? "0 0 12px rgba(239,68,68,0.4)" : undefined,
+          boxShadow: isSelected ? (isEnemy ? "0 0 12px rgba(239,68,68,0.4)" : "0 0 12px rgba(34,197,94,0.4)") : undefined,
           transition: "all 0.15s",
         }}>
           <CombatantCard p={p} isEnemy={isEnemy}
