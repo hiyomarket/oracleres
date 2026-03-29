@@ -3146,8 +3146,16 @@ export const gameQuestSkillCatalog = mysqlTable("game_quest_skill_catalog", {
   prerequisites: json("prerequisites"),
   /** 教導此技能的 NPC ID（關聯 gameNpcCatalog） */
   npcId: int("npc_id"),
+  /** 技能目標範圍：single / t_shape / cross / all_enemy / all_ally / self / party */
+  targetType: varchar("target_type", { length: 20 }).notNull().default("single"),
+  /** 傷害/效果基於哪個屬性：atk / mtk / none */
+  scaleStat: varchar("scale_stat", { length: 10 }).notNull().default("atk"),
   /** 稀有度（用於平衡系統）：common / rare / epic / legendary */
   rarity: varchar("rarity", { length: 20 }).notNull().default("rare"),
+  /** 是否為寵物可學技能 */
+  petLearnable: tinyint("pet_learnable").notNull().default(1),
+  /** 是否為人物可學技能 */
+  playerLearnable: tinyint("player_learnable").notNull().default(1),
   /** 圖示 URL */
   iconUrl: text("icon_url"),
   /** 排序權重 */

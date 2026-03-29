@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, category, skill_type FROM game_skill_catalog GROUP BY category, skill_type ORDER BY category;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total, category, skill_type FROM game_skill_catalog GROUP BY category, skill_type ORDER BY category;",
+  "rows": [
+    {
+      "total": "109",
+      "category": "active_combat",
+      "skill_type": "attack"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tcategory\tskill_type\n109\tactive_combat\tattack\n",
+  "stderr": "",
+  "execution_time_ms": 1605
+}

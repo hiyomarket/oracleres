@@ -1,0 +1,252 @@
+{
+  "query": "SELECT code, name, category, skill_type, wuxing, power_percent, mp_cost, additional_effect, special_mechanic FROM game_quest_skill_catalog WHERE code NOT IN ('P1','P2','P3','P4','P5','P6','P7','P8','M1','M2');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT code, name, category, skill_type, wuxing, power_percent, mp_cost, additional_effect, special_mechanic FROM game_quest_skill_catalog WHERE code NOT IN ('P1','P2','P3','P4','P5','P6','P7','P8','M1','M2');",
+  "rows": [
+    {
+      "code": "M3",
+      "name": "風刃魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "wuxing": "木",
+      "power_percent": "120",
+      "mp_cost": "12",
+      "additional_effect": "{\"chance\": 15, \"duration\": 2, \"type\": \"defDown\", \"value\": 20}",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "M4",
+      "name": "隕石魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "wuxing": "土",
+      "power_percent": "200",
+      "mp_cost": "25",
+      "additional_effect": "{\"chance\": 10, \"duration\": 1, \"type\": \"stun\", \"value\": 0}",
+      "special_mechanic": "{\"aoe\": \"3x3\", \"centerDouble\": true}"
+    },
+    {
+      "code": "S1",
+      "name": "昏睡魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "wuxing": "水",
+      "power_percent": "0",
+      "mp_cost": "15",
+      "additional_effect": "{\"chance\": 70, \"duration\": 5, \"type\": \"sleep\", \"value\": 0}",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "S2",
+      "name": "石化魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "wuxing": "土",
+      "power_percent": "0",
+      "mp_cost": "18",
+      "additional_effect": "{\"chance\": 60, \"duration\": 3, \"type\": \"petrify\", \"value\": 0}",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "S3",
+      "name": "混亂魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "wuxing": "火",
+      "power_percent": "0",
+      "mp_cost": "20",
+      "additional_effect": "{\"chance\": 65, \"duration\": 4, \"type\": \"confuse\", \"value\": 40}",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "S4",
+      "name": "中毒魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "wuxing": "木",
+      "power_percent": "0",
+      "mp_cost": "10",
+      "additional_effect": "{\"chance\": 75, \"duration\": 5, \"type\": \"poison\", \"value\": 15}",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "S5",
+      "name": "遺忘魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "wuxing": "水",
+      "power_percent": "0",
+      "mp_cost": "22",
+      "additional_effect": "{\"chance\": 55, \"duration\": 3, \"type\": \"forget\", \"value\": 2}",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "S6",
+      "name": "酒醉魔法",
+      "category": "status",
+      "skill_type": "debuff",
+      "wuxing": "水",
+      "power_percent": "0",
+      "mp_cost": "18",
+      "additional_effect": "{\"chance\": 70, \"duration\": 5, \"type\": \"drunk\", \"value\": 40}",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "A1",
+      "name": "補血魔法",
+      "category": "support",
+      "skill_type": "heal",
+      "wuxing": "水",
+      "power_percent": "80",
+      "mp_cost": "12",
+      "additional_effect": "NULL",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "A2",
+      "name": "強效補血魔法",
+      "category": "support",
+      "skill_type": "heal",
+      "wuxing": "水",
+      "power_percent": "120",
+      "mp_cost": "20",
+      "additional_effect": "NULL",
+      "special_mechanic": "{\"aoe\": \"party\"}"
+    },
+    {
+      "code": "A3",
+      "name": "氣絕回復",
+      "category": "support",
+      "skill_type": "heal",
+      "wuxing": "木",
+      "power_percent": "30",
+      "mp_cost": "30",
+      "additional_effect": "NULL",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "A4",
+      "name": "潔淨魔法",
+      "category": "support",
+      "skill_type": "buff",
+      "wuxing": "水",
+      "power_percent": "0",
+      "mp_cost": "15",
+      "additional_effect": "NULL",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "A5",
+      "name": "恢復魔法",
+      "category": "support",
+      "skill_type": "heal",
+      "wuxing": "木",
+      "power_percent": "8",
+      "mp_cost": "22",
+      "additional_effect": "NULL",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "A6",
+      "name": "攻擊吸收",
+      "category": "support",
+      "skill_type": "buff",
+      "wuxing": "土",
+      "power_percent": "0",
+      "mp_cost": "18",
+      "additional_effect": "NULL",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "A7",
+      "name": "魔法吸收",
+      "category": "support",
+      "skill_type": "buff",
+      "wuxing": "火",
+      "power_percent": "0",
+      "mp_cost": "20",
+      "additional_effect": "NULL",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "A8",
+      "name": "明鏡止水",
+      "category": "support",
+      "skill_type": "heal",
+      "wuxing": "水",
+      "power_percent": "40",
+      "mp_cost": "0",
+      "additional_effect": "NULL",
+      "special_mechanic": "{\"mpRestore\": 30, \"skipNextTurn\": true}"
+    },
+    {
+      "code": "X1",
+      "name": "暗殺",
+      "category": "special",
+      "skill_type": "attack",
+      "wuxing": "金",
+      "power_percent": "500",
+      "mp_cost": "25",
+      "additional_effect": "NULL",
+      "special_mechanic": "{\"requireBackstab\": true}"
+    },
+    {
+      "code": "X2",
+      "name": "偷竊",
+      "category": "special",
+      "skill_type": "utility",
+      "wuxing": "木",
+      "power_percent": "0",
+      "mp_cost": "15",
+      "additional_effect": "NULL",
+      "special_mechanic": "{\"failRate\": 30}"
+    },
+    {
+      "code": "X3",
+      "name": "聖盾",
+      "category": "special",
+      "skill_type": "buff",
+      "wuxing": "土",
+      "power_percent": "0",
+      "mp_cost": "25",
+      "additional_effect": "NULL",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "C1",
+      "name": "採集",
+      "category": "production",
+      "skill_type": "production",
+      "wuxing": "木",
+      "power_percent": "0",
+      "mp_cost": "0",
+      "additional_effect": "NULL",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "C2",
+      "name": "製作",
+      "category": "production",
+      "skill_type": "production",
+      "wuxing": "火",
+      "power_percent": "0",
+      "mp_cost": "0",
+      "additional_effect": "NULL",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "C3",
+      "name": "鑑定",
+      "category": "production",
+      "skill_type": "production",
+      "wuxing": "水",
+      "power_percent": "0",
+      "mp_cost": "0",
+      "additional_effect": "NULL",
+      "special_mechanic": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "code\tname\tcategory\tskill_type\twuxing\tpower_percent\tmp_cost\tadditional_effect\tspecial_mechanic\nM3\t風刃魔法\tmagic\tattack\t木\t120\t12\t{\"chance\": 15, \"duration\": 2, \"type\": \"defDown\", \"value\": 20}\tNULL\nM4\t隕石魔法\tmagic\tattack\t土\t200\t25\t{\"chance\": 10, \"duration\": 1, \"type\": \"stun\", \"value\": 0}\t{\"aoe\": \"3x3\", \"centerDouble\": true}\nS1\t昏睡魔法\tstatus\tdebuff\t水\t0\t15\t{\"chance\": 70, \"duration\": 5, \"type\": \"sleep\", \"value\": 0}\tNULL\nS2\t石化魔法\tstatus\tdebuff\t土\t0\t18\t{\"chance\": 60, \"duration\": 3, \"type\": \"petrify\", \"value\": 0}\tNULL\nS3\t混亂魔法\tstatus\tdebuff\t火\t0\t20\t{\"chance\": 65, \"duration\": 4, \"type\": \"confuse\", \"value\": 40}\tNULL\nS4\t中毒魔法\tstatus\tdebuff\t木\t0\t10\t{\"chance\": 75, \"duration\": 5, \"type\": \"poison\", \"value\": 15}\tNULL\nS5\t遺忘魔法\tstatus\tdebuff\t水\t0\t22\t{\"chance\": 55, \"duration\": 3, \"type\": \"forget\", \"value\": 2}\tNULL\nS6\t酒醉魔法\tstatus\tdebuff\t水\t0\t18\t{\"chance\": 70, \"duration\": 5, \"type\": \"drunk\", \"value\": 40}\tNULL\nA1\t補血魔法\tsupport\theal\t水\t80\t12\tNULL\tNULL\nA2\t強效補血魔法\tsupport\theal\t水\t120\t20\tNULL\t{\"aoe\": \"party\"}\nA3\t氣絕回復\tsupport\theal\t木\t30\t30\tNULL\tNULL\nA4\t潔淨魔法\tsupport\tbuff\t水\t0\t15\tNULL\tNULL\nA5\t恢復魔法\tsupport\theal\t木\t8\t22\tNULL\tNULL\nA6\t攻擊吸收\tsupport\tbuff\t土\t0\t18\tNULL\tNULL\nA7\t魔法吸收\tsupport\tbuff\t火\t0\t20\tNULL\tNULL\nA8\t明鏡止水\tsupport\theal\t水\t40\t0\tNULL\t{\"mpRestore\": 30, \"skipNextTurn\": true}\nX1\t暗殺\tspecial\tattack\t金\t500\t25\tNULL\t{\"requireBackstab\": true}\nX2\t偷竊\tspecial\tutility\t木\t0\t15\tNULL\t{\"failRate\": 30}\nX3\t聖盾\tspecial\tbuff\t土\t0\t25\tNULL\tNULL\nC1\t採集\tproduction\tproduction\t木\t0\t0\tNULL\tNULL\nC2\t製作\tproduction\tproduction\t火\t0\t0\tNULL\tNULL\nC3\t鑑定\tproduction\tproduction\t水\t0\t0\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1568
+}

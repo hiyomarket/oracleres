@@ -1,0 +1,52 @@
+{
+  "query": "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE '%skill%' OR TABLE_NAME LIKE '%pet%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE '%skill%' OR TABLE_NAME LIKE '%pet%';",
+  "rows": [
+    {
+      "TABLE_NAME": "game_pet_catalog"
+    },
+    {
+      "TABLE_NAME": "game_pet_learned_skills"
+    },
+    {
+      "TABLE_NAME": "game_skill_catalog"
+    },
+    {
+      "TABLE_NAME": "game_quest_skill_catalog"
+    },
+    {
+      "TABLE_NAME": "skill_books"
+    },
+    {
+      "TABLE_NAME": "agent_skills"
+    },
+    {
+      "TABLE_NAME": "game_player_pets"
+    },
+    {
+      "TABLE_NAME": "game_learned_quest_skills"
+    },
+    {
+      "TABLE_NAME": "skill_templates"
+    },
+    {
+      "TABLE_NAME": "game_pet_bp_history"
+    },
+    {
+      "TABLE_NAME": "hidden_skill_trackers"
+    },
+    {
+      "TABLE_NAME": "game_monster_skill_catalog"
+    },
+    {
+      "TABLE_NAME": "game_skills"
+    },
+    {
+      "TABLE_NAME": "game_pet_innate_skills"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\ngame_pet_catalog\ngame_pet_learned_skills\ngame_skill_catalog\ngame_quest_skill_catalog\nskill_books\nagent_skills\ngame_player_pets\ngame_learned_quest_skills\nskill_templates\ngame_pet_bp_history\nhidden_skill_trackers\ngame_monster_skill_catalog\ngame_skills\ngame_pet_innate_skills\n",
+  "stderr": "",
+  "execution_time_ms": 1538
+}

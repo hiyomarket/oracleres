@@ -386,8 +386,18 @@ export function resolveCombat(
     mdef?: number;
     magicAttack?: number;
     profession?: string;
-    // 技能資訊（用於詳細戰鬥計算），M3L: 加入 wuxing 和 cooldown
-    equippedSkills?: Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number; wuxing?: string; cooldown?: number }>;
+    // 技能資訊（用於詳細戰鬥計算），v2.0: 完整戰鬥機制欄位
+    equippedSkills?: Array<{
+      id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number;
+      wuxing?: string; cooldown?: number;
+      scaleStat?: string; targetType?: string;
+      additionalEffect?: any; isPassive?: boolean; passiveType?: string;
+      passiveTriggerChance?: number; passiveChancePerLevel?: number;
+      lifesteal?: number; hitCount?: number[]; multiTargetHit?: boolean;
+      ignoreDefPercent?: number; accuracyMod?: number; priority?: boolean;
+      selfDamagePercent?: number; healType?: string; hotDuration?: number;
+      onDefend?: boolean; buff?: any; absorb?: any; shield?: any; taunt?: any;
+    }>;
     currentMp?: number;
   },
   monster: Monster | CombatMonster
@@ -1532,7 +1542,18 @@ async function processCombatEvent(
 
   // 取得玩家已裝備技能資訊（用於詳細戰鬥計算）
   // M3L: 取得玩家已裝備技能資訊（加入 wuxing 和 cooldown）
-  let equippedSkillsForCombat: Array<{ id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number; wuxing?: string; cooldown?: number }> = [];
+  let equippedSkillsForCombat: Array<{
+    id: string; name: string; skillType: string; damageMultiplier: number; mpCost: number;
+    wuxing?: string; cooldown?: number;
+    // v2.0 battle mechanic fields
+    scaleStat?: string; targetType?: string;
+    additionalEffect?: any; isPassive?: boolean; passiveType?: string;
+    passiveTriggerChance?: number; passiveChancePerLevel?: number;
+    lifesteal?: number; hitCount?: number[]; multiTargetHit?: boolean;
+    ignoreDefPercent?: number; accuracyMod?: number; priority?: boolean;
+    selfDamagePercent?: number; healType?: string; hotDuration?: number;
+    onDefend?: boolean; buff?: any; absorb?: any; shield?: any; taunt?: any;
+  }> = [];
   try {
     const { agentSkills, gameSkillCatalog } = await import("../drizzle/schema");
     const { eq } = await import("drizzle-orm");
@@ -1590,14 +1611,24 @@ async function processCombatEvent(
         mpCost: gameQuestSkillCatalog.mpCost,
         cooldown: gameQuestSkillCatalog.cooldown,
         wuxing: gameQuestSkillCatalog.wuxing,
+        additionalEffect: gameQuestSkillCatalog.additionalEffect,
+        specialMechanic: gameQuestSkillCatalog.specialMechanic,
+        targetType: gameQuestSkillCatalog.targetType,
+        scaleStat: gameQuestSkillCatalog.scaleStat,
       }).from(gameQuestSkillCatalog).where(inArray(gameQuestSkillCatalog.id, questSkillIds));
       for (const qs of questSkillData) {
-        // 將天命考核技能轉換為戰鬥技能格式
+        // 將天命考核技能轉換為戰鬥技能格式（v2.0：完整戰鬥機制映射）
         const mappedType = qs.skillType === "attack" ? "attack" :
           qs.skillType === "heal" ? "heal" :
           qs.skillType === "buff" ? "buff" :
-          qs.skillType === "debuff" ? "attack" : // debuff 當作攻擊處理
-          qs.skillType === "utility" ? "buff" : "attack";
+          qs.skillType === "debuff" ? "debuff" :
+          qs.skillType === "passive" ? "passive" :
+          qs.skillType === "utility" ? "utility" : "attack";
+        
+        // 解析 specialMechanic JSON
+        const sm = (typeof qs.specialMechanic === 'string' ? JSON.parse(qs.specialMechanic) : qs.specialMechanic) as any ?? {};
+        const ae = (typeof qs.additionalEffect === 'string' ? JSON.parse(qs.additionalEffect) : qs.additionalEffect) as any ?? null;
+        
         equippedSkillsForCombat.push({
           id: `quest_${qs.id}`,
           name: `[天命] ${qs.name}`,
@@ -1606,6 +1637,28 @@ async function processCombatEvent(
           mpCost: qs.mpCost ?? 0,
           wuxing: qs.wuxing ?? undefined,
           cooldown: qs.cooldown ?? 3,
+          // v2.0 新增戰鬥機制欄位
+          scaleStat: qs.scaleStat ?? 'atk',
+          targetType: qs.targetType ?? 'single',
+          additionalEffect: ae,
+          isPassive: sm.isPassive ?? false,
+          passiveType: sm.passiveType,
+          passiveTriggerChance: sm.passiveTriggerChance,
+          passiveChancePerLevel: sm.passiveChancePerLevel,
+          lifesteal: sm.lifesteal,
+          hitCount: sm.hitCount,
+          multiTargetHit: sm.multiTargetHit,
+          ignoreDefPercent: sm.ignoreDefPercent,
+          accuracyMod: sm.accuracyMod,
+          priority: sm.priority,
+          selfDamagePercent: sm.selfDamagePercent,
+          healType: sm.healType,
+          hotDuration: sm.hotDuration,
+          onDefend: sm.onDefend,
+          buff: sm.buff,
+          absorb: sm.absorb,
+          shield: sm.shield,
+          taunt: sm.taunt,
         });
       }
     }

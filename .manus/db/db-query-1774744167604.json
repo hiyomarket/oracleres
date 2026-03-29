@@ -1,0 +1,130 @@
+{
+  "query": "SELECT code, name, category, skill_type, wuxing, power_percent, mp_cost, max_level, additional_effect, special_mechanic FROM game_quest_skill_catalog LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT code, name, category, skill_type, wuxing, power_percent, mp_cost, max_level, additional_effect, special_mechanic FROM game_quest_skill_catalog LIMIT 10;",
+  "rows": [
+    {
+      "code": "P1",
+      "name": "連擊",
+      "category": "physical",
+      "skill_type": "attack",
+      "wuxing": "金",
+      "power_percent": "110",
+      "mp_cost": "15",
+      "max_level": "10",
+      "additional_effect": "NULL",
+      "special_mechanic": "{\"hitCount\": [2, 5]}"
+    },
+    {
+      "code": "P2",
+      "name": "諸刃",
+      "category": "physical",
+      "skill_type": "attack",
+      "wuxing": "金",
+      "power_percent": "180",
+      "mp_cost": "20",
+      "max_level": "10",
+      "additional_effect": "NULL",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "P3",
+      "name": "反擊",
+      "category": "physical",
+      "skill_type": "passive",
+      "wuxing": "金",
+      "power_percent": "100",
+      "mp_cost": "0",
+      "max_level": "10",
+      "additional_effect": "NULL",
+      "special_mechanic": "{\"isPassive\": true}"
+    },
+    {
+      "code": "P4",
+      "name": "崩擊",
+      "category": "physical",
+      "skill_type": "attack",
+      "wuxing": "土",
+      "power_percent": "250",
+      "mp_cost": "18",
+      "max_level": "10",
+      "additional_effect": "{\"chance\": 100, \"duration\": 3, \"type\": \"defDown\", \"value\": 30}",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "P5",
+      "name": "亂射",
+      "category": "physical",
+      "skill_type": "attack",
+      "wuxing": "木",
+      "power_percent": "120",
+      "mp_cost": "22",
+      "max_level": "10",
+      "additional_effect": "NULL",
+      "special_mechanic": "{\"aoe\": \"5x5\"}"
+    },
+    {
+      "code": "P6",
+      "name": "乾坤一擲",
+      "category": "physical",
+      "skill_type": "attack",
+      "wuxing": "火",
+      "power_percent": "350",
+      "mp_cost": "25",
+      "max_level": "10",
+      "additional_effect": "NULL",
+      "special_mechanic": "{\"accuracyMod\": -40}"
+    },
+    {
+      "code": "P7",
+      "name": "迅速果斷",
+      "category": "physical",
+      "skill_type": "attack",
+      "wuxing": "金",
+      "power_percent": "150",
+      "mp_cost": "12",
+      "max_level": "10",
+      "additional_effect": "NULL",
+      "special_mechanic": "{\"ignoreShield\": true, \"priority\": true}"
+    },
+    {
+      "code": "P8",
+      "name": "毒擊",
+      "category": "physical",
+      "skill_type": "attack",
+      "wuxing": "木",
+      "power_percent": "100",
+      "mp_cost": "12",
+      "max_level": "10",
+      "additional_effect": "{\"chance\": 80, \"duration\": 5, \"type\": \"poison\", \"value\": 10}",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "M1",
+      "name": "火焰魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "wuxing": "火",
+      "power_percent": "130",
+      "mp_cost": "8",
+      "max_level": "10",
+      "additional_effect": "{\"chance\": 15, \"duration\": 3, \"type\": \"burn\", \"value\": 8}",
+      "special_mechanic": "NULL"
+    },
+    {
+      "code": "M2",
+      "name": "冰凍魔法",
+      "category": "magic",
+      "skill_type": "attack",
+      "wuxing": "水",
+      "power_percent": "125",
+      "mp_cost": "10",
+      "max_level": "10",
+      "additional_effect": "{\"chance\": 20, \"duration\": 3, \"type\": \"freeze\", \"value\": 30}",
+      "special_mechanic": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "code\tname\tcategory\tskill_type\twuxing\tpower_percent\tmp_cost\tmax_level\tadditional_effect\tspecial_mechanic\nP1\t連擊\tphysical\tattack\t金\t110\t15\t10\tNULL\t{\"hitCount\": [2, 5]}\nP2\t諸刃\tphysical\tattack\t金\t180\t20\t10\tNULL\tNULL\nP3\t反擊\tphysical\tpassive\t金\t100\t0\t10\tNULL\t{\"isPassive\": true}\nP4\t崩擊\tphysical\tattack\t土\t250\t18\t10\t{\"chance\": 100, \"duration\": 3, \"type\": \"defDown\", \"value\": 30}\tNULL\nP5\t亂射\tphysical\tattack\t木\t120\t22\t10\tNULL\t{\"aoe\": \"5x5\"}\nP6\t乾坤一擲\tphysical\tattack\t火\t350\t25\t10\tNULL\t{\"accuracyMod\": -40}\nP7\t迅速果斷\tphysical\tattack\t金\t150\t12\t10\tNULL\t{\"ignoreShield\": true, \"priority\": true}\nP8\t毒擊\tphysical\tattack\t木\t100\t12\t10\t{\"chance\": 80, \"duration\": 5, \"type\": \"poison\", \"value\": 10}\tNULL\nM1\t火焰魔法\tmagic\tattack\t火\t130\t8\t10\t{\"chance\": 15, \"duration\": 3, \"type\": \"burn\", \"value\": 8}\tNULL\nM2\t冰凍魔法\tmagic\tattack\t水\t125\t10\t10\t{\"chance\": 20, \"duration\": 3, \"type\": \"freeze\", \"value\": 30}\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1503
+}

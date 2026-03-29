@@ -1,0 +1,124 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_skill_catalog' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_skill_catalog' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "skill_id"
+    },
+    {
+      "COLUMN_NAME": "name"
+    },
+    {
+      "COLUMN_NAME": "wuxing"
+    },
+    {
+      "COLUMN_NAME": "category"
+    },
+    {
+      "COLUMN_NAME": "tier"
+    },
+    {
+      "COLUMN_NAME": "mp_cost"
+    },
+    {
+      "COLUMN_NAME": "description"
+    },
+    {
+      "COLUMN_NAME": "skill_type"
+    },
+    {
+      "COLUMN_NAME": "in_normal_shop"
+    },
+    {
+      "COLUMN_NAME": "in_spirit_shop"
+    },
+    {
+      "COLUMN_NAME": "in_secret_shop"
+    },
+    {
+      "COLUMN_NAME": "is_active"
+    },
+    {
+      "COLUMN_NAME": "created_at"
+    },
+    {
+      "COLUMN_NAME": "rarity"
+    },
+    {
+      "COLUMN_NAME": "cooldown"
+    },
+    {
+      "COLUMN_NAME": "power_percent"
+    },
+    {
+      "COLUMN_NAME": "learn_level"
+    },
+    {
+      "COLUMN_NAME": "acquire_type"
+    },
+    {
+      "COLUMN_NAME": "shop_price"
+    },
+    {
+      "COLUMN_NAME": "drop_monster_id"
+    },
+    {
+      "COLUMN_NAME": "hidden_trigger"
+    },
+    {
+      "COLUMN_NAME": "value_score"
+    },
+    {
+      "COLUMN_NAME": "quality_grade"
+    },
+    {
+      "COLUMN_NAME": "drop_level_min"
+    },
+    {
+      "COLUMN_NAME": "drop_level_max"
+    },
+    {
+      "COLUMN_NAME": "tradeable"
+    },
+    {
+      "COLUMN_NAME": "in_auction_house"
+    },
+    {
+      "COLUMN_NAME": "image_url"
+    },
+    {
+      "COLUMN_NAME": "damage_type"
+    },
+    {
+      "COLUMN_NAME": "wuxing_threshold"
+    },
+    {
+      "COLUMN_NAME": "status_effect"
+    },
+    {
+      "COLUMN_NAME": "status_chance"
+    },
+    {
+      "COLUMN_NAME": "status_duration"
+    },
+    {
+      "COLUMN_NAME": "heal_percent"
+    },
+    {
+      "COLUMN_NAME": "profession_required"
+    },
+    {
+      "COLUMN_NAME": "skill_tier"
+    },
+    {
+      "COLUMN_NAME": "acquire_method"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nskill_id\nname\nwuxing\ncategory\ntier\nmp_cost\ndescription\nskill_type\nin_normal_shop\nin_spirit_shop\nin_secret_shop\nis_active\ncreated_at\nrarity\ncooldown\npower_percent\nlearn_level\nacquire_type\nshop_price\ndrop_monster_id\nhidden_trigger\nvalue_score\nquality_grade\ndrop_level_min\ndrop_level_max\ntradeable\nin_auction_house\nimage_url\ndamage_type\nwuxing_threshold\nstatus_effect\nstatus_chance\nstatus_duration\nheal_percent\nprofession_required\nskill_tier\nacquire_method\n",
+  "stderr": "",
+  "execution_time_ms": 1517
+}

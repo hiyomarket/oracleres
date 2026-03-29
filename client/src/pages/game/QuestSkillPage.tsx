@@ -30,17 +30,19 @@ const WUXING_CONFIG: Record<string, { label: string; color: string; bg: string; 
 };
 
 const CATEGORY_CONFIG: Record<string, { label: string; icon: any; color: string; bg: string; border: string }> = {
-  physical:   { label: "物理攻擊", icon: Sword,   color: "text-red-400",    bg: "bg-red-950/30",    border: "border-red-800/40" },
-  magic:      { label: "法術攻擊", icon: Zap,     color: "text-blue-400",   bg: "bg-blue-950/30",   border: "border-blue-800/40" },
-  status:     { label: "狀態異常", icon: Eye,     color: "text-purple-400", bg: "bg-purple-950/30", border: "border-purple-800/40" },
-  support:    { label: "輔助增益", icon: Shield,  color: "text-green-400",  bg: "bg-green-950/30",  border: "border-green-800/40" },
-  special:    { label: "特殊功能", icon: Star,    color: "text-amber-400",  bg: "bg-amber-950/30",  border: "border-amber-800/40" },
+  physical:   { label: "物理戰鬥", icon: Sword,   color: "text-red-400",    bg: "bg-red-950/30",    border: "border-red-800/40" },
+  magic:      { label: "五行元素魔法", icon: Zap,     color: "text-blue-400",   bg: "bg-blue-950/30",   border: "border-blue-800/40" },
+  status:     { label: "咒術控制", icon: Eye,     color: "text-purple-400", bg: "bg-purple-950/30", border: "border-purple-800/40" },
+  support:    { label: "治療輔助", icon: Heart,   color: "text-green-400",  bg: "bg-green-950/30",  border: "border-green-800/40" },
+  special:    { label: "特殊技能", icon: Star,    color: "text-amber-400",  bg: "bg-amber-950/30",  border: "border-amber-800/40" },
+  resistance: { label: "抵抗被動", icon: Shield,  color: "text-cyan-400",   bg: "bg-cyan-950/30",   border: "border-cyan-800/40" },
   production: { label: "生產製作", icon: Hammer,  color: "text-orange-400", bg: "bg-orange-950/30", border: "border-orange-800/40" },
   attack:     { label: "攻擊系",   icon: Sword,   color: "text-red-400",    bg: "bg-red-950/30",    border: "border-red-800/40" },
 };
 
 const RARITY_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; glow: string }> = {
   common:    { label: "普通", color: "text-gray-400",   bg: "bg-gray-800/40",   border: "border-gray-600/50",   glow: "" },
+  uncommon:  { label: "優良", color: "text-green-400",  bg: "bg-green-950/40",  border: "border-green-700/50",  glow: "shadow-green-500/15" },
   rare:      { label: "稀有", color: "text-blue-400",   bg: "bg-blue-950/40",   border: "border-blue-700/50",   glow: "shadow-blue-500/20" },
   epic:      { label: "史詩", color: "text-purple-400", bg: "bg-purple-950/40", border: "border-purple-700/50", glow: "shadow-purple-500/30" },
   legendary: { label: "傳說", color: "text-amber-400",  bg: "bg-amber-950/40",  border: "border-amber-700/50",  glow: "shadow-amber-500/40" },
@@ -49,6 +51,26 @@ const RARITY_CONFIG: Record<string, { label: string; color: string; bg: string; 
 const SKILL_TYPE_LABELS: Record<string, string> = {
   attack: "攻擊", heal: "治療", buff: "增益", debuff: "減益",
   passive: "被動", utility: "功能", production: "生產",
+};
+
+const TARGET_TYPE_LABELS: Record<string, { label: string; color: string }> = {
+  single: { label: "單體", color: "text-gray-300" },
+  t_shape: { label: "T字範圍", color: "text-blue-300" },
+  cross: { label: "十字範圍", color: "text-purple-300" },
+  all_enemy: { label: "全體敵方", color: "text-red-300" },
+  self: { label: "自身", color: "text-green-300" },
+  single_ally: { label: "單體友方", color: "text-green-300" },
+  all_ally: { label: "全體友方", color: "text-green-300" },
+  all: { label: "全場", color: "text-amber-300" },
+};
+
+const SCALE_STAT_LABELS: Record<string, { label: string; color: string }> = {
+  atk: { label: "ATK 物理", color: "text-red-400" },
+  mtk: { label: "MTK 魔法", color: "text-blue-400" },
+  spr: { label: "SPR 精神", color: "text-cyan-400" },
+  fixed: { label: "固定值", color: "text-gray-400" },
+  hp_percent: { label: "HP%", color: "text-green-400" },
+  none: { label: "無", color: "text-gray-500" },
 };
 
 const EFFECT_LABELS: Record<string, string> = {
@@ -325,6 +347,25 @@ function QuestSkillCard({ skill, status, progress, learned, onSelect }: {
           <p className="text-xs text-gray-400 line-clamp-2 mb-3">{skill.description}</p>
         )}
 
+        {/* 目標/計算基礎標籤 */}
+        <div className="flex gap-1 mb-2 flex-wrap">
+          {skill.targetType && TARGET_TYPE_LABELS[skill.targetType] && (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded bg-gray-800/60 border border-gray-700/50 ${TARGET_TYPE_LABELS[skill.targetType].color}`}>
+              {TARGET_TYPE_LABELS[skill.targetType].label}
+            </span>
+          )}
+          {skill.scaleStat && SCALE_STAT_LABELS[skill.scaleStat] && skill.scaleStat !== 'none' && (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded bg-gray-800/60 border border-gray-700/50 ${SCALE_STAT_LABELS[skill.scaleStat].color}`}>
+              {SCALE_STAT_LABELS[skill.scaleStat].label}
+            </span>
+          )}
+          {skill.skillType && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-800/60 border border-gray-700/50 text-gray-400">
+              {SKILL_TYPE_LABELS[skill.skillType] ?? skill.skillType}
+            </span>
+          )}
+        </div>
+
         {/* 數值條 */}
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="bg-gray-900/50 rounded px-1 py-1">
@@ -453,6 +494,31 @@ function QuestDetailDialog({ skill, status, progress, learned, open, onOpenChang
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* 技能基本資訊 */}
+          <div className="flex gap-1.5 mb-3 flex-wrap">
+            {skill.targetType && TARGET_TYPE_LABELS[skill.targetType] && (
+              <Badge variant="outline" className={`${TARGET_TYPE_LABELS[skill.targetType].color} border-current text-[10px]`}>
+                {TARGET_TYPE_LABELS[skill.targetType].label}
+              </Badge>
+            )}
+            {skill.scaleStat && SCALE_STAT_LABELS[skill.scaleStat] && skill.scaleStat !== 'none' && (
+              <Badge variant="outline" className={`${SCALE_STAT_LABELS[skill.scaleStat].color} border-current text-[10px]`}>
+                {SCALE_STAT_LABELS[skill.scaleStat].label}
+              </Badge>
+            )}
+            {skill.skillType && (
+              <Badge variant="outline" className="text-gray-400 border-gray-600 text-[10px]">
+                {SKILL_TYPE_LABELS[skill.skillType] ?? skill.skillType}
+              </Badge>
+            )}
+            {skill.petLearnable === 1 && (
+              <Badge variant="outline" className="text-pink-400 border-pink-600 text-[10px]">寵物可學</Badge>
+            )}
+            {skill.playerLearnable === 1 && (
+              <Badge variant="outline" className="text-cyan-400 border-cyan-600 text-[10px]">人物可學</Badge>
+            )}
+          </div>
+
           {/* 技能數值 */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
             <StatBlock label="威力" value={`${skill.powerPercent}%`} color="text-red-400" />
@@ -480,17 +546,122 @@ function QuestDetailDialog({ skill, status, progress, learned, open, onOpenChang
             </div>
           )}
 
-          {/* 特殊機制 */}
+          {/* 特殊機制（v2.0 完整戰鬥機制顯示） */}
           {specialMechanic && Object.keys(specialMechanic).length > 0 && (
             <div className="rounded-md bg-purple-950/30 border border-purple-800/40 p-3">
-              <p className="text-xs font-semibold text-purple-400 mb-1">特殊機制</p>
-              <div className="text-sm text-gray-300 space-y-1">
-                {specialMechanic.hitCount && <p>連擊次數：{specialMechanic.hitCount[0]}~{specialMechanic.hitCount[1]}</p>}
-                {specialMechanic.accuracyMod && <p>命中率修正：{specialMechanic.accuracyMod > 0 ? "+" : ""}{specialMechanic.accuracyMod}%</p>}
-                {specialMechanic.aoe && <p>範圍：{specialMechanic.aoe}</p>}
-                {specialMechanic.selfDamage && <p className="text-red-400">自傷效果</p>}
-                {specialMechanic.skipNextTurn && <p className="text-red-400">使用後跳過下一回合</p>}
-                {specialMechanic.isPassive && <p className="text-green-400">被動技能（自動生效）</p>}
+              <p className="text-xs font-semibold text-purple-400 mb-2">戰鬥機制</p>
+              <div className="text-sm text-gray-300 space-y-1.5">
+                {/* 被動技能 */}
+                {specialMechanic.isPassive && (
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-3.5 h-3.5 text-green-400" />
+                    <span className="text-green-400">被動技能（自動生效）</span>
+                  </div>
+                )}
+                {specialMechanic.passiveType && (
+                  <p className="text-gray-400 text-xs ml-5">觸發類型：{specialMechanic.passiveType === 'on_hit' ? '被攻擊時' : specialMechanic.passiveType === 'on_attack' ? '攻擊時' : specialMechanic.passiveType === 'on_defend' ? '防禦時' : specialMechanic.passiveType}</p>
+                )}
+                {specialMechanic.passiveTriggerChance && (
+                  <p className="text-gray-400 text-xs ml-5">觸發機率：{specialMechanic.passiveTriggerChance}%{specialMechanic.passiveChancePerLevel ? ` (+${specialMechanic.passiveChancePerLevel}%/級)` : ''}</p>
+                )}
+                {/* 連擊 */}
+                {specialMechanic.hitCount && (
+                  <div className="flex items-center gap-2">
+                    <Sword className="w-3.5 h-3.5 text-red-400" />
+                    <span>連擊 {specialMechanic.hitCount[0]}~{specialMechanic.hitCount[1]} 次</span>
+                    {specialMechanic.multiTargetHit && <span className="text-amber-400 text-xs">(每段可打不同目標)</span>}
+                  </div>
+                )}
+                {/* 吸血 */}
+                {specialMechanic.lifesteal && (
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-3.5 h-3.5 text-pink-400" />
+                    <span className="text-pink-400">吸血 {specialMechanic.lifesteal}% 傷害轉化為HP</span>
+                  </div>
+                )}
+                {/* 穿透防禦 */}
+                {specialMechanic.ignoreDefPercent && (
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-amber-400" />
+                    <span>穿透 {specialMechanic.ignoreDefPercent}% 防禦</span>
+                  </div>
+                )}
+                {/* 命中率修正 */}
+                {specialMechanic.accuracyMod && (
+                  <p>命中率修正：{specialMechanic.accuracyMod > 0 ? '+' : ''}{specialMechanic.accuracyMod}%</p>
+                )}
+                {/* 先制攻擊 */}
+                {specialMechanic.priority && (
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-3.5 h-3.5 text-yellow-400" />
+                    <span className="text-yellow-400">先制攻擊（忽略速度判定）</span>
+                  </div>
+                )}
+                {/* 自傷 */}
+                {specialMechanic.selfDamagePercent && (
+                  <p className="text-red-400">自傷：損失自身 {specialMechanic.selfDamagePercent}% 最大HP</p>
+                )}
+                {/* 治療類型 */}
+                {specialMechanic.healType && (
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-3.5 h-3.5 text-green-400" />
+                    <span className="text-green-400">
+                      {specialMechanic.healType === 'instant' ? '瞬間治療' : specialMechanic.healType === 'hot' ? `持續治療 (${specialMechanic.hotDuration ?? 3}回合)` : specialMechanic.healType === 'revive' ? '復活氣絕角色' : specialMechanic.healType === 'mp_restore' ? '恢復MP' : specialMechanic.healType}
+                    </span>
+                  </div>
+                )}
+                {/* 護盾 */}
+                {specialMechanic.shield && (
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="text-cyan-400">護盾：吸收 {specialMechanic.shield.percent}% 傷害，持續 {specialMechanic.shield.duration} 回合</span>
+                  </div>
+                )}
+                {/* 吸收 */}
+                {specialMechanic.absorb && (
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-3.5 h-3.5 text-blue-400" />
+                    <span className="text-blue-400">
+                      {specialMechanic.absorb.type === 'physical' ? '物理吸收' : specialMechanic.absorb.type === 'magic' ? '魔法吸收' : '吸收'}
+                      ：{specialMechanic.absorb.percent}%，持續 {specialMechanic.absorb.duration} 回合
+                    </span>
+                  </div>
+                )}
+                {/* 增益/減益 */}
+                {specialMechanic.buff && (
+                  <div className="rounded bg-gray-800/50 p-2 mt-1">
+                    <p className="text-xs text-amber-400 mb-1">{specialMechanic.buff.target === 'self' ? '自身增益' : specialMechanic.buff.target === 'ally' ? '友方增益' : '敵方減益'}</p>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {specialMechanic.buff.atk && <span className="text-red-300">ATK {specialMechanic.buff.atk > 0 ? '+' : ''}{specialMechanic.buff.atk}%</span>}
+                      {specialMechanic.buff.def && <span className="text-blue-300">DEF {specialMechanic.buff.def > 0 ? '+' : ''}{specialMechanic.buff.def}%</span>}
+                      {specialMechanic.buff.mtk && <span className="text-purple-300">MTK {specialMechanic.buff.mtk > 0 ? '+' : ''}{specialMechanic.buff.mtk}%</span>}
+                      {specialMechanic.buff.spd && <span className="text-cyan-300">SPD {specialMechanic.buff.spd > 0 ? '+' : ''}{specialMechanic.buff.spd}%</span>}
+                      {specialMechanic.buff.mdef && <span className="text-green-300">MDEF {specialMechanic.buff.mdef > 0 ? '+' : ''}{specialMechanic.buff.mdef}%</span>}
+                      {specialMechanic.buff.duration && <span className="text-gray-400">持續 {specialMechanic.buff.duration} 回合</span>}
+                    </div>
+                  </div>
+                )}
+                {/* 嘲諽 */}
+                {specialMechanic.taunt && (
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-3.5 h-3.5 text-orange-400" />
+                    <span className="text-orange-400">嘲諽：強制敵方攻擊自己，持續 {specialMechanic.taunt.duration} 回合</span>
+                  </div>
+                )}
+                {/* 消除異常 */}
+                {specialMechanic.cleanse && (
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-green-400" />
+                    <span className="text-green-400">消除{specialMechanic.cleanse === 'all' ? '所有' : specialMechanic.cleanse}狀態異常</span>
+                  </div>
+                )}
+                {/* 明鏡止水 */}
+                {specialMechanic.onDefend && (
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                    <span className="text-indigo-400">明鏡止水：防禦姿態，大幅提升防禦力</span>
+                  </div>
+                )}
               </div>
             </div>
           )}

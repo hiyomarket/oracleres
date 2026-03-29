@@ -194,7 +194,11 @@ const skillCatalogRouter = router({
       learnCost: z.any().optional(),
       prerequisites: z.any().optional(),
       npcId: z.number().optional(),
+      targetType: z.string().optional(),
+      scaleStat: z.string().optional(),
       rarity: z.string().optional(),
+      petLearnable: z.number().optional(),
+      playerLearnable: z.number().optional(),
       iconUrl: z.string().optional(),
       sortOrder: z.number().optional(),
     }))
@@ -230,7 +234,11 @@ const skillCatalogRouter = router({
       learnCost: z.any().optional(),
       prerequisites: z.any().optional(),
       npcId: z.number().optional(),
+      targetType: z.string().optional(),
+      scaleStat: z.string().optional(),
       rarity: z.string().optional(),
+      petLearnable: z.number().optional(),
+      playerLearnable: z.number().optional(),
       iconUrl: z.string().optional(),
       sortOrder: z.number().optional(),
     }))

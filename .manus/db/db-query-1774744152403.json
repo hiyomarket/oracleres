@@ -1,0 +1,30 @@
+{
+  "query": "SELECT COUNT(*) as cnt, 'quest_skill' as tbl FROM game_quest_skill_catalog UNION ALL SELECT COUNT(*), 'monster_skill' FROM game_monster_skill_catalog UNION ALL SELECT COUNT(*), 'game_skills' FROM game_skills UNION ALL SELECT COUNT(*), 'pet_learned' FROM game_pet_learned_skills UNION ALL SELECT COUNT(*), 'pet_innate' FROM game_pet_innate_skills;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as cnt, 'quest_skill' as tbl FROM game_quest_skill_catalog UNION ALL SELECT COUNT(*), 'monster_skill' FROM game_monster_skill_catalog UNION ALL SELECT COUNT(*), 'game_skills' FROM game_skills UNION ALL SELECT COUNT(*), 'pet_learned' FROM game_pet_learned_skills UNION ALL SELECT COUNT(*), 'pet_innate' FROM game_pet_innate_skills;",
+  "rows": [
+    {
+      "cnt": "2",
+      "tbl": "pet_learned"
+    },
+    {
+      "cnt": "0",
+      "tbl": "game_skills"
+    },
+    {
+      "cnt": "96",
+      "tbl": "monster_skill"
+    },
+    {
+      "cnt": "32",
+      "tbl": "quest_skill"
+    },
+    {
+      "cnt": "0",
+      "tbl": "pet_innate"
+    }
+  ],
+  "messages": [],
+  "stdout": "cnt\ttbl\n2\tpet_learned\n0\tgame_skills\n96\tmonster_skill\n32\tquest_skill\n0\tpet_innate\n",
+  "stderr": "",
+  "execution_time_ms": 1507
+}

@@ -1,0 +1,13 @@
+{
+  "query": "SELECT GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION SEPARATOR ', ') as all_cols FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_skill_catalog';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION SEPARATOR ', ') as all_cols FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_skill_catalog';",
+  "rows": [
+    {
+      "all_cols": "id, skill_id, name, wuxing, category, tier, mp_cost, description, skill_type, in_normal_shop, in_spirit_shop, in_secret_shop, is_active, created_at, rarity, cooldown, power_percent, learn_level, acquire_type, shop_price, drop_monster_id, hidden_trigger, value_score, quality_grade, drop_level_min, drop_level_max, tradeable, in_auction_house, image_url, damage_type, wuxing_threshold, status_effect, status_chance, status_duration, heal_percent, profession_required, skill_tier, acquire_method"
+    }
+  ],
+  "messages": [],
+  "stdout": "all_cols\nid, skill_id, name, wuxing, category, tier, mp_cost, description, skill_type, in_normal_shop, in_spirit_shop, in_secret_shop, is_active, created_at, rarity, cooldown, power_percent, learn_level, acquire_type, shop_price, drop_monster_id, hidden_trigger, value_score, quality_grade, drop_level_min, drop_level_max, tradeable, in_auction_house, image_url, damage_type, wuxing_threshold, status_effect, status_chance, status_duration, heal_percent, profession_required, skill_tier, acquire_method\n",
+  "stderr": "",
+  "execution_time_ms": 1516
+}

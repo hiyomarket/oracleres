@@ -1,0 +1,13 @@
+{
+  "query": "SELECT GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION SEPARATOR ', ') as all_cols FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_quest_skill_catalog';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION SEPARATOR ', ') as all_cols FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_quest_skill_catalog';",
+  "rows": [
+    {
+      "all_cols": "id, code, name, quest_title, category, skill_type, description, wuxing, power_percent, mp_cost, cooldown, max_level, level_up_bonus, additional_effect, special_mechanic, learn_cost, prerequisites, npc_id, rarity, icon_url, sort_order, created_at, updated_at"
+    }
+  ],
+  "messages": [],
+  "stdout": "all_cols\nid, code, name, quest_title, category, skill_type, description, wuxing, power_percent, mp_cost, cooldown, max_level, level_up_bonus, additional_effect, special_mechanic, learn_cost, prerequisites, npc_id, rarity, icon_url, sort_order, created_at, updated_at\n",
+  "stderr": "",
+  "execution_time_ms": 1499
+}

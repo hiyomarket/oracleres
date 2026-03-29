@@ -1,0 +1,46 @@
+{
+  "query": "SELECT code, name, category, skill_type, wuxing, power_percent, mp_cost FROM game_quest_skill_catalog WHERE code LIKE 'X%' OR code LIKE 'A8';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT code, name, category, skill_type, wuxing, power_percent, mp_cost FROM game_quest_skill_catalog WHERE code LIKE 'X%' OR code LIKE 'A8';",
+  "rows": [
+    {
+      "code": "A8",
+      "name": "明鏡止水",
+      "category": "support",
+      "skill_type": "heal",
+      "wuxing": "水",
+      "power_percent": "40",
+      "mp_cost": "0"
+    },
+    {
+      "code": "X1",
+      "name": "暗殺",
+      "category": "special",
+      "skill_type": "attack",
+      "wuxing": "金",
+      "power_percent": "500",
+      "mp_cost": "25"
+    },
+    {
+      "code": "X2",
+      "name": "偷竊",
+      "category": "special",
+      "skill_type": "utility",
+      "wuxing": "木",
+      "power_percent": "0",
+      "mp_cost": "15"
+    },
+    {
+      "code": "X3",
+      "name": "聖盾",
+      "category": "special",
+      "skill_type": "buff",
+      "wuxing": "土",
+      "power_percent": "0",
+      "mp_cost": "25"
+    }
+  ],
+  "messages": [],
+  "stdout": "code\tname\tcategory\tskill_type\twuxing\tpower_percent\tmp_cost\nA8\t明鏡止水\tsupport\theal\t水\t40\t0\nX1\t暗殺\tspecial\tattack\t金\t500\t25\nX2\t偷竊\tspecial\tutility\t木\t0\t15\nX3\t聖盾\tspecial\tbuff\t土\t0\t25\n",
+  "stderr": "",
+  "execution_time_ms": 1582
+}

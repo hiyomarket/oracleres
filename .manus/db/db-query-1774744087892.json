@@ -1,0 +1,314 @@
+{
+  "query": "DESCRIBE game_skill_catalog;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DESCRIBE game_skill_catalog;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "skill_id",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "category",
+      "Type": "varchar(30)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "active_combat",
+      "Extra": ""
+    },
+    {
+      "Field": "tier",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "初階",
+      "Extra": ""
+    },
+    {
+      "Field": "mp_cost",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "skill_type",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "attack",
+      "Extra": ""
+    },
+    {
+      "Field": "in_normal_shop",
+      "Type": "tinyint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "in_spirit_shop",
+      "Type": "tinyint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "in_secret_shop",
+      "Type": "tinyint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "rarity",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "common",
+      "Extra": ""
+    },
+    {
+      "Field": "cooldown",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "power_percent",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "100",
+      "Extra": ""
+    },
+    {
+      "Field": "learn_level",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "acquire_type",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "shop",
+      "Extra": ""
+    },
+    {
+      "Field": "shop_price",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_monster_id",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "hidden_trigger",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "value_score",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "quality_grade",
+      "Type": "varchar(5)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "C",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_level_min",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_level_max",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "15",
+      "Extra": ""
+    },
+    {
+      "Field": "tradeable",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "in_auction_house",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "image_url",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "damage_type",
+      "Type": "enum('single','aoe')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "single",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing_threshold",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "status_effect",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "none",
+      "Extra": ""
+    },
+    {
+      "Field": "status_chance",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "status_duration",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "heal_percent",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "profession_required",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "none",
+      "Extra": ""
+    },
+    {
+      "Field": "skill_tier",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "basic",
+      "Extra": ""
+    },
+    {
+      "Field": "acquire_method",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "levelup",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nskill_id\tvarchar(20)\tNO\tUNI\tNULL\t\nname\tvarchar(100)\tNO\t\tNULL\t\nwuxing\tvarchar(10)\tNO\t\tNULL\t\ncategory\tvarchar(30)\tNO\t\tactive_combat\t\ntier\tvarchar(20)\tNO\t\t初階\t\nmp_cost\tint\tNO\t\t0\t\ndescription\ttext\tYES\t\tNULL\t\nskill_type\tvarchar(20)\tNO\t\tattack\t\nin_normal_shop\ttinyint\tYES\t\t0\t\nin_spirit_shop\ttinyint\tYES\t\t0\t\nin_secret_shop\ttinyint\tYES\t\t0\t\nis_active\ttinyint\tYES\t\t1\t\ncreated_at\tbigint\tNO\t\t0\t\nrarity\tvarchar(20)\tNO\t\tcommon\t\ncooldown\tint\tNO\t\t0\t\npower_percent\tint\tNO\t\t100\t\nlearn_level\tint\tNO\t\t1\t\nacquire_type\tvarchar(20)\tNO\t\tshop\t\nshop_price\tint\tNO\t\t0\t\ndrop_monster_id\tvarchar(20)\tYES\t\tNULL\t\nhidden_trigger\ttext\tYES\t\tNULL\t\nvalue_score\tint\tNO\t\t0\t\nquality_grade\tvarchar(5)\tNO\t\tC\t\ndrop_level_min\tint\tNO\t\t1\t\ndrop_level_max\tint\tNO\t\t15\t\ntradeable\ttinyint\tNO\t\t1\t\nin_auction_house\ttinyint\tNO\t\t1\t\nimage_url\ttext\tYES\t\tNULL\t\ndamage_type\tenum('single','aoe')\tNO\t\tsingle\t\nwuxing_threshold\tint\tNO\t\t0\t\nstatus_effect\tvarchar(20)\tNO\t\tnone\t\nstatus_chance\tint\tNO\t\t0\t\nstatus_duration\tint\tNO\t\t0\t\nheal_percent\tint\tNO\t\t0\t\nprofession_required\tvarchar(20)\tNO\t\tnone\t\nskill_tier\tvarchar(20)\tNO\t\tbasic\t\nacquire_method\tvarchar(20)\tNO\t\tlevelup\t\n",
+  "stderr": "",
+  "execution_time_ms": 1650
+}

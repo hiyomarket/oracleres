@@ -1,0 +1,100 @@
+{
+  "query": "SELECT monster_skill_id, name, wuxing, skill_type, rarity, power_percent, mp_cost FROM game_monster_skill_catalog LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_skill_id, name, wuxing, skill_type, rarity, power_percent, mp_cost FROM game_monster_skill_catalog LIMIT 10;",
+  "rows": [
+    {
+      "monster_skill_id": "SK_M001",
+      "name": "泡沫凍結",
+      "wuxing": "水",
+      "skill_type": "attack",
+      "rarity": "common",
+      "power_percent": "90",
+      "mp_cost": "5"
+    },
+    {
+      "monster_skill_id": "SK_M002",
+      "name": "冰牙撕咬",
+      "wuxing": "水",
+      "skill_type": "attack",
+      "rarity": "common",
+      "power_percent": "110",
+      "mp_cost": "6"
+    },
+    {
+      "monster_skill_id": "SK_M003",
+      "name": "貝殼撞擊",
+      "wuxing": "水",
+      "skill_type": "attack",
+      "rarity": "common",
+      "power_percent": "85",
+      "mp_cost": "4"
+    },
+    {
+      "monster_skill_id": "SK_M004",
+      "name": "深海潮汐",
+      "wuxing": "水",
+      "skill_type": "attack",
+      "rarity": "rare",
+      "power_percent": "130",
+      "mp_cost": "15"
+    },
+    {
+      "monster_skill_id": "SK_M005",
+      "name": "鯨靈庇護",
+      "wuxing": "水",
+      "skill_type": "support",
+      "rarity": "rare",
+      "power_percent": "90",
+      "mp_cost": "15"
+    },
+    {
+      "monster_skill_id": "SK_M006",
+      "name": "冰霜群襲",
+      "wuxing": "水",
+      "skill_type": "attack",
+      "rarity": "rare",
+      "power_percent": "120",
+      "mp_cost": "15"
+    },
+    {
+      "monster_skill_id": "SK_M007",
+      "name": "極寒嚎叫",
+      "wuxing": "水",
+      "skill_type": "debuff",
+      "rarity": "rare",
+      "power_percent": "90",
+      "mp_cost": "12"
+    },
+    {
+      "monster_skill_id": "SK_M008",
+      "name": "多重觸手打擊",
+      "wuxing": "水",
+      "skill_type": "attack",
+      "rarity": "rare",
+      "power_percent": "115",
+      "mp_cost": "15"
+    },
+    {
+      "monster_skill_id": "SK_M009",
+      "name": "墨汁迷霧",
+      "wuxing": "水",
+      "skill_type": "debuff",
+      "rarity": "rare",
+      "power_percent": "90",
+      "mp_cost": "15"
+    },
+    {
+      "monster_skill_id": "SK_M010",
+      "name": "冰錐術",
+      "wuxing": "水",
+      "skill_type": "attack",
+      "rarity": "rare",
+      "power_percent": "140",
+      "mp_cost": "15"
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_skill_id\tname\twuxing\tskill_type\trarity\tpower_percent\tmp_cost\nSK_M001\t泡沫凍結\t水\tattack\tcommon\t90\t5\nSK_M002\t冰牙撕咬\t水\tattack\tcommon\t110\t6\nSK_M003\t貝殼撞擊\t水\tattack\tcommon\t85\t4\nSK_M004\t深海潮汐\t水\tattack\trare\t130\t15\nSK_M005\t鯨靈庇護\t水\tsupport\trare\t90\t15\nSK_M006\t冰霜群襲\t水\tattack\trare\t120\t15\nSK_M007\t極寒嚎叫\t水\tdebuff\trare\t90\t12\nSK_M008\t多重觸手打擊\t水\tattack\trare\t115\t15\nSK_M009\t墨汁迷霧\t水\tdebuff\trare\t90\t15\nSK_M010\t冰錐術\t水\tattack\trare\t140\t15\n",
+  "stderr": "",
+  "execution_time_ms": 1626
+}

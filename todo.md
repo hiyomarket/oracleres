@@ -5478,3 +5478,15 @@
 - [x] 前端圖鑑表格新增種族欄位、五行分配條形圖、稀有度徽章、捕捉率欄位
 - [x] 新增 uncommon 稀有度等級支援
 - [x] 1527 項測試全部通過，TypeScript 零錯誤
+
+### 技能系統全面重設計（戰鬥引擎級）
+- [x] 設計完整的戰鬥引擎技能欄位結構（目標選擇/傷害計算/持續效果/狀態異常/吸血回復/連擊判定/增減益/護盾吸收）
+- [x] 更新 game_quest_skill_catalog schema 加入所有戰鬥機制欄位（target_type, scale_stat, pet_learnable, player_learnable）
+- [x] 清空舊的 game_skill_catalog (109 筆)
+- [x] 刪除舊的 game_quest_skill_catalog (32 筆) 並重新插入 74 筆完整技能
+- [x] 每個技能的 JSON 欄位可直接被戰鬥引擎讀取執行
+- [x] 技能涵蓋：物理戰鬥系/五行元素魔法/咒術狀態控制/治療輔助/特殊技能/抵抗被動
+- [x] 技能機制涵蓋：吸血/補血/狀態控制/解異常/恢復魔法/攻擊吸收/魔法吸收/明鏡止水/連擊多段/全體範圍
+- [x] 更新後端 routers 支援新技能欄位（questSkill.ts zod schema + tickEngine.ts 技能載入映射）
+- [x] 更新前端技能圖鑑顯示新欄位（目標類型/計算基礎/戰鬥機制完整可視化）
+- [x] 1527 項測試全部通過，TypeScript 零錯誤

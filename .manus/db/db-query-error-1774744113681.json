@@ -1,0 +1,8 @@
+{
+  "query": "SELECT skill_id, name, target_type, damage_type, hit_count, effect_type, effect_value, effect_duration, scale_stat, image_url FROM game_skill_catalog LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, target_type, damage_type, hit_count, effect_type, effect_value, effect_duration, scale_stat, image_url FROM game_skill_catalog LIMIT 5;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'target_type' in 'field list'"
+  ]
+}
