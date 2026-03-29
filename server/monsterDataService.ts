@@ -1,18 +1,18 @@
 /**
  * M3L 怪物數據服務層
- * 統一怪物數據源：優先從資料庫讀取 gameMonsterCatalog + gameMonsterSkillCatalog，
+ * 統一怪物數據源：優先從資料庫讀取 gameMonsterCatalog + gameUnifiedSkillCatalog，
  * 若資料庫無資料則 fallback 到 shared/monsters.ts 靜態表。
  * 內建記憶體快取，避免每次 Tick 都查資料庫。
  */
 import { getDb } from "./db";
 import { eq, and, sql, inArray } from "drizzle-orm";
-import { gameMonsterCatalog, gameMonsterSkillCatalog } from "../drizzle/schema";
+import { gameMonsterCatalog, gameUnifiedSkillCatalog } from "../drizzle/schema";
 import { getMonstersForNode as getStaticMonstersForNode, MONSTER_MAP, type Monster } from "../shared/monsters";
 import type { WuXing } from "../shared/types";
 
 // ─── 怪物技能數據結構 ─────────────────────────────────────────────────────────
 export interface MonsterSkillData {
-  id: string;           // monsterSkillId (e.g. SK_M001)
+  id: string;           // skillId (e.g. USK_229)
   name: string;
   wuxing: string;       // 五行屬性
   skillType: string;    // attack / heal / buff / debuff / special / passive
@@ -81,23 +81,24 @@ async function loadMonstersFromDb(): Promise<CombatMonster[]> {
 
     if (dbMonsters.length === 0) return [];
 
-    // 載入所有啟用的怪物技能
-    const dbSkills = await db.select().from(gameMonsterSkillCatalog)
-      .where(eq(gameMonsterSkillCatalog.isActive, 1));
+    // 載入所有啟用的怪物技能（從統一技能表讀取，篩選 usable_by_monster=1）
+    const dbSkills = await db.select().from(gameUnifiedSkillCatalog)
+      .where(and(eq(gameUnifiedSkillCatalog.isActive, 1), eq(gameUnifiedSkillCatalog.usableByMonster, 1)));
 
     // 建立技能 ID → 技能數據的映射
     const skillMap = new Map<string, MonsterSkillData>();
     for (const sk of dbSkills) {
-      skillMap.set(sk.monsterSkillId, {
-        id: sk.monsterSkillId,
+      const skillId = sk.skillId ?? `USK_${sk.id}`;
+      skillMap.set(skillId, {
+        id: skillId,
         name: sk.name,
-        wuxing: sk.wuxing,
-        skillType: sk.skillType,
-        rarity: sk.rarity,
-        powerPercent: sk.powerPercent,
-        mpCost: sk.mpCost,
-        cooldown: sk.cooldown,
-        accuracyMod: sk.accuracyMod,
+        wuxing: sk.wuxing ?? "",
+        skillType: sk.skillType ?? "attack",
+        rarity: sk.rarity ?? "common",
+        powerPercent: sk.powerPercent ?? 100,
+        mpCost: sk.mpCost ?? 0,
+        cooldown: sk.cooldown ?? 0,
+        accuracyMod: sk.accuracyMod ?? 0,
         additionalEffect: sk.additionalEffect ?? null,
         aiCondition: sk.aiCondition ?? null,
         description: sk.description ?? "",

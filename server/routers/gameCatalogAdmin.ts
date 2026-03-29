@@ -1,6 +1,6 @@
 /**
- * 六大圖鑑後台管理 Router（M3D 升級）
- * 魔物圖鑑 / 道具圖鑑 / 裝備圖鑑 / 技能圖鑑 / 成就系統 / 魔物技能圖鑑
+ * 六大圖鑑後台管理 Router（統一技能版）
+ * 魔物圖鑑 / 道具圖鑑 / 裝備圖鑑 / 統一技能圖鑑 / 成就系統
  * 所有 procedures 均為 adminProcedure（需 role = admin）
  * 自動編碼：Boss 只需輸入名稱 + 選五行，系統自動生成 ID
  */
@@ -12,15 +12,14 @@ import {
   gameMonsterCatalog,
   gameItemCatalog,
   gameEquipmentCatalog,
-  gameSkillCatalog,
+  gameUnifiedSkillCatalog,
   gameAchievements,
-  gameMonsterSkillCatalog,
   gameAgents,
   gameVirtualShop,
   gameSpiritShop,
   gameHiddenShopPool,
 } from "../../drizzle/schema";
-import { sql, like, or, eq, desc, asc, and, gte, lte, count } from "drizzle-orm";
+import { sql, like, or, eq, desc, asc, and, gte, lte, count, inArray } from "drizzle-orm";
 import { invokeLLM } from "../_core/llm";
 
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -44,54 +43,36 @@ async function generateNextId(
 ): Promise<string> {
   const code = WUXING_CODE[wuxing] || "X";
   const fullPrefix = `${prefix}_${code}`;
-  // 查詢該前綴下最大的編號
   const rows = await db
     .select({ id: idColumn })
     .from(table)
     .where(like(idColumn, `${fullPrefix}%`))
     .orderBy(desc(idColumn))
     .limit(1);
-  
   let nextNum = 1;
   if (rows.length > 0) {
-    const lastId = rows[0].id as string;
-    const numPart = lastId.replace(fullPrefix, "");
+    const numPart = rows[0].id.replace(fullPrefix, "");
     nextNum = parseInt(numPart, 10) + 1;
     if (isNaN(nextNum)) nextNum = 1;
   }
   return `${fullPrefix}${String(nextNum).padStart(3, "0")}`;
 }
 
-async function generateAchievementId(db: any): Promise<string> {
+/** 統一技能 ID 自動生成（USK_001 ~ USK_999） */
+async function generateSkillId(db: any): Promise<string> {
   const rows = await db
-    .select({ achId: gameAchievements.achId })
-    .from(gameAchievements)
-    .where(like(gameAchievements.achId, "ACH_%"))
-    .orderBy(desc(gameAchievements.achId))
-    .limit(1);
-  let nextNum = 1;
-  if (rows.length > 0 && rows[0].achId) {
-    const numPart = rows[0].achId.replace("ACH_", "");
-    nextNum = parseInt(numPart, 10) + 1;
-    if (isNaN(nextNum)) nextNum = 1;
-  }
-  return `ACH_${String(nextNum).padStart(3, "0")}`;
-}
-
-async function generateMonsterSkillId(db: any): Promise<string> {
-  const rows = await db
-    .select({ id: gameMonsterSkillCatalog.monsterSkillId })
-    .from(gameMonsterSkillCatalog)
-    .where(like(gameMonsterSkillCatalog.monsterSkillId, "SK_M%"))
-    .orderBy(desc(gameMonsterSkillCatalog.monsterSkillId))
+    .select({ id: gameUnifiedSkillCatalog.skillId })
+    .from(gameUnifiedSkillCatalog)
+    .where(like(gameUnifiedSkillCatalog.skillId, "USK_%"))
+    .orderBy(desc(gameUnifiedSkillCatalog.skillId))
     .limit(1);
   let nextNum = 1;
   if (rows.length > 0) {
-    const numPart = rows[0].id.replace("SK_M", "");
+    const numPart = rows[0].id.replace("USK_", "");
     nextNum = parseInt(numPart, 10) + 1;
     if (isNaN(nextNum)) nextNum = 1;
   }
-  return `SK_M${String(nextNum).padStart(3, "0")}`;
+  return `USK_${String(nextNum).padStart(3, "0")}`;
 }
 
 // ===== Zod Schemas =====
@@ -187,7 +168,6 @@ const equipCatalogInput = z.object({
   attackBonus: z.number().int().default(0),
   defenseBonus: z.number().int().default(0),
   speedBonus: z.number().int().default(0),
-  // GD-028 新增加成
   mpBonus: z.number().int().default(0),
   magicAttackBonus: z.number().int().default(0),
   magicDefenseBonus: z.number().int().default(0),
@@ -200,48 +180,142 @@ const equipCatalogInput = z.object({
   affix3: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullish().default(null),
   affix4: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullish().default(null),
   affix5: z.object({ name: z.string(), type: z.string(), value: z.number(), description: z.string() }).nullish().default(null),
-  craftMaterialsList: z.array(z.object({ itemId: z.string(), name: z.string(), quantity: z.number() })).nullish().default([]),
-  setId: z.string().nullish().default(""),
-  specialEffect: z.string().nullish(),
   rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
+  setId: z.string().nullish().default(""),
+  specialEffect: z.string().nullish().default(""),
   shopPrice: z.number().int().nonnegative().default(0),
   inNormalShop: z.number().int().min(0).max(1).default(0),
   inSpiritShop: z.number().int().min(0).max(1).default(0),
   inSecretShop: z.number().int().min(0).max(1).default(0),
   stackable: z.number().int().min(0).max(1).default(0),
   imageUrl: z.string().nullish().default(""),
+  craftMaterialsList: z.array(z.object({ itemId: z.string(), name: z.string(), count: z.number() })).nullish().default([]),
+  // GD-028 新增
+  bonusSpr: z.number().int().default(0),
+  requiredProfession: z.string().nullish().default("none"),
+  requiredRealm: z.string().nullish().default("初界"),
   isActive: z.number().int().min(0).max(1).default(1),
 });
 
-const skillCatalogInput = z.object({
+/**
+ * 統一技能圖鑑 Zod Schema
+ * 對應 gameUnifiedSkillCatalog 表的 70+ 個欄位
+ * 所有 JSON 已拆分為獨立表單欄位
+ */
+const unifiedSkillInput = z.object({
+  // ===== 基礎資訊 =====
+  code: z.string().max(10).default(""),
   name: z.string().min(1).max(100),
-  wuxing: z.enum(["木", "火", "土", "金", "水"]),
-  category: z.enum(["active_combat", "passive_combat", "life_gather", "craft_forge"]).default("active_combat"),
-  rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
-  tier: z.string().nullish().default("初階"),
-  mpCost: z.number().int().nonnegative().default(0),
-  cooldown: z.number().int().nonnegative().default(0),
-  powerPercent: z.number().int().nonnegative().default(100),
-  learnLevel: z.number().int().positive().default(1),
-  acquireType: z.enum(["shop", "drop", "quest", "craft", "hidden"]).default("shop"),
-  shopPrice: z.number().int().nonnegative().default(0),
-  dropMonsterId: z.string().nullish().default(""),
-  hiddenTrigger: z.union([z.string(), z.array(z.any())]).nullish(),
+  questTitle: z.string().max(200).nullish(),
+  category: z.enum(["physical", "magic", "status", "support", "special", "resistance"]).default("physical"),
+  skillType: z.enum(["attack", "heal", "buff", "debuff", "passive", "utility", "defense"]).default("attack"),
   description: z.string().nullish(),
-  skillType: z.enum(["attack", "heal", "buff", "debuff", "passive", "special"]).default("attack"),
-  damageType: z.enum(["single", "aoe"]).default("single"),
-  // GD-028 新增
-  wuxingThreshold: z.number().int().min(0).max(100).default(0),
-  statusEffect: z.enum(["none", "poison", "petrify", "sleep", "confuse", "forget", "drunk", "stun"]).default("none"),
-  statusChance: z.number().int().min(0).max(100).default(0),
-  statusDuration: z.number().int().min(0).max(10).default(0),
-  healPercent: z.number().int().min(0).max(100).default(0),
-  professionRequired: z.enum(["none", "hunter", "mage", "tank", "thief", "wizard"]).default("none"),
-  skillTier: z.enum(["basic", "intermediate", "advanced", "destiny", "legendary"]).default("basic"),
-  acquireMethod: z.enum(["levelup", "profession", "skillbook", "destiny"]).default("levelup"),
-  inNormalShop: z.number().int().min(0).max(1).default(0),
-  inSpiritShop: z.number().int().min(0).max(1).default(0),
-  inSecretShop: z.number().int().min(0).max(1).default(0),
+  wuxing: z.enum(["金", "木", "水", "火", "土", "無"]).default("無"),
+
+  // ===== 數值基礎 =====
+  powerPercent: z.number().int().nonnegative().default(100),
+  mpCost: z.number().int().nonnegative().default(10),
+  cooldown: z.number().int().nonnegative().default(3),
+  maxLevel: z.number().int().positive().default(10),
+  levelUpBonus: z.number().int().nonnegative().default(10),
+  accuracyMod: z.number().int().default(100),
+
+  // ===== 目標與計算 =====
+  targetType: z.enum(["single", "t_shape", "cross", "all_enemy", "all_ally", "self", "party"]).default("single"),
+  scaleStat: z.enum(["atk", "mtk", "none"]).default("atk"),
+
+  // ===== 可用性控制 =====
+  usableByPlayer: z.number().int().min(0).max(1).default(1),
+  usableByPet: z.number().int().min(0).max(1).default(1),
+  usableByMonster: z.number().int().min(0).max(1).default(1),
+
+  // ===== 狀態異常 =====
+  statusEffectType: z.enum(["none", "poison", "burn", "freeze", "stun", "slow", "sleep", "petrify", "confuse", "drunk", "forget", "bleed"]).default("none"),
+  statusEffectChance: z.number().int().min(0).max(100).default(0),
+  statusEffectDuration: z.number().int().min(0).max(20).default(0),
+  statusEffectValue: z.number().int().nonnegative().default(0),
+
+  // ===== 連擊系統 =====
+  hitCountMin: z.number().int().min(1).max(10).default(1),
+  hitCountMax: z.number().int().min(1).max(10).default(1),
+  multiTargetHit: z.number().int().min(0).max(1).default(0),
+
+  // ===== 吸血/自傷/穿透 =====
+  lifestealPercent: z.number().int().min(0).max(100).default(0),
+  selfDamagePercent: z.number().int().min(0).max(100).default(0),
+  ignoreDefPercent: z.number().int().min(0).max(100).default(0),
+
+  // ===== 先制 =====
+  isPriority: z.number().int().min(0).max(1).default(0),
+
+  // ===== 治療系統 =====
+  healType: z.enum(["none", "instant", "hot", "revive", "mpRestore", "cleanse"]).default("none"),
+  hotDuration: z.number().int().nonnegative().default(0),
+  mpRestorePercent: z.number().int().nonnegative().default(0),
+  cleanseCount: z.number().int().default(0),
+
+  // ===== 增益/減益系統 =====
+  buffStat: z.enum(["none", "atk", "def", "mtk", "spd", "mdef", "all"]).default("none"),
+  buffPercent: z.number().int().default(0),
+  buffDuration: z.number().int().nonnegative().default(0),
+
+  // ===== 護盾系統 =====
+  shieldType: z.enum(["none", "physical", "magical", "all"]).default("none"),
+  shieldCharges: z.number().int().nonnegative().default(0),
+  shieldDuration: z.number().int().nonnegative().default(0),
+  shieldAbsorbPercent: z.number().int().min(0).max(100).default(0),
+
+  // ===== 吸收系統 =====
+  absorbType: z.enum(["none", "physical", "magical"]).default("none"),
+  absorbPercent: z.number().int().min(0).max(100).default(0),
+  absorbDuration: z.number().int().nonnegative().default(0),
+
+  // ===== 嘲諷 =====
+  tauntDuration: z.number().int().nonnegative().default(0),
+
+  // ===== 被動技能系統 =====
+  isPassive: z.number().int().min(0).max(1).default(0),
+  passiveType: z.enum(["none", "counter", "dodge", "guard", "lowHpBoost", "statusResist"]).default("none"),
+  passiveTriggerChance: z.number().int().min(0).max(100).default(0),
+  passiveChancePerLevel: z.number().int().nonnegative().default(0),
+  guardDamageReduction: z.number().int().min(0).max(100).default(0),
+  lowHpThreshold: z.number().int().min(0).max(100).default(0),
+  lowHpBoostPercent: z.number().int().nonnegative().default(0),
+  resistType: z.enum(["none", "petrify", "sleep", "confuse", "poison", "forget", "drunk"]).default("none"),
+  resistChancePerLevel: z.number().int().nonnegative().default(0),
+
+  // ===== 特殊效果 =====
+  hasInstantKill: z.number().int().min(0).max(1).default(0),
+  instantKillChance: z.number().int().min(0).max(100).default(0),
+  hasSteal: z.number().int().min(0).max(1).default(0),
+  stealChance: z.number().int().min(0).max(100).default(0),
+  hasSealWuxing: z.number().int().min(0).max(1).default(0),
+  sealDuration: z.number().int().nonnegative().default(0),
+
+  // ===== 防禦觸發（明鏡止水） =====
+  onDefendTrigger: z.number().int().min(0).max(1).default(0),
+  defendHealPercent: z.number().int().nonnegative().default(0),
+  defendMpPercent: z.number().int().nonnegative().default(0),
+
+  // ===== AI 使用條件 =====
+  aiHpBelow: z.number().int().min(0).max(100).default(0),
+  aiPriority: z.number().int().min(0).max(10).default(5),
+  aiTargetElement: z.string().max(10).default(""),
+
+  // ===== 學習/取得 =====
+  rarity: z.enum(["common", "uncommon", "rare", "epic", "legendary"]).default("rare"),
+  learnCost: z.any().nullish(),
+  prerequisites: z.any().nullish(),
+  prerequisiteLevel: z.number().int().nullish(),
+  npcId: z.number().int().nullish(),
+
+  // ===== 保留 JSON 欄位（向後兼容） =====
+  additionalEffect: z.any().nullish(),
+  specialMechanic: z.any().nullish(),
+
+  // ===== 其他 =====
+  iconUrl: z.string().nullish(),
+  sortOrder: z.number().int().nonnegative().default(0),
   isActive: z.number().int().min(0).max(1).default(1),
 });
 
@@ -259,21 +333,6 @@ const achievementInput = z.object({
   titleReward: z.string().nullish().default(""),
   glowEffect: z.string().nullish().default(""),
   iconUrl: z.string().nullish().default(""),
-  isActive: z.number().int().min(0).max(1).default(1),
-});
-
-const monsterSkillInput = z.object({
-  name: z.string().min(1).max(100),
-  wuxing: z.enum(["木", "火", "土", "金", "水"]),
-  skillType: z.enum(["attack", "heal", "buff", "debuff", "special", "passive"]).default("attack"),
-  rarity: z.enum(["common", "rare", "epic", "legendary"]).default("common"),
-  powerPercent: z.number().int().nonnegative().default(100),
-  mpCost: z.number().int().nonnegative().default(0),
-  cooldown: z.number().int().nonnegative().default(0),
-  accuracyMod: z.number().int().nonnegative().default(100),
-  additionalEffect: z.any().nullish().optional(),
-  aiCondition: z.any().nullish().optional(),
-  description: z.string().nullish(),
   isActive: z.number().int().min(0).max(1).default(1),
 });
 
@@ -301,7 +360,6 @@ export const gameCatalogAdminRouter = router({
       if (p.search) conditions.push(like(gameMonsterCatalog.name, `%${p.search}%`));
       if (p.wuxing) conditions.push(eq(gameMonsterCatalog.wuxing, p.wuxing));
       if (p.rarity) conditions.push(eq(gameMonsterCatalog.rarity, p.rarity));
-      // levelRange is stored as "1-5", parse min from it for filtering
       if (p.levelMin !== undefined) {
         conditions.push(sql`CAST(SUBSTRING_INDEX(${gameMonsterCatalog.levelRange}, '-', 1) AS UNSIGNED) >= ${p.levelMin}`);
       }
@@ -344,17 +402,12 @@ export const gameCatalogAdminRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      // 將 null 轉為安全預設值，避免 DB 寫入 null
       const safeData = { ...input.data } as any;
-      if (safeData.destinyClue === null) safeData.destinyClue = "";
-      if (safeData.imageUrl === null) safeData.imageUrl = "";
-      if (safeData.spawnNodes === null) safeData.spawnNodes = [];
-      if (safeData.dropGold === null) safeData.dropGold = { min: 5, max: 15 };
-      if (safeData.levelRange === null) safeData.levelRange = "1-5";
-      if (safeData.legendaryDrop === null) safeData.legendaryDrop = "";
-      for (const k of ["skillId1","skillId2","skillId3","dropItem1","dropItem2","dropItem3","dropItem4","dropItem5"]) {
+      for (const k of ["destinyClue","imageUrl","levelRange","skillId1","skillId2","skillId3","dropItem1","dropItem2","dropItem3","dropItem4","dropItem5","legendaryDrop"]) {
         if (safeData[k] === null) safeData[k] = "";
       }
+      if (safeData.spawnNodes === null) safeData.spawnNodes = [];
+      if (safeData.dropGold === null) safeData.dropGold = { min: 5, max: 15 };
       await db.update(gameMonsterCatalog).set(safeData).where(eq(gameMonsterCatalog.id, input.id));
       return { success: true };
     }),
@@ -402,10 +455,10 @@ export const gameCatalogAdminRouter = router({
     const [result] = await db.insert(gameItemCatalog).values({
       ...input,
       itemId,
-      dropMonsterId: input.dropMonsterId ?? "",
       source: input.source ?? "",
       effect: input.effect ?? "",
       imageUrl: input.imageUrl ?? "",
+      dropMonsterId: input.dropMonsterId ?? "",
       gatherLocations: (input.gatherLocations ?? []) as any,
       useEffect: input.useEffect as any,
     });
@@ -418,7 +471,7 @@ export const gameCatalogAdminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const safeData = { ...input.data } as any;
-      for (const k of ["dropMonsterId","source","effect","imageUrl"]) {
+      for (const k of ["source","effect","imageUrl","dropMonsterId"]) {
         if (safeData[k] === null) safeData[k] = "";
       }
       if (safeData.gatherLocations === null) safeData.gatherLocations = [];
@@ -497,9 +550,6 @@ export const gameCatalogAdminRouter = router({
       }
       if (safeData.resistBonus === null) safeData.resistBonus = { wood: 0, fire: 0, earth: 0, metal: 0, water: 0 };
       if (safeData.craftMaterialsList === null) safeData.craftMaterialsList = [];
-      for (const k of ["affix1","affix2","affix3","affix4","affix5"]) {
-        // affix null 是合法的（表示無詞綴），保留
-      }
       await db.update(gameEquipmentCatalog).set(safeData).where(eq(gameEquipmentCatalog.id, input.id));
       return { success: true };
     }),
@@ -514,7 +564,7 @@ export const gameCatalogAdminRouter = router({
     }),
 
   // ════════════════════════════════════════════════════════════════
-  // 4. 技能圖鑑 CRUD
+  // 4. 統一技能圖鑑 CRUD（合併舊技能圖鑑 + 魔物技能圖鑑）
   // ════════════════════════════════════════════════════════════════
   getSkillCatalog: adminProcedure
     .input(z.object({
@@ -523,6 +573,9 @@ export const gameCatalogAdminRouter = router({
       category: z.string().optional(),
       rarity: z.string().optional(),
       skillType: z.string().optional(),
+      usableByPlayer: z.number().int().optional(),
+      usableByPet: z.number().int().optional(),
+      usableByMonster: z.number().int().optional(),
       page: z.number().int().positive().default(1),
       pageSize: z.number().int().positive().default(50),
     }).optional())
@@ -531,48 +584,50 @@ export const gameCatalogAdminRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       const p = input ?? { page: 1, pageSize: 50 };
       const conditions: any[] = [];
-      if (p.search) conditions.push(like(gameSkillCatalog.name, `%${p.search}%`));
-      if (p.wuxing) conditions.push(eq(gameSkillCatalog.wuxing, p.wuxing));
-      if (p.category) conditions.push(eq(gameSkillCatalog.category, p.category));
-      if (p.rarity) conditions.push(eq(gameSkillCatalog.rarity, p.rarity));
-      if (p.skillType) conditions.push(eq(gameSkillCatalog.skillType, p.skillType));
+      if (p.search) conditions.push(like(gameUnifiedSkillCatalog.name, `%${p.search}%`));
+      if (p.wuxing) conditions.push(eq(gameUnifiedSkillCatalog.wuxing, p.wuxing));
+      if (p.category) conditions.push(eq(gameUnifiedSkillCatalog.category, p.category));
+      if (p.rarity) conditions.push(eq(gameUnifiedSkillCatalog.rarity, p.rarity));
+      if (p.skillType) conditions.push(eq(gameUnifiedSkillCatalog.skillType, p.skillType));
+      if (p.usableByPlayer !== undefined) conditions.push(eq(gameUnifiedSkillCatalog.usableByPlayer, p.usableByPlayer));
+      if (p.usableByPet !== undefined) conditions.push(eq(gameUnifiedSkillCatalog.usableByPet, p.usableByPet));
+      if (p.usableByMonster !== undefined) conditions.push(eq(gameUnifiedSkillCatalog.usableByMonster, p.usableByMonster));
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-      const total = await db.select({ count: sql<number>`count(*)` }).from(gameSkillCatalog).where(whereClause);
-      const rows = await db.select().from(gameSkillCatalog).where(whereClause).orderBy(asc(gameSkillCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
+      const total = await db.select({ count: sql<number>`count(*)` }).from(gameUnifiedSkillCatalog).where(whereClause);
+      const rows = await db.select().from(gameUnifiedSkillCatalog).where(whereClause).orderBy(asc(gameUnifiedSkillCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
       return { items: rows, total: total[0]?.count ?? 0, page: p.page, pageSize: p.pageSize };
     }),
 
-  createSkillCatalog: adminProcedure.input(skillCatalogInput).mutation(async ({ input }) => {
+  createSkillCatalog: adminProcedure.input(unifiedSkillInput).mutation(async ({ input }) => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-    const skillId = await generateNextId(db, gameSkillCatalog, gameSkillCatalog.skillId, "S", input.wuxing);
-    const [result] = await db.insert(gameSkillCatalog).values({
+    const skillId = await generateSkillId(db);
+    const [result] = await db.insert(gameUnifiedSkillCatalog).values({
       ...input,
       skillId,
-      tier: input.tier ?? "初階",
-      dropMonsterId: input.dropMonsterId ?? "",
-      hiddenTrigger: Array.isArray(input.hiddenTrigger) ? JSON.stringify(input.hiddenTrigger) : (input.hiddenTrigger ?? ""),
       description: input.description ?? "",
+      questTitle: input.questTitle ?? "",
+      iconUrl: input.iconUrl ?? "",
+      aiTargetElement: input.aiTargetElement ?? "",
+      additionalEffect: input.additionalEffect as any,
+      specialMechanic: input.specialMechanic as any,
+      learnCost: input.learnCost as any,
+      prerequisites: input.prerequisites as any,
+      updatedAt: Date.now(),
     });
     return { id: (result as any).insertId, skillId };
   }),
 
   updateSkillCatalog: adminProcedure
-    .input(z.object({ id: z.number().int(), data: skillCatalogInput.partial() }))
+    .input(z.object({ id: z.number().int(), data: unifiedSkillInput.partial() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      const safeData = { ...input.data } as any;
-      for (const k of ["tier","dropMonsterId","description"]) {
+      const safeData = { ...input.data, updatedAt: Date.now() } as any;
+      for (const k of ["description", "questTitle", "iconUrl", "aiTargetElement"]) {
         if (safeData[k] === null) safeData[k] = "";
       }
-      // hiddenTrigger 必須儲存為 JSON 字串
-      if (safeData.hiddenTrigger !== undefined) {
-        safeData.hiddenTrigger = Array.isArray(safeData.hiddenTrigger)
-          ? JSON.stringify(safeData.hiddenTrigger)
-          : (safeData.hiddenTrigger === null ? "" : safeData.hiddenTrigger);
-      }
-      await db.update(gameSkillCatalog).set(safeData).where(eq(gameSkillCatalog.id, input.id));
+      await db.update(gameUnifiedSkillCatalog).set(safeData).where(eq(gameUnifiedSkillCatalog.id, input.id));
       return { success: true };
     }),
 
@@ -581,7 +636,7 @@ export const gameCatalogAdminRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.delete(gameSkillCatalog).where(eq(gameSkillCatalog.id, input.id));
+      await db.delete(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.id, input.id));
       return { success: true };
     }),
 
@@ -613,20 +668,20 @@ export const gameCatalogAdminRouter = router({
   createAchievement: adminProcedure.input(achievementInput).mutation(async ({ input }) => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-    const achId = await generateAchievementId(db);
+    const achId = `ACH_${String(Date.now()).slice(-6)}`;
     const [result] = await db.insert(gameAchievements).values({
       ...input,
       achId,
+      conditionParams: (input.conditionParams ?? {}) as any,
+      rewardContent: (input.rewardContent ?? []) as any,
       titleReward: input.titleReward ?? "",
       glowEffect: input.glowEffect ?? "",
       iconUrl: input.iconUrl ?? "",
-      conditionParams: (input.conditionParams ?? {}) as any,
-      rewardContent: (input.rewardContent ?? []) as any,
     });
     return { id: (result as any).insertId, achId };
   }),
 
-  updateAchievementCatalog: adminProcedure
+  updateAchievement: adminProcedure
     .input(z.object({ id: z.number().int(), data: achievementInput.partial() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -641,73 +696,12 @@ export const gameCatalogAdminRouter = router({
       return { success: true };
     }),
 
-  deleteAchievementCatalog: adminProcedure
+  deleteAchievement: adminProcedure
     .input(z.object({ id: z.number().int() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       await db.delete(gameAchievements).where(eq(gameAchievements.id, input.id));
-      return { success: true };
-    }),
-
-  // ════════════════════════════════════════════════════════════════
-  // 6. 魔物技能圖鑑 CRUD
-  // ════════════════════════════════════════════════════════════════
-  getMonsterSkillCatalog: adminProcedure
-    .input(z.object({
-      search: z.string().optional(),
-      wuxing: z.string().optional(),
-      rarity: z.string().optional(),
-      skillType: z.string().optional(),
-      page: z.number().int().positive().default(1),
-      pageSize: z.number().int().positive().default(50),
-    }).optional())
-    .query(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      const p = input ?? { page: 1, pageSize: 50 };
-      const conditions: any[] = [];
-      if (p.search) conditions.push(like(gameMonsterSkillCatalog.name, `%${p.search}%`));
-      if (p.wuxing) conditions.push(eq(gameMonsterSkillCatalog.wuxing, p.wuxing));
-      if (p.rarity) conditions.push(eq(gameMonsterSkillCatalog.rarity, p.rarity));
-      if (p.skillType) conditions.push(eq(gameMonsterSkillCatalog.skillType, p.skillType));
-      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-      const total = await db.select({ count: sql<number>`count(*)` }).from(gameMonsterSkillCatalog).where(whereClause);
-      const rows = await db.select().from(gameMonsterSkillCatalog).where(whereClause).orderBy(asc(gameMonsterSkillCatalog.id)).limit(p.pageSize).offset((p.page - 1) * p.pageSize);
-      return { items: rows, total: total[0]?.count ?? 0, page: p.page, pageSize: p.pageSize };
-    }),
-
-  createMonsterSkill: adminProcedure.input(monsterSkillInput).mutation(async ({ input }) => {
-    const db = await getDb();
-    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-    const monsterSkillId = await generateMonsterSkillId(db);
-    const [result] = await db.insert(gameMonsterSkillCatalog).values({
-      ...input,
-      monsterSkillId,
-      description: input.description ?? "",
-      additionalEffect: input.additionalEffect as any,
-      aiCondition: input.aiCondition as any,
-    });
-    return { id: (result as any).insertId, monsterSkillId };
-  }),
-
-  updateMonsterSkill: adminProcedure
-    .input(z.object({ id: z.number().int(), data: monsterSkillInput.partial() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      const safeData = { ...input.data } as any;
-      if (safeData.description === null) safeData.description = "";
-      await db.update(gameMonsterSkillCatalog).set(safeData).where(eq(gameMonsterSkillCatalog.id, input.id));
-      return { success: true };
-    }),
-
-  deleteMonsterSkill: adminProcedure
-    .input(z.object({ id: z.number().int() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.delete(gameMonsterSkillCatalog).where(eq(gameMonsterSkillCatalog.id, input.id));
       return { success: true };
     }),
 
@@ -747,7 +741,7 @@ export const gameCatalogAdminRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.delete(gameSkillCatalog).where(sql`${gameSkillCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      await db.delete(gameUnifiedSkillCatalog).where(sql`${gameUnifiedSkillCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
       return { deleted: input.ids.length };
     }),
 
@@ -757,15 +751,6 @@ export const gameCatalogAdminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       await db.delete(gameAchievements).where(sql`${gameAchievements.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
-      return { deleted: input.ids.length };
-    }),
-
-  batchDeleteMonsterSkills: adminProcedure
-    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500) }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.delete(gameMonsterSkillCatalog).where(sql`${gameMonsterSkillCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
       return { deleted: input.ids.length };
     }),
 
@@ -800,11 +785,11 @@ export const gameCatalogAdminRouter = router({
     }),
 
   batchUpdateSkills: adminProcedure
-    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500), data: skillCatalogInput.partial() }))
+    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500), data: unifiedSkillInput.partial() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.update(gameSkillCatalog).set(input.data as any).where(sql`${gameSkillCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
+      await db.update(gameUnifiedSkillCatalog).set({ ...input.data, updatedAt: Date.now() } as any).where(sql`${gameUnifiedSkillCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
       return { updated: input.ids.length };
     }),
 
@@ -817,29 +802,38 @@ export const gameCatalogAdminRouter = router({
       return { updated: input.ids.length };
     }),
 
-  batchUpdateMonsterSkills: adminProcedure
-    .input(z.object({ ids: z.array(z.number().int()).min(1).max(500), data: monsterSkillInput.partial() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      await db.update(gameMonsterSkillCatalog).set(input.data as any).where(sql`${gameMonsterSkillCatalog.id} IN (${sql.join(input.ids.map(id => sql`${id}`), sql`, `)})`);
-      return { updated: input.ids.length };
-    }),
-
   // ════════════════════════════════════════════════════════════════
   // 連動查詢（供下拉選單使用）
   // ════════════════════════════════════════════════════════════════
   
-  /** 取得所有魔物技能（供魔物建製的技能下拉） */
+  /** 取得所有技能（統一技能池，供魔物/玩家/寵物技能下拉） */
+  getAllSkills: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select({
+      skillId: gameUnifiedSkillCatalog.skillId,
+      name: gameUnifiedSkillCatalog.name,
+      wuxing: gameUnifiedSkillCatalog.wuxing,
+      skillType: gameUnifiedSkillCatalog.skillType,
+      category: gameUnifiedSkillCatalog.category,
+      usableByPlayer: gameUnifiedSkillCatalog.usableByPlayer,
+      usableByPet: gameUnifiedSkillCatalog.usableByPet,
+      usableByMonster: gameUnifiedSkillCatalog.usableByMonster,
+    }).from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.isActive, 1)).orderBy(asc(gameUnifiedSkillCatalog.name));
+  }),
+
+  /** 取得魔物可用技能（供魔物圖鑑技能下拉） */
   getAllMonsterSkills: adminProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     return db.select({
-      monsterSkillId: gameMonsterSkillCatalog.monsterSkillId,
-      name: gameMonsterSkillCatalog.name,
-      wuxing: gameMonsterSkillCatalog.wuxing,
-      skillType: gameMonsterSkillCatalog.skillType,
-    }).from(gameMonsterSkillCatalog).where(eq(gameMonsterSkillCatalog.isActive, 1)).orderBy(asc(gameMonsterSkillCatalog.name));
+      skillId: gameUnifiedSkillCatalog.skillId,
+      name: gameUnifiedSkillCatalog.name,
+      wuxing: gameUnifiedSkillCatalog.wuxing,
+      skillType: gameUnifiedSkillCatalog.skillType,
+    }).from(gameUnifiedSkillCatalog).where(
+      and(eq(gameUnifiedSkillCatalog.isActive, 1), eq(gameUnifiedSkillCatalog.usableByMonster, 1))
+    ).orderBy(asc(gameUnifiedSkillCatalog.name));
   }),
 
   /** 取得所有道具（供魔物掉落的道具下拉） */
@@ -865,18 +859,6 @@ export const gameCatalogAdminRouter = router({
       wuxing: gameMonsterCatalog.wuxing,
       levelRange: gameMonsterCatalog.levelRange,
     }).from(gameMonsterCatalog).where(eq(gameMonsterCatalog.isActive, 1)).orderBy(asc(gameMonsterCatalog.name));
-  }),
-
-  /** 取得所有玩家技能（供技能圖鑑下拉） */
-  getAllSkills: adminProcedure.query(async () => {
-    const db = await getDb();
-    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-    return db.select({
-      skillId: gameSkillCatalog.skillId,
-      name: gameSkillCatalog.name,
-      wuxing: gameSkillCatalog.wuxing,
-      skillType: gameSkillCatalog.skillType,
-    }).from(gameSkillCatalog).where(eq(gameSkillCatalog.isActive, 1)).orderBy(asc(gameSkillCatalog.name));
   }),
 
   /** 取得所有裝備（供成就獎勵的下拉） */
@@ -912,17 +894,12 @@ export const gameCatalogAdminRouter = router({
   exportSkillCatalog: adminProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-    return db.select().from(gameSkillCatalog).orderBy(asc(gameSkillCatalog.id));
+    return db.select().from(gameUnifiedSkillCatalog).orderBy(asc(gameUnifiedSkillCatalog.id));
   }),
   exportAchievementCatalog: adminProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     return db.select().from(gameAchievements).orderBy(asc(gameAchievements.id));
-  }),
-  exportMonsterSkillCatalog: adminProcedure.query(async () => {
-    const db = await getDb();
-    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-    return db.select().from(gameMonsterSkillCatalog).orderBy(asc(gameMonsterSkillCatalog.id));
   }),
 
   // ===== 批量匯入 =====
@@ -935,15 +912,16 @@ export const gameCatalogAdminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      // 預載所有魔物技能（用於自動關聯）
-      let allMonsterSkills: { monsterSkillId: string; wuxing: string; skillType: string; rarity: string }[] = [];
+      let allMonsterSkills: { skillId: string; wuxing: string; skillType: string; rarity: string }[] = [];
       if (input.autoLinkSkills) {
         const skills = await db.select({
-          monsterSkillId: gameMonsterSkillCatalog.monsterSkillId,
-          wuxing: gameMonsterSkillCatalog.wuxing,
-          skillType: gameMonsterSkillCatalog.skillType,
-          rarity: gameMonsterSkillCatalog.rarity,
-        }).from(gameMonsterSkillCatalog).where(eq(gameMonsterSkillCatalog.isActive, 1));
+          skillId: gameUnifiedSkillCatalog.skillId,
+          wuxing: gameUnifiedSkillCatalog.wuxing,
+          skillType: gameUnifiedSkillCatalog.skillType,
+          rarity: gameUnifiedSkillCatalog.rarity,
+        }).from(gameUnifiedSkillCatalog).where(
+          and(eq(gameUnifiedSkillCatalog.isActive, 1), eq(gameUnifiedSkillCatalog.usableByMonster, 1))
+        );
         allMonsterSkills = skills;
       }
 
@@ -958,33 +936,27 @@ export const gameCatalogAdminRouter = router({
           const lastNum = existing[0] ? parseInt(existing[0].monsterId.replace(prefix, "")) || 0 : 0;
           const monsterId = `${prefix}${String(lastNum + 1).padStart(3, "0")}`;
 
-          // 自動關聯技能：根據五行屬性 + 稀有度配置技能
           let skillId1 = item.skillId1 ?? "";
           let skillId2 = item.skillId2 ?? "";
           let skillId3 = item.skillId3 ?? "";
           if (input.autoLinkSkills && !skillId1 && allMonsterSkills.length > 0) {
             const monsterWuxing = item.wuxing ?? "木";
             const monsterRarity = item.rarity ?? "common";
-            // 策略：同五行技能優先，再補充其他五行
             const sameElement = allMonsterSkills.filter(s => s.wuxing === monsterWuxing);
             const otherElement = allMonsterSkills.filter(s => s.wuxing !== monsterWuxing);
-            // 根據稀有度決定技能數量：common=1, rare=2, elite/boss/legendary=3
             const skillCount = monsterRarity === "common" ? 1 : monsterRarity === "rare" ? 2 : 3;
             const picked: string[] = [];
-            // 優先選同五行 attack 技能
             const sameAttack = sameElement.filter(s => s.skillType === "attack");
-            if (sameAttack.length > 0) picked.push(sameAttack[Math.floor(Math.random() * sameAttack.length)].monsterSkillId);
-            // 補充同五行其他技能
-            const sameOther = sameElement.filter(s => !picked.includes(s.monsterSkillId));
+            if (sameAttack.length > 0) picked.push(sameAttack[Math.floor(Math.random() * sameAttack.length)].skillId);
+            const sameOther = sameElement.filter(s => !picked.includes(s.skillId));
             while (picked.length < skillCount && sameOther.length > 0) {
               const idx = Math.floor(Math.random() * sameOther.length);
-              picked.push(sameOther[idx].monsterSkillId);
+              picked.push(sameOther[idx].skillId);
               sameOther.splice(idx, 1);
             }
-            // 仍不夠則從其他五行補充
             while (picked.length < skillCount && otherElement.length > 0) {
               const idx = Math.floor(Math.random() * otherElement.length);
-              picked.push(otherElement[idx].monsterSkillId);
+              picked.push(otherElement[idx].skillId);
               otherElement.splice(idx, 1);
             }
             skillId1 = picked[0] ?? "";
@@ -1074,13 +1046,27 @@ export const gameCatalogAdminRouter = router({
       let imported = 0;
       for (const item of input.items) {
         try {
-          await db.insert(gameSkillCatalog).values({
-            skillId: item.skillId ?? `skill-${Date.now()}-${imported}`,
-            name: item.name ?? "未命名", wuxing: item.wuxing ?? "木",
-            category: item.category ?? "active_combat", tier: item.tier ?? "basic",
-            description: item.description ?? "", mpCost: item.mpCost ?? 0,
-            cooldown: item.cooldown ?? 0, isActive: item.isActive ?? 1,
+          const skillId = await generateSkillId(db);
+          await db.insert(gameUnifiedSkillCatalog).values({
+            skillId,
+            code: item.code ?? "",
+            name: item.name ?? "未命名",
+            wuxing: item.wuxing ?? "無",
+            category: item.category ?? "physical",
+            skillType: item.skillType ?? "attack",
+            description: item.description ?? "",
+            powerPercent: item.powerPercent ?? 100,
+            mpCost: item.mpCost ?? 10,
+            cooldown: item.cooldown ?? 3,
+            targetType: item.targetType ?? "single",
+            scaleStat: item.scaleStat ?? "atk",
+            usableByPlayer: item.usableByPlayer ?? 1,
+            usableByPet: item.usableByPet ?? 1,
+            usableByMonster: item.usableByMonster ?? 1,
+            rarity: item.rarity ?? "rare",
+            isActive: item.isActive ?? 1,
             createdAt: Date.now(),
+            updatedAt: Date.now(),
           });
           imported++;
         } catch (e) { console.error("[BulkImport] Skill error:", e); }
@@ -1114,32 +1100,6 @@ export const gameCatalogAdminRouter = router({
       return { imported, total: input.items.length };
     }),
 
-  bulkImportMonsterSkills: adminProcedure
-    .input(z.object({ items: z.array(z.record(z.string(), z.any())).min(1).max(500) }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      let imported = 0;
-      for (const item of input.items) {
-        try {
-          await db.insert(gameMonsterSkillCatalog).values({
-            monsterSkillId: item.monsterSkillId ?? `mskill-${Date.now()}-${imported}`,
-            name: item.name ?? "未命名", wuxing: item.wuxing ?? "木",
-            skillType: item.skillType ?? "attack",
-            powerPercent: item.powerPercent ?? 100,
-            mpCost: item.mpCost ?? 0,
-            cooldown: item.cooldown ?? 0,
-            accuracyMod: item.accuracyMod ?? 100,
-            description: item.description ?? "",
-            isActive: item.isActive ?? 1,
-            createdAt: Date.now(),
-          });
-          imported++;
-        } catch (e) { console.error("[BulkImport] MonsterSkill error:", e); }
-      }
-      return { imported, total: input.items.length };
-    }),
-
   // ═══════════════════════════════════════════════════════════════
   // 圖鑑統計儀表板 API
   // ═══════════════════════════════════════════════════════════════
@@ -1147,7 +1107,6 @@ export const gameCatalogAdminRouter = router({
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-    // 怪物統計
     const monsterTotal = await db.select({ count: sql<number>`count(*)` }).from(gameMonsterCatalog);
     const monsterByWuxing = await db.select({
       wuxing: gameMonsterCatalog.wuxing,
@@ -1158,7 +1117,6 @@ export const gameCatalogAdminRouter = router({
       count: sql<number>`count(*)`,
     }).from(gameMonsterCatalog).groupBy(gameMonsterCatalog.rarity);
 
-    // 道具統計
     const itemTotal = await db.select({ count: sql<number>`count(*)` }).from(gameItemCatalog);
     const itemByWuxing = await db.select({
       wuxing: gameItemCatalog.wuxing,
@@ -1169,7 +1127,6 @@ export const gameCatalogAdminRouter = router({
       count: sql<number>`count(*)`,
     }).from(gameItemCatalog).groupBy(gameItemCatalog.rarity);
 
-    // 裝備統計
     const equipTotal = await db.select({ count: sql<number>`count(*)` }).from(gameEquipmentCatalog);
     const equipByWuxing = await db.select({
       wuxing: gameEquipmentCatalog.wuxing,
@@ -1180,22 +1137,23 @@ export const gameCatalogAdminRouter = router({
       count: sql<number>`count(*)`,
     }).from(gameEquipmentCatalog).groupBy(gameEquipmentCatalog.rarity);
 
-    // 技能統計
-    const skillTotal = await db.select({ count: sql<number>`count(*)` }).from(gameSkillCatalog);
+    // 統一技能統計
+    const skillTotal = await db.select({ count: sql<number>`count(*)` }).from(gameUnifiedSkillCatalog);
     const skillByWuxing = await db.select({
-      wuxing: gameSkillCatalog.wuxing,
+      wuxing: gameUnifiedSkillCatalog.wuxing,
       count: sql<number>`count(*)`,
-    }).from(gameSkillCatalog).groupBy(gameSkillCatalog.wuxing);
+    }).from(gameUnifiedSkillCatalog).groupBy(gameUnifiedSkillCatalog.wuxing);
+    const skillByCategory = await db.select({
+      category: gameUnifiedSkillCatalog.category,
+      count: sql<number>`count(*)`,
+    }).from(gameUnifiedSkillCatalog).groupBy(gameUnifiedSkillCatalog.category);
+    const skillByUsability = {
+      player: (await db.select({ count: sql<number>`count(*)` }).from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.usableByPlayer, 1)))[0]?.count ?? 0,
+      pet: (await db.select({ count: sql<number>`count(*)` }).from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.usableByPet, 1)))[0]?.count ?? 0,
+      monster: (await db.select({ count: sql<number>`count(*)` }).from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.usableByMonster, 1)))[0]?.count ?? 0,
+    };
 
-    // 成就統計
     const achieveTotal = await db.select({ count: sql<number>`count(*)` }).from(gameAchievements);
-
-    // 魔物技能統計
-    const monsterSkillTotal = await db.select({ count: sql<number>`count(*)` }).from(gameMonsterSkillCatalog);
-    const monsterSkillByWuxing = await db.select({
-      wuxing: gameMonsterSkillCatalog.wuxing,
-      count: sql<number>`count(*)`,
-    }).from(gameMonsterSkillCatalog).groupBy(gameMonsterSkillCatalog.wuxing);
 
     return {
       monsters: {
@@ -1216,13 +1174,11 @@ export const gameCatalogAdminRouter = router({
       skills: {
         total: skillTotal[0]?.count ?? 0,
         byWuxing: skillByWuxing,
+        byCategory: skillByCategory,
+        byUsability: skillByUsability,
       },
       achievements: {
         total: achieveTotal[0]?.count ?? 0,
-      },
-      monsterSkills: {
-        total: monsterSkillTotal[0]?.count ?? 0,
-        byWuxing: monsterSkillByWuxing,
       },
     };
   }),
@@ -1232,7 +1188,6 @@ export const gameCatalogAdminRouter = router({
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-    // 1. 怪物攻擊力異常檢測（按等級分組，找出偏離平均值 > 2倍標準差的）
     const monsters = await db.select({
       id: gameMonsterCatalog.id,
       name: gameMonsterCatalog.name,
@@ -1245,7 +1200,6 @@ export const gameCatalogAdminRouter = router({
       dropRate: gameMonsterCatalog.dropRate1,
     }).from(gameMonsterCatalog);
 
-    // 按等級分組分析
     const monstersByLevel: Record<number, typeof monsters> = {};
     for (const m of monsters) {
       const lvl = m.level ?? 1;
@@ -1279,7 +1233,6 @@ export const gameCatalogAdminRouter = router({
       }
     }
 
-    // 2. 道具掉率異常檢測
     const db2 = await getDb();
     if (!db2) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     const items = await db2.select({
@@ -1306,7 +1259,6 @@ export const gameCatalogAdminRouter = router({
       }
     }
 
-    // 3. 裝備屬性異常檢測
     const db3 = await getDb();
     if (!db3) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     const equips = await db3.select({
@@ -1351,7 +1303,6 @@ export const gameCatalogAdminRouter = router({
       }
     }
 
-    // 4. 綜合健康分數
     const totalAnomalies = monsterAnomalies.length + itemAnomalies.length + equipAnomalies.length;
     const severeCount = [...monsterAnomalies, ...equipAnomalies].filter(a => a.severity === "嚴重").length;
     const healthScore = Math.max(0, 100 - severeCount * 10 - (totalAnomalies - severeCount) * 3);
@@ -1373,8 +1324,6 @@ export const gameCatalogAdminRouter = router({
   // ════════════════════════════════════════════════════════════════
   // AI 商店佈局功能
   // ════════════════════════════════════════════════════════════════
-
-  /** AI 分析玩家統計 + 圖鑑數據，推薦商店佈局 */
   aiShopLayoutAnalyze: adminProcedure
     .input(z.object({
       shopType: z.enum(["normal", "spirit", "secret"]),
@@ -1384,7 +1333,6 @@ export const gameCatalogAdminRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      // 1. 玩家統計
       const agents = await db.select({
         level: gameAgents.level,
         gold: gameAgents.gold,
@@ -1399,7 +1347,6 @@ export const gameCatalogAdminRouter = router({
         levelDist[bracket] = (levelDist[bracket] || 0) + 1;
       }
 
-      // 2. 圖鑑數據
       const shopField = input.shopType === "normal" ? "inNormalShop"
         : input.shopType === "spirit" ? "inSpiritShop" : "inSecretShop";
 
@@ -1410,7 +1357,6 @@ export const gameCatalogAdminRouter = router({
         category: gameItemCatalog.category,
         rarity: gameItemCatalog.rarity,
         shopPrice: gameItemCatalog.shopPrice,
-
         inNormalShop: gameItemCatalog.inNormalShop,
         inSpiritShop: gameItemCatalog.inSpiritShop,
         inSecretShop: gameItemCatalog.inSecretShop,
@@ -1430,24 +1376,11 @@ export const gameCatalogAdminRouter = router({
         inSecretShop: gameEquipmentCatalog.inSecretShop,
       }).from(gameEquipmentCatalog);
 
-      const skills = await db.select({
-        id: gameSkillCatalog.id,
-        skillId: gameSkillCatalog.skillId,
-        name: gameSkillCatalog.name,
-        category: gameSkillCatalog.category,
-        rarity: gameSkillCatalog.rarity,
-        shopPrice: gameSkillCatalog.shopPrice,
-        learnLevel: gameSkillCatalog.learnLevel,
-        inNormalShop: gameSkillCatalog.inNormalShop,
-        inSpiritShop: gameSkillCatalog.inSpiritShop,
-        inSecretShop: gameSkillCatalog.inSecretShop,
-      }).from(gameSkillCatalog);
-
-      // 3. LLM 分析
+      // Note: unified skill catalog doesn't have shopPrice/inNormalShop etc.
+      // For AI analysis, we skip skills from shop layout for now
       const catalogSummary = JSON.stringify({
         items: items.slice(0, 100).map(i => ({ id: i.id, itemId: i.itemId, name: i.name, category: i.category, rarity: i.rarity, price: i.shopPrice, [shopField]: (i as any)[shopField] })),
         equips: equips.slice(0, 100).map(e => ({ id: e.id, equipId: e.equipId, name: e.name, slot: e.slot, quality: e.quality, rarity: e.rarity, price: e.shopPrice, lvReq: e.levelRequired, [shopField]: (e as any)[shopField] })),
-        skills: skills.slice(0, 100).map(s => ({ id: s.id, skillId: s.skillId, name: s.name, category: s.category, rarity: s.rarity, price: s.shopPrice, lvReq: s.learnLevel, [shopField]: (s as any)[shopField] })),
       });
 
       const shopTypeLabel = input.shopType === "normal" ? "一般商店（金幣）" : input.shopType === "spirit" ? "靈相商店（靈石）" : "密店（隨機出現）";
@@ -1461,17 +1394,17 @@ export const gameCatalogAdminRouter = router({
 1. 選擇最多 ${input.maxItems} 個商品
 2. 考慮玩家等級分佈，確保各等級段都有可購買的商品
 3. 考慮經濟平衡，不要讓玩家太容易獲得高級裝備
-4. 確保商品類型多樣化（道具/裝備/技能都要有）
+4. 確保商品類型多樣化（道具/裝備都要有）
 5. 建議合理售價（如果現有售價為 0 或不合理）
 
 返回 JSON 格式：
 {
   "recommendations": [
-    { "type": "item"|"equip"|"skill", "id": number, "name": string, "suggestedPrice": number, "reason": string }
+    { "type": "item"|"equip", "id": number, "name": string, "suggestedPrice": number, "reason": string }
   ],
   "analysis": string,
   "priceAdjustments": [
-    { "type": "item"|"equip"|"skill", "id": number, "name": string, "currentPrice": number, "suggestedPrice": number, "reason": string }
+    { "type": "item"|"equip", "id": number, "name": string, "currentPrice": number, "suggestedPrice": number, "reason": string }
   ]
 }`,
           },
@@ -1500,7 +1433,7 @@ ${catalogSummary}`,
                   items: {
                     type: "object",
                     properties: {
-                      type: { type: "string", enum: ["item", "equip", "skill"] },
+                      type: { type: "string", enum: ["item", "equip"] },
                       id: { type: "number" },
                       name: { type: "string" },
                       suggestedPrice: { type: "number" },
@@ -1516,7 +1449,7 @@ ${catalogSummary}`,
                   items: {
                     type: "object",
                     properties: {
-                      type: { type: "string", enum: ["item", "equip", "skill"] },
+                      type: { type: "string", enum: ["item", "equip"] },
                       id: { type: "number" },
                       name: { type: "string" },
                       currentPrice: { type: "number" },
@@ -1546,22 +1479,18 @@ ${catalogSummary}`,
       };
     }),
 
-  /** 一鍵套用 AI 推薦的商店佈局 */
   aiShopLayoutApply: adminProcedure
     .input(z.object({
       shopType: z.enum(["normal", "spirit", "secret"]),
-      /** 要上架的商品 */
       toEnable: z.array(z.object({
-        type: z.enum(["item", "equip", "skill"]),
+        type: z.enum(["item", "equip"]),
         id: z.number().int(),
         suggestedPrice: z.number().int().optional(),
       })),
-      /** 要下架的商品 */
       toDisable: z.array(z.object({
-        type: z.enum(["item", "equip", "skill"]),
+        type: z.enum(["item", "equip"]),
         id: z.number().int(),
       })).optional(),
-      /** 是否同時更新售價 */
       updatePrices: z.boolean().default(false),
     }))
     .mutation(async ({ input }) => {
@@ -1575,7 +1504,6 @@ ${catalogSummary}`,
       let disabled = 0;
       let pricesUpdated = 0;
 
-      // 上架商品
       for (const item of input.toEnable) {
         const updateData: any = { [shopField]: 1 };
         if (input.updatePrices && item.suggestedPrice != null) {
@@ -1584,24 +1512,19 @@ ${catalogSummary}`,
         }
         if (item.type === "item") {
           await db.update(gameItemCatalog).set(updateData).where(eq(gameItemCatalog.id, item.id));
-        } else if (item.type === "equip") {
-          await db.update(gameEquipmentCatalog).set(updateData).where(eq(gameEquipmentCatalog.id, item.id));
         } else {
-          await db.update(gameSkillCatalog).set(updateData).where(eq(gameSkillCatalog.id, item.id));
+          await db.update(gameEquipmentCatalog).set(updateData).where(eq(gameEquipmentCatalog.id, item.id));
         }
         enabled++;
       }
 
-      // 下架商品
       if (input.toDisable) {
         for (const item of input.toDisable) {
           const updateData: any = { [shopField]: 0 };
           if (item.type === "item") {
             await db.update(gameItemCatalog).set(updateData).where(eq(gameItemCatalog.id, item.id));
-          } else if (item.type === "equip") {
-            await db.update(gameEquipmentCatalog).set(updateData).where(eq(gameEquipmentCatalog.id, item.id));
           } else {
-            await db.update(gameSkillCatalog).set(updateData).where(eq(gameSkillCatalog.id, item.id));
+            await db.update(gameEquipmentCatalog).set(updateData).where(eq(gameEquipmentCatalog.id, item.id));
           }
           disabled++;
         }

@@ -252,7 +252,12 @@ describe("AI 生成端點 - aiGenerateQuestSkill", () => {
 // ═══════════════════════════════════════════════════════════════
 
 describe("天命考核技能 Schema", () => {
-  it("gameQuestSkillCatalog 表應存在於 schema 中", async () => {
+  it("gameUnifiedSkillCatalog 表應存在於 schema 中", async () => {
+    const schema = await import("../drizzle/schema");
+    expect(schema.gameUnifiedSkillCatalog).toBeDefined();
+  });
+
+  it("gameQuestSkillCatalog 別名應存在於 schema 中（向後相容）", async () => {
     const schema = await import("../drizzle/schema");
     expect(schema.gameQuestSkillCatalog).toBeDefined();
   });

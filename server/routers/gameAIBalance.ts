@@ -17,7 +17,6 @@ import {
   gameMonsterCatalog,
   gameItemCatalog,
   gameEquipmentCatalog,
-  gameSkillCatalog,
   gameAchievements,
   gameMonsterSkillCatalog,
   gameQuestSkillCatalog,
@@ -291,7 +290,7 @@ export const gameAIBalanceRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      const skills = await db.select().from(gameSkillCatalog).where(sql`is_active = 1`);
+      const skills = await db.select().from(gameQuestSkillCatalog).where(sql`is_active = 1`);
       const changes: BalanceChange[] = [];
 
       const allRules = await loadBalanceRulesGrouped();
@@ -301,7 +300,6 @@ export const gameAIBalanceRouter = router({
         const powerR = getRange(skRules, s.rarity, "power");
         const mpR = getRange(skRules, s.rarity, "mp");
         const cdR = getRange(skRules, s.rarity, "cd");
-        const priceR = getRange(skRules, s.rarity, "price");
 
         if (s.skillType !== "passive" && isOutOfRange(s.powerPercent, powerR)) {
           const nv = clamp(s.powerPercent, powerR[0], powerR[1]);
@@ -315,17 +313,12 @@ export const gameAIBalanceRouter = router({
         }
         if (isOutOfRange(s.cooldown, cdR)) {
           const nv = clamp(s.cooldown, cdR[0], cdR[1]);
-          changes.push({ id: s.id, name: s.name, field: "冷卻", oldValue: s.cooldown, newValue: nv, reason: `${s.rarity} CD 應在 ${cdR[0]}-${cdR[1]}` });
+          changes.push({ id: s.id, name: s.name, field: "冷却", oldValue: s.cooldown, newValue: nv, reason: `${s.rarity} CD 應在 ${cdR[0]}-${cdR[1]}` });
           fixes.cooldown = nv;
-        }
-        if (s.acquireType === "shop" && s.shopPrice > 0 && isOutOfRange(s.shopPrice, priceR)) {
-          const nv = clamp(s.shopPrice, priceR[0], priceR[1]);
-          changes.push({ id: s.id, name: s.name, field: "售價", oldValue: s.shopPrice, newValue: nv, reason: `${s.rarity} 售價應在 ${priceR[0]}-${priceR[1]}` });
-          fixes.shopPrice = nv;
         }
 
         if (!input.dryRun && Object.keys(fixes).length > 0) {
-          await db.update(gameSkillCatalog).set(fixes).where(eq(gameSkillCatalog.id, s.id));
+          await db.update(gameQuestSkillCatalog).set(fixes).where(eq(gameQuestSkillCatalog.id, s.id));
         }
       }
 
@@ -464,7 +457,7 @@ export const gameAIBalanceRouter = router({
       summary.push({ catalog: "裝備", scanned: equips.length, changes: equipChanges.length });
 
       // 人物技能
-      const skills = await db.select().from(gameSkillCatalog).where(sql`is_active = 1`);
+      const skills = await db.select().from(gameQuestSkillCatalog).where(sql`is_active = 1`);
       const skillChanges: BalanceChange[] = [];
       for (const s of skills) {
         const powerR = getRange(skRules, s.rarity, "power");

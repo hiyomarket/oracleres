@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, skill_slot_1, skill_slot_2, skill_slot_3, skill_slot_4 FROM game_agents LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, skill_slot_1, skill_slot_2, skill_slot_3, skill_slot_4 FROM game_agents LIMIT 5;",
+  "rows": [
+    {
+      "id": "8",
+      "skill_slot_1": "S_F004",
+      "skill_slot_2": "S_W005",
+      "skill_slot_3": "S_M004",
+      "skill_slot_4": "S_E005"
+    },
+    {
+      "id": "9",
+      "skill_slot_1": "S_W012",
+      "skill_slot_2": "S_W001",
+      "skill_slot_3": "S_W005",
+      "skill_slot_4": "NULL"
+    },
+    {
+      "id": "10",
+      "skill_slot_1": "S_E001",
+      "skill_slot_2": "S_E002",
+      "skill_slot_3": "NULL",
+      "skill_slot_4": "NULL"
+    },
+    {
+      "id": "11",
+      "skill_slot_1": "S_F001",
+      "skill_slot_2": "S_F002",
+      "skill_slot_3": "NULL",
+      "skill_slot_4": "NULL"
+    },
+    {
+      "id": "12",
+      "skill_slot_1": "S_W059",
+      "skill_slot_2": "NULL",
+      "skill_slot_3": "NULL",
+      "skill_slot_4": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tskill_slot_1\tskill_slot_2\tskill_slot_3\tskill_slot_4\n8\tS_F004\tS_W005\tS_M004\tS_E005\n9\tS_W012\tS_W001\tS_W005\tNULL\n10\tS_E001\tS_E002\tNULL\tNULL\n11\tS_F001\tS_F002\tNULL\tNULL\n12\tS_W059\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1569
+}

@@ -1,0 +1,70 @@
+{
+  "query": "SELECT id, skill_id, code, name FROM game_unified_skill_catalog LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, skill_id, code, name FROM game_unified_skill_catalog LIMIT 10;",
+  "rows": [
+    {
+      "id": "155",
+      "skill_id": "USK_155",
+      "code": "P01",
+      "name": "連擊"
+    },
+    {
+      "id": "156",
+      "skill_id": "USK_156",
+      "code": "P02",
+      "name": "諸刃"
+    },
+    {
+      "id": "157",
+      "skill_id": "USK_157",
+      "code": "P03",
+      "name": "反擊"
+    },
+    {
+      "id": "158",
+      "skill_id": "USK_158",
+      "code": "P04",
+      "name": "崩擊"
+    },
+    {
+      "id": "159",
+      "skill_id": "USK_159",
+      "code": "P05",
+      "name": "亂射"
+    },
+    {
+      "id": "160",
+      "skill_id": "USK_160",
+      "code": "P06",
+      "name": "乾坤一擲"
+    },
+    {
+      "id": "161",
+      "skill_id": "USK_161",
+      "code": "P07",
+      "name": "迅速果斷"
+    },
+    {
+      "id": "162",
+      "skill_id": "USK_162",
+      "code": "P08",
+      "name": "毒擊"
+    },
+    {
+      "id": "163",
+      "skill_id": "USK_163",
+      "code": "P09",
+      "name": "氣功彈"
+    },
+    {
+      "id": "164",
+      "skill_id": "USK_164",
+      "code": "P10",
+      "name": "吸血攻擊"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tskill_id\tcode\tname\n155\tUSK_155\tP01\t連擊\n156\tUSK_156\tP02\t諸刃\n157\tUSK_157\tP03\t反擊\n158\tUSK_158\tP04\t崩擊\n159\tUSK_159\tP05\t亂射\n160\tUSK_160\tP06\t乾坤一擲\n161\tUSK_161\tP07\t迅速果斷\n162\tUSK_162\tP08\t毒擊\n163\tUSK_163\tP09\t氣功彈\n164\tUSK_164\tP10\t吸血攻擊\n",
+  "stderr": "",
+  "execution_time_ms": 1572
+}

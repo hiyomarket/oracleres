@@ -4,14 +4,14 @@ import { router } from "../_core/trpc";
 import { getDb } from "../db";
 import {
   gameNpcCatalog,
-  gameQuestSkillCatalog,
+  gameUnifiedSkillCatalog,
   gameQuestSteps,
   gameQuestProgress,
   gameLearnedQuestSkills,
   agentInventory,
   gameItemCatalog,
   type InsertGameNpcCatalog,
-  type InsertGameQuestSkillCatalog,
+  type InsertGameUnifiedSkillCatalog,
   type InsertGameQuestStep,
 } from "../../drizzle/schema";
 import { eq, and, sql, desc, asc, inArray, like } from "drizzle-orm";
@@ -136,7 +136,7 @@ const skillCatalogRouter = router({
   /** 取得所有技能（含 NPC 資訊） */
   list: publicProcedure.query(async () => {
     const db = await getDb();
-    const skills = await db!.select().from(gameQuestSkillCatalog).orderBy(asc(gameQuestSkillCatalog.sortOrder));
+    const skills = await db!.select().from(gameUnifiedSkillCatalog).orderBy(asc(gameUnifiedSkillCatalog.sortOrder));
     // 取得關聯的 NPC
     const npcIds = Array.from(new Set(skills.map((s: any) => s.npcId).filter(Boolean))) as number[];
     let npcMap: Record<number, typeof gameNpcCatalog.$inferSelect> = {};
@@ -155,15 +155,15 @@ const skillCatalogRouter = router({
     .input(z.object({ category: z.string() }))
     .query(async ({ input }) => {
       const db = await getDb();
-      return (await getDb())!.select().from(gameQuestSkillCatalog)
-        .where(eq(gameQuestSkillCatalog.category, input.category))
-        .orderBy(asc(gameQuestSkillCatalog.sortOrder));
+      return (await getDb())!.select().from(gameUnifiedSkillCatalog)
+        .where(eq(gameUnifiedSkillCatalog.category, input.category))
+        .orderBy(asc(gameUnifiedSkillCatalog.sortOrder));
     }),
 
   /** 取得單一技能（含步驟） */
   getById: publicProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => {
     const db = await getDb();
-    const [skill] = await db!.select().from(gameQuestSkillCatalog).where(eq(gameQuestSkillCatalog.id, input.id));
+    const [skill] = await db!.select().from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.id, input.id));
     if (!skill) return null;
     const steps = await db!.select().from(gameQuestSteps)
       .where(eq(gameQuestSteps.skillId, input.id))
@@ -205,11 +205,11 @@ const skillCatalogRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       const now = Date.now();
-      const [result] = await db!.insert(gameQuestSkillCatalog).values({
+      const [result] = await db!.insert(gameUnifiedSkillCatalog).values({
         ...input,
         createdAt: now,
         updatedAt: now,
-      } as InsertGameQuestSkillCatalog);
+      } as InsertGameUnifiedSkillCatalog);
       return { id: result.insertId };
     }),
 
@@ -245,9 +245,9 @@ const skillCatalogRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       const { id, ...data } = input;
-      await db!.update(gameQuestSkillCatalog)
+      await db!.update(gameUnifiedSkillCatalog)
         .set({ ...data, updatedAt: Date.now() })
-        .where(eq(gameQuestSkillCatalog.id, id));
+        .where(eq(gameUnifiedSkillCatalog.id, id));
       return { success: true };
     }),
 
@@ -257,7 +257,7 @@ const skillCatalogRouter = router({
     .mutation(async ({ input }) => {
       const db = await getDb();
       await db!.delete(gameQuestSteps).where(eq(gameQuestSteps.skillId, input.id));
-      await db!.delete(gameQuestSkillCatalog).where(eq(gameQuestSkillCatalog.id, input.id));
+      await db!.delete(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.id, input.id));
       return { success: true };
     }),
 
@@ -295,9 +295,9 @@ const skillCatalogRouter = router({
         sortOrder: s.sortOrder ?? i,
         createdAt: now,
         updatedAt: now,
-      } as InsertGameQuestSkillCatalog));
+      } as InsertGameUnifiedSkillCatalog));
       if (values.length > 0) {
-        await db!.insert(gameQuestSkillCatalog).values(values);
+        await db!.insert(gameUnifiedSkillCatalog).values(values);
       }
       return { count: values.length };
     }),
@@ -435,8 +435,8 @@ const questProgressRouter = router({
     // 取得技能詳情
     if (learned.length === 0) return [];
     const skillIds = learned.map(l => l.skillId);
-    const skills = await db!.select().from(gameQuestSkillCatalog)
-      .where(inArray(gameQuestSkillCatalog.id, skillIds));
+    const skills = await db!.select().from(gameUnifiedSkillCatalog)
+      .where(inArray(gameUnifiedSkillCatalog.id, skillIds));
     const skillMap = Object.fromEntries(skills.map(s => [s.id, s]));
     return learned.map(l => ({
       ...l,
@@ -626,8 +626,8 @@ const questProgressRouter = router({
       }
 
       // 取得技能資料以檢查代價
-      const [skill] = await db!.select().from(gameQuestSkillCatalog)
-        .where(eq(gameQuestSkillCatalog.id, input.skillId));
+      const [skill] = await db!.select().from(gameUnifiedSkillCatalog)
+        .where(eq(gameUnifiedSkillCatalog.id, input.skillId));
       if (!skill) throw new Error("找不到技能資料");
 
       // TODO: 在這裡扣除 learnCost（金幣、魂晶、道具等）
@@ -748,8 +748,8 @@ async function getAgentId(userId: number): Promise<number | null> {
 /** 檢查前置條件 */
 async function checkPrerequisites(agentId: number, skillId: number): Promise<{ passed: boolean; reason: string }> {
   const db = await getDb();
-  const [skill] = await db!.select().from(gameQuestSkillCatalog)
-    .where(eq(gameQuestSkillCatalog.id, skillId));
+  const [skill] = await db!.select().from(gameUnifiedSkillCatalog)
+    .where(eq(gameUnifiedSkillCatalog.id, skillId));
   if (!skill) return { passed: false, reason: "找不到技能資料" };
 
   const prereqs = skill.prerequisites as any;
@@ -764,9 +764,9 @@ async function checkPrerequisites(agentId: number, skillId: number): Promise<{ p
     
     let learnedCodes: string[] = [];
     if (learnedSkillIds.length > 0) {
-      const skills = await db!.select({ code: gameQuestSkillCatalog.code })
-        .from(gameQuestSkillCatalog)
-        .where(inArray(gameQuestSkillCatalog.id, learnedSkillIds));
+      const skills = await db!.select({ code: gameUnifiedSkillCatalog.code })
+        .from(gameUnifiedSkillCatalog)
+        .where(inArray(gameUnifiedSkillCatalog.id, learnedSkillIds));
       learnedCodes = skills.map((s: any) => s.code);
     }
 
@@ -856,7 +856,7 @@ const adminSeedRouter = router({
       }
 
       // Step 2: 匯入技能（跳過已存在的）
-      const existingSkills = await db!.select({ code: gameQuestSkillCatalog.code, id: gameQuestSkillCatalog.id }).from(gameQuestSkillCatalog);
+      const existingSkills = await db!.select({ code: gameUnifiedSkillCatalog.code, id: gameUnifiedSkillCatalog.id }).from(gameUnifiedSkillCatalog);
       const skillCodeMap: Record<string, number> = {};
       for (const s of existingSkills) skillCodeMap[s.code] = s.id;
 
@@ -867,7 +867,7 @@ const adminSeedRouter = router({
         }
         const npcId = skill.npcCode ? npcCodeMap[skill.npcCode] ?? null : null;
         const { npcCode, ...skillData } = skill;
-        const [res] = await db!.insert(gameQuestSkillCatalog).values({
+        const [res] = await db!.insert(gameUnifiedSkillCatalog).values({
           ...skillData,
           npcId,
           createdAt: now, updatedAt: now,
@@ -929,14 +929,14 @@ const adminSeedRouter = router({
     }
 
     // Step 2: 匹入技能
-    const existingSkills = await db!.select({ code: gameQuestSkillCatalog.code, id: gameQuestSkillCatalog.id }).from(gameQuestSkillCatalog);
+    const existingSkills = await db!.select({ code: gameUnifiedSkillCatalog.code, id: gameUnifiedSkillCatalog.id }).from(gameUnifiedSkillCatalog);
     const skillCodeMap: Record<string, number> = {};
     for (const s of existingSkills) skillCodeMap[s.code] = s.id;
     for (const skill of QUEST_SKILLS) {
       if (skillCodeMap[skill.code]) { results.skipped.push(skill.code); continue; }
       const npcId = skill.npcCode ? npcCodeMap[skill.npcCode] ?? null : null;
       const { npcCode, ...skillData } = skill;
-      const [res] = await db!.insert(gameQuestSkillCatalog).values({
+      const [res] = await db!.insert(gameUnifiedSkillCatalog).values({
         ...skillData, npcId, createdAt: now, updatedAt: now,
       } as any);
       skillCodeMap[skill.code] = Number(res.insertId);
@@ -969,7 +969,7 @@ const adminSeedRouter = router({
     await db!.delete(gameLearnedQuestSkills);
     await db!.delete(gameQuestProgress);
     await db!.delete(gameQuestSteps);
-    await db!.delete(gameQuestSkillCatalog);
+    await db!.delete(gameUnifiedSkillCatalog);
     await db!.delete(gameNpcCatalog);
     return { success: true, message: "已清除所有天命技能種子資料" };
   }),

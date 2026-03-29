@@ -711,7 +711,7 @@ export function MonsterCatalogV2Tab() {
     onError: (e) => toast.error(`匯入失敗：${e.message}`),
   });
 
-  const skillOpts = (monsterSkills ?? []).map((s: any) => ({ value: s.monsterSkillId, label: `${s.monsterSkillId} ${s.name}（${s.wuxing}）` }));
+  const skillOpts = (monsterSkills ?? []).map((s: any) => ({ value: s.skillId, label: `${s.skillId} ${s.name}（${s.wuxing}）` }));
   const itemOpts = (allItems ?? []).map((i: any) => ({ value: i.itemId, label: `${i.itemId} ${i.name}（${i.wuxing}）` }));
 
   const fields: FieldDef[] = [
@@ -1426,23 +1426,81 @@ export function EquipCatalogV2Tab() {
 }
 
 // ════════════════════════════════════════════════════════════════
-// 4. 技能圖鑑 V2
+// 4. 統一技能圖鑑（合併玩家技能 + 魔物技能）
 // ════════════════════════════════════════════════════════════════
 const SKILL_CAT_OPTS = [
-  { value: "active_combat", label: "主動戰鬥" }, { value: "passive_combat", label: "被動戰鬥" },
-  { value: "life_gather", label: "生活採集" }, { value: "craft_forge", label: "製作鍛造" },
+  { value: "physical", label: "物理" }, { value: "magic", label: "魔法" },
+  { value: "status", label: "狀態" }, { value: "support", label: "輔助" },
+  { value: "special", label: "特殊" }, { value: "resistance", label: "抗性" },
 ];
 const SKILL_CAT_FILTER = [{ value: "", label: "全部分類" }, ...SKILL_CAT_OPTS];
 const SKILL_TYPE_OPTS = [
   { value: "attack", label: "攻擊" }, { value: "heal", label: "治療" },
   { value: "buff", label: "增益" }, { value: "debuff", label: "減益" },
-  { value: "passive", label: "被動" }, { value: "special", label: "特殊" },
+  { value: "passive", label: "被動" }, { value: "utility", label: "功能" },
+  { value: "defense", label: "防禦" },
 ];
 const SKILL_TYPE_FILTER = [{ value: "", label: "全部類型" }, ...SKILL_TYPE_OPTS];
-const ACQUIRE_TYPE_OPTS = [
-  { value: "shop", label: "商店" }, { value: "drop", label: "掉落" },
-  { value: "quest", label: "任務" }, { value: "craft", label: "製作" },
-  { value: "hidden", label: "隱藏" },
+const TARGET_TYPE_OPTS = [
+  { value: "single", label: "單體" }, { value: "t_shape", label: "T字範圍" },
+  { value: "cross", label: "十字範圍" }, { value: "all_enemy", label: "全體敵方" },
+  { value: "all_ally", label: "全體我方" }, { value: "self", label: "自身" },
+  { value: "party", label: "隊伍" },
+];
+const SCALE_STAT_OPTS = [
+  { value: "atk", label: "物理攻擊(ATK)" }, { value: "mtk", label: "魔法攻擊(MTK)" },
+  { value: "none", label: "無" },
+];
+const STATUS_EFFECT_OPTS = [
+  { value: "none", label: "無" }, { value: "poison", label: "中毒" },
+  { value: "burn", label: "灼燒" }, { value: "freeze", label: "冰凍" },
+  { value: "stun", label: "氣絕" }, { value: "slow", label: "減速" },
+  { value: "sleep", label: "昏睡" }, { value: "petrify", label: "石化" },
+  { value: "confuse", label: "混亂" }, { value: "drunk", label: "酒醉" },
+  { value: "forget", label: "遺忘" }, { value: "bleed", label: "流血" },
+];
+const HEAL_TYPE_OPTS = [
+  { value: "none", label: "無" }, { value: "instant", label: "瞬間治療" },
+  { value: "hot", label: "持續回復(HoT)" }, { value: "revive", label: "復活" },
+  { value: "mpRestore", label: "MP回復" }, { value: "cleanse", label: "淨化解除" },
+];
+const BUFF_STAT_OPTS = [
+  { value: "none", label: "無" }, { value: "atk", label: "攻擊" },
+  { value: "def", label: "防禦" }, { value: "mtk", label: "魔攻" },
+  { value: "spd", label: "速度" }, { value: "mdef", label: "魔防" },
+  { value: "all", label: "全屬性" },
+];
+const SHIELD_TYPE_OPTS = [
+  { value: "none", label: "無" }, { value: "physical", label: "物理護盾" },
+  { value: "magical", label: "魔法護盾" }, { value: "all", label: "全護盾" },
+];
+const ABSORB_TYPE_OPTS = [
+  { value: "none", label: "無" }, { value: "physical", label: "物理吸收" },
+  { value: "magical", label: "魔法吸收" },
+];
+const PASSIVE_TYPE_OPTS = [
+  { value: "none", label: "無" }, { value: "counter", label: "反擊" },
+  { value: "dodge", label: "閃避" }, { value: "guard", label: "護衛" },
+  { value: "lowHpBoost", label: "低血強化" }, { value: "statusResist", label: "異常抗性" },
+];
+const RESIST_TYPE_OPTS = [
+  { value: "none", label: "無" }, { value: "petrify", label: "石化" },
+  { value: "sleep", label: "昏睡" }, { value: "confuse", label: "混亂" },
+  { value: "poison", label: "中毒" }, { value: "forget", label: "遺忘" },
+  { value: "drunk", label: "酒醉" },
+];
+const WUXING_SKILL_OPTS = [
+  { value: "金", label: "⚔️ 金" }, { value: "木", label: "🌿 木" },
+  { value: "水", label: "💧 水" }, { value: "火", label: "🔥 火" },
+  { value: "土", label: "🪨 土" }, { value: "無", label: "⚪ 無" },
+];
+const WUXING_SKILL_FILTER = [{ value: "", label: "全部" }, ...WUXING_SKILL_OPTS];
+const BOOL_OPTS = [{ value: "1", label: "是" }, { value: "0", label: "否" }];
+const USABLE_FILTER = [
+  { value: "", label: "全部使用者" },
+  { value: "player", label: "玩家可用" },
+  { value: "pet", label: "寵物可用" },
+  { value: "monster", label: "魔物可用" },
 ];
 
 export function SkillCatalogV2Tab() {
@@ -1452,6 +1510,7 @@ export function SkillCatalogV2Tab() {
   const [rarity, setRarity] = useState("");
   const [category, setCategory] = useState("");
   const [skillType, setSkillType] = useState("");
+  const [usableFilter, setUsableFilter] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [formOpen, setFormOpen] = useState(false);
@@ -1463,11 +1522,14 @@ export function SkillCatalogV2Tab() {
 
   const queryInput = useMemo(() => ({
     search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
-    category: category || undefined, skillType: skillType || undefined, page, pageSize,
-  }), [search, wuxing, rarity, category, skillType, page, pageSize]);
+    category: category || undefined, skillType: skillType || undefined,
+    usableByPlayer: usableFilter === "player" ? 1 : undefined,
+    usableByPet: usableFilter === "pet" ? 1 : undefined,
+    usableByMonster: usableFilter === "monster" ? 1 : undefined,
+    page, pageSize,
+  }), [search, wuxing, rarity, category, skillType, usableFilter, page, pageSize]);
 
   const { data, isLoading, refetch } = trpc.gameCatalog.getSkillCatalog.useQuery(queryInput);
-  const { data: allMonsters } = trpc.gameCatalog.getAllMonsters.useQuery();
   const exportQuery = trpc.gameCatalog.exportSkillCatalog.useQuery(undefined, { enabled: false });
 
   const createMut = trpc.gameCatalog.createSkillCatalog.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.skillId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
@@ -1477,89 +1539,141 @@ export function SkillCatalogV2Tab() {
   const batchUpdateMut = trpc.gameCatalog.batchUpdateSkills.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
   const bulkImportMut = trpc.gameCatalog.bulkImportSkills.useMutation({ onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆技能`); setImportOpen(false); refetch(); }, onError: (e) => toast.error(`匯入失敗：${e.message}`) });
 
-  const monsterOpts = (allMonsters ?? []).map((m: any) => ({ value: m.monsterId, label: `${m.monsterId} ${m.name}` }));
-
+  // ===== 統一技能圖鑑全表單化欄位定義 =====
   const fields: FieldDef[] = [
-    { key: "name", label: "名稱", type: "text", required: true },
-    { key: "wuxing", label: "五行", type: "select", required: true, options: WUXING_OPTS, defaultValue: "木" },
-    { key: "category", label: "分類", type: "select", options: SKILL_CAT_OPTS, defaultValue: "active_combat" },
-    { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS, defaultValue: "common" },
-    { key: "tier", label: "階級", type: "text", defaultValue: "初階" },
-    { key: "skillType", label: "技能類型", type: "select", options: SKILL_TYPE_OPTS, defaultValue: "attack" },
-    { key: "damageType", label: "傷害方式", type: "select", options: [{ value: "single", label: "單體攻擊" }, { value: "aoe", label: "全體攻擊" }], defaultValue: "single" },
-    { key: "mpCost", label: "MP消耗", type: "number", defaultValue: 0, group: "數値" },
-    { key: "cooldown", label: "冷卻(回合)", type: "number", defaultValue: 0, group: "數值" },
-    { key: "powerPercent", label: "威力%", type: "number", defaultValue: 100, group: "數值" },
-    { key: "learnLevel", label: "習得等級", type: "number", defaultValue: 1, group: "數值" },
-    { key: "acquireType", label: "獲取方式", type: "select", options: ACQUIRE_TYPE_OPTS, defaultValue: "shop", group: "獲取" },
-    { key: "shopPrice", label: "商店售價", type: "number", defaultValue: 0, group: "獲取" },
-    { key: "dropMonsterId", label: "掉落怪物", type: "linkedSelect", linkedOptions: monsterOpts, defaultValue: "", group: "獲取" },
-    { key: "hiddenTrigger", label: "隱藏觸發條件", type: "custom", defaultValue: [], group: "獲取",
-      render: (val, onChange) => <HiddenTriggerEditor value={Array.isArray(val) ? val : (typeof val === 'string' && val ? (() => { try { return JSON.parse(val); } catch { return []; } })() : [])} onChange={onChange} />
-    },
-    { key: "wuxingThreshold", label: "五行門檻", type: "number", defaultValue: 0, min: 0, max: 100, group: "進階設定" },
-    { key: "statusEffect", label: "狀態異常", type: "select", options: [
-      { value: "none", label: "無" },
-      { value: "poison", label: "中毒" },
-      { value: "petrify", label: "石化" },
-      { value: "sleep", label: "昆睡" },
-      { value: "confuse", label: "混亂" },
-      { value: "forget", label: "遺忘" },
-      { value: "drunk", label: "酒醉" },
-      { value: "stun", label: "氣絕" },
-    ], defaultValue: "none", group: "進階設定" },
-    { key: "statusChance", label: "狀態機率%", type: "number", defaultValue: 0, min: 0, max: 100, group: "進階設定" },
-    { key: "statusDuration", label: "狀態持續(回合)", type: "number", defaultValue: 0, min: 0, max: 10, group: "進階設定" },
-    { key: "healPercent", label: "回血比例%", type: "number", defaultValue: 0, min: 0, max: 100, group: "進階設定" },
-    { key: "professionRequired", label: "職業需求", type: "select", options: [
-      { value: "none", label: "無限制" },
-      { value: "hunter", label: "獵人" },
-      { value: "mage", label: "法師" },
-      { value: "tank", label: "護衛" },
-      { value: "thief", label: "盜賀" },
-      { value: "wizard", label: "巫師" },
-    ], defaultValue: "none", group: "進階設定" },
-    { key: "skillTier", label: "技能階級", type: "select", options: [
-      { value: "basic", label: "初階" },
-      { value: "intermediate", label: "中階" },
-      { value: "advanced", label: "高階" },
-      { value: "destiny", label: "天命" },
-      { value: "legendary", label: "傳說" },
-    ], defaultValue: "basic", group: "進階設定" },
-    { key: "acquireMethod", label: "取得方式", type: "select", options: [
-      { value: "levelup", label: "升級自動" },
-      { value: "profession", label: "職業解鎖" },
-      { value: "skillbook", label: "技能書" },
-      { value: "destiny", label: "天命覚醒" },
-    ], defaultValue: "levelup", group: "進階設定" },
-    { key: "description", label: "效果說明", type: "textarea", group: "其他" },
-    { key: "inNormalShop", label: "一般商店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
-    { key: "inSpiritShop", label: "靈相商店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
-    { key: "inSecretShop", label: "密店", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }], defaultValue: "0", group: "商店分配" },
-    { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
+    // 基礎資訊
+    { key: "name", label: "技能名稱", type: "text", required: true },
+    { key: "code", label: "代碼", type: "text", placeholder: "如 P01, M02", defaultValue: "" },
+    { key: "wuxing", label: "五行屬性", type: "select", required: true, options: WUXING_SKILL_OPTS, defaultValue: "無" },
+    { key: "category", label: "技能分類", type: "select", options: SKILL_CAT_OPTS, defaultValue: "physical" },
+    { key: "skillType", label: "技能子類型", type: "select", options: SKILL_TYPE_OPTS, defaultValue: "attack" },
+    { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS, defaultValue: "rare" },
+    { key: "questTitle", label: "任務副標題", type: "text", placeholder: "如「碎影雙刃・連環之路」" },
+    { key: "description", label: "效果說明", type: "textarea" },
+
+    // 數值基礎
+    { key: "powerPercent", label: "威力%", type: "number", defaultValue: 100, min: 0, group: "數值基礎" },
+    { key: "mpCost", label: "MP消耗", type: "number", defaultValue: 10, min: 0, group: "數值基礎" },
+    { key: "cooldown", label: "冷却(回合)", type: "number", defaultValue: 3, min: 0, group: "數值基礎" },
+    { key: "maxLevel", label: "等級上限", type: "number", defaultValue: 10, min: 1, group: "數值基礎" },
+    { key: "levelUpBonus", label: "每級加成%", type: "number", defaultValue: 10, min: 0, group: "數值基礎" },
+    { key: "accuracyMod", label: "命中修正%", type: "number", defaultValue: 100, group: "數值基礎" },
+
+    // 目標與計算
+    { key: "targetType", label: "目標範圍", type: "select", options: TARGET_TYPE_OPTS, defaultValue: "single", group: "目標與計算" },
+    { key: "scaleStat", label: "傷害基準屬性", type: "select", options: SCALE_STAT_OPTS, defaultValue: "atk", group: "目標與計算" },
+
+    // 可用性控制
+    { key: "usableByPlayer", label: "玩家可用", type: "select", options: BOOL_OPTS, defaultValue: "1", group: "可用性控制" },
+    { key: "usableByPet", label: "寵物可用", type: "select", options: BOOL_OPTS, defaultValue: "1", group: "可用性控制" },
+    { key: "usableByMonster", label: "魔物可用", type: "select", options: BOOL_OPTS, defaultValue: "1", group: "可用性控制" },
+
+    // 狀態異常
+    { key: "statusEffectType", label: "狀態異常類型", type: "select", options: STATUS_EFFECT_OPTS, defaultValue: "none", group: "狀態異常" },
+    { key: "statusEffectChance", label: "觸發機率%", type: "number", defaultValue: 0, min: 0, max: 100, group: "狀態異常" },
+    { key: "statusEffectDuration", label: "持續回合", type: "number", defaultValue: 0, min: 0, max: 20, group: "狀態異常" },
+    { key: "statusEffectValue", label: "效果值", type: "number", defaultValue: 0, min: 0, group: "狀態異常" },
+
+    // 連擊系統
+    { key: "hitCountMin", label: "最少攻擊次數", type: "number", defaultValue: 1, min: 1, max: 10, group: "連擊系統" },
+    { key: "hitCountMax", label: "最多攻擊次數", type: "number", defaultValue: 1, min: 1, max: 10, group: "連擊系統" },
+    { key: "multiTargetHit", label: "多段隨機目標", type: "select", options: BOOL_OPTS, defaultValue: "0", group: "連擊系統" },
+
+    // 吸血/自傷/穿透
+    { key: "lifestealPercent", label: "吸血%", type: "number", defaultValue: 0, min: 0, max: 100, group: "吸血/自傷/穿透" },
+    { key: "selfDamagePercent", label: "自傷%", type: "number", defaultValue: 0, min: 0, max: 100, group: "吸血/自傷/穿透" },
+    { key: "ignoreDefPercent", label: "穿透防禦%", type: "number", defaultValue: 0, min: 0, max: 100, group: "吸血/自傷/穿透" },
+    { key: "isPriority", label: "先制攻擊", type: "select", options: BOOL_OPTS, defaultValue: "0", group: "吸血/自傷/穿透" },
+
+    // 治療系統
+    { key: "healType", label: "治療類型", type: "select", options: HEAL_TYPE_OPTS, defaultValue: "none", group: "治療系統" },
+    { key: "hotDuration", label: "HoT持續回合", type: "number", defaultValue: 0, min: 0, group: "治療系統" },
+    { key: "mpRestorePercent", label: "MP回復%", type: "number", defaultValue: 0, min: 0, group: "治療系統" },
+    { key: "cleanseCount", label: "淨化數量(-1=全部)", type: "number", defaultValue: 0, group: "治療系統" },
+
+    // 增益/減益系統
+    { key: "buffStat", label: "Buff屬性", type: "select", options: BUFF_STAT_OPTS, defaultValue: "none", group: "增益/減益系統" },
+    { key: "buffPercent", label: "Buff百分比", type: "number", defaultValue: 0, group: "增益/減益系統" },
+    { key: "buffDuration", label: "Buff持續回合", type: "number", defaultValue: 0, min: 0, group: "增益/減益系統" },
+
+    // 護盾系統
+    { key: "shieldType", label: "護盾類型", type: "select", options: SHIELD_TYPE_OPTS, defaultValue: "none", group: "護盾系統" },
+    { key: "shieldCharges", label: "護盾次數", type: "number", defaultValue: 0, min: 0, group: "護盾系統" },
+    { key: "shieldDuration", label: "護盾持續回合", type: "number", defaultValue: 0, min: 0, group: "護盾系統" },
+    { key: "shieldAbsorbPercent", label: "護盾吸收%", type: "number", defaultValue: 0, min: 0, max: 100, group: "護盾系統" },
+
+    // 吸收系統
+    { key: "absorbType", label: "吸收類型", type: "select", options: ABSORB_TYPE_OPTS, defaultValue: "none", group: "吸收系統" },
+    { key: "absorbPercent", label: "吸收轉HP%", type: "number", defaultValue: 0, min: 0, max: 100, group: "吸收系統" },
+    { key: "absorbDuration", label: "吸收持續回合", type: "number", defaultValue: 0, min: 0, group: "吸收系統" },
+
+    // 嘲諽
+    { key: "tauntDuration", label: "嘲諽持續回合", type: "number", defaultValue: 0, min: 0, group: "嘲諽" },
+
+    // 被動技能系統
+    { key: "isPassive", label: "是否被動", type: "select", options: BOOL_OPTS, defaultValue: "0", group: "被動技能系統" },
+    { key: "passiveType", label: "被動類型", type: "select", options: PASSIVE_TYPE_OPTS, defaultValue: "none", group: "被動技能系統" },
+    { key: "passiveTriggerChance", label: "觸發基礎機率%", type: "number", defaultValue: 0, min: 0, max: 100, group: "被動技能系統" },
+    { key: "passiveChancePerLevel", label: "每級增加機率%", type: "number", defaultValue: 0, min: 0, group: "被動技能系統" },
+    { key: "guardDamageReduction", label: "護衛減傷%", type: "number", defaultValue: 0, min: 0, max: 100, group: "被動技能系統" },
+    { key: "lowHpThreshold", label: "低血閾值%", type: "number", defaultValue: 0, min: 0, max: 100, group: "被動技能系統" },
+    { key: "lowHpBoostPercent", label: "低血強化%", type: "number", defaultValue: 0, min: 0, group: "被動技能系統" },
+    { key: "resistType", label: "抗性異常類型", type: "select", options: RESIST_TYPE_OPTS, defaultValue: "none", group: "被動技能系統" },
+    { key: "resistChancePerLevel", label: "每級抗性機率%", type: "number", defaultValue: 0, min: 0, group: "被動技能系統" },
+
+    // 特殊效果
+    { key: "hasInstantKill", label: "即死效果", type: "select", options: BOOL_OPTS, defaultValue: "0", group: "特殊效果" },
+    { key: "instantKillChance", label: "即死機率%", type: "number", defaultValue: 0, min: 0, max: 100, group: "特殊效果" },
+    { key: "hasSteal", label: "偷竊效果", type: "select", options: BOOL_OPTS, defaultValue: "0", group: "特殊效果" },
+    { key: "stealChance", label: "偷竊機率%", type: "number", defaultValue: 0, min: 0, max: 100, group: "特殊效果" },
+    { key: "hasSealWuxing", label: "封印五行", type: "select", options: BOOL_OPTS, defaultValue: "0", group: "特殊效果" },
+    { key: "sealDuration", label: "封印持續回合", type: "number", defaultValue: 0, min: 0, group: "特殊效果" },
+
+    // 防禦觸發
+    { key: "onDefendTrigger", label: "防禦時觸發", type: "select", options: BOOL_OPTS, defaultValue: "0", group: "防禦觸發" },
+    { key: "defendHealPercent", label: "防禦回HP%", type: "number", defaultValue: 0, min: 0, group: "防禦觸發" },
+    { key: "defendMpPercent", label: "防禦回MP%", type: "number", defaultValue: 0, min: 0, group: "防禦觸發" },
+
+    // AI 使用條件
+    { key: "aiHpBelow", label: "AI觸發HP低於%", type: "number", defaultValue: 0, min: 0, max: 100, group: "AI使用條件" },
+    { key: "aiPriority", label: "AI優先級(0-10)", type: "number", defaultValue: 5, min: 0, max: 10, group: "AI使用條件" },
+    { key: "aiTargetElement", label: "AI目標偏好元素", type: "select", options: [{ value: "", label: "無偏好" }, ...WUXING_SKILL_OPTS], defaultValue: "", group: "AI使用條件" },
+
+    // 學習/取得
+    { key: "prerequisiteLevel", label: "前置等級需求", type: "number", defaultValue: 0, min: 0, group: "學習/取得" },
+    { key: "npcId", label: "教導NPC ID", type: "number", defaultValue: 0, min: 0, group: "學習/取得" },
+    { key: "learnCost", label: "習得代價(JSON)", type: "json", defaultValue: null, group: "學習/取得" },
+    { key: "prerequisites", label: "前置技能(JSON)", type: "json", defaultValue: null, group: "學習/取得" },
+
+    // 其他
+    { key: "iconUrl", label: "圖示URL", type: "text", group: "其他" },
+    { key: "sortOrder", label: "排序權重", type: "number", defaultValue: 0, min: 0, group: "其他" },
+    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
   ];
 
   const batchEditFields = [
-    { key: "wuxing", label: "五行", type: "select", options: WUXING_OPTS },
+    { key: "wuxing", label: "五行", type: "select", options: WUXING_SKILL_OPTS },
     { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
     { key: "category", label: "分類", type: "select", options: SKILL_CAT_OPTS },
     { key: "skillType", label: "技能類型", type: "select", options: SKILL_TYPE_OPTS },
-    { key: "shopPrice", label: "商店售價", type: "number" },
-    { key: "inNormalShop", label: "一般商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
-    { key: "inSpiritShop", label: "靈相商店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
-    { key: "inSecretShop", label: "密店上架", type: "select", options: [{ value: "1", label: "是" }, { value: "0", label: "否" }] },
+    { key: "usableByPlayer", label: "玩家可用", type: "select", options: BOOL_OPTS },
+    { key: "usableByPet", label: "寵物可用", type: "select", options: BOOL_OPTS },
+    { key: "usableByMonster", label: "魔物可用", type: "select", options: BOOL_OPTS },
     { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
   ];
 
   const handleSubmit = (data: any) => {
     for (const k of Object.keys(data)) { if (data[k] === "__none__") data[k] = ""; }
-    ["inNormalShop", "inSpiritShop", "inSecretShop", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
+    ["usableByPlayer", "usableByPet", "usableByMonster", "multiTargetHit", "isPriority",
+     "isPassive", "hasInstantKill", "hasSteal", "hasSealWuxing", "onDefendTrigger", "isActive"].forEach(k => {
+      if (data[k] !== undefined) data[k] = Number(data[k]);
+    });
     if (editItem && editItem.id != null) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
   };
 
   const handleExport = useCallback(async (format: "csv" | "json") => {
     const result = await exportQuery.refetch();
-    if (result.data) { if (format === "csv") exportToCSV(result.data, "skill_catalog"); else exportToJSON(result.data, "skill_catalog"); }
+    if (result.data) { if (format === "csv") exportToCSV(result.data, "unified_skill_catalog"); else exportToJSON(result.data, "unified_skill_catalog"); }
   }, [exportQuery]);
 
   const items = data?.items ?? [];
@@ -1570,14 +1684,14 @@ export function SkillCatalogV2Tab() {
   const toggleOne = (id: number) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
   const handleBatchDelete = () => { if (!confirm(`確定要刪除選取的 ${selectedIds.size} 筆技能？`)) return; batchDeleteMut.mutate({ ids: Array.from(selectedIds) }); };
   const handleBatchEdit = (data: Record<string, any>) => {
-    ["inNormalShop", "inSpiritShop", "inSecretShop", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
+    ["usableByPlayer", "usableByPet", "usableByMonster", "isActive"].forEach(k => { if (data[k] !== undefined) data[k] = Number(data[k]); });
     batchUpdateMut.mutate({ ids: Array.from(selectedIds), data });
   };
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-        <div><h2 className="text-lg font-semibold">✨ 技能圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 S_W001）</p></div>
+        <div><h2 className="text-lg font-semibold">✨ 統一技能圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">合併玩家/寵物/魔物技能，自動生成 ID（USK_001）</p></div>
         <div className="flex gap-2 items-center flex-wrap">
           <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
           <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
@@ -1585,39 +1699,59 @@ export function SkillCatalogV2Tab() {
         </div>
       </div>
       <FilterBar>
-        <div className="flex gap-1 flex-wrap">{WUXING_FILTER.map(w => (<FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => { setWuxing(w.value); setPage(1); }} />))}</div>
+        <div className="flex gap-1 flex-wrap">{WUXING_SKILL_FILTER.map(w => (<FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => { setWuxing(w.value); setPage(1); }} />))}</div>
         <div className="flex gap-1 flex-wrap">{RARITY_FILTER.map(r => (<FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => { setRarity(r.value); setPage(1); }} />))}</div>
       </FilterBar>
       <FilterBar>
         <select value={category} onChange={e => { setCategory(e.target.value); setPage(1); }} className="h-7 text-xs rounded border bg-background px-2">{SKILL_CAT_FILTER.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}</select>
         <select value={skillType} onChange={e => { setSkillType(e.target.value); setPage(1); }} className="h-7 text-xs rounded border bg-background px-2">{SKILL_TYPE_FILTER.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
+        <select value={usableFilter} onChange={e => { setUsableFilter(e.target.value); setPage(1); }} className="h-7 text-xs rounded border bg-background px-2">{USABLE_FILTER.map(u => <option key={u.value} value={u.value}>{u.label}</option>)}</select>
         <div className="flex gap-2 ml-auto">
           <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { setSearch(searchInput); setPage(1); } }} className="w-40 h-7 text-xs" />
           <Button size="sm" variant="outline" className="h-7" onClick={() => { setSearch(searchInput); setPage(1); }}>搜尋</Button>
-          {(search || wuxing || rarity || category || skillType) && (<Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setCategory(""); setSkillType(""); setPage(1); }}>清除全部</Button>)}
+          {(search || wuxing || rarity || category || skillType || usableFilter) && (<Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setCategory(""); setSkillType(""); setUsableFilter(""); setPage(1); }}>清除全部</Button>)}
         </div>
       </FilterBar>
       <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
       {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
         <>
           <div className="overflow-x-auto -mx-2 px-2">
-            <table className="w-full text-sm border-collapse min-w-[550px]">
+            <table className="w-full text-sm border-collapse min-w-[700px]">
               <thead><tr className="border-b text-muted-foreground text-xs">
                 <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
-                <th className="text-left py-2 px-2 whitespace-nowrap">ID</th><th className="text-left py-2 px-2 whitespace-nowrap">名稱</th><th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
-                <th className="text-left py-2 px-2 whitespace-nowrap">類型</th><th className="text-left py-2 px-2 whitespace-nowrap">售價</th><th className="text-left py-2 px-2 whitespace-nowrap">商店</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">ID</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">名稱</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">分類</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">類型</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">威力%</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">MP</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">可用</th>
+                <th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
               </tr></thead>
               <tbody>{items.map((m: any) => (
                 <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
                   <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
-                  <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.skillId}</td>
-                  <td className="py-2 px-2 font-medium">{m.imageUrl ? <img src={m.imageUrl} alt="" className="w-5 h-5 inline mr-1 rounded" /> : null}{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
-                  <td className="py-2 px-2 text-xs">{m.skillType}</td><td className="py-2 px-2">{m.shopPrice > 0 ? m.shopPrice : '-'}</td>
-                  <td className="py-2 px-2 text-xs space-x-0.5">{m.inNormalShop ? <span className="inline-block px-1 rounded bg-green-500/20 text-green-400 text-[10px]">一般</span> : null}{m.inSpiritShop ? <span className="inline-block px-1 rounded bg-purple-500/20 text-purple-400 text-[10px]">靈相</span> : null}{m.inSecretShop ? <span className="inline-block px-1 rounded bg-amber-500/20 text-amber-400 text-[10px]">密店</span> : null}{!m.inNormalShop && !m.inSpiritShop && !m.inSecretShop ? <span className="text-muted-foreground">-</span> : null}</td>
+                  <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.skillId || m.code}</td>
+                  <td className="py-2 px-2 font-medium">
+                    {m.iconUrl ? <img src={m.iconUrl} alt="" className="w-5 h-5 inline mr-1 rounded" /> : null}
+                    {m.name}
+                    <RarityBadge rarity={m.rarity} />
+                  </td>
+                  <td className="py-2 px-2 text-xs">{m.wuxing}</td>
+                  <td className="py-2 px-2 text-xs">{SKILL_CAT_OPTS.find(c => c.value === m.category)?.label || m.category}</td>
+                  <td className="py-2 px-2 text-xs">{SKILL_TYPE_OPTS.find(t => t.value === m.skillType)?.label || m.skillType}</td>
+                  <td className="py-2 px-2 text-xs">{m.powerPercent}%</td>
+                  <td className="py-2 px-2 text-xs">{m.mpCost}</td>
+                  <td className="py-2 px-2 text-xs space-x-0.5">
+                    {m.usableByPlayer ? <span className="inline-block px-1 rounded bg-blue-500/20 text-blue-400 text-[10px]">玩家</span> : null}
+                    {m.usableByPet ? <span className="inline-block px-1 rounded bg-green-500/20 text-green-400 text-[10px]">寵物</span> : null}
+                    {m.usableByMonster ? <span className="inline-block px-1 rounded bg-red-500/20 text-red-400 text-[10px]">魔物</span> : null}
+                  </td>
                   <td className="py-2 px-2 space-x-1">
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
-                    <AiImageBtn type="skill" id={m.skillId} name={m.name} hasImage={!!m.imageUrl} onSuccess={() => refetch()} />
-                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-amber-400" title="上架到商店" onClick={() => setQuickShopItem({ itemKey: m.skillId, displayName: m.name })}>🛒</Button>
+                    <AiImageBtn type="skill" id={m.skillId || m.id} name={m.name} hasImage={!!m.iconUrl} onSuccess={() => refetch()} />
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-amber-400" title="上架到商店" onClick={() => setQuickShopItem({ itemKey: m.skillId || String(m.id), displayName: m.name })}>🛒</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
                     <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
                   </td>
@@ -1628,11 +1762,11 @@ export function SkillCatalogV2Tab() {
           <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
         </>
       )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯技能：${editItem.name}` : "新增技能"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} catalogType="skill" />
+      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯統一技能：${editItem.name}` : "新增統一技能"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} catalogType="skill" />
       <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
         selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
-        isLoading={bulkImportMut.isPending} catalogName="技能圖鑑" />
+        isLoading={bulkImportMut.isPending} catalogName="統一技能圖鑑" />
       {quickShopItem && <QuickShopListModal open={!!quickShopItem} onClose={() => setQuickShopItem(null)} itemKey={quickShopItem.itemKey} displayName={quickShopItem.displayName} />}
     </div>
   );
@@ -1802,147 +1936,15 @@ export function AchievementCatalogTab() {
 }
 
 // ════════════════════════════════════════════════════════════════
-// 6. 魔物技能圖鑑
+// 6. 魔物技能圖鑑（已合併至統一技能圖鑑，保留空殼向後兼容）
 // ════════════════════════════════════════════════════════════════
-const MS_TYPE_OPTS = [
-  { value: "attack", label: "攻擊" }, { value: "heal", label: "治療" },
-  { value: "buff", label: "增益" }, { value: "debuff", label: "減益" },
-  { value: "special", label: "特殊" }, { value: "passive", label: "被動" },
-];
-const MS_TYPE_FILTER = [{ value: "", label: "全部類型" }, ...MS_TYPE_OPTS];
-
 export function MonsterSkillCatalogTab() {
-  const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
-  const [wuxing, setWuxing] = useState("");
-  const [rarity, setRarity] = useState("");
-  const [skillType, setSkillType] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [formOpen, setFormOpen] = useState(false);
-  const [editItem, setEditItem] = useState<any>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [batchEditOpen, setBatchEditOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
-
-  const queryInput = useMemo(() => ({
-    search: search || undefined, wuxing: wuxing || undefined, rarity: rarity || undefined,
-    skillType: skillType || undefined, page, pageSize,
-  }), [search, wuxing, rarity, skillType, page, pageSize]);
-
-  const { data, isLoading, refetch } = trpc.gameCatalog.getMonsterSkillCatalog.useQuery(queryInput);
-  const exportQuery = trpc.gameCatalog.exportMonsterSkillCatalog.useQuery(undefined, { enabled: false });
-
-  const createMut = trpc.gameCatalog.createMonsterSkill.useMutation({ onSuccess: (r) => { toast.success(`建立成功 (${r.monsterSkillId})`); setFormOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const updateMut = trpc.gameCatalog.updateMonsterSkill.useMutation({ onSuccess: () => { toast.success("更新成功"); setFormOpen(false); setEditItem(null); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const deleteMut = trpc.gameCatalog.deleteMonsterSkill.useMutation({ onSuccess: () => { toast.success("已刪除"); refetch(); } });
-  const batchDeleteMut = trpc.gameCatalog.batchDeleteMonsterSkills.useMutation({ onSuccess: (r) => { toast.success(`已刪除 ${r.deleted} 筆`); setSelectedIds(new Set()); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const batchUpdateMut = trpc.gameCatalog.batchUpdateMonsterSkills.useMutation({ onSuccess: (r) => { toast.success(`已更新 ${r.updated} 筆`); setSelectedIds(new Set()); setBatchEditOpen(false); refetch(); }, onError: (e) => toast.error(`${e.message}`) });
-  const bulkImportMut = trpc.gameCatalog.bulkImportMonsterSkills.useMutation({ onSuccess: (r) => { toast.success(`成功匯入 ${r.imported} 筆魔物技能`); setImportOpen(false); refetch(); }, onError: (e) => toast.error(`匯入失敗：${e.message}`) });
-
-  const fields: FieldDef[] = [
-    { key: "name", label: "名稱", type: "text", required: true },
-    { key: "wuxing", label: "五行", type: "select", required: true, options: WUXING_OPTS },
-    { key: "skillType", label: "類型", type: "select", options: MS_TYPE_OPTS, defaultValue: "attack" },
-    { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS, defaultValue: "common" },
-    { key: "powerPercent", label: "威力%", type: "number", defaultValue: 100, group: "數值" },
-    { key: "mpCost", label: "MP消耗", type: "number", defaultValue: 0, group: "數值" },
-    { key: "cooldown", label: "冷卻(回合)", type: "number", defaultValue: 0, group: "數值" },
-    { key: "accuracyMod", label: "命中修正%", type: "number", defaultValue: 100, group: "數值" },
-    { key: "additionalEffect", label: "附加效果", type: "custom", defaultValue: null, group: "效果", skipParse: true,
-      render: (val, onChange) => <SkillEffectEditor value={val} onChange={onChange} />
-    },
-    { key: "aiCondition", label: "AI觸發條件", type: "custom", defaultValue: null, group: "效果", skipParse: true,
-      render: (val, onChange) => <AiConditionEditor value={val} onChange={onChange} />
-    },
-    { key: "description", label: "說明", type: "textarea", group: "其他" },
-    { key: "isActive", label: "啟用", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }], defaultValue: "1", group: "其他" },
-  ];
-
-  const batchEditFields = [
-    { key: "wuxing", label: "五行", type: "select", options: WUXING_OPTS },
-    { key: "rarity", label: "稀有度", type: "select", options: RARITY_OPTS },
-    { key: "skillType", label: "類型", type: "select", options: MS_TYPE_OPTS },
-    { key: "isActive", label: "啟用狀態", type: "select", options: [{ value: "1", label: "啟用" }, { value: "0", label: "停用" }] },
-    { key: "powerPercent", label: "威力%", type: "number" },
-    { key: "mpCost", label: "MP消耗", type: "number" },
-  ];
-
-  const handleSubmit = (data: any) => {
-    if (data.isActive !== undefined) data.isActive = Number(data.isActive);
-    if (editItem && editItem.id != null) updateMut.mutate({ id: editItem.id, data }); else createMut.mutate(data);
-  };
-
-  const handleExport = useCallback(async (format: "csv" | "json") => {
-    const result = await exportQuery.refetch();
-    if (result.data) { if (format === "csv") exportToCSV(result.data, "monster_skill_catalog"); else exportToJSON(result.data, "monster_skill_catalog"); }
-  }, [exportQuery]);
-
-  const items = data?.items ?? [];
-  const total = data?.total ?? 0;
-  const allSelected = items.length > 0 && items.every((m: any) => selectedIds.has(m.id));
-  const someSelected = items.some((m: any) => selectedIds.has(m.id));
-  const toggleAll = () => { if (allSelected) setSelectedIds(new Set()); else setSelectedIds(new Set(items.map((m: any) => m.id))); };
-  const toggleOne = (id: number) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
-  const handleBatchDelete = () => { if (!confirm(`確定要刪除選取的 ${selectedIds.size} 筆魔物技能？`)) return; batchDeleteMut.mutate({ ids: Array.from(selectedIds) }); };
-  const handleBatchEdit = (data: Record<string, any>) => { if (data.isActive !== undefined) data.isActive = Number(data.isActive); batchUpdateMut.mutate({ ids: Array.from(selectedIds), data }); };
-
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
-        <div><h2 className="text-lg font-semibold">🐲 魔物技能圖鑑（{total}）</h2><p className="text-xs text-muted-foreground">自動生成 ID（如 SK_M001）</p></div>
-        <div className="flex gap-2 items-center flex-wrap">
-          <ExportButtons onCSV={() => handleExport("csv")} onJSON={() => handleExport("json")} />
-          <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>📥 匯入</Button>
-          <Button size="sm" onClick={() => { setEditItem(null); setFormOpen(true); }}>＋ 新增魔物技能</Button>
-        </div>
-      </div>
-      <FilterBar>
-        <div className="flex gap-1 flex-wrap">{WUXING_FILTER.map(w => (<FilterPill key={w.value} label={w.label} active={wuxing === w.value} onClick={() => { setWuxing(w.value); setPage(1); }} />))}</div>
-        <div className="flex gap-1 flex-wrap">{RARITY_FILTER.map(r => (<FilterPill key={r.value} label={r.label} active={rarity === r.value} onClick={() => { setRarity(r.value); setPage(1); }} />))}</div>
-      </FilterBar>
-      <FilterBar>
-        <select value={skillType} onChange={e => { setSkillType(e.target.value); setPage(1); }} className="h-7 text-xs rounded border bg-background px-2">{MS_TYPE_FILTER.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}</select>
-        <div className="flex gap-2 ml-auto">
-          <Input placeholder="搜尋名稱…" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { setSearch(searchInput); setPage(1); } }} className="w-40 h-7 text-xs" />
-          <Button size="sm" variant="outline" className="h-7" onClick={() => { setSearch(searchInput); setPage(1); }}>搜尋</Button>
-          {(search || wuxing || rarity || skillType) && (<Button size="sm" variant="ghost" className="h-7" onClick={() => { setSearch(""); setSearchInput(""); setWuxing(""); setRarity(""); setSkillType(""); setPage(1); }}>清除全部</Button>)}
-        </div>
-      </FilterBar>
-      <BatchToolbar selectedCount={selectedIds.size} onBatchDelete={handleBatchDelete} onBatchEdit={() => setBatchEditOpen(true)} onClearSelection={() => setSelectedIds(new Set())} isDeleting={batchDeleteMut.isPending} />
-      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
-        <>
-          <div className="overflow-x-auto -mx-2 px-2">
-            <table className="w-full text-sm border-collapse min-w-[600px]">
-              <thead><tr className="border-b text-muted-foreground text-xs">
-                <th className="py-2 px-2 w-8"><SelectAllCheckbox checked={allSelected} indeterminate={!allSelected && someSelected} onChange={toggleAll} /></th>
-                <th className="text-left py-2 px-2 whitespace-nowrap">ID</th><th className="text-left py-2 px-2 whitespace-nowrap">名稱</th><th className="text-left py-2 px-2 whitespace-nowrap">五行</th>
-                <th className="text-left py-2 px-2 whitespace-nowrap">類型</th><th className="text-left py-2 px-2 whitespace-nowrap">威力%</th><th className="text-left py-2 px-2 whitespace-nowrap">MP</th><th className="text-left py-2 px-2 whitespace-nowrap">冷卻</th><th className="text-left py-2 px-2 whitespace-nowrap">操作</th>
-              </tr></thead>
-              <tbody>{items.map((m: any) => (
-                <tr key={m.id} className={`border-b hover:bg-muted/30 ${selectedIds.has(m.id) ? "bg-primary/5" : ""}`}>
-                  <td className="py-2 px-2"><input type="checkbox" checked={selectedIds.has(m.id)} onChange={() => toggleOne(m.id)} className="rounded" /></td>
-                  <td className="py-2 px-2 text-xs font-mono text-muted-foreground">{m.monsterSkillId}</td>
-                  <td className="py-2 px-2 font-medium">{m.name}</td><td className="py-2 px-2 text-xs">{m.wuxing}</td>
-                  <td className="py-2 px-2 text-xs">{m.skillType}</td><td className="py-2 px-2">{m.powerPercent}%</td>
-                  <td className="py-2 px-2">{m.mpCost}</td><td className="py-2 px-2">{m.cooldown}</td>
-                  <td className="py-2 px-2 space-x-1">
-                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => { setEditItem(m); setFormOpen(true); }}>✏️</Button>
-                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" title="複製" onClick={() => { const copy = { ...m }; delete copy.id; copy.name = `${m.name}(複製)`; setEditItem(null); setFormOpen(true); setTimeout(() => setEditItem(copy as any), 50); toast.info(`已複製「${m.name}」，請修改後儲存`); }}>📋</Button>
-                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs text-destructive" onClick={() => { if (confirm(`確定刪除 ${m.name}？`)) deleteMut.mutate({ id: m.id }); }}>🗑️</Button>
-                  </td>
-                </tr>
-              ))}</tbody>
-            </table>
-          </div>
-          <Pagination page={page} pageSize={pageSize} total={total} onPageChange={p => { setPage(p); setSelectedIds(new Set()); }} onPageSizeChange={s => { setPageSize(s); setPage(1); setSelectedIds(new Set()); }} />
-        </>
-      )}
-      <CatalogFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditItem(null); }} title={editItem ? `編輯魔物技能：${editItem.name}` : "新增魔物技能"} fields={fields} initialData={editItem} onSubmit={handleSubmit} isLoading={createMut.isPending || updateMut.isPending} catalogType="monsterSkill" />
-      <BatchEditDialog open={batchEditOpen} onClose={() => setBatchEditOpen(false)} fields={batchEditFields} onSubmit={handleBatchEdit} isLoading={batchUpdateMut.isPending} selectedCount={selectedIds.size}
-        selectedItems={items.filter((m: any) => selectedIds.has(m.id))} />
-      <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={(rows) => bulkImportMut.mutate({ items: rows })}
-        isLoading={bulkImportMut.isPending} catalogName="魔物技能圖鑑" />
+    <div className="p-8 text-center">
+      <p className="text-lg font-semibold mb-2">魔物技能已合併至「統一技能圖鑑」</p>
+      <p className="text-sm text-muted-foreground">請切換到「統一技能」分頁，使用「使用者」篩選器選擇「魔物可用」即可管理魔物技能。</p>
     </div>
   );
 }
+
+

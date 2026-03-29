@@ -24,7 +24,7 @@ import {
   gameMonsterCatalog,
   gameItemCatalog,
   gameEquipmentCatalog,
-  gameSkillCatalog,
+  gameUnifiedSkillCatalog,
   gameConfig,
   adminGameControl,
   gameAgents,
@@ -667,7 +667,7 @@ export const gameAdminRouter = router({
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      const rows = await db.select().from(gameSkillCatalog).orderBy(gameSkillCatalog.skillId);
+      const rows = await db.select().from(gameUnifiedSkillCatalog).orderBy(gameUnifiedSkillCatalog.skillId);
       let result = rows;
       if (input.wuxing) result = result.filter(r => r.wuxing === input.wuxing);
       if (input.category) result = result.filter(r => r.category === input.category);

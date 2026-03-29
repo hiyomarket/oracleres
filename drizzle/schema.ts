@@ -3100,23 +3100,26 @@ export type GameNpcCatalog = typeof gameNpcCatalog.$inferSelect;
 export type InsertGameNpcCatalog = typeof gameNpcCatalog.$inferInsert;
 
 /**
- * 天命考核技能圖鑑
- * 定義所有可透過任務鏈習得的技能（32 種）
- * 這些技能習得後可掛到主技能欄，在戰鬥中使用
+ * 統一技能圖鑑（三表合一）
+ * 人物、寵物、魔物共用同一套技能池
+ * 差異由 usable_by_player / usable_by_pet / usable_by_monster 控制
+ * 怪物的強弱由掛載的技能等級決定（如 Lv1-10 小怪掛連擊 Lv1，Lv30 中怪掛連擊 Lv3）
  */
-export const gameQuestSkillCatalog = mysqlTable("game_quest_skill_catalog", {
+export const gameUnifiedSkillCatalog = mysqlTable("game_unified_skill_catalog", {
   id: int("id").autoincrement().primaryKey(),
-  /** 技能代碼（如 P1, M2, S3, A4, X1, C1） */
+  /** 技能代碼（如 P01, M02, S03, A04, X01, R01） */
   code: varchar("code", { length: 10 }).notNull(),
+  /** 統一技能 ID（如 USK_155，用於魔物/代理人技能槽引用） */
+  skillId: varchar("skill_id", { length: 20 }).notNull().default(""),
   /** 技能名稱（如「連擊」「火焰魔法」） */
   name: varchar("name", { length: 100 }).notNull(),
   /** 任務鏈副標題（如「碎影雙刃・連環之路」） */
   questTitle: varchar("quest_title", { length: 200 }),
-  /** 技能分類：physical / magic / status / support / special / production */
+  /** 技能分類：physical / magic / status / support / special / resistance */
   category: varchar("category", { length: 20 }).notNull(),
   /** 技能子類型（用於戰鬥引擎判定）：
    * attack = 攻擊, heal = 治癒, buff = 增益, debuff = 減益,
-   * passive = 被動, utility = 功能, production = 生產 */
+   * passive = 被動, utility = 功能, defense = 防禦 */
   skillType: varchar("skill_type", { length: 20 }).notNull().default("attack"),
   /** 技能描述/效果說明 */
   description: text("description"),
@@ -3132,41 +3135,176 @@ export const gameQuestSkillCatalog = mysqlTable("game_quest_skill_catalog", {
   maxLevel: int("max_level").notNull().default(10),
   /** 每升一級增加的效果百分比 */
   levelUpBonus: int("level_up_bonus").notNull().default(10),
-  /** 附加效果 JSON（與怪物技能相同格式）
-   * { type: "poison"|"burn"|"freeze"|"stun"|"slow"|"sleep"|"petrify"|"confuse"|"drunk"|"forget"|"defDown"|"spdDown",
-   *   chance: number, value: number, duration: number } */
-  additionalEffect: json("additional_effect"),
-  /** 特殊機制 JSON（連擊次數、命中率修正、範圍等）
-   * { hitCount?: [min, max], accuracyMod?: number, range?: number, aoe?: string,
-   *   selfDamage?: boolean, skipNextTurn?: boolean, isPassive?: boolean } */
-  specialMechanic: json("special_mechanic"),
+  /** 命中率修正 %（100 = 必中，-40 = 降低 40%） */
+  accuracyMod: int("accuracy_mod").notNull().default(100),
+
+  // ===== 目標與計算 =====
+  /** 技能目標範圍：single / t_shape / cross / all_enemy / all_ally / self / party */
+  targetType: varchar("target_type", { length: 20 }).notNull().default("single"),
+  /** 傷害/效果基於哪個屬性：atk / mtk / none */
+  scaleStat: varchar("scale_stat", { length: 10 }).notNull().default("atk"),
+
+  // ===== 可用性控制 =====
+  /** 人物可用 */
+  usableByPlayer: tinyint("usable_by_player").notNull().default(1),
+  /** 寵物可用 */
+  usableByPet: tinyint("usable_by_pet").notNull().default(1),
+  /** 魔物可用 */
+  usableByMonster: tinyint("usable_by_monster").notNull().default(1),
+
+  // ===== 狀態異常（拆分為獨立欄位，不再用 JSON） =====
+  /** 狀態異常類型：none/poison/burn/freeze/stun/slow/sleep/petrify/confuse/drunk/forget/bleed */
+  statusEffectType: varchar("status_effect_type", { length: 20 }).notNull().default("none"),
+  /** 狀態異常觸發機率 %（0-100） */
+  statusEffectChance: int("status_effect_chance").notNull().default(0),
+  /** 狀態異常持續回合數 */
+  statusEffectDuration: int("status_effect_duration").notNull().default(0),
+  /** 狀態異常效果值（如每回合傷害佔 ATK 的百分比） */
+  statusEffectValue: int("status_effect_value").notNull().default(0),
+
+  // ===== 連擊系統 =====
+  /** 攻擊次數（最小）：1 = 單次攻擊 */
+  hitCountMin: int("hit_count_min").notNull().default(1),
+  /** 攻擊次數（最大）：與 hitCountMin 相同 = 固定次數 */
+  hitCountMax: int("hit_count_max").notNull().default(1),
+  /** 多段攻擊是否隨機選目標（true = 每段打不同怪） */
+  multiTargetHit: tinyint("multi_target_hit").notNull().default(0),
+
+  // ===== 吸血/自傷 =====
+  /** 吸血百分比（造成傷害的 X% 回復 HP，0 = 無吸血） */
+  lifestealPercent: int("lifesteal_percent").notNull().default(0),
+  /** 自傷百分比（消耗自身 X% 當前 HP，0 = 無自傷） */
+  selfDamagePercent: int("self_damage_percent").notNull().default(0),
+  /** 穿透防禦百分比（無視 X% 防禦，0 = 無穿透） */
+  ignoreDefPercent: int("ignore_def_percent").notNull().default(0),
+
+  // ===== 先制/優先 =====
+  /** 先制攻擊（無視速度順序） */
+  isPriority: tinyint("is_priority").notNull().default(0),
+
+  // ===== 治療系統 =====
+  /** 治療類型：none/instant/hot/revive/mpRestore/cleanse */
+  healType: varchar("heal_type", { length: 20 }).notNull().default("none"),
+  /** HoT 持續回合數 */
+  hotDuration: int("hot_duration").notNull().default(0),
+  /** MP 恢復百分比（每回合恢復最大 MP 的 X%） */
+  mpRestorePercent: int("mp_restore_percent").notNull().default(0),
+  /** 潔淨解除異常數量（-1 = 全部） */
+  cleanseCount: int("cleanse_count").notNull().default(0),
+
+  // ===== 增益/減益系統 =====
+  /** buff 影響的屬性：none/atk/def/mtk/spd/mdef/all */
+  buffStat: varchar("buff_stat", { length: 10 }).notNull().default("none"),
+  /** buff 百分比（正數 = 增益，負數 = 減益） */
+  buffPercent: int("buff_percent").notNull().default(0),
+  /** buff 持續回合數 */
+  buffDuration: int("buff_duration").notNull().default(0),
+
+  // ===== 護盾系統 =====
+  /** 護盾類型：none/physical/magical/all */
+  shieldType: varchar("shield_type", { length: 10 }).notNull().default("none"),
+  /** 護盾可抵擋次數 */
+  shieldCharges: int("shield_charges").notNull().default(0),
+  /** 護盾持續回合數 */
+  shieldDuration: int("shield_duration").notNull().default(0),
+  /** 護盾吸收百分比（100 = 完全免疫） */
+  shieldAbsorbPercent: int("shield_absorb_percent").notNull().default(0),
+
+  // ===== 吸收系統（攻擊吸收/魔法吸收） =====
+  /** 吸收類型：none/physical/magical */
+  absorbType: varchar("absorb_type", { length: 10 }).notNull().default("none"),
+  /** 吸收傷害轉 HP 百分比 */
+  absorbPercent: int("absorb_percent").notNull().default(0),
+  /** 吸收持續回合數 */
+  absorbDuration: int("absorb_duration").notNull().default(0),
+
+  // ===== 嘲諷 =====
+  /** 嘲諷持續回合數（0 = 無嘲諷） */
+  tauntDuration: int("taunt_duration").notNull().default(0),
+
+  // ===== 被動技能系統 =====
+  /** 是否為被動技能 */
+  isPassive: tinyint("is_passive").notNull().default(0),
+  /** 被動類型：none/counter/dodge/guard/lowHpBoost/statusResist */
+  passiveType: varchar("passive_type", { length: 20 }).notNull().default("none"),
+  /** 被動觸發基礎機率 % */
+  passiveTriggerChance: int("passive_trigger_chance").notNull().default(0),
+  /** 每等級增加的觸發機率 % */
+  passiveChancePerLevel: int("passive_chance_per_level").notNull().default(0),
+  /** 護衛時傷害減少百分比 */
+  guardDamageReduction: int("guard_damage_reduction").notNull().default(0),
+  /** 低血量閾值 %（HP < X% 時觸發） */
+  lowHpThreshold: int("low_hp_threshold").notNull().default(0),
+  /** 低血量時屬性提升百分比 */
+  lowHpBoostPercent: int("low_hp_boost_percent").notNull().default(0),
+  /** 抵抗的異常類型：none/petrify/sleep/confuse/poison/forget/drunk */
+  resistType: varchar("resist_type", { length: 20 }).notNull().default("none"),
+  /** 每等級增加的抵抗機率 % */
+  resistChancePerLevel: int("resist_chance_per_level").notNull().default(0),
+
+  // ===== 特殊效果 =====
+  /** 即死效果（BOSS 無效） */
+  hasInstantKill: tinyint("has_instant_kill").notNull().default(0),
+  /** 即死機率 % */
+  instantKillChance: int("instant_kill_chance").notNull().default(0),
+  /** 偷竊效果 */
+  hasSteal: tinyint("has_steal").notNull().default(0),
+  /** 偷竊成功率 % */
+  stealChance: int("steal_chance").notNull().default(0),
+  /** 封印五行屬性 */
+  hasSealWuxing: tinyint("has_seal_wuxing").notNull().default(0),
+  /** 封印持續回合數 */
+  sealDuration: int("seal_duration").notNull().default(0),
+
+  // ===== 防禦觸發（明鏡止水） =====
+  /** 防禦時觸發 */
+  onDefendTrigger: tinyint("on_defend_trigger").notNull().default(0),
+  /** 防禦時回復 HP 百分比 */
+  defendHealPercent: int("defend_heal_percent").notNull().default(0),
+  /** 防禦時回復 MP 百分比 */
+  defendMpPercent: int("defend_mp_percent").notNull().default(0),
+
+  // ===== AI 使用條件（魔物 AI 用） =====
+  /** AI 使用條件：HP 低於 X% 時使用（0 = 無條件） */
+  aiHpBelow: int("ai_hp_below").notNull().default(0),
+  /** AI 優先級（數字越高越優先使用） */
+  aiPriority: int("ai_priority").notNull().default(5),
+  /** AI 目標偏好元素（空 = 無偏好） */
+  aiTargetElement: varchar("ai_target_element", { length: 10 }).notNull().default(""),
+
+  // ===== 學習/取得 =====
+  /** 稀有度：common / uncommon / rare / epic / legendary */
+  rarity: varchar("rarity", { length: 20 }).notNull().default("rare"),
   /** 習得代價 JSON { gold?: number, soulCrystal?: number, items?: [{name, count}], reputation?: {area, amount} } */
   learnCost: json("learn_cost"),
-  /** 前置條件 JSON [skillId1, skillId2, ...] */
+  /** 前置條件 JSON [skillCode1, skillCode2, ...] */
   prerequisites: json("prerequisites"),
   /** 前置等級需求 */
   prerequisiteLevel: int("prerequisite_level"),
   /** 教導此技能的 NPC ID（關聯 gameNpcCatalog） */
   npcId: int("npc_id"),
-  /** 技能目標範圍：single / t_shape / cross / all_enemy / all_ally / self / party */
-  targetType: varchar("target_type", { length: 20 }).notNull().default("single"),
-  /** 傷害/效果基於哪個屬性：atk / mtk / none */
-  scaleStat: varchar("scale_stat", { length: 10 }).notNull().default("atk"),
-  /** 稀有度（用於平衡系統）：common / rare / epic / legendary */
-  rarity: varchar("rarity", { length: 20 }).notNull().default("rare"),
-  /** 是否為寵物可學技能 */
-  petLearnable: tinyint("pet_learnable").notNull().default(1),
-  /** 是否為人物可學技能 */
-  playerLearnable: tinyint("player_learnable").notNull().default(1),
+
+  // ===== 保留的 JSON 欄位（僅供向後兼容和未來擴展） =====
+  /** 附加效果 JSON（向後兼容） */
+  additionalEffect: json("additional_effect"),
+  /** 特殊機制 JSON（向後兼容） */
+  specialMechanic: json("special_mechanic"),
+
   /** 圖示 URL */
   iconUrl: text("icon_url"),
   /** 排序權重 */
   sortOrder: int("sort_order").notNull().default(0),
+  isActive: tinyint("is_active").notNull().default(1),
   createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
   updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
 });
-export type GameQuestSkillCatalog = typeof gameQuestSkillCatalog.$inferSelect;
-export type InsertGameQuestSkillCatalog = typeof gameQuestSkillCatalog.$inferInsert;
+export type GameUnifiedSkillCatalog = typeof gameUnifiedSkillCatalog.$inferSelect;
+export type InsertGameUnifiedSkillCatalog = typeof gameUnifiedSkillCatalog.$inferInsert;
+
+// Backward-compatible aliases
+export const gameQuestSkillCatalog = gameUnifiedSkillCatalog;
+export type GameQuestSkillCatalog = GameUnifiedSkillCatalog;
+export type InsertGameQuestSkillCatalog = InsertGameUnifiedSkillCatalog;
 
 /**
  * 技能任務鏈步驟
@@ -3174,7 +3312,7 @@ export type InsertGameQuestSkillCatalog = typeof gameQuestSkillCatalog.$inferIns
  */
 export const gameQuestSteps = mysqlTable("game_quest_steps", {
   id: int("id").autoincrement().primaryKey(),
-  /** 關聯的技能 ID（gameQuestSkillCatalog） */
+  /** 關聯的技能 ID（gameUnifiedSkillCatalog） */
   skillId: int("skill_id").notNull(),
   /** 步驟序號（1, 2, 3, 4...；最終確認 = 99） */
   stepNumber: int("step_number").notNull(),
@@ -3215,7 +3353,7 @@ export const gameQuestProgress = mysqlTable("game_quest_progress", {
   id: int("id").autoincrement().primaryKey(),
   /** 玩家的代理人 ID（關聯 gameAgents） */
   agentId: int("agent_id").notNull(),
-  /** 技能 ID（關聯 gameQuestSkillCatalog） */
+  /** 技能 ID（關聯 gameUnifiedSkillCatalog） */
   skillId: int("skill_id").notNull(),
   /** 當前步驟序號（0=未開始, 1~4=進行中, 99=最終確認, 100=已完成） */
   currentStep: int("current_step").notNull().default(0),
@@ -3242,7 +3380,7 @@ export const gameLearnedQuestSkills = mysqlTable("game_learned_quest_skills", {
   id: int("id").autoincrement().primaryKey(),
   /** 玩家的代理人 ID */
   agentId: int("agent_id").notNull(),
-  /** 技能 ID（關聯 gameQuestSkillCatalog） */
+  /** 技能 ID（關聯 gameUnifiedSkillCatalog） */
   skillId: int("skill_id").notNull(),
   /** 當前技能等級 */
   level: int("level").notNull().default(1),

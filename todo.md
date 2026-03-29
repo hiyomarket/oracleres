@@ -5520,3 +5520,26 @@
 - [x] 點擊技能節點開啟詳情對話框
 - [x] 為 55 個技能設定前置條件關係（prerequisites JSON + prerequisite_level）
 - [ ] 玩家可學習技能 vs 寵物可學習技能分類顯示（待後續迭代）
+
+### 技能系統統一整合（三表合一 + 後台表單化）
+- [x] 分析現有三張技能表結構（game_skill_catalog, game_quest_skill_catalog, game_monster_skill_catalog）
+- [x] 設計統一技能圖鑑表 game_unified_skill_catalog（70+ 個獨立欄位，所有 JSON 拆分為表單欄位）
+- [x] 新增可用性欄位：usable_by_player, usable_by_pet, usable_by_monster
+- [x] 建立統一表並推送 schema
+- [x] 遷移 74 個天命技能數據到統一表（JSON 解析為獨立欄位）
+- [x] 遷移 100 個魔物技能數據到統一表（JSON 解析為獨立欄位）
+- [x] 更新後端 routers 使用統一技能表（gameWorld/valueRebalance/starterPackEngine/tickEngine/gameAI/gameAIBalance/gameAdmin/gameBattle/gameSkillSystem/runBalance 全部遷移）
+- [x] 建立直覺式後台技能編輯器（所有 JSON 欄位轉表單）
+- [x] 目標類型：下拉選單（單體/群體/T字/十字/自身/隊友）
+- [x] 計算基礎：下拉選單（ATK/MTK/固定值）
+- [x] 傷害類型：下拉選單（物理/魔法/治療/狀態/被動/增益）
+- [x] 狀態異常：勾選框 + 機率輸入 + 持續回合輸入
+- [x] 特殊機制：各項獨立表單欄位（吸血%/連擊次數/穿透%/護盾/吸收/反射等）
+- [x] 增益減益：獨立表單（選擇屬性 + 百分比 + 持續回合）
+- [x] 可用性勾選：人物/寵物/魔物三個勾選框
+- [x] 更新 tickEngine 戰鬥引擎使用統一技能
+- [x] 更新前端技能展示頁面（Tab 標籤更新、魔物技能合併到統一技能）
+- [x] 後台統一技能編輯器 10 大分組（基礎/數值/目標/可用性/狀態異常/連擊吸血穿透/治療/增益護盾/被動/特殊效果/AI/學習）
+- [x] 後台篩選器支援五行/分類/稀有度/技能類型/可用性（玩家/寵物/魔物）
+- [x] TypeScript 零錯誤，伺服器正常啟動
+- [ ] 測試通過

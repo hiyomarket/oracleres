@@ -19,7 +19,7 @@ import { getDb } from "../db";
 import {
   gameMonsterCatalog,
   gameMonsterSkillCatalog,
-  gameSkillCatalog,
+  gameUnifiedSkillCatalog,
   gameEquipmentCatalog,
   equipmentTemplates,
   gameVirtualShop,
@@ -121,7 +121,7 @@ export async function runFullBalance(): Promise<BalanceResult> {
   // 3. 人物技能校準
   // ═══════════════════════════════════════════════════════════════
   try {
-    const pSkills = await db.select().from(gameSkillCatalog).where(sql`is_active = 1`);
+    const pSkills = await db.select().from(gameUnifiedSkillCatalog).where(sql`is_active = 1`);
     for (const sk of pSkills) {
       const base = SKILL_TIER_BASE[sk.tier] || SKILL_TIER_BASE["初階"];
       const mod = SKILL_TYPE_MODIFIER[sk.skillType] || SKILL_TYPE_MODIFIER["attack"];
@@ -135,15 +135,13 @@ export async function runFullBalance(): Promise<BalanceResult> {
       // 根據技能的 acquireType 決定是否設定 shopPrice
       const shopPrice = sk.acquireType === "shop" ? midPrice : 0;
 
-      await db.update(gameSkillCatalog)
+      await db.update(gameUnifiedSkillCatalog)
         .set({
           powerPercent: Math.max(midPower, 10),
           mpCost: Math.max(midMp, 0),
           cooldown: Math.max(midCd, 0),
-          learnLevel: midLv,
-          shopPrice: shopPrice,
         })
-        .where(eq(gameSkillCatalog.id, sk.id));
+        .where(eq(gameUnifiedSkillCatalog.id, sk.id));
       result.playerSkillsUpdated++;
     }
     console.log(`[Balance] 人物技能校準完成：${result.playerSkillsUpdated} 個`);
@@ -218,11 +216,11 @@ export async function runFullBalance(): Promise<BalanceResult> {
 
     // 同時取得技能圖鑑的 rarity
     const skillCatalog = await db.select({
-      skillId: gameSkillCatalog.skillId,
-      rarity: gameSkillCatalog.rarity,
-      tier: gameSkillCatalog.tier,
-    }).from(gameSkillCatalog).where(sql`is_active = 1`);
-    const skillMap = new Map(skillCatalog.map((s: { skillId: string; rarity: string; tier: string }) => [s.skillId, s]));
+      skillId: gameUnifiedSkillCatalog.skillId,
+      rarity: gameUnifiedSkillCatalog.rarity,
+      category: gameUnifiedSkillCatalog.category,
+    }).from(gameUnifiedSkillCatalog).where(sql`is_active = 1`);
+    const skillMap = new Map(skillCatalog.map((s: { skillId: string; rarity: string; category: string }) => [s.skillId, s]));
 
     for (const si of shopItems) {
       let newPrice = si.priceCoins;
@@ -267,12 +265,12 @@ export async function runFullBalance(): Promise<BalanceResult> {
   // ═══════════════════════════════════════════════════════════════
   try {
     const spiritItems = await db.select().from(gameSpiritShop).where(sql`is_on_sale = 1 AND is_locked = 0`);
-    const skillCatalog = await db.select({
-      skillId: gameSkillCatalog.skillId,
-      rarity: gameSkillCatalog.rarity,
-      tier: gameSkillCatalog.tier,
-    }).from(gameSkillCatalog).where(sql`is_active = 1`);
-    const skillMap = new Map(skillCatalog.map((s: { skillId: string; rarity: string; tier: string }) => [s.skillId, s]));
+    const skillCatalog2 = await db.select({
+      skillId: gameUnifiedSkillCatalog.skillId,
+      rarity: gameUnifiedSkillCatalog.rarity,
+      category: gameUnifiedSkillCatalog.category,
+    }).from(gameUnifiedSkillCatalog).where(sql`is_active = 1`);
+    const skillMap = new Map(skillCatalog2.map((s: { skillId: string; rarity: string; category: string }) => [s.skillId, s]));
 
     const itemCatalog = await db.select({
       itemId: gameItemCatalog.itemId,
@@ -317,12 +315,12 @@ export async function runFullBalance(): Promise<BalanceResult> {
   // ═══════════════════════════════════════════════════════════════
   try {
     const hiddenItems = await db.select().from(gameHiddenShopPool).where(sql`is_active = 1 AND is_locked = 0`);
-    const skillCatalog = await db.select({
-      skillId: gameSkillCatalog.skillId,
-      rarity: gameSkillCatalog.rarity,
-      tier: gameSkillCatalog.tier,
-    }).from(gameSkillCatalog).where(sql`is_active = 1`);
-    const skillMap = new Map(skillCatalog.map((s: { skillId: string; rarity: string; tier: string }) => [s.skillId, s]));
+    const skillCatalog3 = await db.select({
+      skillId: gameUnifiedSkillCatalog.skillId,
+      rarity: gameUnifiedSkillCatalog.rarity,
+      category: gameUnifiedSkillCatalog.category,
+    }).from(gameUnifiedSkillCatalog).where(sql`is_active = 1`);
+    const skillMap = new Map(skillCatalog3.map((s: { skillId: string; rarity: string; category: string }) => [s.skillId, s]));
 
     const itemCatalog = await db.select({
       itemId: gameItemCatalog.itemId,

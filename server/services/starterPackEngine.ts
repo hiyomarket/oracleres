@@ -10,7 +10,7 @@ import { getDb } from "../db";
 import {
   gameEquipmentCatalog,
   agentInventory,
-  gameSkillCatalog,
+  gameUnifiedSkillCatalog,
   agentSkills,
   gamePetCatalog,
   gamePlayerPets,
@@ -101,18 +101,19 @@ export async function grantStarterPack(
     // 從技能圖鑑中找到對應屬性的最基本技能
     const elementSkills = await db
       .select()
-      .from(gameSkillCatalog)
+      .from(gameUnifiedSkillCatalog)
       .where(
         and(
-          eq(gameSkillCatalog.wuxing, dominantElement),
-          eq(gameSkillCatalog.isActive, 1),
+          eq(gameUnifiedSkillCatalog.wuxing, dominantElement),
+          eq(gameUnifiedSkillCatalog.isActive, 1),
+          eq(gameUnifiedSkillCatalog.usableByPlayer, 1),
         ),
       );
 
     // 找等級需求最低的技能
     const basicSkills = elementSkills
-      .filter((s) => (s.learnLevel ?? 1) <= 1)
-      .sort((a, b) => (a.learnLevel ?? 1) - (b.learnLevel ?? 1));
+      .filter((s) => (s.prerequisiteLevel ?? 1) <= 1)
+      .sort((a, b) => (a.prerequisiteLevel ?? 1) - (b.prerequisiteLevel ?? 1));
 
     if (basicSkills.length > 0) {
       const skill = basicSkills[0];

@@ -1,9 +1,8 @@
 /**
- * GD-022 技能系統 Router（修復版）
- * 統一使用 game_skill_catalog（gameSkillCatalog）作為技能資料來源
- * 因為 skill_templates 只有 10 個木系技能，完整資料在 game_skill_catalog
+ * GD-022 技能系統 Router（統一版）
+ * 統一使用 game_unified_skill_catalog（gameUnifiedSkillCatalog）作為技能資料來源
  *
- * agentSkills: id, agentId, skillId(FK→game_skill_catalog.skillId), awakeTier, useCount,
+ * agentSkills: id, agentId, skillId(FK→game_unified_skill_catalog.skillId), awakeTier, useCount,
  *   installedSlot, acquiredAt
  */
 import { z } from "zod";
@@ -12,7 +11,7 @@ import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
 import { eq, and, sql } from "drizzle-orm";
 import {
-  gameSkillCatalog,
+  gameUnifiedSkillCatalog,
   agentSkills,
   skillBooks,
   awakeMaterials,
@@ -51,11 +50,11 @@ export const gameSkillSystemRouter = router({
       };
 
       const catalogs = input.element === "all"
-        ? await db.select().from(gameSkillCatalog).where(eq(gameSkillCatalog.isActive, 1))
-        : await db.select().from(gameSkillCatalog).where(
+        ? await db.select().from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.isActive, 1))
+        : await db.select().from(gameUnifiedSkillCatalog).where(
             and(
-              eq(gameSkillCatalog.isActive, 1),
-              eq(gameSkillCatalog.wuxing, ELEMENT_TO_WUXING[input.element] ?? input.element)
+              eq(gameUnifiedSkillCatalog.isActive, 1),
+              eq(gameUnifiedSkillCatalog.wuxing, ELEMENT_TO_WUXING[input.element] ?? input.element)
             )
           );
 
@@ -72,23 +71,21 @@ export const gameSkillSystemRouter = router({
         const hidden = isHiddenSkill(t);
         const unlocked = unlockedSet.has(t.skillId);
         const fogged = hidden && !unlocked;
-        // 統一輸出格式，相容前端原有欄位
         return {
           id: t.skillId,
           name: t.name,
-          element: WUXING_MAP[t.wuxing] ?? t.wuxing,
+          element: WUXING_MAP[t.wuxing ?? ""] ?? t.wuxing,
           wuxing: t.wuxing,
           category: t.category,
-          rarity: t.tier === "天命" ? "fate" : t.tier === "傳說" ? "legend" : t.tier === "高階" ? "epic" : t.tier === "中階" ? "rare" : "basic",
-          tier: t.tier,
+          rarity: t.rarity,
           mpCost: t.mpCost,
-          cooldown: 0,
+          cooldown: t.cooldown,
           effectDesc: t.description ?? "",
-          effectValue: 1.0,
-          statusEffect: null,
-          statusChance: 0,
-          targetType: "single",
-          acquireMethod: "shop",
+          effectValue: t.powerPercent / 100,
+          statusEffect: t.statusEffectType !== "none" ? t.statusEffectType : null,
+          statusChance: t.statusEffectChance,
+          targetType: t.targetType,
+          acquireMethod: "catalog",
           comboTags: null,
           isActive: t.isActive ?? 1,
           skillType: t.skillType,
@@ -109,32 +106,30 @@ export const gameSkillSystemRouter = router({
 
       const skills = await db.select({
         agentSkill: agentSkills,
-        catalog: gameSkillCatalog,
+        catalog: gameUnifiedSkillCatalog,
       })
         .from(agentSkills)
-        .innerJoin(gameSkillCatalog, eq(agentSkills.skillId, gameSkillCatalog.skillId))
+        .innerJoin(gameUnifiedSkillCatalog, eq(agentSkills.skillId, gameUnifiedSkillCatalog.skillId))
         .where(eq(agentSkills.agentId, input.agentId))
         .orderBy(agentSkills.acquiredAt);
 
-      // 轉換為前端相容格式
       return skills.map(({ agentSkill, catalog }) => ({
         agentSkill,
         template: {
           id: catalog.skillId,
           name: catalog.name,
-          element: WUXING_MAP[catalog.wuxing] ?? catalog.wuxing,
+          element: WUXING_MAP[catalog.wuxing ?? ""] ?? catalog.wuxing,
           wuxing: catalog.wuxing,
           category: catalog.category,
-          rarity: catalog.tier === "天命" ? "fate" : catalog.tier === "傳說" ? "legend" : catalog.tier === "高階" ? "epic" : catalog.tier === "中階" ? "rare" : "basic",
-          tier: catalog.tier,
+          rarity: catalog.rarity,
           mpCost: catalog.mpCost,
-          cooldown: 0,
+          cooldown: catalog.cooldown,
           effectDesc: catalog.description ?? "",
-          effectValue: 1.0,
-          statusEffect: null as string | null,
-          statusChance: 0,
-          targetType: "single",
-          acquireMethod: "shop",
+          effectValue: catalog.powerPercent / 100,
+          statusEffect: catalog.statusEffectType !== "none" ? catalog.statusEffectType : null as string | null,
+          statusChance: catalog.statusEffectChance,
+          targetType: catalog.targetType,
+          acquireMethod: "catalog",
           comboTags: null as string | null,
           isActive: catalog.isActive ?? 1,
           skillType: catalog.skillType,
@@ -151,10 +146,10 @@ export const gameSkillSystemRouter = router({
 
       const equipped = await db.select({
         agentSkill: agentSkills,
-        catalog: gameSkillCatalog,
+        catalog: gameUnifiedSkillCatalog,
       })
         .from(agentSkills)
-        .innerJoin(gameSkillCatalog, eq(agentSkills.skillId, gameSkillCatalog.skillId))
+        .innerJoin(gameUnifiedSkillCatalog, eq(agentSkills.skillId, gameUnifiedSkillCatalog.skillId))
         .where(and(
           eq(agentSkills.agentId, input.agentId),
           sql`${agentSkills.installedSlot} IS NOT NULL`
@@ -166,13 +161,13 @@ export const gameSkillSystemRouter = router({
         template: {
           id: catalog.skillId,
           name: catalog.name,
-          element: WUXING_MAP[catalog.wuxing] ?? catalog.wuxing,
+          element: WUXING_MAP[catalog.wuxing ?? ""] ?? catalog.wuxing,
           wuxing: catalog.wuxing,
           category: catalog.category,
-          tier: catalog.tier,
+          rarity: catalog.rarity,
           mpCost: catalog.mpCost,
           effectDesc: catalog.description ?? "",
-          effectValue: 1.0,
+          effectValue: catalog.powerPercent / 100,
           skillType: catalog.skillType,
         },
       }));
@@ -224,7 +219,6 @@ export const gameSkillSystemRouter = router({
 
       // BUG-2/3 FIX: 同步更新 gameAgents 的槽位欄位
       if (input.slot !== null && validSlots.has(input.slot)) {
-        // 先清除技能在其他槽位的記錄
         const updateFields: Record<string, any> = { [input.slot]: input.skillId, updatedAt: Date.now() };
         for (const slotKey of ALL_SKILL_SLOTS) {
           if (slotKey !== input.slot && (agent as any)[slotKey] === input.skillId) {
@@ -233,7 +227,6 @@ export const gameSkillSystemRouter = router({
         }
         await db.update(gameAgents).set(updateFields).where(eq(gameAgents.id, input.agentId));
       } else if (input.slot === null) {
-        // 卸下技能：清除 gameAgents 中該技能的槽位
         const updateFields: Record<string, any> = { updatedAt: Date.now() };
         for (const slotKey of ALL_SKILL_SLOTS) {
           if ((agent as any)[slotKey] === input.skillId) {
@@ -255,10 +248,10 @@ export const gameSkillSystemRouter = router({
 
       const books = await db.select({
         book: skillBooks,
-        catalog: gameSkillCatalog,
+        catalog: gameUnifiedSkillCatalog,
       })
         .from(skillBooks)
-        .innerJoin(gameSkillCatalog, eq(skillBooks.skillId, gameSkillCatalog.skillId))
+        .innerJoin(gameUnifiedSkillCatalog, eq(skillBooks.skillId, gameUnifiedSkillCatalog.skillId))
         .where(eq(skillBooks.agentId, input.agentId))
         .orderBy(skillBooks.obtainedAt);
 
@@ -267,10 +260,10 @@ export const gameSkillSystemRouter = router({
         template: {
           id: catalog.skillId,
           name: catalog.name,
-          element: WUXING_MAP[catalog.wuxing] ?? catalog.wuxing,
+          element: WUXING_MAP[catalog.wuxing ?? ""] ?? catalog.wuxing,
           wuxing: catalog.wuxing,
           category: catalog.category,
-          tier: catalog.tier,
+          rarity: catalog.rarity,
           mpCost: catalog.mpCost,
           effectDesc: catalog.description ?? "",
           skillType: catalog.skillType,
@@ -297,9 +290,8 @@ export const gameSkillSystemRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "技能書不存在或數量不足" });
       }
 
-      // 從 game_skill_catalog 查詢技能（正確的表）
-      const [catalog] = await db.select().from(gameSkillCatalog)
-        .where(eq(gameSkillCatalog.skillId, book.skillId));
+      const [catalog] = await db.select().from(gameUnifiedSkillCatalog)
+        .where(eq(gameUnifiedSkillCatalog.skillId, book.skillId));
       if (!catalog) throw new TRPCError({ code: "NOT_FOUND", message: "技能資料不存在（catalog）" });
 
       const [existing] = await db.select().from(agentSkills)
@@ -340,8 +332,8 @@ export const gameSkillSystemRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      const [catalog] = await db.select().from(gameSkillCatalog)
-        .where(eq(gameSkillCatalog.skillId, input.skillId));
+      const [catalog] = await db.select().from(gameUnifiedSkillCatalog)
+        .where(eq(gameUnifiedSkillCatalog.skillId, input.skillId));
       if (!catalog) throw new TRPCError({ code: "NOT_FOUND", message: "技能不存在" });
 
       const [agentSkill] = await db.select().from(agentSkills)
@@ -401,44 +393,54 @@ export const gameSkillSystemRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       return db.select().from(hiddenSkillTrackers)
-        .where(eq(hiddenSkillTrackers.agentId, input.agentId))
-        .orderBy(hiddenSkillTrackers.isUnlocked, hiddenSkillTrackers.currentValue);
+        .where(eq(hiddenSkillTrackers.agentId, input.agentId));
     }),
 
-  // ─── 10. 全服首觸發公告 ────────────────────────────────────────────────────
-  checkGlobalFirstTrigger: protectedProcedure
+  // ─── 10. 觸發隱藏技能 ─────────────────────────────────────────────────────
+  triggerHiddenSkill: protectedProcedure
     .input(z.object({
-      skillId: z.string(),
       agentId: z.number().int(),
-      agentName: z.string(),
-      agentElement: z.string(),
-      agentLevel: z.number().int().optional(),
-      description: z.string(),
+      skillId: z.string(),
+      triggerType: z.string(),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      const [existing] = await db.select().from(globalFirstTriggers)
-        .where(eq(globalFirstTriggers.skillId, input.skillId));
-      if (existing) return { isFirst: false, firstAgentName: existing.firstAgentName };
+      const [catalog] = await db.select().from(gameUnifiedSkillCatalog)
+        .where(eq(gameUnifiedSkillCatalog.skillId, input.skillId));
+      if (!catalog || !isHiddenSkill(catalog)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "非隱藏技能" });
+      }
 
-      await db.insert(globalFirstTriggers).values({
+      const [existing] = await db.select().from(agentSkills)
+        .where(and(
+          eq(agentSkills.agentId, input.agentId),
+          eq(agentSkills.skillId, input.skillId)
+        ));
+      if (existing) return { success: true, alreadyUnlocked: true, skillName: catalog.name };
+
+      await db.insert(agentSkills).values({
+        agentId: input.agentId,
         skillId: input.skillId,
-        firstAgentId: input.agentId,
-        firstAgentName: input.agentName,
+        awakeTier: 0,
+        useCount: 0,
       });
 
-      broadcastLiveFeed({
-        feedType: "world_event",
-        agentName: input.agentName,
-        agentElement: input.agentElement,
-        agentLevel: input.agentLevel,
-        detail: `🌟 天命首觸發！${input.agentName} ${input.description}`,
-        icon: "🌟",
-        targetPath: "/game/skills",
-      });
+      // 全服首次觸發
+      const [firstTrigger] = await db.select().from(globalFirstTriggers)
+        .where(eq(globalFirstTriggers.skillId, input.skillId));
+      let isGlobalFirst = false;
+      if (!firstTrigger) {
+        await db.insert(globalFirstTriggers).values({
+          skillId: input.skillId,
+          agentId: input.agentId,
+          triggeredAt: Date.now(),
+        });
+        isGlobalFirst = true;
+        broadcastLiveFeed(`🌟 全服首次觸發隱藏技能「${catalog.name}」！`);
+      }
 
-      return { isFirst: true, firstAgentName: input.agentName };
+      return { success: true, alreadyUnlocked: false, skillName: catalog.name, isGlobalFirst };
     }),
 });

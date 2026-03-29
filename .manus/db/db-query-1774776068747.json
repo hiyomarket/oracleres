@@ -1,0 +1,40 @@
+{
+  "query": "SELECT monster_id, skill_id_1, skill_id_2, skill_id_3 FROM game_monster_catalog LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id, skill_id_1, skill_id_2, skill_id_3 FROM game_monster_catalog LIMIT 5;",
+  "rows": [
+    {
+      "monster_id": "M_E001",
+      "skill_id_1": "SK_M024",
+      "skill_id_2": "SK_M036",
+      "skill_id_3": ""
+    },
+    {
+      "monster_id": "M_E002",
+      "skill_id_1": "SK_M024",
+      "skill_id_2": "SK_M036",
+      "skill_id_3": ""
+    },
+    {
+      "monster_id": "M_E003",
+      "skill_id_1": "SK_M024",
+      "skill_id_2": "SK_M036",
+      "skill_id_3": ""
+    },
+    {
+      "monster_id": "M_E004",
+      "skill_id_1": "SK_M024",
+      "skill_id_2": "SK_M036",
+      "skill_id_3": ""
+    },
+    {
+      "monster_id": "M_E005",
+      "skill_id_1": "SK_M024",
+      "skill_id_2": "SK_M036",
+      "skill_id_3": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "monster_id\tskill_id_1\tskill_id_2\tskill_id_3\nM_E001\tSK_M024\tSK_M036\t\nM_E002\tSK_M024\tSK_M036\t\nM_E003\tSK_M024\tSK_M036\t\nM_E004\tSK_M024\tSK_M036\t\nM_E005\tSK_M024\tSK_M036\t\n",
+  "stderr": "",
+  "execution_time_ms": 1556
+}

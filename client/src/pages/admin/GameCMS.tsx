@@ -493,9 +493,9 @@ export default function GameCMS() {
             <TabsTrigger value="catalog-monsters">🐉 魔物建製</TabsTrigger>
             <TabsTrigger value="catalog-items">🎒 道具圖鑑</TabsTrigger>
             <TabsTrigger value="catalog-equipment">⚔️ 裝備圖鑑</TabsTrigger>
-            <TabsTrigger value="catalog-skills">✨ 技能圖鑑</TabsTrigger>
+            <TabsTrigger value="catalog-skills">✨ 統一技能</TabsTrigger>
             <TabsTrigger value="catalog-achievements">🏆 成就系統</TabsTrigger>
-            <TabsTrigger value="catalog-monster-skills">🐲 魔物技能</TabsTrigger>
+            <TabsTrigger value="catalog-monster-skills">🐲 魔物技能(已合併)</TabsTrigger>
             <TabsTrigger value="catalog-stats">📊 圖鑑統計</TabsTrigger>
             <TabsTrigger value="balance">⚖️ 數值平衡</TabsTrigger>
             <TabsTrigger value="ai-tools">🤖 AI 工具</TabsTrigger>

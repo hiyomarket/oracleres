@@ -1,0 +1,26 @@
+{
+  "query": "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_agents' AND COLUMN_NAME LIKE '%skill%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_agents' AND COLUMN_NAME LIKE '%skill%';",
+  "rows": [
+    {
+      "COLUMN_NAME": "skill_slot_1",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "skill_slot_2",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "skill_slot_3",
+      "DATA_TYPE": "varchar"
+    },
+    {
+      "COLUMN_NAME": "skill_slot_4",
+      "DATA_TYPE": "varchar"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\tDATA_TYPE\nskill_slot_1\tvarchar\nskill_slot_2\tvarchar\nskill_slot_3\tvarchar\nskill_slot_4\tvarchar\n",
+  "stderr": "",
+  "execution_time_ms": 1540
+}

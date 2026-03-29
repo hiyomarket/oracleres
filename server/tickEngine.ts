@@ -9,7 +9,7 @@ import { checkAchievements, seedAchievements } from "./achievementEngine";
 import { broadcastToAll, sendToAgent } from "./wsServer";
 import { broadcastLevelUp, broadcastLegendaryDrop, broadcastAchievementUnlock } from "./liveFeedBroadcast";
 import { calcSkillCombo, updateHiddenSkillTracker } from "./skillComboEngine";
-import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates, gameRogueEvents, gameVirtualShop, gameSpiritShop, gameItemCatalog, gameLearnedQuestSkills, gameQuestSkillCatalog } from "../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, monsterDropTables, agentDropCounters, equipmentTemplates, gameRogueEvents, gameVirtualShop, gameSpiritShop, gameItemCatalog, gameLearnedQuestSkills, gameUnifiedSkillCatalog } from "../drizzle/schema";
 import { processHiddenEvents } from "./hiddenEventEngine";
 import { getEngineConfig, getMultipliers, getEventChances, getTickIntervalMs, getInfuseConfig } from "./gameEngineConfig";
 import { eq, and, sql } from "drizzle-orm";
@@ -32,7 +32,7 @@ import { getCombatMonstersForNode, invalidateMonsterCache, type CombatMonster, t
 import { gamePlayerPets, gamePetCatalog, gamePetInnateSkills, gamePetLearnedSkills, gamePetBpHistory } from "../drizzle/schema";
 import { petSkillsToCombatFormat, calcPetBattleExp, calcPetExpToNext, levelUpBP, calcPetStats, RACE_HP_MULTIPLIER, calcCaptureRate, calcAfkBpGain, AFK_BP_DAILY_CAP, recalcReasonableBP } from "./services/petEngine";
 import { getAutoLearnSkills, type SkillTier } from "./services/skillLearningEngine";
-import { agentSkills, gameSkillCatalog } from "../drizzle/schema";
+import { agentSkills, gameUnifiedSkillCatalog } from "../drizzle/schema";
 
 // ─── 工具函數 ───
 function randInt(min: number, max: number): number {
@@ -1795,7 +1795,7 @@ async function processCombatEvent(
     onDefend?: boolean; buff?: any; absorb?: any; shield?: any; taunt?: any;
   }> = [];
   try {
-    const { agentSkills, gameSkillCatalog } = await import("../drizzle/schema");
+    const { agentSkills, gameUnifiedSkillCatalog } = await import("../drizzle/schema");
     const { eq } = await import("drizzle-orm");
     const installedSkills = await db
       .select({ id: agentSkills.skillId, installedSlot: agentSkills.installedSlot })
@@ -1805,14 +1805,14 @@ async function processCombatEvent(
     if (installedIds.length > 0) {
       const { inArray } = await import("drizzle-orm");
       const skillData = await db.select({
-        id: gameSkillCatalog.skillId,
-        name: gameSkillCatalog.name,
-        skillType: gameSkillCatalog.category,
-        damageMultiplier: gameSkillCatalog.powerPercent,
-        mpCost: gameSkillCatalog.mpCost,
-        wuxing: gameSkillCatalog.wuxing,
-        cooldown: gameSkillCatalog.cooldown,
-      }).from(gameSkillCatalog).where(inArray(gameSkillCatalog.skillId, installedIds));
+        id: gameUnifiedSkillCatalog.skillId,
+        name: gameUnifiedSkillCatalog.name,
+        skillType: gameUnifiedSkillCatalog.category,
+        damageMultiplier: gameUnifiedSkillCatalog.powerPercent,
+        mpCost: gameUnifiedSkillCatalog.mpCost,
+        wuxing: gameUnifiedSkillCatalog.wuxing,
+        cooldown: gameUnifiedSkillCatalog.cooldown,
+      }).from(gameUnifiedSkillCatalog).where(inArray(gameUnifiedSkillCatalog.skillId, installedIds));
       equippedSkillsForCombat = skillData.map(s => ({
         id: s.id,
         name: s.name,
@@ -1843,19 +1843,19 @@ async function processCombatEvent(
     const questSkillIds = equippedQuestSkills.map(s => s.skillId);
     if (questSkillIds.length > 0) {
       const questSkillData = await db.select({
-        id: gameQuestSkillCatalog.id,
-        name: gameQuestSkillCatalog.name,
-        category: gameQuestSkillCatalog.category,
-        skillType: gameQuestSkillCatalog.skillType,
-        powerPercent: gameQuestSkillCatalog.powerPercent,
-        mpCost: gameQuestSkillCatalog.mpCost,
-        cooldown: gameQuestSkillCatalog.cooldown,
-        wuxing: gameQuestSkillCatalog.wuxing,
-        additionalEffect: gameQuestSkillCatalog.additionalEffect,
-        specialMechanic: gameQuestSkillCatalog.specialMechanic,
-        targetType: gameQuestSkillCatalog.targetType,
-        scaleStat: gameQuestSkillCatalog.scaleStat,
-      }).from(gameQuestSkillCatalog).where(inArray(gameQuestSkillCatalog.id, questSkillIds));
+        id: gameUnifiedSkillCatalog.id,
+        name: gameUnifiedSkillCatalog.name,
+        category: gameUnifiedSkillCatalog.category,
+        skillType: gameUnifiedSkillCatalog.skillType,
+        powerPercent: gameUnifiedSkillCatalog.powerPercent,
+        mpCost: gameUnifiedSkillCatalog.mpCost,
+        cooldown: gameUnifiedSkillCatalog.cooldown,
+        wuxing: gameUnifiedSkillCatalog.wuxing,
+        additionalEffect: gameUnifiedSkillCatalog.additionalEffect,
+        specialMechanic: gameUnifiedSkillCatalog.specialMechanic,
+        targetType: gameUnifiedSkillCatalog.targetType,
+        scaleStat: gameUnifiedSkillCatalog.scaleStat,
+      }).from(gameUnifiedSkillCatalog).where(inArray(gameUnifiedSkillCatalog.id, questSkillIds));
       for (const qs of questSkillData) {
         // 將天命考核技能轉換為戰鬥技能格式（v2.0：完整戰鬥機制映射）
         const mappedType = qs.skillType === "attack" ? "attack" :
@@ -2033,14 +2033,14 @@ async function processCombatEvent(
     try {
       // 查詢所有 levelup 類型的技能
       const allLevelupSkills = await db.select({
-        skillId: gameSkillCatalog.skillId,
-        learnLevel: gameSkillCatalog.learnLevel,
-        skillTier: gameSkillCatalog.skillTier,
-        wuxing: gameSkillCatalog.wuxing,
-        professionRequired: gameSkillCatalog.professionRequired,
-        acquireMethod: gameSkillCatalog.acquireMethod,
-      }).from(gameSkillCatalog)
-        .where(eq(gameSkillCatalog.isActive, 1));
+        skillId: gameUnifiedSkillCatalog.skillId,
+        prerequisiteLevel: gameUnifiedSkillCatalog.prerequisiteLevel,
+        rarity: gameUnifiedSkillCatalog.rarity,
+        wuxing: gameUnifiedSkillCatalog.wuxing,
+        category: gameUnifiedSkillCatalog.category,
+        usableByPlayer: gameUnifiedSkillCatalog.usableByPlayer,
+      }).from(gameUnifiedSkillCatalog)
+        .where(and(eq(gameUnifiedSkillCatalog.isActive, 1), eq(gameUnifiedSkillCatalog.usableByPlayer, 1)));
 
       // 查詢已學技能
       const learnedSkills = await db.select({ skillId: agentSkills.skillId })

@@ -7,7 +7,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
-import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameSkillCatalog, gamePetInnateSkills, gamePetLearnedSkills, roamingBossInstances, roamingBossCatalog, gameParties, gameMonsterCatalog, gameEquipmentCatalog } from "../../drizzle/schema";
+import { gameAgents, gamePlayerPets, gamePetCatalog, gameBattles, gameBattleParticipants, gameBattleCommands, gameBattleLogs, gameIdleSessions, agentInventory, gamePetBpHistory, gameLearnedQuestSkills, gameQuestSkillCatalog, gameItemCatalog, agentSkills, gameUnifiedSkillCatalog, gamePetInnateSkills, gamePetLearnedSkills, roamingBossInstances, roamingBossCatalog, gameParties, gameMonsterCatalog, gameEquipmentCatalog } from "../../drizzle/schema";
 import { sql, inArray } from "drizzle-orm";
 import { eq, and, desc, isNull } from "drizzle-orm";
 import { calcCharacterStatsV2 } from "../services/balanceFormulas";
@@ -346,16 +346,16 @@ export const gameBattleRouter = router({
       let normalCombatSkills: import("../services/combatEngineV2").CombatSkill[] = [];
       if (agentSkillIds.length > 0) {
         const skillData = await db.select({
-          skillId: gameSkillCatalog.skillId,
-          name: gameSkillCatalog.name,
-          category: gameSkillCatalog.category,
-          skillType: gameSkillCatalog.skillType,
-          wuxing: gameSkillCatalog.wuxing,
-          mpCost: gameSkillCatalog.mpCost,
-          cooldown: gameSkillCatalog.cooldown,
-          powerPercent: gameSkillCatalog.powerPercent,
-          damageType: gameSkillCatalog.damageType,
-        }).from(gameSkillCatalog).where(inArray(gameSkillCatalog.skillId, agentSkillIds));
+          skillId: gameUnifiedSkillCatalog.skillId,
+          name: gameUnifiedSkillCatalog.name,
+          category: gameUnifiedSkillCatalog.category,
+          skillType: gameUnifiedSkillCatalog.skillType,
+          wuxing: gameUnifiedSkillCatalog.wuxing,
+          mpCost: gameUnifiedSkillCatalog.mpCost,
+          cooldown: gameUnifiedSkillCatalog.cooldown,
+          powerPercent: gameUnifiedSkillCatalog.powerPercent,
+          targetType: gameUnifiedSkillCatalog.targetType,
+        }).from(gameUnifiedSkillCatalog).where(inArray(gameUnifiedSkillCatalog.skillId, agentSkillIds));
         normalCombatSkills = skillData.map(sk => {
           const equipped = equippedAgentSkills.find(e => e.skillId === sk.skillId);
           const mappedType = sk.skillType === "heal" ? "heal" :

@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE game_unified_skill_catalog ADD COLUMN skill_id VARCHAR(20) DEFAULT '' AFTER code;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute ALTER TABLE game_unified_skill_catalog ADD COLUMN skill_id VARCHAR(20) DEFAULT '' AFTER code;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1734
+}

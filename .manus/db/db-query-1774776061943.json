@@ -1,0 +1,16 @@
+{
+  "query": "SELECT COUNT(*) as total, COUNT(skill_id_1) as has_skill1, COUNT(skill_id_2) as has_skill2, COUNT(skill_id_3) as has_skill3 FROM game_monster_catalog;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total, COUNT(skill_id_1) as has_skill1, COUNT(skill_id_2) as has_skill2, COUNT(skill_id_3) as has_skill3 FROM game_monster_catalog;",
+  "rows": [
+    {
+      "total": "201",
+      "has_skill1": "201",
+      "has_skill2": "201",
+      "has_skill3": "201"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\thas_skill1\thas_skill2\thas_skill3\n201\t201\t201\t201\n",
+  "stderr": "",
+  "execution_time_ms": 1482
+}

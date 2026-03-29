@@ -1,0 +1,64 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_player_pets' AND ORDINAL_POSITION > 20 ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'game_player_pets' AND ORDINAL_POSITION > 20 ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "growth_type"
+    },
+    {
+      "COLUMN_NAME": "is_active"
+    },
+    {
+      "COLUMN_NAME": "friendship"
+    },
+    {
+      "COLUMN_NAME": "captured_at"
+    },
+    {
+      "COLUMN_NAME": "updated_at"
+    },
+    {
+      "COLUMN_NAME": "bp_unallocated"
+    },
+    {
+      "COLUMN_NAME": "magic_defense"
+    },
+    {
+      "COLUMN_NAME": "heal_power"
+    },
+    {
+      "COLUMN_NAME": "wuxing_wood"
+    },
+    {
+      "COLUMN_NAME": "wuxing_fire"
+    },
+    {
+      "COLUMN_NAME": "wuxing_earth"
+    },
+    {
+      "COLUMN_NAME": "wuxing_metal"
+    },
+    {
+      "COLUMN_NAME": "wuxing_water"
+    },
+    {
+      "COLUMN_NAME": "species"
+    },
+    {
+      "COLUMN_NAME": "realm"
+    },
+    {
+      "COLUMN_NAME": "crit_rate"
+    },
+    {
+      "COLUMN_NAME": "crit_damage"
+    },
+    {
+      "COLUMN_NAME": "spr"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\ngrowth_type\nis_active\nfriendship\ncaptured_at\nupdated_at\nbp_unallocated\nmagic_defense\nheal_power\nwuxing_wood\nwuxing_fire\nwuxing_earth\nwuxing_metal\nwuxing_water\nspecies\nrealm\ncrit_rate\ncrit_damage\nspr\n",
+  "stderr": "",
+  "execution_time_ms": 1538
+}

@@ -7,7 +7,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserProfileForEngine } from "../db";
-import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, hiddenShopInstances, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements, agentSkills, gameConfig, gameShopPurchaseLog } from "../../drizzle/schema";
+import { gameAgents, agentEvents, gameWorld, agentInventory, gameHiddenEvents, agentTitles, gameTitles, gameUnifiedSkillCatalog, gameItemCatalog, gameEquipmentCatalog, gameMonsterCatalog, gameVirtualShop, gameSpiritShop, gameHiddenShopPool, hiddenShopInstances, users, equipmentTemplates, agentDropCounters, gameBroadcast, pvpChallenges, chatMessages, agentPvpStats, achievements, agentAchievements, agentSkills, gameConfig, gameShopPurchaseLog } from "../../drizzle/schema";
 import { TRPCError } from "@trpc/server";
 import { eq, and, desc, gt, lt, sql, count, asc, inArray, like } from "drizzle-orm";
 import { MAP_NODES, MAP_NODE_MAP } from "../../shared/mapNodes";
@@ -1651,7 +1651,7 @@ export const gameWorldRouter = router({
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) return [];
-      const rows = await db.select().from(gameSkillCatalog).orderBy(gameSkillCatalog.skillId);
+      const rows = await db.select().from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.usableByPlayer, 1)).orderBy(gameUnifiedSkillCatalog.skillId);
       let result = rows;
       if (input?.wuxing) result = result.filter(r => r.wuxing === input.wuxing);
       if (input?.category) result = result.filter(r => r.category === input.category);
@@ -1760,8 +1760,8 @@ export const gameWorldRouter = router({
         .where(and(eq(agentSkills.agentId, agent.id), eq(agentSkills.skillId, skillId))).limit(1);
       if (already[0]) throw new TRPCError({ code: "CONFLICT", message: "已習得此技能，無需重複學習" });
       // 查詢技能名稱
-      const [skillCatalog] = await db.select().from(gameSkillCatalog)
-        .where(eq(gameSkillCatalog.skillId, skillId)).limit(1);
+      const [skillCatalog] = await db.select().from(gameUnifiedSkillCatalog)
+        .where(eq(gameUnifiedSkillCatalog.skillId, skillId)).limit(1);
       const skillName = skillCatalog?.name ?? skillId;
       // 寫入 agentSkills
       await db.insert(agentSkills).values({
@@ -3022,11 +3022,11 @@ export const gameWorldRouter = router({
       }
 
       if (isSkill) {
-        const rows = await db.select().from(gameSkillCatalog)
-          .where(eq(gameSkillCatalog.skillId, key)).limit(1);
+        const rows = await db.select().from(gameUnifiedSkillCatalog)
+          .where(eq(gameUnifiedSkillCatalog.skillId, key)).limit(1);
         if (rows[0]) return { type: "skill" as const, data: rows[0] };
-        const byName = await db.select().from(gameSkillCatalog)
-          .where(like(gameSkillCatalog.name, `%${key}%`)).limit(1);
+        const byName = await db.select().from(gameUnifiedSkillCatalog)
+          .where(like(gameUnifiedSkillCatalog.name, `%${key}%`)).limit(1);
         return { type: "skill" as const, data: byName[0] ?? null };
       }
 
@@ -3287,12 +3287,12 @@ export const gameWorldRouter = router({
       try {
         const { getProfessionUnlockSkills } = await import("../services/skillLearningEngine");
         const allSkills = await db.select({
-          skillId: gameSkillCatalog.skillId,
-          professionRequired: gameSkillCatalog.professionRequired,
-          acquireMethod: gameSkillCatalog.acquireMethod,
-          learnLevel: gameSkillCatalog.learnLevel,
-          skillTier: gameSkillCatalog.skillTier,
-        }).from(gameSkillCatalog).where(eq(gameSkillCatalog.isActive, 1));
+          skillId: gameUnifiedSkillCatalog.skillId,
+          category: gameUnifiedSkillCatalog.category,
+          rarity: gameUnifiedSkillCatalog.rarity,
+          prerequisiteLevel: gameUnifiedSkillCatalog.prerequisiteLevel,
+          usableByPlayer: gameUnifiedSkillCatalog.usableByPlayer,
+        }).from(gameUnifiedSkillCatalog).where(and(eq(gameUnifiedSkillCatalog.isActive, 1), eq(gameUnifiedSkillCatalog.usableByPlayer, 1)));
 
         const learnedSkills = await db.select({ skillId: agentSkills.skillId })
           .from(agentSkills)

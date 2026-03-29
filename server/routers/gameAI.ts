@@ -12,12 +12,11 @@ import {
   gameMonsterCatalog,
   gameItemCatalog,
   gameEquipmentCatalog,
-  gameSkillCatalog,
   gameAchievements,
   gameVirtualShop,
   gameSpiritShop,
   gameHiddenShopPool,
-  gameMonsterSkillCatalog,
+  gameUnifiedSkillCatalog,
   gameNpcCatalog,
   gameQuestSkillCatalog,
   gameQuestSteps,
@@ -87,10 +86,10 @@ async function generateAchievementId(db: any): Promise<string> {
 // ===== 魔物技能 ID 生成器 =====
 async function generateNextMonsterSkillId(db: any): Promise<string> {
   const rows = await db
-    .select({ id: gameMonsterSkillCatalog.monsterSkillId })
-    .from(gameMonsterSkillCatalog)
-    .where(like(gameMonsterSkillCatalog.monsterSkillId, "SK_M%"))
-    .orderBy(desc(gameMonsterSkillCatalog.monsterSkillId))
+    .select({ id: gameUnifiedSkillCatalog.skillId })
+    .from(gameUnifiedSkillCatalog)
+    .where(like(gameUnifiedSkillCatalog.skillId, "SK_M%"))
+    .orderBy(desc(gameUnifiedSkillCatalog.skillId))
     .limit(1);
   let nextNum = 1;
   if (rows.length > 0) {
@@ -152,20 +151,15 @@ export const gameAIRouter = router({
 
       // 取得所有啟用的技能（含價值評估欄位）
       const allSkills = await db.select({
-        skillId: gameSkillCatalog.skillId,
-        name: gameSkillCatalog.name,
-        rarity: gameSkillCatalog.rarity,
-        wuxing: gameSkillCatalog.wuxing,
-        category: gameSkillCatalog.category,
-        shopPrice: gameSkillCatalog.shopPrice,
-        acquireType: gameSkillCatalog.acquireType,
-        tier: gameSkillCatalog.tier,
-        valueScore: gameSkillCatalog.valueScore,
-        qualityGrade: gameSkillCatalog.qualityGrade,
-        inNormalShop: gameSkillCatalog.inNormalShop,
-        inSpiritShop: gameSkillCatalog.inSpiritShop,
-        inSecretShop: gameSkillCatalog.inSecretShop,
-      }).from(gameSkillCatalog).where(sql`is_active = 1`);
+        skillId: gameUnifiedSkillCatalog.skillId,
+        name: gameUnifiedSkillCatalog.name,
+        rarity: gameUnifiedSkillCatalog.rarity,
+        wuxing: gameUnifiedSkillCatalog.wuxing,
+        category: gameUnifiedSkillCatalog.category,
+        powerPercent: gameUnifiedSkillCatalog.powerPercent,
+        mpCost: gameUnifiedSkillCatalog.mpCost,
+        skillType: gameUnifiedSkillCatalog.skillType,
+      }).from(gameUnifiedSkillCatalog).where(sql`is_active = 1`);
 
       // 合併成商品池，加入 ValueEngine 流通權限和正確定價
       const allProducts = [
@@ -425,7 +419,7 @@ ${productListStr}
           };
         }
       } else if (catalogType === "skill") {
-        const rows = await db.select({ name: gameSkillCatalog.name, power: gameSkillCatalog.powerPercent }).from(gameSkillCatalog);
+        const rows = await db.select({ name: gameUnifiedSkillCatalog.name, power: gameUnifiedSkillCatalog.powerPercent }).from(gameUnifiedSkillCatalog);
         existingNames = rows.map(r => r.name);
         if (rows.length > 0) {
           existingStats = {
@@ -783,7 +777,7 @@ ${getValueEngineRulesForAI()}
               skillType: item.skillType || "attack",
             }, auditSkill);
             const wuxing = item.wuxing || "木";
-            const skillId = await generateNextId(db, gameSkillCatalog, gameSkillCatalog.skillId, "S", wuxing);
+            const skillId = await generateNextId(db, gameUnifiedSkillCatalog, gameUnifiedSkillCatalog.skillId, "USK", wuxing);
             // ValueEngine 評估
             const skillEval = evaluateSkill({
               tier: item.tier || "初階",
@@ -795,28 +789,24 @@ ${getValueEngineRulesForAI()}
               learnLevel: Math.min(60, Math.max(1, item.learnLevel || 1)),
               description: item.description || "",
             });
-            await db.insert(gameSkillCatalog).values({
+            await db.insert(gameUnifiedSkillCatalog).values({
               skillId,
+              code: skillId,
               name: item.name,
               wuxing,
-              category: item.category || "active_combat",
+              category: item.category || "physical",
               rarity: skillEval.correctedRarity,
-              tier: item.tier || "初階",
               mpCost: fs.mpCost,
               cooldown: fs.cooldown,
               powerPercent: fs.powerPercent,
-              learnLevel: Math.min(60, Math.max(1, item.learnLevel || 1)),
-              acquireType: item.acquireType || "shop",
-              shopPrice: skillEval.suggestedCoinPrice,
+              prerequisiteLevel: Math.min(60, Math.max(1, item.learnLevel || 1)),
               description: item.description || "",
               skillType: item.skillType || "attack",
-              valueScore: skillEval.valueScore,
-              qualityGrade: skillEval.qualityGrade,
-              inNormalShop: skillEval.tradeRules.normalShop ? 1 : 0,
-              inSpiritShop: skillEval.tradeRules.spiritShop ? 1 : 0,
-              inSecretShop: skillEval.tradeRules.secretShop ? 1 : 0,
+              usableByPlayer: 1,
+              usableByMonster: 0,
               isActive: 1,
               createdAt: Date.now(),
+              updatedAt: Date.now(),
             });
             insertedNames.push(item.name);
             insertedCount++;
@@ -877,7 +867,7 @@ ${getValueEngineRulesForAI()}
       if (!monster) throw new TRPCError({ code: "NOT_FOUND", message: "找不到該魔物" });
 
       // 取得現有魔物技能名稱（避免重複）
-      const existingSkills = await db.select({ name: gameMonsterSkillCatalog.name }).from(gameMonsterSkillCatalog);
+      const existingSkills = await db.select({ name: gameUnifiedSkillCatalog.name }).from(gameUnifiedSkillCatalog);
       const existingNames = existingSkills.map(s => s.name);
 
       // 決定技能數量：common=1, rare=2, epic=2-3, boss/legendary=3
@@ -941,8 +931,8 @@ HP：${monster.baseHp}, ATK：${monster.baseAttack}, DEF：${monster.baseDefense
         if (!skill.name || existingNames.includes(skill.name)) continue;
         // 生成技能 ID
         const nextId = await generateNextMonsterSkillId(db);
-        await db.insert(gameMonsterSkillCatalog).values({
-          monsterSkillId: nextId,
+        await db.insert(gameUnifiedSkillCatalog).values({
+          skillId: nextId,
           name: skill.name,
           wuxing: skill.wuxing || monster.wuxing,
           skillType: skill.skillType || "attack",
@@ -994,7 +984,7 @@ HP：${monster.baseHp}, ATK：${monster.baseAttack}, DEF：${monster.baseDefense
       }
 
       // 取得現有技能名稱
-      const existingSkills = await db.select({ name: gameMonsterSkillCatalog.name }).from(gameMonsterSkillCatalog);
+      const existingSkills = await db.select({ name: gameUnifiedSkillCatalog.name }).from(gameUnifiedSkillCatalog);
       const existingNames = existingSkills.map(s => s.name);
 
       // 批量生成（每次最多處理 10 隻）
@@ -1049,8 +1039,8 @@ ${monsterDescriptions}
           if (!skill.name || existingNames.includes(skill.name)) continue;
           const nextId = await generateNextMonsterSkillId(db);
           try {
-            await db.insert(gameMonsterSkillCatalog).values({
-              monsterSkillId: nextId,
+            await db.insert(gameUnifiedSkillCatalog).values({
+              skillId: nextId,
               name: skill.name,
               wuxing: skill.wuxing || monster.wuxing,
               skillType: skill.skillType || "attack",
@@ -1155,15 +1145,16 @@ ${monsterDescriptions}
       }
 
       if (catalogType === "skill") {
-        const [original] = await db.select().from(gameSkillCatalog).where(eq(gameSkillCatalog.id, id));
+        const [original] = await db.select().from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.id, id));
         if (!original) throw new TRPCError({ code: "NOT_FOUND" });
-        const newId = await generateNextId(db, gameSkillCatalog, gameSkillCatalog.skillId, "S", original.wuxing);
-        const { id: _id, skillId: _sid, createdAt: _ca, ...rest } = original;
-        await db.insert(gameSkillCatalog).values({
+        const newId = await generateNextId(db, gameUnifiedSkillCatalog, gameUnifiedSkillCatalog.skillId, "USK", original.wuxing ?? "無");
+        const { id: _id, skillId: _sid, createdAt: _ca, updatedAt: _ua, ...rest } = original;
+        await db.insert(gameUnifiedSkillCatalog).values({
           ...rest,
           skillId: newId,
           name: `${original.name}（複製）`,
           createdAt: Date.now(),
+          updatedAt: Date.now(),
         });
         return { success: true, newId, message: `已複製技能「${original.name}」` };
       }
@@ -1183,13 +1174,13 @@ ${monsterDescriptions}
       }
 
       if (catalogType === "monsterSkill") {
-        const [original] = await db.select().from(gameMonsterSkillCatalog).where(eq(gameMonsterSkillCatalog.id, id));
+        const [original] = await db.select().from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.id, id));
         if (!original) throw new TRPCError({ code: "NOT_FOUND" });
         const newId = await generateNextMonsterSkillId(db);
-        const { id: _id, monsterSkillId: _msid, createdAt: _ca, ...rest } = original;
-        await db.insert(gameMonsterSkillCatalog).values({
+        const { id: _id, skillId: _msid, createdAt: _ca, ...rest } = original;
+        await db.insert(gameUnifiedSkillCatalog).values({
           ...rest,
-          monsterSkillId: newId,
+          skillId: newId,
           name: `${original.name}（複製）`,
           createdAt: Date.now(),
         });
@@ -2294,16 +2285,16 @@ ${petDescriptions}
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
-      const [skill] = await db.select().from(gameSkillCatalog).where(eq(gameSkillCatalog.skillId, input.skillId));
+      const [skill] = await db.select().from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.skillId, input.skillId));
       if (!skill) throw new TRPCError({ code: "NOT_FOUND", message: "技能不存在" });
 
-      const prompt = input.customPrompt || skillCardPrompt({ ...skill, skillType: skill.category || "attack", tier: parseInt(skill.tier) || 1 });
+      const prompt = input.customPrompt || skillCardPrompt({ ...skill, skillType: skill.category || "attack", tier: 1 });
 
       const { url } = await generateImage({ prompt });
       if (!url) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "圖片生成失敗" });
 
-      await db.update(gameSkillCatalog).set({ imageUrl: url })
-        .where(eq(gameSkillCatalog.skillId, skill.skillId));
+      await db.update(gameUnifiedSkillCatalog).set({ iconUrl: url })
+        .where(eq(gameUnifiedSkillCatalog.skillId, skill.skillId));
 
       return { success: true, imageUrl: url, name: skill.name };
     }),
@@ -2362,18 +2353,18 @@ ${petDescriptions}
           } catch (e) { console.error(`生成裝備圖片失敗: ${equip.name}`, e); }
         }
       } else if (input.type === "skill") {
-        const skills = await db.select().from(gameSkillCatalog)
-          .where(eq(gameSkillCatalog.isActive, 1)).limit(500);
+        const skills = await db.select().from(gameUnifiedSkillCatalog)
+          .where(eq(gameUnifiedSkillCatalog.isActive, 1)).limit(500);
         const targets = input.forceRegenerate
           ? skills.slice(0, input.limit)
-          : skills.filter(s => !s.imageUrl).slice(0, input.limit);
+          : skills.filter(s => !s.iconUrl).slice(0, input.limit);
         for (const skill of targets) {
           try {
-            const prompt = skillCardPrompt({ ...skill, skillType: skill.category || "attack", tier: parseInt(skill.tier) || 1 });
+            const prompt = skillCardPrompt({ ...skill, skillType: skill.category || "attack", tier: 1 });
             const { url } = await generateImage({ prompt });
             if (url) {
-              await db.update(gameSkillCatalog).set({ imageUrl: url })
-                .where(eq(gameSkillCatalog.skillId, skill.skillId));
+              await db.update(gameUnifiedSkillCatalog).set({ iconUrl: url })
+                .where(eq(gameUnifiedSkillCatalog.skillId, skill.skillId));
               results.push({ id: skill.skillId, name: skill.name, imageUrl: url });
             }
           } catch (e) { console.error(`生成技能圖片失敗: ${skill.name}`, e); }

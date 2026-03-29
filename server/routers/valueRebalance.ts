@@ -10,7 +10,7 @@ import { eq, and, between } from "drizzle-orm";
 import {
   gameItemCatalog,
   gameEquipmentCatalog,
-  gameSkillCatalog,
+  gameUnifiedSkillCatalog,
   gameMonsterCatalog,
   monsterDropTables,
 } from "../../drizzle/schema";
@@ -37,7 +37,7 @@ export const valueRebalanceRouter = router({
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
     const items = await db.select().from(gameItemCatalog).where(eq(gameItemCatalog.isActive, 1));
     const equips = await db.select().from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.isActive, 1));
-    const skills = await db.select().from(gameSkillCatalog).where(eq(gameSkillCatalog.isActive, 1));
+    const skills = await db.select().from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.isActive, 1));
 
     const itemResults = items.map(item => {
       const result = evaluateItem({
@@ -272,52 +272,35 @@ export const valueRebalanceRouter = router({
     }
 
     // 3. 更新技能
-    const skills = await db.select().from(gameSkillCatalog).where(eq(gameSkillCatalog.isActive, 1));
+    const skills = await db.select().from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.isActive, 1));
     for (const skill of skills) {
       const realStats = parseSkillRealStats({
         powerPercent: skill.powerPercent,
         mpCost: skill.mpCost,
         cooldown: skill.cooldown,
-        tier: skill.tier,
+        tier: skill.category,
         skillType: skill.skillType,
         description: skill.description,
       });
       const result = evaluateSkill({
-        tier: skill.tier,
+        tier: skill.category,
         rarity: skill.rarity,
         skillType: skill.skillType,
         powerPercent: realStats.powerPercent,
         mpCost: realStats.mpCost,
         cooldown: realStats.cooldown,
-        learnLevel: skill.learnLevel,
+        learnLevel: skill.prerequisiteLevel ?? 1,
         description: skill.description,
       });
 
-      // 根據稀有度設定 acquireType
-      let acquireType = skill.acquireType;
-      if (result.correctedRarity === "legendary") {
-        acquireType = "quest"; // 傳說級只能通過任務獲得
-      }
-
-      await db.update(gameSkillCatalog)
+      await db.update(gameUnifiedSkillCatalog)
         .set({
           rarity: result.correctedRarity,
           powerPercent: realStats.powerPercent,
           mpCost: realStats.mpCost,
           cooldown: realStats.cooldown,
-          shopPrice: result.suggestedCoinPrice,
-          valueScore: result.valueScore,
-          qualityGrade: result.qualityGrade,
-          dropLevelMin: result.dropLevelRange[0],
-          dropLevelMax: result.dropLevelRange[1],
-          tradeable: result.tradeRules.tradeable ? 1 : 0,
-          inNormalShop: result.tradeRules.normalShop ? 1 : 0,
-          inSpiritShop: result.tradeRules.spiritShop ? 1 : 0,
-          inSecretShop: result.tradeRules.secretShop ? 1 : 0,
-          inAuctionHouse: result.tradeRules.auctionHouse ? 1 : 0,
-          acquireType,
         })
-        .where(eq(gameSkillCatalog.id, skill.id));
+        .where(eq(gameUnifiedSkillCatalog.id, skill.id));
       skillsUpdated++;
     }
 
@@ -371,8 +354,8 @@ export const valueRebalanceRouter = router({
         });
       }
       // skill
-      const [skill] = await db.select().from(gameSkillCatalog)
-        .where(eq(gameSkillCatalog.skillId, input.id));
+      const [skill] = await db.select().from(gameUnifiedSkillCatalog)
+        .where(eq(gameUnifiedSkillCatalog.skillId, input.id));
       if (!skill) throw new TRPCError({ code: "NOT_FOUND" });
       const realStats = parseSkillRealStats({
         powerPercent: skill.powerPercent, mpCost: skill.mpCost,
@@ -401,7 +384,7 @@ export const valueRebalanceRouter = router({
       // 2. 讀取所有可用道具、裝備、技能書
       const items = await db.select().from(gameItemCatalog).where(eq(gameItemCatalog.isActive, 1));
       const equips = await db.select().from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.isActive, 1));
-      const skills = await db.select().from(gameSkillCatalog).where(eq(gameSkillCatalog.isActive, 1));
+      const skills = await db.select().from(gameUnifiedSkillCatalog).where(eq(gameUnifiedSkillCatalog.isActive, 1));
 
       // 3. 為每個道具/裝備/技能計算價值和掉落等級範圍
       const dropPool: Array<{
