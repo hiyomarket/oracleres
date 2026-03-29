@@ -3552,6 +3552,35 @@ export const gameWorldRouter = router({
         `旅人，你的氣息不錯。我是${npc.name}，或許我能教你一些有用的技能。`,
       ];
 
+      // 解析每個技能的學習代價，正規化道具格式並查詢道具名稱
+      const resolvedSkills = [];
+      for (const s of teachableSkills) {
+        const costRaw = typeof s.learnCost === "string" ? JSON.parse(s.learnCost) : (s.learnCost ?? {});
+        const rawItems: Array<any> = costRaw.items ?? [];
+        const resolvedItems: Array<{ itemId: string; qty: number; name: string }> = [];
+        for (const ri of rawItems) {
+          const iid = ri.itemId || "";
+          const qty = ri.qty ?? ri.count ?? 1;
+          const iname = ri.name || "";
+          if (iid) {
+            // 查詢道具名稱
+            const [cat] = await db.select({ name: gameItemCatalog.name }).from(gameItemCatalog)
+              .where(eq(gameItemCatalog.itemId, iid)).limit(1);
+            resolvedItems.push({ itemId: iid, qty, name: cat?.name ?? iid });
+          } else if (iname) {
+            // 舊格式：用名稱查 itemId
+            const [found] = await db.select({ itemId: gameItemCatalog.itemId }).from(gameItemCatalog)
+              .where(eq(gameItemCatalog.name, iname)).limit(1);
+            resolvedItems.push({ itemId: found?.itemId ?? "", qty, name: iname });
+          }
+        }
+        resolvedSkills.push({
+          ...s,
+          learnCost: { ...costRaw, items: resolvedItems },
+          isLearned: learnedSkillIds.includes(s.skillId),
+        });
+      }
+
       return {
         npc: {
           id: npc.id,
@@ -3564,13 +3593,10 @@ export const gameWorldRouter = router({
           location: npc.location,
         },
         greeting: greetings[Math.floor(Math.random() * greetings.length)],
-        teachableSkills: teachableSkills.map(s => ({
-          ...s,
-          learnCost: typeof s.learnCost === "string" ? JSON.parse(s.learnCost) : s.learnCost,
-          isLearned: learnedSkillIds.includes(s.skillId),
-        })),
+        teachableSkills: resolvedSkills,
         agentLevel: agent?.level ?? 1,
         agentGold: agent?.gold ?? 0,
+        agentStones: agent?.actionPoints ?? 0,
       };
     }),
 
@@ -3604,12 +3630,28 @@ export const gameWorldRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: `等級不足（需要 Lv.${skill.prerequisiteLevel}）` });
       }
 
-      // 解析學習代價
+      // 解析學習代價（防禦性處理：同時支援 {itemId,qty} 和舊格式 {name,count}）
       const costRaw = typeof skill.learnCost === "string" ? JSON.parse(skill.learnCost) : (skill.learnCost ?? {});
       const goldCost = costRaw.gold ?? 0;
       const stonesCost = costRaw.stones ?? 0;
       const reputationCost = costRaw.reputation ?? 0;
-      const itemsCost: Array<{ itemId: string; qty: number }> = costRaw.items ?? [];
+      const rawItems: Array<any> = costRaw.items ?? [];
+      // 正規化道具格式：如果是舊格式 {name, count}，嘗試查詢 itemId
+      const itemsCost: Array<{ itemId: string; qty: number }> = [];
+      for (const ri of rawItems) {
+        if (ri.itemId) {
+          itemsCost.push({ itemId: ri.itemId, qty: ri.qty ?? ri.count ?? 1 });
+        } else if (ri.name) {
+          // 舊格式：用名稱查詢 itemId
+          const [found] = await db.select({ itemId: gameItemCatalog.itemId }).from(gameItemCatalog)
+            .where(eq(gameItemCatalog.name, ri.name)).limit(1);
+          if (found) {
+            itemsCost.push({ itemId: found.itemId, qty: ri.qty ?? ri.count ?? 1 });
+          } else {
+            throw new TRPCError({ code: "BAD_REQUEST", message: `道具「${ri.name}」在圖鑑中不存在，請聯繫管理員` });
+          }
+        }
+      }
 
       // 檢查金幣
       if (goldCost > 0 && agent.gold < goldCost) {

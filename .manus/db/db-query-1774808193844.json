@@ -1,0 +1,150 @@
+{
+  "query": "SELECT skill_id, name, npc_id, learn_cost, prerequisite_level FROM game_unified_skill_catalog WHERE npc_id IS NOT NULL LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, npc_id, learn_cost, prerequisite_level FROM game_unified_skill_catalog WHERE npc_id IS NOT NULL LIMIT 20;",
+  "rows": [
+    {
+      "skill_id": "USK_155",
+      "name": "連擊",
+      "npc_id": "36",
+      "learn_cost": "{\"gold\": 500, \"items\": [{\"count\": 1, \"name\": \"戰士之證\"}]}",
+      "prerequisite_level": "8"
+    },
+    {
+      "skill_id": "USK_156",
+      "name": "諸刃",
+      "npc_id": "36",
+      "learn_cost": "{\"gold\": 1150, \"items\": [], \"reputation\": 170, \"stones\": 23}",
+      "prerequisite_level": "3"
+    },
+    {
+      "skill_id": "USK_157",
+      "name": "反擊",
+      "npc_id": "40",
+      "learn_cost": "{\"gold\": 900, \"items\": [], \"reputation\": 67, \"stones\": 43}",
+      "prerequisite_level": "5"
+    },
+    {
+      "skill_id": "USK_158",
+      "name": "崩擊",
+      "npc_id": "37",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_SHATTER\", \"qty\": 1}]}",
+      "prerequisite_level": "5"
+    },
+    {
+      "skill_id": "USK_159",
+      "name": "亂射",
+      "npc_id": "40",
+      "learn_cost": "{\"gold\": 1950, \"items\": [], \"reputation\": 182, \"stones\": 47}",
+      "prerequisite_level": "3"
+    },
+    {
+      "skill_id": "USK_160",
+      "name": "乾坤一擲",
+      "npc_id": "39",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_COSMOS_A\", \"qty\": 1}, {\"itemId\": \"I_QST_COSMOS_B\", \"qty\": 1}]}",
+      "prerequisite_level": "10"
+    },
+    {
+      "skill_id": "USK_161",
+      "name": "迅速果斷",
+      "npc_id": "40",
+      "learn_cost": "{\"gold\": 1900, \"items\": [], \"reputation\": 158, \"stones\": 19}",
+      "prerequisite_level": "8"
+    },
+    {
+      "skill_id": "USK_162",
+      "name": "毒擊",
+      "npc_id": "44",
+      "learn_cost": "{\"gold\": 450, \"items\": [], \"reputation\": 21, \"stones\": 10}",
+      "prerequisite_level": "5"
+    },
+    {
+      "skill_id": "USK_163",
+      "name": "氣功彈",
+      "npc_id": "49",
+      "learn_cost": "{\"gold\": 400, \"items\": [], \"reputation\": 27, \"stones\": 5}",
+      "prerequisite_level": "5"
+    },
+    {
+      "skill_id": "USK_164",
+      "name": "吸血攻擊",
+      "npc_id": "36",
+      "learn_cost": "{\"gold\": 1350, \"items\": [], \"reputation\": 152, \"stones\": 32}",
+      "prerequisite_level": "8"
+    },
+    {
+      "skill_id": "USK_165",
+      "name": "雙重斬",
+      "npc_id": "49",
+      "learn_cost": "{\"gold\": 200, \"items\": [], \"reputation\": 44, \"stones\": 1}",
+      "prerequisite_level": "5"
+    },
+    {
+      "skill_id": "USK_166",
+      "name": "戰慄襲心",
+      "npc_id": "36",
+      "learn_cost": "{\"gold\": 1100, \"items\": [], \"reputation\": 145, \"stones\": 17}",
+      "prerequisite_level": "15"
+    },
+    {
+      "skill_id": "USK_167",
+      "name": "護衛",
+      "npc_id": "40",
+      "learn_cost": "{\"gold\": 1600, \"items\": [], \"reputation\": 105, \"stones\": 22}",
+      "prerequisite_level": "5"
+    },
+    {
+      "skill_id": "USK_168",
+      "name": "陽炎",
+      "npc_id": "36",
+      "learn_cost": "{\"gold\": 1850, \"items\": [], \"reputation\": 64, \"stones\": 38}",
+      "prerequisite_level": "10"
+    },
+    {
+      "skill_id": "USK_169",
+      "name": "騎士之譽",
+      "npc_id": "41",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_HONOR\", \"qty\": 1}]}",
+      "prerequisite_level": "20"
+    },
+    {
+      "skill_id": "USK_170",
+      "name": "火焰魔法",
+      "npc_id": "48",
+      "learn_cost": "{\"gold\": 350, \"items\": [], \"reputation\": 16, \"stones\": 8}",
+      "prerequisite_level": "10"
+    },
+    {
+      "skill_id": "USK_171",
+      "name": "烈焰魔法",
+      "npc_id": "50",
+      "learn_cost": "{\"gold\": 1750, \"items\": [], \"reputation\": 156, \"stones\": 48}",
+      "prerequisite_level": "5"
+    },
+    {
+      "skill_id": "USK_172",
+      "name": "業火魔法",
+      "npc_id": "60",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_HELLFIRE\", \"qty\": 1}]}",
+      "prerequisite_level": "12"
+    },
+    {
+      "skill_id": "USK_173",
+      "name": "冰凍魔法",
+      "npc_id": "46",
+      "learn_cost": "{\"gold\": 200, \"items\": [], \"reputation\": 36, \"stones\": 7}",
+      "prerequisite_level": "6"
+    },
+    {
+      "skill_id": "USK_174",
+      "name": "暴風雪魔法",
+      "npc_id": "47",
+      "learn_cost": "{\"gold\": 1700, \"items\": [], \"reputation\": 101, \"stones\": 45}",
+      "prerequisite_level": "5"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\tnpc_id\tlearn_cost\tprerequisite_level\nUSK_155\t連擊\t36\t{\"gold\": 500, \"items\": [{\"count\": 1, \"name\": \"戰士之證\"}]}\t8\nUSK_156\t諸刃\t36\t{\"gold\": 1150, \"items\": [], \"reputation\": 170, \"stones\": 23}\t3\nUSK_157\t反擊\t40\t{\"gold\": 900, \"items\": [], \"reputation\": 67, \"stones\": 43}\t5\nUSK_158\t崩擊\t37\t{\"items\": [{\"itemId\": \"I_QST_SHATTER\", \"qty\": 1}]}\t5\nUSK_159\t亂射\t40\t{\"gold\": 1950, \"items\": [], \"reputation\": 182, \"stones\": 47}\t3\nUSK_160\t乾坤一擲\t39\t{\"items\": [{\"itemId\": \"I_QST_COSMOS_A\", \"qty\": 1}, {\"itemId\": \"I_QST_COSMOS_B\", \"qty\": 1}]}\t10\nUSK_161\t迅速果斷\t40\t{\"gold\": 1900, \"items\": [], \"reputation\": 158, \"stones\": 19}\t8\nUSK_162\t毒擊\t44\t{\"gold\": 450, \"items\": [], \"reputation\": 21, \"stones\": 10}\t5\nUSK_163\t氣功彈\t49\t{\"gold\": 400, \"items\": [], \"reputation\": 27, \"stones\": 5}\t5\nUSK_164\t吸血攻擊\t36\t{\"gold\": 1350, \"items\": [], \"reputation\": 152, \"stones\": 32}\t8\nUSK_165\t雙重斬\t49\t{\"gold\": 200, \"items\": [], \"reputation\": 44, \"stones\": 1}\t5\nUSK_166\t戰慄襲心\t36\t{\"gold\": 1100, \"items\": [], \"reputation\": 145, \"stones\": 17}\t15\nUSK_167\t護衛\t40\t{\"gold\": 1600, \"items\": [], \"reputation\": 105, \"stones\": 22}\t5\nUSK_168\t陽炎\t36\t{\"gold\": 1850, \"items\": [], \"reputation\": 64, \"stones\": 38}\t10\nUSK_169\t騎士之譽\t41\t{\"items\": [{\"itemId\": \"I_QST_HONOR\", \"qty\": 1}]}\t20\nUSK_170\t火焰魔法\t48\t{\"gold\": 350, \"items\": [], \"reputation\": 16, \"stones\": 8}\t10\nUSK_171\t烈焰魔法\t50\t{\"gold\": 1750, \"items\": [], \"reputation\": 156, \"stones\": 48}\t5\nUSK_172\t業火魔法\t60\t{\"items\": [{\"itemId\": \"I_QST_HELLFIRE\", \"qty\": 1}]}\t12\nUSK_173\t冰凍魔法\t46\t{\"gold\": 200, \"items\": [], \"reputation\": 36, \"stones\": 7}\t6\nUSK_174\t暴風雪魔法\t47\t{\"gold\": 1700, \"items\": [], \"reputation\": 101, \"stones\": 45}\t5\n",
+  "stderr": "",
+  "execution_time_ms": 1588
+}

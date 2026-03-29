@@ -1,0 +1,8 @@
+{
+  "query": "SELECT skill_id, name, learn_cost FROM game_unified_skill_catalog WHERE learn_cost::text LIKE '%\"name\":%' AND learn_cost::text LIKE '%\"count\":%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, learn_cost FROM game_unified_skill_catalog WHERE learn_cost::text LIKE '%\"name\":%' AND learn_cost::text LIKE '%\"count\":%';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 83 near \"::text LIKE '%\"name\":%' AND learn_cost::text LIKE '%\"count\":%'\""
+  ]
+}

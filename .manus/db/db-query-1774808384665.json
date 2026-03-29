@@ -1,0 +1,30 @@
+{
+  "query": "SELECT skill_id, name, learn_cost FROM game_unified_skill_catalog WHERE CAST(learn_cost AS CHAR) LIKE '%items%' AND CAST(learn_cost AS CHAR) NOT LIKE '%[]%' ORDER BY skill_id LIMIT 10 OFFSET 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, learn_cost FROM game_unified_skill_catalog WHERE CAST(learn_cost AS CHAR) LIKE '%items%' AND CAST(learn_cost AS CHAR) NOT LIKE '%[]%' ORDER BY skill_id LIMIT 10 OFFSET 20;",
+  "rows": [
+    {
+      "skill_id": "USK_217",
+      "name": "暗殺",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_ASSASSIN_A\", \"qty\": 1}, {\"itemId\": \"I_QST_ASSASSIN_B\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_220",
+      "name": "捨身",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_SACRIFICE_A\", \"qty\": 1}, {\"itemId\": \"I_QST_SACRIFICE_B\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_221",
+      "name": "五行封印",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_SEAL_WOOD\", \"qty\": 1}, {\"itemId\": \"I_QST_SEAL_FIRE\", \"qty\": 1}, {\"itemId\": \"I_QST_SEAL_CORE\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_222",
+      "name": "天命共振",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_FATE_A\", \"qty\": 1}, {\"itemId\": \"I_QST_FATE_B\", \"qty\": 1}, {\"itemId\": \"I_QST_FATE_C\", \"qty\": 5}]}"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\tlearn_cost\nUSK_217\t暗殺\t{\"items\": [{\"itemId\": \"I_QST_ASSASSIN_A\", \"qty\": 1}, {\"itemId\": \"I_QST_ASSASSIN_B\", \"qty\": 1}]}\nUSK_220\t捨身\t{\"items\": [{\"itemId\": \"I_QST_SACRIFICE_A\", \"qty\": 1}, {\"itemId\": \"I_QST_SACRIFICE_B\", \"qty\": 1}]}\nUSK_221\t五行封印\t{\"items\": [{\"itemId\": \"I_QST_SEAL_WOOD\", \"qty\": 1}, {\"itemId\": \"I_QST_SEAL_FIRE\", \"qty\": 1}, {\"itemId\": \"I_QST_SEAL_CORE\", \"qty\": 1}]}\nUSK_222\t天命共振\t{\"items\": [{\"itemId\": \"I_QST_FATE_A\", \"qty\": 1}, {\"itemId\": \"I_QST_FATE_B\", \"qty\": 1}, {\"itemId\": \"I_QST_FATE_C\", \"qty\": 5}]}\n",
+  "stderr": "",
+  "execution_time_ms": 1578
+}

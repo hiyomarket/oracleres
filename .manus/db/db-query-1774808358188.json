@@ -1,0 +1,14 @@
+{
+  "query": "SELECT item_id, name FROM game_item_catalog WHERE name LIKE '%戰士之證%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name FROM game_item_catalog WHERE name LIKE '%戰士之證%';",
+  "rows": [
+    {
+      "item_id": "I_M001",
+      "name": "戰士之證"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\nI_M001\t戰士之證\n",
+  "stderr": "",
+  "execution_time_ms": 1494
+}

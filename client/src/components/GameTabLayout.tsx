@@ -23,7 +23,7 @@ const GAME_TABS: GameTab[] = [
   { id: "shop",     path: "/game/gameshop",     icon: "🛒", label: "天命商城" },
   { id: "auction",  path: "/game/auction",      icon: "🏛️", label: "拍賣行" },
   { id: "pets",     path: "/game/pets",         icon: "🐾", label: "寵物" },
-  { id: "quests",   path: "/game/quest-skills", icon: "📖", label: "天命考核" },
+  { id: "quests",   path: "/game/quest-skills", icon: "📖", label: "技能學習" },
   { id: "pvp",      path: "/game/achievements", icon: "🏆",  label: "排行/成就" },
   { id: "combat",   path: "/game/combat",       icon: "⚔️", label: "戰鬥大廳" },
   { id: "enhance", path: "/game/enhance",     icon: "✨", label: "強化" },

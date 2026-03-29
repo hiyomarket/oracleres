@@ -1,0 +1,130 @@
+{
+  "query": "SELECT skill_id, name, learn_cost FROM game_unified_skill_catalog WHERE CAST(learn_cost AS CHAR) LIKE '%items%' AND CAST(learn_cost AS CHAR) NOT LIKE '%[]%' ORDER BY skill_id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, learn_cost FROM game_unified_skill_catalog WHERE CAST(learn_cost AS CHAR) LIKE '%items%' AND CAST(learn_cost AS CHAR) NOT LIKE '%[]%' ORDER BY skill_id;",
+  "rows": [
+    {
+      "skill_id": "USK_155",
+      "name": "連擊",
+      "learn_cost": "{\"gold\": 500, \"items\": [{\"itemId\": \"I_M001\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_158",
+      "name": "崩擊",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_SHATTER\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_160",
+      "name": "乾坤一擲",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_COSMOS_A\", \"qty\": 1}, {\"itemId\": \"I_QST_COSMOS_B\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_169",
+      "name": "騎士之譽",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_HONOR\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_172",
+      "name": "業火魔法",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_HELLFIRE\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_175",
+      "name": "極寒魔法",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_FROSTCORE\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_178",
+      "name": "龍捲魔法",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_TORNADO\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_181",
+      "name": "天崩地裂",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_QUAKE\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_184",
+      "name": "金光天罰",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_DIVINE\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_186",
+      "name": "超強吸血魔法",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_BLOODGEM\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_190",
+      "name": "石化群體",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_MEDUSA\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_192",
+      "name": "混亂群體",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_CHAOS\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_196",
+      "name": "遺忘群體",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_OBLIVION\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_201",
+      "name": "超強補血魔法",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_LIFEDEW\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_202",
+      "name": "氣絕回復",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_PHOENIX\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_205",
+      "name": "全體潔淨",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_PURIFY\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_208",
+      "name": "明鏡止水",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_MIRROR\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_213",
+      "name": "全體攻擊增幅",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_WARCRY\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_214",
+      "name": "全體防禦增幅",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_BASTION\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_216",
+      "name": "聖盾",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_HOLYSHIELD_A\", \"qty\": 1}, {\"itemId\": \"I_QST_HOLYSHIELD_B\", \"qty\": 1}, {\"itemId\": \"I_QST_HOLYSHIELD_C\", \"qty\": 3}]}"
+    },
+    {
+      "skill_id": "USK_217",
+      "name": "暗殺",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_ASSASSIN_A\", \"qty\": 1}, {\"itemId\": \"I_QST_ASSASSIN_B\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_220",
+      "name": "捨身",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_SACRIFICE_A\", \"qty\": 1}, {\"itemId\": \"I_QST_SACRIFICE_B\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_221",
+      "name": "五行封印",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_SEAL_WOOD\", \"qty\": 1}, {\"itemId\": \"I_QST_SEAL_FIRE\", \"qty\": 1}, {\"itemId\": \"I_QST_SEAL_CORE\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_222",
+      "name": "天命共振",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_FATE_A\", \"qty\": 1}, {\"itemId\": \"I_QST_FATE_B\", \"qty\": 1}, {\"itemId\": \"I_QST_FATE_C\", \"qty\": 5}]}"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\tlearn_cost\nUSK_155\t連擊\t{\"gold\": 500, \"items\": [{\"itemId\": \"I_M001\", \"qty\": 1}]}\nUSK_158\t崩擊\t{\"items\": [{\"itemId\": \"I_QST_SHATTER\", \"qty\": 1}]}\nUSK_160\t乾坤一擲\t{\"items\": [{\"itemId\": \"I_QST_COSMOS_A\", \"qty\": 1}, {\"itemId\": \"I_QST_COSMOS_B\", \"qty\": 1}]}\nUSK_169\t騎士之譽\t{\"items\": [{\"itemId\": \"I_QST_HONOR\", \"qty\": 1}]}\nUSK_172\t業火魔法\t{\"items\": [{\"itemId\": \"I_QST_HELLFIRE\", \"qty\": 1}]}\nUSK_175\t極寒魔法\t{\"items\": [{\"itemId\": \"I_QST_FROSTCORE\", \"qty\": 1}]}\nUSK_178\t龍捲魔法\t{\"items\": [{\"itemId\": \"I_QST_TORNADO\", \"qty\": 1}]}\nUSK_181\t天崩地裂\t{\"items\": [{\"itemId\": \"I_QST_QUAKE\", \"qty\": 1}]}\nUSK_184\t金光天罰\t{\"items\": [{\"itemId\": \"I_QST_DIVINE\", \"qty\": 1}]}\nUSK_186\t超強吸血魔法\t{\"items\": [{\"itemId\": \"I_QST_BLOODGEM\", \"qty\": 1}]}\nUSK_190\t石化群體\t{\"items\": [{\"itemId\": \"I_QST_MEDUSA\", \"qty\": 1}]}\nUSK_192\t混亂群體\t{\"items\": [{\"itemId\": \"I_QST_CHAOS\", \"qty\": 1}]}\nUSK_196\t遺忘群體\t{\"items\": [{\"itemId\": \"I_QST_OBLIVION\", \"qty\": 1}]}\nUSK_201\t超強補血魔法\t{\"items\": [{\"itemId\": \"I_QST_LIFEDEW\", \"qty\": 1}]}\nUSK_202\t氣絕回復\t{\"items\": [{\"itemId\": \"I_QST_PHOENIX\", \"qty\": 1}]}\nUSK_205\t全體潔淨\t{\"items\": [{\"itemId\": \"I_QST_PURIFY\", \"qty\": 1}]}\nUSK_208\t明鏡止水\t{\"items\": [{\"itemId\": \"I_QST_MIRROR\", \"qty\": 1}]}\nUSK_213\t全體攻擊增幅\t{\"items\": [{\"itemId\": \"I_QST_WARCRY\", \"qty\": 1}]}\nUSK_214\t全體防禦增幅\t{\"items\": [{\"itemId\": \"I_QST_BASTION\", \"qty\": 1}]}\nUSK_216\t聖盾\t{\"items\": [{\"itemId\": \"I_QST_HOLYSHIELD_A\", \"qty\": 1}, {\"itemId\": \"I_QST_HOLYSHIELD_B\", \"qty\": 1}, {\"itemId\": \"I_QST_HOLYSHIELD_C\", \"qty\": 3}]}\nUSK_217\t暗殺\t{\"items\": [{\"itemId\": \"I_QST_ASSASSIN_A\", \"qty\": 1}, {\"itemId\": \"I_QST_ASSASSIN_B\", \"qty\": 1}]}\nUSK_220\t捨身\t{\"items\": [{\"itemId\": \"I_QST_SACRIFICE_A\", \"qty\": 1}, {\"itemId\": \"I_QST_SACRIFICE_B\", \"qty\": 1}]}\nUSK_221\t五行封印\t{\"items\": [{\"itemId\": \"I_QST_SEAL_WOOD\", \"qty\": 1}, {\"itemId\": \"I_QST_SEAL_FIRE\", \"qty\": 1}, {\"itemId\": \"I_QST_SEAL_CORE\", \"qty\": 1}]}\nUSK_222\t天命共振\t{\"items\": [{\"itemId\": \"I_QST_FATE_A\", \"qty\": 1}, {\"itemId\": \"I_QST_FATE_B\", \"qty\": 1}, {\"itemId\": \"I_QST_FATE_C\", \"qty\": 5}]}\n",
+  "stderr": "",
+  "execution_time_ms": 1600
+}

@@ -1,0 +1,15 @@
+{
+  "query": "SELECT skill_id, name, learn_cost FROM game_unified_skill_catalog WHERE skill_id = 'USK_155';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT skill_id, name, learn_cost FROM game_unified_skill_catalog WHERE skill_id = 'USK_155';",
+  "rows": [
+    {
+      "skill_id": "USK_155",
+      "name": "連擊",
+      "learn_cost": "{\"gold\": 500, \"items\": [{\"itemId\": \"I_M001\", \"qty\": 1}]}"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\tlearn_cost\nUSK_155\t連擊\t{\"gold\": 500, \"items\": [{\"itemId\": \"I_M001\", \"qty\": 1}]}\n",
+  "stderr": "",
+  "execution_time_ms": 1530
+}

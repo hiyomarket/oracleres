@@ -34,7 +34,7 @@ export function NpcDialogueModal({ npcId, onClose }: NpcDialogueModalProps) {
     );
   }
 
-  const { npc, greeting, teachableSkills, agentLevel, agentGold } = data;
+  const { npc, greeting, teachableSkills, agentLevel, agentGold, agentStones } = data as any;
   const selected = teachableSkills.find(s => s.skillId === selectedSkill);
 
   const handleLearn = async () => {
@@ -131,7 +131,7 @@ export function NpcDialogueModal({ npcId, onClose }: NpcDialogueModalProps) {
             <div className="px-5 pb-5 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-slate-500">可學習技能（{teachableSkills.length}）</span>
-                <span className="text-xs text-slate-600">你的等級: Lv.{agentLevel} | 金幣: {agentGold}</span>
+                <span className="text-xs text-slate-600">Lv.{agentLevel} | 💰{agentGold} | 💎{agentStones ?? 0}</span>
               </div>
 
               {teachableSkills.length === 0 && (
@@ -193,9 +193,9 @@ export function NpcDialogueModal({ npcId, onClose }: NpcDialogueModalProps) {
                                 ⭐ {cost.reputation} 聲望
                               </span>
                             )}
-                            {(cost.items ?? []).map((item: { itemId: string; qty: number }, i: number) => (
+                            {(cost.items ?? []).map((item: { itemId: string; qty: number; name?: string }, i: number) => (
                               <span key={i} className="text-xs px-2 py-1 rounded-lg" style={{ background: "rgba(96,165,250,0.1)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>
-                                📦 {item.itemId} x{item.qty}
+                                📦 {item.name || item.itemId} x{item.qty}
                               </span>
                             ))}
                           </div>
