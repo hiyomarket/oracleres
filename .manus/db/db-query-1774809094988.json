@@ -1,0 +1,31 @@
+{
+  "query": "SELECT item_id, name, category, rarity, stackable FROM game_item_catalog WHERE item_id IN ('I_M001', 'iron_sword', 'E_M001') OR name LIKE '%武器強化卷軸%' OR name LIKE '%戰士之證%' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, category, rarity, stackable FROM game_item_catalog WHERE item_id IN ('I_M001', 'iron_sword', 'E_M001') OR name LIKE '%武器強化卷軸%' OR name LIKE '%戰士之證%' LIMIT 20;",
+  "rows": [
+    {
+      "item_id": "I_SCR_WPN",
+      "name": "武器強化卷軸",
+      "category": "scroll",
+      "rarity": "common",
+      "stackable": "1"
+    },
+    {
+      "item_id": "I_SCR_WPN_B",
+      "name": "祝福的武器強化卷軸",
+      "category": "scroll",
+      "rarity": "rare",
+      "stackable": "1"
+    },
+    {
+      "item_id": "I_M001",
+      "name": "戰士之證",
+      "category": "quest",
+      "rarity": "common",
+      "stackable": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\tcategory\trarity\tstackable\nI_SCR_WPN\t武器強化卷軸\tscroll\tcommon\t1\nI_SCR_WPN_B\t祝福的武器強化卷軸\tscroll\trare\t1\nI_M001\t戰士之證\tquest\tcommon\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1582
+}

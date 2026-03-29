@@ -1,0 +1,16 @@
+{
+  "query": "SELECT equip_id, name, stackable, slot FROM game_equipment_catalog WHERE equip_id = 'E_M001';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT equip_id, name, stackable, slot FROM game_equipment_catalog WHERE equip_id = 'E_M001';",
+  "rows": [
+    {
+      "equip_id": "E_M001",
+      "name": "鐵劍",
+      "stackable": "0",
+      "slot": "weapon"
+    }
+  ],
+  "messages": [],
+  "stdout": "equip_id\tname\tstackable\tslot\nE_M001\t鐵劍\t0\tweapon\n",
+  "stderr": "",
+  "execution_time_ms": 1580
+}

@@ -1,0 +1,52 @@
+{
+  "query": "SELECT item_id, name, category, use_effect FROM game_item_catalog WHERE use_effect IS NOT NULL AND use_effect != 'null' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, category, use_effect FROM game_item_catalog WHERE use_effect IS NOT NULL AND use_effect != 'null' LIMIT 10;",
+  "rows": [
+    {
+      "item_id": "I_W033",
+      "name": "復甦之風",
+      "category": "consumable",
+      "use_effect": "{\"description\": \"全體恢復 100 HP\", \"type\": \"heal_hp\", \"value\": 100}"
+    },
+    {
+      "item_id": "I_W035",
+      "name": "生命之水",
+      "category": "consumable",
+      "use_effect": "{\"description\": \"恢復 30% HP\", \"type\": \"heal_hp\", \"value\": 30}"
+    },
+    {
+      "item_id": "I_M027",
+      "name": "疾風藥劑",
+      "category": "consumable",
+      "use_effect": "{\"description\": \"速度提升 30%，持續 3 回合\", \"duration\": 3, \"type\": \"atk_boost\", \"value\": 30}"
+    },
+    {
+      "item_id": "I_SCR_WPN",
+      "name": "武器強化卷軸",
+      "category": "scroll",
+      "use_effect": "{\"description\": \"武器強化卷軸（白武卷）：標準強化+1\", \"scrollType\": \"weapon_scroll\", \"type\": \"enhance_scroll\"}"
+    },
+    {
+      "item_id": "I_SCR_ARM",
+      "name": "防具強化卷軸",
+      "category": "scroll",
+      "use_effect": "{\"description\": \"防具強化卷軸（白防卷）：標準強化+1\", \"scrollType\": \"armor_scroll\", \"type\": \"enhance_scroll\"}"
+    },
+    {
+      "item_id": "I_SCR_WPN_B",
+      "name": "祝福的武器強化卷軸",
+      "category": "scroll",
+      "use_effect": "{\"description\": \"祝福的武器強化卷軸（黃武卷）：爆裝率減半，成功+1~3\", \"scrollType\": \"blessed_weapon_scroll\", \"type\": \"enhance_scroll\"}"
+    },
+    {
+      "item_id": "I_SCR_ARM_B",
+      "name": "祝福的防具強化卷軸",
+      "category": "scroll",
+      "use_effect": "{\"description\": \"祝福的防具強化卷軸（黃防卷）：爆裝率減半，成功+1~3\", \"scrollType\": \"blessed_armor_scroll\", \"type\": \"enhance_scroll\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\tcategory\tuse_effect\nI_W033\t復甦之風\tconsumable\t{\"description\": \"全體恢復 100 HP\", \"type\": \"heal_hp\", \"value\": 100}\nI_W035\t生命之水\tconsumable\t{\"description\": \"恢復 30% HP\", \"type\": \"heal_hp\", \"value\": 30}\nI_M027\t疾風藥劑\tconsumable\t{\"description\": \"速度提升 30%，持續 3 回合\", \"duration\": 3, \"type\": \"atk_boost\", \"value\": 30}\nI_SCR_WPN\t武器強化卷軸\tscroll\t{\"description\": \"武器強化卷軸（白武卷）：標準強化+1\", \"scrollType\": \"weapon_scroll\", \"type\": \"enhance_scroll\"}\nI_SCR_ARM\t防具強化卷軸\tscroll\t{\"description\": \"防具強化卷軸（白防卷）：標準強化+1\", \"scrollType\": \"armor_scroll\", \"type\": \"enhance_scroll\"}\nI_SCR_WPN_B\t祝福的武器強化卷軸\tscroll\t{\"description\": \"祝福的武器強化卷軸（黃武卷）：爆裝率減半，成功+1~3\", \"scrollType\": \"blessed_weapon_scroll\", \"type\": \"enhance_scroll\"}\nI_SCR_ARM_B\t祝福的防具強化卷軸\tscroll\t{\"description\": \"祝福的防具強化卷軸（黃防卷）：爆裝率減半，成功+1~3\", \"scrollType\": \"blessed_armor_scroll\", \"type\": \"enhance_scroll\"}\n",
+  "stderr": "",
+  "execution_time_ms": 1561
+}

@@ -1,0 +1,74 @@
+{
+  "query": "SELECT ai.id, ai.item_id, ai.item_type, ai.quantity, ic.category AS catalog_cat, ec.equip_id\nFROM agent_inventory ai\nLEFT JOIN game_item_catalog ic ON ai.item_id = ic.item_id\nLEFT JOIN game_equipment_catalog ec ON ai.item_id = ec.equip_id\nWHERE ai.id > 554\nORDER BY ai.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT ai.id, ai.item_id, ai.item_type, ai.quantity, ic.category AS catalog_cat, ec.equip_id\nFROM agent_inventory ai\nLEFT JOIN game_item_catalog ic ON ai.item_id = ic.item_id\nLEFT JOIN game_equipment_catalog ec ON ai.item_id = ec.equip_id\nWHERE ai.id > 554\nORDER BY ai.id;",
+  "rows": [
+    {
+      "id": "555",
+      "item_id": "mat-wood-002",
+      "item_type": "material",
+      "quantity": "5",
+      "catalog_cat": "NULL",
+      "equip_id": "NULL"
+    },
+    {
+      "id": "556",
+      "item_id": "I_MAT_HERB",
+      "item_type": "material",
+      "quantity": "2",
+      "catalog_cat": "material",
+      "equip_id": "NULL"
+    },
+    {
+      "id": "557",
+      "item_id": "iron_sword",
+      "item_type": "consumable",
+      "quantity": "13",
+      "catalog_cat": "NULL",
+      "equip_id": "NULL"
+    },
+    {
+      "id": "558",
+      "item_id": "mat-metal-001",
+      "item_type": "material",
+      "quantity": "9",
+      "catalog_cat": "NULL",
+      "equip_id": "NULL"
+    },
+    {
+      "id": "559",
+      "item_id": "mat-metal-002",
+      "item_type": "material",
+      "quantity": "8",
+      "catalog_cat": "NULL",
+      "equip_id": "NULL"
+    },
+    {
+      "id": "560",
+      "item_id": "mat-metal-003",
+      "item_type": "material",
+      "quantity": "3",
+      "catalog_cat": "NULL",
+      "equip_id": "NULL"
+    },
+    {
+      "id": "561",
+      "item_id": "I_MAT_SHARD",
+      "item_type": "material",
+      "quantity": "1",
+      "catalog_cat": "material",
+      "equip_id": "NULL"
+    },
+    {
+      "id": "562",
+      "item_id": "E_M001",
+      "item_type": "equipment",
+      "quantity": "10",
+      "catalog_cat": "NULL",
+      "equip_id": "E_M001"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\titem_id\titem_type\tquantity\tcatalog_cat\tequip_id\n555\tmat-wood-002\tmaterial\t5\tNULL\tNULL\n556\tI_MAT_HERB\tmaterial\t2\tmaterial\tNULL\n557\tiron_sword\tconsumable\t13\tNULL\tNULL\n558\tmat-metal-001\tmaterial\t9\tNULL\tNULL\n559\tmat-metal-002\tmaterial\t8\tNULL\tNULL\n560\tmat-metal-003\tmaterial\t3\tNULL\tNULL\n561\tI_MAT_SHARD\tmaterial\t1\tmaterial\tNULL\n562\tE_M001\tequipment\t10\tNULL\tE_M001\n",
+  "stderr": "",
+  "execution_time_ms": 1521
+}

@@ -1,0 +1,26 @@
+{
+  "query": "SELECT vs.id, vs.item_key, vs.display_name, ic.category AS catalog_category, ec.equip_id, ec.slot AS equip_slot FROM game_virtual_shop vs LEFT JOIN game_item_catalog ic ON vs.item_key = ic.item_id LEFT JOIN game_equipment_catalog ec ON vs.item_key = ec.equip_id WHERE vs.item_key IN ('iron_sword', 'E_M001', 'I_M001', 'I_SCR_WPN') LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT vs.id, vs.item_key, vs.display_name, ic.category AS catalog_category, ec.equip_id, ec.slot AS equip_slot FROM game_virtual_shop vs LEFT JOIN game_item_catalog ic ON vs.item_key = ic.item_id LEFT JOIN game_equipment_catalog ec ON vs.item_key = ec.equip_id WHERE vs.item_key IN ('iron_sword', 'E_M001', 'I_M001', 'I_SCR_WPN') LIMIT 10;",
+  "rows": [
+    {
+      "id": "33483",
+      "item_key": "I_SCR_WPN",
+      "display_name": "武器強化卷軸",
+      "catalog_category": "scroll",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33484",
+      "item_key": "E_M001",
+      "display_name": "鐵劍",
+      "catalog_category": "NULL",
+      "equip_id": "E_M001",
+      "equip_slot": "weapon"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\titem_key\tdisplay_name\tcatalog_category\tequip_id\tequip_slot\n33483\tI_SCR_WPN\t武器強化卷軸\tscroll\tNULL\tNULL\n33484\tE_M001\t鐵劍\tNULL\tE_M001\tweapon\n",
+  "stderr": "",
+  "execution_time_ms": 1575
+}

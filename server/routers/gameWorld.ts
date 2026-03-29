@@ -22,6 +22,7 @@ import { getStatBalanceConfig } from "../gameEngineConfig";
 import { storagePut } from "../storage";
 import type { WuXing } from "../../shared/types";
 import { grantStarterPack } from "../services/starterPackEngine";
+import { resolveItemType } from "../resolveItemType";
 
 // ─── GD-020 補充二：從命格資料計算角色初始屬性（使用統一公式） ───
 // V2: 五行主導版 — 五行屬性佔 70%+，等級只是輔助加成
@@ -1338,39 +1339,66 @@ export const gameWorldRouter = router({
           .from(gameItemCatalog).where(inArray(gameItemCatalog.itemId, allItemIds))
       : [];
     const catalogNameMap = new Map(catalogItems.map(c => [c.itemId, c]));
-    // 裝備圖鑑名稱
-    const equipItemIds = items.filter(i => i.itemType === 'equipment').map(i => i.itemId);
-    const equipCatalogItems = equipItemIds.length > 0
+    // 裝備圖鑑名稱（查詢所有道具，不只查 itemType=equipment，因為舊數據可能存錯類型）
+    const equipCatalogItems = allItemIds.length > 0
       ? await db.select({ equipId: gameEquipmentCatalog.equipId, name: gameEquipmentCatalog.name, rarity: gameEquipmentCatalog.rarity })
-          .from(gameEquipmentCatalog).where(inArray(gameEquipmentCatalog.equipId, equipItemIds))
+          .from(gameEquipmentCatalog).where(inArray(gameEquipmentCatalog.equipId, allItemIds))
       : [];
     const equipNameMap = new Map(equipCatalogItems.map(c => [c.equipId, c]));
 
     const RARITY_EMOJI: Record<string, string> = { common: "🟢", uncommon: "🔵", rare: "🟣", epic: "🟠", legendary: "🔴" };
 
+    // 道具圖鑑 category → itemType 映射（修正舊數據的錯誤類型）
+    const CATALOG_CAT_TO_TYPE: Record<string, string> = {
+      material: "material", material_basic: "material", material_drop: "material",
+      equipment_material: "material", consumable: "consumable",
+      quest: "material", scroll: "material", treasure: "material",
+      skillbook: "skill_book", active_combat: "skill_book",
+      passive_combat: "skill_book", life_gather: "skill_book", craft_forge: "skill_book",
+    };
+
     return items.map(item => {
-      // 1. 優先查資料庫圖鑑（道具圖鑑 + 裝備圖鑑）
-      const dbItem = catalogNameMap.get(item.itemId);
-      if (dbItem) {
-        return { ...item, itemName: dbItem.name, rarity: dbItem.rarity ?? "common", emoji: RARITY_EMOJI[dbItem.rarity ?? "common"] ?? "📦" };
-      }
+      // 1. 優先查裝備圖鑑（因為裝備可能被錯誤存為 consumable）
       const dbEquip = equipNameMap.get(item.itemId);
       if (dbEquip) {
-        return { ...item, itemName: dbEquip.name, rarity: dbEquip.rarity ?? "common", emoji: RARITY_EMOJI[dbEquip.rarity ?? "common"] ?? "⚔️" };
+        return {
+          ...item,
+          itemType: "equipment" as const,
+          itemName: dbEquip.name,
+          rarity: dbEquip.rarity ?? "common",
+          emoji: RARITY_EMOJI[dbEquip.rarity ?? "common"] ?? "⚔️",
+          canUse: false,
+        };
       }
-      // 2. fallback 到 shared/itemNames 靜態映射
+      // 2. 查道具圖鑑
+      const dbItem = catalogNameMap.get(item.itemId);
+      if (dbItem) {
+        const correctedType = CATALOG_CAT_TO_TYPE[dbItem.category ?? ""] ?? item.itemType;
+        // 只有 category=consumable 且有 use_effect 且不是卷軸才可以使用
+        const canUse = dbItem.category === "consumable";
+        return {
+          ...item,
+          itemType: correctedType,
+          itemName: dbItem.name,
+          rarity: dbItem.rarity ?? "common",
+          emoji: RARITY_EMOJI[dbItem.rarity ?? "common"] ?? "📦",
+          canUse,
+        };
+      }
+      // 3. fallback 到 shared/itemNames 靜態映射
       const sharedInfo = getSharedItemInfo(item.itemId);
       const isKnown = sharedInfo.name !== item.itemId;
       if (isKnown) {
-        return { ...item, itemName: sharedInfo.name, rarity: sharedInfo.rarity, emoji: sharedInfo.emoji };
+        return { ...item, itemName: sharedInfo.name, rarity: sharedInfo.rarity, emoji: sharedInfo.emoji, canUse: item.itemType === "consumable" };
       }
-      // 3. fallback 到舊版本地映射
+      // 4. fallback 到舊版本地映射
       const legacy = ITEM_NAMES_LEGACY[item.itemId];
       return {
         ...item,
         itemName: legacy?.name ?? item.itemId,
         rarity: legacy?.rarity ?? "common",
         emoji: legacy?.emoji ?? "📦",
+        canUse: item.itemType === "consumable" || item.itemType === "potion" as any,
       };
     });
   }),
@@ -1910,15 +1938,35 @@ export const gameWorldRouter = router({
       const [invItem] = await db.select().from(agentInventory)
         .where(and(eq(agentInventory.id, input.inventoryId), eq(agentInventory.agentId, agent.id))).limit(1);
       if (!invItem) throw new TRPCError({ code: "NOT_FOUND", message: "道具不存在" });
-      if (invItem.itemType !== "consumable") throw new TRPCError({ code: "BAD_REQUEST", message: "此道具無法使用" });
       // 查詢圖鑑效果
       const [catalog] = await db.select().from(gameItemCatalog)
         .where(eq(gameItemCatalog.itemId, invItem.itemId)).limit(1);
+      // 檢查裝備圖鑑（裝備不可「使用」）
+      const [equipCheck] = await db.select({ equipId: gameEquipmentCatalog.equipId })
+        .from(gameEquipmentCatalog).where(eq(gameEquipmentCatalog.equipId, invItem.itemId)).limit(1);
+      if (equipCheck) throw new TRPCError({ code: "BAD_REQUEST", message: "裝備需要從裝備欄位進行裝備，無法直接使用" });
+      // 檢查道具是否真的可以「使用」
+      // 卷軸類型需要透過強化系統，不能直接使用
+      const useEff = catalog?.useEffect as { type: string; value: number; duration?: number; description?: string } | null;
+      if (useEff && useEff.type === "enhance_scroll") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "卷軸需要透過強化系統使用，無法直接使用" });
+      }
+      // 任務道具不可使用
+      if (catalog && catalog.category === "quest") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "任務道具無法直接使用" });
+      }
+      // 非消耗品類型且無 use_effect 的道具不可使用
+      if (catalog && catalog.category !== "consumable" && !useEff) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "此道具無法使用" });
+      }
+      // 無圖鑑且非藥水類型的道具不可使用
+      if (!catalog && !invItem.itemId.includes("potion") && !invItem.itemId.includes("elixir")) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "此道具無法使用" });
+      }
       let newHp = agent.hp;
       let newMp = agent.mp;
       let newStamina = agent.stamina;
       // 優先使用結構化 use_effect JSON
-      const useEff = catalog?.useEffect as { type: string; value: number; duration?: number; description?: string } | null;
       if (useEff) {
         switch (useEff.type) {
           case "heal_hp":
@@ -1928,14 +1976,14 @@ export const gameWorldRouter = router({
             newMp = Math.min(agent.maxMp, agent.mp + Math.floor(agent.maxMp * useEff.value / 100));
             break;
           case "revive":
-            // 地圖上復活僅恢復 HP
             newHp = Math.min(agent.maxHp, Math.floor(agent.maxHp * useEff.value / 100));
             break;
           case "cure_status":
-            // 非戰鬥中無異常狀態可清除，僅消耗道具
             break;
+          case "atk_boost":
+            // 非戰鬥中無法使用增益藥劑
+            throw new TRPCError({ code: "BAD_REQUEST", message: "增益藥劑只能在戰鬥中使用" });
           default:
-            // 未知類型 fallback 補血 20%
             newHp = Math.min(agent.maxHp, agent.hp + Math.floor(agent.maxHp * 0.2));
             break;
         }
@@ -1950,7 +1998,6 @@ export const gameWorldRouter = router({
         else if (hpFlatM) newHp = Math.min(agent.maxHp, agent.hp + parseInt(hpFlatM[1]));
         if (mpFlatM) newMp = Math.min(agent.maxMp, agent.mp + parseInt(mpFlatM[1]));
         if (staminaM) newStamina = Math.min(100, agent.stamina + parseInt(staminaM[1]));
-        // 預設效果（無圖鑑記錄）
         if (!catalog && invItem.itemId.includes("potion")) newHp = Math.min(agent.maxHp, agent.hp + 50);
         if (!catalog && invItem.itemId.includes("elixir")) { newHp = Math.min(agent.maxHp, agent.hp + 100); newMp = Math.min(agent.maxMp, agent.mp + 50); }
       }
@@ -2270,14 +2317,22 @@ export const gameWorldRouter = router({
         // 扣除金幣
         await db.update(gameAgents).set({ gold: agent.gold - totalCost, updatedAt: Date.now() })
           .where(eq(gameAgents.id, agent.id));
-        // 加入背包
-        const existing = await db.select().from(agentInventory)
-          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
-        if (existing[0]) {
-          await db.update(agentInventory).set({ quantity: existing[0].quantity + totalQty, updatedAt: Date.now() })
-            .where(eq(agentInventory.id, existing[0].id));
+        // 加入背包（根據圖鑑解析正確的道具類型）
+        const resolved = await resolveItemType(item.itemKey);
+        if (resolved.itemType === "equipment" && !resolved.stackable) {
+          // 裝備不可疊加，每件獨立存儲
+          for (let i = 0; i < totalQty; i++) {
+            await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: resolved.itemType, quantity: 1, acquiredAt: Date.now(), updatedAt: Date.now() });
+          }
         } else {
-          await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: "consumable", quantity: totalQty, acquiredAt: Date.now(), updatedAt: Date.now() });
+          const existing = await db.select().from(agentInventory)
+            .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
+          if (existing[0]) {
+            await db.update(agentInventory).set({ quantity: existing[0].quantity + totalQty, updatedAt: Date.now() })
+              .where(eq(agentInventory.id, existing[0].id));
+          } else {
+            await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: resolved.itemType, quantity: totalQty, acquiredAt: Date.now(), updatedAt: Date.now() });
+          }
         }
         await db.insert(agentEvents).values({
           agentId: agent.id, eventType: "system",
@@ -2312,14 +2367,21 @@ export const gameWorldRouter = router({
         // 扣除靈石
         await db.update(users).set({ gameStones: userRows[0].gameStones - totalCost })
           .where(eq(users.id, ctx.user.id));
-        // 加入背包
-        const existing = await db.select().from(agentInventory)
-          .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
-        if (existing[0]) {
-          await db.update(agentInventory).set({ quantity: existing[0].quantity + totalQty, updatedAt: Date.now() })
-            .where(eq(agentInventory.id, existing[0].id));
+        // 加入背包（根據圖鑑解析正確的道具類型）
+        const resolvedStone = await resolveItemType(item.itemKey);
+        if (resolvedStone.itemType === "equipment" && !resolvedStone.stackable) {
+          for (let i = 0; i < totalQty; i++) {
+            await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: resolvedStone.itemType, quantity: 1, acquiredAt: Date.now(), updatedAt: Date.now() });
+          }
         } else {
-          await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: "consumable", quantity: totalQty, acquiredAt: Date.now(), updatedAt: Date.now() });
+          const existing = await db.select().from(agentInventory)
+            .where(and(eq(agentInventory.agentId, agent.id), eq(agentInventory.itemId, item.itemKey))).limit(1);
+          if (existing[0]) {
+            await db.update(agentInventory).set({ quantity: existing[0].quantity + totalQty, updatedAt: Date.now() })
+              .where(eq(agentInventory.id, existing[0].id));
+          } else {
+            await db.insert(agentInventory).values({ agentId: agent.id, itemId: item.itemKey, itemType: resolvedStone.itemType, quantity: totalQty, acquiredAt: Date.now(), updatedAt: Date.now() });
+          }
         }
         await db.insert(agentEvents).values({
           agentId: agent.id, eventType: "system",

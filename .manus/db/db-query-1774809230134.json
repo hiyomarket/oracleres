@@ -1,0 +1,46 @@
+{
+  "query": "SELECT * FROM game_shop_purchase_log WHERE item_key = 'iron_sword' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT * FROM game_shop_purchase_log WHERE item_key = 'iron_sword' LIMIT 5;",
+  "rows": [
+    {
+      "id": "18",
+      "agent_id": "16",
+      "shop_type": "coin",
+      "shop_item_id": "33472",
+      "item_key": "iron_sword",
+      "quantity": "1",
+      "purchased_at": "1774808417326"
+    },
+    {
+      "id": "19",
+      "agent_id": "16",
+      "shop_type": "coin",
+      "shop_item_id": "33472",
+      "item_key": "iron_sword",
+      "quantity": "1",
+      "purchased_at": "1774808420055"
+    },
+    {
+      "id": "20",
+      "agent_id": "16",
+      "shop_type": "coin",
+      "shop_item_id": "33472",
+      "item_key": "iron_sword",
+      "quantity": "10",
+      "purchased_at": "1774808479500"
+    },
+    {
+      "id": "21",
+      "agent_id": "16",
+      "shop_type": "coin",
+      "shop_item_id": "33472",
+      "item_key": "iron_sword",
+      "quantity": "1",
+      "purchased_at": "1774808690127"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_id\tshop_type\tshop_item_id\titem_key\tquantity\tpurchased_at\n18\t16\tcoin\t33472\tiron_sword\t1\t1774808417326\n19\t16\tcoin\t33472\tiron_sword\t1\t1774808420055\n20\t16\tcoin\t33472\tiron_sword\t10\t1774808479500\n21\t16\tcoin\t33472\tiron_sword\t1\t1774808690127\n",
+  "stderr": "",
+  "execution_time_ms": 1513
+}

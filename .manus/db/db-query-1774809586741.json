@@ -1,0 +1,280 @@
+{
+  "query": "SELECT ai.id, ai.item_id, ai.item_type, ai.quantity, ic.category AS catalog_cat, ic.name AS catalog_name, ec.equip_id, ec.name AS equip_name\nFROM agent_inventory ai\nLEFT JOIN game_item_catalog ic ON ai.item_id = ic.item_id\nLEFT JOIN game_equipment_catalog ec ON ai.item_id = ec.equip_id\nORDER BY ai.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT ai.id, ai.item_id, ai.item_type, ai.quantity, ic.category AS catalog_cat, ic.name AS catalog_name, ec.equip_id, ec.name AS equip_name\nFROM agent_inventory ai\nLEFT JOIN game_item_catalog ic ON ai.item_id = ic.item_id\nLEFT JOIN game_equipment_catalog ec ON ai.item_id = ec.equip_id\nORDER BY ai.id;",
+  "rows": [
+    {
+      "id": "535",
+      "item_id": "E_W003",
+      "item_type": "equipment",
+      "quantity": "1",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "E_W003",
+      "equip_name": "樹皮帽"
+    },
+    {
+      "id": "537",
+      "item_id": "food-earth-001",
+      "item_type": "material",
+      "quantity": "12",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "538",
+      "item_id": "I_QST_BASTION",
+      "item_type": "material",
+      "quantity": "1",
+      "catalog_cat": "quest",
+      "catalog_name": "堡壘之盾碎片",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "539",
+      "item_id": "mat-earth-001",
+      "item_type": "material",
+      "quantity": "2",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "540",
+      "item_id": "I_MAT_CLAY",
+      "item_type": "material",
+      "quantity": "4",
+      "catalog_cat": "material",
+      "catalog_name": "黏土",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "541",
+      "item_id": "mat-earth-002",
+      "item_type": "material",
+      "quantity": "5",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "542",
+      "item_id": "herb-002",
+      "item_type": "material",
+      "quantity": "6",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "543",
+      "item_id": "I_MAT_WOOD",
+      "item_type": "material",
+      "quantity": "3",
+      "catalog_cat": "material",
+      "catalog_name": "木材",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "544",
+      "item_id": "herb-001",
+      "item_type": "material",
+      "quantity": "2",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "545",
+      "item_id": "mat-wood-001",
+      "item_type": "material",
+      "quantity": "5",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "546",
+      "item_id": "I_MAT_ASH",
+      "item_type": "material",
+      "quantity": "3",
+      "catalog_cat": "material",
+      "catalog_name": "灰燼",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "547",
+      "item_id": "I_QST_SEAL_FIRE",
+      "item_type": "material",
+      "quantity": "1",
+      "catalog_cat": "quest",
+      "catalog_name": "火行封印符",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "548",
+      "item_id": "I_MAT_EMBER",
+      "item_type": "material",
+      "quantity": "1",
+      "catalog_cat": "material",
+      "catalog_name": "餘燼",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "549",
+      "item_id": "herb-fire-001",
+      "item_type": "material",
+      "quantity": "1",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "550",
+      "item_id": "mat-fire-001",
+      "item_type": "material",
+      "quantity": "1",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "551",
+      "item_id": "I_SCR_WPN",
+      "item_type": "material",
+      "quantity": "43",
+      "catalog_cat": "scroll",
+      "catalog_name": "武器強化卷軸",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "552",
+      "item_id": "I_M001",
+      "item_type": "material",
+      "quantity": "1",
+      "catalog_cat": "quest",
+      "catalog_name": "戰士之證",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "553",
+      "item_id": "I_MAT_STONE",
+      "item_type": "material",
+      "quantity": "1",
+      "catalog_cat": "material",
+      "catalog_name": "石塊",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "554",
+      "item_id": "I_QST_TORNADO",
+      "item_type": "material",
+      "quantity": "1",
+      "catalog_cat": "quest",
+      "catalog_name": "風暴之眼",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "555",
+      "item_id": "mat-wood-002",
+      "item_type": "material",
+      "quantity": "5",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "556",
+      "item_id": "I_MAT_HERB",
+      "item_type": "material",
+      "quantity": "2",
+      "catalog_cat": "material",
+      "catalog_name": "草藥",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "557",
+      "item_id": "iron_sword",
+      "item_type": "consumable",
+      "quantity": "13",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "558",
+      "item_id": "mat-metal-001",
+      "item_type": "material",
+      "quantity": "9",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "559",
+      "item_id": "mat-metal-002",
+      "item_type": "material",
+      "quantity": "8",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "560",
+      "item_id": "mat-metal-003",
+      "item_type": "material",
+      "quantity": "3",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "561",
+      "item_id": "I_MAT_SHARD",
+      "item_type": "material",
+      "quantity": "1",
+      "catalog_cat": "material",
+      "catalog_name": "碎片",
+      "equip_id": "NULL",
+      "equip_name": "NULL"
+    },
+    {
+      "id": "562",
+      "item_id": "E_M001",
+      "item_type": "equipment",
+      "quantity": "10",
+      "catalog_cat": "NULL",
+      "catalog_name": "NULL",
+      "equip_id": "E_M001",
+      "equip_name": "鐵劍"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\titem_id\titem_type\tquantity\tcatalog_cat\tcatalog_name\tequip_id\tequip_name\n535\tE_W003\tequipment\t1\tNULL\tNULL\tE_W003\t樹皮帽\n537\tfood-earth-001\tmaterial\t12\tNULL\tNULL\tNULL\tNULL\n538\tI_QST_BASTION\tmaterial\t1\tquest\t堡壘之盾碎片\tNULL\tNULL\n539\tmat-earth-001\tmaterial\t2\tNULL\tNULL\tNULL\tNULL\n540\tI_MAT_CLAY\tmaterial\t4\tmaterial\t黏土\tNULL\tNULL\n541\tmat-earth-002\tmaterial\t5\tNULL\tNULL\tNULL\tNULL\n542\therb-002\tmaterial\t6\tNULL\tNULL\tNULL\tNULL\n543\tI_MAT_WOOD\tmaterial\t3\tmaterial\t木材\tNULL\tNULL\n544\therb-001\tmaterial\t2\tNULL\tNULL\tNULL\tNULL\n545\tmat-wood-001\tmaterial\t5\tNULL\tNULL\tNULL\tNULL\n546\tI_MAT_ASH\tmaterial\t3\tmaterial\t灰燼\tNULL\tNULL\n547\tI_QST_SEAL_FIRE\tmaterial\t1\tquest\t火行封印符\tNULL\tNULL\n548\tI_MAT_EMBER\tmaterial\t1\tmaterial\t餘燼\tNULL\tNULL\n549\therb-fire-001\tmaterial\t1\tNULL\tNULL\tNULL\tNULL\n550\tmat-fire-001\tmaterial\t1\tNULL\tNULL\tNULL\tNULL\n551\tI_SCR_WPN\tmaterial\t43\tscroll\t武器強化卷軸\tNULL\tNULL\n552\tI_M001\tmaterial\t1\tquest\t戰士之證\tNULL\tNULL\n553\tI_MAT_STONE\tmaterial\t1\tmaterial\t石塊\tNULL\tNULL\n554\tI_QST_TORNADO\tmaterial\t1\tquest\t風暴之眼\tNULL\tNULL\n555\tmat-wood-002\tmaterial\t5\tNULL\tNULL\tNULL\tNULL\n556\tI_MAT_HERB\tmaterial\t2\tmaterial\t草藥\tNULL\tNULL\n557\tiron_sword\tconsumable\t13\tNULL\tNULL\tNULL\tNULL\n558\tmat-metal-001\tmaterial\t9\tNULL\tNULL\tNULL\tNULL\n559\tmat-metal-002\tmaterial\t8\tNULL\tNULL\tNULL\tNULL\n560\tmat-metal-003\tmaterial\t3\tNULL\tNULL\tNULL\tNULL\n561\tI_MAT_SHARD\tmaterial\t1\tmaterial\t碎片\tNULL\tNULL\n562\tE_M001\tequipment\t10\tNULL\tNULL\tE_M001\t鐵劍\n",
+  "stderr": "",
+  "execution_time_ms": 1508
+}

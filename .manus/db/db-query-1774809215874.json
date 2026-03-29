@@ -1,0 +1,9 @@
+{
+  "query": "SELECT ss.id, ss.item_key, ss.display_name, ic.category AS catalog_category, ec.equip_id, ec.slot AS equip_slot FROM game_spirit_shop ss LEFT JOIN game_item_catalog ic ON ss.item_key = ic.item_id LEFT JOIN game_equipment_catalog ec ON ss.item_key = ec.equip_id WHERE ss.item_key = 'iron_sword' LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT ss.id, ss.item_key, ss.display_name, ic.category AS catalog_category, ec.equip_id, ec.slot AS equip_slot FROM game_spirit_shop ss LEFT JOIN game_item_catalog ic ON ss.item_key = ic.item_id LEFT JOIN game_equipment_catalog ec ON ss.item_key = ec.equip_id WHERE ss.item_key = 'iron_sword' LIMIT 5;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1608
+}

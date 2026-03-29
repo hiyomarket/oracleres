@@ -691,7 +691,7 @@ export function CharacterPanel({
                           </div>
                         </div>
                         <span className="text-sm font-bold text-slate-400 shrink-0">x{item.quantity}</span>
-                      {(item.itemType === "consumable" || item.itemType === "potion") && (
+                      {(item as any).canUse && (
                         <button
                           onClick={() => useItemMutation.mutate({ inventoryId: item.id })}
                           disabled={useItemMutation.isPending}

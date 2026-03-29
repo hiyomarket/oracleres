@@ -5729,3 +5729,15 @@
 - [x] NPC 對話技能學習面板顯示道具中文名稱（而非原始 itemId）
 - [x] NPC 對話顯示玩家靈晶數量
 - [x] 21 個 vitest 測試全部通過（格式正規化/代價解析/標籤改名/防禦處理/驗證邏輯）
+
+## v5.13 - 道具欄分類 + 裝備顯示 bug 修復
+
+- [x] 修復不可使用道具（武器強化卷軸、戰士之證等）在道具欄顯示為消耗品且可點擊使用（使用後消失無效果）
+- [x] 修復裝備物品（iron_sword、E_M001 等）購買後顯示原始 ID 亂碼名稱（根因：getInventory 只查裝備圖鑑當 itemType=equipment，但商店購買全部存為 consumable）
+- [x] 修復裝備物品被錯誤歸類為消耗道具，無法裝備只能使用（根因：buyGameShopItem 硬編碼 itemType='consumable'）
+- [x] 前端道具欄分類判定邏輯修正（根據圖鑑 category/type 正確分類）
+- [x] 確保「使用」按鈕只出現在真正可使用的消耗品上（後端返回 canUse 標記）
+- [x] 建立共用 resolveItemType 工具函數，統一所有商店購買的 itemType 解析
+- [x] 後端 useItem 新增裝備/卷軸/任務道具使用防護檢查
+- [x] 修復資料庫中已存在的錯誤資料（iron_sword 刪除、E_M001 拆分為單個裝備）
+- [x] 38 個 vitest 測試全部通過

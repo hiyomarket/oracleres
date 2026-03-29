@@ -1,0 +1,170 @@
+{
+  "query": "SELECT vs.id, vs.item_key, vs.display_name, ic.category AS catalog_category, ec.equip_id, ec.slot AS equip_slot FROM game_virtual_shop vs LEFT JOIN game_item_catalog ic ON vs.item_key = ic.item_id LEFT JOIN game_equipment_catalog ec ON vs.item_key = ec.equip_id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT vs.id, vs.item_key, vs.display_name, ic.category AS catalog_category, ec.equip_id, ec.slot AS equip_slot FROM game_virtual_shop vs LEFT JOIN game_item_catalog ic ON vs.item_key = ic.item_id LEFT JOIN game_equipment_catalog ec ON vs.item_key = ec.equip_id LIMIT 20;",
+  "rows": [
+    {
+      "id": "33483",
+      "item_key": "I_SCR_WPN",
+      "display_name": "武器強化卷軸",
+      "catalog_category": "scroll",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33462",
+      "item_key": "potion_small",
+      "display_name": "小回復藥",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33463",
+      "item_key": "potion_medium",
+      "display_name": "中回復藥",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33464",
+      "item_key": "potion_large",
+      "display_name": "大回復藥",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33465",
+      "item_key": "mp_potion_small",
+      "display_name": "靈力小藥",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33466",
+      "item_key": "stamina_elixir",
+      "display_name": "體力靈液",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33467",
+      "item_key": "antidote",
+      "display_name": "解毒藥",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33468",
+      "item_key": "map_fragment",
+      "display_name": "地圖碎片",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33469",
+      "item_key": "compass",
+      "display_name": "羅盤",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33470",
+      "item_key": "incense_stick",
+      "display_name": "靈香",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33471",
+      "item_key": "gathering_kit",
+      "display_name": "採集工具包",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33473",
+      "item_key": "leather_armor",
+      "display_name": "皮革護甲",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33474",
+      "item_key": "wooden_shield",
+      "display_name": "木製盾牌",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33475",
+      "item_key": "cloth_robe",
+      "display_name": "布衣法袍",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33476",
+      "item_key": "iron_boots",
+      "display_name": "鐵製靴子",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33477",
+      "item_key": "wood_essence",
+      "display_name": "木之精華",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33478",
+      "item_key": "fire_crystal",
+      "display_name": "火晶石",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33479",
+      "item_key": "earth_ore",
+      "display_name": "土靈礦石",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33480",
+      "item_key": "metal_shard",
+      "display_name": "金屬碎片",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    },
+    {
+      "id": "33481",
+      "item_key": "water_pearl",
+      "display_name": "水靈珠",
+      "catalog_category": "NULL",
+      "equip_id": "NULL",
+      "equip_slot": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\titem_key\tdisplay_name\tcatalog_category\tequip_id\tequip_slot\n33483\tI_SCR_WPN\t武器強化卷軸\tscroll\tNULL\tNULL\n33462\tpotion_small\t小回復藥\tNULL\tNULL\tNULL\n33463\tpotion_medium\t中回復藥\tNULL\tNULL\tNULL\n33464\tpotion_large\t大回復藥\tNULL\tNULL\tNULL\n33465\tmp_potion_small\t靈力小藥\tNULL\tNULL\tNULL\n33466\tstamina_elixir\t體力靈液\tNULL\tNULL\tNULL\n33467\tantidote\t解毒藥\tNULL\tNULL\tNULL\n33468\tmap_fragment\t地圖碎片\tNULL\tNULL\tNULL\n33469\tcompass\t羅盤\tNULL\tNULL\tNULL\n33470\tincense_stick\t靈香\tNULL\tNULL\tNULL\n33471\tgathering_kit\t採集工具包\tNULL\tNULL\tNULL\n33473\tleather_armor\t皮革護甲\tNULL\tNULL\tNULL\n33474\twooden_shield\t木製盾牌\tNULL\tNULL\tNULL\n33475\tcloth_robe\t布衣法袍\tNULL\tNULL\tNULL\n33476\tiron_boots\t鐵製靴子\tNULL\tNULL\tNULL\n33477\twood_essence\t木之精華\tNULL\tNULL\tNULL\n33478\tfire_crystal\t火晶石\tNULL\tNULL\tNULL\n33479\tearth_ore\t土靈礦石\tNULL\tNULL\tNULL\n33480\tmetal_shard\t金屬碎片\tNULL\tNULL\tNULL\n33481\twater_pearl\t水靈珠\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1588
+}

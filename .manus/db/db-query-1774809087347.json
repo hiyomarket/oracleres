@@ -1,0 +1,37 @@
+{
+  "query": "SELECT id, agent_id, item_id, item_type, quantity, is_equipped, equipped_slot FROM agent_inventory WHERE item_id LIKE '%iron_sword%' OR item_id LIKE '%E_M001%' OR item_id LIKE '%武卷%' OR item_id LIKE '%I_SCROLL%' OR item_id LIKE '%I_M001%' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, agent_id, item_id, item_type, quantity, is_equipped, equipped_slot FROM agent_inventory WHERE item_id LIKE '%iron_sword%' OR item_id LIKE '%E_M001%' OR item_id LIKE '%武卷%' OR item_id LIKE '%I_SCROLL%' OR item_id LIKE '%I_M001%' LIMIT 20;",
+  "rows": [
+    {
+      "id": "552",
+      "agent_id": "16",
+      "item_id": "I_M001",
+      "item_type": "consumable",
+      "quantity": "1",
+      "is_equipped": "0",
+      "equipped_slot": "NULL"
+    },
+    {
+      "id": "557",
+      "agent_id": "16",
+      "item_id": "iron_sword",
+      "item_type": "consumable",
+      "quantity": "13",
+      "is_equipped": "0",
+      "equipped_slot": "NULL"
+    },
+    {
+      "id": "562",
+      "agent_id": "16",
+      "item_id": "E_M001",
+      "item_type": "consumable",
+      "quantity": "10",
+      "is_equipped": "0",
+      "equipped_slot": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tagent_id\titem_id\titem_type\tquantity\tis_equipped\tequipped_slot\n552\t16\tI_M001\tconsumable\t1\t0\tNULL\n557\t16\tiron_sword\tconsumable\t13\t0\tNULL\n562\t16\tE_M001\tconsumable\t10\t0\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1638
+}
