@@ -5558,3 +5558,23 @@
 - [x] AI 工具全部集中到「🤖 AI 工具」分類（AI 圖鑑工具/寵物 AI/AI 商店佈局）
 - [x] 統合 /admin/game 與 /game-theater 路由（AdminGameTheaterInline 嵌入 GameCMS，/game-theater 重導向）
 - [x] TypeScript 零錯誤，LSP 零錯誤，伺服器正常啟動
+
+## v5.4 - Bug 修復 + 學習技能系統串接
+
+### Bug 修復
+- [x] 統一技能編輯器 Select.Item value 為空字串導致崩潰（CatalogFormDialog 加入 __none__ 佔位符處理）
+- [x] 世界管理（Theater 合併功能）全部讀取不到（根因：AdminGameTheaterInline 使用了虛構的 trpc.gameTheater 路徑，已改為直接 import AdminGameTheater 的已有組件）
+- [x] 完整測試所有從 Theater 合併過來的功能（組件直接重用，零編譯錯誤）
+
+### Schema 清理
+- [x] 完全移除舊 gameSkillCatalog / gameMonsterSkillCatalog schema 定義（從 drizzle/schema.ts 刪除，保留註解標記）
+
+### 學習技能系統完整串接
+- [x] 習得代價：道具選擇下拉（從道具圖鑑拉取，顯示名稱+類型）
+- [x] 習得代價：可直接在技能編輯器新增任務道具並同步到道具圖鑑（quickCreateQuestItem API）
+- [x] 前置條件：前置技能多選下拉（支援舊格式數字 ID 和新格式 skillId）
+- [x] NPC 選擇器（搜尋下拉，顯示 NPC 名稱/地點/區域，32 個 NPC 已建立）
+- [x] NPC 所在節點確認（NPC 圖鑑已含 location/region 欄位，後台可選擇關聯）
+- [x] 所有關聯欄位都有直覺式表單選擇（NPC/道具/前置技能全部下拉選取）
+- [x] 後端 checkPrerequisites 支援數字 ID 陣列和物件格式兩種前置條件
+- [x] 後端 confirmLearn 實作代價扣除（金幣/靈晶/道具）+ 前置條件檢查

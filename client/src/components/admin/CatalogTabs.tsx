@@ -1503,6 +1503,233 @@ const USABLE_FILTER = [
   { value: "monster", label: "魔物可用" },
 ];
 
+// ===== 學習系統自訂編輯器組件 =====
+
+/** NPC 選擇器（下拉搜尋 + 顯示 NPC 資訊） */
+function NpcSelector({ value, onChange }: { value: any; onChange: (v: any) => void }) {
+  const { data: npcs } = trpc.gameCatalog.getAllNpcs.useQuery();
+  const [search, setSearch] = useState("");
+  const npcId = value ? Number(value) : 0;
+  const selected = npcs?.find(n => n.id === npcId);
+  const filtered = npcs?.filter(n =>
+    !search || n.name.includes(search) || n.code.includes(search) || (n.location ?? "").includes(search)
+  ) ?? [];
+
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-medium">教導 NPC</label>
+      <Input placeholder="搜尋 NPC 名稱/代碼/地點..." value={search} onChange={e => setSearch(e.target.value)} className="h-8 text-xs" />
+      <div className="max-h-32 overflow-y-auto border rounded-md">
+        <div className={`px-2 py-1 text-xs cursor-pointer hover:bg-accent ${npcId === 0 ? 'bg-accent font-bold' : ''}`}
+          onClick={() => onChange(0)}>（無 NPC）</div>
+        {filtered.map(n => (
+          <div key={n.id}
+            className={`px-2 py-1 text-xs cursor-pointer hover:bg-accent flex justify-between ${n.id === npcId ? 'bg-accent font-bold' : ''}`}
+            onClick={() => onChange(n.id)}>
+            <span>{n.name}{n.title ? ` (${n.title})` : ''}</span>
+            <span className="text-muted-foreground">{n.region} · {n.location ?? '未知'}</span>
+          </div>
+        ))}
+      </div>
+      {selected && (
+        <div className="text-xs text-muted-foreground bg-muted/50 rounded p-2">
+          已選：<strong>{selected.name}</strong> [{selected.code}] — {selected.region} · {selected.location}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** 習得代價編輯器（金幣/靈晶/道具/聲望 全表單化） */
+function LearnCostEditor({ value, onChange }: { value: any; onChange: (v: any) => void }) {
+  const { data: allItems, refetch: refetchItems } = trpc.gameCatalog.getAllItems.useQuery();
+  const quickCreateMut = trpc.gameCatalog.quickCreateQuestItem.useMutation({
+    onSuccess: (r) => { toast.success(`已建立任務道具: ${r.name} (${r.itemId})`); refetchItems(); },
+    onError: (e) => toast.error(`建立失敗: ${e.message}`),
+  });
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemWuxing, setNewItemWuxing] = useState("木");
+
+  // Parse value
+  const cost = typeof value === 'string' ? (() => { try { return JSON.parse(value); } catch { return {}; } })() : (value ?? {});
+  const gold = cost.gold ?? 0;
+  const soulCrystal = cost.soulCrystal ?? 0;
+  const items: Array<{itemId: string; name: string; count: number}> = cost.items ?? [];
+  const reputation = cost.reputation ?? null;
+
+  const update = (patch: any) => {
+    const next = { ...cost, ...patch };
+    // Clean up empty values
+    if (!next.gold) delete next.gold;
+    if (!next.soulCrystal) delete next.soulCrystal;
+    if (!next.items?.length) delete next.items;
+    if (!next.reputation?.amount) delete next.reputation;
+    onChange(Object.keys(next).length > 0 ? next : null);
+  };
+
+  const addItem = (itemId: string) => {
+    const item = allItems?.find(i => i.itemId === itemId);
+    if (!item) return;
+    const existing = items.find(i => i.itemId === itemId);
+    if (existing) {
+      update({ items: items.map(i => i.itemId === itemId ? { ...i, count: i.count + 1 } : i) });
+    } else {
+      update({ items: [...items, { itemId, name: item.name, count: 1 }] });
+    }
+  };
+
+  const removeItem = (itemId: string) => {
+    update({ items: items.filter(i => i.itemId !== itemId) });
+  };
+
+  const updateItemCount = (itemId: string, count: number) => {
+    update({ items: items.map(i => i.itemId === itemId ? { ...i, count } : i) });
+  };
+
+  const questItems = allItems?.filter(i => i.category === 'quest') ?? [];
+  const [itemSearch, setItemSearch] = useState("");
+  const filteredItems = questItems.filter(i => !itemSearch || i.name.includes(itemSearch) || i.itemId.includes(itemSearch));
+
+  return (
+    <div className="space-y-3">
+      <label className="text-xs font-medium">習得代價</label>
+      {/* 金幣 & 靈晶 */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <label className="text-[10px] text-muted-foreground">金幣</label>
+          <Input type="number" value={gold} onChange={e => update({ gold: Number(e.target.value) })} min={0} className="h-7 text-xs" />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] text-muted-foreground">靈晶</label>
+          <Input type="number" value={soulCrystal} onChange={e => update({ soulCrystal: Number(e.target.value) })} min={0} className="h-7 text-xs" />
+        </div>
+      </div>
+
+      {/* 所需道具 */}
+      <div className="space-y-1">
+        <label className="text-[10px] text-muted-foreground">所需道具</label>
+        {items.map(item => (
+          <div key={item.itemId} className="flex items-center gap-1 text-xs">
+            <span className="flex-1">{item.name} ({item.itemId})</span>
+            <Input type="number" value={item.count} onChange={e => updateItemCount(item.itemId, Number(e.target.value))} min={1} className="h-6 w-16 text-xs" />
+            <Button variant="ghost" size="sm" className="h-6 px-1 text-destructive" onClick={() => removeItem(item.itemId)}>✕</Button>
+          </div>
+        ))}
+        <div className="flex gap-1">
+          <Input placeholder="搜尋任務道具..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-7 text-xs flex-1" />
+        </div>
+        {itemSearch && (
+          <div className="max-h-24 overflow-y-auto border rounded text-xs">
+            {filteredItems.map(i => (
+              <div key={i.itemId} className="px-2 py-0.5 cursor-pointer hover:bg-accent flex justify-between" onClick={() => { addItem(i.itemId); setItemSearch(""); }}>
+                <span>{i.name}</span><span className="text-muted-foreground">{i.itemId}</span>
+              </div>
+            ))}
+            {filteredItems.length === 0 && <div className="px-2 py-1 text-muted-foreground">無匹配道具</div>}
+          </div>
+        )}
+        {/* 快速新增任務道具 */}
+        <div className="flex gap-1 items-center mt-1">
+          <Input placeholder="新道具名稱" value={newItemName} onChange={e => setNewItemName(e.target.value)} className="h-7 text-xs flex-1" />
+          <select value={newItemWuxing} onChange={e => setNewItemWuxing(e.target.value)} className="h-7 text-xs border rounded px-1">
+            <option value="木">木</option><option value="火">火</option><option value="土">土</option><option value="金">金</option><option value="水">水</option>
+          </select>
+          <Button variant="outline" size="sm" className="h-7 text-xs" disabled={!newItemName || quickCreateMut.isPending}
+            onClick={() => { quickCreateMut.mutate({ name: newItemName, wuxing: newItemWuxing }); setNewItemName(""); }}>
+            {quickCreateMut.isPending ? '建立中...' : '＋新增道具'}
+          </Button>
+        </div>
+      </div>
+
+      {/* 聲望需求 */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <label className="text-[10px] text-muted-foreground">聲望區域</label>
+          <Input value={reputation?.area ?? ''} onChange={e => update({ reputation: { area: e.target.value, amount: reputation?.amount ?? 0 } })} placeholder="如：迷霧城" className="h-7 text-xs" />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] text-muted-foreground">聲望需求量</label>
+          <Input type="number" value={reputation?.amount ?? 0} onChange={e => update({ reputation: { area: reputation?.area ?? '', amount: Number(e.target.value) } })} min={0} className="h-7 text-xs" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** 前置技能選擇器（多選，支援舊格式數字 ID 和新格式 skillId） */
+function PrerequisiteSkillSelector({ value, onChange }: { value: any; onChange: (v: any) => void }) {
+  const { data: allSkills } = trpc.gameCatalog.getAllSkills.useQuery();
+  const [search, setSearch] = useState("");
+
+  // Parse value: can be JSON string or array of numbers/strings
+  const rawSelected: (string | number)[] = typeof value === 'string'
+    ? (() => { try { return JSON.parse(value); } catch { return []; } })()
+    : (Array.isArray(value) ? value : []);
+
+  // Normalize: convert old numeric IDs to skillId strings for display
+  const resolveSkill = (sid: string | number) => {
+    if (!allSkills) return null;
+    if (typeof sid === 'number') return allSkills.find(s => s.id === sid);
+    return allSkills.find(s => s.skillId === sid || s.code === sid);
+  };
+
+  const filtered = allSkills?.filter(s =>
+    !search || s.name.includes(search) || s.skillId.includes(search) || (s.code ?? '').includes(search)
+  ) ?? [];
+
+  // Always save as numeric IDs (consistent with DB format)
+  const toggle = (numericId: number) => {
+    const next = rawSelected.includes(numericId)
+      ? rawSelected.filter(s => s !== numericId)
+      : [...rawSelected, numericId];
+    onChange(next.length > 0 ? next : null);
+  };
+
+  const remove = (sid: string | number) => {
+    const next = rawSelected.filter(s => s !== sid);
+    onChange(next.length > 0 ? next : null);
+  };
+
+  const isSelected = (numericId: number) => rawSelected.includes(numericId);
+
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-medium">前置技能條件</label>
+      {/* 已選列表 */}
+      {rawSelected.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {rawSelected.map(sid => {
+            const skill = resolveSkill(sid);
+            return (
+              <span key={String(sid)} className="inline-flex items-center gap-1 bg-primary/10 text-primary rounded px-2 py-0.5 text-xs">
+                {skill ? `${skill.name} (${skill.skillId})` : `ID:${sid}`}
+                <button className="hover:text-destructive" onClick={() => remove(sid)}>✕</button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {/* 搜尋 & 選取 */}
+      <Input placeholder="搜尋技能名稱/代碼..." value={search} onChange={e => setSearch(e.target.value)} className="h-7 text-xs" />
+      {search && (
+        <div className="max-h-32 overflow-y-auto border rounded text-xs">
+          {filtered.slice(0, 30).map(s => (
+            <div key={s.skillId}
+              className={`px-2 py-0.5 cursor-pointer hover:bg-accent flex justify-between ${isSelected(s.id) ? 'bg-accent font-bold' : ''}`}
+              onClick={() => toggle(s.id)}>
+              <span>{isSelected(s.id) ? '✓ ' : ''}{s.name}</span>
+              <span className="text-muted-foreground">{s.skillId} · {s.wuxing} · {s.category}</span>
+            </div>
+          ))}
+          {filtered.length === 0 && <div className="px-2 py-1 text-muted-foreground">無匹配技能</div>}
+          {filtered.length > 30 && <div className="px-2 py-1 text-muted-foreground">還有 {filtered.length - 30} 個結果，請縮小搜尋範圍</div>}
+        </div>
+      )}
+      {rawSelected.length === 0 && !search && <div className="text-xs text-muted-foreground">無前置技能要求（點擊搜尋框選取技能）</div>}
+    </div>
+  );
+}
+
 export function SkillCatalogV2Tab() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -1641,9 +1868,15 @@ export function SkillCatalogV2Tab() {
 
     // 學習/取得
     { key: "prerequisiteLevel", label: "前置等級需求", type: "number", defaultValue: 0, min: 0, group: "學習/取得" },
-    { key: "npcId", label: "教導NPC ID", type: "number", defaultValue: 0, min: 0, group: "學習/取得" },
-    { key: "learnCost", label: "習得代價(JSON)", type: "json", defaultValue: null, group: "學習/取得" },
-    { key: "prerequisites", label: "前置技能(JSON)", type: "json", defaultValue: null, group: "學習/取得" },
+    { key: "npcId", label: "教導 NPC", type: "custom", group: "學習/取得", skipParse: true,
+      render: (value, onChange) => <NpcSelector value={value} onChange={onChange} />
+    },
+    { key: "learnCost", label: "習得代價", type: "custom", group: "學習/取得", skipParse: true,
+      render: (value, onChange) => <LearnCostEditor value={value} onChange={onChange} />
+    },
+    { key: "prerequisites", label: "前置技能", type: "custom", group: "學習/取得", skipParse: true,
+      render: (value, onChange) => <PrerequisiteSkillSelector value={value} onChange={onChange} />
+    },
 
     // 其他
     { key: "iconUrl", label: "圖示URL", type: "text", group: "其他" },

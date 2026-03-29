@@ -1,0 +1,46 @@
+{
+  "query": "SELECT COUNT(*) as cnt FROM game_npc_catalog; SELECT id, code, name, title, location, region FROM game_npc_catalog LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as cnt FROM game_npc_catalog; SELECT id, code, name, title, location, region FROM game_npc_catalog LIMIT 10;",
+  "rows": [
+    {
+      "cnt": "32"
+    },
+    {
+      "cnt": "id\tcode\tname\ttitle\tlocation\tregion"
+    },
+    {
+      "cnt": "36\tNPC_SILA\t席拉\t連擊導師\t迷霧城・戰士公會大廳\t迷霧城"
+    },
+    {
+      "cnt": "37\tNPC_WOKEN\t沃克恩\t武器評議官\t迷霧城・武器評議塔\t迷霧城"
+    },
+    {
+      "cnt": "38\tNPC_FELINA\t費蓮娜\t反擊女劍士\t碎影深淵・入口營地\t碎影深淵"
+    },
+    {
+      "cnt": "39\tNPC_HEGMOS\t赫格莫斯\t崩擊大師\t試煉之塔・地下訓練場\t試煉之塔"
+    },
+    {
+      "cnt": "40\tNPC_ELLA\t艾拉\t箭塔守衛\t迷霧城・東門箭塔\t迷霧城"
+    },
+    {
+      "cnt": "41\tNPC_TORIGO\t托里戈\t賭徒鬥士\t迷霧城・地下競技場\t迷霧城"
+    },
+    {
+      "cnt": "42\tNPC_MU\t暮\t暗影刺客\t迷霧城・黑市後巷\t迷霧城"
+    },
+    {
+      "cnt": "43\tNPC_VICTOR\t維克多・奈斯特\t毒術師\t迷霧城・荒廢藥房\t迷霧城"
+    },
+    {
+      "cnt": "44\tNPC_ELVEN_FIRE\t艾爾文・赤焰\t火焰導師\t初界・試煉廣場\t初界"
+    },
+    {
+      "cnt": "45\tNPC_FILIA\t菲莉亞・霜語\t冰霜魔女\t初界・霜語小屋\t初界"
+    }
+  ],
+  "messages": [],
+  "stdout": "cnt\n32\nid\tcode\tname\ttitle\tlocation\tregion\n36\tNPC_SILA\t席拉\t連擊導師\t迷霧城・戰士公會大廳\t迷霧城\n37\tNPC_WOKEN\t沃克恩\t武器評議官\t迷霧城・武器評議塔\t迷霧城\n38\tNPC_FELINA\t費蓮娜\t反擊女劍士\t碎影深淵・入口營地\t碎影深淵\n39\tNPC_HEGMOS\t赫格莫斯\t崩擊大師\t試煉之塔・地下訓練場\t試煉之塔\n40\tNPC_ELLA\t艾拉\t箭塔守衛\t迷霧城・東門箭塔\t迷霧城\n41\tNPC_TORIGO\t托里戈\t賭徒鬥士\t迷霧城・地下競技場\t迷霧城\n42\tNPC_MU\t暮\t暗影刺客\t迷霧城・黑市後巷\t迷霧城\n43\tNPC_VICTOR\t維克多・奈斯特\t毒術師\t迷霧城・荒廢藥房\t迷霧城\n44\tNPC_ELVEN_FIRE\t艾爾文・赤焰\t火焰導師\t初界・試煉廣場\t初界\n45\tNPC_FILIA\t菲莉亞・霜語\t冰霜魔女\t初界・霜語小屋\t初界\n",
+  "stderr": "",
+  "execution_time_ms": 1806
+}

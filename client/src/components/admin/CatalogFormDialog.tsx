@@ -192,15 +192,18 @@ export default function CatalogFormDialog({ open, onClose, onSubmit, title, fiel
       );
     }
     if (f.type === "select") {
-      const opts = f.options ?? [];
+      const opts = (f.options ?? []).map(o => ({ ...o, value: o.value === "" ? "__none__" : o.value }));
+      const rawVal = form[f.key];
+      const selectVal = (rawVal === null || rawVal === undefined || rawVal === "") ? "__none__" : String(rawVal);
       return (
         <div key={f.key} className="space-y-1">
           <Label className="text-xs font-medium">{f.label}</Label>
-          <Select value={form[f.key] ?? ""} onValueChange={v => handleChange(f.key, v)}>
+          <Select value={selectVal} onValueChange={v => handleChange(f.key, v === "__none__" ? "" : v)}>
             <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder={f.placeholder ?? `選擇${f.label}`} />
             </SelectTrigger>
             <SelectContent className="max-h-60">
+              {!opts.some(o => o.value === "__none__") && <SelectItem value="__none__">（未設定）</SelectItem>}
               {opts.map(o => (
                 <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
               ))}

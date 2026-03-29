@@ -13,6 +13,7 @@ import {
   gameItemCatalog,
   gameEquipmentCatalog,
   gameUnifiedSkillCatalog,
+  gameNpcCatalog,
   gameAchievements,
   gameAgents,
   gameVirtualShop,
@@ -811,7 +812,9 @@ export const gameCatalogAdminRouter = router({
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
     return db.select({
+      id: gameUnifiedSkillCatalog.id,
       skillId: gameUnifiedSkillCatalog.skillId,
+      code: gameUnifiedSkillCatalog.code,
       name: gameUnifiedSkillCatalog.name,
       wuxing: gameUnifiedSkillCatalog.wuxing,
       skillType: gameUnifiedSkillCatalog.skillType,
@@ -847,6 +850,55 @@ export const gameCatalogAdminRouter = router({
       category: gameItemCatalog.category,
       rarity: gameItemCatalog.rarity,
     }).from(gameItemCatalog).where(eq(gameItemCatalog.isActive, 1)).orderBy(asc(gameItemCatalog.name));
+  }),
+
+  /** 取得所有 NPC（供技能教導 NPC 下拉） */
+  getAllNpcs: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    return db.select({
+      id: gameNpcCatalog.id,
+      code: gameNpcCatalog.code,
+      name: gameNpcCatalog.name,
+      title: gameNpcCatalog.title,
+      location: gameNpcCatalog.location,
+      region: gameNpcCatalog.region,
+    }).from(gameNpcCatalog).orderBy(asc(gameNpcCatalog.sortOrder));
+  }),
+
+  /** 快速新增任務道具（從技能編輯器直接建立） */
+  quickCreateQuestItem: adminProcedure.input(z.object({
+    name: z.string().min(1),
+    wuxing: z.string().default("木"),
+    description: z.string().optional(),
+  })).mutation(async ({ input }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    // 自動生成 quest item ID
+    const wuxingPrefix: Record<string, string> = { "木": "W", "火": "F", "土": "E", "金": "M", "水": "Wt" };
+    const prefix = `I_${wuxingPrefix[input.wuxing] || "W"}`;
+    const existing = await db.select({ itemId: gameItemCatalog.itemId })
+      .from(gameItemCatalog)
+      .where(like(gameItemCatalog.itemId, `${prefix}%`))
+      .orderBy(desc(gameItemCatalog.id))
+      .limit(1);
+    const lastNum = existing.length > 0 ? parseInt(existing[0].itemId.replace(prefix, "")) || 0 : 0;
+    const newId = `${prefix}${String(lastNum + 1).padStart(3, "0")}`;
+    const now = Date.now();
+    const [result] = await db.insert(gameItemCatalog).values({
+      itemId: newId,
+      name: input.name,
+      wuxing: input.wuxing,
+      category: "quest",
+      rarity: "common",
+      stackLimit: 99,
+      stackable: 1,
+      shopPrice: 0,
+      effect: input.description || `任務道具：${input.name}`,
+      isActive: 1,
+      createdAt: now,
+    });
+    return { id: result.insertId, itemId: newId, name: input.name };
   }),
 
   /** 取得所有魔物（供道具/技能掉落來源的下拉） */

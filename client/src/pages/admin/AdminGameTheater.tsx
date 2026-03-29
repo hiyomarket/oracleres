@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { useLocation } from "wouter";
 
 // ─── 世界重置 Tab ───────────────────────────────────────────────────────────
-function WorldResetTab() {
+export function WorldResetTab() {
   const [confirmText, setConfirmText] = useState("");
   const [isResetting, setIsResetting] = useState(false);
   const [resetResult, setResetResult] = useState<null | {
@@ -232,7 +232,7 @@ const CONFIG_CATEGORY_LABELS: Record<string, string> = {
 };
 
 // ─── 角色管理 Tab ─────────────────────────────────────────────────────────────
-function AgentManagementTab() {
+export function AgentManagementTab() {
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -627,7 +627,7 @@ function AgentManagementTab() {
 }
 
 // ─── 全域參數 Tab ─────────────────────────────────────────────────────────────
-function GameConfigTab() {
+export function GameConfigTab() {
   const { data: configs, isLoading, refetch } = trpc.gameAdmin.getGameConfigs.useQuery();
   const [editedValues, setEditedValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -735,7 +735,7 @@ function GameConfigTab() {
 }
 
 // ─── Tick 引擎狀態 Tab ────────────────────────────────────────────────────────
-function TickEngineTab() {
+export function TickEngineTab() {
   const [tickLog, setTickLog] = useState<Array<{ time: string; msg: string; type: "info" | "success" | "error" }>>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [tickCount, setTickCount] = useState(0);
@@ -878,7 +878,7 @@ const MSG_TYPE_OPTIONS = [
   { value: "maintenance", label: "🔧 維護公告",  color: "#ef4444" },
 ];
 
-function BroadcastTab() {
+export function BroadcastTab() {
   const [content, setContent] = useState("");
   const [msgType, setMsgType] = useState<"info" | "warning" | "event" | "maintenance">("info");
   const [duration, setDuration] = useState("300");
@@ -1023,7 +1023,7 @@ function BroadcastTab() {
 }
 
 // ─── 引擎彈性調控 Tab ─────────────────────────────────────────────────────────────────────────────
-function EngineControlTab() {
+export function EngineControlTab() {
   const { data: cfg, refetch: refetchCfg } = trpc.gameAdmin.getEngineConfig.useQuery();
   const [localCfg, setLocalCfg] = useState<Record<string, string | boolean>>({});
   const [isDirty, setIsDirty] = useState(false);
@@ -1766,7 +1766,7 @@ const REWARD_TYPE_LABELS: Record<string, string> = {
   mixed: "🎁 混合",
 };
 
-function RogueEventTab() {
+export function RogueEventTab() {
   const { data: rogueEvents, refetch } = trpc.gameAdmin.getRogueEvents.useQuery();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -2018,7 +2018,7 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   manual:           "🔧 手動觸發",
 };
 
-function WorldEventTab() {
+export function WorldEventTab() {
   const { data: worldStatus, refetch: refetchStatus } = trpc.gameAdmin.getWorldTickStatus.useQuery();
   const { data: worldEvents, refetch: refetchEvents } = trpc.gameAdmin.getWorldEvents.useQuery({ limit: 30 });
   const [editingConfig, setEditingConfig] = useState<Record<string, { enabled: boolean; probability: number }>>({});
@@ -2238,7 +2238,7 @@ function WorldEventTab() {
 }
 
 // ─── 商店管理 Tab ──────────────────────────────────────────────────────────────────────────────────────
-function ShopManagementTab() {
+export function ShopManagementTab() {
   const [shopType, setShopType] = useState<"virtual" | "spirit" | "hidden">("virtual");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({

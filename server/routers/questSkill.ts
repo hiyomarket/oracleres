@@ -630,8 +630,34 @@ const questProgressRouter = router({
         .where(eq(gameUnifiedSkillCatalog.id, input.skillId));
       if (!skill) throw new Error("找不到技能資料");
 
-      // TODO: 在這裡扣除 learnCost（金幣、魂晶、道具等）
-      // 目前先跳過代價扣除，直接習得
+      // 檢查前置條件
+      const prereqCheck = await checkPrerequisites(agentId, input.skillId);
+      if (!prereqCheck.passed) throw new Error(prereqCheck.reason);
+
+      // 扣除習得代價（金幣、靈晶、道具）
+      const learnCost = typeof skill.learnCost === 'string' ? JSON.parse(skill.learnCost as string) : skill.learnCost;
+      if (learnCost) {
+        // 扣除金幣
+        if (learnCost.gold && learnCost.gold > 0) {
+          await db!.execute(
+            sql`UPDATE game_agents SET gold = gold - ${learnCost.gold} WHERE id = ${agentId} AND gold >= ${learnCost.gold}`
+          );
+        }
+        // 扣除靈晶
+        if (learnCost.soulCrystal && learnCost.soulCrystal > 0) {
+          await db!.execute(
+            sql`UPDATE game_agents SET soul_crystal = soul_crystal - ${learnCost.soulCrystal} WHERE id = ${agentId} AND soul_crystal >= ${learnCost.soulCrystal}`
+          );
+        }
+        // 扣除道具
+        if (learnCost.items && Array.isArray(learnCost.items)) {
+          for (const item of learnCost.items) {
+            await db!.execute(
+              sql`UPDATE game_inventory SET quantity = quantity - ${item.count} WHERE agent_id = ${agentId} AND item_id = ${item.itemId} AND quantity >= ${item.count}`
+            );
+          }
+        }
+      }
 
       const now = Date.now();
 
@@ -746,58 +772,94 @@ async function getAgentId(userId: number): Promise<number | null> {
 }
 
 /** 檢查前置條件 */
-async function checkPrerequisites(agentId: number, skillId: number): Promise<{ passed: boolean; reason: string }> {
+async function checkPrerequisites(agentId: number, skillId: number): Promise<{ passed: boolean; reason: string; details?: any }> {
   const db = await getDb();
   const [skill] = await db!.select().from(gameUnifiedSkillCatalog)
     .where(eq(gameUnifiedSkillCatalog.id, skillId));
   if (!skill) return { passed: false, reason: "找不到技能資料" };
 
-  const prereqs = skill.prerequisites as any;
-  if (!prereqs) return { passed: true, reason: "" };
+  // === 1. 檢查等級要求（prerequisiteLevel 欄位） ===
+  const reqLevel = skill.prerequisiteLevel ?? 0;
+  if (reqLevel > 0) {
+    const [agent] = await db!.execute(
+      sql`SELECT level FROM game_agents WHERE id = ${agentId} LIMIT 1`
+    ) as any;
+    const agentLevel = Array.isArray(agent) && agent.length > 0 ? agent[0].level : 1;
+    if (agentLevel < reqLevel) {
+      return { passed: false, reason: `需要角色等級 ${reqLevel} 以上（目前 ${agentLevel}）` };
+    }
+  }
 
-  // 檢查前置技能
-  if (prereqs.skills && Array.isArray(prereqs.skills) && prereqs.skills.length > 0) {
-    // 取得已習得的技能代碼
+  // === 2. 檢查前置技能（prerequisites 欄位，支援兩種格式） ===
+  const prereqs = skill.prerequisites as any;
+  if (prereqs) {
+    // 取得已習得的技能 ID 列表
     const learned = await db!.select().from(gameLearnedQuestSkills)
       .where(eq(gameLearnedQuestSkills.agentId, agentId));
-    const learnedSkillIds = learned.map((l: any) => l.skillId);
-    
-    let learnedCodes: string[] = [];
-    if (learnedSkillIds.length > 0) {
-      const skills = await db!.select({ code: gameUnifiedSkillCatalog.code })
-        .from(gameUnifiedSkillCatalog)
-        .where(inArray(gameUnifiedSkillCatalog.id, learnedSkillIds));
-      learnedCodes = skills.map((s: any) => s.code);
-    }
+    const learnedIds = new Set(learned.map((l: any) => l.skillId));
 
-    for (const reqCode of prereqs.skills) {
-      // 特殊處理「任一魔法」
-      if (reqCode === "any_magic") {
-        const hasMagic = learnedCodes.some(c => c.startsWith("M"));
-        if (!hasMagic) return { passed: false, reason: "需要先習得任一魔法攻擊技能" };
-      } else {
-        if (!learnedCodes.includes(reqCode)) {
-          return { passed: false, reason: `需要先習得技能 ${reqCode}` };
+    // 格式 A：純數字陣列 [65, 66] → 直接比對 ID
+    if (Array.isArray(prereqs)) {
+      for (const reqId of prereqs) {
+        const numId = typeof reqId === 'number' ? reqId : Number(reqId);
+        if (!learnedIds.has(numId)) {
+          // 嘗試查找技能名稱
+          const [reqSkill] = await db!.select({ name: gameUnifiedSkillCatalog.name })
+            .from(gameUnifiedSkillCatalog)
+            .where(eq(gameUnifiedSkillCatalog.id, numId));
+          const name = reqSkill?.name ?? `ID:${numId}`;
+          return { passed: false, reason: `需要先習得技能「${name}」` };
+        }
+      }
+    }
+    // 格式 B：物件 { skills: ["P01", "M02"], level: 5 }
+    else if (typeof prereqs === 'object') {
+      if (prereqs.skills && Array.isArray(prereqs.skills)) {
+        let learnedCodes: string[] = [];
+        if (learnedIds.size > 0) {
+          const skills = await db!.select({ id: gameUnifiedSkillCatalog.id, code: gameUnifiedSkillCatalog.code })
+            .from(gameUnifiedSkillCatalog)
+            .where(inArray(gameUnifiedSkillCatalog.id, [...learnedIds]));
+          learnedCodes = skills.map((s: any) => s.code).filter(Boolean);
+        }
+        for (const reqCode of prereqs.skills) {
+          if (reqCode === "any_magic") {
+            const hasMagic = learnedCodes.some(c => c?.startsWith("M"));
+            if (!hasMagic) return { passed: false, reason: "需要先習得任一魔法攻擊技能" };
+          } else {
+            if (!learnedCodes.includes(reqCode)) {
+              return { passed: false, reason: `需要先習得技能 ${reqCode}` };
+            }
+          }
+        }
+      }
+      if (prereqs.level) {
+        const [agent] = await db!.execute(
+          sql`SELECT level FROM game_agents WHERE id = ${agentId} LIMIT 1`
+        ) as any;
+        const agentLevel = Array.isArray(agent) && agent.length > 0 ? agent[0].level : 1;
+        if (agentLevel < prereqs.level) {
+          return { passed: false, reason: `需要角色等級 ${prereqs.level} 以上（目前 ${agentLevel}）` };
         }
       }
     }
   }
 
-  // 檢查等級要求
-  if (prereqs.level) {
+  // === 3. 檢查習得代價是否足夠（learnCost 欄位） ===
+  const learnCost = typeof skill.learnCost === 'string' ? JSON.parse(skill.learnCost) : skill.learnCost;
+  if (learnCost) {
     const [agent] = await db!.execute(
-      sql`SELECT level FROM game_agents WHERE id = ${agentId} LIMIT 1`
+      sql`SELECT gold, soul_crystal FROM game_agents WHERE id = ${agentId} LIMIT 1`
     ) as any;
-    const agentLevel = Array.isArray(agent) && agent.length > 0 ? agent[0].level : 1;
-    if (agentLevel < prereqs.level) {
-      return { passed: false, reason: `需要角色等級 ${prereqs.level} 以上（目前 ${agentLevel}）` };
+    const agentData = Array.isArray(agent) && agent.length > 0 ? agent[0] : { gold: 0, soul_crystal: 0 };
+    
+    if (learnCost.gold && agentData.gold < learnCost.gold) {
+      return { passed: false, reason: `金幣不足（需要 ${learnCost.gold}，目前 ${agentData.gold}）` };
     }
-  }
-
-  // 檢查特殊條件（文字描述，無法自動驗證的由管理員手動確認）
-  if (prereqs.special) {
-    // 特殊條件目前只做提示，不阻擋
-    // 未來可加入更精確的檢查
+    if (learnCost.soulCrystal && agentData.soul_crystal < learnCost.soulCrystal) {
+      return { passed: false, reason: `靈晶不足（需要 ${learnCost.soulCrystal}，目前 ${agentData.soul_crystal}）` };
+    }
+    // TODO: 檢查道具數量（items）和聲望（reputation）
   }
 
   return { passed: true, reason: "" };

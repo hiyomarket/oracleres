@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, skill_id, name, npc_id, learn_cost, prerequisites, prerequisite_level FROM game_unified_skill_catalog WHERE npc_id IS NOT NULL AND npc_id > 0 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, skill_id, name, npc_id, learn_cost, prerequisites, prerequisite_level FROM game_unified_skill_catalog WHERE npc_id IS NOT NULL AND npc_id > 0 LIMIT 10;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1594
+}

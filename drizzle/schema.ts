@@ -2330,89 +2330,7 @@ export const gameEquipmentCatalog = mysqlTable("game_equipment_catalog", {
 export type GameEquipmentCatalog = typeof gameEquipmentCatalog.$inferSelect;
 export type InsertGameEquipmentCatalog = typeof gameEquipmentCatalog.$inferInsert;
 
-/**
- * @deprecated 已棄用 - 請使用 gameUnifiedSkillCatalog
- * 舊技能圖鑑表（對應 GD-016 完整技能資料庫，250 種）
- * 保留定義以防需要回溯，但不再有任何程式碼引用此表
- */
-export const gameSkillCatalog = mysqlTable("game_skill_catalog", {
-  id: int("id").autoincrement().primaryKey(),
-  /** 技能唯一識別碼，如 S_W001 */
-  skillId: varchar("skill_id", { length: 20 }).notNull().unique(),
-  name: varchar("name", { length: 100 }).notNull(),
-  /** 五行屬性：木/火/土/金/水 */
-  wuxing: varchar("wuxing", { length: 10 }).notNull(),
-  /** 類別：active_combat / passive_combat / life_gather / craft_forge */
-  category: varchar("category", { length: 30 }).notNull().default("active_combat"),
-  /** 稀有度：common / rare / epic / legendary */
-  rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
-  /** 階級：初階/中階/高階/傳說/天命 */
-  tier: varchar("tier", { length: 20 }).notNull().default("初階"),
-  /** MP 消耗（被動技能為 0） */
-  mpCost: int("mp_cost").notNull().default(0),
-  /** 冷卻回合數 */
-  cooldown: int("cooldown").notNull().default(0),
-  /** 威力 %（基礎攻擊的倍率，如 150 = 150%） */
-  powerPercent: int("power_percent").notNull().default(100),
-  /** 習得等級 */
-  learnLevel: int("learn_level").notNull().default(1),
-  /** 獲取類型：shop / drop / quest / craft / hidden */
-  acquireType: varchar("acquire_type", { length: 20 }).notNull().default("shop"),
-  /** 商店售價（金幣，0 表示不在商店販售） */
-  shopPrice: int("shop_price").notNull().default(0),
-  /** 掉落怪物 ID（從魔物圖鑑選取） */
-  dropMonsterId: varchar("drop_monster_id", { length: 20 }).default(""),
-  /** 隱藏觸發條件（文字說明） */
-  hiddenTrigger: text("hidden_trigger"),
-  /** 效果說明 */
-  description: text("description"),
-  /** 技能類型：attack / heal / buff / debuff / passive / special */
-  skillType: varchar("skill_type", { length: 20 }).notNull().default("attack"),
-  /** 是否在一般商店上架 */
-  inNormalShop: tinyint("in_normal_shop").default(0),
-  /** 是否在靈相商店上架 */
-  inSpiritShop: tinyint("in_spirit_shop").default(0),
-  /** 是否在密店上架 */
-  inSecretShop: tinyint("in_secret_shop").default(0),
-  // ===== 價值評估引擎 =====
-  /** 價值分數（0~1000） */
-  valueScore: int("value_score").notNull().default(0),
-  /** 品質等級：S/A/B/C/D */
-  qualityGrade: varchar("quality_grade", { length: 5 }).notNull().default("C"),
-  /** 建議掉落等級下限 */
-  dropLevelMin: int("drop_level_min").notNull().default(1),
-  /** 建議掉落等級上限 */
-  dropLevelMax: int("drop_level_max").notNull().default(15),
-  /** 是否可交易 */
-  tradeable: tinyint("tradeable").notNull().default(1),
-  /** 是否可在拍賣行上架 */
-  inAuctionHouse: tinyint("in_auction_house").notNull().default(1),
-  /** 圖片 URL */
-  imageUrl: text("image_url").default(""),
-  /** 傷害方式： single 單體攻擊 / aoe 全體攻擊 */
-  damageType: mysqlEnum("damage_type", ["single", "aoe"]).notNull().default("single"),
-  // ===== GD-028 新增欄位 =====
-  /** 五行門檻（學習該技能所需的主屬性最低值，0=無門檻） */
-  wuxingThreshold: int("wuxing_threshold").notNull().default(0),
-  /** 狀態異常效果（poison/petrify/sleep/confuse/forget/drunk/stun/none） */
-  statusEffect: varchar("status_effect", { length: 20 }).notNull().default("none"),
-  /** 狀態異常觸發機率（%） */
-  statusChance: int("status_chance").notNull().default(0),
-  /** 狀態異常持續回合數 */
-  statusDuration: int("status_duration").notNull().default(0),
-  /** 治療百分比（治療技能用，0=非治療） */
-  healPercent: int("heal_percent").notNull().default(0),
-  /** 職業需求（none=無限制） */
-  professionRequired: varchar("profession_required", { length: 20 }).notNull().default("none"),
-  /** 技能階級（basic/intermediate/advanced/destiny/legendary） */
-  skillTier: varchar("skill_tier", { length: 20 }).notNull().default("basic"),
-  /** 取得方式（levelup/profession/skillbook/destiny） */
-  acquireMethod: varchar("acquire_method", { length: 20 }).notNull().default("levelup"),
-  isActive: tinyint("is_active").default(1),
-  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
-});
-export type GameSkillCatalog = typeof gameSkillCatalog.$inferSelect;
-export type InsertGameSkillCatalog = typeof gameSkillCatalog.$inferInsert;
+// [REMOVED] gameSkillCatalog 已完全移除，所有功能已遷移至 gameUnifiedSkillCatalog
 
 /**
  * 裝備模板表（GD-021）：所有裝備的定義資料
@@ -3000,41 +2918,7 @@ export type AuctionListing = typeof auctionListings.$inferSelect;
 export type InsertAuctionListing = typeof auctionListings.$inferInsert;
 
 
-/**
- * @deprecated 已棄用 - 請使用 gameUnifiedSkillCatalog（usable_by_monster = 1）
- * 舊魔物技能圖鑑表（M3D 新增）
- * 保留定義以防需要回溯，但不再有任何程式碼引用此表
- */
-export const gameMonsterSkillCatalog = mysqlTable("game_monster_skill_catalog", {
-  id: int("id").autoincrement().primaryKey(),
-  /** 魔物技能唯一識別碼，如 SK_M001 */
-  monsterSkillId: varchar("monster_skill_id", { length: 20 }).notNull().unique(),
-  name: varchar("name", { length: 100 }).notNull(),
-  /** 五行屬性：木/火/土/金/水 */
-  wuxing: varchar("wuxing", { length: 10 }).notNull(),
-  /** 技能類型：attack / heal / buff / debuff / special / passive */
-  skillType: varchar("skill_type", { length: 20 }).notNull().default("attack"),
-  /** 稀有度：common / rare / epic / legendary */
-  rarity: varchar("rarity", { length: 20 }).notNull().default("common"),
-  /** 威力 %（基礎攻擊的倍率，如 150 = 150%） */
-  powerPercent: int("power_percent").notNull().default(100),
-  /** MP 消耗 */
-  mpCost: int("mp_cost").notNull().default(0),
-  /** 冷卻回合數 */
-  cooldown: int("cooldown").notNull().default(0),
-  /** 命中率修正 %（100 = 必中） */
-  accuracyMod: int("accuracy_mod").notNull().default(100),
-  /** 附加效果（JSON：{type, chance, duration, value}） */
-  additionalEffect: json("additional_effect").$type<{type: string; chance: number; duration?: number; value?: number} | null>().default(null),
-  /** AI 使用條件（JSON：{hpBelow, targetElement, priority}） */
-  aiCondition: json("ai_condition").$type<{hpBelow?: number; targetElement?: string; priority?: number} | null>().default(null),
-  /** 效果說明 */
-  description: text("description"),
-  isActive: tinyint("is_active").default(1),
-  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
-});
-export type GameMonsterSkillCatalog = typeof gameMonsterSkillCatalog.$inferSelect;
-export type InsertGameMonsterSkillCatalog = typeof gameMonsterSkillCatalog.$inferInsert;
+// [REMOVED] gameMonsterSkillCatalog 已完全移除，所有功能已遷移至 gameUnifiedSkillCatalog（usable_by_monster = 1）
 
 
 /**

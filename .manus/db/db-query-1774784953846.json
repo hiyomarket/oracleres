@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, skill_id, name, learn_cost, prerequisites, prerequisite_level FROM game_unified_skill_catalog WHERE usable_by_player = 1 LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, skill_id, name, learn_cost, prerequisites, prerequisite_level FROM game_unified_skill_catalog WHERE usable_by_player = 1 LIMIT 10;",
+  "rows": [
+    {
+      "id": "155",
+      "skill_id": "USK_155",
+      "name": "連擊",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}",
+      "prerequisites": "NULL",
+      "prerequisite_level": "NULL"
+    },
+    {
+      "id": "156",
+      "skill_id": "USK_156",
+      "name": "諸刃",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}",
+      "prerequisites": "[65]",
+      "prerequisite_level": "3"
+    },
+    {
+      "id": "157",
+      "skill_id": "USK_157",
+      "name": "反擊",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}",
+      "prerequisites": "NULL",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "158",
+      "skill_id": "USK_158",
+      "name": "崩擊",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}",
+      "prerequisites": "[65]",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "159",
+      "skill_id": "USK_159",
+      "name": "亂射",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}",
+      "prerequisites": "[65]",
+      "prerequisite_level": "3"
+    },
+    {
+      "id": "160",
+      "skill_id": "USK_160",
+      "name": "乾坤一擲",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}",
+      "prerequisites": "[68]",
+      "prerequisite_level": "10"
+    },
+    {
+      "id": "161",
+      "skill_id": "USK_161",
+      "name": "迅速果斷",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}",
+      "prerequisites": "[65]",
+      "prerequisite_level": "8"
+    },
+    {
+      "id": "162",
+      "skill_id": "USK_162",
+      "name": "毒擊",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}",
+      "prerequisites": "[65]",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "163",
+      "skill_id": "USK_163",
+      "name": "氣功彈",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}",
+      "prerequisites": "[65]",
+      "prerequisite_level": "5"
+    },
+    {
+      "id": "164",
+      "skill_id": "USK_164",
+      "name": "吸血攻擊",
+      "learn_cost": "{\"gold\": 500, \"soulCrystal\": 10}",
+      "prerequisites": "[65]",
+      "prerequisite_level": "8"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tskill_id\tname\tlearn_cost\tprerequisites\tprerequisite_level\n155\tUSK_155\t連擊\t{\"gold\": 500, \"soulCrystal\": 10}\tNULL\tNULL\n156\tUSK_156\t諸刃\t{\"gold\": 500, \"soulCrystal\": 10}\t[65]\t3\n157\tUSK_157\t反擊\t{\"gold\": 500, \"soulCrystal\": 10}\tNULL\t5\n158\tUSK_158\t崩擊\t{\"gold\": 500, \"soulCrystal\": 10}\t[65]\t5\n159\tUSK_159\t亂射\t{\"gold\": 500, \"soulCrystal\": 10}\t[65]\t3\n160\tUSK_160\t乾坤一擲\t{\"gold\": 500, \"soulCrystal\": 10}\t[68]\t10\n161\tUSK_161\t迅速果斷\t{\"gold\": 500, \"soulCrystal\": 10}\t[65]\t8\n162\tUSK_162\t毒擊\t{\"gold\": 500, \"soulCrystal\": 10}\t[65]\t5\n163\tUSK_163\t氣功彈\t{\"gold\": 500, \"soulCrystal\": 10}\t[65]\t5\n164\tUSK_164\t吸血攻擊\t{\"gold\": 500, \"soulCrystal\": 10}\t[65]\t8\n",
+  "stderr": "",
+  "execution_time_ms": 1583
+}
