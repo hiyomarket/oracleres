@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, name, lat, lng FROM game_map_nodes LIMIT 3",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, lat, lng FROM game_map_nodes LIMIT 3",
+  "rows": [
+    {
+      "id": "1",
+      "name": "迷霧城・戰士公會大廳",
+      "lat": "25.033",
+      "lng": "121.5654"
+    },
+    {
+      "id": "2",
+      "name": "迷霧城・武器評議塔",
+      "lat": "25.0478",
+      "lng": "121.517"
+    },
+    {
+      "id": "3",
+      "name": "迷霧城・東門箭塔",
+      "lat": "25.034",
+      "lng": "121.5228"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tlat\tlng\n1\t迷霧城・戰士公會大廳\t25.033\t121.5654\n2\t迷霧城・武器評議塔\t25.0478\t121.517\n3\t迷霧城・東門箭塔\t25.034\t121.5228\n",
+  "stderr": "",
+  "execution_time_ms": 1513
+}

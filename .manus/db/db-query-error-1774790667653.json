@@ -1,0 +1,8 @@
+{
+  "query": "SELECT monster_id, name, rarity, level_range, wu_xing FROM game_monster_catalog WHERE rarity IN ('rare', 'legendary') LIMIT 15",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id, name, rarity, level_range, wu_xing FROM game_monster_catalog WHERE rarity IN ('rare', 'legendary') LIMIT 15",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'wu_xing' in 'field list'"
+  ]
+}

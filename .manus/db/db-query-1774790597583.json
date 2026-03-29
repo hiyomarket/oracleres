@@ -1,0 +1,9 @@
+{
+  "query": "SELECT monster_id, name, rarity, drop_item_1, drop_rate_1, drop_item_2, drop_rate_2, drop_item_3, drop_rate_3, drop_item_4, drop_rate_4, drop_item_5, drop_rate_5, legendary_drop, legendary_drop_rate \nFROM game_monster_catalog \nWHERE rarity IN ('elite', 'epic', 'boss') \nLIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT monster_id, name, rarity, drop_item_1, drop_rate_1, drop_item_2, drop_rate_2, drop_item_3, drop_rate_3, drop_item_4, drop_rate_4, drop_item_5, drop_rate_5, legendary_drop, legendary_drop_rate \nFROM game_monster_catalog \nWHERE rarity IN ('elite', 'epic', 'boss') \nLIMIT 10",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1542
+}

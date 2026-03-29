@@ -1,0 +1,26 @@
+{
+  "query": "SHOW COLUMNS FROM game_monster_catalog LIKE '%level%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW COLUMNS FROM game_monster_catalog LIKE '%level%'",
+  "rows": [
+    {
+      "Field": "level_range",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1-5",
+      "Extra": ""
+    },
+    {
+      "Field": "ai_level",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nlevel_range\tvarchar(20)\tNO\t\t1-5\t\nai_level\tint\tNO\t\t1\t\n",
+  "stderr": "",
+  "execution_time_ms": 1516
+}

@@ -1,0 +1,110 @@
+{
+  "query": "SELECT id, name, region, lat, lng, real_world_name, wuxing, node_type FROM game_map_nodes WHERE region = '迷霧城' ORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, region, lat, lng, real_world_name, wuxing, node_type FROM game_map_nodes WHERE region = '迷霧城' ORDER BY id",
+  "rows": [
+    {
+      "id": "1",
+      "name": "迷霧城・戰士公會大廳",
+      "region": "迷霧城",
+      "lat": "25.033",
+      "lng": "121.5654",
+      "real_world_name": "台北市信義區・台北101",
+      "wuxing": "金",
+      "node_type": "guild"
+    },
+    {
+      "id": "2",
+      "name": "迷霧城・武器評議塔",
+      "region": "迷霧城",
+      "lat": "25.0478",
+      "lng": "121.517",
+      "real_world_name": "台北市中山區・圓山大飯店",
+      "wuxing": "金",
+      "node_type": "tower"
+    },
+    {
+      "id": "3",
+      "name": "迷霧城・東門箭塔",
+      "region": "迷霧城",
+      "lat": "25.034",
+      "lng": "121.5228",
+      "real_world_name": "台北市中正區・中正紀念堂",
+      "wuxing": "木",
+      "node_type": "tower"
+    },
+    {
+      "id": "4",
+      "name": "迷霧城・地下競技場",
+      "region": "迷霧城",
+      "lat": "25.0418",
+      "lng": "121.5079",
+      "real_world_name": "台北市萬華區・龍山寺",
+      "wuxing": "火",
+      "node_type": "dungeon"
+    },
+    {
+      "id": "5",
+      "name": "迷霧城・黑市後巷",
+      "region": "迷霧城",
+      "lat": "25.046",
+      "lng": "121.5085",
+      "real_world_name": "台北市大同區・迪化街",
+      "wuxing": "水",
+      "node_type": "market"
+    },
+    {
+      "id": "6",
+      "name": "迷霧城・荒廢藥房",
+      "region": "迷霧城",
+      "lat": "25.0375",
+      "lng": "121.5645",
+      "real_world_name": "台北市信義區・松山文創園區",
+      "wuxing": "木",
+      "node_type": "lab"
+    },
+    {
+      "id": "7",
+      "name": "迷霧城・盜賊公會",
+      "region": "迷霧城",
+      "lat": "25.05",
+      "lng": "121.525",
+      "real_world_name": "台北市中山區・林森北路",
+      "wuxing": "水",
+      "node_type": "guild"
+    },
+    {
+      "id": "8",
+      "name": "迷霧城・採集者工會",
+      "region": "迷霧城",
+      "lat": "25.028",
+      "lng": "121.543",
+      "real_world_name": "台北市大安區・大安森林公園",
+      "wuxing": "木",
+      "node_type": "guild"
+    },
+    {
+      "id": "9",
+      "name": "迷霧城・工匠街",
+      "region": "迷霧城",
+      "lat": "25.053",
+      "lng": "121.514",
+      "real_world_name": "台北市大同區・寧夏夜市",
+      "wuxing": "火",
+      "node_type": "market"
+    },
+    {
+      "id": "10",
+      "name": "迷霧城・鑑定商店",
+      "region": "迷霧城",
+      "lat": "25.042",
+      "lng": "121.544",
+      "real_world_name": "台北市松山區・饒河街夜市",
+      "wuxing": "土",
+      "node_type": "market"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tregion\tlat\tlng\treal_world_name\twuxing\tnode_type\n1\t迷霧城・戰士公會大廳\t迷霧城\t25.033\t121.5654\t台北市信義區・台北101\t金\tguild\n2\t迷霧城・武器評議塔\t迷霧城\t25.0478\t121.517\t台北市中山區・圓山大飯店\t金\ttower\n3\t迷霧城・東門箭塔\t迷霧城\t25.034\t121.5228\t台北市中正區・中正紀念堂\t木\ttower\n4\t迷霧城・地下競技場\t迷霧城\t25.0418\t121.5079\t台北市萬華區・龍山寺\t火\tdungeon\n5\t迷霧城・黑市後巷\t迷霧城\t25.046\t121.5085\t台北市大同區・迪化街\t水\tmarket\n6\t迷霧城・荒廢藥房\t迷霧城\t25.0375\t121.5645\t台北市信義區・松山文創園區\t木\tlab\n7\t迷霧城・盜賊公會\t迷霧城\t25.05\t121.525\t台北市中山區・林森北路\t水\tguild\n8\t迷霧城・採集者工會\t迷霧城\t25.028\t121.543\t台北市大安區・大安森林公園\t木\tguild\n9\t迷霧城・工匠街\t迷霧城\t25.053\t121.514\t台北市大同區・寧夏夜市\t火\tmarket\n10\t迷霧城・鑑定商店\t迷霧城\t25.042\t121.544\t台北市松山區・饒河街夜市\t土\tmarket\n",
+  "stderr": "",
+  "execution_time_ms": 1564
+}

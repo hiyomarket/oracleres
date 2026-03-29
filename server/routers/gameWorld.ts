@@ -15,7 +15,7 @@ import { broadcastToAll, broadcastToAllIncludingAnon, sendToAgent } from "../wsS
 import { updatePvpStats } from "../achievementEngine";
 import { broadcastPvpWin, broadcastWeeklyChampion } from "../liveFeedBroadcast";
 import { MONSTERS } from "../../shared/monsters";
-import { roamingBossInstances, roamingBossCatalog } from "../../drizzle/schema";
+import { roamingBossInstances, roamingBossCatalog, gameNpcCatalog, gameMapNodes } from "../../drizzle/schema";
 import { processTick, processAgentTick, regenStamina, calcExpToNext, resolveCombat, calcCharacterStats } from "../tickEngine";
 import { calcResistances } from "../services/balanceFormulas";
 import { getStatBalanceConfig } from "../gameEngineConfig";
@@ -565,27 +565,43 @@ export const gameWorldRouter = router({
 
       const agent = agents[0];
       if (!agent) throw new Error("角色不存在");
-      if (agent.actionPoints < 2) throw new Error("靈力值不足（需要 2 點）");
+      // 根據目標區域計算傳送費用
+      const isNpcNode = input.targetNodeId.startsWith("npc-");
+      const regionCostMap: Record<string, number> = {
+        "初界": 2, "迷霧城": 2, "中界": 4, "試煉之塔": 6, "碎影深淵": 8,
+      };
+      let apCost = 2;
+      if (isNpcNode) {
+        // 查詢 NPC 節點的區域
+        const [nodeRow] = await db.select({ region: gameMapNodes.region })
+          .from(gameMapNodes)
+          .where(eq(gameMapNodes.nodeId, input.targetNodeId))
+          .limit(1);
+        if (nodeRow?.region) apCost = regionCostMap[nodeRow.region] ?? 3;
+      }
+
+      if (agent.actionPoints < apCost) throw new Error(`靈力值不足（傳送到此區域需要 ${apCost} 點）`);
 
       const now = Date.now();
       await db.update(gameAgents).set({
         currentNodeId: input.targetNodeId,
         targetNodeId: null,
         status: "idle",
-        actionPoints: agent.actionPoints - 2,
+        actionPoints: agent.actionPoints - apCost,
         updatedAt: now,
       }).where(eq(gameAgents.id, agent.id));
 
+      const regionLabel = isNpcNode ? "（跨區域傳送）" : "";
       await db.insert(agentEvents).values({
         agentId: agent.id,
         eventType: "system",
-        message: `🌸 神明施展傳送神蹟，${agent.agentName ?? "旅人"} 瞬間出現在 ${targetNode.name}！（消耗 2 靈力值）`,
-        detail: { type: "divine_transport", targetNodeId: input.targetNodeId },
+        message: `🌸 神明施展傳送神蹟，${agent.agentName ?? "旅人"} 瞬間出現在 ${targetNode.name}！${regionLabel}（消耗 ${apCost} 靈力值）`,
+        detail: { type: "divine_transport", targetNodeId: input.targetNodeId, apCost },
         nodeId: input.targetNodeId,
         createdAt: now,
       });
 
-      return { success: true };
+      return { success: true, apCost };
     }),
 
   // ─── 取得地圖節點列表 ───
@@ -1525,7 +1541,43 @@ export const gameWorldRouter = router({
           // Boss 查詢失敗不影響主流程
         }
       }
-      return { node, monsters: nodeMonsters, resources, questHints, adventurers };
+      // ═══ 查詢此節點的 NPC ═══
+      let npcsAtNode: Array<{ id: number; code: string; name: string; title: string | null; avatarUrl: string | null; description: string | null }> = [];
+      if (dbInstance) {
+        try {
+          // 將靜態節點 ID 對應到 DB map_node_id
+          const npcNodeIdMap: Record<string, number> = {
+            "npc-fogcity-1": 1, "npc-fogcity-2": 2, "npc-fogcity-3": 3,
+            "npc-fogcity-4": 4, "npc-fogcity-5": 5, "npc-fogcity-6": 6,
+            "npc-fogcity-7": 7, "npc-fogcity-8": 8, "npc-fogcity-9": 9,
+            "npc-fogcity-10": 10,
+            "npc-realm1-11": 11, "npc-realm1-12": 12, "npc-realm1-13": 13,
+            "npc-realm1-14": 14, "npc-realm1-15": 15, "npc-realm1-16": 16,
+            "npc-realm1-17": 17, "npc-realm1-18": 18, "npc-realm1-19": 19,
+            "npc-realm1-20": 20,
+            "npc-realm2-21": 21, "npc-realm2-22": 22, "npc-realm2-23": 23,
+            "npc-realm2-24": 24, "npc-realm2-25": 25, "npc-realm2-26": 26,
+            "npc-realm2-27": 27, "npc-realm2-28": 28, "npc-realm2-29": 29,
+            "npc-tower-30": 30, "npc-abyss-31": 31,
+          };
+          const dbNodeId = npcNodeIdMap[input.nodeId];
+          if (dbNodeId) {
+            const npcRows = await dbInstance.select({
+              id: gameNpcCatalog.id,
+              code: gameNpcCatalog.code,
+              name: gameNpcCatalog.name,
+              title: gameNpcCatalog.title,
+              avatarUrl: gameNpcCatalog.avatarUrl,
+              description: gameNpcCatalog.description,
+            }).from(gameNpcCatalog)
+              .where(eq(gameNpcCatalog.mapNodeId, dbNodeId));
+            npcsAtNode = npcRows;
+          }
+        } catch (e) {
+          // NPC 查詢失敗不影響主流程
+        }
+      }
+      return { node, monsters: nodeMonsters, resources, questHints, adventurers, npcs: npcsAtNode };
     }),
   // ─── 取得全服在線統計 ───
   getOnlineStats: publicProcedure.query(async () => {
@@ -1559,7 +1611,20 @@ export const gameWorldRouter = router({
       const moveCfgRows = await db.select({ configKey: gameConfig.configKey, configValue: gameConfig.configValue })
         .from(gameConfig)
         .where(and(eq(gameConfig.isActive, 1), eq(gameConfig.configKey, 'move_stamina_cost')));
-      const moveStaminaCost = moveCfgRows[0] ? (parseFloat(moveCfgRows[0].configValue) || 2) : 2;
+      let moveStaminaCost = moveCfgRows[0] ? (parseFloat(moveCfgRows[0].configValue) || 2) : 2;
+
+      // NPC 節點（海外區域）額外體力消耗
+      if (input.targetNodeId.startsWith("npc-")) {
+        const regionStaminaMap: Record<string, number> = {
+          "初界": 1, "迷霧城": 1, "中界": 1.5, "試煉之塔": 2, "碎影深淵": 3,
+        };
+        const [nodeRow] = await db.select({ region: gameMapNodes.region })
+          .from(gameMapNodes)
+          .where(eq(gameMapNodes.nodeId, input.targetNodeId))
+          .limit(1);
+        const regionMult = nodeRow?.region ? (regionStaminaMap[nodeRow.region] ?? 1.5) : 1.5;
+        moveStaminaCost = Math.ceil(moveStaminaCost * regionMult);
+      }
 
       if (agent.stamina < moveStaminaCost) throw new Error(`體力不足（移動需要 ${moveStaminaCost} 點體力）`);
 
@@ -3355,5 +3420,239 @@ export const gameWorldRouter = router({
         minLevel: def.minLevel,
         goldCost: def.goldCost,
       }));
+    }),
+
+  // ═════════════════════════════════════════════════════════════
+  // NPC 對話 + 技能學習系統
+  // ═════════════════════════════════════════════════════════════
+
+  /** 取得 NPC 詳細資料（包含可教授的技能列表） */
+  getNpcDetail: protectedProcedure
+    .input(z.object({ npcId: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      // 查詢 NPC 基本資料
+      const [npc] = await db.select().from(gameNpcCatalog)
+        .where(eq(gameNpcCatalog.id, input.npcId)).limit(1);
+      if (!npc) throw new TRPCError({ code: "NOT_FOUND", message: "NPC 不存在" });
+
+      // 查詢此 NPC 可教授的技能
+      const teachableSkills = await db.select({
+        skillId: gameUnifiedSkillCatalog.skillId,
+        name: gameUnifiedSkillCatalog.name,
+        description: gameUnifiedSkillCatalog.description,
+        element: gameUnifiedSkillCatalog.element,
+        rarity: gameUnifiedSkillCatalog.rarity,
+        category: gameUnifiedSkillCatalog.category,
+        prerequisiteLevel: gameUnifiedSkillCatalog.prerequisiteLevel,
+        learnCost: gameUnifiedSkillCatalog.learnCost,
+        skillType: gameUnifiedSkillCatalog.skillType,
+      }).from(gameUnifiedSkillCatalog)
+        .where(eq(gameUnifiedSkillCatalog.npcId, input.npcId));
+
+      // 查詢玩家已學技能
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const agent = agents[0];
+      let learnedSkillIds: string[] = [];
+      if (agent) {
+        const learned = await db.select({ skillId: agentSkills.skillId })
+          .from(agentSkills).where(eq(agentSkills.agentId, agent.id));
+        learnedSkillIds = learned.map(s => s.skillId);
+      }
+
+      // 組裝 NPC 對話資料
+      const greetings = [
+        `歡迎來到我的修煉場，旅人。我是${npc.name}，${npc.title ? `人稱「${npc.title}」。` : "。"}`,
+        `哼…又來了一個尋求力量的人。我是${npc.name}，你想學什麼？`,
+        `旅人，你的氣息不錯。我是${npc.name}，或許我能教你一些有用的技能。`,
+      ];
+
+      return {
+        npc: {
+          id: npc.id,
+          code: npc.code,
+          name: npc.name,
+          title: npc.title,
+          avatarUrl: npc.avatarUrl,
+          description: npc.description,
+          region: npc.region,
+          location: npc.location,
+        },
+        greeting: greetings[Math.floor(Math.random() * greetings.length)],
+        teachableSkills: teachableSkills.map(s => ({
+          ...s,
+          learnCost: typeof s.learnCost === "string" ? JSON.parse(s.learnCost) : s.learnCost,
+          isLearned: learnedSkillIds.includes(s.skillId),
+        })),
+        agentLevel: agent?.level ?? 1,
+        agentGold: agent?.gold ?? 0,
+      };
+    }),
+
+  /** 從 NPC 學習技能（消耗金幣/靈晶/聲望/道具） */
+  learnSkillFromNpc: protectedProcedure
+    .input(z.object({ npcId: z.number().int().positive(), skillId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const agent = agents[0];
+      if (!agent) throw new TRPCError({ code: "NOT_FOUND", message: "角色不存在" });
+
+      // 查詢技能目錄
+      const [skill] = await db.select().from(gameUnifiedSkillCatalog)
+        .where(and(
+          eq(gameUnifiedSkillCatalog.skillId, input.skillId),
+          eq(gameUnifiedSkillCatalog.npcId, input.npcId)
+        )).limit(1);
+      if (!skill) throw new TRPCError({ code: "NOT_FOUND", message: "此 NPC 不教授該技能" });
+
+      // 檢查是否已學
+      const [already] = await db.select().from(agentSkills)
+        .where(and(eq(agentSkills.agentId, agent.id), eq(agentSkills.skillId, input.skillId))).limit(1);
+      if (already) throw new TRPCError({ code: "CONFLICT", message: "已習得此技能" });
+
+      // 檢查等級需求
+      if (skill.prerequisiteLevel && agent.level < skill.prerequisiteLevel) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `等級不足（需要 Lv.${skill.prerequisiteLevel}）` });
+      }
+
+      // 解析學習代價
+      const costRaw = typeof skill.learnCost === "string" ? JSON.parse(skill.learnCost) : (skill.learnCost ?? {});
+      const goldCost = costRaw.gold ?? 0;
+      const stonesCost = costRaw.stones ?? 0;
+      const reputationCost = costRaw.reputation ?? 0;
+      const itemsCost: Array<{ itemId: string; qty: number }> = costRaw.items ?? [];
+
+      // 檢查金幣
+      if (goldCost > 0 && agent.gold < goldCost) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `金幣不足（需要 ${goldCost}，當前 ${agent.gold}）` });
+      }
+
+      // 檢查靈晶（使用 actionPoints 作為靈晶）
+      if (stonesCost > 0 && agent.actionPoints < stonesCost) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: `靈晶不足（需要 ${stonesCost}，當前 ${agent.actionPoints}）` });
+      }
+
+      // 檢查道具需求
+      for (const item of itemsCost) {
+        const invItems = await db.select().from(agentInventory)
+          .where(and(
+            eq(agentInventory.agentId, agent.id),
+            eq(agentInventory.itemId, item.itemId)
+          ));
+        const totalQty = invItems.reduce((sum, inv) => sum + inv.quantity, 0);
+        if (totalQty < item.qty) {
+          // 查詢道具名稱
+          const [itemCat] = await db.select({ name: gameItemCatalog.name }).from(gameItemCatalog)
+            .where(eq(gameItemCatalog.itemId, item.itemId)).limit(1);
+          throw new TRPCError({ code: "BAD_REQUEST", message: `缺少道具「${itemCat?.name ?? item.itemId}」（需要 ${item.qty}，當前 ${totalQty}）` });
+        }
+      }
+
+      // 扣除金幣
+      if (goldCost > 0) {
+        await db.update(gameAgents).set({
+          gold: agent.gold - goldCost,
+          updatedAt: Date.now(),
+        }).where(eq(gameAgents.id, agent.id));
+      }
+
+      // 扣除靈晶
+      if (stonesCost > 0) {
+        await db.update(gameAgents).set({
+          actionPoints: agent.actionPoints - stonesCost,
+          updatedAt: Date.now(),
+        }).where(eq(gameAgents.id, agent.id));
+      }
+
+      // 扣除道具
+      for (const item of itemsCost) {
+        let remaining = item.qty;
+        const invItems = await db.select().from(agentInventory)
+          .where(and(
+            eq(agentInventory.agentId, agent.id),
+            eq(agentInventory.itemId, item.itemId)
+          ));
+        for (const inv of invItems) {
+          if (remaining <= 0) break;
+          if (inv.quantity <= remaining) {
+            remaining -= inv.quantity;
+            await db.delete(agentInventory).where(eq(agentInventory.id, inv.id));
+          } else {
+            await db.update(agentInventory).set({
+              quantity: inv.quantity - remaining,
+              updatedAt: Date.now(),
+            }).where(eq(agentInventory.id, inv.id));
+            remaining = 0;
+          }
+        }
+      }
+
+      // 寫入技能
+      await db.insert(agentSkills).values({
+        agentId: agent.id,
+        skillId: input.skillId,
+        awakeTier: 0,
+        useCount: 0,
+      });
+
+      // 寫入事件日誌
+      const [npc] = await db.select({ name: gameNpcCatalog.name }).from(gameNpcCatalog)
+        .where(eq(gameNpcCatalog.id, input.npcId)).limit(1);
+      await db.insert(agentEvents).values({
+        agentId: agent.id,
+        eventType: "system",
+        detail: { skillId: input.skillId, skillName: skill.name, npcName: npc?.name },
+        message: `💬 ${npc?.name ?? "NPC"} 教授了技能「${skill.name}」！`,
+        createdAt: Date.now(),
+      });
+
+      return { success: true, skillId: input.skillId, skillName: skill.name };
+    }),
+
+  /** 查詢玩家當前節點的 NPC 列表（快速查詢） */
+  getNpcsAtCurrentNode: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const agents = await db.select().from(gameAgents)
+        .where(eq(gameAgents.userId, String(ctx.user.id))).limit(1);
+      const agent = agents[0];
+      if (!agent || !agent.currentNodeId) return [];
+
+      // 將靜態節點 ID 對應到 DB map_node_id
+      const npcNodeIdMap: Record<string, number> = {
+        "npc-fogcity-1": 1, "npc-fogcity-2": 2, "npc-fogcity-3": 3,
+        "npc-fogcity-4": 4, "npc-fogcity-5": 5, "npc-fogcity-6": 6,
+        "npc-fogcity-7": 7, "npc-fogcity-8": 8, "npc-fogcity-9": 9,
+        "npc-fogcity-10": 10,
+        "npc-realm1-11": 11, "npc-realm1-12": 12, "npc-realm1-13": 13,
+        "npc-realm1-14": 14, "npc-realm1-15": 15, "npc-realm1-16": 16,
+        "npc-realm1-17": 17, "npc-realm1-18": 18, "npc-realm1-19": 19,
+        "npc-realm1-20": 20,
+        "npc-realm2-21": 21, "npc-realm2-22": 22, "npc-realm2-23": 23,
+        "npc-realm2-24": 24, "npc-realm2-25": 25, "npc-realm2-26": 26,
+        "npc-realm2-27": 27, "npc-realm2-28": 28, "npc-realm2-29": 29,
+        "npc-tower-30": 30, "npc-abyss-31": 31,
+      };
+      const dbNodeId = npcNodeIdMap[agent.currentNodeId];
+      if (!dbNodeId) return [];
+
+      const npcs = await db.select({
+        id: gameNpcCatalog.id,
+        code: gameNpcCatalog.code,
+        name: gameNpcCatalog.name,
+        title: gameNpcCatalog.title,
+        avatarUrl: gameNpcCatalog.avatarUrl,
+        description: gameNpcCatalog.description,
+      }).from(gameNpcCatalog)
+        .where(eq(gameNpcCatalog.mapNodeId, dbNodeId));
+      return npcs;
     }),
 });

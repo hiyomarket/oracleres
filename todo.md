@@ -5607,3 +5607,28 @@
 - [x] 為 6 個 legendary 技能添加任務道具代價（各 2-3 個專屬道具）
 - [x] 新增 32 個任務道具到道具圖鑑（category=quest）
 - [x] 12 個 vitest 測試全部通過
+
+## v5.7 - 魔物數值倍率系統 + 世界地圖整合 + NPC 互動 + 節點傳送
+
+### 魔物數值倍率管理後台
+- [x] 審計現有魔物戰鬥數值結構（13 項戰鬥數值 + 6 稀有度倍率）
+- [x] 設計全域倍率系統（19 個 game_config 項目，分數值倍率 + 稀有度倍率）
+- [x] 建立倍率管理後台 UI（MonsterMultiplierTab，在魔物圖鑑管理中）
+- [x] 倍率即時預覽功能（調整前後數值對比）
+- [x] 倍率應用到戰鬥引擎（monsterDataService 載入時即時套用）
+
+### 前端大地圖整合
+- [x] 將 31 個 NPC 節點加入 shared/mapNodes.ts 和 LeafletMap NODE_COORDS
+- [x] 節點上顯示 NPC 圖標（terrain=NPC據點，專屬標記樣式）
+- [x] NodeInfoPanel 顯示節點 NPC 列表（從 DB 查詢）
+
+### NPC 對話與道具掉落機制
+- [x] NPC 對話流程（NpcDialogueModal：點擊 NPC → 對話 → 查看可學技能 → 學習）
+- [x] 後端 getNpcDialogue + getNpcTeachableSkills 程序
+- [x] 任務道具掉落機制（42 個 epic 道具分配到 common 怪 + 11 個 legendary 道具分配到 legendary 怪）
+- [x] 139 隻 common 怪物分配基礎材料掉落（10 種基礎材料）
+
+### 節點傳送/旅行系統
+- [x] 跨區域傳送費用（divineTransport：初界 2 AP、中界 4 AP、試煉之塔 6 AP、碎影深淵 8 AP）
+- [x] 海外節點體力消耗倍率（setTeleport：初界 x1、中界 x1.5、試煉之塔 x2、碎影深淵 x3）
+- [x] 29 個 vitest 測試全部通過（v5.6: 12 + v5.7: 17）

@@ -5,7 +5,7 @@ import { BossMonsterRow } from "@/components/game/BossTooltip";
 import { WX_HEX, WX_EMOJI, type NodeInfoData } from "./constants";
 
 export function NodeInfoPanel({
-  nodeData, isOpen, onToggle, ec, compact = false, onChallenge,
+  nodeData, isOpen, onToggle, ec, compact = false, onChallenge, onNpcClick,
 }: {
   nodeData: NodeInfoData | null | undefined;
   isOpen: boolean;
@@ -13,6 +13,7 @@ export function NodeInfoPanel({
   ec: string;
   compact?: boolean;
   onChallenge?: (monsterId: string, monsterName: string, isBoss?: boolean) => void;
+  onNpcClick?: (npcId: number) => void;
 }) {
   const node = nodeData?.node;
   const monsters = nodeData?.monsters ?? [];
@@ -153,7 +154,35 @@ export function NodeInfoPanel({
             </div>
           )}
 
-          {monsters.length === 0 && resources.length === 0 && adventurers.length === 0 && (
+          {(nodeData?.npcs ?? []).length > 0 && (
+            <div>
+              <p className="text-xs font-bold text-slate-400 mb-1.5 flex items-center gap-1">
+                <span>💬</span> 駐場 NPC
+              </p>
+              <div className="space-y-1.5">
+                {(nodeData?.npcs ?? []).map(npc => (
+                  <div key={npc.id} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-all hover:bg-white/5 cursor-pointer"
+                    onClick={() => onNpcClick?.(npc.id)}
+                    style={{ background: `${ec}06`, borderColor: `${ec}20`, boxShadow: `0 0 6px ${ec}10` }}>
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-base"
+                      style={{ background: `${ec}18`, border: `1.5px solid ${ec}40` }}>
+                      {npc.avatarUrl ? <img src={npc.avatarUrl} className="w-full h-full rounded-full object-cover" /> : "👤"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-slate-200">{npc.name}</span>
+                        {npc.title && <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ background: `${ec}15`, color: ec }}>「{npc.title}」</span>}
+                      </div>
+                      {npc.description && <p className="text-xs text-slate-500 truncate mt-0.5">{npc.description.slice(0, 40)}...</p>}
+                    </div>
+                    <span className="text-xs text-slate-600 shrink-0">→</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {monsters.length === 0 && resources.length === 0 && adventurers.length === 0 && (nodeData?.npcs ?? []).length === 0 && (
             <p className="text-xs text-slate-600 text-center py-2">此地一片寧靜…</p>
           )}
         </div>

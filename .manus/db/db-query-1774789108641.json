@@ -1,0 +1,22 @@
+{
+  "query": "SELECT config_key, config_value FROM game_config WHERE config_key LIKE '%multi%' OR config_key LIKE '%scale%' OR config_key LIKE '%monster%' LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT config_key, config_value FROM game_config WHERE config_key LIKE '%multi%' OR config_key LIKE '%scale%' OR config_key LIKE '%monster%' LIMIT 20",
+  "rows": [
+    {
+      "config_key": "combat_exp_multiplier",
+      "config_value": "0.2"
+    },
+    {
+      "config_key": "combat_gold_multiplier",
+      "config_value": "0.2"
+    },
+    {
+      "config_key": "combat_drop_rate_multiplier",
+      "config_value": "1.0"
+    }
+  ],
+  "messages": [],
+  "stdout": "config_key\tconfig_value\ncombat_exp_multiplier\t0.2\ncombat_gold_multiplier\t0.2\ncombat_drop_rate_multiplier\t1.0\n",
+  "stderr": "",
+  "execution_time_ms": 1525
+}

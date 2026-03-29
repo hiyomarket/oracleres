@@ -1,0 +1,514 @@
+{
+  "query": "DESCRIBE game_monster_catalog",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute DESCRIBE game_monster_catalog",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "monster_id",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "level_range",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1-5",
+      "Extra": ""
+    },
+    {
+      "Field": "base_hp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "50",
+      "Extra": ""
+    },
+    {
+      "Field": "base_attack",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "10",
+      "Extra": ""
+    },
+    {
+      "Field": "base_defense",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "5",
+      "Extra": ""
+    },
+    {
+      "Field": "base_speed",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "10",
+      "Extra": ""
+    },
+    {
+      "Field": "description",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_items",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "rarity",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "common",
+      "Extra": ""
+    },
+    {
+      "Field": "image_url",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "catch_rate",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0.1",
+      "Extra": ""
+    },
+    {
+      "Field": "is_active",
+      "Type": "tinyint",
+      "Null": "YES",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "base_accuracy",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "80",
+      "Extra": ""
+    },
+    {
+      "Field": "base_magic_attack",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "8",
+      "Extra": ""
+    },
+    {
+      "Field": "resist_wood",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "resist_fire",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "resist_earth",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "resist_metal",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "resist_water",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "counter_bonus",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "50",
+      "Extra": ""
+    },
+    {
+      "Field": "skill_id_1",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "skill_id_2",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "skill_id_3",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "race",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "",
+      "Extra": ""
+    },
+    {
+      "Field": "ai_level",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "growth_rate",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_item_1",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_rate_1",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_item_2",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_rate_2",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_item_3",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_rate_3",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_item_4",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_rate_4",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_item_5",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_rate_5",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_gold",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "legendary_drop",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "legendary_drop_rate",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "destiny_clue",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "spawn_nodes",
+      "Type": "json",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "base_capture_rate",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "25",
+      "Extra": ""
+    },
+    {
+      "Field": "base_bp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "50",
+      "Extra": ""
+    },
+    {
+      "Field": "is_capturable",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "actions_per_turn",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "base_mp",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "30",
+      "Extra": ""
+    },
+    {
+      "Field": "base_magic_defense",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "5",
+      "Extra": ""
+    },
+    {
+      "Field": "base_heal_power",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "base_crit_rate",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "5",
+      "Extra": ""
+    },
+    {
+      "Field": "base_crit_damage",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "150",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing_wood",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing_fire",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing_earth",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing_metal",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing_water",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "20",
+      "Extra": ""
+    },
+    {
+      "Field": "realm",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "初界",
+      "Extra": ""
+    },
+    {
+      "Field": "realm_multiplier",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "species",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "beast",
+      "Extra": ""
+    },
+    {
+      "Field": "damage_type",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "single",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nmonster_id\tvarchar(20)\tNO\tUNI\tNULL\t\nname\tvarchar(100)\tNO\t\tNULL\t\nwuxing\tvarchar(10)\tNO\t\tNULL\t\nlevel_range\tvarchar(20)\tNO\t\t1-5\t\nbase_hp\tint\tNO\t\t50\t\nbase_attack\tint\tNO\t\t10\t\nbase_defense\tint\tNO\t\t5\t\nbase_speed\tint\tNO\t\t10\t\ndescription\ttext\tYES\t\tNULL\t\ndrop_items\tjson\tYES\t\tNULL\t\nrarity\tvarchar(20)\tNO\t\tcommon\t\nimage_url\ttext\tYES\t\tNULL\t\ncatch_rate\tfloat\tNO\t\t0.1\t\nis_active\ttinyint\tYES\t\t1\t\ncreated_at\tbigint\tNO\t\t0\t\nbase_accuracy\tint\tNO\t\t80\t\nbase_magic_attack\tint\tNO\t\t8\t\nresist_wood\tint\tNO\t\t0\t\nresist_fire\tint\tNO\t\t0\t\nresist_earth\tint\tNO\t\t0\t\nresist_metal\tint\tNO\t\t0\t\nresist_water\tint\tNO\t\t0\t\ncounter_bonus\tint\tNO\t\t50\t\nskill_id_1\tvarchar(20)\tYES\t\tNULL\t\nskill_id_2\tvarchar(20)\tYES\t\tNULL\t\nskill_id_3\tvarchar(20)\tYES\t\tNULL\t\nrace\tvarchar(20)\tYES\t\t\t\nai_level\tint\tNO\t\t1\t\ngrowth_rate\tfloat\tNO\t\t1\t\ndrop_item_1\tvarchar(20)\tYES\t\tNULL\t\ndrop_rate_1\tfloat\tNO\t\t0\t\ndrop_item_2\tvarchar(20)\tYES\t\tNULL\t\ndrop_rate_2\tfloat\tNO\t\t0\t\ndrop_item_3\tvarchar(20)\tYES\t\tNULL\t\ndrop_rate_3\tfloat\tNO\t\t0\t\ndrop_item_4\tvarchar(20)\tYES\t\tNULL\t\ndrop_rate_4\tfloat\tNO\t\t0\t\ndrop_item_5\tvarchar(20)\tYES\t\tNULL\t\ndrop_rate_5\tfloat\tNO\t\t0\t\ndrop_gold\tjson\tYES\t\tNULL\t\nlegendary_drop\tvarchar(20)\tYES\t\tNULL\t\nlegendary_drop_rate\tfloat\tNO\t\t0\t\ndestiny_clue\ttext\tYES\t\tNULL\t\nspawn_nodes\tjson\tYES\t\tNULL\t\nbase_capture_rate\tint\tNO\t\t25\t\nbase_bp\tint\tNO\t\t50\t\nis_capturable\ttinyint\tNO\t\t1\t\nactions_per_turn\tint\tNO\t\t1\t\nbase_mp\tint\tNO\t\t30\t\nbase_magic_defense\tint\tNO\t\t5\t\nbase_heal_power\tint\tNO\t\t0\t\nbase_crit_rate\tfloat\tNO\t\t5\t\nbase_crit_damage\tfloat\tNO\t\t150\t\nwuxing_wood\tint\tNO\t\t20\t\nwuxing_fire\tint\tNO\t\t20\t\nwuxing_earth\tint\tNO\t\t20\t\nwuxing_metal\tint\tNO\t\t20\t\nwuxing_water\tint\tNO\t\t20\t\nrealm\tvarchar(10)\tNO\t\t初界\t\nrealm_multiplier\tfloat\tNO\t\t1\t\nspecies\tvarchar(20)\tNO\t\tbeast\t\ndamage_type\tvarchar(20)\tNO\t\tsingle\t\n",
+  "stderr": "",
+  "execution_time_ms": 1524
+}

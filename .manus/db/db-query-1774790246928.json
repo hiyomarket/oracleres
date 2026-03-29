@@ -1,0 +1,170 @@
+{
+  "query": "SELECT s.skill_id, s.name, s.rarity, s.npc_id, n.name as npc_name, s.learn_cost \nFROM game_unified_skill_catalog s \nLEFT JOIN game_npc_catalog n ON s.npc_id = n.id \nWHERE s.npc_id IS NOT NULL \nLIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT s.skill_id, s.name, s.rarity, s.npc_id, n.name as npc_name, s.learn_cost \nFROM game_unified_skill_catalog s \nLEFT JOIN game_npc_catalog n ON s.npc_id = n.id \nWHERE s.npc_id IS NOT NULL \nLIMIT 20",
+  "rows": [
+    {
+      "skill_id": "USK_155",
+      "name": "連擊",
+      "rarity": "common",
+      "npc_id": "49",
+      "npc_name": "格雷",
+      "learn_cost": "{\"gold\": 100, \"items\": [], \"reputation\": 22, \"stones\": 9}"
+    },
+    {
+      "skill_id": "USK_156",
+      "name": "諸刃",
+      "rarity": "rare",
+      "npc_id": "36",
+      "npc_name": "席拉",
+      "learn_cost": "{\"gold\": 1150, \"items\": [], \"reputation\": 170, \"stones\": 23}"
+    },
+    {
+      "skill_id": "USK_157",
+      "name": "反擊",
+      "rarity": "rare",
+      "npc_id": "40",
+      "npc_name": "艾拉",
+      "learn_cost": "{\"gold\": 900, \"items\": [], \"reputation\": 67, \"stones\": 43}"
+    },
+    {
+      "skill_id": "USK_158",
+      "name": "崩擊",
+      "rarity": "epic",
+      "npc_id": "37",
+      "npc_name": "沃克恩",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_SHATTER\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_159",
+      "name": "亂射",
+      "rarity": "rare",
+      "npc_id": "40",
+      "npc_name": "艾拉",
+      "learn_cost": "{\"gold\": 1950, \"items\": [], \"reputation\": 182, \"stones\": 47}"
+    },
+    {
+      "skill_id": "USK_160",
+      "name": "乾坤一擲",
+      "rarity": "legendary",
+      "npc_id": "39",
+      "npc_name": "赫格莫斯",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_COSMOS_A\", \"qty\": 1}, {\"itemId\": \"I_QST_COSMOS_B\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_161",
+      "name": "迅速果斷",
+      "rarity": "rare",
+      "npc_id": "40",
+      "npc_name": "艾拉",
+      "learn_cost": "{\"gold\": 1900, \"items\": [], \"reputation\": 158, \"stones\": 19}"
+    },
+    {
+      "skill_id": "USK_162",
+      "name": "毒擊",
+      "rarity": "common",
+      "npc_id": "44",
+      "npc_name": "艾爾文・赤焰",
+      "learn_cost": "{\"gold\": 450, \"items\": [], \"reputation\": 21, \"stones\": 10}"
+    },
+    {
+      "skill_id": "USK_163",
+      "name": "氣功彈",
+      "rarity": "common",
+      "npc_id": "49",
+      "npc_name": "格雷",
+      "learn_cost": "{\"gold\": 400, \"items\": [], \"reputation\": 27, \"stones\": 5}"
+    },
+    {
+      "skill_id": "USK_164",
+      "name": "吸血攻擊",
+      "rarity": "rare",
+      "npc_id": "36",
+      "npc_name": "席拉",
+      "learn_cost": "{\"gold\": 1350, \"items\": [], \"reputation\": 152, \"stones\": 32}"
+    },
+    {
+      "skill_id": "USK_165",
+      "name": "雙重斬",
+      "rarity": "common",
+      "npc_id": "49",
+      "npc_name": "格雷",
+      "learn_cost": "{\"gold\": 200, \"items\": [], \"reputation\": 44, \"stones\": 1}"
+    },
+    {
+      "skill_id": "USK_166",
+      "name": "戰慄襲心",
+      "rarity": "rare",
+      "npc_id": "36",
+      "npc_name": "席拉",
+      "learn_cost": "{\"gold\": 1100, \"items\": [], \"reputation\": 145, \"stones\": 17}"
+    },
+    {
+      "skill_id": "USK_167",
+      "name": "護衛",
+      "rarity": "rare",
+      "npc_id": "40",
+      "npc_name": "艾拉",
+      "learn_cost": "{\"gold\": 1600, \"items\": [], \"reputation\": 105, \"stones\": 22}"
+    },
+    {
+      "skill_id": "USK_168",
+      "name": "陽炎",
+      "rarity": "rare",
+      "npc_id": "36",
+      "npc_name": "席拉",
+      "learn_cost": "{\"gold\": 1850, \"items\": [], \"reputation\": 64, \"stones\": 38}"
+    },
+    {
+      "skill_id": "USK_169",
+      "name": "騎士之譽",
+      "rarity": "epic",
+      "npc_id": "41",
+      "npc_name": "托里戈",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_HONOR\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_170",
+      "name": "火焰魔法",
+      "rarity": "common",
+      "npc_id": "48",
+      "npc_name": "哈拉爾德",
+      "learn_cost": "{\"gold\": 350, \"items\": [], \"reputation\": 16, \"stones\": 8}"
+    },
+    {
+      "skill_id": "USK_171",
+      "name": "烈焰魔法",
+      "rarity": "rare",
+      "npc_id": "50",
+      "npc_name": "尼克",
+      "learn_cost": "{\"gold\": 1750, \"items\": [], \"reputation\": 156, \"stones\": 48}"
+    },
+    {
+      "skill_id": "USK_172",
+      "name": "業火魔法",
+      "rarity": "epic",
+      "npc_id": "60",
+      "npc_name": "艾莉絲",
+      "learn_cost": "{\"items\": [{\"itemId\": \"I_QST_HELLFIRE\", \"qty\": 1}]}"
+    },
+    {
+      "skill_id": "USK_173",
+      "name": "冰凍魔法",
+      "rarity": "common",
+      "npc_id": "46",
+      "npc_name": "嵐德・虛空旅人",
+      "learn_cost": "{\"gold\": 200, \"items\": [], \"reputation\": 36, \"stones\": 7}"
+    },
+    {
+      "skill_id": "USK_174",
+      "name": "暴風雪魔法",
+      "rarity": "rare",
+      "npc_id": "47",
+      "npc_name": "星見・隕晨",
+      "learn_cost": "{\"gold\": 1700, \"items\": [], \"reputation\": 101, \"stones\": 45}"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\trarity\tnpc_id\tnpc_name\tlearn_cost\nUSK_155\t連擊\tcommon\t49\t格雷\t{\"gold\": 100, \"items\": [], \"reputation\": 22, \"stones\": 9}\nUSK_156\t諸刃\trare\t36\t席拉\t{\"gold\": 1150, \"items\": [], \"reputation\": 170, \"stones\": 23}\nUSK_157\t反擊\trare\t40\t艾拉\t{\"gold\": 900, \"items\": [], \"reputation\": 67, \"stones\": 43}\nUSK_158\t崩擊\tepic\t37\t沃克恩\t{\"items\": [{\"itemId\": \"I_QST_SHATTER\", \"qty\": 1}]}\nUSK_159\t亂射\trare\t40\t艾拉\t{\"gold\": 1950, \"items\": [], \"reputation\": 182, \"stones\": 47}\nUSK_160\t乾坤一擲\tlegendary\t39\t赫格莫斯\t{\"items\": [{\"itemId\": \"I_QST_COSMOS_A\", \"qty\": 1}, {\"itemId\": \"I_QST_COSMOS_B\", \"qty\": 1}]}\nUSK_161\t迅速果斷\trare\t40\t艾拉\t{\"gold\": 1900, \"items\": [], \"reputation\": 158, \"stones\": 19}\nUSK_162\t毒擊\tcommon\t44\t艾爾文・赤焰\t{\"gold\": 450, \"items\": [], \"reputation\": 21, \"stones\": 10}\nUSK_163\t氣功彈\tcommon\t49\t格雷\t{\"gold\": 400, \"items\": [], \"reputation\": 27, \"stones\": 5}\nUSK_164\t吸血攻擊\trare\t36\t席拉\t{\"gold\": 1350, \"items\": [], \"reputation\": 152, \"stones\": 32}\nUSK_165\t雙重斬\tcommon\t49\t格雷\t{\"gold\": 200, \"items\": [], \"reputation\": 44, \"stones\": 1}\nUSK_166\t戰慄襲心\trare\t36\t席拉\t{\"gold\": 1100, \"items\": [], \"reputation\": 145, \"stones\": 17}\nUSK_167\t護衛\trare\t40\t艾拉\t{\"gold\": 1600, \"items\": [], \"reputation\": 105, \"stones\": 22}\nUSK_168\t陽炎\trare\t36\t席拉\t{\"gold\": 1850, \"items\": [], \"reputation\": 64, \"stones\": 38}\nUSK_169\t騎士之譽\tepic\t41\t托里戈\t{\"items\": [{\"itemId\": \"I_QST_HONOR\", \"qty\": 1}]}\nUSK_170\t火焰魔法\tcommon\t48\t哈拉爾德\t{\"gold\": 350, \"items\": [], \"reputation\": 16, \"stones\": 8}\nUSK_171\t烈焰魔法\trare\t50\t尼克\t{\"gold\": 1750, \"items\": [], \"reputation\": 156, \"stones\": 48}\nUSK_172\t業火魔法\tepic\t60\t艾莉絲\t{\"items\": [{\"itemId\": \"I_QST_HELLFIRE\", \"qty\": 1}]}\nUSK_173\t冰凍魔法\tcommon\t46\t嵐德・虛空旅人\t{\"gold\": 200, \"items\": [], \"reputation\": 36, \"stones\": 7}\nUSK_174\t暴風雪魔法\trare\t47\t星見・隕晨\t{\"gold\": 1700, \"items\": [], \"reputation\": 101, \"stones\": 45}\n",
+  "stderr": "",
+  "execution_time_ms": 1510
+}

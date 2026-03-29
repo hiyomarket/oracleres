@@ -1,0 +1,110 @@
+{
+  "query": "SELECT item_id, name, rarity FROM game_item_catalog WHERE category = 'quest' LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, rarity FROM game_item_catalog WHERE category = 'quest' LIMIT 20",
+  "rows": [
+    {
+      "item_id": "I_SCR_WPN",
+      "name": "武器強化卷軸",
+      "rarity": "common"
+    },
+    {
+      "item_id": "I_QST_SHATTER",
+      "name": "碎岩之核",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_HONOR",
+      "name": "騎士勳章",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_HELLFIRE",
+      "name": "獄焰精華",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_FROSTCORE",
+      "name": "極寒之心",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_TORNADO",
+      "name": "風暴之眼",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_QUAKE",
+      "name": "地脈碎片",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_DIVINE",
+      "name": "天罰聖光石",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_BLOODGEM",
+      "name": "血魔寶石",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_MEDUSA",
+      "name": "蛇髮女妖之瞳",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_CHAOS",
+      "name": "混沌碎片",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_OBLIVION",
+      "name": "遺忘之沙",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_LIFEDEW",
+      "name": "生命露珠",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_PHOENIX",
+      "name": "鳳凰羽毛",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_PURIFY",
+      "name": "淨化聖水",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_MIRROR",
+      "name": "明鏡碎片",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_WARCRY",
+      "name": "戰吼號角",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_BASTION",
+      "name": "堡壘之盾碎片",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_COSMOS_A",
+      "name": "乾之精華",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_QST_COSMOS_B",
+      "name": "坤之精華",
+      "rarity": "legendary"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\trarity\nI_SCR_WPN\t武器強化卷軸\tcommon\nI_QST_SHATTER\t碎岩之核\tepic\nI_QST_HONOR\t騎士勳章\tepic\nI_QST_HELLFIRE\t獄焰精華\tepic\nI_QST_FROSTCORE\t極寒之心\tepic\nI_QST_TORNADO\t風暴之眼\tepic\nI_QST_QUAKE\t地脈碎片\tepic\nI_QST_DIVINE\t天罰聖光石\tepic\nI_QST_BLOODGEM\t血魔寶石\tepic\nI_QST_MEDUSA\t蛇髮女妖之瞳\tepic\nI_QST_CHAOS\t混沌碎片\tepic\nI_QST_OBLIVION\t遺忘之沙\tepic\nI_QST_LIFEDEW\t生命露珠\tepic\nI_QST_PHOENIX\t鳳凰羽毛\tepic\nI_QST_PURIFY\t淨化聖水\tepic\nI_QST_MIRROR\t明鏡碎片\tepic\nI_QST_WARCRY\t戰吼號角\tepic\nI_QST_BASTION\t堡壘之盾碎片\tepic\nI_QST_COSMOS_A\t乾之精華\tlegendary\nI_QST_COSMOS_B\t坤之精華\tlegendary\n",
+  "stderr": "",
+  "execution_time_ms": 1584
+}

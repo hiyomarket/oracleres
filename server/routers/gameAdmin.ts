@@ -952,11 +952,103 @@ export const gameAdminRouter = router({
       return { success: true, updated: input.length };
     }),
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 裝備模板管理（GD-021 後續建議）
-  // ─────────────────────────────────────────────────────────────────────────
+  // ───────────────────────────────────────────────────────────────────────────
+  // 魔物數值倍率管理
+  // ───────────────────────────────────────────────────────────────────────────
 
-  /** 取得所有裝備模板 */
+  /** 取得魔物倍率設定 */
+  getMonsterMultipliers: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+    const rows = await db.select().from(gameConfig)
+      .where(and(eq(gameConfig.isActive, 1), sql`${gameConfig.configKey} LIKE 'monster_%_multiplier'`))
+      .orderBy(gameConfig.configKey);
+    return rows;
+  }),
+
+  /** 更新魔物倍率設定（批量） */
+  updateMonsterMultipliers: adminProcedure
+    .input(z.array(z.object({
+      configKey: z.string(),
+      configValue: z.string(),
+    })))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const now = Date.now();
+      await Promise.all(input.map(item =>
+        db.update(gameConfig)
+          .set({ configValue: item.configValue, updatedBy: String(ctx.user.id), updatedAt: now })
+          .where(eq(gameConfig.configKey, item.configKey))
+      ));
+      // 清除倍率快取 + 魔物快取
+      const { invalidateMultiplierCache, invalidateMonsterCache } = await import("../monsterDataService");
+      invalidateMultiplierCache();
+      invalidateMonsterCache();
+      return { success: true, updated: input.length };
+    }),
+
+  /** 預覽倍率套用後的魔物數值（不實際儲存） */
+  previewMonsterMultipliers: adminProcedure
+    .input(z.object({
+      multipliers: z.record(z.string(), z.number()),
+    }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      // 讀取前 10 隻魔物的原始數值
+      const monsters = await db.select({
+        monsterId: gameMonsterCatalog.monsterId,
+        name: gameMonsterCatalog.name,
+        rarity: gameMonsterCatalog.rarity,
+        baseHp: gameMonsterCatalog.baseHp,
+        baseMp: gameMonsterCatalog.baseMp,
+        baseAttack: gameMonsterCatalog.baseAttack,
+        baseMagicAttack: gameMonsterCatalog.baseMagicAttack,
+        baseDefense: gameMonsterCatalog.baseDefense,
+        baseMagicDefense: gameMonsterCatalog.baseMagicDefense,
+        baseSpeed: gameMonsterCatalog.baseSpeed,
+        baseAccuracy: gameMonsterCatalog.baseAccuracy,
+        baseCritRate: gameMonsterCatalog.baseCritRate,
+        baseCritDamage: gameMonsterCatalog.baseCritDamage,
+        baseBp: gameMonsterCatalog.baseBp,
+      }).from(gameMonsterCatalog)
+        .where(eq(gameMonsterCatalog.isActive, 1))
+        .orderBy(gameMonsterCatalog.id)
+        .limit(10);
+
+      const m = input.multipliers;
+      return monsters.map(mon => {
+        const rm = m[`monster_rarity_${mon.rarity}_multiplier`] ?? 1;
+        return {
+          monsterId: mon.monsterId,
+          name: mon.name,
+          rarity: mon.rarity,
+          original: {
+            hp: mon.baseHp, mp: mon.baseMp, atk: mon.baseAttack, matk: mon.baseMagicAttack,
+            def: mon.baseDefense, mdef: mon.baseMagicDefense, spd: mon.baseSpeed,
+            acc: mon.baseAccuracy, critRate: mon.baseCritRate, critDmg: mon.baseCritDamage, bp: mon.baseBp,
+          },
+          scaled: {
+            hp: Math.floor(mon.baseHp * (m.monster_hp_multiplier ?? 1) * rm),
+            mp: Math.floor(mon.baseMp * (m.monster_mp_multiplier ?? 1) * rm),
+            atk: Math.floor(mon.baseAttack * (m.monster_atk_multiplier ?? 1) * rm),
+            matk: Math.floor(mon.baseMagicAttack * (m.monster_matk_multiplier ?? 1) * rm),
+            def: Math.floor(mon.baseDefense * (m.monster_def_multiplier ?? 1) * rm),
+            mdef: Math.floor(mon.baseMagicDefense * (m.monster_mdef_multiplier ?? 1) * rm),
+            spd: Math.floor(mon.baseSpeed * (m.monster_spd_multiplier ?? 1) * rm),
+            acc: Math.floor(mon.baseAccuracy * (m.monster_acc_multiplier ?? 1) * rm),
+            critRate: +(mon.baseCritRate * (m.monster_crit_rate_multiplier ?? 1) * rm).toFixed(1),
+            critDmg: +(mon.baseCritDamage * (m.monster_crit_dmg_multiplier ?? 1) * rm).toFixed(1),
+            bp: Math.floor(mon.baseBp * (m.monster_bp_multiplier ?? 1) * rm),
+          },
+        };
+      });
+    }),
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // 裝備模板管理（GD-021 後續建議）
+  // ───────────────────────────────────────────────────────────────────────────/** 取得所有裝備模板 */
   getEquipmentTemplates: adminProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });

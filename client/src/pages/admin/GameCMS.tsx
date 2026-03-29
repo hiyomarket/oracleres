@@ -27,6 +27,7 @@ import { useLocation } from "wouter";
 import { MonsterPreview, ItemPreview, SkillPreview, AchievementPreview } from "@/components/CatalogPreview";
 import { lazy, Suspense } from "react";
 const AdminGameTheaterInline = lazy(() => import("./AdminGameTheaterInline"));
+const MonsterMultiplierTab = lazy(() => import("@/components/admin/MonsterMultiplierTab"));
 
 const WUXING_OPTIONS = ["木", "火", "土", "金", "水"] as const;
 const WUXING_COLORS: Record<string, string> = {
@@ -184,6 +185,7 @@ export default function GameCMS() {
                     <TabsTrigger value="catalog-achievements">🏆 成就系統</TabsTrigger>
                     <TabsTrigger value="pet-catalog">🐾 寵物圖鑑</TabsTrigger>
                     <TabsTrigger value="catalog-stats">📊 圖鑑統計</TabsTrigger>
+                    <TabsTrigger value="monster-multiplier">⚖️ 數值倍率</TabsTrigger>
                   </TabsList>
                   <TabsContent value="catalog-monsters"><MonsterCatalogV2Tab /></TabsContent>
                   <TabsContent value="catalog-items"><ItemCatalogV2Tab /></TabsContent>
@@ -192,6 +194,7 @@ export default function GameCMS() {
                   <TabsContent value="catalog-achievements"><AchievementCatalogTab /></TabsContent>
                   <TabsContent value="pet-catalog"><PetCatalogTab /></TabsContent>
                   <TabsContent value="catalog-stats"><CatalogStatsTab /></TabsContent>
+                  <TabsContent value="monster-multiplier"><Suspense fallback={<div className="py-8 text-center text-muted-foreground">載入中...</div>}><MonsterMultiplierTab /></Suspense></TabsContent>
                 </Tabs>
               </CardContent>
             </Card>

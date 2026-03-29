@@ -1,0 +1,186 @@
+{
+  "query": "SELECT n.id, n.name, n.region, n.lat, n.lng, n.real_world_name, n.wuxing, n.node_type, COUNT(npc.id) as npc_count FROM game_map_nodes n LEFT JOIN game_npc_catalog npc ON npc.map_node_id = n.id WHERE n.id > 15 GROUP BY n.id ORDER BY n.region, n.id LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT n.id, n.name, n.region, n.lat, n.lng, n.real_world_name, n.wuxing, n.node_type, COUNT(npc.id) as npc_count FROM game_map_nodes n LEFT JOIN game_npc_catalog npc ON npc.map_node_id = n.id WHERE n.id > 15 GROUP BY n.id ORDER BY n.region, n.id LIMIT 20",
+  "rows": [
+    {
+      "id": "21",
+      "name": "中界・墜星高地",
+      "region": "中界",
+      "lat": "35.3606",
+      "lng": "138.7274",
+      "real_world_name": "日本・富士山",
+      "wuxing": "火",
+      "node_type": "mountain",
+      "npc_count": "1"
+    },
+    {
+      "id": "22",
+      "name": "中界・混沌實驗室",
+      "region": "中界",
+      "lat": "35.6762",
+      "lng": "139.6503",
+      "real_world_name": "日本・東京秋葉原",
+      "wuxing": "水",
+      "node_type": "lab",
+      "npc_count": "1"
+    },
+    {
+      "id": "23",
+      "name": "中界・永恆教堂",
+      "region": "中界",
+      "lat": "37.5665",
+      "lng": "126.978",
+      "real_world_name": "韓國・首爾景福宮",
+      "wuxing": "金",
+      "node_type": "temple",
+      "npc_count": "1"
+    },
+    {
+      "id": "24",
+      "name": "中界・古老森林",
+      "region": "中界",
+      "lat": "30.2741",
+      "lng": "120.1551",
+      "real_world_name": "中國・杭州西湖",
+      "wuxing": "木",
+      "node_type": "forest",
+      "npc_count": "1"
+    },
+    {
+      "id": "25",
+      "name": "中界・影之山谷",
+      "region": "中界",
+      "lat": "29.563",
+      "lng": "106.5516",
+      "real_world_name": "中國・重慶武隆天生三橋",
+      "wuxing": "水",
+      "node_type": "dungeon",
+      "npc_count": "1"
+    },
+    {
+      "id": "26",
+      "name": "中界・虛空法塔",
+      "region": "中界",
+      "lat": "34.6937",
+      "lng": "135.5023",
+      "real_world_name": "日本・大阪城",
+      "wuxing": "火",
+      "node_type": "tower",
+      "npc_count": "1"
+    },
+    {
+      "id": "27",
+      "name": "中界・鏡之修行場",
+      "region": "中界",
+      "lat": "36.2048",
+      "lng": "138.2529",
+      "real_world_name": "日本・長野善光寺",
+      "wuxing": "水",
+      "node_type": "temple",
+      "npc_count": "1"
+    },
+    {
+      "id": "28",
+      "name": "中界・暗影公會",
+      "region": "中界",
+      "lat": "35.0116",
+      "lng": "135.7681",
+      "real_world_name": "日本・京都伏見稻荷大社",
+      "wuxing": "水",
+      "node_type": "guild",
+      "npc_count": "1"
+    },
+    {
+      "id": "29",
+      "name": "中界・永恆殿堂",
+      "region": "中界",
+      "lat": "37.5793",
+      "lng": "126.977",
+      "real_world_name": "韓國・首爾昌德宮",
+      "wuxing": "金",
+      "node_type": "temple",
+      "npc_count": "1"
+    },
+    {
+      "id": "16",
+      "name": "初界・濕毒沼澤",
+      "region": "初界",
+      "lat": "23.5565",
+      "lng": "120.439",
+      "real_world_name": "嘉義縣・鰲鼓濕地",
+      "wuxing": "水",
+      "node_type": "water",
+      "npc_count": "1"
+    },
+    {
+      "id": "17",
+      "name": "初界・回憶沙漠",
+      "region": "初界",
+      "lat": "23",
+      "lng": "120.22",
+      "real_world_name": "台南市・七股鹽山",
+      "wuxing": "火",
+      "node_type": "mountain",
+      "npc_count": "1"
+    },
+    {
+      "id": "18",
+      "name": "初界・葡萄酒莊",
+      "region": "初界",
+      "lat": "24.0833",
+      "lng": "120.54",
+      "real_world_name": "彰化縣・鹿港老街",
+      "wuxing": "木",
+      "node_type": "village",
+      "npc_count": "1"
+    },
+    {
+      "id": "19",
+      "name": "初界・聖光修道院",
+      "region": "初界",
+      "lat": "23.48",
+      "lng": "120.45",
+      "real_world_name": "嘉義市・阿里山國家森林遊樂區",
+      "wuxing": "金",
+      "node_type": "temple",
+      "npc_count": "2"
+    },
+    {
+      "id": "20",
+      "name": "初界・泉水聖所",
+      "region": "初界",
+      "lat": "22.6273",
+      "lng": "120.3014",
+      "real_world_name": "高雄市・蓮池潭",
+      "wuxing": "水",
+      "node_type": "water",
+      "npc_count": "1"
+    },
+    {
+      "id": "31",
+      "name": "碎影深淵・入口營地",
+      "region": "碎影深淵",
+      "lat": "27.9881",
+      "lng": "86.925",
+      "real_world_name": "尼泊爾・聖母峰基地營",
+      "wuxing": "金",
+      "node_type": "camp",
+      "npc_count": "1"
+    },
+    {
+      "id": "30",
+      "name": "試煉之塔・地下訓練場",
+      "region": "試煉之塔",
+      "lat": "46.5197",
+      "lng": "7.9597",
+      "real_world_name": "瑞士・少女峰",
+      "wuxing": "土",
+      "node_type": "dungeon",
+      "npc_count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tregion\tlat\tlng\treal_world_name\twuxing\tnode_type\tnpc_count\n21\t中界・墜星高地\t中界\t35.3606\t138.7274\t日本・富士山\t火\tmountain\t1\n22\t中界・混沌實驗室\t中界\t35.6762\t139.6503\t日本・東京秋葉原\t水\tlab\t1\n23\t中界・永恆教堂\t中界\t37.5665\t126.978\t韓國・首爾景福宮\t金\ttemple\t1\n24\t中界・古老森林\t中界\t30.2741\t120.1551\t中國・杭州西湖\t木\tforest\t1\n25\t中界・影之山谷\t中界\t29.563\t106.5516\t中國・重慶武隆天生三橋\t水\tdungeon\t1\n26\t中界・虛空法塔\t中界\t34.6937\t135.5023\t日本・大阪城\t火\ttower\t1\n27\t中界・鏡之修行場\t中界\t36.2048\t138.2529\t日本・長野善光寺\t水\ttemple\t1\n28\t中界・暗影公會\t中界\t35.0116\t135.7681\t日本・京都伏見稻荷大社\t水\tguild\t1\n29\t中界・永恆殿堂\t中界\t37.5793\t126.977\t韓國・首爾昌德宮\t金\ttemple\t1\n16\t初界・濕毒沼澤\t初界\t23.5565\t120.439\t嘉義縣・鰲鼓濕地\t水\twater\t1\n17\t初界・回憶沙漠\t初界\t23\t120.22\t台南市・七股鹽山\t火\tmountain\t1\n18\t初界・葡萄酒莊\t初界\t24.0833\t120.54\t彰化縣・鹿港老街\t木\tvillage\t1\n19\t初界・聖光修道院\t初界\t23.48\t120.45\t嘉義市・阿里山國家森林遊樂區\t金\ttemple\t2\n20\t初界・泉水聖所\t初界\t22.6273\t120.3014\t高雄市・蓮池潭\t水\twater\t1\n31\t碎影深淵・入口營地\t碎影深淵\t27.9881\t86.925\t尼泊爾・聖母峰基地營\t金\tcamp\t1\n30\t試煉之塔・地下訓練場\t試煉之塔\t46.5197\t7.9597\t瑞士・少女峰\t土\tdungeon\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1525
+}

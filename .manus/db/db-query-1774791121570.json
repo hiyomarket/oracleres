@@ -1,0 +1,67 @@
+{
+  "query": "SELECT config_key FROM game_config WHERE config_key LIKE 'monster_%_multiplier' ORDER BY config_key",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT config_key FROM game_config WHERE config_key LIKE 'monster_%_multiplier' ORDER BY config_key",
+  "rows": [
+    {
+      "config_key": "monster_acc_multiplier"
+    },
+    {
+      "config_key": "monster_atk_multiplier"
+    },
+    {
+      "config_key": "monster_bp_multiplier"
+    },
+    {
+      "config_key": "monster_crit_dmg_multiplier"
+    },
+    {
+      "config_key": "monster_crit_rate_multiplier"
+    },
+    {
+      "config_key": "monster_def_multiplier"
+    },
+    {
+      "config_key": "monster_heal_multiplier"
+    },
+    {
+      "config_key": "monster_hp_multiplier"
+    },
+    {
+      "config_key": "monster_matk_multiplier"
+    },
+    {
+      "config_key": "monster_mdef_multiplier"
+    },
+    {
+      "config_key": "monster_mp_multiplier"
+    },
+    {
+      "config_key": "monster_rarity_boss_multiplier"
+    },
+    {
+      "config_key": "monster_rarity_common_multiplier"
+    },
+    {
+      "config_key": "monster_rarity_elite_multiplier"
+    },
+    {
+      "config_key": "monster_rarity_epic_multiplier"
+    },
+    {
+      "config_key": "monster_rarity_legendary_multiplier"
+    },
+    {
+      "config_key": "monster_rarity_rare_multiplier"
+    },
+    {
+      "config_key": "monster_resist_multiplier"
+    },
+    {
+      "config_key": "monster_spd_multiplier"
+    }
+  ],
+  "messages": [],
+  "stdout": "config_key\nmonster_acc_multiplier\nmonster_atk_multiplier\nmonster_bp_multiplier\nmonster_crit_dmg_multiplier\nmonster_crit_rate_multiplier\nmonster_def_multiplier\nmonster_heal_multiplier\nmonster_hp_multiplier\nmonster_matk_multiplier\nmonster_mdef_multiplier\nmonster_mp_multiplier\nmonster_rarity_boss_multiplier\nmonster_rarity_common_multiplier\nmonster_rarity_elite_multiplier\nmonster_rarity_epic_multiplier\nmonster_rarity_legendary_multiplier\nmonster_rarity_rare_multiplier\nmonster_resist_multiplier\nmonster_spd_multiplier\n",
+  "stderr": "",
+  "execution_time_ms": 1541
+}

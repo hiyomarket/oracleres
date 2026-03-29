@@ -31,6 +31,7 @@ import { StatBar, MiniAttrBar } from "./virtualworld/StatBars";
 import { NamingDialog } from "./virtualworld/NamingDialog";
 import { TeleportModal } from "./virtualworld/TeleportModal";
 import { NodeInfoPanel } from "./virtualworld/NodeInfoPanel";
+import { NpcDialogueModal } from "@/components/game/NpcDialogueModal";
 import { CharacterPanel } from "./virtualworld/CharacterPanel";
 
 
@@ -468,6 +469,8 @@ export default function VirtualWorldPage() {
     { nodeId: agent?.currentNodeId ?? "tp-zhongzheng" },
     { enabled: partyPanelOpen && !!agent, staleTime: 10000 }
   );
+  // NPC 對話
+  const [npcDialogueId, setNpcDialogueId] = useState<number | null>(null);
   // 收納式聊天大廳
   const [chatOpen, setChatOpen] = useState(false);
   const [chatInput, setChatInput] = useState("");
@@ -1656,6 +1659,7 @@ export default function VirtualWorldPage() {
                       ec={ec}
                       compact={true}
                       onChallenge={handleChallenge}
+                      onNpcClick={(id) => setNpcDialogueId(id)}
                     />
                   </div>
                 )}
@@ -1705,6 +1709,7 @@ export default function VirtualWorldPage() {
                       ec={ec}
                       compact={true}
                       onChallenge={handleChallenge}
+                      onNpcClick={(id) => setNpcDialogueId(id)}
                     />
                   </div>
                 )}
@@ -1935,6 +1940,7 @@ export default function VirtualWorldPage() {
                 onToggle={() => setNodeInfoOpen(v => !v)}
                 ec={ec}
                 onChallenge={handleChallenge}
+                onNpcClick={(id) => setNpcDialogueId(id)}
               />
             </div>
           </div>
@@ -2306,6 +2312,10 @@ export default function VirtualWorldPage() {
             )}
           </div>
         </div>
+      )}
+      {/* NPC 對話模態 */}
+      {npcDialogueId !== null && (
+        <NpcDialogueModal npcId={npcDialogueId} onClose={() => setNpcDialogueId(null)} />
       )}
     </GameTabLayout>
   );

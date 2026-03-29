@@ -6,9 +6,92 @@
  */
 import { getDb } from "./db";
 import { eq, and, sql, inArray } from "drizzle-orm";
-import { gameMonsterCatalog, gameUnifiedSkillCatalog } from "../drizzle/schema";
+import { gameMonsterCatalog, gameUnifiedSkillCatalog, gameConfig } from "../drizzle/schema";
 import { getMonstersForNode as getStaticMonstersForNode, MONSTER_MAP, type Monster } from "../shared/monsters";
 import type { WuXing } from "../shared/types";
+
+// ─── 魔物數值倍率系統 ─────────────────────────────────────────────────────────────
+export interface MonsterMultipliers {
+  hp: number; mp: number; atk: number; matk: number;
+  def: number; mdef: number; spd: number; acc: number;
+  critRate: number; critDmg: number; bp: number;
+  heal: number; resist: number;
+  rarityMultipliers: Record<string, number>;
+}
+
+const DEFAULT_MULTIPLIERS: MonsterMultipliers = {
+  hp: 1, mp: 1, atk: 1, matk: 1, def: 1, mdef: 1, spd: 1, acc: 1,
+  critRate: 1, critDmg: 1, bp: 1, heal: 1, resist: 1,
+  rarityMultipliers: { common: 1, rare: 1, elite: 1, epic: 1, boss: 1, legendary: 1 },
+};
+
+let multiplierCache: { data: MonsterMultipliers; timestamp: number } | null = null;
+const MULTIPLIER_CACHE_TTL = 60_000; // 1 分鐘
+
+/** 從 game_config 讀取倍率設定 */
+export async function getMonsterMultipliers(): Promise<MonsterMultipliers> {
+  const now = Date.now();
+  if (multiplierCache && (now - multiplierCache.timestamp) < MULTIPLIER_CACHE_TTL) {
+    return multiplierCache.data;
+  }
+  const db = await getDb();
+  if (!db) return DEFAULT_MULTIPLIERS;
+
+  const rows = await db.select({ configKey: gameConfig.configKey, configValue: gameConfig.configValue })
+    .from(gameConfig)
+    .where(and(eq(gameConfig.isActive, 1), sql`${gameConfig.configKey} LIKE 'monster_%_multiplier'`));
+
+  const cfgMap: Record<string, number> = {};
+  for (const r of rows) cfgMap[r.configKey] = parseFloat(r.configValue) || 1;
+
+  const result: MonsterMultipliers = {
+    hp: cfgMap.monster_hp_multiplier ?? 1,
+    mp: cfgMap.monster_mp_multiplier ?? 1,
+    atk: cfgMap.monster_atk_multiplier ?? 1,
+    matk: cfgMap.monster_matk_multiplier ?? 1,
+    def: cfgMap.monster_def_multiplier ?? 1,
+    mdef: cfgMap.monster_mdef_multiplier ?? 1,
+    spd: cfgMap.monster_spd_multiplier ?? 1,
+    acc: cfgMap.monster_acc_multiplier ?? 1,
+    critRate: cfgMap.monster_crit_rate_multiplier ?? 1,
+    critDmg: cfgMap.monster_crit_dmg_multiplier ?? 1,
+    bp: cfgMap.monster_bp_multiplier ?? 1,
+    heal: cfgMap.monster_heal_multiplier ?? 1,
+    resist: cfgMap.monster_resist_multiplier ?? 1,
+    rarityMultipliers: {
+      common: cfgMap.monster_rarity_common_multiplier ?? 1,
+      rare: cfgMap.monster_rarity_rare_multiplier ?? 1,
+      elite: cfgMap.monster_rarity_elite_multiplier ?? 1,
+      epic: cfgMap.monster_rarity_epic_multiplier ?? 1,
+      boss: cfgMap.monster_rarity_boss_multiplier ?? 1,
+      legendary: cfgMap.monster_rarity_legendary_multiplier ?? 1,
+    },
+  };
+  multiplierCache = { data: result, timestamp: now };
+  return result;
+}
+
+/** 清除倍率快取（後台修改後呼叫） */
+export function invalidateMultiplierCache(): void {
+  multiplierCache = null;
+}
+
+/** 將倍率套用到單隻魔物的原始數值 */
+function applyMultipliers(
+  m: { hp: number; attack: number; defense: number; speed: number; baseMp: number; magicAttack: number },
+  rarity: string,
+  mult: MonsterMultipliers,
+): { hp: number; attack: number; defense: number; speed: number; baseMp: number; magicAttack: number } {
+  const rm = mult.rarityMultipliers[rarity] ?? 1;
+  return {
+    hp: Math.floor(m.hp * mult.hp * rm),
+    attack: Math.floor(m.attack * mult.atk * rm),
+    defense: Math.floor(m.defense * mult.def * rm),
+    speed: Math.floor(m.speed * mult.spd * rm),
+    baseMp: Math.floor(m.baseMp * mult.mp * rm),
+    magicAttack: Math.floor(m.magicAttack * mult.matk * rm),
+  };
+}
 
 // ─── 怪物技能數據結構 ─────────────────────────────────────────────────────────
 export interface MonsterSkillData {
@@ -73,6 +156,9 @@ export function invalidateMonsterCache(): void {
 async function loadMonstersFromDb(): Promise<CombatMonster[]> {
   const db = await getDb();
   if (!db) return [];
+
+  // 讀取全域倍率設定
+  const multipliers = await getMonsterMultipliers();
 
   try {
     // 載入所有啟用的怪物
@@ -152,16 +238,24 @@ async function loadMonstersFromDb(): Promise<CombatMonster[]> {
       };
       const expReward = Math.floor(avgLevel * 8 * (rarityExpMult[m.rarity] ?? 1.0));
 
+      // 套用全域倍率
+      const rawBaseMp = calcMonsterBaseMp(avgLevel, m.rarity);
+      const scaled = applyMultipliers(
+        { hp: m.baseHp, attack: m.baseAttack, defense: m.baseDefense, speed: m.baseSpeed, baseMp: rawBaseMp, magicAttack: m.baseMagicAttack },
+        m.rarity, multipliers,
+      );
+      const rm = multipliers.rarityMultipliers[m.rarity] ?? 1;
+
       result.push({
         // Monster 基礎欄位
         id: m.monsterId,
         name: m.name,
         element: element,
         level: avgLevel,
-        hp: m.baseHp,
-        attack: m.baseAttack,
-        defense: m.baseDefense,
-        speed: m.baseSpeed,
+        hp: scaled.hp,
+        attack: scaled.attack,
+        defense: scaled.defense,
+        speed: scaled.speed,
         expReward,
         goldReward: [goldRange.min, goldRange.max],
         dropItems,
@@ -172,15 +266,15 @@ async function loadMonstersFromDb(): Promise<CombatMonster[]> {
         // CombatMonster 擴展欄位
         dbSkills: monsterSkills,
         aiLevel: m.aiLevel,
-        baseMp: calcMonsterBaseMp(avgLevel, m.rarity),
+        baseMp: scaled.baseMp,
         resistances: {
-          wood: m.resistWood,
-          fire: m.resistFire,
-          earth: m.resistEarth,
-          metal: m.resistMetal,
-          water: m.resistWater,
+          wood: Math.floor(m.resistWood * multipliers.resist * rm),
+          fire: Math.floor(m.resistFire * multipliers.resist * rm),
+          earth: Math.floor(m.resistEarth * multipliers.resist * rm),
+          metal: Math.floor(m.resistMetal * multipliers.resist * rm),
+          water: Math.floor(m.resistWater * multipliers.resist * rm),
         },
-        magicAttack: m.baseMagicAttack,
+        magicAttack: scaled.magicAttack,
       });
     }
 

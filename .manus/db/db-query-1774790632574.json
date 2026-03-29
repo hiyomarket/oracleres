@@ -1,0 +1,75 @@
+{
+  "query": "SELECT item_id, name, rarity FROM game_item_catalog WHERE category = 'quest' AND item_id NOT IN ('I_SCR_WPN') LIMIT 20 OFFSET 19",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT item_id, name, rarity FROM game_item_catalog WHERE category = 'quest' AND item_id NOT IN ('I_SCR_WPN') LIMIT 20 OFFSET 19",
+  "rows": [
+    {
+      "item_id": "I_QST_HOLYSHIELD_A",
+      "name": "聖盾核心",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_QST_HOLYSHIELD_B",
+      "name": "永恆誓約書",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_QST_HOLYSHIELD_C",
+      "name": "聖光精華×3",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_ASSASSIN_A",
+      "name": "影之契約",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_QST_ASSASSIN_B",
+      "name": "無聲之刃",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_QST_SACRIFICE_A",
+      "name": "犧牲之心",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_QST_SACRIFICE_B",
+      "name": "不滅之魂",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_QST_SEAL_WOOD",
+      "name": "木行封印符",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_SEAL_FIRE",
+      "name": "火行封印符",
+      "rarity": "epic"
+    },
+    {
+      "item_id": "I_QST_SEAL_CORE",
+      "name": "五行封印核心",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_QST_FATE_A",
+      "name": "天命之書",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_QST_FATE_B",
+      "name": "共振水晶",
+      "rarity": "legendary"
+    },
+    {
+      "item_id": "I_QST_FATE_C",
+      "name": "命運碎片×5",
+      "rarity": "epic"
+    }
+  ],
+  "messages": [],
+  "stdout": "item_id\tname\trarity\nI_QST_HOLYSHIELD_A\t聖盾核心\tlegendary\nI_QST_HOLYSHIELD_B\t永恆誓約書\tlegendary\nI_QST_HOLYSHIELD_C\t聖光精華×3\tepic\nI_QST_ASSASSIN_A\t影之契約\tlegendary\nI_QST_ASSASSIN_B\t無聲之刃\tlegendary\nI_QST_SACRIFICE_A\t犧牲之心\tlegendary\nI_QST_SACRIFICE_B\t不滅之魂\tlegendary\nI_QST_SEAL_WOOD\t木行封印符\tepic\nI_QST_SEAL_FIRE\t火行封印符\tepic\nI_QST_SEAL_CORE\t五行封印核心\tlegendary\nI_QST_FATE_A\t天命之書\tlegendary\nI_QST_FATE_B\t共振水晶\tlegendary\nI_QST_FATE_C\t命運碎片×5\tepic\n",
+  "stderr": "",
+  "execution_time_ms": 1549
+}

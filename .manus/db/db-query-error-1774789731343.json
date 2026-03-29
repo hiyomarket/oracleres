@@ -1,0 +1,8 @@
+{
+  "query": "SELECT npc.id, npc.npc_id, npc.name, npc.title, npc.region, npc.location, npc.map_node_id, npc.wuxing, npc.npc_type, n.name as node_name FROM game_npc_catalog npc LEFT JOIN game_map_nodes n ON npc.map_node_id = n.id ORDER BY npc.map_node_id LIMIT 20",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT npc.id, npc.npc_id, npc.name, npc.title, npc.region, npc.location, npc.map_node_id, npc.wuxing, npc.npc_type, n.name as node_name FROM game_npc_catalog npc LEFT JOIN game_map_nodes n ON npc.map_node_id = n.id ORDER BY npc.map_node_id LIMIT 20",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'npc.npc_id' in 'field list'"
+  ]
+}

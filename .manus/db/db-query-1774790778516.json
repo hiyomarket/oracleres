@@ -1,0 +1,154 @@
+{
+  "query": "SHOW COLUMNS FROM game_item_catalog WHERE `Null` = 'NO'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW COLUMNS FROM game_item_catalog WHERE `Null` = 'NO'",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "item_id",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "UNI",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(100)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "wuxing",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "category",
+      "Type": "varchar(30)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "material_basic",
+      "Extra": ""
+    },
+    {
+      "Field": "rarity",
+      "Type": "varchar(20)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "common",
+      "Extra": ""
+    },
+    {
+      "Field": "created_at",
+      "Type": "bigint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "stack_limit",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "99",
+      "Extra": ""
+    },
+    {
+      "Field": "shop_price",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_rate",
+      "Type": "float",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "value_score",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "quality_grade",
+      "Type": "varchar(5)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "C",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_level_min",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "drop_level_max",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "15",
+      "Extra": ""
+    },
+    {
+      "Field": "tradeable",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "in_auction_house",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "usable_in_battle",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "0",
+      "Extra": ""
+    },
+    {
+      "Field": "stackable",
+      "Type": "tinyint",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nitem_id\tvarchar(20)\tNO\tUNI\tNULL\t\nname\tvarchar(100)\tNO\t\tNULL\t\nwuxing\tvarchar(10)\tNO\t\tNULL\t\ncategory\tvarchar(30)\tNO\t\tmaterial_basic\t\nrarity\tvarchar(20)\tNO\t\tcommon\t\ncreated_at\tbigint\tNO\t\t0\t\nstack_limit\tint\tNO\t\t99\t\nshop_price\tint\tNO\t\t0\t\ndrop_rate\tfloat\tNO\t\t0\t\nvalue_score\tint\tNO\t\t0\t\nquality_grade\tvarchar(5)\tNO\t\tC\t\ndrop_level_min\tint\tNO\t\t1\t\ndrop_level_max\tint\tNO\t\t15\t\ntradeable\ttinyint\tNO\t\t1\t\nin_auction_house\ttinyint\tNO\t\t1\t\nusable_in_battle\ttinyint\tNO\t\t0\t\nstackable\ttinyint\tNO\t\t1\t\n",
+  "stderr": "",
+  "execution_time_ms": 1518
+}

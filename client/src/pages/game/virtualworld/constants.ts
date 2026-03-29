@@ -129,6 +129,7 @@ export type NodeInfoData = {
   resources?: Array<{ name: string; icon: string; rarity: string }>;
   questHints?: string[];
   adventurers?: Array<{ name: string; element: string; level: number; hp: number; maxHp: number; status: string }>;
+  npcs?: Array<{ id: number; code: string; name: string; title: string | null; avatarUrl: string | null; description: string | null }>;
 };
 
 // ─── AgentData 型別 ─────────────────────────────────────────

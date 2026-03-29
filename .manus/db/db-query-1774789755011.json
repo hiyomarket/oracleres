@@ -1,0 +1,150 @@
+{
+  "query": "SELECT npc.id, npc.code, npc.name, npc.title, npc.map_node_id, n.name as node_name, n.lat, n.lng FROM game_npc_catalog npc LEFT JOIN game_map_nodes n ON npc.map_node_id = n.id WHERE npc.id > 53 ORDER BY npc.map_node_id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT npc.id, npc.code, npc.name, npc.title, npc.map_node_id, n.name as node_name, n.lat, n.lng FROM game_npc_catalog npc LEFT JOIN game_map_nodes n ON npc.map_node_id = n.id WHERE npc.id > 53 ORDER BY npc.map_node_id",
+  "rows": [
+    {
+      "id": "63",
+      "code": "NPC_LOCKS",
+      "name": "洛克斯",
+      "title": "盜賊首領",
+      "map_node_id": "7",
+      "node_name": "迷霧城・盜賊公會",
+      "lat": "25.05",
+      "lng": "121.525"
+    },
+    {
+      "id": "65",
+      "code": "NPC_GREEN",
+      "name": "格林",
+      "title": "採集者公會長",
+      "map_node_id": "8",
+      "node_name": "迷霧城・採集者工會",
+      "lat": "25.028",
+      "lng": "121.543"
+    },
+    {
+      "id": "66",
+      "code": "NPC_HANS",
+      "name": "漢斯",
+      "title": "工匠大師",
+      "map_node_id": "9",
+      "node_name": "迷霧城・工匠街",
+      "lat": "25.053",
+      "lng": "121.514"
+    },
+    {
+      "id": "67",
+      "code": "NPC_MADELINE",
+      "name": "瑪德琳",
+      "title": "鑑定師",
+      "map_node_id": "10",
+      "node_name": "迷霧城・鑑定商店",
+      "lat": "25.042",
+      "lng": "121.544"
+    },
+    {
+      "id": "55",
+      "code": "NPC_LINA",
+      "name": "琳娜",
+      "title": "高階治癒師",
+      "map_node_id": "19",
+      "node_name": "初界・聖光修道院",
+      "lat": "23.48",
+      "lng": "120.45"
+    },
+    {
+      "id": "54",
+      "code": "NPC_EVAN",
+      "name": "艾文",
+      "title": "聖光修士",
+      "map_node_id": "19",
+      "node_name": "初界・聖光修道院",
+      "lat": "23.48",
+      "lng": "120.45"
+    },
+    {
+      "id": "57",
+      "code": "NPC_SOPHIA",
+      "name": "索菲亞",
+      "title": "淨化聖女",
+      "map_node_id": "20",
+      "node_name": "初界・泉水聖所",
+      "lat": "22.6273",
+      "lng": "120.3014"
+    },
+    {
+      "id": "56",
+      "code": "NPC_MATTHEW",
+      "name": "馬修",
+      "title": "復活祭司",
+      "map_node_id": "23",
+      "node_name": "中界・永恆教堂",
+      "lat": "37.5665",
+      "lng": "126.978"
+    },
+    {
+      "id": "58",
+      "code": "NPC_RENA",
+      "name": "蓮娜",
+      "title": "森林治癒者",
+      "map_node_id": "24",
+      "node_name": "中界・古老森林",
+      "lat": "30.2741",
+      "lng": "120.1551"
+    },
+    {
+      "id": "59",
+      "code": "NPC_TALOS",
+      "name": "塔洛斯",
+      "title": "影之吸收者",
+      "map_node_id": "25",
+      "node_name": "中界・影之山谷",
+      "lat": "29.563",
+      "lng": "106.5516"
+    },
+    {
+      "id": "60",
+      "code": "NPC_ALICE",
+      "name": "艾莉絲",
+      "title": "虛空法師",
+      "map_node_id": "26",
+      "node_name": "中界・虛空法塔",
+      "lat": "34.6937",
+      "lng": "135.5023"
+    },
+    {
+      "id": "61",
+      "code": "NPC_JINGEN",
+      "name": "靜源",
+      "title": "鏡之修行者",
+      "map_node_id": "27",
+      "node_name": "中界・鏡之修行場",
+      "lat": "36.2048",
+      "lng": "138.2529"
+    },
+    {
+      "id": "62",
+      "code": "NPC_NIGHTSONG",
+      "name": "夜歌",
+      "title": "暗殺大師",
+      "map_node_id": "28",
+      "node_name": "中界・暗影公會",
+      "lat": "35.0116",
+      "lng": "135.7681"
+    },
+    {
+      "id": "64",
+      "code": "NPC_RENARD",
+      "name": "雷納德",
+      "title": "聖盾騎士",
+      "map_node_id": "29",
+      "node_name": "中界・永恆殿堂",
+      "lat": "37.5793",
+      "lng": "126.977"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tcode\tname\ttitle\tmap_node_id\tnode_name\tlat\tlng\n63\tNPC_LOCKS\t洛克斯\t盜賊首領\t7\t迷霧城・盜賊公會\t25.05\t121.525\n65\tNPC_GREEN\t格林\t採集者公會長\t8\t迷霧城・採集者工會\t25.028\t121.543\n66\tNPC_HANS\t漢斯\t工匠大師\t9\t迷霧城・工匠街\t25.053\t121.514\n67\tNPC_MADELINE\t瑪德琳\t鑑定師\t10\t迷霧城・鑑定商店\t25.042\t121.544\n55\tNPC_LINA\t琳娜\t高階治癒師\t19\t初界・聖光修道院\t23.48\t120.45\n54\tNPC_EVAN\t艾文\t聖光修士\t19\t初界・聖光修道院\t23.48\t120.45\n57\tNPC_SOPHIA\t索菲亞\t淨化聖女\t20\t初界・泉水聖所\t22.6273\t120.3014\n56\tNPC_MATTHEW\t馬修\t復活祭司\t23\t中界・永恆教堂\t37.5665\t126.978\n58\tNPC_RENA\t蓮娜\t森林治癒者\t24\t中界・古老森林\t30.2741\t120.1551\n59\tNPC_TALOS\t塔洛斯\t影之吸收者\t25\t中界・影之山谷\t29.563\t106.5516\n60\tNPC_ALICE\t艾莉絲\t虛空法師\t26\t中界・虛空法塔\t34.6937\t135.5023\n61\tNPC_JINGEN\t靜源\t鏡之修行者\t27\t中界・鏡之修行場\t36.2048\t138.2529\n62\tNPC_NIGHTSONG\t夜歌\t暗殺大師\t28\t中界・暗影公會\t35.0116\t135.7681\n64\tNPC_RENARD\t雷納德\t聖盾騎士\t29\t中界・永恆殿堂\t37.5793\t126.977\n",
+  "stderr": "",
+  "execution_time_ms": 1568
+}
