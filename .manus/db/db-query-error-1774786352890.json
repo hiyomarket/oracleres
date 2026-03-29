@@ -1,0 +1,8 @@
+{
+  "query": "SELECT category, wuxing_element, COUNT(*) as cnt FROM game_unified_skill_catalog WHERE usable_by_player = 1 GROUP BY category, wuxing_element ORDER BY category, wuxing_element",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT category, wuxing_element, COUNT(*) as cnt FROM game_unified_skill_catalog WHERE usable_by_player = 1 GROUP BY category, wuxing_element ORDER BY category, wuxing_element",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'wuxing_element' in 'group statement'"
+  ]
+}

@@ -27,7 +27,7 @@ export function CharacterPanel({
   agent: AgentData | null | undefined;
   staminaInfo: { current?: number; max?: number; nextRegenMin?: number; regenAmount?: number; regenMinutes?: number; staminaPerTick?: number; moveStaminaCost?: number; sellDiscountRate?: number } | null | undefined;
   natalStats: { hp?: number; atk?: number; def?: number; spd?: number; mp?: number } | null | undefined;
-  equippedData: { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string; equipId?: string; hpBonus?: number; attackBonus?: number; defenseBonus?: number; speedBonus?: number } | null>; equipBonus?: { hp?: number; atk?: number; def?: number; spd?: number } } | null | undefined;
+  equippedData: { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string; equipId?: string; hpBonus?: number; attackBonus?: number; defenseBonus?: number; speedBonus?: number } | null>; equipBonus?: { hp?: number; atk?: number; def?: number; spd?: number }; statCaps?: { hp?: number; mp?: number; atk?: number; def?: number; spd?: number; matk?: number; mdef?: number; wuxing?: number } } | null | undefined;
   balanceData: { gameCoins?: number; gameStones?: number } | null | undefined;
   dailyData: { dayPillar?: { stem?: string; branch?: string; stemElement?: string } } | null | undefined;
   divineHeal: { mutate: () => void; isPending: boolean };
@@ -84,6 +84,16 @@ export function CharacterPanel({
 
   // GD-002 戰鬥系屬性値（加上裝備加成）
   const eb = equippedData?.equipBonus ?? {} as Record<string, number>;
+  const caps = {
+    hp: equippedData?.statCaps?.hp ?? 99999,
+    mp: equippedData?.statCaps?.mp ?? 9999,
+    atk: equippedData?.statCaps?.atk ?? 1500,
+    def: equippedData?.statCaps?.def ?? 1500,
+    spd: equippedData?.statCaps?.spd ?? 1500,
+    matk: equippedData?.statCaps?.matk ?? 1500,
+    mdef: equippedData?.statCaps?.mdef ?? 1500,
+    wuxing: equippedData?.statCaps?.wuxing ?? 100,
+  };
   const combatValues: Record<string, number> = {
     attack: (agent?.attack ?? 10) + (eb.atk ?? 0),
     defense: (agent?.defense ?? 5) + (eb.def ?? 0),
@@ -445,7 +455,7 @@ export function CharacterPanel({
               style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
               <div className="flex items-center justify-between mb-1.5">
                 <p className="text-xs font-bold text-slate-500">⚔️ 戰鬥系屬性</p>
-                <span className="text-[10px] text-slate-600">上限 255</span>
+                <span className="text-[10px] text-slate-600">上限 {caps.atk}</span>
               </div>
               {COMBAT_ATTRS.map(a => {
                 const baseVal = (() => {
@@ -456,6 +466,15 @@ export function CharacterPanel({
                     case "healPower": return agent?.healPower ?? 20;
                     case "magicAttack": return agent?.magicAttack ?? 20;
                     default: return 0;
+                  }
+                })();
+                const attrCap = (() => {
+                  switch (a.key) {
+                    case "attack": return caps.atk;
+                    case "defense": return caps.def;
+                    case "speed": return caps.spd;
+                    case "magicAttack": return caps.matk;
+                    default: return caps.atk;
                   }
                 })();
                 const equipBonus = (() => {
@@ -471,7 +490,7 @@ export function CharacterPanel({
                   <div key={a.key} className="space-y-0.5">
                     <MiniAttrBar icon={a.icon} label={a.label}
                       value={total}
-                      color={WX_HEX[a.wx] ?? "#888"} max={255} />
+                      color={WX_HEX[a.wx] ?? "#888"} max={attrCap} />
                     {equipBonus > 0 && (
                       <div className="flex justify-end gap-1 text-[9px] px-1">
                         <span className="text-slate-500">{baseVal}</span>
@@ -500,8 +519,8 @@ export function CharacterPanel({
                 <span className="text-[10px] text-slate-600">GD-028</span>
               </div>
               {[
-                { key: "mdef",       icon: "🛡️", label: "魔法防禦", color: "#a78bfa", max: 255, desc: "減少受到的魔法傷害" },
-                { key: "spr",        icon: "✨",   label: "精神力",   color: "#e879f9", max: 255, desc: "狀態抗性與魔法回復" },
+                { key: "mdef",       icon: "🛡️", label: "魔法防禦", color: "#a78bfa", max: caps.mdef, desc: "減少受到的魔法傷害" },
+                { key: "spr",        icon: "✨",   label: "精神力",   color: "#e879f9", max: caps.mdef, desc: "狀態抗性與魔法回復" },
                 { key: "critRate",   icon: "🎯",   label: "暴擊率",   color: "#fb923c", max: 100, desc: "觸發暴擊的機率 %" },
                 { key: "critDamage", icon: "💥",   label: "暴擊傷害", color: "#f43f5e", max: 300, desc: "暴擊時的傷害倍率 %" },
               ].map(a => {
@@ -593,12 +612,12 @@ export function CharacterPanel({
               style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.07)" }}>
               <div className="flex items-center justify-between mb-1.5">
                 <p className="text-xs font-bold text-slate-500">🌿 生活系屬性</p>
-                <span className="text-[10px] text-slate-600">上限 255</span>
+                <span className="text-[10px] text-slate-600">上限 {caps.wuxing}</span>
               </div>
               {LIFE_ATTRS.map(a => (
                 <MiniAttrBar key={a.key} icon={a.icon} label={a.label}
                   value={lifeValues[a.key] ?? 0}
-                  color={WX_HEX[a.wx] ?? "#888"} max={255} />
+                  color={WX_HEX[a.wx] ?? "#888"} max={caps.wuxing} />
               ))}
               {/* 尋寶力特別說明 */}
               <div className="mt-1.5 px-2 py-1.5 rounded-lg text-xs"

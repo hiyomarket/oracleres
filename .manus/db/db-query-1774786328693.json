@@ -1,0 +1,202 @@
+{
+  "query": "SELECT id, name, location, region FROM game_npc_catalog ORDER BY id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT id, name, location, region FROM game_npc_catalog ORDER BY id",
+  "rows": [
+    {
+      "id": "36",
+      "name": "席拉",
+      "location": "迷霧城・戰士公會大廳",
+      "region": "迷霧城"
+    },
+    {
+      "id": "37",
+      "name": "沃克恩",
+      "location": "迷霧城・武器評議塔",
+      "region": "迷霧城"
+    },
+    {
+      "id": "38",
+      "name": "費蓮娜",
+      "location": "碎影深淵・入口營地",
+      "region": "碎影深淵"
+    },
+    {
+      "id": "39",
+      "name": "赫格莫斯",
+      "location": "試煉之塔・地下訓練場",
+      "region": "試煉之塔"
+    },
+    {
+      "id": "40",
+      "name": "艾拉",
+      "location": "迷霧城・東門箭塔",
+      "region": "迷霧城"
+    },
+    {
+      "id": "41",
+      "name": "托里戈",
+      "location": "迷霧城・地下競技場",
+      "region": "迷霧城"
+    },
+    {
+      "id": "42",
+      "name": "暮",
+      "location": "迷霧城・黑市後巷",
+      "region": "迷霧城"
+    },
+    {
+      "id": "43",
+      "name": "維克多・奈斯特",
+      "location": "迷霧城・荒廢藥房",
+      "region": "迷霧城"
+    },
+    {
+      "id": "44",
+      "name": "艾爾文・赤焰",
+      "location": "初界・試煉廣場",
+      "region": "初界"
+    },
+    {
+      "id": "45",
+      "name": "菲莉亞・霜語",
+      "location": "初界・霜語小屋",
+      "region": "初界"
+    },
+    {
+      "id": "46",
+      "name": "嵐德・虛空旅人",
+      "location": "初界・迷跡驛站",
+      "region": "初界"
+    },
+    {
+      "id": "47",
+      "name": "星見・隕晨",
+      "location": "中界・墜星高地",
+      "region": "中界"
+    },
+    {
+      "id": "48",
+      "name": "哈拉爾德",
+      "location": "初界・學術廢墟",
+      "region": "初界"
+    },
+    {
+      "id": "49",
+      "name": "格雷",
+      "location": "初界・岩骨村",
+      "region": "初界"
+    },
+    {
+      "id": "50",
+      "name": "尼克",
+      "location": "中界・混沌實驗室",
+      "region": "中界"
+    },
+    {
+      "id": "51",
+      "name": "米莉亞",
+      "location": "初界・濕毒沼澤",
+      "region": "初界"
+    },
+    {
+      "id": "52",
+      "name": "艾爾文（幽靈）",
+      "location": "初界・回憶沙漠",
+      "region": "初界"
+    },
+    {
+      "id": "53",
+      "name": "卡洛斯",
+      "location": "初界・葡萄酒莊",
+      "region": "初界"
+    },
+    {
+      "id": "54",
+      "name": "艾文",
+      "location": "初界・聖光修道院",
+      "region": "初界"
+    },
+    {
+      "id": "55",
+      "name": "琳娜",
+      "location": "初界・聖光修道院二層",
+      "region": "初界"
+    },
+    {
+      "id": "56",
+      "name": "馬修",
+      "location": "中界・永恆教堂",
+      "region": "中界"
+    },
+    {
+      "id": "57",
+      "name": "索菲亞",
+      "location": "初界・泉水聖所",
+      "region": "初界"
+    },
+    {
+      "id": "58",
+      "name": "蓮娜",
+      "location": "中界・古老森林",
+      "region": "中界"
+    },
+    {
+      "id": "59",
+      "name": "塔洛斯",
+      "location": "中界・影之山谷",
+      "region": "中界"
+    },
+    {
+      "id": "60",
+      "name": "艾莉絲",
+      "location": "中界・虛空法塔",
+      "region": "中界"
+    },
+    {
+      "id": "61",
+      "name": "靜源",
+      "location": "中界・鏡之修行場",
+      "region": "中界"
+    },
+    {
+      "id": "62",
+      "name": "夜歌",
+      "location": "中界・暗影公會",
+      "region": "中界"
+    },
+    {
+      "id": "63",
+      "name": "洛克斯",
+      "location": "初界・迷霧城盜賊公會",
+      "region": "初界"
+    },
+    {
+      "id": "64",
+      "name": "雷納德",
+      "location": "中界・永恆殿堂",
+      "region": "中界"
+    },
+    {
+      "id": "65",
+      "name": "格林",
+      "location": "初界・迷霧城採集者工會",
+      "region": "初界"
+    },
+    {
+      "id": "66",
+      "name": "漢斯",
+      "location": "初界・迷霧城工匠街",
+      "region": "初界"
+    },
+    {
+      "id": "67",
+      "name": "瑪德琳",
+      "location": "初界・迷霧城鑑定商店",
+      "region": "初界"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tlocation\tregion\n36\t席拉\t迷霧城・戰士公會大廳\t迷霧城\n37\t沃克恩\t迷霧城・武器評議塔\t迷霧城\n38\t費蓮娜\t碎影深淵・入口營地\t碎影深淵\n39\t赫格莫斯\t試煉之塔・地下訓練場\t試煉之塔\n40\t艾拉\t迷霧城・東門箭塔\t迷霧城\n41\t托里戈\t迷霧城・地下競技場\t迷霧城\n42\t暮\t迷霧城・黑市後巷\t迷霧城\n43\t維克多・奈斯特\t迷霧城・荒廢藥房\t迷霧城\n44\t艾爾文・赤焰\t初界・試煉廣場\t初界\n45\t菲莉亞・霜語\t初界・霜語小屋\t初界\n46\t嵐德・虛空旅人\t初界・迷跡驛站\t初界\n47\t星見・隕晨\t中界・墜星高地\t中界\n48\t哈拉爾德\t初界・學術廢墟\t初界\n49\t格雷\t初界・岩骨村\t初界\n50\t尼克\t中界・混沌實驗室\t中界\n51\t米莉亞\t初界・濕毒沼澤\t初界\n52\t艾爾文（幽靈）\t初界・回憶沙漠\t初界\n53\t卡洛斯\t初界・葡萄酒莊\t初界\n54\t艾文\t初界・聖光修道院\t初界\n55\t琳娜\t初界・聖光修道院二層\t初界\n56\t馬修\t中界・永恆教堂\t中界\n57\t索菲亞\t初界・泉水聖所\t初界\n58\t蓮娜\t中界・古老森林\t中界\n59\t塔洛斯\t中界・影之山谷\t中界\n60\t艾莉絲\t中界・虛空法塔\t中界\n61\t靜源\t中界・鏡之修行場\t中界\n62\t夜歌\t中界・暗影公會\t中界\n63\t洛克斯\t初界・迷霧城盜賊公會\t初界\n64\t雷納德\t中界・永恆殿堂\t中界\n65\t格林\t初界・迷霧城採集者工會\t初界\n66\t漢斯\t初界・迷霧城工匠街\t初界\n67\t瑪德琳\t初界・迷霧城鑑定商店\t初界\n",
+  "stderr": "",
+  "execution_time_ms": 1567
+}

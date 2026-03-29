@@ -1,0 +1,202 @@
+{
+  "query": "SELECT category, wuxing, usable_by_player, COUNT(*) as cnt FROM game_unified_skill_catalog GROUP BY category, wuxing, usable_by_player ORDER BY category, wuxing",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT category, wuxing, usable_by_player, COUNT(*) as cnt FROM game_unified_skill_catalog GROUP BY category, wuxing, usable_by_player ORDER BY category, wuxing",
+  "rows": [
+    {
+      "category": "magic",
+      "wuxing": "土",
+      "usable_by_player": "1",
+      "cnt": "3"
+    },
+    {
+      "category": "magic",
+      "wuxing": "木",
+      "usable_by_player": "1",
+      "cnt": "3"
+    },
+    {
+      "category": "magic",
+      "wuxing": "水",
+      "usable_by_player": "1",
+      "cnt": "5"
+    },
+    {
+      "category": "magic",
+      "wuxing": "火",
+      "usable_by_player": "1",
+      "cnt": "3"
+    },
+    {
+      "category": "magic",
+      "wuxing": "金",
+      "usable_by_player": "1",
+      "cnt": "3"
+    },
+    {
+      "category": "physical",
+      "wuxing": "土",
+      "usable_by_player": "1",
+      "cnt": "3"
+    },
+    {
+      "category": "physical",
+      "wuxing": "土",
+      "usable_by_player": "0",
+      "cnt": "20"
+    },
+    {
+      "category": "physical",
+      "wuxing": "木",
+      "usable_by_player": "1",
+      "cnt": "2"
+    },
+    {
+      "category": "physical",
+      "wuxing": "木",
+      "usable_by_player": "0",
+      "cnt": "20"
+    },
+    {
+      "category": "physical",
+      "wuxing": "水",
+      "usable_by_player": "0",
+      "cnt": "20"
+    },
+    {
+      "category": "physical",
+      "wuxing": "火",
+      "usable_by_player": "0",
+      "cnt": "20"
+    },
+    {
+      "category": "physical",
+      "wuxing": "火",
+      "usable_by_player": "1",
+      "cnt": "4"
+    },
+    {
+      "category": "physical",
+      "wuxing": "無",
+      "usable_by_player": "1",
+      "cnt": "1"
+    },
+    {
+      "category": "physical",
+      "wuxing": "金",
+      "usable_by_player": "1",
+      "cnt": "5"
+    },
+    {
+      "category": "physical",
+      "wuxing": "金",
+      "usable_by_player": "0",
+      "cnt": "20"
+    },
+    {
+      "category": "resistance",
+      "wuxing": "土",
+      "usable_by_player": "1",
+      "cnt": "1"
+    },
+    {
+      "category": "resistance",
+      "wuxing": "木",
+      "usable_by_player": "1",
+      "cnt": "1"
+    },
+    {
+      "category": "resistance",
+      "wuxing": "水",
+      "usable_by_player": "1",
+      "cnt": "3"
+    },
+    {
+      "category": "resistance",
+      "wuxing": "火",
+      "usable_by_player": "1",
+      "cnt": "1"
+    },
+    {
+      "category": "special",
+      "wuxing": "木",
+      "usable_by_player": "1",
+      "cnt": "1"
+    },
+    {
+      "category": "special",
+      "wuxing": "火",
+      "usable_by_player": "1",
+      "cnt": "2"
+    },
+    {
+      "category": "special",
+      "wuxing": "無",
+      "usable_by_player": "1",
+      "cnt": "2"
+    },
+    {
+      "category": "special",
+      "wuxing": "金",
+      "usable_by_player": "1",
+      "cnt": "1"
+    },
+    {
+      "category": "status",
+      "wuxing": "土",
+      "usable_by_player": "1",
+      "cnt": "2"
+    },
+    {
+      "category": "status",
+      "wuxing": "木",
+      "usable_by_player": "1",
+      "cnt": "2"
+    },
+    {
+      "category": "status",
+      "wuxing": "水",
+      "usable_by_player": "1",
+      "cnt": "6"
+    },
+    {
+      "category": "status",
+      "wuxing": "火",
+      "usable_by_player": "1",
+      "cnt": "2"
+    },
+    {
+      "category": "support",
+      "wuxing": "土",
+      "usable_by_player": "1",
+      "cnt": "4"
+    },
+    {
+      "category": "support",
+      "wuxing": "木",
+      "usable_by_player": "1",
+      "cnt": "4"
+    },
+    {
+      "category": "support",
+      "wuxing": "水",
+      "usable_by_player": "1",
+      "cnt": "6"
+    },
+    {
+      "category": "support",
+      "wuxing": "火",
+      "usable_by_player": "1",
+      "cnt": "3"
+    },
+    {
+      "category": "support",
+      "wuxing": "金",
+      "usable_by_player": "1",
+      "cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "category\twuxing\tusable_by_player\tcnt\nmagic\t土\t1\t3\nmagic\t木\t1\t3\nmagic\t水\t1\t5\nmagic\t火\t1\t3\nmagic\t金\t1\t3\nphysical\t土\t1\t3\nphysical\t土\t0\t20\nphysical\t木\t1\t2\nphysical\t木\t0\t20\nphysical\t水\t0\t20\nphysical\t火\t0\t20\nphysical\t火\t1\t4\nphysical\t無\t1\t1\nphysical\t金\t1\t5\nphysical\t金\t0\t20\nresistance\t土\t1\t1\nresistance\t木\t1\t1\nresistance\t水\t1\t3\nresistance\t火\t1\t1\nspecial\t木\t1\t1\nspecial\t火\t1\t2\nspecial\t無\t1\t2\nspecial\t金\t1\t1\nstatus\t土\t1\t2\nstatus\t木\t1\t2\nstatus\t水\t1\t6\nstatus\t火\t1\t2\nsupport\t土\t1\t4\nsupport\t木\t1\t4\nsupport\t水\t1\t6\nsupport\t火\t1\t3\nsupport\t金\t1\t1\n",
+  "stderr": "",
+  "execution_time_ms": 1618
+}

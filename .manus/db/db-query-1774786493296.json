@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN npc_id IS NULL THEN 1 ELSE 0 END) as no_npc, SUM(CASE WHEN learn_cost IS NULL OR learn_cost = '' THEN 1 ELSE 0 END) as no_cost FROM game_unified_skill_catalog WHERE usable_by_player = 1",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT COUNT(*) as total, SUM(CASE WHEN npc_id IS NULL THEN 1 ELSE 0 END) as no_npc, SUM(CASE WHEN learn_cost IS NULL OR learn_cost = '' THEN 1 ELSE 0 END) as no_cost FROM game_unified_skill_catalog WHERE usable_by_player = 1",
+  "rows": [
+    {
+      "total": "74",
+      "no_npc": "0",
+      "no_cost": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tno_npc\tno_cost\n74\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1531
+}

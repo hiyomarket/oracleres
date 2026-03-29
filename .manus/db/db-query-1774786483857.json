@@ -1,0 +1,175 @@
+{
+  "query": "SELECT s.skill_id, s.name, s.category, s.rarity, s.npc_id, n.name as npc_name, n.location, s.prerequisite_level, s.learn_cost FROM game_unified_skill_catalog s LEFT JOIN game_npc_catalog n ON s.npc_id = n.id WHERE s.usable_by_player = 1 ORDER BY s.category, s.rarity LIMIT 15",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT s.skill_id, s.name, s.category, s.rarity, s.npc_id, n.name as npc_name, n.location, s.prerequisite_level, s.learn_cost FROM game_unified_skill_catalog s LEFT JOIN game_npc_catalog n ON s.npc_id = n.id WHERE s.usable_by_player = 1 ORDER BY s.category, s.rarity LIMIT 15",
+  "rows": [
+    {
+      "skill_id": "USK_182",
+      "name": "金光斬",
+      "category": "magic",
+      "rarity": "common",
+      "npc_id": "48",
+      "npc_name": "哈拉爾德",
+      "location": "初界・學術廢墟",
+      "prerequisite_level": "3",
+      "learn_cost": "{\"gold\": 450, \"items\": [], \"reputation\": 13, \"stones\": 1}"
+    },
+    {
+      "skill_id": "USK_170",
+      "name": "火焰魔法",
+      "category": "magic",
+      "rarity": "common",
+      "npc_id": "48",
+      "npc_name": "哈拉爾德",
+      "location": "初界・學術廢墟",
+      "prerequisite_level": "10",
+      "learn_cost": "{\"gold\": 350, \"items\": [], \"reputation\": 16, \"stones\": 8}"
+    },
+    {
+      "skill_id": "USK_173",
+      "name": "冰凍魔法",
+      "category": "magic",
+      "rarity": "common",
+      "npc_id": "46",
+      "npc_name": "嵐德・虛空旅人",
+      "location": "初界・迷跡驛站",
+      "prerequisite_level": "6",
+      "learn_cost": "{\"gold\": 200, \"items\": [], \"reputation\": 36, \"stones\": 7}"
+    },
+    {
+      "skill_id": "USK_176",
+      "name": "風刃魔法",
+      "category": "magic",
+      "rarity": "common",
+      "npc_id": "48",
+      "npc_name": "哈拉爾德",
+      "location": "初界・學術廢墟",
+      "prerequisite_level": "9",
+      "learn_cost": "{\"gold\": 250, \"items\": [], \"reputation\": 15, \"stones\": 2}"
+    },
+    {
+      "skill_id": "USK_179",
+      "name": "隕石魔法",
+      "category": "magic",
+      "rarity": "common",
+      "npc_id": "46",
+      "npc_name": "嵐德・虛空旅人",
+      "location": "初界・迷跡驛站",
+      "prerequisite_level": "3",
+      "learn_cost": "{\"gold\": 300, \"items\": [], \"reputation\": 12, \"stones\": 6}"
+    },
+    {
+      "skill_id": "USK_186",
+      "name": "超強吸血魔法",
+      "category": "magic",
+      "rarity": "epic",
+      "npc_id": "60",
+      "npc_name": "艾莉絲",
+      "location": "中界・虛空法塔",
+      "prerequisite_level": "15",
+      "learn_cost": "{\"gold\": 4200, \"items\": [], \"reputation\": 279, \"stones\": 133}"
+    },
+    {
+      "skill_id": "USK_181",
+      "name": "天崩地裂",
+      "category": "magic",
+      "rarity": "epic",
+      "npc_id": "58",
+      "npc_name": "蓮娜",
+      "location": "中界・古老森林",
+      "prerequisite_level": "12",
+      "learn_cost": "{\"gold\": 3700, \"items\": [], \"reputation\": 400, \"stones\": 88}"
+    },
+    {
+      "skill_id": "USK_184",
+      "name": "金光天罰",
+      "category": "magic",
+      "rarity": "epic",
+      "npc_id": "60",
+      "npc_name": "艾莉絲",
+      "location": "中界・虛空法塔",
+      "prerequisite_level": "12",
+      "learn_cost": "{\"gold\": 4700, \"items\": [], \"reputation\": 419, \"stones\": 102}"
+    },
+    {
+      "skill_id": "USK_178",
+      "name": "龍捲魔法",
+      "category": "magic",
+      "rarity": "epic",
+      "npc_id": "60",
+      "npc_name": "艾莉絲",
+      "location": "中界・虛空法塔",
+      "prerequisite_level": "12",
+      "learn_cost": "{\"gold\": 2550, \"items\": [], \"reputation\": 432, \"stones\": 69}"
+    },
+    {
+      "skill_id": "USK_172",
+      "name": "業火魔法",
+      "category": "magic",
+      "rarity": "epic",
+      "npc_id": "60",
+      "npc_name": "艾莉絲",
+      "location": "中界・虛空法塔",
+      "prerequisite_level": "12",
+      "learn_cost": "{\"gold\": 3750, \"items\": [], \"reputation\": 320, \"stones\": 194}"
+    },
+    {
+      "skill_id": "USK_175",
+      "name": "極寒魔法",
+      "category": "magic",
+      "rarity": "epic",
+      "npc_id": "58",
+      "npc_name": "蓮娜",
+      "location": "中界・古老森林",
+      "prerequisite_level": "12",
+      "learn_cost": "{\"gold\": 4000, \"items\": [], \"reputation\": 263, \"stones\": 89}"
+    },
+    {
+      "skill_id": "USK_174",
+      "name": "暴風雪魔法",
+      "category": "magic",
+      "rarity": "rare",
+      "npc_id": "47",
+      "npc_name": "星見・隕晨",
+      "location": "中界・墜星高地",
+      "prerequisite_level": "5",
+      "learn_cost": "{\"gold\": 1700, \"items\": [], \"reputation\": 101, \"stones\": 45}"
+    },
+    {
+      "skill_id": "USK_180",
+      "name": "地裂魔法",
+      "category": "magic",
+      "rarity": "rare",
+      "npc_id": "47",
+      "npc_name": "星見・隕晨",
+      "location": "中界・墜星高地",
+      "prerequisite_level": "5",
+      "learn_cost": "{\"gold\": 1450, \"items\": [], \"reputation\": 93, \"stones\": 14}"
+    },
+    {
+      "skill_id": "USK_183",
+      "name": "金光陣",
+      "category": "magic",
+      "rarity": "rare",
+      "npc_id": "50",
+      "npc_name": "尼克",
+      "location": "中界・混沌實驗室",
+      "prerequisite_level": "5",
+      "learn_cost": "{\"gold\": 1100, \"items\": [], \"reputation\": 86, \"stones\": 33}"
+    },
+    {
+      "skill_id": "USK_171",
+      "name": "烈焰魔法",
+      "category": "magic",
+      "rarity": "rare",
+      "npc_id": "50",
+      "npc_name": "尼克",
+      "location": "中界・混沌實驗室",
+      "prerequisite_level": "5",
+      "learn_cost": "{\"gold\": 1750, \"items\": [], \"reputation\": 156, \"stones\": 48}"
+    }
+  ],
+  "messages": [],
+  "stdout": "skill_id\tname\tcategory\trarity\tnpc_id\tnpc_name\tlocation\tprerequisite_level\tlearn_cost\nUSK_182\t金光斬\tmagic\tcommon\t48\t哈拉爾德\t初界・學術廢墟\t3\t{\"gold\": 450, \"items\": [], \"reputation\": 13, \"stones\": 1}\nUSK_170\t火焰魔法\tmagic\tcommon\t48\t哈拉爾德\t初界・學術廢墟\t10\t{\"gold\": 350, \"items\": [], \"reputation\": 16, \"stones\": 8}\nUSK_173\t冰凍魔法\tmagic\tcommon\t46\t嵐德・虛空旅人\t初界・迷跡驛站\t6\t{\"gold\": 200, \"items\": [], \"reputation\": 36, \"stones\": 7}\nUSK_176\t風刃魔法\tmagic\tcommon\t48\t哈拉爾德\t初界・學術廢墟\t9\t{\"gold\": 250, \"items\": [], \"reputation\": 15, \"stones\": 2}\nUSK_179\t隕石魔法\tmagic\tcommon\t46\t嵐德・虛空旅人\t初界・迷跡驛站\t3\t{\"gold\": 300, \"items\": [], \"reputation\": 12, \"stones\": 6}\nUSK_186\t超強吸血魔法\tmagic\tepic\t60\t艾莉絲\t中界・虛空法塔\t15\t{\"gold\": 4200, \"items\": [], \"reputation\": 279, \"stones\": 133}\nUSK_181\t天崩地裂\tmagic\tepic\t58\t蓮娜\t中界・古老森林\t12\t{\"gold\": 3700, \"items\": [], \"reputation\": 400, \"stones\": 88}\nUSK_184\t金光天罰\tmagic\tepic\t60\t艾莉絲\t中界・虛空法塔\t12\t{\"gold\": 4700, \"items\": [], \"reputation\": 419, \"stones\": 102}\nUSK_178\t龍捲魔法\tmagic\tepic\t60\t艾莉絲\t中界・虛空法塔\t12\t{\"gold\": 2550, \"items\": [], \"reputation\": 432, \"stones\": 69}\nUSK_172\t業火魔法\tmagic\tepic\t60\t艾莉絲\t中界・虛空法塔\t12\t{\"gold\": 3750, \"items\": [], \"reputation\": 320, \"stones\": 194}\nUSK_175\t極寒魔法\tmagic\tepic\t58\t蓮娜\t中界・古老森林\t12\t{\"gold\": 4000, \"items\": [], \"reputation\": 263, \"stones\": 89}\nUSK_174\t暴風雪魔法\tmagic\trare\t47\t星見・隕晨\t中界・墜星高地\t5\t{\"gold\": 1700, \"items\": [], \"reputation\": 101, \"stones\": 45}\nUSK_180\t地裂魔法\tmagic\trare\t47\t星見・隕晨\t中界・墜星高地\t5\t{\"gold\": 1450, \"items\": [], \"reputation\": 93, \"stones\": 14}\nUSK_183\t金光陣\tmagic\trare\t50\t尼克\t中界・混沌實驗室\t5\t{\"gold\": 1100, \"items\": [], \"reputation\": 86, \"stones\": 33}\nUSK_171\t烈焰魔法\tmagic\trare\t50\t尼克\t中界・混沌實驗室\t5\t{\"gold\": 1750, \"items\": [], \"reputation\": 156, \"stones\": 48}\n",
+  "stderr": "",
+  "execution_time_ms": 1493
+}

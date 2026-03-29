@@ -1,0 +1,26 @@
+{
+  "query": "SELECT rarity, COUNT(*) as cnt FROM game_unified_skill_catalog WHERE usable_by_player = 1 GROUP BY rarity ORDER BY rarity",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SELECT rarity, COUNT(*) as cnt FROM game_unified_skill_catalog WHERE usable_by_player = 1 GROUP BY rarity ORDER BY rarity",
+  "rows": [
+    {
+      "rarity": "common",
+      "cnt": "24"
+    },
+    {
+      "rarity": "epic",
+      "cnt": "17"
+    },
+    {
+      "rarity": "legendary",
+      "cnt": "6"
+    },
+    {
+      "rarity": "rare",
+      "cnt": "27"
+    }
+  ],
+  "messages": [],
+  "stdout": "rarity\tcnt\ncommon\t24\nepic\t17\nlegendary\t6\nrare\t27\n",
+  "stderr": "",
+  "execution_time_ms": 1584
+}

@@ -1128,23 +1128,7 @@ export default function VirtualWorldPage() {
         />
       )}
 
-      {/* 掛機收益面板 */}
-      {agent && (agent?.strategy === "combat" || agent?.strategy === "explore" || agent?.strategy === "gather" || agent?.strategy === "infuse") && (
-        <div className="hidden lg:block">
-          <DraggableWidget
-            id="idle-panel"
-            defaultPos={WIDGET_DEFAULTS["idle-panel"]}
-            savedPos={widgetLayout["idle-panel"]}
-            onPositionChange={handleWidgetMove}
-            disabled={false}
-          >
-            <IdleSessionPanel
-              agentId={agent?.id}
-              strategy={agent?.strategy}
-            />
-          </DraggableWidget>
-        </div>
-      )}
+      {/* 掛機收益面板已移除 (v5.5) */}
 
       {/* GD-020 玩家模式戰鬥視窗 */}
       {playerBattleId && (
@@ -1966,7 +1950,7 @@ export default function VirtualWorldPage() {
                 agent={agent}
                 staminaInfo={staminaInfo}
                 natalStats={natalStats}
-                equippedData={equippedData as { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string; equipId?: string; hpBonus?: number; attackBonus?: number; defenseBonus?: number; speedBonus?: number } | null> } | null | undefined}
+                equippedData={equippedData as any}
                 balanceData={balanceData as { gameCoins?: number; gameStones?: number } | null | undefined}
                 dailyData={dailyData as { dayPillar?: { stem?: string; branch?: string; stemElement?: string } } | null | undefined}
                 divineHeal={divineHeal}
@@ -2063,7 +2047,7 @@ export default function VirtualWorldPage() {
                     agent={agent}
                     staminaInfo={staminaInfo}
                     natalStats={natalStats}
-                    equippedData={equippedData as { userGender?: string; dayMasterElementEn?: string; equipped?: Record<string, { name: string; quality?: string; equipId?: string; hpBonus?: number; attackBonus?: number; defenseBonus?: number; speedBonus?: number } | null> } | null | undefined}
+                    equippedData={equippedData as any}
                     balanceData={balanceData as { gameCoins?: number; gameStones?: number } | null | undefined}
                     dailyData={dailyData as { dayPillar?: { stem?: string; branch?: string; stemElement?: string } } | null | undefined}
                     divineHeal={divineHeal}
@@ -2074,13 +2058,7 @@ export default function VirtualWorldPage() {
                     mobileMode={true}
                   />
                   {/* V46: 手機版功能列已移至 GameTabLayout 底部 Tab Bar */}
-                  {/* 手機版掛機收益面板 */}
-                  <div className="px-3 py-2 border-t border-slate-800/50">
-                    <IdleSessionPanel
-                      agentId={agent?.id}
-                      strategy={agent?.strategy}
-                    />
-                  </div>
+                  {/* 掛機收益面板已移除 (v5.5) */}
                 </div>
               )}
             </div>

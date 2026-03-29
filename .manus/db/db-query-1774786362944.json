@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM game_unified_skill_catalog LIKE '%element%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PS8xt1zjvuRpYHF.3bd331015af6 --database MLF7bLVZzzxdGTPVXTct3c --execute SHOW COLUMNS FROM game_unified_skill_catalog LIKE '%element%'",
+  "rows": [
+    {
+      "Field": "ai_target_element",
+      "Type": "varchar(10)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nai_target_element\tvarchar(10)\tNO\t\t\t\n",
+  "stderr": "",
+  "execution_time_ms": 1603
+}
