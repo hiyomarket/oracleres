@@ -23,35 +23,15 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Users, Search, CheckCircle, XCircle, Clock, Star, Eye, Ban, RefreshCw, UserPlus, Pencil, Edit3, MessageSquare, Send } from "lucide-react";
+import { EXPERT_STATUS_COLOR, EXPERT_STATUS_LABEL, BOOKING_STATUS_COLOR, BOOKING_STATUS_LABEL } from "@/lib/expertConstants";
 
 type ExpertStatus = "active" | "inactive" | "pending_review";
-const STATUS_COLOR: Record<ExpertStatus, string> = {
-  pending_review: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  active: "bg-green-500/20 text-green-400 border-green-500/30",
-  inactive: "bg-red-500/20 text-red-400 border-red-500/30",
-};
-const STATUS_LABEL: Record<ExpertStatus, string> = {
-  pending_review: "審核中",
-  active: "已上架",
-  inactive: "已停用",
-};
+const STATUS_COLOR = EXPERT_STATUS_COLOR as Record<ExpertStatus, string>;
+const STATUS_LABEL = EXPERT_STATUS_LABEL as Record<ExpertStatus, string>;
 const STATUS_ICON: Record<ExpertStatus, React.ReactNode> = {
   pending_review: <Clock className="w-3.5 h-3.5" />,
   active: <CheckCircle className="w-3.5 h-3.5" />,
   inactive: <XCircle className="w-3.5 h-3.5" />,
-};
-
-const BOOKING_STATUS_COLOR: Record<string, string> = {
-  pending_payment: "bg-yellow-500/20 text-yellow-400",
-  confirmed: "bg-green-500/20 text-green-400",
-  completed: "bg-blue-500/20 text-blue-400",
-  cancelled: "bg-red-500/20 text-red-400",
-};
-const BOOKING_STATUS_LABEL: Record<string, string> = {
-  pending_payment: "待付款",
-  confirmed: "已確認",
-  completed: "已完成",
-  cancelled: "已取消",
 };
 
 export default function AdminExperts() {

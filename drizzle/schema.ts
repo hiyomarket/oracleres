@@ -1237,6 +1237,8 @@ export const reviews = mysqlTable("reviews", {
   expertId: int("expertId").notNull(),
   rating: int("rating").notNull(),
   comment: text("comment"),
+  expertReply: text("expertReply"),
+  expertReplyAt: timestamp("expertReplyAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type Review = typeof reviews.$inferSelect;

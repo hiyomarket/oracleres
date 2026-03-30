@@ -10,6 +10,7 @@
  */
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
+import DOMPurify from "dompurify";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
@@ -422,7 +423,7 @@ export default function CharacterProfile() {
         style={{ zIndex: 2, opacity: 0.7 }}
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
-        dangerouslySetInnerHTML={{ __html: theme.sceneSvgElements }}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(theme.sceneSvgElements, { USE_PROFILES: { svg: true } }) }}
       />
 
       {/* ── 粒子層 ── */}

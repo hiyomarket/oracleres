@@ -3,7 +3,7 @@
  * 訂單訊息聊天室 - 用戶與專家在訂單成立後的溝通頻道
  * 初期版本：僅限下單後師生溝通；未來可擴充為全站訊息系統
  */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useSearch } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -13,21 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Send, MessageCircle, Calendar, Clock, Lock, Info,
+  ArrowLeft, Send, MessageCircle, Calendar, Clock, Lock, Info, ImagePlus, Loader2,
 } from "lucide-react";
-
-const STATUS_LABEL: Record<string, string> = {
-  pending_payment: "待付款",
-  confirmed: "已確認",
-  completed: "已完成",
-  cancelled: "已取消",
-};
-const STATUS_COLOR: Record<string, string> = {
-  pending_payment: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  confirmed: "bg-green-500/20 text-green-400 border-green-500/30",
-  completed: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
-};
+import { BOOKING_STATUS_LABEL as STATUS_LABEL, BOOKING_STATUS_COLOR as STATUS_COLOR } from "@/lib/expertConstants";
 
 export default function Messages() {
   const { user } = useAuth();
@@ -73,6 +61,37 @@ export default function Messages() {
     },
     onError: (e) => toast.error("發送失敗: " + e.message),
   });
+
+  const uploadImageMutation = trpc.expert.uploadChatImage.useMutation({
+    onSuccess: () => {
+      refetch();
+      toast.success("圖片已發送");
+    },
+    onError: (e) => toast.error("圖片發送失敗: " + e.message),
+  });
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !bookingId) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("圖片大小不得超過 5MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = (reader.result as string).split(",")[1];
+      uploadImageMutation.mutate({
+        bookingId,
+        imageBase64: base64,
+        mimeType: file.type || "image/jpeg",
+      });
+    };
+    reader.readAsDataURL(file);
+    // Reset input so same file can be selected again
+    e.target.value = "";
+  }, [bookingId, uploadImageMutation]);
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -227,15 +246,32 @@ export default function Messages() {
                   {!isMe && (
                     <p className="text-xs text-muted-foreground px-1">{msg.senderName ?? "對方"}</p>
                   )}
-                  <div
-                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                      isMe
-                        ? "bg-amber-500 text-black rounded-br-sm"
-                        : "bg-accent text-foreground rounded-bl-sm"
-                    }`}
-                  >
-                    {msg.content}
-                  </div>
+                  {/* 圖片訊息 */}
+                  {msg.imageUrl && (
+                    <div className={`rounded-2xl overflow-hidden max-w-[240px] ${
+                      isMe ? "rounded-br-sm" : "rounded-bl-sm"
+                    }`}>
+                      <img
+                        src={msg.imageUrl}
+                        alt="聊天圖片"
+                        className="w-full h-auto cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => window.open(msg.imageUrl!, "_blank")}
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  {/* 文字訊息（如果是純圖片訊息且 content 是預設值則不顯示） */}
+                  {(!msg.imageUrl || (msg.content && msg.content !== "🖼️ 圖片訊息")) && (
+                    <div
+                      className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                        isMe
+                          ? "bg-amber-500 text-black rounded-br-sm"
+                          : "bg-accent text-foreground rounded-bl-sm"
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
+                  )}
                   <div className={`flex items-center gap-1.5 px-1 ${
                     isMe ? "justify-end" : "justify-start"
                   }`}>
@@ -269,6 +305,27 @@ export default function Messages() {
             </div>
           ) : (
             <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                className="flex-shrink-0"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadImageMutation.isPending}
+                title="發送圖片"
+              >
+                {uploadImageMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ImagePlus className="w-4 h-4" />
+                )}
+              </Button>
               <Input
                 value={text}
                 onChange={(e) => setText(e.target.value)}

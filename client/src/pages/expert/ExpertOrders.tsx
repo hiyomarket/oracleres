@@ -19,22 +19,12 @@ import {
 import { toast } from "sonner";
 import {
   CheckCircle, XCircle, Eye, MessageCircle, ChevronDown, ChevronUp,
-  Calendar, Clock, User, DollarSign, FileText, AlertCircle, Loader2,
+  Calendar, Clock, User, DollarSign, FileText, AlertCircle, Loader2, Search,
 } from "lucide-react";
 import { useLocation } from "wouter";
-
-const STATUS_COLOR: Record<string, string> = {
-  pending_payment: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-  confirmed: "bg-green-500/20 text-green-400 border-green-500/30",
-  completed: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
-};
-const STATUS_LABEL: Record<string, string> = {
-  pending_payment: "待確認",
-  confirmed: "已確認",
-  completed: "已完成",
-  cancelled: "已取消",
-};
+import { BOOKING_STATUS_COLOR as STATUS_COLOR, BOOKING_STATUS_LABEL as STATUS_LABEL, formatDateTime, formatPrice } from "@/lib/expertConstants";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { TableSkeleton } from "@/components/ExpertSkeleton";
 
 type StatusFilter = "all" | "pending_payment" | "confirmed" | "completed" | "cancelled";
 
@@ -42,6 +32,9 @@ export default function ExpertOrders() {
   const utils = trpc.useUtils();
   const [, navigate] = useLocation();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [cancelTargetId, setCancelTargetId] = useState<number | null>(null);
@@ -50,6 +43,19 @@ export default function ExpertOrders() {
   const [confirmMessage, setConfirmMessage] = useState("");
 
   const { data: orders, isLoading } = trpc.expert.listMyBookings.useQuery({ status: statusFilter });
+
+  // 前端搜尋過濾（用戶名、服務名稱）
+  const filteredOrders = (orders ?? []).filter((o) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (o.userName ?? "").toLowerCase().includes(q) ||
+      (o.serviceTitle ?? "").toLowerCase().includes(q) ||
+      String(o.id).includes(q)
+    );
+  });
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const pagedOrders = filteredOrders.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const confirmMutation = trpc.expert.expertConfirmBooking.useMutation({
     onSuccess: () => {
@@ -104,6 +110,18 @@ export default function ExpertOrders() {
           )}
         </div>
 
+        {/* Search Bar */}
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="搜尋用戶名稱、服務名稱或訂單編號..."
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
+            className="w-full px-4 py-2.5 pl-10 rounded-xl bg-accent/30 border border-border/50 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50"
+          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        </div>
+
         {/* Status Filter Tabs */}
         <div className="flex flex-wrap gap-2">
           {tabs.map((t) => (
@@ -128,10 +146,8 @@ export default function ExpertOrders() {
 
         {/* Orders List */}
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
-          </div>
-        ) : !orders || orders.length === 0 ? (
+          <TableSkeleton rows={5} cols={4} />
+        ) : !filteredOrders || filteredOrders.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
               目前沒有符合條件的訂單
@@ -139,7 +155,7 @@ export default function ExpertOrders() {
           </Card>
         ) : (
           <div className="space-y-3">
-            {orders.map((order) => {
+            {pagedOrders.map((order) => {
               const isExpanded = expandedId === order.id;
               const canConfirm = order.status === "pending_payment";
               const canCancel = order.status === "pending_payment" || order.status === "confirmed";
@@ -287,6 +303,33 @@ export default function ExpertOrders() {
                 </Card>
               );
             })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              className="text-xs"
+            >
+              上一頁
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              {page + 1} / {totalPages}（共 {filteredOrders.length} 筆）
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              className="text-xs"
+            >
+              下一頁
+            </Button>
           </div>
         )}
       </div>

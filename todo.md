@@ -5865,3 +5865,30 @@
 - [ ] 修復用戶管理：完成遊戲幣贈送功能（後續處理）
 - [ ] 修復專家管理：管理員備註送後端（後續處理）
 - [ ] 修復商業中心：as any 型別轉換問題（後續處理）
+
+## v5.24 - 天命聯盟專家後台全面優化
+
+### P0：安全與關鍵修復
+- [x] P0-1：SafeHtml XSS 防護升級（安裝 DOMPurify 替換正則過濾）
+- [x] P0-2：ATM 轉帳資訊從 systemSettings 動態讀取（取代硬編碼佔位符）
+- [x] P0-3：expert.ts 路由器拆分為多個子路由器（降低維護成本）
+
+### P1：UI/UX 一致性對齊
+- [x] P1-1：抽取共用常數（STATUS_COLOR/LABEL/ICON 統一到 lib/expertConstants.ts）
+- [x] P1-2：建立 ExpertSkeleton 元件（參考 AdminSkeleton）
+- [x] P1-3：統一刪除/危險操作確認（行事曆時段刪除、活動刪除、訂單標記完成加確認）
+- [x] P1-4：訂單管理加入搜尋/排序/分頁
+- [x] P1-5：增加測試覆蓋率（23 項專家後台測試全部通過）
+
+### P2：功能補齊
+- [x] P2-1：收入統計面板（新增 API + 儀表盤收入區塊 + 獨立 /expert/revenue 頁面）
+- [x] P2-2：評價管理頁面（/expert/reviews，含評價列表和回覆功能）
+- [x] P2-3：每週重複時段（重複規則 API + 行事曆 UI）
+- [x] P2-4：聊天室圖片發送（S3 上傳 + 訊息類型擴展）
+- [ ] P2-5：ExpertCalendar 元件拆分（CalendarGrid、SlotManager、EventManager）— 延後至下次重構
+
+### P3：長期規劃
+- [ ] P3-1：WebSocket 即時訊息（替換 5 秒輪詢）— 延後至下次迭代
+- [x] P3-2：專家數據分析面板（營收統計已整合至儀表盤 + 獨立營收頁面）
+- [x] P3-3：行事曆 iCal 匯出（同步到 Google Calendar）
+- [x] P3-4：服務模板系統（預設套餐模板）

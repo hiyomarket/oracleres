@@ -16,19 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
-
-const STATUS_COLOR: Record<string, string> = {
-  pending_payment: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  confirmed: "bg-green-500/20 text-green-400 border-green-500/30",
-  completed: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
-};
-const STATUS_LABEL: Record<string, string> = {
-  pending_payment: "待付款",
-  confirmed: "已確認",
-  completed: "已完成",
-  cancelled: "已取消",
-};
+import { BOOKING_STATUS_COLOR as STATUS_COLOR, BOOKING_STATUS_LABEL as STATUS_LABEL } from "@/lib/expertConstants";
 const STATUS_ICON: Record<string, React.ReactNode> = {
   pending_payment: <AlertCircle className="w-3.5 h-3.5" />,
   confirmed: <CheckCircle2 className="w-3.5 h-3.5" />,
@@ -54,6 +42,14 @@ export default function MyBookings() {
   const [cancelReason, setCancelReason] = useState("");
 
   const { data: bookings = [], isLoading } = trpc.expert.myBookings.useQuery({ status: statusFilter });
+
+  // P0-2: 動態讀取 ATM 轉帳資訊
+  const { data: bankNameSetting } = trpc.expert.getSystemSetting.useQuery({ key: "payment_bank_name" });
+  const { data: bankAccountSetting } = trpc.expert.getSystemSetting.useQuery({ key: "payment_bank_account" });
+  const { data: bankHolderSetting } = trpc.expert.getSystemSetting.useQuery({ key: "payment_bank_holder" });
+  const bankName = bankNameSetting?.settingValue || "（尚未設定，請聯繫專家）";
+  const bankAccount = bankAccountSetting?.settingValue || "（尚未設定，請聯繫專家）";
+  const bankHolder = bankHolderSetting?.settingValue || "（尚未設定，請聯繫專家）";
 
   const submitReviewMutation = trpc.expert.submitReview.useMutation({
     onSuccess: () => {
@@ -365,13 +361,15 @@ export default function MyBookings() {
               </div>
             </div>
 
-            {/* 轉帳資訊（預設顯示，實際上線後由管理員設定） */}
+            {/* 轉帳資訊（從 systemSettings 動態讀取） */}
             <div className="p-3 rounded-lg bg-card border border-border text-xs space-y-1.5">
               <p className="font-medium text-sm mb-2">ATM 轉帳資訊</p>
-              <p className="text-muted-foreground">銀行：（待設定）</p>
-              <p className="text-muted-foreground">帳號：（待設定）</p>
-              <p className="text-muted-foreground">戶名：（待設定）</p>
-              <p className="text-amber-400/80 text-xs mt-2">請聯繫專家取得最新轉帳資訊</p>
+              <p className="text-muted-foreground">銀行：{bankName}</p>
+              <p className="text-muted-foreground">帳號：{bankAccount}</p>
+              <p className="text-muted-foreground">戶名：{bankHolder}</p>
+              {(!bankNameSetting?.settingValue || !bankAccountSetting?.settingValue) && (
+                <p className="text-amber-400/80 text-xs mt-2">管理員尚未設定轉帳資訊，請直接聯繫專家確認付款方式</p>
+              )}
             </div>
 
             {/* 付款方式選擇 */}

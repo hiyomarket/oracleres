@@ -12,21 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import {
   Calendar, Plus, Trash2, Clock, ChevronLeft, ChevronRight,
-  Users, MapPin, Megaphone, Video, CalendarPlus, Info,
+  Users, MapPin, Megaphone, Video, CalendarPlus, Info, Download,
 } from "lucide-react";
-
-const STATUS_COLOR: Record<string, string> = {
-  pending_payment: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  confirmed: "bg-green-500/20 text-green-400 border-green-500/30",
-  completed: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  cancelled: "bg-red-500/20 text-red-400 border-red-500/30",
-};
-const STATUS_LABEL: Record<string, string> = {
-  pending_payment: "待付款",
-  confirmed: "已確認",
-  completed: "已完成",
-  cancelled: "已取消",
-};
+import { BOOKING_STATUS_COLOR as STATUS_COLOR, BOOKING_STATUS_LABEL as STATUS_LABEL } from "@/lib/expertConstants";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { CalendarSkeleton } from "@/components/ExpertSkeleton";
 
 const EVENT_TYPE_CONFIG = {
   offline: { label: "線下活動", icon: MapPin, color: "text-green-400 bg-green-500/10 border-green-500/20" },
@@ -56,6 +46,12 @@ export default function ExpertCalendar() {
   const [batchStart, setBatchStart] = useState("09:00");
   const [batchEnd, setBatchEnd] = useState("17:00");
 
+  // 每週重複時段
+  const [recurringDay, setRecurringDay] = useState("1");
+  const [recurringStart, setRecurringStart] = useState("09:00");
+  const [recurringEnd, setRecurringEnd] = useState("17:00");
+  const [recurringWeeks, setRecurringWeeks] = useState("4");
+
   // 行事歷活動表單
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [eventForm, setEventForm] = useState({
@@ -82,6 +78,14 @@ export default function ExpertCalendar() {
       setBatchDates([]);
     },
     onError: (e) => toast.error("新增失敗: " + e.message),
+  });
+
+  const recurringMutation = trpc.expert.setWeeklyRecurringSlots.useMutation({
+    onSuccess: (data) => {
+      toast.success(`✅ 已建立 ${data.count} 個每週重複時段`);
+      utils.expert.getCalendarData.invalidate();
+    },
+    onError: (e) => toast.error("建立失敗: " + e.message),
   });
 
   const deleteAvailMutation = trpc.expert.deleteAvailability.useMutation({
@@ -258,6 +262,27 @@ export default function ExpertCalendar() {
             <p className="text-muted-foreground text-sm mt-1">管理可預約時段與活動公告</p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs gap-1"
+              onClick={() => {
+                const icalQuery = utils.client.expert.exportICalData.query({ year, month });
+                icalQuery.then((res) => {
+                  if (!res.ical) { toast.error("無資料可匯出"); return; }
+                  const blob = new Blob([res.ical], { type: "text/calendar;charset=utf-8" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `calendar-${year}-${String(month).padStart(2, "0")}.ics`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success("✅ 已匯出 iCal 檔案");
+                }).catch(() => toast.error("匯出失敗"));
+              }}
+            >
+              <Download className="w-3.5 h-3.5" /> 匯出 iCal
+            </Button>
             <Button variant="outline" size="sm" onClick={prevMonth}><ChevronLeft className="w-4 h-4" /></Button>
             <span className="text-sm font-semibold w-24 text-center">{year} 年 {month} 月</span>
             <Button variant="outline" size="sm" onClick={nextMonth}><ChevronRight className="w-4 h-4" /></Button>
@@ -382,18 +407,18 @@ export default function ExpertCalendar() {
 
               {/* 預約時段 Tab */}
               <TabsContent value="slots" className="space-y-3 mt-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() => setBatchMode(false)}
                     className={`flex-1 py-1.5 rounded-lg text-xs border transition-colors ${!batchMode ? "bg-amber-500/20 text-amber-400 border-amber-500/40" : "border-border text-muted-foreground"}`}
                   >
-                    單日新增
+                    單日
                   </button>
                   <button
                     onClick={() => setBatchMode(true)}
                     className={`flex-1 py-1.5 rounded-lg text-xs border transition-colors ${batchMode ? "bg-blue-500/20 text-blue-400 border-blue-500/40" : "border-border text-muted-foreground"}`}
                   >
-                    批次新增
+                    批次
                   </button>
                 </div>
 
@@ -479,6 +504,80 @@ export default function ExpertCalendar() {
                     </CardContent>
                   </Card>
                 )}
+
+                {/* 每週重複時段 */}
+                <Card className="border-violet-500/20">
+                  <CardContent className="p-3 space-y-3">
+                    <p className="text-xs font-medium text-violet-400 flex items-center gap-1">
+                      <CalendarPlus className="w-3.5 h-3.5" /> 每週重複時段
+                    </p>
+                    <p className="text-xs text-muted-foreground">自動建立未來數週的固定可預約時段</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">星期幾</label>
+                        <Select value={recurringDay} onValueChange={setRecurringDay}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {["日", "一", "二", "三", "四", "五", "六"].map((d, i) => (
+                              <SelectItem key={i} value={String(i)} className="text-xs">星期{d}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">重複週數</label>
+                        <Select value={recurringWeeks} onValueChange={setRecurringWeeks}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {[1,2,3,4,5,6,7,8].map((w) => (
+                              <SelectItem key={w} value={String(w)} className="text-xs">{w} 週</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">開始時間</label>
+                        <Select value={recurringStart} onValueChange={setRecurringStart}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {TIME_OPTIONS.map((t) => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">結束時間</label>
+                        <Select value={recurringEnd} onValueChange={setRecurringEnd}>
+                          <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {TIME_OPTIONS.map((t) => <SelectItem key={t} value={t} className="text-xs">{t}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      className="w-full bg-violet-500 hover:bg-violet-600 text-white text-xs"
+                      onClick={() => {
+                        const [sh, sm] = recurringStart.split(":").map(Number);
+                        const [eh, em] = recurringEnd.split(":").map(Number);
+                        recurringMutation.mutate({
+                          dayOfWeek: Number(recurringDay),
+                          startHour: sh,
+                          startMinute: sm,
+                          endHour: eh,
+                          endMinute: em,
+                          weeks: Number(recurringWeeks),
+                        });
+                      }}
+                      disabled={recurringMutation.isPending}
+                    >
+                      <CalendarPlus className="w-3.5 h-3.5 mr-1" />
+                      {recurringMutation.isPending ? "建立中..." : `建立 ${recurringWeeks} 週重複時段`}
+                    </Button>
+                  </CardContent>
+                </Card>
 
                 {/* 選取日期的時段詳情 */}
                 {selectedDate && (

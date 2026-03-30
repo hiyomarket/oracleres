@@ -12,6 +12,9 @@ import {
   Plus, Pencil, Trash2, Clock, DollarSign, ToggleLeft, ToggleRight,
   Video, Users, MessageSquare, Handshake, Star, Zap, Sparkles,
 } from "lucide-react";
+import { SERVICE_TYPE_LABEL, formatPrice } from "@/lib/expertConstants";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { ServicesSkeleton } from "@/components/ExpertSkeleton";
 
 interface ServiceForm {
   title: string;
@@ -162,17 +165,52 @@ export default function ExpertServices() {
             ))}
           </div>
         ) : services.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex flex-col items-center justify-center py-12 text-center">
             <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mb-4">
               <Sparkles className="w-8 h-8 text-amber-400" />
             </div>
             <h3 className="text-lg font-semibold mb-2">還沒有服務項目</h3>
             <p className="text-muted-foreground text-sm mb-6 max-w-xs">
-              新增您的第一個服務套餐，讓用戶可以預約您的諮詢服務
+              新增您的第一個服務套餐，或從下方模板快速建立
             </p>
-            <Button className="bg-amber-500 hover:bg-amber-600 text-black" onClick={openCreate}>
-              <Plus className="w-4 h-4 mr-1" /> 新增第一個服務
+            <Button className="bg-amber-500 hover:bg-amber-600 text-black mb-8" onClick={openCreate}>
+              <Plus className="w-4 h-4 mr-1" /> 自訂服務
             </Button>
+
+            {/* 服務模板 */}
+            <div className="w-full max-w-2xl">
+              <p className="text-xs text-muted-foreground mb-3 font-medium">✨ 快速建立模板</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+                {[
+                  { title: "八字命盤解析", desc: "全面解讀您的八字命盤，分析五行、十神、大運走勢", duration: 60, price: 1500, type: "online" as const },
+                  { title: "快速運勢諮詢", desc: "針對特定問題的快速命理諮詢，適合感情/職場/財運", duration: 30, price: 800, type: "online" as const },
+                  { title: "紫微斗數排盤", desc: "完整紫微斗數命盤解讀，含十二宮位詳解與大限分析", duration: 90, price: 2000, type: "online" as const },
+                  { title: "面對面深度諮詢", desc: "線下面對面命理諮詢，含命盤分析與開運建議", duration: 120, price: 3000, type: "offline" as const },
+                ].map((tpl, idx) => (
+                  <Card key={idx} className="border-dashed border-border/60 hover:border-amber-500/30 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setEditingId(null);
+                      setForm({ title: tpl.title, description: tpl.desc, durationMinutes: tpl.duration, price: tpl.price, type: tpl.type });
+                      setDialogOpen(true);
+                    }}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-start gap-2">
+                        <ServiceIcon type={tpl.type} price={tpl.price} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">{tpl.title}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{tpl.desc}</p>
+                          <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-0.5"><Clock className="w-3 h-3" />{tpl.duration}分</span>
+                            <span className="flex items-center gap-0.5"><DollarSign className="w-3 h-3" />NT${tpl.price.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-6">

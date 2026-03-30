@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ExpertLayout } from "@/components/ExpertLayout";
 import { trpc } from "@/lib/trpc";
+import DOMPurify from "dompurify";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,16 +23,13 @@ const SPECIALTY_OPTIONS = [
   "靈數學", "靈氣消除", "山海經", "符咒開運",
 ];
 
-// 安全渲染 HTML（過濾危險屬性）
+// 安全渲染 HTML（使用 DOMPurify 過濾 XSS）
 function SafeHtml({ html }: { html: string }) {
-  // 移除 style 屬性中的 position/fixed/absolute 等危險 CSS
-  const sanitized = html
-    .replace(/style="[^"]*"/gi, (match) => {
-      const safe = match.replace(/(position|z-index|fixed|absolute|overflow|display\s*:\s*none)[^;"]*/gi, "");
-      return safe;
-    })
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/on\w+="[^"]*"/gi, "");
+  const sanitized = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ["h1","h2","h3","h4","h5","h6","p","br","hr","ul","ol","li","a","strong","em","u","s","blockquote","code","pre","img","span","div","table","thead","tbody","tr","th","td"],
+    ALLOWED_ATTR: ["href","src","alt","title","class","style","target","rel","width","height"],
+    FORBID_ATTR: ["onerror","onload","onclick","onmouseover"],
+  });
   return (
     <div
       className="prose prose-invert prose-sm max-w-none"

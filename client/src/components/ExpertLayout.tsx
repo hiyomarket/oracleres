@@ -14,6 +14,8 @@ import {
   Calendar,
   Star,
   Home,
+  DollarSign,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +25,8 @@ const NAV_ITEMS = [
   { path: "/expert/services",  label: "服務項目", icon: Briefcase,       badgeKey: null },
   { path: "/expert/calendar",  label: "行事曆",   icon: Calendar,        badgeKey: null },
   { path: "/expert/bookings",  label: "訂單管理", icon: Star,            badgeKey: "bookings" },
+  { path: "/expert/revenue",   label: "收入統計", icon: DollarSign,      badgeKey: null },
+  { path: "/expert/reviews",   label: "評價管理", icon: MessageSquare,   badgeKey: null },
 ];
 
 interface ExpertLayoutProps {

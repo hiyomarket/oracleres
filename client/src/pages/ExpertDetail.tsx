@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useParams, useLocation } from "wouter";
+import DOMPurify from "dompurify";
 import { SharedNav } from "@/components/SharedNav";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -282,7 +283,7 @@ export default function ExpertDetail() {
                 {bioHtml ? (
                   <div
                     className="prose prose-invert prose-sm max-w-none leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: bioHtml }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(bioHtml) }}
                   />
                 ) : expert.bio ? (
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">{expert.bio}</p>
