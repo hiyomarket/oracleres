@@ -159,3 +159,37 @@ export type AgentData = {
   potentialWood?: number; potentialFire?: number; potentialEarth?: number;
   potentialMetal?: number; potentialWater?: number;
 };
+
+// ─── 強化等級色階映射（與 EnhancePage 同步） ─────────────────────
+const ENHANCE_COLOR_KEYS = [
+  "white","green","blue","purple","orange","red","gold","platinum","cyan","skyblue",
+  "starpurple","deepred","flameorange","lavagold","destinyyellow","artifactcyan",
+  "legendwhite","ancientsilver","chaosmag","holywhite","rainbow",
+];
+export const ENHANCE_COLORS: Record<string, { hex: string; label: string; glow: string }> = {
+  white:          { hex: "#94a3b8", label: "白",       glow: "rgba(148,163,184,0.3)" },
+  green:          { hex: "#4ade80", label: "綠",       glow: "rgba(74,222,128,0.4)" },
+  blue:           { hex: "#60a5fa", label: "藍",       glow: "rgba(96,165,250,0.4)" },
+  purple:         { hex: "#a78bfa", label: "紫",       glow: "rgba(167,139,250,0.5)" },
+  orange:         { hex: "#fb923c", label: "橙",       glow: "rgba(251,146,60,0.5)" },
+  red:            { hex: "#ef4444", label: "紅",       glow: "rgba(239,68,68,0.6)" },
+  gold:           { hex: "#f59e0b", label: "金",       glow: "rgba(245,158,11,0.6)" },
+  platinum:       { hex: "#fde68a", label: "白金",     glow: "rgba(253,230,138,0.5)" },
+  cyan:           { hex: "#34d399", label: "青",       glow: "rgba(52,211,153,0.5)" },
+  skyblue:        { hex: "#38bdf8", label: "天藍",     glow: "rgba(56,189,248,0.5)" },
+  starpurple:     { hex: "#8b5cf6", label: "星紫",     glow: "rgba(139,92,246,0.6)" },
+  deepred:        { hex: "#dc2626", label: "深紅",     glow: "rgba(220,38,38,0.6)" },
+  flameorange:    { hex: "#ea580c", label: "烈焰橙",   glow: "rgba(234,88,12,0.6)" },
+  lavagold:       { hex: "#d97706", label: "熔岩金",   glow: "rgba(217,119,6,0.6)" },
+  destinyyellow:  { hex: "#eab308", label: "天命黃",   glow: "rgba(234,179,8,0.6)" },
+  artifactcyan:   { hex: "#06b6d4", label: "神器青",   glow: "rgba(6,182,212,0.6)" },
+  legendwhite:    { hex: "#e2e8f0", label: "傳說白金", glow: "rgba(226,232,240,0.5)" },
+  ancientsilver:  { hex: "#cbd5e1", label: "太古銀",   glow: "rgba(203,213,225,0.5)" },
+  chaosmag:       { hex: "#c026d3", label: "混沌紫紅", glow: "rgba(192,38,211,0.7)" },
+  holywhite:      { hex: "#fef9c3", label: "神聖金白", glow: "rgba(254,249,195,0.6)" },
+  rainbow:        { hex: "#fbbf24", label: "絕頂彩虹", glow: "rgba(251,191,36,0.8)" },
+};
+export function getEnhanceColorInfo(level: number): { hex: string; label: string; glow: string } {
+  const key = ENHANCE_COLOR_KEYS[Math.min(level, 20)] ?? "white";
+  return ENHANCE_COLORS[key] ?? ENHANCE_COLORS.white;
+}

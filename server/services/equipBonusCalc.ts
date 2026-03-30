@@ -1,11 +1,12 @@
 /**
  * 裝備加成計算器
  * 查詢角色已裝備的裝備，計算含強化的總屬性加成
+ * v5.19: 改用動態設定（getEnhanceConfig）計算強化加成
  */
 import { getDb } from "../db";
 import { agentInventory, gameEquipmentCatalog } from "../../drizzle/schema";
 import { eq, and, inArray } from "drizzle-orm";
-import { calcEnhancedStat } from "./enhanceEngine";
+import { calcEnhancedStatWithConfig, getEnhanceConfig, type EnhanceConfig } from "./enhanceEngine";
 
 export interface EquipBonus {
   hp: number;
@@ -19,7 +20,7 @@ export interface EquipBonus {
 const ZERO_BONUS: EquipBonus = { hp: 0, atk: 0, def: 0, spd: 0, matk: 0, mdef: 0 };
 
 /**
- * 計算角色所有已裝備裝備的總屬性加成（含強化加成）
+ * 計算角色所有已裝備裝備的總屬性加成（含強化加成，使用動態設定）
  * @param equippedIds - 角色各部位已裝備的 itemId 列表
  */
 export async function calcEquipBonus(equippedIds: string[]): Promise<EquipBonus> {
@@ -27,6 +28,9 @@ export async function calcEquipBonus(equippedIds: string[]): Promise<EquipBonus>
 
   const db = await getDb();
   if (!db) return { ...ZERO_BONUS };
+
+  // 讀取動態強化設定
+  const cfg = await getEnhanceConfig();
 
   // 查詢裝備圖鑑屬性
   const catalogs = await db.select().from(gameEquipmentCatalog)
@@ -46,12 +50,12 @@ export async function calcEquipBonus(equippedIds: string[]): Promise<EquipBonus>
 
   for (const cat of catalogs) {
     const enhLv = enhanceLevelMap.get(cat.equipId) ?? 0;
-    bonus.hp   += calcEnhancedStat(cat.hpBonus ?? 0, enhLv);
-    bonus.atk  += calcEnhancedStat(cat.attackBonus ?? 0, enhLv);
-    bonus.def  += calcEnhancedStat(cat.defenseBonus ?? 0, enhLv);
-    bonus.spd  += calcEnhancedStat(cat.speedBonus ?? 0, enhLv);
-    bonus.matk += calcEnhancedStat(cat.magicAttackBonus ?? 0, enhLv);
-    bonus.mdef += calcEnhancedStat(cat.magicDefenseBonus ?? 0, enhLv);
+    bonus.hp   += calcEnhancedStatWithConfig(cat.hpBonus ?? 0, enhLv, cfg);
+    bonus.atk  += calcEnhancedStatWithConfig(cat.attackBonus ?? 0, enhLv, cfg);
+    bonus.def  += calcEnhancedStatWithConfig(cat.defenseBonus ?? 0, enhLv, cfg);
+    bonus.spd  += calcEnhancedStatWithConfig(cat.speedBonus ?? 0, enhLv, cfg);
+    bonus.matk += calcEnhancedStatWithConfig(cat.magicAttackBonus ?? 0, enhLv, cfg);
+    bonus.mdef += calcEnhancedStatWithConfig(cat.magicDefenseBonus ?? 0, enhLv, cfg);
   }
 
   return bonus;
@@ -60,12 +64,16 @@ export async function calcEquipBonus(equippedIds: string[]): Promise<EquipBonus>
 /**
  * 查詢角色已裝備的裝備，計算含強化的總屬性加成（透過 agentId 查詢）
  * 此函數直接查詢 agentInventory 中 isEquipped=1 的裝備
+ * v5.19: 使用動態設定計算強化加成
  * @param agentId - 角色 ID
  * @returns EquipBonus - 各屬性的加成值
  */
 export async function calcEquipBonusForAgent(agentId: number): Promise<EquipBonus> {
   const db = await getDb();
   if (!db) return { ...ZERO_BONUS };
+
+  // 讀取動態強化設定
+  const cfg = await getEnhanceConfig();
 
   // 查詢已裝備的裝備
   const equippedItems = await db.select().from(agentInventory)
@@ -97,12 +105,12 @@ export async function calcEquipBonusForAgent(agentId: number): Promise<EquipBonu
     const data = inv.itemData ? (typeof inv.itemData === "string" ? JSON.parse(inv.itemData) : inv.itemData) : null;
     const enhLv = (data as any)?.enhanceLevel ?? 0;
 
-    bonus.hp   += calcEnhancedStat(cat.hpBonus ?? 0, enhLv);
-    bonus.atk  += calcEnhancedStat(cat.attackBonus ?? 0, enhLv);
-    bonus.def  += calcEnhancedStat(cat.defenseBonus ?? 0, enhLv);
-    bonus.spd  += calcEnhancedStat(cat.speedBonus ?? 0, enhLv);
-    bonus.matk += calcEnhancedStat(cat.magicAttackBonus ?? 0, enhLv);
-    bonus.mdef += calcEnhancedStat(cat.magicDefenseBonus ?? 0, enhLv);
+    bonus.hp   += calcEnhancedStatWithConfig(cat.hpBonus ?? 0, enhLv, cfg);
+    bonus.atk  += calcEnhancedStatWithConfig(cat.attackBonus ?? 0, enhLv, cfg);
+    bonus.def  += calcEnhancedStatWithConfig(cat.defenseBonus ?? 0, enhLv, cfg);
+    bonus.spd  += calcEnhancedStatWithConfig(cat.speedBonus ?? 0, enhLv, cfg);
+    bonus.matk += calcEnhancedStatWithConfig(cat.magicAttackBonus ?? 0, enhLv, cfg);
+    bonus.mdef += calcEnhancedStatWithConfig(cat.magicDefenseBonus ?? 0, enhLv, cfg);
   }
 
   return bonus;

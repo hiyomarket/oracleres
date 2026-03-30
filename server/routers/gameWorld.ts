@@ -23,7 +23,7 @@ import { storagePut } from "../storage";
 import type { WuXing } from "../../shared/types";
 import { grantStarterPack } from "../services/starterPackEngine";
 import { resolveItemType } from "../resolveItemType";
-import { calcEnhancedStat } from "../services/enhanceEngine";
+import { calcEnhancedStatWithConfig, getEnhanceConfig } from "../services/enhanceEngine";
 import { calcEquipBonusForAgent } from "../services/equipBonusCalc";
 
 // ─── GD-020 補充二：從命格資料計算角色初始屬性（使用統一公式） ───
@@ -2083,6 +2083,8 @@ export const gameWorldRouter = router({
         for (const fs of frontSlots) FRONT_TO_CATALOG[fs] = catSlot;
       }
       const filterCatalogSlot = input?.slot ? (FRONT_TO_CATALOG[input.slot] ?? input.slot) : undefined;
+      // 讀取動態強化設定
+      const enhCfg = await getEnhanceConfig();
       // 合併背包記錄和圖鑑屬性
       const result = invItems.map(inv => {
         const cat = catalogMap.get(inv.itemId);
@@ -2098,11 +2100,11 @@ export const gameWorldRouter = router({
           quality: cat?.quality ?? 'common',
           tier: cat?.tier ?? null,
           enhanceLevel: enhanceData?.enhanceLevel ?? 0,
-          hpBonus: calcEnhancedStat(cat?.hpBonus ?? 0, enhanceData?.enhanceLevel ?? 0),
-          attackBonus: calcEnhancedStat(cat?.attackBonus ?? 0, enhanceData?.enhanceLevel ?? 0),
-          defenseBonus: calcEnhancedStat(cat?.defenseBonus ?? 0, enhanceData?.enhanceLevel ?? 0),
-          speedBonus: calcEnhancedStat(cat?.speedBonus ?? 0, enhanceData?.enhanceLevel ?? 0),
-          matkBonus: calcEnhancedStat(cat?.magicAttackBonus ?? 0, enhanceData?.enhanceLevel ?? 0),
+          hpBonus: calcEnhancedStatWithConfig(cat?.hpBonus ?? 0, enhanceData?.enhanceLevel ?? 0, enhCfg),
+          attackBonus: calcEnhancedStatWithConfig(cat?.attackBonus ?? 0, enhanceData?.enhanceLevel ?? 0, enhCfg),
+          defenseBonus: calcEnhancedStatWithConfig(cat?.defenseBonus ?? 0, enhanceData?.enhanceLevel ?? 0, enhCfg),
+          speedBonus: calcEnhancedStatWithConfig(cat?.speedBonus ?? 0, enhanceData?.enhanceLevel ?? 0, enhCfg),
+          matkBonus: calcEnhancedStatWithConfig(cat?.magicAttackBonus ?? 0, enhanceData?.enhanceLevel ?? 0, enhCfg),
           baseHpBonus: cat?.hpBonus ?? 0,
           baseAttackBonus: cat?.attackBonus ?? 0,
           baseDefenseBonus: cat?.defenseBonus ?? 0,

@@ -13,6 +13,7 @@ import {
   STRATEGIES, QUALITY_COLOR, QUALITY_ZH, SKILL_DEFS, WX_SKILL_ICON,
   WX_ZH_TO_EN, COMBAT_ATTRS, LIFE_ATTRS, EQUIP_SLOTS,
   REALM_LABELS, PROFESSION_LABELS, FATE_LABELS,
+  getEnhanceColorInfo,
   type PanelId, type AgentData,
 } from "./constants";
 import { StatBar, MiniAttrBar } from "./StatBars";
@@ -747,12 +748,18 @@ export function CharacterPanel({
                 {EQUIP_SLOTS.map(({ slot, icon, label, desc }) => {
                   const item = equipped[slot];
                   const qc = item?.quality ? QUALITY_COLOR[item.quality] ?? "#94a3b8" : null;
+                  const enhLv = (item as any)?.enhanceLevel ?? 0;
+                  const enhColor = enhLv > 0 ? getEnhanceColorInfo(enhLv) : null;
+                  // 高強化等級優先使用強化色，否則用品質色
+                  const displayColor = enhLv >= 3 ? enhColor?.hex ?? qc : qc;
+                  const hasGlow = enhLv >= 6;
                   return (
                     <div key={slot}
                       className="flex items-center gap-2 px-2.5 py-2 rounded-xl border cursor-pointer active:scale-[0.98] transition-transform"
                       style={{
-                        background: item ? `${qc ?? ec}08` : "rgba(255,255,255,0.02)",
-                        borderColor: item ? `${qc ?? ec}30` : "rgba(255,255,255,0.07)",
+                        background: item ? `${displayColor ?? ec}08` : "rgba(255,255,255,0.02)",
+                        borderColor: item ? `${displayColor ?? ec}30` : "rgba(255,255,255,0.07)",
+                        boxShadow: hasGlow && enhColor ? `0 0 8px ${enhColor.glow}, inset 0 0 4px ${enhColor.glow}` : "none",
                       }}
                       onClick={() => { setSelectedEquipSlot(slot); setEquipPickerWuxing(""); }}>
                       <span className="text-lg shrink-0">{icon}</span>
@@ -760,13 +767,24 @@ export function CharacterPanel({
                         <p className="text-xs text-slate-500">{label}</p>
                         {item ? (
                           <div>
-                            <p className="text-xs font-bold text-slate-200 leading-tight truncate">{item.name}</p>
-                            {item.quality && qc && (
-                              <span className="text-xs px-1 py-0.5 rounded-full"
-                                style={{ background: `${qc}20`, color: qc }}>
-                                {QUALITY_ZH[item.quality] ?? item.quality}
-                              </span>
-                            )}
+                            <p className="text-xs font-bold leading-tight truncate" style={{ color: enhLv >= 3 && enhColor ? enhColor.hex : "#e2e8f0" }}>
+                              {item.name}
+                              {enhLv > 0 && <span style={{ color: enhColor?.hex ?? "#fbbf24", marginLeft: "2px", fontSize: "10px" }}>+{enhLv}</span>}
+                            </p>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {item.quality && qc && (
+                                <span className="text-[9px] px-1 py-0.5 rounded-full"
+                                  style={{ background: `${qc}20`, color: qc }}>
+                                  {QUALITY_ZH[item.quality] ?? item.quality}
+                                </span>
+                              )}
+                              {enhLv > 0 && enhColor && (
+                                <span className="text-[9px] px-1 py-0.5 rounded-full font-bold"
+                                  style={{ background: `${enhColor.hex}20`, color: enhColor.hex }}>
+                                  {enhColor.label}色
+                                </span>
+                              )}
+                            </div>
                           </div>
                         ) : (
                           <p className="text-xs text-slate-700 italic">{desc}</p>
@@ -810,6 +828,9 @@ export function CharacterPanel({
                     <p className="text-xs font-bold text-slate-400">⚔️ 裝備列表</p>
                     {equippedList.map(([slot, e]) => {
                       const qc = e?.quality ? QUALITY_COLOR[e.quality] ?? '#94a3b8' : '#94a3b8';
+                      const eEnhLv = (e as any)?.enhanceLevel ?? 0;
+                      const eEnhColor = eEnhLv > 0 ? getEnhanceColorInfo(eEnhLv) : null;
+                      const nameColor = eEnhLv >= 3 && eEnhColor ? eEnhColor.hex : qc;
                       const bonusParts: string[] = [];
                       if (e?.hpBonus) bonusParts.push(`HP+${e.hpBonus}`);
                       if (e?.attackBonus) bonusParts.push(`攻+${e.attackBonus}`);
@@ -818,7 +839,10 @@ export function CharacterPanel({
                       return (
                         <div key={slot} className="flex items-center gap-2">
                           <span className="text-xs text-slate-600 w-10 shrink-0">{EQUIP_SLOTS.find(s => s.slot === slot)?.label ?? slot}</span>
-                          <span className="text-xs font-bold truncate" style={{ color: qc }}>{e?.name ?? ''}</span>
+                          <span className="text-xs font-bold truncate" style={{ color: nameColor }}>
+                            {e?.name ?? ''}
+                            {eEnhLv > 0 && <span style={{ color: eEnhColor?.hex, fontSize: '9px', marginLeft: '2px' }}>+{eEnhLv}</span>}
+                          </span>
                           {bonusParts.length > 0 && (
                             <span className="text-[10px] text-emerald-400 ml-auto shrink-0">{bonusParts.join(' ')}</span>
                           )}
