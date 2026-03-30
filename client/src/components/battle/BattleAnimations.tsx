@@ -121,8 +121,15 @@ export function FloatingTexts({ texts }: {
             color: ft.color,
             textShadow: ft.isCrit
               ? `0 0 20px ${ft.color}, 0 0 40px ${ft.color}80, 0 0 60px ${ft.color}40, 0 4px 8px rgba(0,0,0,0.9)`
+              : ft.type === "block"
+              ? `0 0 16px ${ft.color}, 0 0 32px ${ft.color}60, 0 3px 6px rgba(0,0,0,0.9)`
+              : ft.type === "dodge"
+              ? `0 0 10px ${ft.color}60, 0 2px 4px rgba(0,0,0,0.8)`
               : `0 0 12px ${ft.color}80, 0 2px 6px rgba(0,0,0,0.9)`,
-            animation: ft.isCrit ? "critFloatUp 2s ease-out forwards" : "floatUp 1.8s ease-out forwards",
+            animation: ft.isCrit ? "critFloatUp 2s ease-out forwards"
+              : ft.type === "dodge" ? "dodgeSlide 1.5s ease-out forwards"
+              : ft.type === "block" ? "blockPulse 1.8s ease-out forwards"
+              : "floatUp 1.8s ease-out forwards",
           }}>
           {ft.text}
         </div>
@@ -229,6 +236,30 @@ export function BattleStyles() {
       @keyframes defeatDarken {
         0%   { opacity: 0; }
         100% { opacity: 1; }
+      }
+      @keyframes dodgeSlide {
+        0%   { opacity: 0; transform: translateY(0) translateX(-20px) scale(0.8); }
+        20%  { opacity: 1; transform: translateY(-5px) translateX(0) scale(1.3); }
+        50%  { transform: translateY(-15px) scale(1.1); }
+        100% { opacity: 0; transform: translateY(-50px) scale(0.7); }
+      }
+      @keyframes blockPulse {
+        0%   { opacity: 0; transform: translateY(0) scale(0.5); }
+        15%  { opacity: 1; transform: translateY(-5px) scale(1.4); }
+        30%  { transform: translateY(-10px) scale(1.1); filter: brightness(1.5); }
+        50%  { transform: translateY(-20px) scale(1); }
+        100% { opacity: 0; transform: translateY(-60px) scale(0.6); }
+      }
+      @keyframes battleShakeHeavy {
+        0%   { transform: translateX(0) rotate(0); }
+        10%  { transform: translateX(-12px) rotate(-1deg); }
+        20%  { transform: translateX(12px) rotate(1deg); }
+        30%  { transform: translateX(-10px) rotate(-0.8deg); }
+        40%  { transform: translateX(10px) rotate(0.8deg); }
+        50%  { transform: translateX(-6px) rotate(-0.4deg); }
+        60%  { transform: translateX(6px) rotate(0.4deg); }
+        75%  { transform: translateX(-3px); }
+        100% { transform: translateX(0) rotate(0); }
       }
     `}</style>
   );

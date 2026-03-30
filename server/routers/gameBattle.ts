@@ -564,6 +564,7 @@ export const gameBattleRouter = router({
           activeBuffs: [] as any,
           actionsPerTurn: p.actionsPerTurn ?? 1,
           rowPosition: p.type === "pet" ? "front" : p.type === "character" ? "back" : "front",
+          avatarUrl: (p as any).avatarUrl ?? null,
         });
       }
 
@@ -1494,7 +1495,7 @@ export const gameBattleRouter = router({
           elementBoostDesc: log.elementBoostDesc ?? null,
           statusEffectDesc: log.statusEffectDesc ?? null,
           message: log.message,
-          detail: log.detail ? (log.detail as any) : null,
+          detail: { ...(log.detail ?? {}), ...(log.isBlocked ? { isBlocked: true } : {}), ...(log.isDodged ? { isDodged: true } : {}) } as any,
           createdAt: Date.now(),
         });
       }
@@ -1583,8 +1584,8 @@ export const gameBattleRouter = router({
           agentId: p.agentId ?? null,
           petId: p.petId ?? null,
           monsterId: p.monsterId ?? null,
-          avatarUrl: (p as any).avatarUrl ?? null,
-          rowPosition: (p as any).rowPosition ?? null,
+          avatarUrl: p.avatarUrl ?? null,
+          rowPosition: p.rowPosition ?? null,
           skills: ((p.equippedSkills ?? []) as any[]).map((s: any) => {
             const cdMap = (p.skillCooldowns ?? {}) as Record<string, number>;
             return {
@@ -1602,6 +1603,8 @@ export const gameBattleRouter = router({
           targetId: l.targetId,
           value: l.value,
           isCritical: l.isCritical === 1,
+          isBlocked: !!(l.detail as any)?.isBlocked,
+          isDodged: !!(l.detail as any)?.isDodged,
           skillName: l.skillName,
           elementBoostDesc: l.elementBoostDesc,
           statusEffectDesc: l.statusEffectDesc,

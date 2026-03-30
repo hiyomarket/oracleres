@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { MonsterCatalogV2Tab, ItemCatalogV2Tab, EquipCatalogV2Tab, SkillCatalogV2Tab, AchievementCatalogTab } from "@/components/admin/CatalogTabs";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -4678,109 +4678,84 @@ const BOSS_WUXING_OPTIONS = [
 ];
 
 function BossSkillEditor({ skills, onChange }: { skills: BossSkill[]; onChange: (s: BossSkill[]) => void }) {
-  const EFFECT_TYPES: { value: BossSkillEffect["type"]; label: string }[] = [
-    { value: "none", label: "-- 無" },
-    { value: "poison", label: "☠ 中毒" }, { value: "burn", label: "火 燃燒" },
-    { value: "freeze", label: "❄ 冰凍" }, { value: "stun", label: "★ 眩暈" },
-    { value: "bleed", label: "※ 流血" }, { value: "weaken", label: "↓ 虛弱" },
-    { value: "slow", label: "▽ 減速" }, { value: "silence", label: "✕ 沉默" },
-    { value: "heal", label: "♥ 恢復" }, { value: "buff_atk", label: "↑ 攻擊提升" },
-    { value: "buff_def", label: "◆ 防禦提升" }, { value: "debuff_atk", label: "↓ 攻擊降低" },
-    { value: "debuff_def", label: "◇ 防禦降低" }, { value: "drain_hp", label: "◎ 吸血" },
-    { value: "drain_mp", label: "✦ 吸魔" },
-  ];
-  const TARGET_TYPES: { value: BossSkill["targetType"]; label: string }[] = [
-    { value: "single_enemy", label: "◎ 單體敵人" }, { value: "all_enemy", label: "◈ 全體敵人" },
-    { value: "random_enemy", label: "◇ 隨機敵人" }, { value: "single_ally", label: "♥ 單體己方" },
-    { value: "all_ally", label: "♡ 全體己方" }, { value: "self", label: "● 自身" },
-  ];
-  const SKILL_TYPES: { value: BossSkill["skillType"]; label: string }[] = [
-    { value: "physical", label: "⚔ 物理攻擊" }, { value: "magical", label: "✦ 法術攻擊" },
-    { value: "heal", label: "♥ 治療" }, { value: "buff", label: "↑ 增益" },
-    { value: "debuff", label: "↓ 減益" }, { value: "support", label: "◆ 輔助" },
-  ];
-  const defaultEffect: BossSkillEffect = { type: "none", chance: 0, duration: 0, value: 0 };
-  const addSkill = () => onChange([...skills, {
-    id: `skill_${Date.now()}`, name: "", skillType: "physical", targetType: "single_enemy",
-    wuxing: "水", damageMultiplier: 1.5, mpCost: 10, cooldown: 2,
-    hitCount: 1, accuracy: 95, description: "", additionalEffect: { ...defaultEffect },
-  }]);
+  // 從技能圖鑑讀取可用技能
+  const { data: skillCatalog } = trpc.gameCatalog.getAllMonsterSkills.useQuery();
+  const [searchTerms, setSearchTerms] = useState<Record<number, string>>({});
+
+  const WX_EMOJI_MAP: Record<string, string> = { "木": "🌿", "火": "🔥", "土": "🪨", "金": "⚔️", "水": "💧" };
+  const SKILL_TYPE_LABELS: Record<string, string> = {
+    physical: "⚔ 物攻", magical: "✦ 法攻", heal: "♥ 治療", buff: "↑ 增益", debuff: "↓ 減益", support: "◆ 輔助",
+  };
+
+  const addFromCatalog = (skill: any) => {
+    onChange([...skills, {
+      id: skill.skillId, name: skill.name, skillType: skill.skillType || "physical",
+      targetType: "single_enemy", wuxing: skill.wuxing || "水",
+      damageMultiplier: 1.5, mpCost: 10, cooldown: 2,
+      hitCount: 1, accuracy: 95, description: "",
+      additionalEffect: { type: "none", chance: 0, duration: 0, value: 0 },
+    }]);
+  };
   const removeSkill = (i: number) => onChange(skills.filter((_, idx) => idx !== i));
-  const updateSkill = (i: number, field: string, val: any) => {
-    const updated = [...skills];
-    updated[i] = { ...updated[i], [field]: val };
-    onChange(updated);
+
+  // 篩選技能圖鑑
+  const getFilteredSkills = (idx: number) => {
+    if (!skillCatalog) return [];
+    const term = (searchTerms[idx] || "").toLowerCase();
+    const usedIds = new Set(skills.map(s => s.id));
+    return skillCatalog.filter(s =>
+      !usedIds.has(s.skillId) &&
+      (term === "" || s.name.toLowerCase().includes(term) || s.skillId.toLowerCase().includes(term) || (s.wuxing || "").includes(term))
+    );
   };
-  const updateEffect = (i: number, field: keyof BossSkillEffect, val: any) => {
-    const updated = [...skills];
-    updated[i] = { ...updated[i], additionalEffect: { ...(updated[i].additionalEffect || defaultEffect), [field]: val } };
-    onChange(updated);
-  };
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="text-xs text-muted-foreground font-medium">技能列表 ({skills.length} 個)</label>
-        <Button size="sm" variant="outline" onClick={addSkill} className="h-6 text-xs px-2">+ 新增技能</Button>
+        <label className="text-xs text-muted-foreground font-medium">技能列表 ({skills.length} 個) — 從技能圖鑑選取</label>
       </div>
-      {skills.length === 0 && (
-        <div className="text-xs text-muted-foreground text-center py-2 border border-dashed rounded">尚未設定技能，點擊新增</div>
-      )}
+
+      {/* 已選技能 */}
       {skills.map((sk, i) => (
-        <div key={i} className="border border-border/50 rounded p-2 space-y-2 bg-background/30">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-amber-400">技能 {i + 1}{sk.name ? ` -- ${sk.name}` : ""}</span>
-            <Button size="sm" variant="ghost" onClick={() => removeSkill(i)} className="h-5 w-5 p-0 text-red-400 hover:text-red-300">×</Button>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <div><label className="text-xs text-muted-foreground">技能名稱</label>
-              <Input value={sk.name} onChange={e => updateSkill(i, "name", e.target.value)} className="h-7 text-xs" placeholder="如：暗影突襲" /></div>
-            <div><label className="text-xs text-muted-foreground">技能類型</label>
-              <Select value={sk.skillType} onValueChange={v => updateSkill(i, "skillType", v)}>
-                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>{SKILL_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-              </Select></div>
-            <div><label className="text-xs text-muted-foreground">目標類型</label>
-              <Select value={sk.targetType || "single_enemy"} onValueChange={v => updateSkill(i, "targetType", v)}>
-                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>{TARGET_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-              </Select></div>
-            <div><label className="text-xs text-muted-foreground">五行屬性</label>
-              <Select value={sk.wuxing} onValueChange={v => updateSkill(i, "wuxing", v)}>
-                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>{BOSS_WUXING_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-              </Select></div>
-            <div><label className="text-xs text-muted-foreground">傷害倍率</label>
-              <Input type="number" step="0.1" min="0" value={sk.damageMultiplier} onChange={e => updateSkill(i, "damageMultiplier", Number(e.target.value))} className="h-7 text-xs" /></div>
-            <div><label className="text-xs text-muted-foreground">MP 消耗</label>
-              <Input type="number" min="0" value={sk.mpCost} onChange={e => updateSkill(i, "mpCost", Number(e.target.value))} className="h-7 text-xs" /></div>
-            <div><label className="text-xs text-muted-foreground">冷却回合</label>
-              <Input type="number" min="0" value={sk.cooldown} onChange={e => updateSkill(i, "cooldown", Number(e.target.value))} className="h-7 text-xs" /></div>
-            <div><label className="text-xs text-muted-foreground">連擊次數</label>
-              <Input type="number" min="1" max="10" value={sk.hitCount ?? 1} onChange={e => updateSkill(i, "hitCount", Number(e.target.value))} className="h-7 text-xs" /></div>
-            <div><label className="text-xs text-muted-foreground">命中率%</label>
-              <Input type="number" min="0" max="100" value={sk.accuracy ?? 95} onChange={e => updateSkill(i, "accuracy", Number(e.target.value))} className="h-7 text-xs" /></div>
-          </div>
-          {/* 附加效果 */}
-          <div className="border-t border-border/30 pt-2 mt-1">
-            <label className="text-[10px] text-muted-foreground font-medium">附加效果</label>
-            <div className="grid grid-cols-4 gap-2 mt-1">
-              <div><label className="text-[10px] text-muted-foreground">效果類型</label>
-                <Select value={sk.additionalEffect?.type || "none"} onValueChange={v => updateEffect(i, "type", v)}>
-                  <SelectTrigger className="h-6 text-[10px]"><SelectValue /></SelectTrigger>
-                  <SelectContent>{EFFECT_TYPES.map(e => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}</SelectContent>
-                </Select></div>
-              <div><label className="text-[10px] text-muted-foreground">觸發率%</label>
-                <Input type="number" min="0" max="100" value={sk.additionalEffect?.chance ?? 0} onChange={e => updateEffect(i, "chance", Number(e.target.value))} className="h-6 text-[10px]" /></div>
-              <div><label className="text-[10px] text-muted-foreground">持續回合</label>
-                <Input type="number" min="0" value={sk.additionalEffect?.duration ?? 0} onChange={e => updateEffect(i, "duration", Number(e.target.value))} className="h-6 text-[10px]" /></div>
-              <div><label className="text-[10px] text-muted-foreground">效果數值</label>
-                <Input type="number" step="0.1" value={sk.additionalEffect?.value ?? 0} onChange={e => updateEffect(i, "value", Number(e.target.value))} className="h-6 text-[10px]" /></div>
-            </div>
-          </div>
-          <div><label className="text-xs text-muted-foreground">技能說明</label>
-            <Input value={sk.description} onChange={e => updateSkill(i, "description", e.target.value)} className="h-7 text-xs" placeholder="技能效果說明" /></div>
+        <div key={i} className="flex items-center gap-2 p-2 border border-border/50 rounded bg-background/30">
+          <Badge className="bg-amber-600/20 text-amber-400 text-[10px] shrink-0">{sk.id}</Badge>
+          <span className="text-xs font-medium flex-1">{WX_EMOJI_MAP[sk.wuxing] || ""} {sk.name}</span>
+          <Badge variant="outline" className="text-[10px]">{SKILL_TYPE_LABELS[sk.skillType] || sk.skillType}</Badge>
+          <Button size="sm" variant="ghost" onClick={() => removeSkill(i)} className="h-5 w-5 p-0 text-red-400 hover:text-red-300">×</Button>
         </div>
       ))}
+
+      {/* 新增技能搜尋 */}
+      <div className="border border-dashed border-border/50 rounded p-2 space-y-2">
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="🔍 搜尋技能圖鑑（名稱/編號/屬性）..."
+            value={searchTerms[-1] || ""}
+            onChange={e => setSearchTerms(prev => ({ ...prev, [-1]: e.target.value }))}
+            className="h-7 text-xs flex-1"
+          />
+          <span className="text-[10px] text-muted-foreground shrink-0">可用: {skillCatalog?.length ?? 0} 個</span>
+        </div>
+        {(searchTerms[-1] || "").length > 0 && (
+          <div className="max-h-40 overflow-y-auto space-y-1">
+            {getFilteredSkills(-1).slice(0, 20).map(sk => (
+              <div key={sk.skillId}
+                className="flex items-center gap-2 p-1.5 rounded hover:bg-accent/50 cursor-pointer transition-colors"
+                onClick={() => { addFromCatalog(sk); setSearchTerms(prev => ({ ...prev, [-1]: "" })); }}>
+                <Badge variant="outline" className="text-[10px] shrink-0">{sk.skillId}</Badge>
+                <span className="text-xs">{WX_EMOJI_MAP[sk.wuxing] || ""} {sk.name}</span>
+                <Badge variant="outline" className="text-[10px] ml-auto">{SKILL_TYPE_LABELS[sk.skillType] || sk.skillType}</Badge>
+              </div>
+            ))}
+            {getFilteredSkills(-1).length === 0 && (
+              <div className="text-xs text-muted-foreground text-center py-2">找不到符合的技能</div>
+            )}
+          </div>
+        )}
+        {!(searchTerms[-1] || "").length && skills.length === 0 && (
+          <div className="text-xs text-muted-foreground text-center py-2">輸入關鍵字搜尋技能圖鑑，點擊即可新增</div>
+        )}
+      </div>
     </div>
   );
 }
@@ -5036,6 +5011,12 @@ function BossEditDialog({ boss, onClose, onSave, saving }: { boss: any; onClose:
 
 /* Boss 新增對話框 */
 function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; onSave: (data: any) => void; saving: boolean }) {
+  // 從魔物圖鑑讀取所有魔物
+  const { data: monsterCatalog } = trpc.gameCatalog.getAllMonsters.useQuery();
+  const [monsterSearch, setMonsterSearch] = useState("");
+  const [selectedMonster, setSelectedMonster] = useState<any>(null);
+  const [showMonsterPicker, setShowMonsterPicker] = useState(false);
+
   const [bossCode, setBossCode] = useState("");
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
@@ -5050,6 +5031,57 @@ function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; on
   const [baseMagicDefense, setBaseMagicDefense] = useState("50");
   const [description, setDescription] = useState("");
   const [skills, setSkills] = useState<BossSkill[]>([]);
+  // 五行抗性
+  const [resistWood, setResistWood] = useState("0");
+  const [resistFire, setResistFire] = useState("0");
+  const [resistEarth, setResistEarth] = useState("0");
+  const [resistMetal, setResistMetal] = useState("0");
+  const [resistWater, setResistWater] = useState("0");
+
+  const WX_EMOJI: Record<string, string> = { "木": "🌿", "火": "🔥", "土": "🪨", "金": "⚔️", "水": "💧" };
+  const RARITY_LABELS: Record<string, string> = { common: "普通", rare: "稀有", elite: "精英", boss: "首領", legendary: "傳說" };
+
+  // 從魔物圖鑑選取並自動填入
+  const selectMonster = (m: any) => {
+    setSelectedMonster(m);
+    setBossCode(m.monsterId.toLowerCase().replace(/[^a-z0-9]/g, "_"));
+    setName(m.name);
+    setWuxing(m.wuxing);
+    // 取 levelRange 的最高等級作為 Boss 等級基準，並乘以 Tier 倍率
+    const [, hi] = (m.levelRange || "1-5").split("-").map(Number);
+    const bossLevel = Math.max(hi || 30, 30);
+    setLevel(String(bossLevel));
+    // 數值乘以 Boss 倍率（基礎數值×3~5倍）
+    const mult = tier === "1" ? 3 : tier === "2" ? 5 : 8;
+    setBaseHp(String(Math.round(m.baseHp * mult * 2)));
+    setBaseAttack(String(Math.round(m.baseAttack * mult)));
+    setBaseDefense(String(Math.round(m.baseDefense * mult)));
+    setBaseSpeed(String(Math.round(m.baseSpeed * (mult * 0.5 + 0.5))));
+    setBaseMagicAttack(String(Math.round(m.baseMagicAttack * mult)));
+    setBaseMagicDefense(String(Math.round(m.baseMagicDefense * mult)));
+    setDescription(m.description || "");
+    // 五行抗性
+    setResistWood(String(m.resistWood ?? 0));
+    setResistFire(String(m.resistFire ?? 0));
+    setResistEarth(String(m.resistEarth ?? 0));
+    setResistMetal(String(m.resistMetal ?? 0));
+    setResistWater(String(m.resistWater ?? 0));
+    setShowMonsterPicker(false);
+    setMonsterSearch("");
+  };
+
+  // 篩選魔物
+  const filteredMonsters = useMemo(() => {
+    if (!monsterCatalog) return [];
+    const term = monsterSearch.toLowerCase();
+    if (!term) return monsterCatalog.slice(0, 30);
+    return monsterCatalog.filter(m =>
+      m.name.toLowerCase().includes(term) ||
+      m.monsterId.toLowerCase().includes(term) ||
+      (m.wuxing || "").includes(term) ||
+      (m.rarity || "").includes(term)
+    ).slice(0, 30);
+  }, [monsterCatalog, monsterSearch]);
 
   const handleSubmit = () => {
     if (!bossCode || !name) { alert("Boss 代碼和名稱必填"); return; }
@@ -5063,6 +5095,8 @@ function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; on
       expMultiplier: tier === "1" ? 2.0 : tier === "2" ? 3.0 : 5.0,
       goldMultiplier: tier === "1" ? 2.0 : tier === "2" ? 3.0 : 5.0,
       description, skills,
+      resistWood: Number(resistWood), resistFire: Number(resistFire), resistEarth: Number(resistEarth),
+      resistMetal: Number(resistMetal), resistWater: Number(resistWater),
       dropTable: [], patrolRegion: [],
       enrageConfig: { hpThresholds: [{ hpPercent: 50, atkBoost: 0.2, spdBoost: 0.1, message: "Boss 進入狂暴！" }] },
       scheduleConfig: tier === "1" ? { type: "permanent" } : { type: "scheduled", cron: "0 0 12 * * *", duration: 30, maxInstances: 1 },
@@ -5073,12 +5107,52 @@ function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; on
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader><DialogTitle>➕ 新增 Boss</DialogTitle></DialogHeader>
+
+        {/* ═══ 從魔物圖鑑選取 ═══ */}
+        <div className="border border-amber-600/40 rounded-lg p-3 bg-amber-950/20 space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-medium text-amber-400">📚 從魔物圖鑑選取基底魔物（自動填入數值）</label>
+            {selectedMonster && (
+              <Badge className="bg-green-600/20 text-green-400 text-[10px]">✅ 已選取: {selectedMonster.name} ({selectedMonster.monsterId})</Badge>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="🔍 搜尋魔物（名稱/編號/屬性/稀有度）..."
+              value={monsterSearch}
+              onChange={e => { setMonsterSearch(e.target.value); setShowMonsterPicker(true); }}
+              onFocus={() => setShowMonsterPicker(true)}
+              className="h-8 text-xs flex-1"
+            />
+            <span className="text-[10px] text-muted-foreground self-center shrink-0">圖鑑: {monsterCatalog?.length ?? 0} 隻</span>
+          </div>
+          {showMonsterPicker && (
+            <div className="max-h-48 overflow-y-auto border border-border/50 rounded bg-background/80 space-y-0.5 p-1">
+              {filteredMonsters.map(m => (
+                <div key={m.monsterId}
+                  className="flex items-center gap-2 p-1.5 rounded hover:bg-accent/50 cursor-pointer transition-colors"
+                  onClick={() => selectMonster(m)}>
+                  <Badge variant="outline" className="text-[10px] shrink-0">{m.monsterId}</Badge>
+                  <span className="text-xs font-medium">{WX_EMOJI[m.wuxing] || ""} {m.name}</span>
+                  <Badge variant="outline" className="text-[10px]">{RARITY_LABELS[m.rarity] || m.rarity}</Badge>
+                  <span className="text-[10px] text-muted-foreground">Lv.{m.levelRange}</span>
+                  <span className="text-[10px] text-muted-foreground ml-auto">HP:{m.baseHp} ATK:{m.baseAttack} DEF:{m.baseDefense}</span>
+                </div>
+              ))}
+              {filteredMonsters.length === 0 && (
+                <div className="text-xs text-muted-foreground text-center py-3">找不到符合的魔物</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ═══ Boss 基本資料 ═══ */}
         <div className="grid grid-cols-2 gap-3">
-          <div><label className="text-xs text-muted-foreground">Boss 代碼（英文）</label><Input value={bossCode} onChange={e => setBossCode(e.target.value)} placeholder="e.g. shadow_wolf" /></div>
+          <div><label className="text-xs text-muted-foreground">Boss 代碼（英文）</label><Input value={bossCode} onChange={e => setBossCode(e.target.value)} placeholder="自動產生或手動輸入" /></div>
           <div><label className="text-xs text-muted-foreground">名稱 *</label><Input value={name} onChange={e => setName(e.target.value)} placeholder="如：魔狼王" /></div>
           <div><label className="text-xs text-muted-foreground">稱號</label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="如：暗影之王" /></div>
           <div><label className="text-xs text-muted-foreground">Tier 等階</label>
-            <Select value={tier} onValueChange={setTier}>
+            <Select value={tier} onValueChange={v => { setTier(v); /* 切換 Tier 時重新計算倍率 */ if (selectedMonster) selectMonster(selectedMonster); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="1">T1 遊走精英</SelectItem>
@@ -5094,13 +5168,33 @@ function BossCreateDialog({ onClose, onSave, saving }: { onClose: () => void; on
             </Select>
           </div>
           <div><label className="text-xs text-muted-foreground">等級</label><Input type="number" value={level} onChange={e => setLevel(e.target.value)} /></div>
-          <div><label className="text-xs text-muted-foreground">HP</label><Input type="number" value={baseHp} onChange={e => setBaseHp(e.target.value)} /></div>
-          <div><label className="text-xs text-muted-foreground">ATK</label><Input type="number" value={baseAttack} onChange={e => setBaseAttack(e.target.value)} /></div>
-          <div><label className="text-xs text-muted-foreground">DEF</label><Input type="number" value={baseDefense} onChange={e => setBaseDefense(e.target.value)} /></div>
-          <div><label className="text-xs text-muted-foreground">SPD</label><Input type="number" value={baseSpeed} onChange={e => setBaseSpeed(e.target.value)} /></div>
-          <div><label className="text-xs text-muted-foreground">MATK</label><Input type="number" value={baseMagicAttack} onChange={e => setBaseMagicAttack(e.target.value)} /></div>
-          <div><label className="text-xs text-muted-foreground">MDEF</label><Input type="number" value={baseMagicDefense} onChange={e => setBaseMagicDefense(e.target.value)} /></div>
         </div>
+
+        {/* ═══ 戰鬥數值 ═══ */}
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">戰鬥數值 {selectedMonster && <span className="text-amber-400">(已從魔物圖鑑自動計算，可手動調整)</span>}</label>
+          <div className="grid grid-cols-3 gap-2">
+            <div><label className="text-[10px] text-muted-foreground">HP</label><Input type="number" value={baseHp} onChange={e => setBaseHp(e.target.value)} className="h-8" /></div>
+            <div><label className="text-[10px] text-muted-foreground">ATK</label><Input type="number" value={baseAttack} onChange={e => setBaseAttack(e.target.value)} className="h-8" /></div>
+            <div><label className="text-[10px] text-muted-foreground">DEF</label><Input type="number" value={baseDefense} onChange={e => setBaseDefense(e.target.value)} className="h-8" /></div>
+            <div><label className="text-[10px] text-muted-foreground">SPD</label><Input type="number" value={baseSpeed} onChange={e => setBaseSpeed(e.target.value)} className="h-8" /></div>
+            <div><label className="text-[10px] text-muted-foreground">MATK</label><Input type="number" value={baseMagicAttack} onChange={e => setBaseMagicAttack(e.target.value)} className="h-8" /></div>
+            <div><label className="text-[10px] text-muted-foreground">MDEF</label><Input type="number" value={baseMagicDefense} onChange={e => setBaseMagicDefense(e.target.value)} className="h-8" /></div>
+          </div>
+        </div>
+
+        {/* ═══ 五行抗性 ═══ */}
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">五行抗性 (0-50%)</label>
+          <div className="grid grid-cols-5 gap-2">
+            <div><label className="text-[10px] text-muted-foreground">🌿木</label><Input type="number" min="0" max="50" value={resistWood} onChange={e => setResistWood(e.target.value)} className="h-7 text-xs" /></div>
+            <div><label className="text-[10px] text-muted-foreground">🔥火</label><Input type="number" min="0" max="50" value={resistFire} onChange={e => setResistFire(e.target.value)} className="h-7 text-xs" /></div>
+            <div><label className="text-[10px] text-muted-foreground">🪨土</label><Input type="number" min="0" max="50" value={resistEarth} onChange={e => setResistEarth(e.target.value)} className="h-7 text-xs" /></div>
+            <div><label className="text-[10px] text-muted-foreground">⚔️金</label><Input type="number" min="0" max="50" value={resistMetal} onChange={e => setResistMetal(e.target.value)} className="h-7 text-xs" /></div>
+            <div><label className="text-[10px] text-muted-foreground">💧水</label><Input type="number" min="0" max="50" value={resistWater} onChange={e => setResistWater(e.target.value)} className="h-7 text-xs" /></div>
+          </div>
+        </div>
+
         <div><label className="text-xs text-muted-foreground">描述</label><Textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} placeholder="描述這隻 Boss 的背景與特性" /></div>
         <BossSkillEditor skills={skills} onChange={setSkills} />
         <DialogFooter>

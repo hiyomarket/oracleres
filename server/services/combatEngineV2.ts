@@ -138,11 +138,13 @@ export interface BattleLogEntry {
   round: number;
   actorId: number;
   actorName: string;
-  logType: string;        // damage, heal, buff, debuff, flee, defeat, status_tick, defend, miss
+  logType: string;        // damage, heal, buff, debuff, flee, defeat, status_tick, defend, miss, block, dodge
   targetId?: number;
   targetName?: string;
   value: number;
   isCritical: boolean;
+  isBlocked?: boolean;    // 格檔（傷害減半）
+  isDodged?: boolean;     // 閃避（完全迴避）
   skillName?: string;
   elementBoostDesc?: string;
   statusEffectDesc?: string;
@@ -837,6 +839,17 @@ export function executeCommand(
   return logs;
 }
 
+/** 閃避率：基於速度差 (最高15%) */
+function calcDodgeChance(attacker: BattleParticipant, defender: BattleParticipant): number {
+  const spdDiff = defender.speed - attacker.speed;
+  return Math.min(0.15, Math.max(0.02, 0.05 + spdDiff / 500));
+}
+
+/** 格檔率：基於防禦值 (最高20%) */
+function calcBlockChance(defender: BattleParticipant): number {
+  return Math.min(0.20, Math.max(0.03, 0.08 + defender.defense / 1000));
+}
+
 /** 執行普通攻擊 */
 function executeAttack(
   attacker: BattleParticipant,
@@ -844,21 +857,44 @@ function executeAttack(
   round: number,
 ): BattleLogEntry[] {
   const logs: BattleLogEntry[] = [];
+
+  // 閃避判定
+  const dodgeChance = calcDodgeChance(attacker, defender);
+  if (Math.random() < dodgeChance) {
+    logs.push({
+      round, actorId: attacker.id, actorName: attacker.name,
+      logType: "damage", targetId: defender.id, targetName: defender.name,
+      value: 0, isCritical: false, isDodged: true,
+      message: `${defender.name}閃避了${attacker.name}的攻擊！`,
+    });
+    return logs;
+  }
+
   const { damage, isCritical } = calcPhysicalDamage(attacker, defender);
   const elementBoost = calcElementBoost(attacker.dominantElement, defender.dominantElement, undefined);
   // 五行抗性減傷：依攻擊者主屬性對應防御者的抗性
   const resistPct = getElementResist(defender, attacker.dominantElement);
   const resistMultiplier = 1 - resistPct / 100;
-  const finalDamage = Math.max(1, Math.floor(damage * elementBoost.multiplier * resistMultiplier));
+  let finalDamage = Math.max(1, Math.floor(damage * elementBoost.multiplier * resistMultiplier));
   const resistDesc = resistPct > 0 ? `抗性-${resistPct}%` : "";
 
+  // 格檔判定（暴擊不會被格檔）
+  const blockChance = calcBlockChance(defender);
+  const isBlocked = !isCritical && Math.random() < blockChance;
+  if (isBlocked) {
+    finalDamage = Math.max(1, Math.floor(finalDamage * 0.5));
+  }
+
   defender.currentHp = Math.max(0, defender.currentHp - finalDamage);
+  const blockTag = isBlocked ? "格檔" : "";
+  const critTag = isCritical ? "暴擊" : "";
+  const eventTag = blockTag || critTag;
   logs.push({
     round, actorId: attacker.id, actorName: attacker.name,
     logType: "damage", targetId: defender.id, targetName: defender.name,
-    value: finalDamage, isCritical,
+    value: finalDamage, isCritical, isBlocked,
     elementBoostDesc: [elementBoost.description, resistDesc].filter(Boolean).join("，") || undefined,
-    message: `${attacker.name}攻擊${defender.name}，造成 ${finalDamage} 點${isCritical ? "暴擊" : ""}傷害${elementBoost.description ? `（${elementBoost.description}${resistDesc ? "，" + resistDesc : ""}）` : resistDesc ? `（${resistDesc}）` : ""}`,
+    message: `${attacker.name}攻擊${defender.name}，${eventTag ? `${eventTag}！` : ""}造成 ${finalDamage} 點傷害${elementBoost.description ? `（${elementBoost.description}${resistDesc ? "，" + resistDesc : ""}）` : resistDesc ? `（${resistDesc}）` : ""}`,
   });
 
   if (defender.currentHp <= 0) {

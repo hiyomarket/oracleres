@@ -215,16 +215,42 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
     if (newLogs.length > prevLogsLength.current) {
       const addedLogs = newLogs.slice(prevLogsLength.current);
       for (const log of addedLogs) {
-        if (log.logType === "damage" && log.value > 0) {
+        if (log.logType === "damage") {
           const isAllyActor = (d.participants as BattleParticipantUI[]).find(p => p.id === log.actorId)?.side === "ally";
-          const color = log.isCritical ? "#fbbf24" : isAllyActor ? "#22c55e" : "#ef4444";
           const xPos = isAllyActor ? `${55 + Math.random() * 15}%` : `${30 + Math.random() * 15}%`;
-          addFloatingText({ text: log.isCritical ? `💥${log.value}` : `-${log.value}`, color, x: xPos, y: "35%", isCrit: log.isCritical, type: "damage" });
-          if (log.isCritical) { triggerScreenFlash("rgba(251,191,36,0.15)"); triggerShake(2); }
-          else { triggerShake(1); }
-          if (log.targetId) setHitId(log.targetId);
-          if (log.actorId) setAttackingId(log.actorId);
-          setTimeout(() => { setHitId(null); setAttackingId(null); }, 400);
+
+          // 閃避：顯示 MISS 文字
+          if (log.isDodged) {
+            addFloatingText({ text: "MISS", color: "#94a3b8", x: xPos, y: "35%", size: "text-2xl", type: "dodge" });
+            triggerScreenFlash("rgba(148,163,184,0.08)");
+          }
+          // 格檔：顯示盾牌圖示 + 減半傷害
+          else if (log.isBlocked) {
+            addFloatingText({ text: `🛡️${log.value}`, color: "#60a5fa", x: xPos, y: "35%", size: "text-2xl", type: "block" });
+            triggerScreenFlash("rgba(96,165,250,0.12)");
+            triggerShake(1);
+            if (log.targetId) setHitId(log.targetId);
+            if (log.actorId) setAttackingId(log.actorId);
+            setTimeout(() => { setHitId(null); setAttackingId(null); }, 400);
+          }
+          // 爆擊：大字金色 + 強烈閃光與震動
+          else if (log.isCritical && log.value > 0) {
+            addFloatingText({ text: `💥${log.value}`, color: "#fbbf24", x: xPos, y: "35%", isCrit: true, size: "text-3xl", type: "damage" });
+            triggerScreenFlash("rgba(251,191,36,0.2)");
+            triggerShake(3);
+            if (log.targetId) setHitId(log.targetId);
+            if (log.actorId) setAttackingId(log.actorId);
+            setTimeout(() => { setHitId(null); setAttackingId(null); }, 500);
+          }
+          // 普通傷害
+          else if (log.value > 0) {
+            const color = isAllyActor ? "#22c55e" : "#ef4444";
+            addFloatingText({ text: `-${log.value}`, color, x: xPos, y: "35%", type: "damage" });
+            triggerShake(1);
+            if (log.targetId) setHitId(log.targetId);
+            if (log.actorId) setAttackingId(log.actorId);
+            setTimeout(() => { setHitId(null); setAttackingId(null); }, 400);
+          }
         }
         if (log.logType === "heal" && log.value > 0) {
           addFloatingText({ text: `+${log.value}`, color: "#22c55e", y: "30%", type: "heal" });
@@ -360,7 +386,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       <div className="relative w-full h-full flex flex-col"
         style={{
           background: "linear-gradient(160deg, #0c0a1d 0%, #1a1145 40%, #0f0d2e 70%, #0c0a1d 100%)",
-          animation: shakeIntensity > 0 ? `battleShake${shakeIntensity > 1 ? "Hard" : ""} 0.5s ease-out` : undefined,
+          animation: shakeIntensity > 0 ? `battleShake${shakeIntensity >= 3 ? "Heavy" : shakeIntensity > 1 ? "Hard" : ""} ${shakeIntensity >= 3 ? "0.7s" : "0.5s"} ease-out` : undefined,
         }}>
         {/* 頂部裝飾線 */}
         <div className="absolute top-0 left-0 right-0 h-[2px] z-10"
@@ -487,7 +513,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
                 const r = battleResult === "win" ? "win" : battleResult === "flee" ? "flee" : "lose";
                 onBattleEnd?.(r as any);
                 onClose();
-              }} rewards={rewards} />
+              }} rewards={rewards} participants={participants} logs={logs} />
             ) : (
               <>
                 <CommandPanel

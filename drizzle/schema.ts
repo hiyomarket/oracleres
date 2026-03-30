@@ -3623,6 +3623,8 @@ export const gameBattleParticipants = mysqlTable("game_battle_participants", {
   actionsPerTurn: int("actions_per_turn").notNull().default(1),
   /** 前後排定位：front（前排）/ back（後排） */
   rowPosition: varchar("row_position", { length: 10 }).notNull().default("front"),
+  /** 頭像/圖片 URL */
+  avatarUrl: text("avatar_url"),
 });
 export type GameBattleParticipant = typeof gameBattleParticipants.$inferSelect;
 export type InsertGameBattleParticipant = typeof gameBattleParticipants.$inferInsert;

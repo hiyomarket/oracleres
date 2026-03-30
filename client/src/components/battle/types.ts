@@ -45,6 +45,8 @@ export interface BattleLogUI {
   targetName?: string;
   value: number;
   isCritical: boolean;
+  isBlocked?: boolean;
+  isDodged?: boolean;
   skillName?: string;
   elementBoostDesc?: string;
   statusEffectDesc?: string;

@@ -448,20 +448,40 @@ export const gameAIBalanceRouter = router({
         { ruleField: "counterBonus", dbField: "counterBonus", label: "反擊加成", getter: m => m.counterBonus },
       ];
 
-      // AI 五行屬性判定：根據稀有度（危險度）分配五行百分比
-      // 規則：主屬性佔比隨稀有度提升而集中
-      const WUXING_DISTRIBUTION: Record<string, { primary: number; secondary: number; rest: number }> = {
-        common:    { primary: 40, secondary: 20, rest: 40 },  // 主40% 副20% 其餘各13%
-        uncommon:  { primary: 50, secondary: 20, rest: 30 },  // 主50% 副20% 其餘各10%
-        rare:      { primary: 55, secondary: 20, rest: 25 },  // 主55% 副20% 其餘各8%
-        epic:      { primary: 65, secondary: 15, rest: 20 },  // 主65% 副15% 其餘各7%
-        legendary: { primary: 75, secondary: 15, rest: 10 },  // 主75% 副15% 其餘各3%
+      /**
+       * AI 五行屬性分配：嚴格限制比例為兩元組合
+       * 合法比例（5:5 / 4:6 / 3:7 / 2:8 / 1:9 / 0:10）
+       * 主屬性佔 50-100%，其他隨機分配剩餘
+       * 稀有度越高，主屬性越集中
+       */
+      // 主屬性比例範圍（以 10 為基底）
+      const WUXING_PRIMARY_RANGE: Record<string, [number, number]> = {
+        common:    [5, 6],   // 50-60%
+        uncommon:  [5, 7],   // 50-70%
+        rare:      [6, 8],   // 60-80%
+        elite:     [7, 9],   // 70-90%
+        epic:      [7, 9],   // 70-90%
+        boss:      [8, 10],  // 80-100%
+        legendary: [8, 10],  // 80-100%
       };
 
       const WUXING_LIST = ["木", "火", "土", "金", "水"] as const;
       const WUXING_DB_MAP: Record<string, string> = { "木": "wuxingWood", "火": "wuxingFire", "土": "wuxingEarth", "金": "wuxingMetal", "水": "wuxingWater" };
-      // 五行相生：木→火→土→金→水→木（副屬性取相生方向）
-      const WUXING_SECONDARY: Record<string, string> = { "木": "火", "火": "土", "土": "金", "金": "水", "水": "木" };
+
+      /**
+       * 將剩餘份數隨機分配給 N 個屬性，每個屬性可為 0
+       * 保證總和 = remaining，每個值都是整數
+       */
+      function distributeRemaining(remaining: number, count: number): number[] {
+        if (count === 0) return [];
+        if (remaining === 0) return Array(count).fill(0);
+        const result = Array(count).fill(0);
+        // 隨機分配每一份
+        for (let i = 0; i < remaining; i++) {
+          result[Math.floor(Math.random() * count)]++;
+        }
+        return result;
+      }
 
       for (const m of monsters) {
         const fixes: Partial<Record<string, any>> = {};
@@ -484,28 +504,24 @@ export const gameAIBalanceRouter = router({
           fixes.aiLevel = expectedAi;
         }
 
-        // AI 五行屬性分配（依稀有度/危險度）
-        const primaryWuxing = m.wuxing; // 主五行（已設定）
+        // AI 五行屬性分配（主屬性占 50-100%，其他隨機分配）
+        const primaryWuxing = m.wuxing;
         if (primaryWuxing && WUXING_LIST.includes(primaryWuxing as any)) {
-          const dist = WUXING_DISTRIBUTION[m.rarity] ?? WUXING_DISTRIBUTION.common;
-          const secondaryWuxing = WUXING_SECONDARY[primaryWuxing];
-          const otherCount = WUXING_LIST.length - 2; // 3
-          const restEach = Math.floor(dist.rest / otherCount);
-          const remainder = dist.rest - restEach * otherCount;
+          const [minPrimary, maxPrimary] = WUXING_PRIMARY_RANGE[m.rarity] ?? WUXING_PRIMARY_RANGE.common;
+          // 在範圍內隨機選取主屬性份數（以 10 為基底）
+          const primaryParts = minPrimary + Math.floor(Math.random() * (maxPrimary - minPrimary + 1));
+          const remainingParts = 10 - primaryParts;
 
+          // 其他 4 個屬性隨機分配剩餘份數
+          const otherElements = WUXING_LIST.filter(w => w !== primaryWuxing);
+          const otherParts = distributeRemaining(remainingParts, otherElements.length);
+
+          // 轉換為百分比（份數 × 10）
           const newAlloc: Record<string, number> = {};
-          let idx = 0;
-          for (const w of WUXING_LIST) {
-            if (w === primaryWuxing) {
-              newAlloc[WUXING_DB_MAP[w]] = dist.primary;
-            } else if (w === secondaryWuxing) {
-              newAlloc[WUXING_DB_MAP[w]] = dist.secondary;
-            } else {
-              // 分配剩餘，第一個多拿餘數
-              newAlloc[WUXING_DB_MAP[w]] = restEach + (idx === 0 ? remainder : 0);
-              idx++;
-            }
-          }
+          newAlloc[WUXING_DB_MAP[primaryWuxing]] = primaryParts * 10;
+          otherElements.forEach((w, i) => {
+            newAlloc[WUXING_DB_MAP[w]] = otherParts[i] * 10;
+          });
 
           // 檢查是否需要更新
           const currentAlloc: Record<string, number> = {

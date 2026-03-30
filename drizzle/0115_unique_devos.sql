@@ -1,0 +1,1 @@
+ALTER TABLE `game_battle_participants` ADD `avatar_url` text;
