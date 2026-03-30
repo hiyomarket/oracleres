@@ -47,6 +47,7 @@ export const DEFAULT_BALANCE_RULES: BalanceRuleEntry[] = [
   { catalogType: "monster", rarity: "common",    field: "actionsPerTurn", minValue: 1, maxValue: 1 },
   { catalogType: "monster", rarity: "common",    field: "counterBonus", minValue: 30, maxValue: 60 },
   { catalogType: "monster", rarity: "common",    field: "aiLevel",    minValue: 1,   maxValue: 1 },
+  { catalogType: "monster", rarity: "common",    field: "wuxingPrimary", minValue: 5, maxValue: 6 },
   // rare
   { catalogType: "monster", rarity: "rare",      field: "hp",         minValue: 80,  maxValue: 250 },
   { catalogType: "monster", rarity: "rare",      field: "atk",        minValue: 15,  maxValue: 40 },
@@ -63,6 +64,7 @@ export const DEFAULT_BALANCE_RULES: BalanceRuleEntry[] = [
   { catalogType: "monster", rarity: "rare",      field: "actionsPerTurn", minValue: 1, maxValue: 1 },
   { catalogType: "monster", rarity: "rare",      field: "counterBonus", minValue: 40, maxValue: 70 },
   { catalogType: "monster", rarity: "rare",      field: "aiLevel",    minValue: 2,   maxValue: 2 },
+  { catalogType: "monster", rarity: "rare",      field: "wuxingPrimary", minValue: 5, maxValue: 7 },
   // elite
   { catalogType: "monster", rarity: "elite",     field: "hp",         minValue: 150, maxValue: 350 },
   { catalogType: "monster", rarity: "elite",     field: "atk",        minValue: 25,  maxValue: 55 },
@@ -79,6 +81,7 @@ export const DEFAULT_BALANCE_RULES: BalanceRuleEntry[] = [
   { catalogType: "monster", rarity: "elite",     field: "actionsPerTurn", minValue: 1, maxValue: 2 },
   { catalogType: "monster", rarity: "elite",     field: "counterBonus", minValue: 45, maxValue: 80 },
   { catalogType: "monster", rarity: "elite",     field: "aiLevel",    minValue: 2,   maxValue: 2 },
+  { catalogType: "monster", rarity: "elite",     field: "wuxingPrimary", minValue: 6, maxValue: 8 },
   // epic
   { catalogType: "monster", rarity: "epic",      field: "hp",         minValue: 200, maxValue: 400 },
   { catalogType: "monster", rarity: "epic",      field: "atk",        minValue: 30,  maxValue: 65 },
@@ -95,6 +98,7 @@ export const DEFAULT_BALANCE_RULES: BalanceRuleEntry[] = [
   { catalogType: "monster", rarity: "epic",      field: "actionsPerTurn", minValue: 1, maxValue: 2 },
   { catalogType: "monster", rarity: "epic",      field: "counterBonus", minValue: 50, maxValue: 90 },
   { catalogType: "monster", rarity: "epic",      field: "aiLevel",    minValue: 3,   maxValue: 3 },
+  { catalogType: "monster", rarity: "epic",      field: "wuxingPrimary", minValue: 7, maxValue: 9 },
   // boss
   { catalogType: "monster", rarity: "boss",      field: "hp",         minValue: 300, maxValue: 500 },
   { catalogType: "monster", rarity: "boss",      field: "atk",        minValue: 40,  maxValue: 80 },
@@ -111,6 +115,7 @@ export const DEFAULT_BALANCE_RULES: BalanceRuleEntry[] = [
   { catalogType: "monster", rarity: "boss",      field: "actionsPerTurn", minValue: 1, maxValue: 3 },
   { catalogType: "monster", rarity: "boss",      field: "counterBonus", minValue: 55, maxValue: 100 },
   { catalogType: "monster", rarity: "boss",      field: "aiLevel",    minValue: 3,   maxValue: 3 },
+  { catalogType: "monster", rarity: "boss",      field: "wuxingPrimary", minValue: 8, maxValue: 10 },
   // legendary
   { catalogType: "monster", rarity: "legendary", field: "hp",         minValue: 350, maxValue: 500 },
   { catalogType: "monster", rarity: "legendary", field: "atk",        minValue: 50,  maxValue: 80 },
@@ -127,6 +132,7 @@ export const DEFAULT_BALANCE_RULES: BalanceRuleEntry[] = [
   { catalogType: "monster", rarity: "legendary", field: "actionsPerTurn", minValue: 1, maxValue: 3 },
   { catalogType: "monster", rarity: "legendary", field: "counterBonus", minValue: 60, maxValue: 120 },
   { catalogType: "monster", rarity: "legendary", field: "aiLevel",    minValue: 3,   maxValue: 3 },
+  { catalogType: "monster", rarity: "legendary", field: "wuxingPrimary", minValue: 8, maxValue: 10 },
 
   // ── 怪物技能 ──
   { catalogType: "monsterSkill", rarity: "common",    field: "power", minValue: 60,  maxValue: 130 },

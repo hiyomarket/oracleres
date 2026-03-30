@@ -65,7 +65,7 @@ function buildCharacterParticipant(
     id,
     type: "character",
     side: "ally",
-    name: agent.name || "修行者",
+    name: agent.agentName || "修行者",
     level: agent.level ?? 1,
     maxHp: stats.hp,
     currentHp: stats.hp,

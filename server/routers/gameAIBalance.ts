@@ -152,6 +152,40 @@ export const gameAIBalanceRouter = router({
           fixes.aiLevel = expectedAi;
         }
 
+        // ★ 五行分配（從自訂規則 wuxingPrimary 讀取）
+        const WUXING_LIST_M = ["木", "火", "土", "金", "水"] as const;
+        const WUXING_DB_MAP_M: Record<string, string> = { "木": "wuxingWood", "火": "wuxingFire", "土": "wuxingEarth", "金": "wuxingMetal", "水": "wuxingWater" };
+        const primaryWuxing = m.wuxing;
+        if (primaryWuxing && WUXING_LIST_M.includes(primaryWuxing as any)) {
+          const wuxingPrimaryRange = getRange(monsterRules, m.rarity, "wuxingPrimary", [5, 6]);
+          const [minP, maxP] = wuxingPrimaryRange;
+          const primaryParts = minP + Math.floor(Math.random() * (maxP - minP + 1));
+          const remainingParts = 10 - primaryParts;
+          const otherElements = WUXING_LIST_M.filter(w => w !== primaryWuxing);
+          // 隨機分配剩餘份數
+          const otherParts = Array(otherElements.length).fill(0);
+          for (let i = 0; i < remainingParts; i++) {
+            otherParts[Math.floor(Math.random() * otherElements.length)]++;
+          }
+          const newAlloc: Record<string, number> = {};
+          newAlloc[WUXING_DB_MAP_M[primaryWuxing]] = primaryParts * 10;
+          otherElements.forEach((w, i) => { newAlloc[WUXING_DB_MAP_M[w]] = otherParts[i] * 10; });
+          const currentAlloc: Record<string, number> = {
+            wuxingWood: m.wuxingWood, wuxingFire: m.wuxingFire,
+            wuxingEarth: m.wuxingEarth, wuxingMetal: m.wuxingMetal, wuxingWater: m.wuxingWater,
+          };
+          let wuxingChanged = false;
+          for (const [key, val] of Object.entries(newAlloc)) {
+            if (currentAlloc[key] !== val) { wuxingChanged = true; break; }
+          }
+          if (wuxingChanged) {
+            const oldStr = `木${currentAlloc.wuxingWood}/火${currentAlloc.wuxingFire}/土${currentAlloc.wuxingEarth}/金${currentAlloc.wuxingMetal}/水${currentAlloc.wuxingWater}`;
+            const newStr = `木${newAlloc.wuxingWood}/火${newAlloc.wuxingFire}/土${newAlloc.wuxingEarth}/金${newAlloc.wuxingMetal}/水${newAlloc.wuxingWater}`;
+            changes.push({ id: m.id, name: m.name, field: "五行分配", oldValue: 0, newValue: 0, reason: `主屬${primaryWuxing} ${m.rarity}: ${oldStr} → ${newStr}` });
+            Object.assign(fixes, newAlloc);
+          }
+        }
+
         if (!input.dryRun && Object.keys(fixes).length > 0) {
           await db.update(gameMonsterCatalog).set(fixes).where(eq(gameMonsterCatalog.id, m.id));
         }
@@ -453,17 +487,8 @@ export const gameAIBalanceRouter = router({
        * 合法比例（5:5 / 4:6 / 3:7 / 2:8 / 1:9 / 0:10）
        * 主屬性佔 50-100%，其他隨機分配剩餘
        * 稀有度越高，主屬性越集中
+       * ★ 從自訂規則 wuxingPrimary 讀取，可在後台調整
        */
-      // 主屬性比例範圍（以 10 為基底）
-      const WUXING_PRIMARY_RANGE: Record<string, [number, number]> = {
-        common:    [5, 6],   // 50-60%
-        uncommon:  [5, 7],   // 50-70%
-        rare:      [6, 8],   // 60-80%
-        elite:     [7, 9],   // 70-90%
-        epic:      [7, 9],   // 70-90%
-        boss:      [8, 10],  // 80-100%
-        legendary: [8, 10],  // 80-100%
-      };
 
       const WUXING_LIST = ["木", "火", "土", "金", "水"] as const;
       const WUXING_DB_MAP: Record<string, string> = { "木": "wuxingWood", "火": "wuxingFire", "土": "wuxingEarth", "金": "wuxingMetal", "水": "wuxingWater" };
@@ -507,7 +532,8 @@ export const gameAIBalanceRouter = router({
         // AI 五行屬性分配（主屬性占 50-100%，其他隨機分配）
         const primaryWuxing = m.wuxing;
         if (primaryWuxing && WUXING_LIST.includes(primaryWuxing as any)) {
-          const [minPrimary, maxPrimary] = WUXING_PRIMARY_RANGE[m.rarity] ?? WUXING_PRIMARY_RANGE.common;
+          const wuxingPrimaryRange = getRange(monRules, m.rarity, "wuxingPrimary", [5, 6]);
+          const [minPrimary, maxPrimary] = wuxingPrimaryRange;
           // 在範圍內隨機選取主屬性份數（以 10 為基底）
           const primaryParts = minPrimary + Math.floor(Math.random() * (maxPrimary - minPrimary + 1));
           const remainingParts = 10 - primaryParts;

@@ -8,3 +8,5 @@ export { VictoryPanel } from "./VictoryPanel";
 export { PetCommandPanel } from "./PetCommandPanel";
 export { ActionPreview } from "./ActionPreview";
 export { ParticleBackground, ScreenFlash, DropAnimation, SkillAnnounce, RoundTransition, FloatingTexts, BattleStyles } from "./BattleAnimations";
+export { BattleScene, BattleSceneStyles } from "./BattleScene";
+export { playCritSFX, playBlockSFX, playDodgeSFX, playAttackSFX, playHealSFX } from "./BattleSFX";

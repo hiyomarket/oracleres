@@ -18,6 +18,8 @@ import {
   PetCommandPanel, ActionPreview,
   ParticleBackground, ScreenFlash, DropAnimation, SkillAnnounce,
   RoundTransition, FloatingTexts, BattleStyles,
+  BattleScene, BattleSceneStyles,
+  playCritSFX, playBlockSFX, playDodgeSFX, playAttackSFX, playHealSFX,
 } from "./battle";
 
 // ─── 主組件 ───
@@ -44,6 +46,9 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
   const [animatedDrops, setAnimatedDrops] = useState<string[]>([]);
   const [rewards, setRewards] = useState<{ expReward: number; goldReward: number; drops: string[]; petExpGained: number } | null>(null);
   const logScrollRef = useRef<HTMLDivElement>(null);
+  // 戰鬥場景
+  const [battleMode, setBattleMode] = useState<string>("idle");
+  const [bgmEnabled, setBgmEnabled] = useState(true);
 
   // 動畫 state
   const [screenFlash, setScreenFlash] = useState<string | null>(null);
@@ -219,34 +224,38 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
           const isAllyActor = (d.participants as BattleParticipantUI[]).find(p => p.id === log.actorId)?.side === "ally";
           const xPos = isAllyActor ? `${55 + Math.random() * 15}%` : `${30 + Math.random() * 15}%`;
 
-          // 閃避：顯示 MISS 文字
+          // 閃避：顯示 MISS 文字 + 風切音效
           if (log.isDodged) {
             addFloatingText({ text: "MISS", color: "#94a3b8", x: xPos, y: "35%", size: "text-2xl", type: "dodge" });
             triggerScreenFlash("rgba(148,163,184,0.08)");
+            if (bgmEnabled) playDodgeSFX();
           }
-          // 格檔：顯示盾牌圖示 + 減半傷害
+          // 格檔：顯示盾牌圖示 + 減半傷害 + 盾牌碰撞音效
           else if (log.isBlocked) {
             addFloatingText({ text: `🛡️${log.value}`, color: "#60a5fa", x: xPos, y: "35%", size: "text-2xl", type: "block" });
-            triggerScreenFlash("rgba(96,165,250,0.12)");
-            triggerShake(1);
+            triggerScreenFlash("rgba(96,165,250,0.15)");
+            triggerShake(2);
+            if (bgmEnabled) playBlockSFX();
             if (log.targetId) setHitId(log.targetId);
             if (log.actorId) setAttackingId(log.actorId);
             setTimeout(() => { setHitId(null); setAttackingId(null); }, 400);
           }
-          // 爆擊：大字金色 + 強烈閃光與震動
+          // 爆擊：大字金色 + 強烈閃光與震動 + 重擊音效
           else if (log.isCritical && log.value > 0) {
             addFloatingText({ text: `💥${log.value}`, color: "#fbbf24", x: xPos, y: "35%", isCrit: true, size: "text-3xl", type: "damage" });
-            triggerScreenFlash("rgba(251,191,36,0.2)");
+            triggerScreenFlash("rgba(251,191,36,0.25)");
             triggerShake(3);
+            if (bgmEnabled) playCritSFX();
             if (log.targetId) setHitId(log.targetId);
             if (log.actorId) setAttackingId(log.actorId);
             setTimeout(() => { setHitId(null); setAttackingId(null); }, 500);
           }
-          // 普通傷害
+          // 普通傷害 + 輕擊音效
           else if (log.value > 0) {
             const color = isAllyActor ? "#22c55e" : "#ef4444";
             addFloatingText({ text: `-${log.value}`, color, x: xPos, y: "35%", type: "damage" });
             triggerShake(1);
+            if (bgmEnabled) playAttackSFX();
             if (log.targetId) setHitId(log.targetId);
             if (log.actorId) setAttackingId(log.actorId);
             setTimeout(() => { setHitId(null); setAttackingId(null); }, 400);
@@ -254,6 +263,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
         }
         if (log.logType === "heal" && log.value > 0) {
           addFloatingText({ text: `+${log.value}`, color: "#22c55e", y: "30%", type: "heal" });
+          if (bgmEnabled) playHealSFX();
         }
         if (log.skillName) {
           const actor = (d.participants as BattleParticipantUI[]).find(p => p.id === log.actorId);
@@ -286,6 +296,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       setBattleState(d.battle.state);
       if (d.battle.result) setBattleResult(d.battle.result);
       if ((d.battle as any).turnTimer !== undefined) setTurnTimer((d.battle as any).turnTimer);
+      if ((d.battle as any).mode) setBattleMode((d.battle as any).mode);
     }
   }, [battleQuery.data]);
 
@@ -383,11 +394,7 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
       <FloatingTexts texts={floatingTexts} />
 
       {/* ═══ 主戰鬥面板（全螢幕） ═══ */}
-      <div className="relative w-full h-full flex flex-col"
-        style={{
-          background: "linear-gradient(160deg, #0c0a1d 0%, #1a1145 40%, #0f0d2e 70%, #0c0a1d 100%)",
-          animation: shakeIntensity > 0 ? `battleShake${shakeIntensity >= 3 ? "Heavy" : shakeIntensity > 1 ? "Hard" : ""} ${shakeIntensity >= 3 ? "0.7s" : "0.5s"} ease-out` : undefined,
-        }}>
+      <BattleScene mode={battleMode as any} bgmEnabled={bgmEnabled} shakeIntensity={shakeIntensity}>
         {/* 頂部裝飾線 */}
         <div className="absolute top-0 left-0 right-0 h-[2px] z-10"
           style={{ background: "linear-gradient(90deg, transparent, #8b5cf6, #6366f1, #8b5cf6, transparent)" }} />
@@ -431,6 +438,10 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
                 <span className="relative z-10 text-purple-300 group-hover:text-purple-200">🤖 自動</span>
               </button>
             )}
+            <button onClick={() => setBgmEnabled(v => !v)} title={bgmEnabled ? "靜音" : "開啟音效"}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all text-sm">
+              {bgmEnabled ? "🔊" : "🔇"}
+            </button>
             <button onClick={onClose}
               className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 transition-all text-lg">
               ✕
@@ -591,9 +602,10 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
         {/* 底部裝飾線 */}
         <div className="absolute bottom-0 left-0 right-0 h-[1px]"
           style={{ background: "linear-gradient(90deg, transparent, #6366f1, #8b5cf6, #6366f1, transparent)" }} />
-      </div>
+      </BattleScene>
 
       <BattleStyles />
+      <BattleSceneStyles />
     </div>
   );
 }

@@ -23,12 +23,59 @@ export function ParticleBackground({ particles }: {
   );
 }
 
-// ─── 全屏閃光 ───
+// ─── 全螢幕視覺特效 ───
 export function ScreenFlash({ color }: { color: string | null }) {
   if (!color) return null;
+  // 判斷特效類型
+  const isCrit = color.includes("251,191,36"); // 金色 = 爆擊
+  const isBlock = color.includes("96,165,250"); // 藍色 = 格檔
+  const isDodge = color.includes("148,163,184"); // 灰色 = 閃避
   return (
-    <div className="fixed inset-0 pointer-events-none z-[203] animate-screenFlash"
-      style={{ background: color }} />
+    <>
+      {/* 基礎閃光 */}
+      <div className="fixed inset-0 pointer-events-none z-[203] animate-screenFlash"
+        style={{ background: color }} />
+      {/* 爆擊：金色徑向爆裂 + 邊緣光暈 */}
+      {isCrit && (
+        <>
+          <div className="fixed inset-0 pointer-events-none z-[203]"
+            style={{
+              background: "radial-gradient(circle at 50% 40%, rgba(251,191,36,0.3) 0%, rgba(251,191,36,0.1) 30%, transparent 60%)",
+              animation: "critBurst 0.6s ease-out forwards",
+            }} />
+          <div className="fixed inset-0 pointer-events-none z-[203]"
+            style={{
+              boxShadow: "inset 0 0 80px rgba(251,191,36,0.4), inset 0 0 160px rgba(245,158,11,0.15)",
+              animation: "screenFlash 0.5s ease-out forwards",
+            }} />
+        </>
+      )}
+      {/* 格檔：藍色盾牌波紋擴散 */}
+      {isBlock && (
+        <div className="fixed inset-0 pointer-events-none z-[203] flex items-center justify-center">
+          <div style={{
+            width: "200px", height: "200px", borderRadius: "50%",
+            border: "3px solid rgba(96,165,250,0.6)",
+            boxShadow: "0 0 40px rgba(96,165,250,0.3), inset 0 0 30px rgba(96,165,250,0.1)",
+            animation: "blockRipple 0.8s ease-out forwards",
+          }} />
+        </div>
+      )}
+      {/* 閃避：橫向速度線 */}
+      {isDodge && (
+        <div className="fixed inset-0 pointer-events-none z-[203] overflow-hidden">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="absolute" style={{
+              left: "-10%", right: "-10%",
+              top: `${35 + i * 10}%`,
+              height: "2px",
+              background: "linear-gradient(90deg, transparent, rgba(148,163,184,0.4), rgba(148,163,184,0.6), rgba(148,163,184,0.4), transparent)",
+              animation: `dodgeLine 0.5s ease-out ${i * 0.08}s forwards`,
+            }} />
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -249,6 +296,21 @@ export function BattleStyles() {
         30%  { transform: translateY(-10px) scale(1.1); filter: brightness(1.5); }
         50%  { transform: translateY(-20px) scale(1); }
         100% { opacity: 0; transform: translateY(-60px) scale(0.6); }
+      }
+      @keyframes critBurst {
+        0%   { opacity: 0; transform: scale(0.5); }
+        30%  { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(2); }
+      }
+      @keyframes blockRipple {
+        0%   { opacity: 1; transform: scale(0.3); }
+        50%  { opacity: 0.6; transform: scale(1.5); }
+        100% { opacity: 0; transform: scale(3); }
+      }
+      @keyframes dodgeLine {
+        0%   { opacity: 0; transform: translateX(-100%); }
+        30%  { opacity: 1; }
+        100% { opacity: 0; transform: translateX(100%); }
       }
       @keyframes battleShakeHeavy {
         0%   { transform: translateX(0) rotate(0); }
