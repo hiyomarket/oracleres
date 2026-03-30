@@ -120,7 +120,7 @@ function SubscriptionLogsPanel({ userId }: { userId: number }) {
       {open && (
         <div className="mt-2 bg-slate-800/60 rounded-xl border border-slate-700/40 overflow-hidden">
           {isLoading ? (
-            <div className="px-3 py-2 text-xs text-slate-500">載入中...</div>
+            <div className="px-3 py-2 space-y-1.5">{[...Array(2)].map((_,i) => <div key={i} className="h-4 bg-slate-700/40 rounded animate-pulse" />)}</div>
           ) : !logs || logs.length === 0 ? (
             <div className="px-3 py-2 text-xs text-slate-500">尚無訂閱記錄</div>
           ) : (

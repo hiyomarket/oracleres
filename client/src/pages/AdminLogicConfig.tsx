@@ -10,6 +10,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { AdminLayout } from "@/components/AdminLayout";
+import { useConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ const ELEMENT_COLORS: Record<string, string> = {
 // Tab 1：能量模擬器規則
 // ============================================================
 function AuraRulesTab() {
+  const { confirm: confirmDialog, ConfirmDialogElement: CD1 } = useConfirmDialog();
   const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
   const { data: grouped, isLoading } = trpc.adminConfig.getAuraRules.useQuery();
@@ -155,7 +157,7 @@ function AuraRulesTab() {
 
                 {/* 快照列表 */}
                 <div className="space-y-2">
-                  {historyLoading && <p className="text-slate-400 text-sm text-center animate-pulse">載入中...</p>}
+                  {historyLoading && <div className="space-y-2 py-2">{[...Array(3)].map((_,i) => <div key={i} className="h-8 bg-slate-700/40 rounded animate-pulse" />)}</div>}
                   {!historyLoading && (history ?? []).length === 0 && (
                     <p className="text-slate-500 text-sm text-center py-4">尚無快照記錄</p>
                   )}
@@ -176,8 +178,9 @@ function AuraRulesTab() {
                             disabled={readOnly || restore.isPending}
                             title={readOnly ? "唯讀模式，無法操作" : undefined}
                             onClick={() => {
-                              if (confirm(`確定還原到「${h.snapshotLabel}」？當前規則將被覆蓋。`))
-                                restore.mutate({ id: h.id });
+                              confirmDialog({ title: "還原快照", description: `確定還原到「${h.snapshotLabel}」？當前規則將被覆蓋。` }).then(ok => {
+                                if (ok) restore.mutate({ id: h.id });
+                              });
                             }}
                           >
                             還原
@@ -189,8 +192,9 @@ function AuraRulesTab() {
                             disabled={readOnly}
                             title={readOnly ? "唯讀模式，無法操作" : undefined}
                             onClick={() => {
-                              if (confirm("確定刪除此快照？"))
-                                deleteSnapshot.mutate({ id: h.id });
+                              confirmDialog({ title: "刪除快照", description: "確定刪除此快照？" }).then(ok => {
+                                if (ok) deleteSnapshot.mutate({ id: h.id });
+                              });
                             }}
                           >
                             🗑️
@@ -282,12 +286,13 @@ function AuraRulesTab() {
           </div>
         </div>
       ))}
+      {CD1}
     </div>
   );
 }
 
 // ============================================================
-// Tab 2：手串/配飾管理
+// Tab 2：手串/配飾管理理
 // ============================================================
 interface BraceletFormData {
   id?: number;
@@ -303,6 +308,7 @@ interface BraceletFormData {
 }
 
 function BraceletsTab() {
+  const { confirm: confirmDialog, ConfirmDialogElement: CD2 } = useConfirmDialog();
   const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
   const { data: bracelets, isLoading } = trpc.adminConfig.getCustomBracelets.useQuery();
@@ -520,7 +526,9 @@ function BraceletsTab() {
                     disabled={readOnly}
                     title={readOnly ? "唯讀模式，無法操作" : undefined}
                     onClick={() => {
-                      if (confirm(`確定刪除「${b.name}」？`)) deleteBracelet.mutate({ id: b.id });
+                      confirmDialog({ title: "刪除手串", description: `確定刪除「${b.name}」？` }).then(ok => {
+                        if (ok) deleteBracelet.mutate({ id: b.id });
+                      });
                     }}
                   >
                     🗑️
@@ -683,6 +691,7 @@ function BraceletsTab() {
           </div>
         </SheetContent>
       </Sheet>
+      {CD2}
     </div>
   );
 }
@@ -705,6 +714,7 @@ interface CategoryFormData {
 }
 
 function RestaurantCategoriesTab() {
+  const { confirm: confirmDialog, ConfirmDialogElement: CD3 } = useConfirmDialog();
   const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
   const { data: categories, isLoading } = trpc.adminConfig.getRestaurantCategories.useQuery();
@@ -882,7 +892,9 @@ function RestaurantCategoriesTab() {
                   disabled={readOnly}
                   title={readOnly ? "唯讀模式，無法操作" : undefined}
                   onClick={() => {
-                    if (confirm(`確定刪除分類「${c.label}」？`)) deleteCategory.mutate({ id: c.id });
+                    confirmDialog({ title: "刪除分類", description: `確定刪除分類「${c.label}」？` }).then(ok => {
+                      if (ok) deleteCategory.mutate({ id: c.id });
+                    });
                   }}
                 >
                   🗑️
@@ -1031,6 +1043,7 @@ function RestaurantCategoriesTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {CD3}
     </div>
   );
 }

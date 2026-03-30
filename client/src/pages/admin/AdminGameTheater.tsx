@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import ItemKeySearchSelect from "@/components/admin/ItemKeySearchSelect";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import { useConfirmDialog } from "@/components/admin/ConfirmDialog";
 
 // ─── 世界重置 Tab ───────────────────────────────────────────────────────────
 export function WorldResetTab() {
@@ -382,7 +383,7 @@ export function AgentManagementTab() {
       </div>
 
       {/* 結果列表 */}
-      {isLoading && <p className="text-muted-foreground text-sm">載入中…</p>}
+      {isLoading && <div className="space-y-2 py-2">{[...Array(3)].map((_,i) => <div key={i} className="h-8 bg-muted/40 rounded animate-pulse" />)}</div>}
       {!isLoading && agents && agents.length === 0 && (
         <p className="text-muted-foreground text-sm">找不到符合的角色</p>
       )}
@@ -737,7 +738,7 @@ export function GameConfigTab() {
         </div>
       </div>
 
-      {isLoading && <p className="text-muted-foreground text-sm">載入中…</p>}
+      {isLoading && <div className="space-y-2 py-2">{[...Array(3)].map((_,i) => <div key={i} className="h-8 bg-muted/40 rounded animate-pulse" />)}</div>}
 
       {/* 分類顯示 */}
       {Object.entries(grouped).map(([category, items]) => (
@@ -1814,6 +1815,7 @@ const REWARD_TYPE_LABELS: Record<string, string> = {
 };
 
 export function RogueEventTab() {
+  const { confirm: confirmDialog, ConfirmDialogElement } = useConfirmDialog();
   const { data: rogueEvents, refetch } = trpc.gameAdmin.getRogueEvents.useQuery();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -2041,13 +2043,14 @@ export function RogueEventTab() {
                     {(e as any).isActive ? "停用" : "啟用"}
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => startEdit(e)}>編輯</Button>
-                  <Button size="sm" variant="destructive" onClick={() => { if (confirm(`確定刪除「${(e as any).name}」？`)) deleteMutation.mutate({ id: (e as any).id }); }}>刪除</Button>
+                  <Button size="sm" variant="destructive" onClick={() => { confirmDialog({ title: "刪除事件", description: `確定刪除「${(e as any).name}」？` }).then(ok => { if (ok) deleteMutation.mutate({ id: (e as any).id }); }); }}>刪除</Button>
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+      {ConfirmDialogElement}
     </div>
   );
 }

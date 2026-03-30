@@ -6,6 +6,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { AdminLayout } from "@/components/AdminLayout";
+import { useConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,7 @@ const EMPTY_FORM = {
 };
 
 export default function AdminBanners() {
+  const { confirm: confirmDialog, ConfirmDialogElement } = useConfirmDialog();
   const { readOnly } = useAdminRole();
   const { data: banners = [], refetch } = trpc.siteBanner.list.useQuery();
   const [showDialog, setShowDialog] = useState(false);
@@ -244,9 +246,9 @@ export default function AdminBanners() {
                     disabled={readOnly}
                     title={readOnly ? "唯讀模式，無法操作" : "刪除"}
                     onClick={() => {
-                      if (confirm(`確定刪除「${b.title}」嗎？`)) {
-                        deleteMutation.mutate({ id: b.id });
-                      }
+                      confirmDialog({ title: "刪除廣告", description: `確定刪除「${b.title}」嗎？` }).then(ok => {
+                        if (ok) deleteMutation.mutate({ id: b.id });
+                      });
                     }}
                     className="w-8 h-8 rounded-lg bg-muted hover:bg-red-500/20 flex items-center justify-center transition-colors"
                   >
@@ -387,6 +389,7 @@ export default function AdminBanners() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {ConfirmDialogElement}
     </AdminLayout>
   );
 }

@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { CardGridSkeleton, TableSkeleton } from "@/components/admin/AdminSkeleton";
 import { ChevronDown, Plus, Trash2, Users, Settings, UserMinus } from "lucide-react";
 
 const GROUP_COLORS: Record<string, { bg: string; border: string; text: string }> = {
@@ -395,7 +397,7 @@ function AddMemberModal({ groupId, groupName, onClose, onSuccess }: AddMemberMod
           )}
           <div className="max-h-64 overflow-y-auto space-y-1 border border-slate-700/50 rounded-lg p-1">
             {!usersData ? (
-              <div className="text-center py-4 text-slate-500 text-sm">載入中...</div>
+              <TableSkeleton rows={3} cols={3} />
             ) : (usersData?.users ?? []).length === 0 ? (
               <div className="text-center py-4 text-slate-500 text-sm">
                 {debouncedSearch ? "找不到符合的用戶" : "目前沒有用戶"}
@@ -463,7 +465,7 @@ function GroupDetailPanel({ groupId, onRefreshGroups, readOnly }: GroupDetailPan
     onError: (e) => toast.error(`移除失敗：${e.message}`),
   });
 
-  if (!group) return <div className="text-center py-8 text-slate-500">載入中...</div>;
+  if (!group) return <TableSkeleton rows={4} cols={3} />;
 
   const colorStyle = GROUP_COLORS[group.color ?? "amber"] ?? GROUP_COLORS.amber;
 
@@ -578,6 +580,7 @@ function GroupDetailPanel({ groupId, onRefreshGroups, readOnly }: GroupDetailPan
 
 // ─── 主頁面 ─────────────────────────────────────────────────────────────────
 export default function AdminUserGroups() {
+  const { confirm: confirmDialog, ConfirmDialogElement } = useConfirmDialog();
   const { readOnly } = useAdminRole();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editGroup, setEditGroup] = useState<{ id: number; name: string; description?: string | null; color?: string | null; icon?: string | null } | null>(null);
@@ -590,8 +593,9 @@ export default function AdminUserGroups() {
   });
 
   const handleDeleteGroup = (groupId: number, groupName: string) => {
-    if (!confirm(`確定要刪除分組「${groupName}」嗎？此操作無法復原，但不會影響成員帳號。`)) return;
-    deleteMutation.mutate({ groupId });
+    confirmDialog({ title: "刪除分組", description: `確定要刪除分組「${groupName}」嗎？此操作無法復原，但不會影響成員帳號。` }).then(ok => {
+      if (ok) deleteMutation.mutate({ groupId });
+    });
   };
 
   return (
@@ -688,6 +692,7 @@ export default function AdminUserGroups() {
       {editGroup && (
         <GroupFormModal group={editGroup} onClose={() => setEditGroup(null)} onSuccess={refetch} />
       )}
+      {ConfirmDialogElement}
     </AdminLayout>
   );
 }

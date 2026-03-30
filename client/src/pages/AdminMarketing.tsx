@@ -6,6 +6,8 @@
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
+import { useConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { TableSkeleton, CardGridSkeleton } from "@/components/admin/AdminSkeleton";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -95,6 +97,7 @@ function MatchFormFields({ value, onChange }: { value: MatchForm; onChange: (v: 
 }
 
 export default function AdminMarketing() {
+  const { confirm: confirmDialog, ConfirmDialogElement } = useConfirmDialog();
   const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
 
@@ -408,7 +411,7 @@ export default function AdminMarketing() {
             </CardHeader>
             <CardContent>
               {matchesLoading ? (
-                <div className="text-slate-400 text-sm py-4 text-center">載入中...</div>
+                <TableSkeleton rows={3} cols={3} />
               ) : filteredMatches.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
                   <div className="text-3xl mb-2">⚾</div>
@@ -485,7 +488,7 @@ export default function AdminMarketing() {
                             <Button size="sm" variant="ghost"
                               disabled={readOnly}
                               title={readOnly ? "唯讀模式，無法操作" : undefined}
-                              onClick={() => { if (confirm("確定刪除此賽事？")) deleteMatch.mutate({ id: match.id }); }}
+                              onClick={() => { confirmDialog({ title: "刪除賽事", description: "確定刪除此賽事？" }).then(ok => { if (ok) deleteMatch.mutate({ id: match.id }); }); }}
                               className="text-red-400 hover:text-red-300 h-7 px-1.5 text-xs">刪除</Button>
                           )}
                         </div>
@@ -513,9 +516,9 @@ export default function AdminMarketing() {
                       disabled={readOnly || updateAllMatchDeadlines.isPending}
                       title={readOnly ? "唯讀模式，無法操作" : undefined}
                       onClick={() => {
-                        if (confirm(`確定將所有待開賽比賽的截止時間設為 ${globalDeadlineMinutes} 分鐘？`)) {
-                          updateAllMatchDeadlines.mutate({ bettingDeadlineMinutes: Number(globalDeadlineMinutes) });
-                        }
+                        confirmDialog({ title: "批量設定截止時間", description: `確定將所有待開賽比賽的截止時間設為 ${globalDeadlineMinutes} 分鐘？` }).then(ok => {
+                          if (ok) updateAllMatchDeadlines.mutate({ bettingDeadlineMinutes: Number(globalDeadlineMinutes) });
+                        });
                       }}
                       className="border-blue-600/50 text-blue-400 hover:bg-blue-600/10 text-xs h-7"
                     >
@@ -538,7 +541,7 @@ export default function AdminMarketing() {
           </CardHeader>
           <CardContent>
             {configLoading ? (
-              <div className="text-slate-400 text-sm">載入中...</div>
+              <CardGridSkeleton count={3} />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
@@ -727,6 +730,7 @@ export default function AdminMarketing() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {ConfirmDialogElement}
     </AdminLayout>
   );
 }

@@ -36,6 +36,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Package, Plus, Pencil, Trash2, CheckCircle, XCircle, Gift, RefreshCw } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
+import { useConfirmDialog } from "@/components/admin/ConfirmDialog";
 
 // ==================== 功能方案管理 ====================
 
@@ -72,6 +73,7 @@ const emptyPlanForm: PlanFormData = {
 };
 
 function PlansTab() {
+  const { confirm: confirmDialog, ConfirmDialogElement } = useConfirmDialog();
   const { readOnly } = useAdminRole();
   const [showDialog, setShowDialog] = useState(false);
   const [form, setForm] = useState<PlanFormData>(emptyPlanForm);
@@ -190,9 +192,9 @@ function PlansTab() {
                   className="text-destructive hover:text-destructive"
                   title={readOnly ? "唯讀模式，無法操作" : undefined}
                   onClick={() => {
-                    if (confirm(`確定要刪除「${plan.name}」嗎？`)) {
-                      deleteMutation.mutate({ id: plan.id });
-                    }
+                    confirmDialog({ title: "刪除方案", description: `確定要刪除「${plan.name}」嗎？` }).then(ok => {
+                      if (ok) deleteMutation.mutate({ id: plan.id });
+                    });
                   }}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -329,6 +331,7 @@ function PlansTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {ConfirmDialogElement}
     </div>
   );
 }

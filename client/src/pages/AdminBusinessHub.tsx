@@ -32,6 +32,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { CardGridSkeleton, TableSkeleton } from "@/components/admin/AdminSkeleton";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type Module = {
@@ -228,7 +229,7 @@ function ModuleManagerTab() {
       </div>
 
       {isLoading ? (
-        <div className="text-slate-400 text-center py-8">載入中...</div>
+        <CardGridSkeleton count={4} />
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={displayIds} strategy={verticalListSortingStrategy}>
@@ -557,7 +558,7 @@ function PlansTab() {
       </div>
 
       {isLoading ? (
-        <div className="text-slate-400 text-center py-8">載入中...</div>
+        <CardGridSkeleton count={4} />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {(plans as Plan[]).map((plan) => (
@@ -1030,7 +1031,7 @@ function RedemptionCodesPanel({ campaignId, campaignName }: { campaignId: number
 
       {/* 碼列表 */}
       {isLoading ? (
-        <div className="text-xs text-slate-500 py-2">載入中...</div>
+        <div className="py-2 space-y-1">{[...Array(2)].map((_,i) => <div key={i} className="h-3 bg-slate-700/40 rounded animate-pulse" />)}</div>
       ) : codes.length === 0 ? (
         <div className="text-xs text-slate-600 italic py-2">尚無兌換碼</div>
       ) : (
@@ -1135,7 +1136,7 @@ function CampaignsTab() {
       </div>
 
       {isLoading ? (
-        <div className="text-slate-400 text-center py-8">載入中...</div>
+        <CardGridSkeleton count={4} />
       ) : (campaigns as Campaign[]).length === 0 ? (
         <div className="text-center py-12 text-slate-500">
           <p className="text-4xl mb-3">🎪</p>

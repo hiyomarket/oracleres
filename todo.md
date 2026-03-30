@@ -5832,3 +5832,36 @@
 - [x] 實作戰鬥背景音樂系統（不同場景對應不同 BGM）
 - [x] 強化格檔/閃避全螢幕視覺特效（更具衝擊力的動畫）
 - [x] 為格檔/閃避成功加上獨特音效
+
+## v5.23 - /admin 後台系統優化
+
+### P0：統一佈局與導航
+- [x] 建立統一 AdminLayout 組件（側邊欄 + 頂部列 + 麵包屑）— 已有完善 AdminLayout
+- [x] 側邊欄按六大領域分組導航（核心管理/商業營運/內容管理/專家系統/安全存取/遊戲系統）
+- [x] 側邊欄支援收合（手機端自動收合為漢堡選單）
+- [x] 套用 AdminLayout 到所有 15 個 /admin 頁面（含 GameCMS）
+- [x] 移除各頁面原有的獨立佈局包裝
+
+### P1a：替換原生 confirm
+- [x] 建立統一 ConfirmDialog 元件（基於 AlertDialog，Promise 模式）
+- [x] 替換 9 個頁面中 18 處原生 confirm() 呼叫
+
+### P1b：載入狀態與錯誤邊界
+- [x] 建立統一 AdminSkeleton 骨架屏元件（Table/CardGrid/Stats/Form/Page 五種）
+- [x] 建立 AdminErrorFallback + AdminEmptyState 元件
+- [x] 替換 8 個頁面中所有「載入中...」文字為骨架屏動畫
+
+### P1c：響應式設計修復
+- [x] 全域 CSS 規則：admin 表格自動水平滾動
+- [x] 全域 CSS 規則：表單小螢幕自動單欄佈局
+- [x] 全域 CSS 規則：彈窗手機端自動全螢幕
+
+### P2a：統一 DataTable
+- [x] 建立統一 AdminDataTable 元件（含排序、搜尋、分頁、空狀態）
+- [ ] 套用到需要分頁的 6 個頁面（作為新功能標準，現有頁面暫不強制遷移）
+
+### P2b：表單驗證與功能修復
+- [x] 建立 useFormValidation hook + FormFieldError 元件
+- [ ] 修復用戶管理：完成遊戲幣贈送功能（後續處理）
+- [ ] 修復專家管理：管理員備註送後端（後續處理）
+- [ ] 修復商業中心：as any 型別轉換問題（後續處理）

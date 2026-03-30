@@ -12,6 +12,7 @@ import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { AdminLayout } from "@/components/AdminLayout";
+import { PageSkeleton } from "@/components/admin/AdminSkeleton";
 import {
   BarChart,
   Bar,
@@ -103,9 +104,11 @@ export default function AdminDashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen oracle-page flex items-center justify-center">
-        <div className="text-amber-400 text-lg animate-pulse">載入中...</div>
-      </div>
+      <AdminLayout>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <PageSkeleton />
+        </div>
+      </AdminLayout>
     );
   }
   if (!user || (user.role !== "admin" && user.role !== "viewer")) return null;

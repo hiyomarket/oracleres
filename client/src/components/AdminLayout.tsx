@@ -128,7 +128,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen text-foreground flex flex-col" style={{ background: "var(--page-bg)" }}>
+    <div data-admin-page className="min-h-screen text-foreground flex flex-col" style={{ background: "var(--page-bg)" }}>
       {/* 頂部 Header */}
       <header
         className="border-b border-border px-4 py-3 flex items-center gap-3 shrink-0 sticky top-0 z-40"

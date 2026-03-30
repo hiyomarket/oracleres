@@ -7,6 +7,8 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { AdminLayout } from "@/components/AdminLayout";
+import { useConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { TableSkeleton } from "@/components/admin/AdminSkeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -79,6 +81,7 @@ function daysUntilExpiry(expiresAt: Date | null): number | null {
 }
 
 export default function AdminAccessTokens() {
+  const { confirm: confirmDialog, ConfirmDialogElement } = useConfirmDialog();
   const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
   const { data: tokens = [], isLoading } = trpc.accessTokens.list.useQuery();
@@ -220,7 +223,7 @@ export default function AdminAccessTokens() {
 
         {/* Token 列表 */}
         {isLoading ? (
-          <div className="text-center py-12 text-white/40">載入中...</div>
+          <TableSkeleton rows={5} cols={4} />
         ) : tokens.length === 0 ? (
           <div className="text-center py-12 text-white/40">
             <Key className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -372,7 +375,7 @@ export default function AdminAccessTokens() {
                       {expandedLogs === token.id && (
                         <div className="mt-2 rounded-lg border border-white/10 bg-black/20 p-3">
                           {logsLoading ? (
-                            <p className="text-xs text-white/30 text-center py-2">載入中...</p>
+                            <div className="py-2 space-y-1">{[...Array(2)].map((_,i) => <div key={i} className="h-3 bg-white/10 rounded animate-pulse" />)}</div>
                           ) : !logsData || logsData.length === 0 ? (
                             <p className="text-xs text-white/30 text-center py-2">尚無存取紀錄</p>
                           ) : (
@@ -419,9 +422,9 @@ export default function AdminAccessTokens() {
                         size="sm"
                         disabled={readOnly}
                         onClick={() => {
-                          if (confirm(`確定要刪除 Token「${token.name}」嗎？此操作無法復原。`)) {
-                            deleteMutation.mutate({ id: token.id });
-                          }
+                          confirmDialog({ title: "刪除 Token", description: `確定要刪除 Token「${token.name}」嗎？此操作無法復原。` }).then(ok => {
+                            if (ok) deleteMutation.mutate({ id: token.id });
+                          });
                         }}
                         className="text-red-400 border-red-500/30 hover:bg-red-500/10 h-8 w-8 p-0"
                       >
@@ -675,6 +678,7 @@ export default function AdminAccessTokens() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {ConfirmDialogElement}
     </AdminLayout>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { MonsterCatalogV2Tab, ItemCatalogV2Tab, EquipCatalogV2Tab, SkillCatalogV2Tab, AchievementCatalogTab } from "@/components/admin/CatalogTabs";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { AdminLayout } from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import ItemKeySearchSelect from "@/components/admin/ItemKeySearchSelect";
 import { useLocation } from "wouter";
+import { useConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { TableSkeleton, CardGridSkeleton } from "@/components/admin/AdminSkeleton";
 import { MonsterPreview, ItemPreview, SkillPreview, AchievementPreview } from "@/components/CatalogPreview";
 import { lazy, Suspense } from "react";
 const AdminGameTheaterInline = lazy(() => import("./AdminGameTheaterInline"));
@@ -75,7 +78,7 @@ function GameItemsTab() {
         <h2 className="text-lg font-semibold">商城道具管理（{items.length} 筆）</h2>
         <p className="text-xs text-muted-foreground">點擊「上架/下架」切換販售狀態</p>
       </div>
-      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+      {isLoading ? <TableSkeleton rows={4} cols={4} /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
@@ -125,32 +128,12 @@ function GameItemsTab() {
 
 // ─── Main GameCMS Page ─────────────────────────────────────────────────────────
 export default function GameCMS() {
+  const { confirm: confirmDialog, ConfirmDialogElement } = useConfirmDialog();
   const { user, loading } = useAuth();
   const [, navigate] = useLocation();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">驗證中…</p>
-      </div>
-    );
-  }
-
-  if (!user || user.role !== "admin") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-80">
-          <CardContent className="pt-6 text-center">
-            <p className="text-destructive font-semibold mb-4">需要管理員權限</p>
-            <Button onClick={() => navigate("/")}>返回首頁</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <AdminLayout>
       <div className="max-w-screen-xl mx-auto px-4 py-8">
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
@@ -196,7 +179,7 @@ export default function GameCMS() {
                   <TabsContent value="catalog-achievements"><AchievementCatalogTab /></TabsContent>
                   <TabsContent value="pet-catalog"><PetCatalogTab /></TabsContent>
                   <TabsContent value="catalog-stats"><CatalogStatsTab /></TabsContent>
-                  <TabsContent value="monster-multiplier"><Suspense fallback={<div className="py-8 text-center text-muted-foreground">載入中...</div>}><MonsterMultiplierTab /></Suspense></TabsContent>
+                  <TabsContent value="monster-multiplier"><Suspense fallback={<TableSkeleton rows={4} cols={4} />}><MonsterMultiplierTab /></Suspense></TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
@@ -220,7 +203,7 @@ export default function GameCMS() {
                   <TabsContent value="spirit-shop"><SpiritShopTab /></TabsContent>
                   <TabsContent value="hidden-shop"><HiddenShopTab /></TabsContent>
                   <TabsContent value="items"><GameItemsTab /></TabsContent>
-                  <TabsContent value="theater-shop"><Suspense fallback={<p className="text-muted-foreground p-4">載入中…</p>}><AdminGameTheaterInline section="shop" /></Suspense></TabsContent>
+                  <TabsContent value="theater-shop"><Suspense fallback={<div className="p-4"><TableSkeleton rows={3} cols={3} /></div>}><AdminGameTheaterInline section="shop" /></Suspense></TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
@@ -268,7 +251,7 @@ export default function GameCMS() {
           <TabsContent value="world">
             <Card>
               <CardContent className="pt-6">
-                <Suspense fallback={<p className="text-muted-foreground p-4">載入中…</p>}>
+                <Suspense fallback={<div className="p-4"><TableSkeleton rows={3} cols={3} /></div>}>
                   <AdminGameTheaterInline section="world" />
                 </Suspense>
               </CardContent>
@@ -287,16 +270,17 @@ export default function GameCMS() {
                     <TabsTrigger value="sys-reset" className="text-red-400">🔴 世界重置</TabsTrigger>
                   </TabsList>
                   <TabsContent value="game-guide"><GameGuideTab /></TabsContent>
-                  <TabsContent value="enhance-config"><Suspense fallback={<p className="text-muted-foreground p-4">載入中…</p>}><EnhanceConfigTab /></Suspense></TabsContent>
-                  <TabsContent value="broadcast"><Suspense fallback={<p className="text-muted-foreground p-4">載入中…</p>}><AdminGameTheaterInline section="broadcast" /></Suspense></TabsContent>
-                  <TabsContent value="sys-reset"><Suspense fallback={<p className="text-muted-foreground p-4">載入中…</p>}><AdminGameTheaterInline section="reset" /></Suspense></TabsContent>
+                  <TabsContent value="enhance-config"><Suspense fallback={<div className="p-4"><TableSkeleton rows={3} cols={3} /></div>}><EnhanceConfigTab /></Suspense></TabsContent>
+                  <TabsContent value="broadcast"><Suspense fallback={<div className="p-4"><TableSkeleton rows={3} cols={3} /></div>}><AdminGameTheaterInline section="broadcast" /></Suspense></TabsContent>
+                  <TabsContent value="sys-reset"><Suspense fallback={<div className="p-4"><TableSkeleton rows={3} cols={3} /></div>}><AdminGameTheaterInline section="reset" /></Suspense></TabsContent>
                 </Tabs>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+      {ConfirmDialogElement}
+    </AdminLayout>
   );
 }
 
@@ -327,7 +311,7 @@ function InventoryItemsTab() {
         <h2 className="text-lg font-semibold">遊戲道具管理（{items.length} 筆）</h2>
         <Button onClick={() => setOpen(true)} size="sm">+ 新增道具</Button>
       </div>
-      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+      {isLoading ? <TableSkeleton rows={4} cols={4} /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
@@ -465,7 +449,7 @@ function VirtualShopTab() {
         </div>
         <Button onClick={() => setOpen(true)} size="sm">+ 新增商品</Button>
       </div>
-      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+      {isLoading ? <TableSkeleton rows={4} cols={4} /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
@@ -618,7 +602,7 @@ function SpiritShopTab() {
         </div>
         <Button onClick={() => setOpen(true)} size="sm">+ 新增商品</Button>
       </div>
-      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+      {isLoading ? <TableSkeleton rows={4} cols={4} /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
@@ -782,7 +766,7 @@ function HiddenShopTab() {
         </div>
         <Button onClick={() => setOpen(true)} size="sm">+ 新增商品</Button>
       </div>
-      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+      {isLoading ? <TableSkeleton rows={4} cols={4} /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
@@ -953,7 +937,7 @@ function MonsterCatalogTab() {
           {search && <Button size="sm" variant="ghost" onClick={() => { setSearch(""); setSearchInput(""); }}>清除</Button>}
         </div>
       </div>
-      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+      {isLoading ? <TableSkeleton rows={4} cols={4} /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
@@ -1032,7 +1016,7 @@ function ItemCatalogTab() {
           {search && <Button size="sm" variant="ghost" onClick={() => { setSearch(""); setSearchInput(""); }}>清除</Button>}
         </div>
       </div>
-      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+      {isLoading ? <TableSkeleton rows={4} cols={4} /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
@@ -1107,7 +1091,7 @@ function EquipmentCatalogTab() {
           {search && <Button size="sm" variant="ghost" onClick={() => { setSearch(""); setSearchInput(""); }}>清除</Button>}
         </div>
       </div>
-      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+      {isLoading ? <TableSkeleton rows={4} cols={4} /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
@@ -1189,7 +1173,7 @@ function SkillCatalogTab() {
           {search && <Button size="sm" variant="ghost" onClick={() => { setSearch(""); setSearchInput(""); }}>清除</Button>}
         </div>
       </div>
-      {isLoading ? <p className="text-muted-foreground">載入中…</p> : (
+      {isLoading ? <TableSkeleton rows={4} cols={4} /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
@@ -2383,7 +2367,7 @@ function PetCatalogTab() {
         </div>
       </div>
 
-      {isLoading ? <p className="text-muted-foreground">載入中...</p> : (
+      {isLoading ? <TableSkeleton rows={4} cols={4} /> : (
         <div className="border rounded-lg overflow-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b bg-muted/50">
@@ -2419,7 +2403,7 @@ function PetCatalogTab() {
                     <td className="px-3 py-2 text-center">
                       <div className="flex gap-1 justify-center">
                         <Button size="sm" variant="outline" onClick={() => openEdit(p)}>編輯</Button>
-                        <Button size="sm" variant="destructive" onClick={() => { if (confirm(`確定刪除「${p.name}」？`)) deleteMut.mutate({ id: p.id }); }}>刪除</Button>
+                        <Button size="sm" variant="destructive" onClick={() => { confirmDialog({ title: "刪除怪物", description: `確定刪除「${p.name}」？` }).then(ok => { if (ok) deleteMut.mutate({ id: p.id }); }); }}>刪除</Button>
                       </div>
                     </td>
                   </tr>
@@ -3146,7 +3130,7 @@ function AIToolsTab() {
                 <Button size="sm" variant="outline" onClick={() => bc.mutate.mutate({ dryRun: true })} disabled={isAnyBalancing} className="flex-1">
                   {bc.mutate.isPending ? "⏳..." : "🔍 預覽"}
                 </Button>
-                <Button size="sm" onClick={() => { if (confirm(`確定要執行 ${bc.label} 平衡修正？此操作會寫入資料庫。`)) bc.mutate.mutate({ dryRun: false }); }} disabled={isAnyBalancing} className="flex-1" style={{ backgroundColor: bc.color, color: "#fff" }}>
+                <Button size="sm" onClick={() => { confirmDialog({ title: "執行平衡修正", description: `確定要執行 ${bc.label} 平衡修正？此操作會寫入資料庫。` }).then(ok => { if (ok) bc.mutate.mutate({ dryRun: false }); }); }} disabled={isAnyBalancing} className="flex-1" style={{ backgroundColor: bc.color, color: "#fff" }}>
                   {bc.mutate.isPending ? "⏳..." : "✅ 執行"}
                 </Button>
               </div>
@@ -3721,9 +3705,9 @@ function ValueEngineTab() {
             </Button>
             <Button
               onClick={() => {
-                if (confirm("確定要執行全圖鑑重新評估？這會修改所有道具/裝備/技能的價格、品質、流通權限。")) {
-                  applyAll.mutate();
-                }
+                confirmDialog({ title: "全圖鑑重新評估", description: "確定要執行全圖鑑重新評估？這會修改所有道具/裝備/技能的價格、品質、流通權限。" }).then(ok => {
+                  if (ok) applyAll.mutate();
+                });
               }}
               disabled={applyAll.isPending}
               className="bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-700 hover:to-purple-700"
@@ -3864,9 +3848,9 @@ function ValueEngineTab() {
             </Button>
             <Button
               onClick={() => {
-                if (confirm("確定要執行怪物掉落分配？這會覆蓋所有怪物的掉落設定。")) {
-                  aiAssignDrops.mutate({ dryRun: false });
-                }
+                confirmDialog({ title: "怪物掉落分配", description: "確定要執行怪物掉落分配？這會覆蓋所有怪物的掉落設定。" }).then(ok => {
+                  if (ok) aiAssignDrops.mutate({ dryRun: false });
+                });
               }}
               disabled={aiAssignDrops.isPending}
               className="bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700"
@@ -4147,9 +4131,9 @@ function GameGuideTab() {
             size="sm"
             className="bg-gradient-to-r from-violet-600 to-blue-600 text-white"
             disabled={aiGenerate.isPending}
-            onClick={() => {
+            onClick={async () => {
               if (sections.data && sections.data.length > 0) {
-                if (!confirm("一鍵生成將覆蓋所有現有章節，確定要繼續嗎？")) return;
+                const okGen = await confirmDialog({ title: "一鍵生成章節", description: "一鍵生成將覆蓋所有現有章節，確定要繼續嗎？" }); if (!okGen) return;
               }
               aiGenerate.mutate();
             }}
@@ -4226,7 +4210,7 @@ function GameGuideTab() {
       {/* 章節列表 */}
       <div className="space-y-2">
         <h4 className="font-semibold text-sm">📋 章節列表（{sections.data?.length ?? 0} 個）</h4>
-        {sections.isLoading && <p className="text-sm text-muted-foreground">載入中...</p>}
+        {sections.isLoading && <TableSkeleton rows={3} cols={3} />}
         {sections.data?.map((s, idx) => (
           <div key={s.id} className={`p-3 rounded-lg border ${s.enabled ? "bg-card" : "bg-muted/30 opacity-60"} flex items-start gap-3`}>
             {/* 排序按鈕 */}
@@ -4265,7 +4249,7 @@ function GameGuideTab() {
               </Button>
               <Button
                 size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive"
-                onClick={() => { if (confirm(`確定刪除「${s.title}」？`)) deleteSection.mutate({ id: s.id }); }}
+                onClick={() => { confirmDialog({ title: "刪除章節", description: `確定刪除「${s.title}」？` }).then(ok => { if (ok) deleteSection.mutate({ id: s.id }); }); }}
               >🗑️</Button>
             </div>
           </div>
@@ -4590,7 +4574,7 @@ function BossConfigPanel() {
             <Button onClick={handleSave} disabled={updateConfig.isPending}>
               {updateConfig.isPending ? "儲存中..." : "💾 儲存設定"}
             </Button>
-            <Button variant="outline" onClick={() => { if (confirm("確定要重置為預設值嗎？")) resetConfigMut.mutate(); }}
+            <Button variant="outline" onClick={() => { confirmDialog({ title: "重置設定", description: "確定要重置為預設值嗎？" }).then(ok => { if (ok) resetConfigMut.mutate(); }); }}
               disabled={resetConfigMut.isPending}>
               🔄 重置預設
             </Button>
