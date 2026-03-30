@@ -4,7 +4,7 @@
  * v11.7：加入模組勾選、到期警示標籤、使用次數顯示
  */
 import { useAdminRole } from "@/hooks/useAdminRole";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { AdminLayout } from "@/components/AdminLayout";
 import { useConfirmDialog } from "@/components/admin/ConfirmDialog";
@@ -85,6 +85,33 @@ export default function AdminAccessTokens() {
   const { readOnly } = useAdminRole();
   const utils = trpc.useUtils();
   const { data: tokens = [], isLoading } = trpc.accessTokens.list.useQuery();
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "expired">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
+
+  // Client-side filtering
+  const filteredTokens = useMemo(() => {
+    let result = (tokens as AccessToken[]);
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter(t => t.name.toLowerCase().includes(q) || (t.description ?? "").toLowerCase().includes(q));
+    }
+    if (statusFilter !== "all") {
+      result = result.filter(t => {
+        const expired = t.expiresAt !== null && new Date(t.expiresAt) < new Date();
+        if (statusFilter === "active") return t.isActive === 1 && !expired;
+        if (statusFilter === "inactive") return t.isActive !== 1;
+        if (statusFilter === "expired") return expired;
+        return true;
+      });
+    }
+    return result;
+  }, [tokens, searchTerm, statusFilter]);
+
+  const totalPages = Math.ceil(filteredTokens.length / PAGE_SIZE);
+  const paginatedTokens = filteredTokens.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showNewTokenDialog, setShowNewTokenDialog] = useState(false);
@@ -207,9 +234,39 @@ export default function AdminAccessTokens() {
           </div>
         </div>
 
+        {/* 搜尋和篩選 */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <Input
+            placeholder="搜尋 Token 名稱或說明..."
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            className="bg-white/5 border-white/10 text-white placeholder:text-white/30 flex-1"
+          />
+          <div className="flex gap-2">
+            {(["all", "active", "inactive", "expired"] as const).map(s => (
+              <button
+                key={s}
+                onClick={() => { setStatusFilter(s); setCurrentPage(1); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  statusFilter === s
+                    ? s === "active" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                    : s === "inactive" ? "bg-red-500/20 text-red-300 border border-red-500/40"
+                    : s === "expired" ? "bg-orange-500/20 text-orange-300 border border-orange-500/40"
+                    : "bg-white/10 text-white/80 border border-white/20"
+                    : "bg-white/5 text-white/40 border border-transparent hover:bg-white/10"
+                }`}
+              >
+                {s === "all" ? "全部" : s === "active" ? "啟用中" : s === "inactive" ? "已停用" : "已過期"}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* 操作列 */}
         <div className="flex items-center justify-between">
-          <p className="text-white/50 text-sm">共 {tokens.length} 個 Token</p>
+          <p className="text-white/50 text-sm">
+            {searchTerm || statusFilter !== "all" ? `符合條件 ${filteredTokens.length} 個` : `共 ${tokens.length} 個 Token`}
+          </p>
           <Button
             onClick={() => { setForm({ ...EMPTY_FORM }); setShowCreateDialog(true); }}
             disabled={readOnly}
@@ -231,7 +288,7 @@ export default function AdminAccessTokens() {
           </div>
         ) : (
           <div className="space-y-3">
-            {(tokens as AccessToken[]).map((token) => {
+            {paginatedTokens.map((token) => {
               const expired = isExpired(token);
               const active = token.isActive === 1 && !expired;
               const days = daysUntilExpiry(token.expiresAt);
@@ -678,6 +735,32 @@ export default function AdminAccessTokens() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* 分頁控制 */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage <= 1}
+            className="text-white/60 border-white/20 hover:bg-white/10 bg-transparent"
+          >
+            ← 上一頁
+          </Button>
+          <span className="text-sm text-white/50">
+            第 <span className="text-amber-400 font-medium">{currentPage}</span> / {totalPages} 頁
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage >= totalPages}
+            className="text-white/60 border-white/20 hover:bg-white/10 bg-transparent"
+          >
+            下一頁 →
+          </Button>
+        </div>
+      )}
       {ConfirmDialogElement}
     </AdminLayout>
   );

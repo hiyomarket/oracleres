@@ -297,6 +297,7 @@ export const dashboardRouter = router({
             planId: users.planId,
             planExpiresAt: users.planExpiresAt,
             pointsBalance: users.pointsBalance,
+            gameCoins: users.gameCoins,
             createdAt: users.createdAt,
             lastSignedIn: users.lastSignedIn,
           })
@@ -319,6 +320,7 @@ export const dashboardRouter = router({
             planId: users.planId,
             planExpiresAt: users.planExpiresAt,
             pointsBalance: users.pointsBalance,
+            gameCoins: users.gameCoins,
             createdAt: users.createdAt,
             lastSignedIn: users.lastSignedIn,
           })

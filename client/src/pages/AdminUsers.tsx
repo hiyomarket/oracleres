@@ -453,44 +453,83 @@ function CoinsGrantModal({
 }) {
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
+  const [mode, setMode] = useState<'add' | 'subtract'>('add');
   const grantMutation = trpc.dashboard.adminAdjustCoins.useMutation({
     onSuccess: (data) => {
-      toast.success(`🎮 遊戲幣已贈送！新餘額：${data.newCoins} 枚`);
+      toast.success(mode === 'add'
+        ? `🎮 遊戲幣已贈送！新餘額：${data.newCoins} 枚`
+        : `🎮 遊戲幣已扣除！新餘額：${data.newCoins} 枚`);
       onSuccess();
     },
-    onError: (err) => toast.error(`贈送失敗：${err.message}`),
+    onError: (err) => toast.error(`操作失敗：${err.message}`),
   });
+  const parsedAmount = parseInt(amount) || 0;
+  const previewBalance = mode === 'add'
+    ? user.gameCoins + parsedAmount
+    : Math.max(0, user.gameCoins - parsedAmount);
   const handleSubmit = () => {
     const amt = parseInt(amount);
     if (isNaN(amt) || amt <= 0) { toast.error('請輸入有效正整數'); return; }
-    grantMutation.mutate({ userId: user.id, mode: 'add', amount: amt, reason: reason || undefined });
+    grantMutation.mutate({ userId: user.id, mode, amount: amt, reason: reason || undefined });
   };
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 max-w-sm">
         <DialogHeader>
-          <DialogTitle className="text-purple-400">🎮 贈送遊戲幣 — {user.name ?? '用戶 #' + user.id}</DialogTitle>
+          <DialogTitle className="text-purple-400">🎮 調整遊戲幣 — {user.name ?? '用戶 #' + user.id}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="bg-slate-800/60 rounded-xl px-4 py-3 text-center">
             <div className="text-xs text-slate-400 mb-1">目前遊戲幣餘額</div>
             <div className="text-2xl font-bold text-purple-400">{user.gameCoins.toLocaleString()} 枚</div>
           </div>
+          {/* 模式切換 */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setMode('add')}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                mode === 'add'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  : 'bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700'
+              }`}
+            >
+              ➕ 贈送
+            </button>
+            <button
+              onClick={() => setMode('subtract')}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                mode === 'subtract'
+                  ? 'bg-red-500/20 text-red-300 border border-red-500/40'
+                  : 'bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700'
+              }`}
+            >
+              ➖ 扣除
+            </button>
+          </div>
           <div>
-            <label className="text-xs text-slate-400 mb-1 block">贈送數量</label>
+            <label className="text-xs text-slate-400 mb-1 block">{mode === 'add' ? '贈送' : '扣除'}數量</label>
             <Input
               type="number"
               min="1"
-              placeholder="輸入贈送數量..."
+              placeholder={`輸入${mode === 'add' ? '贈送' : '扣除'}數量...`}
               value={amount}
               onChange={e => setAmount(e.target.value)}
               className="bg-slate-800 border-slate-700 text-slate-200"
             />
           </div>
+          {parsedAmount > 0 && (
+            <div className="bg-slate-800/40 rounded-lg px-3 py-2 flex items-center justify-between">
+              <span className="text-xs text-slate-400">預計新餘額</span>
+              <span className={`text-sm font-bold ${mode === 'add' ? 'text-emerald-400' : 'text-red-400'}`}>
+                {previewBalance.toLocaleString()} 枚
+                <span className="text-xs ml-1 opacity-60">({mode === 'add' ? '+' : '-'}{parsedAmount.toLocaleString()})</span>
+              </span>
+            </div>
+          )}
           <div>
             <label className="text-xs text-slate-400 mb-1 block">原因備注（選填）</label>
             <Input
-              placeholder="例：活動獎勵、補償..."
+              placeholder="例：活動獎勵、補償、違規扣除..."
               value={reason}
               onChange={e => setReason(e.target.value)}
               className="bg-slate-800 border-slate-700 text-slate-200"
@@ -502,9 +541,12 @@ function CoinsGrantModal({
           <Button
             onClick={handleSubmit}
             disabled={grantMutation.isPending || !amount}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+            className={mode === 'add'
+              ? 'bg-purple-600 hover:bg-purple-700 text-white font-semibold'
+              : 'bg-red-600 hover:bg-red-700 text-white font-semibold'
+            }
           >
-            {grantMutation.isPending ? '處理中...' : '確認贈送'}
+            {grantMutation.isPending ? '處理中...' : mode === 'add' ? '確認贈送' : '確認扣除'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -936,6 +978,12 @@ export default function AdminUsers() {
                           </div>
                         </div>
                         <div>
+                          <div className="text-slate-500 mb-0.5">遊戲幣</div>
+                          <div className="text-purple-400 font-semibold">
+                            {(u.gameCoins ?? 0).toLocaleString()} 枚
+                          </div>
+                        </div>
+                        <div>
                           <div className="text-slate-500 mb-0.5">方案到期</div>
                           <div className="text-slate-300">
                             {u.planExpiresAt ? formatDate(u.planExpiresAt) : "無到期日"}
@@ -1007,11 +1055,11 @@ export default function AdminUsers() {
                             title={readOnly ? "唯讀模式" : undefined}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setCoinsModalUser({ id: u.id, name: u.name ?? null, gameCoins: Number((u as any).gameCoins ?? 0) });
+                              setCoinsModalUser({ id: u.id, name: u.name ?? null, gameCoins: Number(u.gameCoins ?? 0) });
                             }}
                             className="border-purple-600/50 text-purple-400 hover:bg-purple-600/20 bg-transparent text-xs font-semibold shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
-                            🎮 贈送遇戲幣
+                            🎮 贈送遊戲幣
                           </Button>
                           <Button
                             size="sm"

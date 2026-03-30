@@ -21,7 +21,8 @@ export default function ExpertDashboard() {
   const pendingCount = bookings.filter((b) => b.status === "pending_payment").length;
   const confirmedCount = bookings.filter((b) => b.status === "confirmed").length;
   const totalRevenue = revenueStats?.totalRevenue ?? 0;
-  const monthRevenue = revenueStats?.monthRevenue ?? 0;
+  const monthRevenue = revenueStats?.thisMonthRevenue ?? 0;
+  const monthCompletedCount = revenueStats?.thisMonthCount ?? 0;
 
 
 
@@ -186,15 +187,15 @@ export default function ExpertDashboard() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
-                  <div className="text-lg font-bold text-emerald-400">${revenueStats.monthRevenue.toLocaleString()}</div>
+                  <div className="text-lg font-bold text-emerald-400">${(revenueStats?.thisMonthRevenue ?? 0).toLocaleString()}</div>
                   <div className="text-[11px] text-muted-foreground">本月營收</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-foreground">{revenueStats.monthCompletedCount}</div>
+                  <div className="text-lg font-bold text-foreground">{revenueStats?.thisMonthCount ?? 0}</div>
                   <div className="text-[11px] text-muted-foreground">本月完成</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-foreground">${revenueStats.totalRevenue.toLocaleString()}</div>
+                  <div className="text-lg font-bold text-foreground">${(revenueStats?.totalRevenue ?? 0).toLocaleString()}</div>
                   <div className="text-[11px] text-muted-foreground">總營收</div>
                 </div>
               </div>

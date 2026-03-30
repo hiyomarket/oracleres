@@ -10,6 +10,7 @@ import {
 import { eq, and, asc, lte, ne, gte, sql, not } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { storagePut } from "../../storage";
+import { broadcastToChatRoom, sendToUser } from "../../wsServer";
 
 export const expertMessagingRouter = router({
 
@@ -90,12 +91,36 @@ export const expertMessagingRouter = router({
         booking.userId === ctx.user.id ||
         (expertRecord && booking.expertId === expertRecord.id);
       if (!isParticipant) throw new TRPCError({ code: "FORBIDDEN" });
-      await db.insert(privateMessages).values({
+      const [inserted] = await db.insert(privateMessages).values({
         bookingId: input.bookingId,
         senderId: ctx.user.id,
         content: input.content,
         imageUrl: input.imageUrl,
       });
+      // WebSocket 廣播新訊息給聊天室成員
+      const msgPayload = {
+        bookingId: input.bookingId,
+        senderId: ctx.user.id,
+        senderName: ctx.user.name,
+        content: input.content,
+        imageUrl: input.imageUrl || null,
+        createdAt: new Date().toISOString(),
+        id: inserted?.insertId ? Number(inserted.insertId) : Date.now(),
+      };
+      broadcastToChatRoom(input.bookingId, {
+        type: "expert_chat_new",
+        payload: msgPayload,
+      }, ctx.user.id);
+      // 也通知不在房間的另一方（專家或用戶）
+      const otherUserId = booking.userId === ctx.user.id
+        ? (await db.select({ userId: experts.userId }).from(experts).where(eq(experts.id, booking.expertId)).limit(1))?.[0]?.userId
+        : booking.userId;
+      if (otherUserId) {
+        sendToUser(otherUserId, {
+          type: "expert_chat_new",
+          payload: msgPayload,
+        });
+      }
       return { success: true };
     }),
 
@@ -133,6 +158,30 @@ export const expertMessagingRouter = router({
         content: "🖼️ 圖片訊息",
         imageUrl: url,
       });
+      // WebSocket 廣播圖片訊息
+      const imgPayload = {
+        bookingId: input.bookingId,
+        senderId: ctx.user.id,
+        senderName: ctx.user.name,
+        content: "🖼️ 圖片訊息",
+        imageUrl: url,
+        createdAt: new Date().toISOString(),
+        id: Date.now(),
+      };
+      broadcastToChatRoom(input.bookingId, {
+        type: "expert_chat_new",
+        payload: imgPayload,
+      }, ctx.user.id);
+      // 通知不在房間的另一方
+      const otherUserId2 = booking.userId === ctx.user.id
+        ? (await db.select({ userId: experts.userId }).from(experts).where(eq(experts.id, booking.expertId)).limit(1))?.[0]?.userId
+        : booking.userId;
+      if (otherUserId2) {
+        sendToUser(otherUserId2, {
+          type: "expert_chat_new",
+          payload: imgPayload,
+        });
+      }
       return { url, success: true };
     }),
 

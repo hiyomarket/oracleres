@@ -5862,7 +5862,7 @@
 
 ### P2b：表單驗證與功能修復
 - [x] 建立 useFormValidation hook + FormFieldError 元件
-- [ ] 修復用戶管理：完成遊戲幣贈送功能（後續處理）
+- [x] 修復用戶管理：完成遊戲幣贈送功能（v5.25 已完成）
 - [ ] 修復專家管理：管理員備註送後端（後續處理）
 - [ ] 修復商業中心：as any 型別轉換問題（後續處理）
 
@@ -5888,7 +5888,25 @@
 - [ ] P2-5：ExpertCalendar 元件拆分（CalendarGrid、SlotManager、EventManager）— 延後至下次重構
 
 ### P3：長期規劃
-- [ ] P3-1：WebSocket 即時訊息（替換 5 秒輪詢）— 延後至下次迭代
+- [x] P3-1：WebSocket 即時訊息（替換 5 秒輪詢）— v5.25 已完成
 - [x] P3-2：專家數據分析面板（營收統計已整合至儀表盤 + 獨立營收頁面）
 - [x] P3-3：行事曆 iCal 匯出（同步到 Google Calendar）
 - [x] P3-4：服務模板系統（預設套餐模板）
+
+## v5.25 - WebSocket 即時訊息 + 後台管理強化 + 遊戲幣贈送
+
+### WebSocket 即時訊息
+- [x] 替換聊天室 5 秒輪詢為 WebSocket 即時推送
+- [x] Messages.tsx 前端接入 WebSocket 連線
+- [x] 專家端 ExpertOrders 聊天也接入 WebSocket
+- [x] 保留 tRPC 查詢作為初始載入 + fallback
+
+### AdminDataTable 套用
+- [x] 用戶管理頁面（AdminUsers）加入 gameCoins 欄位顯示、修復錯字、展開詳情遊戲幣餘額
+- [x] 存取權杖頁面（AdminAccessTokens）加入搜尋過濾、狀態篩選、分頁控制
+
+### 遊戲幣贈送功能
+- [x] 後端：admin 遊戲幣贈送 API（已存在 adminAdjustCoins，加入 gameCoins 到 listUsersFiltered）
+- [x] 前端：CoinsGrantModal 增強（贈送/扣除切換、餘額預覽、原因備注）
+- [x] 贈送記錄追蹤（透過 adminAdjustCoins 已記錄於 DB）
+- [x] BUG: ExpertDashboard toLocaleString crash（Cannot read properties of undefined）— 欄位名稱不匹配已修正

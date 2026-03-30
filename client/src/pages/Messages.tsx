@@ -1,7 +1,7 @@
 /**
  * /messages?bookingId=123
  * 訂單訊息聊天室 - 用戶與專家在訂單成立後的溝通頻道
- * 初期版本：僅限下單後師生溝通；未來可擴充為全站訊息系統
+ * v5.25: WebSocket 即時訊息（替代 5 秒輪詢）
  */
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useSearch } from "wouter";
@@ -13,31 +13,86 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Send, MessageCircle, Calendar, Clock, Lock, Info, ImagePlus, Loader2,
+  ArrowLeft, Send, MessageCircle, Calendar, Clock, Lock, Info, ImagePlus, Loader2, Wifi, WifiOff,
 } from "lucide-react";
 import { BOOKING_STATUS_LABEL as STATUS_LABEL, BOOKING_STATUS_COLOR as STATUS_COLOR } from "@/lib/expertConstants";
+import { useChatWebSocket, type ChatMessage } from "@/hooks/useChatWebSocket";
 
 export default function Messages() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
-  const search = useSearch(); // wouter v3: useSearch() returns the query string
+  const search = useSearch();
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Parse bookingId from query string using wouter's useSearch
+  // Parse bookingId from query string
   const params = new URLSearchParams(search ?? window.location.search ?? "");
   const bookingIdStr = params.get("bookingId");
   const bookingId = bookingIdStr ? parseInt(bookingIdStr, 10) : null;
 
-  // Fetch messages
+  // Fetch messages (initial load only, no polling)
   const {
-    data: messages = [],
+    data: serverMessages = [],
     isLoading,
     refetch,
   } = trpc.expert.getMessages.useQuery(
     { bookingId: bookingId! },
-    { enabled: !!bookingId && !!user, refetchInterval: 5000 }
+    { enabled: !!bookingId && !!user, refetchInterval: false }
   );
+
+  // Local messages state (for optimistic + WS updates)
+  const [localMessages, setLocalMessages] = useState<ChatMessage[]>([]);
+
+  // Sync server messages to local state on initial load
+  useEffect(() => {
+    if (serverMessages.length > 0) {
+      setLocalMessages(serverMessages.map((m) => ({
+        id: m.id,
+        bookingId: bookingId!,
+        senderId: m.senderId,
+        senderName: m.senderName ?? "對方",
+        content: m.content,
+        imageUrl: m.imageUrl,
+        createdAt: typeof m.createdAt === "string" ? m.createdAt : new Date(m.createdAt).toISOString(),
+        isRead: m.isRead ?? 0,
+        readAt: m.readAt ? (typeof m.readAt === "string" ? m.readAt : new Date(m.readAt).toISOString()) : null,
+      })));
+    }
+  }, [serverMessages, bookingId]);
+
+  // WebSocket: receive real-time messages
+  const handleWsNewMessage = useCallback((msg: ChatMessage) => {
+    setLocalMessages((prev) => {
+      // 避免重複（用 id 或 createdAt+senderId 去重）
+      const exists = prev.some(
+        (m) => m.id === msg.id || (m.senderId === msg.senderId && m.createdAt === msg.createdAt && m.content === msg.content)
+      );
+      if (exists) return prev;
+      return [...prev, msg];
+    });
+  }, []);
+
+  const handleWsReadNotify = useCallback((payload: { bookingId: number; readerId: number }) => {
+    if (payload.bookingId === bookingId) {
+      // 標記所有自己發送的訊息為已讀
+      setLocalMessages((prev) =>
+        prev.map((m) =>
+          m.senderId === user?.id && !m.isRead
+            ? { ...m, isRead: 1, readAt: new Date().toISOString() }
+            : m
+        )
+      );
+    }
+  }, [bookingId, user?.id]);
+
+  const { status: wsStatus } = useChatWebSocket({
+    userId: user?.id ?? null,
+    userName: user?.name,
+    bookingId,
+    enabled: !!bookingId && !!user,
+    onNewMessage: handleWsNewMessage,
+    onReadNotify: handleWsReadNotify,
+  });
 
   // Fetch booking info (from myBookings)
   const { data: allBookings = [] } = trpc.expert.myBookings.useQuery(
@@ -55,19 +110,52 @@ export default function Messages() {
   const activeBooking = booking ?? expertBooking;
 
   const sendMutation = trpc.expert.sendMessage.useMutation({
-    onSuccess: () => {
+    onMutate: (variables) => {
+      // 樂觀更新：立即顯示自己的訊息
+      const optimisticMsg: ChatMessage = {
+        id: Date.now(),
+        bookingId: variables.bookingId,
+        senderId: user!.id,
+        senderName: user!.name ?? "我",
+        content: variables.content,
+        imageUrl: null,
+        createdAt: new Date().toISOString(),
+        isRead: 0,
+      };
+      setLocalMessages((prev) => [...prev, optimisticMsg]);
       setText("");
+    },
+    onError: (e) => {
+      toast.error("發送失敗: " + e.message);
+      // 移除樂觀更新的訊息
       refetch();
     },
-    onError: (e) => toast.error("發送失敗: " + e.message),
   });
 
   const uploadImageMutation = trpc.expert.uploadChatImage.useMutation({
-    onSuccess: () => {
-      refetch();
-      toast.success("圖片已發送");
+    onMutate: () => {
+      // 樂觀更新：顯示上傳中的圖片佔位
+      const optimisticMsg: ChatMessage = {
+        id: Date.now(),
+        bookingId: bookingId!,
+        senderId: user!.id,
+        senderName: user!.name ?? "我",
+        content: "🖼️ 圖片上傳中...",
+        imageUrl: null,
+        createdAt: new Date().toISOString(),
+        isRead: 0,
+      };
+      setLocalMessages((prev) => [...prev, optimisticMsg]);
     },
-    onError: (e) => toast.error("圖片發送失敗: " + e.message),
+    onSuccess: () => {
+      toast.success("圖片已發送");
+      // 重新載入以取得正確的圖片 URL
+      refetch();
+    },
+    onError: (e) => {
+      toast.error("圖片發送失敗: " + e.message);
+      refetch();
+    },
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -89,14 +177,21 @@ export default function Messages() {
       });
     };
     reader.readAsDataURL(file);
-    // Reset input so same file can be selected again
     e.target.value = "";
   }, [bookingId, uploadImageMutation]);
 
   // Auto scroll to bottom
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [localMessages]);
+
+  // Fallback polling: if WebSocket disconnected, poll every 10s
+  useEffect(() => {
+    if (wsStatus !== "connected" && bookingId && user) {
+      const interval = setInterval(() => refetch(), 10000);
+      return () => clearInterval(interval);
+    }
+  }, [wsStatus, bookingId, user, refetch]);
 
   const handleSend = () => {
     if (!text.trim() || !bookingId) return;
@@ -132,6 +227,7 @@ export default function Messages() {
   }
 
   const isCancelled = activeBooking?.status === "cancelled";
+  const displayMessages = localMessages;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -178,6 +274,16 @@ export default function Messages() {
                 </p>
               )}
             </div>
+            {/* WebSocket 連線狀態指示 */}
+            <div className="flex-shrink-0" title={wsStatus === "connected" ? "即時連線中" : "連線中斷，使用備援輪詢"}>
+              {wsStatus === "connected" ? (
+                <Wifi className="w-4 h-4 text-emerald-400" />
+              ) : wsStatus === "connecting" ? (
+                <Wifi className="w-4 h-4 text-amber-400 animate-pulse" />
+              ) : (
+                <WifiOff className="w-4 h-4 text-muted-foreground/50" />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -213,7 +319,7 @@ export default function Messages() {
               </div>
             ))}
           </div>
-        ) : messages.length === 0 ? (
+        ) : displayMessages.length === 0 ? (
           <div className="text-center py-12 space-y-2">
             <MessageCircle className="w-12 h-12 mx-auto text-muted-foreground/20" />
             <p className="text-muted-foreground text-sm">尚無訊息</p>
@@ -222,7 +328,7 @@ export default function Messages() {
             </p>
           </div>
         ) : (
-          messages.map((msg) => {
+          displayMessages.map((msg) => {
             const isMe = msg.senderId === user.id;
             const timeStr = new Date(msg.createdAt).toLocaleTimeString("zh-TW", {
               hour: "2-digit", minute: "2-digit",
@@ -234,7 +340,6 @@ export default function Messages() {
               <div key={msg.id} className={`flex items-end gap-2 ${
                 isMe ? "justify-end" : "justify-start"
               }`}>
-                {/* 對方頭像（非自己訊息才顯示） */}
                 {!isMe && (
                   <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-xs font-bold shrink-0 mb-0.5 text-foreground">
                     {(msg.senderName ?? "專")?.[0]}
@@ -246,7 +351,6 @@ export default function Messages() {
                   {!isMe && (
                     <p className="text-xs text-muted-foreground px-1">{msg.senderName ?? "對方"}</p>
                   )}
-                  {/* 圖片訊息 */}
                   {msg.imageUrl && (
                     <div className={`rounded-2xl overflow-hidden max-w-[240px] ${
                       isMe ? "rounded-br-sm" : "rounded-bl-sm"
@@ -260,7 +364,6 @@ export default function Messages() {
                       />
                     </div>
                   )}
-                  {/* 文字訊息（如果是純圖片訊息且 content 是預設值則不顯示） */}
                   {(!msg.imageUrl || (msg.content && msg.content !== "🖼️ 圖片訊息")) && (
                     <div
                       className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
@@ -278,12 +381,11 @@ export default function Messages() {
                     <p className="text-[11px] text-muted-foreground/50">
                       {dateStr} {timeStr}
                     </p>
-                    {/* 已讀狀態（只顯示在自己發送的訊息下） */}
                     {isMe && (
                       <span className={`text-[11px] font-medium ${
-                        (msg as any).isRead ? "text-amber-400" : "text-muted-foreground/40"
+                        msg.isRead ? "text-amber-400" : "text-muted-foreground/40"
                       }`}>
-                        {(msg as any).isRead ? "已讀" : "✓"}
+                        {msg.isRead ? "已讀" : "✓"}
                       </span>
                     )}
                   </div>
