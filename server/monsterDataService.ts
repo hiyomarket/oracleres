@@ -275,6 +275,7 @@ async function loadMonstersFromDb(): Promise<CombatMonster[]> {
           water: Math.floor(m.resistWater * multipliers.resist * rm),
         },
         magicAttack: scaled.magicAttack,
+        imageUrl: m.imageUrl ?? null,
       });
     }
 

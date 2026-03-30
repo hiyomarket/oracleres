@@ -104,6 +104,10 @@ export interface BattleParticipant {
   destinySkillUsage?: Record<string, number>;
   /** 每回合動作次數（Boss 多次行動） */
   actionsPerTurn?: number;
+  /** 頭像/圖片 URL */
+  avatarUrl?: string | null;
+  /** 前後排位置 */
+  rowPosition?: "front" | "back" | null;
 }
 
 export interface BattleCommand {

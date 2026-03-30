@@ -78,6 +78,8 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
 
   const allies = participants.filter(p => p.side === "ally");
   const enemies = participants.filter(p => p.side === "enemy");
+  const character = allies.find(p => p.type === "character");
+  const pet = allies.find(p => p.type === "pet");
 
   // 判斷當前選擇的技能是否需要選擇己方目標
   const currentSelectedSkill = selectedCommand === "skill" && selectedSkillId
@@ -87,8 +89,6 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
     currentSelectedSkill.skillType === "heal" || currentSelectedSkill.skillType === "buff" ||
     currentSelectedSkill.targetType === "ally" || currentSelectedSkill.targetType === "self"
   );
-  const character = allies.find(p => p.type === "character");
-  const pet = allies.find(p => p.type === "pet");
 
   // ─── 動畫工具 ───
   const addFloatingText = useCallback((opts: {
@@ -247,13 +247,8 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
     }, 100);
   }, [battleQuery.data]);
 
-  // ─── 戰鬥結束處理 ───
-  useEffect(() => {
-    if (battleState === "ended" && battleResult) {
-      const result = battleResult === "win" ? "win" : battleResult === "flee" ? "flee" : "lose";
-      onBattleEnd?.(result);
-    }
-  }, [battleState, battleResult]);
+  // ─── 戰鬥結束處理（不再自動觸發 onBattleEnd，讓玩家先看結算畫面） ───
+  // onBattleEnd is now called when the player clicks the close button in VictoryPanel
 
   // 初始化
   useEffect(() => {
@@ -462,8 +457,17 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
               <div className="flex items-center justify-between mb-1.5">
                 <p className="text-[9px] font-bold text-cyan-400/50 tracking-widest">▲ ALLY</p>
                 {isAllyTargeting && battleState === "active" && (
-                  <p className="text-[8px] text-emerald-400/80 animate-pulse">
-                    💚 點擊己方選擇治療/增益目標
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full animate-pulse"
+                    style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)" }}>
+                    <span className="text-[8px] text-emerald-300 font-bold">
+                      💚 選擇目標：{currentSelectedSkill?.name ?? "治療"}
+                    </span>
+                    <span className="text-[7px] text-emerald-400/60">點擊己方角色</span>
+                  </div>
+                )}
+                {selectedCommand === "skill" && selectedSkillId && !isAllyTargeting && battleState === "active" && (
+                  <p className="text-[8px] text-purple-400/60">
+                    ✨ {currentSelectedSkill?.name} → 點擊敵方目標
                   </p>
                 )}
               </div>
@@ -479,7 +483,11 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
           {/* 指令面板 / 結算面板（固定底部） */}
           <div className="shrink-0" style={{ borderTop: "1px solid rgba(99,102,241,0.2)" }}>
             {battleState === "ended" ? (
-              <VictoryPanel result={battleResult} round={round} onClose={onClose} rewards={rewards} />
+              <VictoryPanel result={battleResult} round={round} onClose={() => {
+                const r = battleResult === "win" ? "win" : battleResult === "flee" ? "flee" : "lose";
+                onBattleEnd?.(r as any);
+                onClose();
+              }} rewards={rewards} />
             ) : (
               <>
                 <CommandPanel
@@ -506,7 +514,19 @@ export function BattleWindow({ battleId, onClose, onBattleEnd }: BattleWindowPro
                        setSelectedSkillId(null); setSelectedItemId(null);
                      }
                    }}
-                  onSelectSkill={(id) => { setSelectedSkillId(id); setSelectedCommand("skill"); }}
+                  onSelectSkill={(id) => {
+                    setSelectedSkillId(id); setSelectedCommand("skill");
+                    // 選擇技能後自動關閉面板，讓玩家可以選擇目標
+                    const sk = character?.skills.find(s => s.id === id);
+                    const isAllySkill = sk && (sk.skillType === "heal" || sk.skillType === "buff" || sk.targetType === "ally" || sk.targetType === "self");
+                    if (isAllySkill) {
+                      // 治療/增益技能：關閉面板讓玩家點擊己方目標
+                      setShowSkillPanel(false);
+                    } else {
+                      // 攻擊技能：也關閉面板讓玩家點擊敵方目標
+                      setShowSkillPanel(false);
+                    }
+                  }}
                   onSelectItem={(id) => { setSelectedItemId(id); if (selectedCommand !== "capture") setSelectedCommand("item"); }}
                   onCancelPanel={() => { setShowSkillPanel(false); setShowItemPanel(false); setSelectedCommand(null); }}
                   onSubmit={handleSubmitTurn}

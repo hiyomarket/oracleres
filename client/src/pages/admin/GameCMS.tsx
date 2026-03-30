@@ -4648,15 +4648,25 @@ function BossStatsPanel() {
 
 /* Boss 編輯對話框 */
 // 技能編輯器用的型別
+interface BossSkillEffect {
+  type: "poison" | "burn" | "freeze" | "stun" | "bleed" | "weaken" | "slow" | "silence" | "heal" | "buff_atk" | "buff_def" | "debuff_atk" | "debuff_def" | "drain_hp" | "drain_mp" | "none";
+  chance: number;
+  duration: number;
+  value: number;
+}
 interface BossSkill {
   id: string;
   name: string;
-  skillType: "physical" | "magical" | "support";
+  skillType: "physical" | "magical" | "heal" | "buff" | "debuff" | "support";
+  targetType: "single_enemy" | "all_enemy" | "single_ally" | "all_ally" | "self" | "random_enemy";
   wuxing: string;
   damageMultiplier: number;
   mpCost: number;
   cooldown: number;
+  hitCount: number;
+  accuracy: number;
   description: string;
+  additionalEffect: BossSkillEffect;
 }
 
 const BOSS_WUXING_OPTIONS = [
@@ -4668,14 +4678,42 @@ const BOSS_WUXING_OPTIONS = [
 ];
 
 function BossSkillEditor({ skills, onChange }: { skills: BossSkill[]; onChange: (s: BossSkill[]) => void }) {
+  const EFFECT_TYPES: { value: BossSkillEffect["type"]; label: string }[] = [
+    { value: "none", label: "-- 無" },
+    { value: "poison", label: "☠ 中毒" }, { value: "burn", label: "火 燃燒" },
+    { value: "freeze", label: "❄ 冰凍" }, { value: "stun", label: "★ 眩暈" },
+    { value: "bleed", label: "※ 流血" }, { value: "weaken", label: "↓ 虛弱" },
+    { value: "slow", label: "▽ 減速" }, { value: "silence", label: "✕ 沉默" },
+    { value: "heal", label: "♥ 恢復" }, { value: "buff_atk", label: "↑ 攻擊提升" },
+    { value: "buff_def", label: "◆ 防禦提升" }, { value: "debuff_atk", label: "↓ 攻擊降低" },
+    { value: "debuff_def", label: "◇ 防禦降低" }, { value: "drain_hp", label: "◎ 吸血" },
+    { value: "drain_mp", label: "✦ 吸魔" },
+  ];
+  const TARGET_TYPES: { value: BossSkill["targetType"]; label: string }[] = [
+    { value: "single_enemy", label: "◎ 單體敵人" }, { value: "all_enemy", label: "◈ 全體敵人" },
+    { value: "random_enemy", label: "◇ 隨機敵人" }, { value: "single_ally", label: "♥ 單體己方" },
+    { value: "all_ally", label: "♡ 全體己方" }, { value: "self", label: "● 自身" },
+  ];
+  const SKILL_TYPES: { value: BossSkill["skillType"]; label: string }[] = [
+    { value: "physical", label: "⚔ 物理攻擊" }, { value: "magical", label: "✦ 法術攻擊" },
+    { value: "heal", label: "♥ 治療" }, { value: "buff", label: "↑ 增益" },
+    { value: "debuff", label: "↓ 減益" }, { value: "support", label: "◆ 輔助" },
+  ];
+  const defaultEffect: BossSkillEffect = { type: "none", chance: 0, duration: 0, value: 0 };
   const addSkill = () => onChange([...skills, {
-    id: `skill_${Date.now()}`, name: "", skillType: "physical", wuxing: "水",
-    damageMultiplier: 1.5, mpCost: 10, cooldown: 2, description: "",
+    id: `skill_${Date.now()}`, name: "", skillType: "physical", targetType: "single_enemy",
+    wuxing: "水", damageMultiplier: 1.5, mpCost: 10, cooldown: 2,
+    hitCount: 1, accuracy: 95, description: "", additionalEffect: { ...defaultEffect },
   }]);
   const removeSkill = (i: number) => onChange(skills.filter((_, idx) => idx !== i));
-  const updateSkill = (i: number, field: keyof BossSkill, val: any) => {
+  const updateSkill = (i: number, field: string, val: any) => {
     const updated = [...skills];
     updated[i] = { ...updated[i], [field]: val };
+    onChange(updated);
+  };
+  const updateEffect = (i: number, field: keyof BossSkillEffect, val: any) => {
+    const updated = [...skills];
+    updated[i] = { ...updated[i], additionalEffect: { ...(updated[i].additionalEffect || defaultEffect), [field]: val } };
     onChange(updated);
   };
   return (
@@ -4690,34 +4728,54 @@ function BossSkillEditor({ skills, onChange }: { skills: BossSkill[]; onChange: 
       {skills.map((sk, i) => (
         <div key={i} className="border border-border/50 rounded p-2 space-y-2 bg-background/30">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-amber-400">技能 {i + 1}</span>
+            <span className="text-xs font-medium text-amber-400">技能 {i + 1}{sk.name ? ` -- ${sk.name}` : ""}</span>
             <Button size="sm" variant="ghost" onClick={() => removeSkill(i)} className="h-5 w-5 p-0 text-red-400 hover:text-red-300">×</Button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <div><label className="text-xs text-muted-foreground">技能名稱</label>
               <Input value={sk.name} onChange={e => updateSkill(i, "name", e.target.value)} className="h-7 text-xs" placeholder="如：暗影突襲" /></div>
-            <div><label className="text-xs text-muted-foreground">類型</label>
+            <div><label className="text-xs text-muted-foreground">技能類型</label>
               <Select value={sk.skillType} onValueChange={v => updateSkill(i, "skillType", v)}>
                 <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="physical">⚔️ 物理</SelectItem>
-                  <SelectItem value="magical">✨ 法術</SelectItem>
-                  <SelectItem value="support">🛡️ 輔助</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <SelectContent>{SKILL_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+              </Select></div>
+            <div><label className="text-xs text-muted-foreground">目標類型</label>
+              <Select value={sk.targetType || "single_enemy"} onValueChange={v => updateSkill(i, "targetType", v)}>
+                <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>{TARGET_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+              </Select></div>
             <div><label className="text-xs text-muted-foreground">五行屬性</label>
               <Select value={sk.wuxing} onValueChange={v => updateSkill(i, "wuxing", v)}>
                 <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>{BOSS_WUXING_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
+              </Select></div>
             <div><label className="text-xs text-muted-foreground">傷害倍率</label>
-              <Input type="number" step="0.1" value={sk.damageMultiplier} onChange={e => updateSkill(i, "damageMultiplier", Number(e.target.value))} className="h-7 text-xs" /></div>
+              <Input type="number" step="0.1" min="0" value={sk.damageMultiplier} onChange={e => updateSkill(i, "damageMultiplier", Number(e.target.value))} className="h-7 text-xs" /></div>
             <div><label className="text-xs text-muted-foreground">MP 消耗</label>
-              <Input type="number" value={sk.mpCost} onChange={e => updateSkill(i, "mpCost", Number(e.target.value))} className="h-7 text-xs" /></div>
-            <div><label className="text-xs text-muted-foreground">冷卻回合</label>
-              <Input type="number" value={sk.cooldown} onChange={e => updateSkill(i, "cooldown", Number(e.target.value))} className="h-7 text-xs" /></div>
+              <Input type="number" min="0" value={sk.mpCost} onChange={e => updateSkill(i, "mpCost", Number(e.target.value))} className="h-7 text-xs" /></div>
+            <div><label className="text-xs text-muted-foreground">冷却回合</label>
+              <Input type="number" min="0" value={sk.cooldown} onChange={e => updateSkill(i, "cooldown", Number(e.target.value))} className="h-7 text-xs" /></div>
+            <div><label className="text-xs text-muted-foreground">連擊次數</label>
+              <Input type="number" min="1" max="10" value={sk.hitCount ?? 1} onChange={e => updateSkill(i, "hitCount", Number(e.target.value))} className="h-7 text-xs" /></div>
+            <div><label className="text-xs text-muted-foreground">命中率%</label>
+              <Input type="number" min="0" max="100" value={sk.accuracy ?? 95} onChange={e => updateSkill(i, "accuracy", Number(e.target.value))} className="h-7 text-xs" /></div>
+          </div>
+          {/* 附加效果 */}
+          <div className="border-t border-border/30 pt-2 mt-1">
+            <label className="text-[10px] text-muted-foreground font-medium">附加效果</label>
+            <div className="grid grid-cols-4 gap-2 mt-1">
+              <div><label className="text-[10px] text-muted-foreground">效果類型</label>
+                <Select value={sk.additionalEffect?.type || "none"} onValueChange={v => updateEffect(i, "type", v)}>
+                  <SelectTrigger className="h-6 text-[10px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>{EFFECT_TYPES.map(e => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}</SelectContent>
+                </Select></div>
+              <div><label className="text-[10px] text-muted-foreground">觸發率%</label>
+                <Input type="number" min="0" max="100" value={sk.additionalEffect?.chance ?? 0} onChange={e => updateEffect(i, "chance", Number(e.target.value))} className="h-6 text-[10px]" /></div>
+              <div><label className="text-[10px] text-muted-foreground">持續回合</label>
+                <Input type="number" min="0" value={sk.additionalEffect?.duration ?? 0} onChange={e => updateEffect(i, "duration", Number(e.target.value))} className="h-6 text-[10px]" /></div>
+              <div><label className="text-[10px] text-muted-foreground">效果數值</label>
+                <Input type="number" step="0.1" value={sk.additionalEffect?.value ?? 0} onChange={e => updateEffect(i, "value", Number(e.target.value))} className="h-6 text-[10px]" /></div>
+            </div>
           </div>
           <div><label className="text-xs text-muted-foreground">技能說明</label>
             <Input value={sk.description} onChange={e => updateSkill(i, "description", e.target.value)} className="h-7 text-xs" placeholder="技能效果說明" /></div>

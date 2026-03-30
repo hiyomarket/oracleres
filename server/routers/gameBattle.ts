@@ -83,6 +83,8 @@ function buildCharacterParticipant(
     speedScore: 0,
     statusEffects: [],
     agentId: agent.id,
+    avatarUrl: agent.avatarUrl ?? null,
+    rowPosition: "back",
     // 五行抗性（注靈自動計算 + 裝備加成，上限 100）
     resistWood:  Math.min((agent.resistWood  ?? 0) + (equipBonus.resistWood  ?? 0), 100),
     resistFire:  Math.min((agent.resistFire  ?? 0) + (equipBonus.resistFire  ?? 0), 100),
@@ -144,6 +146,8 @@ function buildPetParticipant(
     speedScore: 0,
     statusEffects: [],
     petId: pet.id,
+    avatarUrl: catalog?.imageUrl ?? null,
+    rowPosition: "front",
     destinySkillUsage: {},
   };
 }
@@ -197,6 +201,8 @@ function buildMonsterParticipant(
     dominantElement: monster.element as any,
     race: (monster as any).race,
     monsterId: monster.id,
+    avatarUrl: (monster as any).imageUrl ?? null,
+    rowPosition: "front",
     skills,
     isDefending: false,
     isDefeated: false,

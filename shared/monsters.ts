@@ -29,6 +29,7 @@ export type Monster = {
   description: string;
   isBoss: boolean;
   race?: MonsterRace; // GD-020 補充四：種族欄位（optional，向後相容）
+  imageUrl?: string | null;
 };
 
 export const MONSTERS: Monster[] = [
