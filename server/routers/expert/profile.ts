@@ -2,10 +2,10 @@
  * Expert Router - 個人資料管理
  */
 import { z } from "zod";
-import { router, protectedProcedure } from "../../_core/trpc";
+import { router, protectedProcedure, publicProcedure } from "../../_core/trpc";
 import { getDb } from "../../db";
 import { experts } from "../../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { storagePut } from "../../storage";
 import { requireExpert, requireExpertOrAdmin } from "./_helpers";
@@ -112,4 +112,55 @@ export const expertProfileRouter = router({
       await db.update(experts).set(updateField).where(eq(experts.userId, ctx.user.id));
       return { url, success: true };
     }),
+
+  // ── 專家收藏 ──
+  checkFavorite: publicProcedure
+    .input(z.object({ expertId: z.number().int() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.user) return { isFavorite: false };
+      const db = (await getDb())!;
+      const { expertFavorites } = await import("../../../drizzle/schema");
+      const rows = await db.select().from(expertFavorites)
+        .where(and(eq(expertFavorites.userId, ctx.user.id), eq(expertFavorites.expertId, input.expertId)))
+        .limit(1);
+      return { isFavorite: rows.length > 0 };
+    }),
+
+  toggleFavorite: protectedProcedure
+    .input(z.object({ expertId: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      const { expertFavorites } = await import("../../../drizzle/schema");
+      const existing = await db.select().from(expertFavorites)
+        .where(and(eq(expertFavorites.userId, ctx.user.id), eq(expertFavorites.expertId, input.expertId)))
+        .limit(1);
+      if (existing.length > 0) {
+        await db.delete(expertFavorites).where(eq(expertFavorites.id, existing[0].id));
+        return { isFavorite: false };
+      } else {
+        await db.insert(expertFavorites).values({ userId: ctx.user.id, expertId: input.expertId, createdAt: Date.now() });
+        return { isFavorite: true };
+      }
+    }),
+
+  getMyFavorites: protectedProcedure.query(async ({ ctx }) => {
+    const db = (await getDb())!;
+    const { expertFavorites, experts } = await import("../../../drizzle/schema");
+    const rows = await db.select({
+      id: expertFavorites.id,
+      expertId: expertFavorites.expertId,
+      createdAt: expertFavorites.createdAt,
+      publicName: experts.publicName,
+      title: experts.title,
+      profileImage: experts.profileImage,
+      ratingAvg: experts.ratingAvg,
+      ratingCount: experts.ratingCount,
+    })
+    .from(expertFavorites)
+    .leftJoin(experts, eq(expertFavorites.expertId, experts.id))
+    .where(eq(expertFavorites.userId, ctx.user.id))
+    .orderBy(desc(expertFavorites.createdAt));
+    return rows;
+  }),
+
 });

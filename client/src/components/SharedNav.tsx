@@ -4,7 +4,7 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useState, useRef, useEffect } from "react";
-import { User, LogOut, ChevronDown, Smartphone, LayoutDashboard, Star, Coins, Gift, ShoppingBag, Calendar, MessageSquare, Send, X } from "lucide-react";
+import { User, LogOut, ChevronDown, Smartphone, LayoutDashboard, Star, Coins, Gift, ShoppingBag, Calendar, MessageSquare, Send, X, Heart } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
 import GameTransition from "@/components/GameTransition";
 
@@ -467,6 +467,17 @@ function UserMenu({ user }: { user: { name?: string | null; openId?: string; pla
                 <span className="text-sm">🔮</span>
               </div>
               <span>天命聯盟</span>
+            </Link>
+            {/* 我的收藏 */}
+            <Link
+              href="/my-favorites"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:bg-red-500/10 hover:text-red-300 transition-colors group/item"
+            >
+              <div className="w-7 h-7 rounded-lg bg-red-500/15 flex items-center justify-center shrink-0 group-hover/item:bg-red-500/25 transition-colors">
+                <Heart className="w-3.5 h-3.5 text-red-400" />
+              </div>
+              <span>我的收藏</span>
             </Link>
             {/* 我的預約 - 所有已登入用戶 */}
             <Link

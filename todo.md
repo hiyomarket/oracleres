@@ -5910,3 +5910,15 @@
 - [x] 前端：CoinsGrantModal 增強（贈送/扣除切換、餘額預覽、原因備注）
 - [x] 贈送記錄追蹤（透過 adminAdjustCoins 已記錄於 DB）
 - [x] BUG: ExpertDashboard toLocaleString crash（Cannot read properties of undefined）— 欄位名稱不匹配已修正
+
+## v5.26 - 天命聯盟四波擴充 Batch 1
+
+- [x] FIX: useFormValidation.ts -> .tsx
+- [x] W1-1: ExpertDetail 評價 Tab 串接真實 API
+- [x] W1-2: 專家收藏系統 (DB + API + MyFavorites 頁面)
+- [x] W1-3: ExpertMarket 智慧排序
+- [x] W1-5: 專家通知鈴鐺 (DB + API + ExpertNotificationBell)
+- [x] W3-1: SEO Meta Tags (useSEO hook)
+- [x] SharedNav 加入「我的收藏」入口
+- [x] ExpertLayout 加入通知鈴鐺
+- [x] App.tsx 加入 MyFavorites 路由

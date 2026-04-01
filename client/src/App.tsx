@@ -73,6 +73,7 @@ const ExpertCalendar = lazy(() => import("./pages/expert/ExpertCalendar"));
 const ExpertBookings = lazy(() => import("./pages/expert/ExpertOrders"));
 const ExpertRevenue = lazy(() => import("./pages/expert/ExpertRevenue"));
 const ExpertReviews = lazy(() => import("./pages/expert/ExpertReviews"));
+const MyFavorites = lazy(() => import("./pages/MyFavorites"));
 const MyBookings = lazy(() => import("./pages/MyBookings"));
 const Messages = lazy(() => import("./pages/Messages"));
 const OutfitPage = lazy(() => import("@/pages/OutfitPage"));
@@ -148,6 +149,7 @@ function Router() {
                 <Route path={"/expert/bookings"} component={ExpertBookings} />
                 <Route path={"/expert/revenue"} component={ExpertRevenue} />
                 <Route path={"/expert/reviews"} component={ExpertReviews} />
+                <Route path={"/my-favorites"} component={MyFavorites} />
                 <Route path={"/my-bookings"} component={MyBookings} />
                 <Route path={"/admin/experts"} component={AdminExperts} />
                 <Route path={"/admin/theme"} component={AdminTheme} />

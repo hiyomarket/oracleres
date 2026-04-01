@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useParams, useLocation } from "wouter";
+import { useSEO } from "@/hooks/useSEO";
 import DOMPurify from "dompurify";
 import { SharedNav } from "@/components/SharedNav";
 import { trpc } from "@/lib/trpc";
@@ -13,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
   Star, ArrowLeft, Calendar, Clock, MessageSquare, Video, Handshake,
-  MapPin, Megaphone, ChevronLeft, ChevronRight, Info, CheckCircle2,
+  MapPin, Megaphone, ChevronLeft, ChevronRight, Info, CheckCircle2, Heart, Share2,
 } from "lucide-react";
 
 const EVENT_TYPE_CONFIG = {
@@ -22,11 +23,91 @@ const EVENT_TYPE_CONFIG = {
   announcement: { label: "公告", icon: Megaphone, color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
 };
 
+function ReviewsSection({ expertId }: { expertId: number }) {
+  const [page, setPage] = useState(0);
+  const LIMIT = 10;
+  const { data: reviewsList, isLoading } = trpc.expert.getExpertReviews.useQuery(
+    { expertId, limit: LIMIT, offset: page * LIMIT },
+    { enabled: expertId > 0 }
+  );
+  if (isLoading) return <div className="text-center py-8 text-muted-foreground">載入評價中...</div>;
+  if (!reviewsList || reviewsList.length === 0) {
+    return (
+      <Card><CardContent className="py-8">
+        <p className="text-sm text-muted-foreground text-center">目前尚無評價，成為第一個留下評價的人吧！</p>
+      </CardContent></Card>
+    );
+  }
+  const starCounts = [0,0,0,0,0];
+  reviewsList.forEach(r => { if (r.rating >= 1 && r.rating <= 5) starCounts[r.rating - 1]++; });
+  const total = reviewsList.length;
+  return (
+    <div className="space-y-4">
+      <Card><CardContent className="pt-4">
+        <div className="space-y-1">
+          {[5,4,3,2,1].map(star => (
+            <div key={star} className="flex items-center gap-2 text-sm">
+              <span className="w-8 text-right">{star}星</span>
+              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-amber-400 rounded-full" style={{ width: total ? ((starCounts[star-1]/total)*100).toString() + "%" : "0%" }} />
+              </div>
+              <span className="w-8 text-muted-foreground">{starCounts[star-1]}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent></Card>
+      {reviewsList.map(review => (
+        <Card key={review.id}><CardContent className="pt-4">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <span className="font-medium text-sm">{review.userName ?? "匿名用戶"}</span>
+              <div className="flex items-center gap-1 mt-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className={"w-3 h-3 " + (i < review.rating ? "fill-amber-400 text-amber-400" : "text-muted")} />
+                ))}
+              </div>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {review.createdAt ? new Date(review.createdAt).toLocaleDateString("zh-TW") : ""}
+            </span>
+          </div>
+          {review.comment && <p className="text-sm mt-2">{review.comment}</p>}
+          {review.expertReply && (
+            <div className="mt-3 pl-3 border-l-2 border-primary/30 bg-primary/5 rounded-r p-2">
+              <p className="text-xs font-medium text-primary mb-1">專家回覆</p>
+              <p className="text-sm">{review.expertReply}</p>
+              {review.expertReplyAt && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {new Date(review.expertReplyAt).toLocaleDateString("zh-TW")}
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent></Card>
+      ))}
+      <div className="flex justify-center gap-2">
+        <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+          <ChevronLeft className="w-4 h-4" /> 上一頁
+        </Button>
+        <Button variant="outline" size="sm" disabled={reviewsList.length < LIMIT} onClick={() => setPage(p => p + 1)}>
+          下一頁 <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function ExpertDetail() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const utils = trpc.useUtils();
+
+  useSEO({
+    title: expert?.publicName ? `${expert.publicName} - 天命聯盟` : "天命聯盟",
+    description: expert?.bio ? expert.bio.slice(0, 160) : "天命共振線上命理諮詢平台",
+    ogImage: expert?.profileImage ?? undefined,
+  });
 
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
@@ -636,16 +717,7 @@ export default function ExpertDetail() {
 
           {/* 評價 Tab */}
           <TabsContent value="reviews" className="mt-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" /> 用戶評價
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground text-center py-4">目前尚無評價</p>
-              </CardContent>
-            </Card>
+            <ReviewsSection expertId={expert?.id ?? 0} />
           </TabsContent>
         </Tabs>
       </div>

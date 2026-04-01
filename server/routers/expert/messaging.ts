@@ -7,7 +7,7 @@ import { getDb } from "../../db";
 import {
   experts, bookings, users, privateMessages, teamMessages,
 } from "../../../drizzle/schema";
-import { eq, and, asc, lte, ne, gte, sql, not } from "drizzle-orm";
+import { eq, and, asc, lte, ne, gte, sql, not, desc } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { storagePut } from "../../storage";
 import { broadcastToChatRoom, sendToUser } from "../../wsServer";
@@ -296,4 +296,40 @@ export const expertMessagingRouter = router({
       );
     return { count: result?.count ?? 0 };
   }),
+
+  // ── 專家通知 ──
+  getNotifications: protectedProcedure
+    .input(z.object({ limit: z.number().int().default(20), offset: z.number().int().default(0) }))
+    .query(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      const { expertNotifications, experts } = await import("../../../drizzle/schema");
+      const [expert] = await db.select().from(experts).where(eq(experts.userId, ctx.user.id)).limit(1);
+      if (!expert) return { items: [], unreadCount: 0 };
+      const items = await db.select().from(expertNotifications)
+        .where(eq(expertNotifications.expertId, expert.id))
+        .orderBy(desc(expertNotifications.createdAt))
+        .limit(input.limit).offset(input.offset);
+      const unreadRows = await db.select({ cnt: sql`COUNT(*)` }).from(expertNotifications)
+        .where(and(eq(expertNotifications.expertId, expert.id), eq(expertNotifications.isRead, 0)));
+      return { items, unreadCount: Number(unreadRows[0]?.cnt ?? 0) };
+    }),
+
+  markNotificationRead: protectedProcedure
+    .input(z.object({ notificationId: z.number().int() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = (await getDb())!;
+      const { expertNotifications } = await import("../../../drizzle/schema");
+      await db.update(expertNotifications).set({ isRead: 1 }).where(eq(expertNotifications.id, input.notificationId));
+      return { success: true };
+    }),
+
+  markAllNotificationsRead: protectedProcedure.mutation(async ({ ctx }) => {
+    const db = (await getDb())!;
+    const { expertNotifications, experts } = await import("../../../drizzle/schema");
+    const [expert] = await db.select().from(experts).where(eq(experts.userId, ctx.user.id)).limit(1);
+    if (!expert) return { success: false };
+    await db.update(expertNotifications).set({ isRead: 1 }).where(eq(expertNotifications.expertId, expert.id));
+    return { success: true };
+  }),
+
 });

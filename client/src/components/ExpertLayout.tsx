@@ -5,6 +5,7 @@
  * 只有 role='expert' 或 role='admin' 的用戶才能進入
  */
 import { useEffect } from "react";
+import { ExpertNotificationBell } from "@/components/ExpertNotificationBell";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import {
@@ -164,6 +165,7 @@ export function ExpertLayout({ children, headerAction, pageTitle }: ExpertLayout
           </div>
           {/* 快捷操作按鈕插槽 */}
           <div className="flex items-center gap-2 shrink-0">
+            <ExpertNotificationBell />
             {headerAction}
             <Link href="/">
               <div className="flex items-center gap-1 text-xs text-slate-400 hover:text-amber-400 transition-colors px-2 py-1 rounded-lg hover:bg-amber-500/10">

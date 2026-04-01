@@ -1244,6 +1244,28 @@ export const reviews = mysqlTable("reviews", {
 export type Review = typeof reviews.$inferSelect;
 export type InsertReview = typeof reviews.$inferInsert;
 
+// Expert Favorites
+export const expertFavorites = mysqlTable("expert_favorites", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  expertId: int("expertId").notNull(),
+  createdAt: bigint("createdAt", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type ExpertFavorite = typeof expertFavorites.$inferSelect;
+
+// Expert Notifications
+export const expertNotifications = mysqlTable("expert_notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  expertId: int("expertId").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  content: text("content").notNull(),
+  type: varchar("type", { length: 50 }).notNull().default("info"),
+  isRead: tinyint("isRead").notNull().default(0),
+  relatedId: int("relatedId"),
+  createdAt: bigint("createdAt", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type ExpertNotification = typeof expertNotifications.$inferSelect;
+
 // ─── 命理師申請 ──────────────────────────────────────────────────────────────
 export const expertApplications = mysqlTable("expert_applications", {
   id: int("id").autoincrement().primaryKey(),

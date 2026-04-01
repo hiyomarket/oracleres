@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Star, Users, ChevronRight, MapPin, Video } from "lucide-react";
+import { useSEO } from "@/hooks/useSEO";
 
 // 篩選標籤對應的 specialties 關鍵字
 const FILTER_TAGS = [
@@ -21,8 +22,10 @@ const FILTER_TAGS = [
 ];
 
 export default function ExpertMarket() {
+  useSEO({ title: "天命聯盟 - 命理師市集", description: "探索專業命理師，預約線上諮詢服務" });
   const [search, setSearch] = useState("");
   const [specialty, setSpecialty] = useState("");
+  const [sortBy, setSortBy] = useState<"default"|"rating"|"reviews"|"newest">("default");
   const [offset, setOffset] = useState(0);
   const LIMIT = 12;
 
@@ -43,6 +46,15 @@ export default function ExpertMarket() {
         )
       )
     : allExperts;
+
+  const sortedExperts = [...experts].sort((a, b) => {
+    if (sortBy === "rating") return (Number(b.ratingAvg) || 0) - (Number(a.ratingAvg) || 0);
+    if (sortBy === "reviews") return (b.ratingCount ?? 0) - (a.ratingCount ?? 0);
+    if (sortBy === "newest") return (b.id ?? 0) - (a.id ?? 0);
+    const scoreA = (Number(a.ratingAvg) || 0) * 0.6 + Math.min((a.ratingCount ?? 0) / 10, 1) * 0.4;
+    const scoreB = (Number(b.ratingAvg) || 0) * 0.6 + Math.min((b.ratingCount ?? 0) / 10, 1) * 0.4;
+    return scoreB - scoreA;
+  });
 
   const page = Math.floor(offset / LIMIT) + 1;
   const totalPages = allExperts.length === LIMIT ? page + 1 : page;
@@ -102,7 +114,7 @@ export default function ExpertMarket() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {experts.map((expert) => {
+            {sortedExperts.map((expert) => {
               const href = expert.slug ? `/experts/${expert.slug}` : `/experts/${expert.id}`;
               const specialties = (expert.specialties as string[] | null) ?? [];
               const tags = (expert.tags as string[] | null) ?? [];
