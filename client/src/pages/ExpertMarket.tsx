@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Star, Users, ChevronRight, MapPin, Video } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSEO } from "@/hooks/useSEO";
 
 // 篩選標籤對應的 specialties 關鍵字
@@ -97,6 +98,22 @@ export default function ExpertMarket() {
           ))}
         </div>
 
+
+        {/* Sort Dropdown */}
+        <div className="flex items-center justify-end gap-2 mb-4">
+          <span className="text-sm text-muted-foreground">排序方式：</span>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as "default"|"rating"|"reviews"|"newest")}>
+            <SelectTrigger className="w-36 h-8 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">綜合排序</SelectItem>
+              <SelectItem value="rating">評分最高</SelectItem>
+              <SelectItem value="reviews">評價最多</SelectItem>
+              <SelectItem value="newest">最新上架</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         {/* Expert Grid */}
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

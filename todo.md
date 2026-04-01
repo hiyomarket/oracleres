@@ -5922,3 +5922,8 @@
 - [x] SharedNav 加入「我的收藏」入口
 - [x] ExpertLayout 加入通知鈴鐺
 - [x] App.tsx 加入 MyFavorites 路由
+
+## v5.27 - 三項功能補齊
+- [x] ExpertMarket 排序下拉選單 UI
+- [x] ExpertDetail 收藏按鈕（愛心）
+- [x] 通知觸發機制（新訂單/評價回覆自動寫入通知）

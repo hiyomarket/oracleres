@@ -117,6 +117,22 @@ export default function ExpertDetail() {
   const [requestedStart, setRequestedStart] = useState("");
   const [requestedEnd, setRequestedEnd] = useState("");
 
+  // Favorite
+  const { data: favData } = trpc.expert.checkFavorite.useQuery(
+    { expertId },
+    { enabled: expertId > 0 && !!user }
+  );
+  const isFavorited = favData?.isFavorited ?? false;
+  const toggleFavMutation = trpc.expert.toggleFavorite.useMutation({
+    onSuccess: () => {
+      utils.expert.checkFavorite.invalidate({ expertId });
+      utils.expert.getMyFavorites.invalidate();
+      toast.success(isFavorited ? "已取消收藏" : "已加入收藏 ❤️");
+    },
+    onError: (e) => toast.error("操作失敗: " + e.message),
+  });
+
+
   // Calendar state for public view
   const now = new Date();
   const [calYear, setCalYear] = useState(now.getFullYear());
@@ -325,6 +341,21 @@ export default function ExpertDetail() {
                 </span>
                 <span className="text-muted-foreground text-sm">({expert.ratingCount ?? 0})</span>
               </div>
+              <button
+                onClick={() => {
+                  if (!user) { toast.error("請先登入"); return; }
+                  toggleFavMutation.mutate({ expertId });
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                  isFavorited
+                    ? "bg-red-500/20 text-red-400 border-red-500/30"
+                    : "bg-accent/50 text-muted-foreground hover:text-foreground hover:bg-accent border-border"
+                }`}
+                disabled={toggleFavMutation.isLoading}
+              >
+                <Heart className={`w-4 h-4 ${isFavorited ? "fill-red-400 text-red-400" : ""}`} />
+                {isFavorited ? "已收藏" : "收藏"}
+              </button>
             </div>
 
             {/* Tags & modes */}

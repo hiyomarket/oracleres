@@ -5,7 +5,7 @@ import { z } from "zod";
 import { router, protectedProcedure, publicProcedure } from "../../_core/trpc";
 import { getDb } from "../../db";
 import {
-  experts, expertServices, expertAvailability, bookings, users, reviews, privateMessages, expertCalendarEvents,
+  experts, expertServices, expertAvailability, bookings, users, reviews, privateMessages, expertCalendarEvents, expertNotifications,
 } from "../../../drizzle/schema";
 import { eq, and, desc, asc, gte, lte, sql, ne } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -349,6 +349,17 @@ export const expertBookingsRouter = router({
         .update(expertAvailability)
         .set({ isBooked: 1, bookingId })
         .where(eq(expertAvailability.id, input.availabilityId));
+
+      // Notify expert of new booking
+      try {
+        await db.insert(expertNotifications).values({
+          expertId: input.expertId,
+          type: "new_booking",
+          title: "新預約請求",
+          message: `用戶預約了您的服務，時間：${startStr} ~ ${endStr}${input.notes ? "，備註：" + input.notes.slice(0, 30) : ""}`,
+          relatedId: bookingId,
+        });
+      } catch (_) {}
       return { bookingId, success: true };
     }),
 
@@ -398,6 +409,17 @@ export const expertBookingsRouter = router({
         senderId: ctx.user.id,
         content: `📅 新預約請求！希望預約時間：${startStr} ~ ${endStr}。${input.notes ? `備註：${input.notes}` : ''}請老師確認後回覆。`,
       });
+
+      // Notify expert of new booking
+      try {
+        await db.insert(expertNotifications).values({
+          expertId: input.expertId,
+          type: "new_booking",
+          title: "新預約請求",
+          message: `用戶預約了您的服務，時間：${startStr} ~ ${endStr}${input.notes ? "，備註：" + input.notes.slice(0, 30) : ""}`,
+          relatedId: bookingId,
+        });
+      } catch (_) {}
       return { bookingId, success: true };
     }),
 
