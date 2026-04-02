@@ -56,6 +56,14 @@ const NAV_GROUPS = [
       { href: "/admin/game", icon: "⚔️", label: "靈相世界 CMS", desc: "怪物/技能/任務/商品管理" },
     ],
   },
+  {
+    label: "功能管理",
+    collapsible: true,
+    defaultOpen: false,
+    items: [
+      { href: "/admin/yangzhai", icon: "🏠", label: "陽宅開運管理", desc: "風水參數、化解物品庫、形煞規則" },
+    ],
+  },
 ];
 
 // 扁平化所有項目（用於行動版 Tab）

@@ -44,6 +44,7 @@ import {
   DEFAULT_FORM_SHA_LIBRARY,
   type FormSha,
 } from "../lib/formShaDetector";
+import { storagePut } from "../storage";
 
 // ═══ 工具函數 ═══
 
@@ -172,7 +173,50 @@ export const yangzhaiRouter = router({
       return getConflictReport(favorableElements, unfavorableElements, customRemedies);
     }),
 
+  /** 上傳照片到 S3（base64 轉換） */
+  uploadPhoto: protectedProcedure
+    .input(z.object({
+      imageBase64: z.string(),
+      mimeType: z.string().default('image/jpeg'),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const base64Data = input.imageBase64.replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(base64Data, 'base64');
+      const ext = input.mimeType.split('/')[1] || 'jpg';
+      const fileKey = `yangzhai-photos/${ctx.user.id}-${Date.now()}.${ext}`;
+      const { url } = await storagePut(fileKey, buffer, input.mimeType);
+      return { url };
+    }),
+
   /** 形煞照片分析 */
+  analyzeOfficePhoto: protectedProcedure
+    .input(z.object({
+      photoUrl: z.string().url(),
+      context: z.string().optional(), // 如 "辦公桌" / "租屋房間"
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // 從後台讀取形煞庫設定
+      const shaLibrary = await getYangzhaiConfigValue<FormSha[] | null>(
+        'form_sha_library', null
+      );
+      const report = await detectFormSha(
+        input.photoUrl,
+        shaLibrary || undefined,
+        input.context,
+      );
+      const db = (await getDb())!;
+      await db.insert(yangzhaiAnalyses).values({
+        userId: String(ctx.user.id),
+        analysisType: 'form_sha_photo',
+        result: report,
+        score: report.overallScore ?? null,
+        photoUrl: input.photoUrl,
+        sceneDescription: input.context || '辦公環境',
+      });
+      return report;
+    }),
+
+  /** 形煞照片分析（舊名稱相容） */
   analyzeFormShaPhoto: protectedProcedure
     .input(z.object({
       photoUrl: z.string().url(),
