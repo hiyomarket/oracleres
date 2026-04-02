@@ -43,6 +43,7 @@ import { gameGuideRouter } from './routers/gameGuide';
 import { roamingBossRouter } from './routers/roamingBoss';
 import { gamePartyRouter } from './routers/gameParty';
 import { equipEnhanceRouter } from './routers/equipEnhance';
+import { yangzhaiRouter } from './routers/yangzhai';
 
 import { getDailyTenGodAnalysis, getTenGod, getDailyTenGodAnalysisDynamic, getTenGodDynamic } from "./lib/tenGods";
 import { calculateTarotDailyCard, generateOutfitAdvice, recommendBracelets, generateWealthCompass, getNearestSolarTerm } from "./lib/warRoomEngine";
@@ -3296,6 +3297,7 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
   notifications: notificationsRouter,
   siteBanner: siteBannerRouter,
   expert: expertRouter,
+  yangzhai: yangzhaiRouter,
   braceletWear: router({
     /**
      * 勾選佩戴（新增記錄）

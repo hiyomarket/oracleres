@@ -326,6 +326,12 @@ export default function WarRoom() {
     onError: () => toast.error('發送失敗，請稍後再試'),
   });
 
+  // 陽宅方位速覽
+  const { data: directionData } = trpc.yangzhai.getDailyDirections.useQuery(
+    undefined,
+    { staleTime: 5 * 60 * 1000, refetchOnWindowFocus: false }
+  );
+
   // 手串佩戴記錄
   const utils = trpc.useUtils();
   const { data: wearLogs } = trpc.braceletWear.getByDate.useQuery(
@@ -987,6 +993,56 @@ export default function WarRoom() {
               <p className="text-white text-base md:text-lg leading-relaxed font-medium">{data.heroScript}</p>
             </div>
           </motion.div>
+
+          {/* ═══ 陽宅方位速覽 ═══ */}
+          {directionData && (
+            <SectionCard title="今日辦公方位" icon="🏠">
+              <div className="space-y-3">
+                <div className="grid grid-cols-4 gap-2">
+                  {directionData.directions?.slice(0, 8).map((dir) => {
+                    const isGood = dir.finalScore > 0;
+                    const isBad = dir.finalScore < -30;
+                    return (
+                      <div
+                        key={dir.direction}
+                        className={`p-2 rounded-lg border text-center text-xs ${
+                          isBad
+                            ? 'bg-red-500/10 border-red-500/30'
+                            : isGood
+                            ? 'bg-green-500/10 border-green-500/30'
+                            : 'bg-white/5 border-white/10'
+                        }`}
+                      >
+                        <p className="font-bold text-sm text-white/90">{dir.direction}</p>
+                        <p className={`text-[10px] font-medium ${
+                          isBad ? 'text-red-400' : isGood ? 'text-green-400' : 'text-white/50'
+                        }`}>
+                          {dir.star}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                {directionData.bestDirection && (
+                  <div className="rounded-lg bg-green-500/8 border border-green-500/25 p-2.5">
+                    <p className="text-green-300 text-xs">
+                      ✅ 最佳方位：<span className="font-bold">{directionData.bestDirection.direction}</span>（{directionData.bestDirection.star}）
+                    </p>
+                  </div>
+                )}
+                {directionData.worstDirection && (
+                  <div className="rounded-lg bg-red-500/8 border border-red-500/25 p-2.5">
+                    <p className="text-red-300 text-xs">
+                      ⛔ 避開方位：<span className="font-bold">{directionData.worstDirection.direction}</span>（{directionData.worstDirection.star}）
+                    </p>
+                  </div>
+                )}
+                <a href="/office-fengshui" className="block text-center text-amber-400 text-xs hover:text-amber-300 transition-colors">
+                  查看完整陽宅開運分析 →
+                </a>
+              </div>
+            </SectionCard>
+          )}
 
           {/* ═══ 八：今日能量指引 + 月相能量 ═══ */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

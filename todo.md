@@ -5966,4 +5966,41 @@
 - [x] submitReview 新增評價通知觸發
 - [x] ExpertDetail.tsx TS 錯誤修復（useSEO 位置、屬性名稱、變數順序）
 - [x] MyFavorites.tsx SharedNav currentPage prop 修復
-- [ ] 儲存 V5.29 checkpoint
+- [x] 儲存 V5.29 checkpoint
+
+## v5.30 - 陽宅開運功能（辦公室/租屋族版）
+
+### 後端核心引擎
+- [x] bazhai.ts 八宅命卦引擎（命卦計算、東四/西四命、八方位吉凶星）
+- [x] fengshuiConflictResolver.ts 衝突解決（八宅吉位五行 vs 八字喜忌，通關佈置方案）
+- [x] dailyDirectionEngine.ts 流日方位吉凶（六沖方位、三煢方位、動態加權）
+- [x] 化解方案庫（窮人友善版：高背椅/盆栽/桌燈/顏色物品/水杯擺放）
+
+### 後端 API
+- [x] yangzhai.getDailyDirections（每日八方位吉凶 + 辦公桌佈置建議）
+- [x] yangzhai.diagnoseByDescription（辦公桌照片形煢分析，LLM 視覺識別）
+- [x] yangzhai.diagnoseFormShaQuiz（快速問答式辦公環境診斷）
+- [x] yangzhai.getAnalysisHistory（分析歷史記錄）
+- [x] yangzhai.submitFeedback（用戶反饋）
+- [x] yangzhai.getFullReport（完整報告）
+
+### 前端頁面
+- [x] WarRoom 方位卡片（八方位羅盤 + 今日吉凶 + 座位朝向建議）
+- [x] OfficeFengShui 輕量分析頁（辦公桌/租屋快速診斷 + 問答式分析）
+- [x] formShaDetector.ts（LLM 形煢識別：背後無靠/壓樑/壁刀/路沖/鏡煢）
+- [x] 避小人專區（座位方位 + 擺設建議 + 每日小人方位警告）
+
+### 測試與部署
+- [x] 測試覆蓋
+- [x] 儲存 V5.30 checkpoint
+
+### 後台管理 + API 一次到位（避免重工）
+- [x] Schema: yangzhaiConfig 資料表（八宅權重/流日係數/形煢優先級/全局參數集中管理）
+- [x] Schema: remedyItems 資料表（化解物品庫：品項/五行/價格區間/適用場景/啟停）
+- [x] Schema: yangzhaiAnalyses 資料表（分析記錄）
+- [x] API: admin.yangzhai.getAllConfig / updateConfig / initDefaults（後台讀寫全局參數）
+- [x] API: admin.yangzhai.createRemedyItem / updateRemedyItem / getAllRemedyItems（後台管理化解物品庫）
+- [x] API: admin.yangzhai.getAnalyticsStats（使用統計）
+- [x] Admin 頁面: YangzhaiAdmin.tsx 陽宅風水參數管理面板（參數設定/化解物品庫/使用統計）
+- [x] AdminDashboard 加入陽宅管理快捷連結
+- [x] 所有後台參數變更即時生效，前端 API 讀取最新設定

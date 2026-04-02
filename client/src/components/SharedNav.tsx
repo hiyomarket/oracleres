@@ -23,6 +23,7 @@ const FALLBACK_NAV = [
   { id: "module_warroom",  navPath: "/",         icon: "⚔️", name: "每日運勢", hasAccess: true, isCentral: true },
   { id: "module_outfit",   navPath: "/outfit",   icon: "👗", name: "補運穿搭", hasAccess: true },
   { id: "module_diet",     navPath: "/diet",     icon: "🍽️", name: "飲食羅盤", hasAccess: true },
+  { id: "module_fengshui", navPath: "/office-fengshui", icon: "🏠", name: "陽宅開運", hasAccess: true },
 ];
 
 /** 兌換碼輸入元件（嵌入下拉選單中） */

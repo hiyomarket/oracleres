@@ -4135,3 +4135,91 @@ export const partyBattleInvites = mysqlTable("party_battle_invites", {
 });
 export type PartyBattleInvite = typeof partyBattleInvites.$inferSelect;
 export type InsertPartyBattleInvite = typeof partyBattleInvites.$inferInsert;
+
+
+// ═══════════════════════════════════════════════════════════════
+// 陽宅開運系統資料表
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * 陽宅風水系統設定表
+ * 後台可調控所有風水引擎參數（八宅星分數、流日加權、形煞優先級等）
+ */
+export const yangzhaiConfig = mysqlTable("yangzhai_config", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 設定鍵名 (如 'bazhai_star_scores', 'daily_clash_penalty', 'form_sha_library') */
+  configKey: varchar("config_key", { length: 100 }).notNull().unique(),
+  /** 設定值 (JSON 格式) */
+  configValue: json("config_value").$type<any>().notNull(),
+  /** 設定說明 */
+  description: text("description"),
+  /** 設定分類 */
+  category: varchar("category", { length: 50 }).notNull().default("general"),
+  /** 是否啟用 */
+  isActive: tinyint("is_active").notNull().default(1),
+  /** 最後修改者 */
+  updatedBy: varchar("updated_by", { length: 100 }),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type YangzhaiConfig = typeof yangzhaiConfig.$inferSelect;
+export type InsertYangzhaiConfig = typeof yangzhaiConfig.$inferInsert;
+
+/**
+ * 化解物品庫
+ * 後台可管理所有化解物品（新增/編輯/停用）
+ */
+export const remedyItems = mysqlTable("remedy_items", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 物品名稱 */
+  name: varchar("name", { length: 200 }).notNull(),
+  /** 五行屬性 */
+  element: varchar("element", { length: 10 }).notNull(),
+  /** 分類：植物/燈具/水器/金屬/陶瓷/顏色/其他 */
+  category: varchar("category", { length: 50 }).notNull(),
+  /** 說明 */
+  description: text("description"),
+  /** 價格區間 */
+  priceRange: varchar("price_range", { length: 50 }),
+  /** 是否窮人友善 */
+  isAffordable: tinyint("is_affordable").notNull().default(1),
+  /** 適用場景：office/rental/both */
+  applicableScene: varchar("applicable_scene", { length: 20 }).notNull().default("both"),
+  /** 適用形煞 ID（JSON 陣列） */
+  applicableShaIds: json("applicable_sha_ids").$type<string[]>(),
+  /** 圖片 URL */
+  imageUrl: varchar("image_url", { length: 500 }),
+  /** 排序權重 */
+  sortOrder: int("sort_order").notNull().default(0),
+  /** 是否啟用 */
+  isActive: tinyint("is_active").notNull().default(1),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+  updatedAt: bigint("updated_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type RemedyItem = typeof remedyItems.$inferSelect;
+export type InsertRemedyItem = typeof remedyItems.$inferInsert;
+
+/**
+ * 用戶陽宅分析記錄
+ * 儲存每次分析結果，可追蹤歷史
+ */
+export const yangzhaiAnalyses = mysqlTable("yangzhai_analyses", {
+  id: int("id").autoincrement().primaryKey(),
+  /** 用戶 ID */
+  userId: varchar("user_id", { length: 100 }).notNull(),
+  /** 分析類型：daily_direction / form_sha_photo / form_sha_quiz / full_report */
+  analysisType: varchar("analysis_type", { length: 50 }).notNull(),
+  /** 分析結果（JSON） */
+  result: json("result").$type<any>().notNull(),
+  /** 環境分數 */
+  score: int("score"),
+  /** 場景描述 */
+  sceneDescription: text("scene_description"),
+  /** 照片 URL（形煞分析用） */
+  photoUrl: varchar("photo_url", { length: 500 }),
+  /** 用戶反饋：helpful / not_helpful / null */
+  feedback: varchar("feedback", { length: 20 }),
+  createdAt: bigint("created_at", { mode: "number" }).notNull().$defaultFn(() => Date.now()),
+});
+export type YangzhaiAnalysis = typeof yangzhaiAnalyses.$inferSelect;
+export type InsertYangzhaiAnalysis = typeof yangzhaiAnalyses.$inferInsert;

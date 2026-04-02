@@ -302,6 +302,7 @@ export default function AdminDashboard() {
                     { href: "/admin/destiny-shop", icon: "🪙", label: "天命小舖管理", desc: "設定 AI 功能費用與方案贈幣" },
                     { href: "/admin/users", icon: "👤", label: "帳號管理", desc: "查看用戶天命幣餘額" },
                     { href: "/admin/business-hub", icon: "💰", label: "商業中心", desc: "方案訂閱與行銷活動" },
+                    { href: "/admin/yangzhai", icon: "🏠", label: "陽宅開運管理", desc: "風水參數、化解物品、形煢規則" },
                   ].map(item => (
                     <Link key={item.href} href={item.href}>
                       <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-slate-700/40 hover:bg-slate-700/70 border border-slate-700/30 hover:border-slate-600/50 cursor-pointer transition-all group">

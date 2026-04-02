@@ -82,6 +82,8 @@ const DietPage = lazy(() => import("@/pages/DietPage"));
 const DivinationPage = lazy(() => import("@/pages/DivinationPage"));
 const LuckCyclePage = lazy(() => import("@/pages/LuckCyclePage"));
 const WealthPage = lazy(() => import("@/pages/WealthPage"));
+const OfficeFengShui = lazy(() => import("@/pages/OfficeFengShui"));
+const YangzhaiAdmin = lazy(() => import("@/pages/YangzhaiAdmin"));
 
 // Loading fallback
 function PageLoader() {
@@ -151,9 +153,11 @@ function Router() {
                 <Route path={"/expert/reviews"} component={ExpertReviews} />
                 <Route path={"/my-favorites"} component={MyFavorites} />
                 <Route path={"/my-bookings"} component={MyBookings} />
+                <Route path={"/office-fengshui"} component={OfficeFengShui} />
                 <Route path={"/admin/experts"} component={AdminExperts} />
                 <Route path={"/admin/theme"} component={AdminTheme} />
                 <Route path={"/admin/access-tokens"} component={AdminAccessTokens} />
+                <Route path={"/admin/yangzhai"} component={YangzhaiAdmin} />
                 <Route path={"/admin/game"} component={GameCMS} />
                 <Route path="/admin/game-theater">{() => { window.location.replace("/admin/game"); return null; }}</Route>
                 <Route path="/game">{() => <GameErrorBoundary><VirtualWorldPage /></GameErrorBoundary>}</Route>
