@@ -698,6 +698,71 @@ export default function WarRoom() {
                         </div>
                       ))}
                     </div>
+                    {/* V3.0: 流日脈絡分析徽章 */}
+                    {outfitV3Data.dailyContextAnalysis && (
+                      <div className="rounded-lg bg-indigo-500/10 border border-indigo-500/30 p-3 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            outfitV3Data.dailyContextAnalysis.sourceNature === '根旺'
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                              : outfitV3Data.dailyContextAnalysis.sourceNature === '借旺'
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          }`}>
+                            {outfitV3Data.dailyContextAnalysis.sourceNature === '根旺' ? '🌳' :
+                             outfitV3Data.dailyContextAnalysis.sourceNature === '借旺' ? '🌊' : '💨'}
+                            {outfitV3Data.dailyContextAnalysis.sourceNature}
+                          </span>
+                          <span className="text-indigo-300/60 text-[10px]">
+                            主導元素：{outfitV3Data.dailyContextAnalysis.dominantElement}
+                          </span>
+                          <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded ${
+                            outfitV3Data.dailyContextAnalysis.urgency === '把握今日'
+                              ? 'bg-amber-500/15 text-amber-400'
+                              : outfitV3Data.dailyContextAnalysis.urgency === '長期方向'
+                              ? 'bg-blue-500/15 text-blue-400'
+                              : 'bg-slate-500/15 text-slate-400'
+                          }`}>
+                            {outfitV3Data.dailyContextAnalysis.urgency}
+                          </span>
+                        </div>
+                        <p className="text-indigo-200/70 text-xs leading-relaxed">
+                          {outfitV3Data.dailyContextAnalysis.keyMessage}
+                        </p>
+                      </div>
+                    )}
+                    {/* V3.0: 五行保護警告 */}
+                    {outfitV3Data.protectionTriggered && outfitV3Data.protectionTriggered.length > 0 && (
+                      <div className="rounded-lg bg-red-500/8 border border-red-500/25 p-3 space-y-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-red-400 text-xs">⚠️</span>
+                          <span className="text-red-400 text-[10px] font-semibold uppercase tracking-wider">五行上限保護</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {outfitV3Data.protectionTriggered.map((p: { element: string; ratio: number; status: string; action: string }, idx: number) => (
+                            <div key={idx} className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] ${
+                              p.status === 'critical'
+                                ? 'bg-red-500/20 text-red-300 border border-red-500/40'
+                                : p.status === 'overpower'
+                                ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40'
+                                : 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/30'
+                            }`}>
+                              <span className="font-bold">{p.element}</span>
+                              <span className="opacity-70">{Math.round(p.ratio * 100)}%</span>
+                              <span className={`px-1 rounded text-[9px] ${
+                                p.status === 'critical' ? 'bg-red-500/30' :
+                                p.status === 'overpower' ? 'bg-orange-500/30' : 'bg-yellow-500/20'
+                              }`}>
+                                {p.status === 'critical' ? '危險' : p.status === 'overpower' ? '過旺' : '充足'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-red-300/60 text-[10px] leading-relaxed">
+                          {outfitV3Data.protectionTriggered[0]?.action}
+                        </p>
+                      </div>
+                    )}
                     {outfitV3Data.contextNote && (
                       <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 p-3">
                         <p className="text-amber-200/80 text-xs leading-relaxed">{outfitV3Data.contextNote}</p>

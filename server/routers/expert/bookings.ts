@@ -356,7 +356,7 @@ export const expertBookingsRouter = router({
           expertId: input.expertId,
           type: "new_booking",
           title: "新預約請求",
-          message: `用戶預約了您的服務，時間：${startStr} ~ ${endStr}${input.notes ? "，備註：" + input.notes.slice(0, 30) : ""}`,
+          content: `用戶預約了您的服務${input.notes ? "，備註：" + input.notes.slice(0, 30) : ""}`,
           relatedId: bookingId,
         });
       } catch (_) {}
@@ -416,7 +416,7 @@ export const expertBookingsRouter = router({
           expertId: input.expertId,
           type: "new_booking",
           title: "新預約請求",
-          message: `用戶預約了您的服務，時間：${startStr} ~ ${endStr}${input.notes ? "，備註：" + input.notes.slice(0, 30) : ""}`,
+          content: `用戶預約了您的服務${input.notes ? "，備註：" + input.notes.slice(0, 30) : ""}`,
           relatedId: bookingId,
         });
       } catch (_) {}
@@ -595,6 +595,16 @@ export const expertBookingsRouter = router({
           ratingCount: allReviews.length,
         })
         .where(eq(experts.id, booking.expertId));
+      // Notify expert of new review
+      try {
+        await db.insert(expertNotifications).values({
+          expertId: booking.expertId,
+          type: "new_review",
+          title: "新評價",
+          content: `用戶給了您 ${input.rating} 星評價${input.comment ? "：" + input.comment.slice(0, 50) : ""}`,
+          relatedId: input.bookingId,
+        });
+      } catch (_) {}
       return { success: true };
     }),
 

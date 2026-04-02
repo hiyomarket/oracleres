@@ -103,12 +103,6 @@ export default function ExpertDetail() {
   const { user } = useAuth();
   const utils = trpc.useUtils();
 
-  useSEO({
-    title: expert?.publicName ? `${expert.publicName} - 天命聯盟` : "天命聯盟",
-    description: expert?.bio ? expert.bio.slice(0, 160) : "天命共振線上命理諮詢平台",
-    ogImage: expert?.profileImage ?? undefined,
-  });
-
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
@@ -116,27 +110,6 @@ export default function ExpertDetail() {
   // Window booking: user picks start/end within the slot window
   const [requestedStart, setRequestedStart] = useState("");
   const [requestedEnd, setRequestedEnd] = useState("");
-
-  // Favorite
-  const { data: favData } = trpc.expert.checkFavorite.useQuery(
-    { expertId },
-    { enabled: expertId > 0 && !!user }
-  );
-  const isFavorited = favData?.isFavorited ?? false;
-  const toggleFavMutation = trpc.expert.toggleFavorite.useMutation({
-    onSuccess: () => {
-      utils.expert.checkFavorite.invalidate({ expertId });
-      utils.expert.getMyFavorites.invalidate();
-      toast.success(isFavorited ? "已取消收藏" : "已加入收藏 ❤️");
-    },
-    onError: (e) => toast.error("操作失敗: " + e.message),
-  });
-
-
-  // Calendar state for public view
-  const now = new Date();
-  const [calYear, setCalYear] = useState(now.getFullYear());
-  const [calMonth, setCalMonth] = useState(now.getMonth() + 1);
 
   // Determine if id is numeric or slug
   const isNumeric = /^\d+$/.test(id ?? "");
@@ -159,6 +132,34 @@ export default function ExpertDetail() {
 
   // Calendar events for this expert
   const expertId = expert?.id ?? 0;
+
+  useSEO({
+    title: expert?.publicName ? `${expert.publicName} - 天命聯盟` : "天命聯盟",
+    description: expert?.bio ? expert.bio.slice(0, 160) : "天命共振線上命理諮詢平台",
+    ogImage: expert?.profileImageUrl ?? undefined,
+  });
+
+  // Favorite
+  const { data: favData } = trpc.expert.checkFavorite.useQuery(
+    { expertId },
+    { enabled: expertId > 0 && !!user }
+  );
+  const isFavorited = favData?.isFavorite ?? false;
+  const toggleFavMutation = trpc.expert.toggleFavorite.useMutation({
+    onSuccess: () => {
+      utils.expert.checkFavorite.invalidate({ expertId });
+      utils.expert.getMyFavorites.invalidate();
+      toast.success(isFavorited ? "已取消收藏" : "已加入收藏 ❤️");
+    },
+    onError: (e) => toast.error("操作失敗: " + e.message),
+  });
+
+
+  // Calendar state for public view
+  const now = new Date();
+  const [calYear, setCalYear] = useState(now.getFullYear());
+  const [calMonth, setCalMonth] = useState(now.getMonth() + 1);
+
   const { data: calEvents = [] } = trpc.expert.listExpertCalendarEvents.useQuery(
     { expertId, year: calYear, month: calMonth },
     { enabled: expertId > 0 }
@@ -351,7 +352,7 @@ export default function ExpertDetail() {
                     ? "bg-red-500/20 text-red-400 border-red-500/30"
                     : "bg-accent/50 text-muted-foreground hover:text-foreground hover:bg-accent border-border"
                 }`}
-                disabled={toggleFavMutation.isLoading}
+                disabled={toggleFavMutation.isPending}
               >
                 <Heart className={`w-4 h-4 ${isFavorited ? "fill-red-400 text-red-400" : ""}`} />
                 {isFavorited ? "已收藏" : "收藏"}

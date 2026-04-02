@@ -218,6 +218,9 @@ export default function OutfitPage() {
   const allHours = outfitData?.allHours ?? [];
   // 策略資訊（V10.0 新增）
   const strategy = (outfitData as unknown as { strategy?: { strategyName: string; coreStrategyText: string; primaryTargetElement: string; secondaryTargetElement: string } })?.strategy;
+  // V3.0: 五行保護與脈絡分析
+  const v3Protection = (outfitData as unknown as { v3Protection?: Array<{ element: string; ratio: number; status: string; action: string }> | null })?.v3Protection;
+  const v3DailyContext = (outfitData as unknown as { v3DailyContext?: { dominantElement: string; sourceNature: string; keyMessage: string; urgency: string } | null })?.v3DailyContext;
 
   // 計算顯示的 Aura 分數
   const innateMaxDiscount = simulatorData?.innateMax != null ? (simulatorData.innateMax as number) / 100 : 1;
@@ -572,6 +575,51 @@ export default function OutfitPage() {
               </div>
             )}
 
+            {/* V3.0: 五行過旺保護警告 */}
+            {v3Protection && v3Protection.length > 0 && (
+              <div className="rounded-xl bg-red-950/30 border border-red-500/30 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm">{"\u26A0\uFE0F"}</span>
+                  <span className="text-xs font-semibold text-red-300 uppercase tracking-widest">五行過旺保護</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {v3Protection.map((p, i) => (
+                    <span key={i} className={`text-xs px-2 py-1 rounded-full border ${
+                      p.status === 'critical' ? 'bg-red-500/20 text-red-300 border-red-500/40' :
+                      p.status === 'warning' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                      'bg-yellow-500/20 text-yellow-300 border-yellow-500/40'
+                    }`}>
+                      {p.element} {Math.round(p.ratio * 100)}% {p.status === 'critical' ? '\u2191\u2191\u2191' : p.status === 'overpower' ? '\u2191\u2191' : '\u2191'}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-red-300/60 text-xs mt-2 leading-relaxed">
+                  {v3Protection[0]?.action ?? '系統已自動調整穿搭建議，避免加重過旺五行'}
+                </p>
+              </div>
+            )}
+            {/* V3.0: 流日脈絡分析 */}
+            {v3DailyContext && (
+              <div className="rounded-xl bg-indigo-950/20 border border-indigo-500/20 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-sm">{"\uD83D\uDD2E"}</span>
+                  <span className="text-xs font-semibold text-indigo-300 uppercase tracking-widest">今日能量脈絡</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full border ml-auto ${
+                    v3DailyContext.sourceNature === '根旺' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                    v3DailyContext.sourceNature === '借旺' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' :
+                    'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                  }`}>
+                    {v3DailyContext.sourceNature === '根旺' ? '🌳 根旺' : v3DailyContext.sourceNature === '借旺' ? '🌊 借旺' : '💨 虛旺'}
+                  </span>
+                </div>
+                <p className="text-indigo-200/70 text-xs leading-relaxed">{v3DailyContext.keyMessage}</p>
+                <span className={`text-[10px] mt-1 inline-block px-1.5 py-0.5 rounded ${
+                  v3DailyContext.urgency === '把握今日' ? 'bg-amber-500/15 text-amber-400' :
+                  v3DailyContext.urgency === '長期方向' ? 'bg-blue-500/15 text-blue-400' :
+                  'bg-slate-500/15 text-slate-400'
+                }`}>{v3DailyContext.urgency}</span>
+              </div>
+            )}
             {/* 上半身 */}
             {outfit?.upperBody && (
               <div className={`rounded-xl border p-4 ${WUXING_COLORS[outfit.upperBody.element]?.bg ?? 'bg-red-950/20'} ${WUXING_COLORS[outfit.upperBody.element]?.border ?? 'border-red-500/20'}`}>

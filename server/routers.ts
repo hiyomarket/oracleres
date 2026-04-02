@@ -73,7 +73,7 @@ import {
   recommendBraceletsV9,
 } from "./lib/wuxingEngine";
 import { calculateDaYun, formatDaYunSummary } from "./lib/daYunEngine";
-import { generateOutfitAdviceV11, type UserContext } from "./lib/outfitStrategy";
+import { generateOutfitAdviceV11, type UserContext, scanElementProtection, determineSourceNature, type DailyContextAnalysis, type ElementProtectionStatus } from "./lib/outfitStrategy";
 import { logDailyEnergy, getEnergyTrend } from "./lib/energyTracker";
 import { generateDailyDecisionReport } from "./lib/decisionSupportEngine";
 
@@ -2850,6 +2850,24 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
           strategy: dailyStrategy,
           tarotCardNumber: dailyTarotCard?.cardNumber ?? null,
           tarotCardName: dailyTarotCard?.card.name ?? null,
+          // V3.0: 五行保護狀態與流日脈絡分析
+          v3Protection: (() => {
+            try {
+              const protectionStatuses = scanElementProtection(wuxingResult.weighted);
+              const triggered = protectionStatuses.filter(p => p.status !== 'normal');
+              return triggered.length > 0 ? triggered : null;
+            } catch { return null; }
+          })(),
+          v3DailyContext: (() => {
+            try {
+              return determineSourceNature(
+                wuxingResult.dominantElement,
+                wuxingResult.weighted,
+                ep.natalElementRatio,
+                normalizedEnv,
+              );
+            } catch { return null; }
+          })(),
         };
       }),
     /**
@@ -3501,7 +3519,7 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
     /**
      * V3.0 情境共振穿搭建議
      */
-    getOutfitV3: publicProcedure
+    getOutfitV3: protectedProcedure
       .input((input: unknown) => {
         const i = input as {
           tenGod?: string;
@@ -3512,9 +3530,12 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
         };
         return i;
       })
-      .query(({ input }) => {
+      .query(async ({ input, ctx }) => {
         const now = new Date();
-        const daYun = calculateDaYun(1984, now);
+        // V3.1: 從用戶 profile 動態讀取出生年份和本命五行
+        const ep = await getUserProfileForEngine(ctx.user.id);
+        const birthYear = ep.birthYear ?? 1984;
+        const daYun = calculateDaYun(birthYear, now);
         // V3.0: 計算今日五行加權比例，傳入穿搭引擎啟用保護機制和脈絡分析
         const dateInfo = getFullDateInfo(now);
         const env = calculateEnvironmentElements(
@@ -3522,7 +3543,12 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
           dateInfo.monthPillar.stem, dateInfo.monthPillar.branch,
           dateInfo.dayPillar.stem, dateInfo.dayPillar.branch
         );
-        const wuxingResult = calculateWeightedElements(env, undefined, undefined, daYun, now);
+        // V3.1: 使用用戶本命五行比例（若有設定）
+        const natalRatio = (ep.natalElementRatio &&
+          Object.values(ep.natalElementRatio).some(v => v > 0))
+          ? ep.natalElementRatio
+          : undefined;
+        const wuxingResult = calculateWeightedElements(env, natalRatio, undefined, daYun, now);
         return generateOutfitAdviceV11(
           input.tenGod ?? '食神',
           input.dailyStrategy ?? '均衡守成',

@@ -5954,4 +5954,16 @@
 - [x] routers.ts getOutfitV3 傳入 weighted 和 env 參數
 - [x] 12 個新測試（保護機制 4 + 脈絡分析 4 + 整合 4）全部通過
 - [x] 向後兼容：不傳 weighted 時維持原有行為
-- [ ] 儲存 V5.28 checkpoint
+- [x] 儲存 V5.28 checkpoint
+
+## v5.29 - 穿搭引擎 V3.0 前端整合 + 動態本命五行
+
+- [x] WarRoom 穿搭區塊顯示五行保護警告（過旺元素紅色標籤）
+- [x] WarRoom 穿搭區塊顯示流日脈絡分析徽章（根旺/借旺/虛旺）
+- [x] getOutfitV3 路由改為從登入用戶 profile 讀取出生年份和本命五行
+- [x] 神喻穿搭頁面（OutfitPage）同步 V3.0 保護警告 + 流日脈絡分析 + 修正欄位名稱
+- [x] 通知觸發機制修正（message → content 欄位名稱修正）
+- [x] submitReview 新增評價通知觸發
+- [x] ExpertDetail.tsx TS 錯誤修復（useSEO 位置、屬性名稱、變數順序）
+- [x] MyFavorites.tsx SharedNav currentPage prop 修復
+- [ ] 儲存 V5.29 checkpoint

@@ -684,6 +684,8 @@ export interface EngineProfile {
   unfavorableElements: string[];
   /** 喜用神五行（英文，例：["fire","earth","metal"]） */
   favorableElementsEn: string[];
+  /** 出生年份（從 birthDate 解析） */
+  birthYear: number | null;
   /** 出生日期（YYYY-MM-DD 格式） */
   birthDate: string | null;
   /** 出生月份（1-12） */
@@ -722,6 +724,7 @@ const DEFAULT_ENGINE_PROFILE: EngineProfile = {
   favorableElements: ["火", "土", "金"],
   unfavorableElements: ["水", "木"],
   favorableElementsEn: ["fire", "earth", "metal"],
+  birthYear: 1984,
   birthDate: "1984-11-26",
   birthMonth: 11,
   birthDay: 26,
@@ -832,6 +835,7 @@ export async function getUserProfileForEngine(userId: number): Promise<EnginePro
       favorableElements,
       unfavorableElements,
       favorableElementsEn,
+      birthYear: birthDateStr ? parseInt(birthDateStr.split('-')[0]) || null : null,
       birthDate: birthDateStr,
       birthMonth,
       birthDay,

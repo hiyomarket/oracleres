@@ -15,7 +15,7 @@ export default function MyFavorites() {
   });
   return (
     <div className="min-h-screen bg-background">
-      <SharedNav />
+      <SharedNav currentPage="favorites" />
       <div className="container max-w-4xl py-6 px-4">
         <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
           <Heart className="w-6 h-6 text-red-500 fill-red-500" /> 我的收藏
