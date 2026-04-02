@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { calculateDaYun, formatDaYunSummary } from './lib/daYunEngine';
-import { generateOutfitAdviceV11 } from './lib/outfitStrategy';
+import { generateOutfitAdviceV11, scanElementProtection, determineSourceNature, type ElementProtectionStatus, type DailyContextAnalysis } from './lib/outfitStrategy';
 import { generateDailyDecisionReport } from './lib/decisionSupportEngine';
 import { getYearlyAnalysis } from './lib/yearlyAnalysis';
 import type { WeightedElementResult } from './lib/wuxingEngine';
@@ -163,6 +163,138 @@ describe('outfitStrategy V3.0 (generateOutfitAdviceV11)', () => {
     const resultNewMoon = generateOutfitAdviceV11('食神', '食神生財', daYun.currentDaYun.role, daYun.currentDaYun.theme, '新月', 'new');
     // 滿月和新月的月相說明應不同
     expect(resultFullMoon.moonPhaseNote).not.toBe(resultNewMoon.moonPhaseNote);
+  });
+});
+
+// ─── V3.0 五行上限保護機制測試 ─────────────────────────────────
+
+describe('V3.0 五行上限保護機制 (scanElementProtection)', () => {
+  it('正常五行比例不應觸發保護', () => {
+    const weighted = { 木: 0.25, 火: 0.20, 土: 0.20, 金: 0.18, 水: 0.17 };
+    const protections = scanElementProtection(weighted);
+    expect(protections.length).toBe(0);
+  });
+
+  it('五行 >= 35% 應觸發 sufficient 保護', () => {
+    const weighted = { 木: 0.36, 火: 0.20, 土: 0.20, 金: 0.14, 水: 0.10 };
+    const protections = scanElementProtection(weighted);
+    expect(protections.length).toBeGreaterThan(0);
+    const woodProtection = protections.find(p => p.element === '木');
+    expect(woodProtection).toBeDefined();
+    expect(woodProtection!.status).toBe('sufficient');
+  });
+
+  it('五行 >= 40% 應觸發 overpower 保護', () => {
+    const weighted = { 木: 0.42, 火: 0.15, 土: 0.18, 金: 0.15, 水: 0.10 };
+    const protections = scanElementProtection(weighted);
+    const woodProtection = protections.find(p => p.element === '木');
+    expect(woodProtection).toBeDefined();
+    expect(woodProtection!.status).toBe('overpower');
+  });
+
+  it('五行 >= 45% 應觸發 critical 保護', () => {
+    const weighted = { 木: 0.46, 火: 0.12, 土: 0.18, 金: 0.14, 水: 0.10 };
+    const protections = scanElementProtection(weighted);
+    const woodProtection = protections.find(p => p.element === '木');
+    expect(woodProtection).toBeDefined();
+    expect(woodProtection!.status).toBe('critical');
+    expect(woodProtection!.action).toContain('剋制');
+  });
+});
+
+// ─── V3.0 流日脈絡分析測試 ──────────────────────────────────────
+
+describe('V3.0 流日脈絡分析 (determineSourceNature)', () => {
+  it('本命 >= 20% 的五行應判定為根旺', () => {
+    const weighted = { 木: 0.42, 火: 0.15, 土: 0.18, 金: 0.15, 水: 0.10 };
+    const result = determineSourceNature('木', weighted);
+    expect(result.sourceNature).toBe('根旺');
+    expect(result.dominantElement).toBe('木');
+  });
+
+  it('本命 10-20% 的五行應判定為借旺', () => {
+    const weighted = { 木: 0.20, 火: 0.30, 土: 0.20, 金: 0.15, 水: 0.15 };
+    const result = determineSourceNature('火', weighted);
+    expect(result.sourceNature).toBe('借旺');
+    expect(result.urgency).toBe('把握今日');
+  });
+
+  it('本命 < 10% 的五行應判定為虛旺', () => {
+    const weighted = { 木: 0.20, 火: 0.15, 土: 0.25, 金: 0.30, 水: 0.10 };
+    const result = determineSourceNature('金', weighted);
+    expect(result.sourceNature).toBe('虛旺');
+    expect(result.urgency).toBe('把握今日');
+  });
+
+  it('根旺且過旺應建議收斂', () => {
+    const weighted = { 木: 0.45, 火: 0.15, 土: 0.15, 金: 0.15, 水: 0.10 };
+    const result = determineSourceNature('木', weighted);
+    expect(result.sourceNature).toBe('根旺');
+    expect(result.urgency).toBe('今日收斂');
+  });
+});
+
+// ─── V3.0 穿搭引擎整合測試 ─────────────────────────────────────
+
+describe('V3.0 穿搭引擎整合 (generateOutfitAdviceV11 with weighted)', () => {
+  const daYunResult = calculateDaYun(1984);
+
+  it('傳入 weighted 應啟用保護機制和脈絡分析', () => {
+    const weighted = { 木: 0.42, 火: 0.18, 土: 0.18, 金: 0.12, 水: 0.10 };
+    const result = generateOutfitAdviceV11(
+      '食神', '食神生財',
+      daYunResult.currentDaYun.role,
+      daYunResult.currentDaYun.theme,
+      '上弦月', 'first_quarter',
+      undefined,
+      weighted
+    );
+    expect(result.dailyContextAnalysis).toBeDefined();
+    expect(result.dailyContextAnalysis!.dominantElement).toBe('木');
+    expect(result.dailyContextAnalysis!.sourceNature).toBeDefined();
+  });
+
+  it('木過旺時應觸發保護，避開木色系穿搭', () => {
+    const weighted = { 木: 0.45, 火: 0.15, 土: 0.15, 金: 0.15, 水: 0.10 };
+    const result = generateOutfitAdviceV11(
+      '比肩', '均衡守成',
+      daYunResult.currentDaYun.role,
+      daYunResult.currentDaYun.theme,
+      '上弦月', 'first_quarter',
+      undefined,
+      weighted
+    );
+    // 比肩日原本上衣是木色（橄欖綠），但木過旺時應被替換
+    expect(result.protectionTriggered).toBeDefined();
+    expect(result.protectionTriggered!.length).toBeGreaterThan(0);
+    // 上衣五行不應該是木
+    expect(result.topElement).not.toBe('木');
+  });
+
+  it('不傳 weighted 時應維持原有行為（向後兼容）', () => {
+    const result = generateOutfitAdviceV11(
+      '食神', '食神生財',
+      daYunResult.currentDaYun.role,
+      daYunResult.currentDaYun.theme,
+      '上弦月', 'first_quarter'
+    );
+    expect(result.dailyContextAnalysis).toBeUndefined();
+    expect(result.protectionTriggered).toBeUndefined();
+    expect(result.topColor).toBe('朱紅 / 火焰橙');
+  });
+
+  it('推理文案應包含脈絡分析內容（傳入 weighted 時）', () => {
+    const weighted = { 木: 0.30, 火: 0.25, 土: 0.20, 金: 0.15, 水: 0.10 };
+    const result = generateOutfitAdviceV11(
+      '食神', '食神生財',
+      daYunResult.currentDaYun.role,
+      daYunResult.currentDaYun.theme,
+      '上弦月', 'first_quarter',
+      undefined,
+      weighted
+    );
+    // 推理文案應包含脈絡分析的關鍵詞
+    expect(result.reasoning.length).toBeGreaterThan(50);
   });
 });
 

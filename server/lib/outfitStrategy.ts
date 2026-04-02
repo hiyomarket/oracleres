@@ -1,8 +1,41 @@
 /**
- * 穿搭策略資料庫 V2.9
+ * 穿搭策略資料庫 V3.0（神喻穿搭引擎 V3.0 智能化升級）
  * 基於蘇祐震命格（甲木日主，用神：火土金）
+ * 
+ * V3.0 核心升級：
+ * 1. 五行上限保護機制 — 防止過旺五行繼續被推薦
+ * 2. 流日脈絡分析層 — 判定根旺/借旺/虛旺，解釋能量來源
+ * 3. 推理文案升級 — 結合脈絡分析，生成有命理深度的文案
+ * 
  * 每個十神有真正不同的主色調，天干×月相進一步差異化
  */
+
+import type { ElementRatio } from "./wuxingEngine";
+import { NATAL_ELEMENT_RATIO } from "./wuxingEngine";
+
+// ─── 五行上限保護閾值（V3.0 核心升級一）──────────────────────────
+const ELEMENT_SUFFICIENT = 0.35;  // 充足：停止補強該五行
+const ELEMENT_OVERPOWER = 0.40;   // 過旺：保護模式，禁止推薦該五行顏色
+const ELEMENT_CRITICAL = 0.45;    // 嚴重過旺：保護模式 + 觸發剋制平衡
+
+// 五行相剋關係（誰能剋制誰）
+const ELEMENT_COUNTER: Record<string, string> = {
+  火: "水", 水: "土", 土: "木", 木: "金", 金: "火",
+};
+
+// 五行相生關係
+const ELEMENT_GENERATES: Record<string, string> = {
+  木: "火", 火: "土", 土: "金", 金: "水", 水: "木",
+};
+
+// 五行對應顏色（用於動態替換）
+const ELEMENT_COLOR_MAP: Record<string, { primary: string; secondary: string }> = {
+  火: { primary: "朱紅 / 火焰橙", secondary: "珊瑚紅 / 暖橙紅" },
+  土: { primary: "土黃 / 駝色", secondary: "卡其 / 米色" },
+  金: { primary: "白色 / 銀色", secondary: "米白 / 香檳色" },
+  木: { primary: "橄欖綠 / 深草綠", secondary: "翠綠 / 青色" },
+  水: { primary: "深藍 / 黑色", secondary: "藏青 / 深灰" },
+};
 
 // ─── 天干個性描述 ─────────────────────────────────────────────────
 export const STEM_PERSONALITY: Record<string, string> = {
@@ -34,9 +67,9 @@ export const OUTFIT_STRATEGY_BY_TENGOD: Record<string, {
   topColor: string; topElement: string; topReason: string;
   bottomColor: string; bottomElement: string; bottomReason: string;
   shoesColor: string; shoesElement: string; shoesReason: string;
-  accentColor: string; // 點綴色
+  accentColor: string;
   summary: string;
-  energyTag: string; // 今日能量標籤
+  energyTag: string;
 }> = {
   食神: {
     topColor: "朱紅 / 火焰橙",
@@ -189,19 +222,41 @@ export const MOON_PHASE_OUTFIT_MODIFIER: Record<string, string> = {
   殘月: "殘月之日，以靜制動。選擇舒適、低調的穿搭，為下一個月相周期蓄積能量，深色系或中性色最為適合。",
 };
 
-// ─── V11.0 神喻穿搭引擎 V3.0 ─────────────────────────────────────
+// ─── V3.0 神喻穿搭引擎 ─────────────────────────────────────────
 /**
  * 用戶情境輸入（前端傳入）
  */
 export interface UserContext {
-  /** 今日特殊事件 */
   event?: 'important_meeting' | 'date' | 'interview' | 'creative_work' | 'negotiation' | 'rest' | 'creative_presentation' | 'rest_day' | null;
-  /** 今日心情 */
   mood?: 'confident' | 'anxious' | 'creative' | 'tired' | 'focused' | null;
 }
 
 /**
- * V3.0 穿搭建議（情境共振版）
+ * V3.0 流日脈絡分析（核心升級二）
+ */
+export interface DailyContextAnalysis {
+  /** 當日最突出的五行 */
+  dominantElement: string;
+  /** 能量性質：根旺（本命+大運穩固）、借旺（流月/流日短暫帶旺）、虛旺（僅流日單維度） */
+  sourceNature: '根旺' | '借旺' | '虛旺';
+  /** 給用戶的核心說明（1-2句話） */
+  keyMessage: string;
+  /** 時間感提示 */
+  urgency: '把握今日' | '長期方向' | '今日收斂';
+}
+
+/**
+ * 五行保護狀態
+ */
+export interface ElementProtectionStatus {
+  element: string;
+  ratio: number;
+  status: 'normal' | 'sufficient' | 'overpower' | 'critical';
+  action: string;
+}
+
+/**
+ * V3.0 穿搭建議（情境共振版 + 上限保護 + 脈絡分析）
  */
 export interface OutfitAdviceV11 {
   topColor: string;
@@ -213,14 +268,18 @@ export interface OutfitAdviceV11 {
   accentColor: string;
   energyTag: string;
   summary: string;
-  /** V3.0 新增：動態推理文案（情境感知） */
+  /** V3.0：動態推理文案（結合脈絡分析） */
   reasoning: string;
-  /** V3.0 新增：大運背景色影響說明 */
+  /** V3.0：大運背景色影響說明 */
   daYunNote: string;
-  /** V3.0 新增：月相影響說明 */
+  /** V3.0：月相影響說明 */
   moonPhaseNote: string;
-  /** V3.0 新增：情境修正說明（若有） */
+  /** V3.0：情境修正說明（若有） */
   contextNote?: string;
+  /** V3.0 新增：流日脈絡分析 */
+  dailyContextAnalysis?: DailyContextAnalysis;
+  /** V3.0 新增：五行保護觸發記錄 */
+  protectionTriggered?: ElementProtectionStatus[];
 }
 
 // 事件對應的能量強化方向
@@ -244,9 +303,235 @@ const MOOD_MODIFIER: Record<string, string> = {
   focused:   '今日需要專注，選擇金色系的純淨配色，讓金的精準幫助你集中注意力。',
 };
 
+// ============================================================
+// V3.0 核心升級一：五行上限保護機制
+// ============================================================
+
+/**
+ * 掃描五行比例，判定每個五行的保護狀態
+ */
+export function scanElementProtection(
+  weighted: ElementRatio
+): ElementProtectionStatus[] {
+  const elements = ["火", "木", "水", "土", "金"] as const;
+  const results: ElementProtectionStatus[] = [];
+
+  for (const el of elements) {
+    const ratio = weighted[el] ?? 0;
+    let status: ElementProtectionStatus["status"] = "normal";
+    let action = "允許正常補強";
+
+    if (ratio >= ELEMENT_CRITICAL) {
+      status = "critical";
+      action = `嚴重過旺（${Math.round(ratio * 100)}%），進入保護模式，禁止推薦${el}色系，並在配件層加入${ELEMENT_COUNTER[el]}色系（${ELEMENT_COUNTER[el]}剋${el}）進行剋制平衡`;
+    } else if (ratio >= ELEMENT_OVERPOWER) {
+      status = "overpower";
+      action = `過旺（${Math.round(ratio * 100)}%），進入保護模式，禁止推薦${el}色系穿搭`;
+    } else if (ratio >= ELEMENT_SUFFICIENT) {
+      status = "sufficient";
+      action = `充足（${Math.round(ratio * 100)}%），停止補強${el}，轉向補其他弱項`;
+    }
+
+    if (status !== "normal") {
+      results.push({ element: el, ratio, status, action });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * 根據保護狀態，動態替換穿搭顏色
+ * 核心邏輯：
+ * - 若上衣五行被保護 → 替換為最需要補充的喜用神顏色
+ * - 若下裝五行被保護 → 替換為次優先喜用神顏色
+ * - 若嚴重過旺 → 配件加入剋制色
+ */
+function applyElementProtection(
+  topElement: string,
+  topColor: string,
+  bottomElement: string,
+  bottomColor: string,
+  shoesElement: string,
+  shoesColor: string,
+  accentColor: string,
+  protections: ElementProtectionStatus[],
+  weighted: ElementRatio,
+): {
+  topColor: string; topElement: string;
+  bottomColor: string; bottomElement: string;
+  shoesColor: string; shoesElement: string;
+  accentColor: string;
+  protectionNote: string;
+} {
+  const protectedElements = new Set(
+    protections
+      .filter(p => p.status === "overpower" || p.status === "critical")
+      .map(p => p.element)
+  );
+  const sufficientElements = new Set(
+    protections
+      .filter(p => p.status === "sufficient")
+      .map(p => p.element)
+  );
+
+  // 如果沒有任何保護觸發，直接返回原始值
+  if (protectedElements.size === 0 && sufficientElements.size === 0) {
+    return {
+      topColor, topElement,
+      bottomColor, bottomElement,
+      shoesColor, shoesElement,
+      accentColor,
+      protectionNote: "",
+    };
+  }
+
+  // 找出最需要補充的五行（喜用神中比例最低的）
+  const favorableElements = ["火", "土", "金"];
+  const sortedFavorable = favorableElements
+    .filter(el => !protectedElements.has(el) && !sufficientElements.has(el))
+    .sort((a, b) => (weighted[a as keyof ElementRatio] ?? 0) - (weighted[b as keyof ElementRatio] ?? 0));
+
+  const bestSupplement = sortedFavorable[0] ?? "土";
+  const secondSupplement = sortedFavorable[1] ?? (bestSupplement === "土" ? "金" : "土");
+
+  let newTopColor = topColor;
+  let newTopElement = topElement;
+  let newBottomColor = bottomColor;
+  let newBottomElement = bottomElement;
+  let newShoesColor = shoesColor;
+  let newShoesElement = shoesElement;
+  let newAccentColor = accentColor;
+  const notes: string[] = [];
+
+  // 替換上衣（如果上衣五行被保護或充足）
+  if (protectedElements.has(topElement) || sufficientElements.has(topElement)) {
+    const replacementEl = bestSupplement;
+    const colors = ELEMENT_COLOR_MAP[replacementEl];
+    newTopColor = colors?.primary ?? topColor;
+    newTopElement = replacementEl;
+    notes.push(
+      `上衣原推薦${topElement}色系，但${topElement}能量已${protectedElements.has(topElement) ? "過旺" : "充足"}（${Math.round((weighted[topElement as keyof ElementRatio] ?? 0) * 100)}%），` +
+      `已替換為${replacementEl}色系（${newTopColor}），直接補充${replacementEl}能量`
+    );
+  }
+
+  // 替換下裝（如果下裝五行被保護或充足）
+  if (protectedElements.has(bottomElement) || sufficientElements.has(bottomElement)) {
+    // 避免上下同五行（除非沒有其他選擇）
+    const replacementEl = newTopElement === bestSupplement ? secondSupplement : bestSupplement;
+    const colors = ELEMENT_COLOR_MAP[replacementEl];
+    newBottomColor = colors?.secondary ?? bottomColor;
+    newBottomElement = replacementEl;
+    notes.push(
+      `下裝原推薦${bottomElement}色系，但${bottomElement}能量已${protectedElements.has(bottomElement) ? "過旺" : "充足"}（${Math.round((weighted[bottomElement as keyof ElementRatio] ?? 0) * 100)}%），` +
+      `已替換為${replacementEl}色系（${newBottomColor}）`
+    );
+  }
+
+  // 替換鞋子（如果鞋子五行被保護）
+  if (protectedElements.has(shoesElement)) {
+    const usedElements = new Set([newTopElement, newBottomElement]);
+    const shoeReplacement = favorableElements.find(el => !protectedElements.has(el) && !usedElements.has(el)) ?? secondSupplement;
+    const colors = ELEMENT_COLOR_MAP[shoeReplacement];
+    newShoesColor = colors?.secondary ?? shoesColor;
+    newShoesElement = shoeReplacement;
+  }
+
+  // 嚴重過旺：配件加入剋制色
+  const criticalElements = protections.filter(p => p.status === "critical");
+  if (criticalElements.length > 0) {
+    const critEl = criticalElements[0].element;
+    const counterEl = ELEMENT_COUNTER[critEl];
+    const counterColors = ELEMENT_COLOR_MAP[counterEl];
+    newAccentColor = `${counterColors?.primary ?? counterEl + "色系"}配件（${counterEl}剋${critEl}，收斂過旺能量）`;
+    notes.push(
+      `${critEl}嚴重過旺（${Math.round(criticalElements[0].ratio * 100)}%），配件已加入${counterEl}色系進行剋制平衡`
+    );
+  }
+
+  return {
+    topColor: newTopColor,
+    topElement: newTopElement,
+    bottomColor: newBottomColor,
+    bottomElement: newBottomElement,
+    shoesColor: newShoesColor,
+    shoesElement: newShoesElement,
+    accentColor: newAccentColor,
+    protectionNote: notes.join("。"),
+  };
+}
+
+// ============================================================
+// V3.0 核心升級二：流日脈絡分析層
+// ============================================================
+
+/**
+ * 判定當日突出五行的能量性質
+ * 
+ * 根旺（Rooted Prosperity）：本命該五行 ≥ 20% 且環境也支持 → 穩固能量，過旺時需剋制
+ * 借旺（Borrowed Prosperity）：本命該五行 < 15% 但環境帶旺 → 短暫視窗，應順勢利用
+ * 虛旺（False Prosperity）：本命該五行 < 10% 且環境單維度帶旺 → 極短暫，把握當下
+ */
+export function determineSourceNature(
+  dominantElement: string,
+  weighted: ElementRatio,
+  natalRatio?: Record<string, number>,
+  environmentRatio?: ElementRatio,
+): DailyContextAnalysis {
+  const natal = natalRatio ?? NATAL_ELEMENT_RATIO;
+  const natalPct = natal[dominantElement] ?? 0;
+  // 如果 natal 是百分比整數（如 42），轉為小數
+  const natalDecimal = natalPct > 1 ? natalPct / 100 : natalPct;
+  const weightedPct = weighted[dominantElement as keyof ElementRatio] ?? 0;
+  const weightedPctRound = Math.round(weightedPct * 100);
+
+  // 計算環境貢獻度（如果沒有環境比例，從加權和本命反推）
+  const envPct = environmentRatio
+    ? (environmentRatio[dominantElement as keyof ElementRatio] ?? 0)
+    : (weightedPct - natalDecimal * 0.3) / 0.7; // 反推：weighted = natal*0.3 + env*0.7
+
+  let sourceNature: DailyContextAnalysis["sourceNature"];
+  let keyMessage: string;
+  let urgency: DailyContextAnalysis["urgency"];
+
+  if (natalDecimal >= 0.20) {
+    // 根旺：本命該五行就很強
+    sourceNature = "根旺";
+    if (weightedPct >= ELEMENT_OVERPOWER) {
+      keyMessage = `${dominantElement}是你本命的根基能量（本命${Math.round(natalDecimal * 100)}%），今日環境進一步加持至${weightedPctRound}%，能量已過於飽和。穿搭策略應以收斂為主，避免火上加油。`;
+      urgency = "今日收斂";
+    } else {
+      keyMessage = `${dominantElement}是你本命的穩固能量（本命${Math.round(natalDecimal * 100)}%），今日加權${weightedPctRound}%，這是長期趨勢的自然表現，可順勢而為。`;
+      urgency = "長期方向";
+    }
+  } else if (natalDecimal >= 0.10) {
+    // 借旺：本命中等，但環境帶旺
+    sourceNature = "借旺";
+    keyMessage = `今日${dominantElement}能量達到${weightedPctRound}%，但這並非你本命的常態（本命僅${Math.round(natalDecimal * 100)}%）。這是流月和流日共同帶來的短暫視窗，是難得的能量爆發期。穿搭建議順勢利用這股能量，把今天的靈感和創意轉化為實際成果。`;
+    urgency = "把握今日";
+  } else {
+    // 虛旺：本命極弱，僅靠環境帶旺
+    sourceNature = "虛旺";
+    keyMessage = `今日${dominantElement}能量看似達到${weightedPctRound}%，但你本命${dominantElement}極弱（僅${Math.round(natalDecimal * 100)}%），這股能量幾乎完全來自今日的環境因素，極為短暫。明天這個視窗就會關閉，今天要特別珍惜並善用。`;
+    urgency = "把握今日";
+  }
+
+  return {
+    dominantElement,
+    sourceNature,
+    keyMessage,
+    urgency,
+  };
+}
+
+// ============================================================
+// V3.0 核心升級三：推理文案升級
+// ============================================================
+
 /**
  * 生成動態推理文案（V3.0 核心功能）
- * 將穿搭建議轉化為有溫度、有邏輯的命理解釋
+ * 結合流日脈絡分析 + 五行保護狀態，生成有命理深度的文案
  */
 export function generateReasoningText(
   tenGod: string,
@@ -255,11 +540,32 @@ export function generateReasoningText(
   bottomColor: string,
   daYunRole: string,
   moonPhaseName: string,
-  userContext?: UserContext
+  userContext?: UserContext,
+  dailyContext?: DailyContextAnalysis,
+  protections?: ElementProtectionStatus[],
+  weighted?: ElementRatio,
 ): string {
   const baseStrategy = strategy || '均衡守成';
+  const parts: string[] = [];
 
-  // 策略對應的核心邏輯說明
+  // Part 1: 流日脈絡分析（V3.0 新增，最重要的部分）
+  if (dailyContext) {
+    const natureLabel: Record<string, string> = {
+      '根旺': '穩固能量',
+      '借旺': '借勢視窗',
+      '虛旺': '短暫機遇',
+    };
+    const urgencyLabel: Record<string, string> = {
+      '把握今日': '今日限定',
+      '長期方向': '長期趨勢',
+      '今日收斂': '需要收斂',
+    };
+    parts.push(
+      `【${natureLabel[dailyContext.sourceNature]}・${urgencyLabel[dailyContext.urgency]}】 ${dailyContext.keyMessage}`
+    );
+  }
+
+  // Part 2: 策略對應的核心邏輯說明（升級版，結合脈絡）
   const strategyLogic: Record<string, string> = {
     '強勢補弱': '今日宇宙能量有所缺失，我們需要主動出擊，用穿搭的顏色來補充命格中最需要的能量。',
     '借力打力': `今日${tenGod}入局，帶來一定的壓力與挑戰。聰明的做法不是硬碰硬，而是借助這股能量，轉化為前進的動力。`,
@@ -267,36 +573,51 @@ export function generateReasoningText(
     '食神生財': `今日食神/傷官能量旺盛，你的才華（火）正處於高點。穿搭的重點是讓這股才華能量流動起來，最終化為實際的財富（土）。`,
     '均衡守成': '今日能量相對平衡，穿搭策略以守成為主，選擇能讓你感到舒適自在的配色，保持穩定的能量輸出。',
   };
+  parts.push(strategyLogic[baseStrategy] || strategyLogic['均衡守成']);
 
-  const logicText = strategyLogic[baseStrategy] || strategyLogic['均衡守成'];
+  // Part 3: 五行保護說明（V3.0 新增）
+  if (protections && protections.length > 0) {
+    const criticals = protections.filter(p => p.status === "critical");
+    const overpowers = protections.filter(p => p.status === "overpower");
+    if (criticals.length > 0) {
+      const el = criticals[0].element;
+      const pct = Math.round(criticals[0].ratio * 100);
+      const counter = ELEMENT_COUNTER[el];
+      parts.push(
+        `特別注意：${el}能量已嚴重過旺（${pct}%），系統已啟動保護機制，禁止推薦${el}色系穿搭，並在配件中加入${counter}色系（${counter}剋${el}）進行能量收斂。`
+      );
+    } else if (overpowers.length > 0) {
+      const el = overpowers[0].element;
+      const pct = Math.round(overpowers[0].ratio * 100);
+      parts.push(
+        `注意：${el}能量已過旺（${pct}%），系統已啟動保護模式，今日穿搭已避開${el}色系，轉向補充其他弱項。`
+      );
+    }
+  }
 
-  // 大運背景色說明
-  const daYunText = daYunRole
-    ? `（大運背景：你目前正走「${daYunRole}」大運，這是今日穿搭的長期底色。）`
-    : '';
+  // Part 4: 穿搭建議
+  parts.push(`今日建議：**${topColor}上衣**搭配**${bottomColor}下裝**。`);
 
-  // 月相說明
-  const moonText = moonPhaseName
-    ? `今日月相為「${moonPhaseName}」，月亮的能量也在影響著今日的氣場。`
-    : '';
+  // Part 5: 大運背景色說明
+  if (daYunRole) {
+    parts.push(`（大運背景：你目前正走「${daYunRole}」大運，這是今日穿搭的長期底色。）`);
+  }
 
-  // 情境說明
-  let contextText = '';
+  // Part 6: 月相說明
+  if (moonPhaseName) {
+    parts.push(`今日月相為「${moonPhaseName}」，月亮的能量也在影響著今日的氣場。`);
+  }
+
+  // Part 7: 情境說明
   if (userContext?.event && EVENT_ELEMENT_BOOST[userContext.event]) {
     const boost = EVENT_ELEMENT_BOOST[userContext.event];
-    contextText = `特別提醒：今日你有「${getEventLabel(userContext.event)}」，${boost.reason}，穿搭已針對此情境進行微調。`;
+    parts.push(`特別提醒：今日你有「${getEventLabel(userContext.event)}」，${boost.reason}，穿搭已針對此情境進行微調。`);
   }
   if (userContext?.mood && MOOD_MODIFIER[userContext.mood]) {
-    contextText += (contextText ? ' ' : '') + MOOD_MODIFIER[userContext.mood];
+    parts.push(MOOD_MODIFIER[userContext.mood]);
   }
 
-  return [
-    logicText,
-    `今日建議：**${topColor}上衣**搭配**${bottomColor}下裝**。`,
-    moonText,
-    daYunText,
-    contextText,
-  ].filter(Boolean).join(' ');
+  return parts.filter(Boolean).join(' ');
 }
 
 function getEventLabel(event: string): string {
@@ -313,9 +634,23 @@ function getEventLabel(event: string): string {
   return labels[event] || event;
 }
 
+// ============================================================
+// V3.0 主函數：生成情境共振穿搭建議
+// ============================================================
+
 /**
  * 生成 V3.0 情境共振穿搭建議
- * 整合：基礎十神策略 + 大運背景色 + 月相 + 用戶情境
+ * 整合：基礎十神策略 + 五行上限保護 + 流日脈絡分析 + 大運背景色 + 月相 + 用戶情境
+ * 
+ * @param tenGod - 今日十神
+ * @param dailyStrategy - 今日策略名稱
+ * @param daYunRole - 大運角色
+ * @param daYunKeyTheme - 大運主題
+ * @param moonPhaseName - 月相名稱
+ * @param moonPhaseType - 月相類型
+ * @param userContext - 用戶情境（可選）
+ * @param weighted - 今日五行加權比例（V3.0 新增，可選，提供時啟用保護機制）
+ * @param environmentRatio - 環境五行比例（V3.0 新增，可選，用於脈絡分析）
  */
 export function generateOutfitAdviceV11(
   tenGod: string,
@@ -324,49 +659,94 @@ export function generateOutfitAdviceV11(
   daYunKeyTheme: string,
   moonPhaseName: string,
   moonPhaseType: string,
-  userContext?: UserContext
+  userContext?: UserContext,
+  weighted?: ElementRatio,
+  environmentRatio?: ElementRatio,
 ): OutfitAdviceV11 {
   // Step 1: 取得基礎十神穿搭策略
   const baseOutfit = OUTFIT_STRATEGY_BY_TENGOD[tenGod] ?? OUTFIT_STRATEGY_BY_TENGOD['食神'];
 
-  // Step 2: 情境修正（事件導向的顏色微調）
   let topColor = baseOutfit.topColor;
+  let topElement = baseOutfit.topElement;
   let bottomColor = baseOutfit.bottomColor;
+  let bottomElement = baseOutfit.bottomElement;
   let shoesColor = baseOutfit.shoesColor;
+  let shoesElement = baseOutfit.shoesElement;
+  let accentColor = baseOutfit.accentColor;
   let contextNote: string | undefined;
+  let dailyContextAnalysis: DailyContextAnalysis | undefined;
+  let protectionTriggered: ElementProtectionStatus[] | undefined;
 
+  // Step 2: V3.0 五行上限保護機制（核心升級一）
+  if (weighted) {
+    const protections = scanElementProtection(weighted);
+    if (protections.length > 0) {
+      protectionTriggered = protections;
+      const result = applyElementProtection(
+        topElement, topColor,
+        bottomElement, bottomColor,
+        shoesElement, shoesColor,
+        accentColor,
+        protections,
+        weighted,
+      );
+      topColor = result.topColor;
+      topElement = result.topElement;
+      bottomColor = result.bottomColor;
+      bottomElement = result.bottomElement;
+      shoesColor = result.shoesColor;
+      shoesElement = result.shoesElement;
+      accentColor = result.accentColor;
+      if (result.protectionNote) {
+        contextNote = result.protectionNote;
+      }
+    }
+
+    // Step 3: V3.0 流日脈絡分析（核心升級二）
+    // 找出加權後最突出的五行
+    const sorted = Object.entries(weighted).sort(([, a], [, b]) => b - a);
+    const dominantEl = sorted[0]?.[0] ?? "木";
+    dailyContextAnalysis = determineSourceNature(
+      dominantEl,
+      weighted,
+      NATAL_ELEMENT_RATIO,
+      environmentRatio,
+    );
+  }
+
+  // Step 4: 情境修正（事件導向的顏色微調）
   if (userContext?.event) {
     const boost = EVENT_ELEMENT_BOOST[userContext.event];
     if (boost) {
-      // 重要會議/面試：強化金元素（白色/銀色）
       if ((userContext.event === 'important_meeting' || userContext.event === 'interview')
-          && baseOutfit.topElement !== '金') {
-        topColor = `${baseOutfit.topColor}（建議加入白色或銀色配件強化決斷力）`;
-        contextNote = `今日有${getEventLabel(userContext.event)}，已在穿搭中強化金元素的決斷氣場。`;
+          && topElement !== '金') {
+        topColor = `${topColor}（建議加入白色或銀色配件強化決斷力）`;
+        contextNote = (contextNote ? contextNote + '。' : '') +
+          `今日有${getEventLabel(userContext.event)}，已在穿搭中強化金元素的決斷氣場。`;
       }
-      // 約會/創意工作：強化火元素
       if ((userContext.event === 'date' || userContext.event === 'creative_work')
-          && baseOutfit.topElement !== '火') {
-        topColor = `${baseOutfit.topColor}（建議加入一件暖色系配件提升魅力）`;
-        contextNote = `今日有${getEventLabel(userContext.event)}，已在穿搭中加強火元素的表達力。`;
+          && topElement !== '火') {
+        topColor = `${topColor}（建議加入一件暖色系配件提升魅力）`;
+        contextNote = (contextNote ? contextNote + '。' : '') +
+          `今日有${getEventLabel(userContext.event)}，已在穿搭中加強火元素的表達力。`;
       }
-      // 創意發表提案：強化食傷火元素
       if (userContext.event === 'creative_presentation') {
-        topColor = `${baseOutfit.topColor}（建議加入暖色系主色提升創意展現力）`;
-        contextNote = `今日有創意發表提案，食傷之火的暖色系讓你的才華與魅力充分展現。`;
+        topColor = `${topColor}（建議加入暖色系主色提升創意展現力）`;
+        contextNote = (contextNote ? contextNote + '。' : '') +
+          `今日有創意發表提案，食傷之火的暖色系讓你的才華與魅力充分展現。`;
       }
-      // 靜養充電日：切換均衡守成模式
       if (userContext.event === 'rest_day') {
         topColor = '大地色/米白色/淡灰色';
         bottomColor = '大地色/淡襲色';
         shoesColor = '小麥色/小白色';
-        contextNote = `今日為靜養充電日，已切換均衡守成模式——不強制補強，讓命格自然呼吸。舒適中性色系是今日最好的選擇。`;
+        contextNote = (contextNote ? contextNote + '。' : '') +
+          `今日為靜養充電日，已切換均衡守成模式——不強制補強，讓命格自然呼吸。舒適中性色系是今日最好的選擇。`;
       }
     }
   }
 
-  // Step 3: 月相微調（滿月加強主色，新月加入白色）
-  let moonPhaseNote = MOON_PHASE_OUTFIT_MODIFIER['殘月']; // 預設
+  // Step 5: 月相微調
+  let moonPhaseNote = MOON_PHASE_OUTFIT_MODIFIER['殘月'];
   if (moonPhaseName === '滿月' || moonPhaseType === 'full_moon') {
     moonPhaseNote = MOON_PHASE_OUTFIT_MODIFIER['滿月'];
     topColor = topColor.replace('/', '/ 可選更鮮豔的');
@@ -378,12 +758,12 @@ export function generateOutfitAdviceV11(
     moonPhaseNote = MOON_PHASE_OUTFIT_MODIFIER['下弦月'];
   }
 
-  // Step 4: 大運背景色注記
+  // Step 6: 大運背景色注記
   const daYunNote = daYunKeyTheme
     ? `大運主題「${daYunKeyTheme.slice(0, 15)}...」正在影響你的長期能量背景色，今日穿搭已納入此背景。`
     : '';
 
-  // Step 5: 生成推理文案
+  // Step 7: 生成推理文案（V3.0 升級版）
   const reasoning = generateReasoningText(
     tenGod,
     dailyStrategy,
@@ -391,22 +771,38 @@ export function generateOutfitAdviceV11(
     bottomColor,
     daYunRole,
     moonPhaseName,
-    userContext
+    userContext,
+    dailyContextAnalysis,
+    protectionTriggered,
+    weighted,
   );
+
+  // Step 8: 更新 summary（如果有保護觸發，更新摘要）
+  let summary = baseOutfit.summary;
+  if (protectionTriggered && protectionTriggered.length > 0) {
+    const criticals = protectionTriggered.filter(p => p.status === "critical");
+    if (criticals.length > 0) {
+      summary = `今日${criticals[0].element}嚴重過旺，穿搭已啟動保護機制：${topColor}上衣配${bottomColor}下裝，配件加入${ELEMENT_COUNTER[criticals[0].element]}色系收斂能量。`;
+    } else {
+      summary = `今日穿搭已根據五行保護機制調整：${topColor}上衣配${bottomColor}下裝，避開過旺五行，直接補充弱項。`;
+    }
+  }
 
   return {
     topColor,
-    topElement: baseOutfit.topElement,
+    topElement,
     bottomColor,
-    bottomElement: baseOutfit.bottomElement,
+    bottomElement,
     shoesColor,
-    shoesElement: baseOutfit.shoesElement,
-    accentColor: baseOutfit.accentColor,
+    shoesElement,
+    accentColor,
     energyTag: baseOutfit.energyTag,
-    summary: baseOutfit.summary,
+    summary,
     reasoning,
     daYunNote,
     moonPhaseNote,
     contextNote,
+    dailyContextAnalysis,
+    protectionTriggered,
   };
 }

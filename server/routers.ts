@@ -3513,7 +3513,16 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
         return i;
       })
       .query(({ input }) => {
-        const daYun = calculateDaYun(1984);
+        const now = new Date();
+        const daYun = calculateDaYun(1984, now);
+        // V3.0: 計算今日五行加權比例，傳入穿搭引擎啟用保護機制和脈絡分析
+        const dateInfo = getFullDateInfo(now);
+        const env = calculateEnvironmentElements(
+          dateInfo.yearPillar.stem, dateInfo.yearPillar.branch,
+          dateInfo.monthPillar.stem, dateInfo.monthPillar.branch,
+          dateInfo.dayPillar.stem, dateInfo.dayPillar.branch
+        );
+        const wuxingResult = calculateWeightedElements(env, undefined, undefined, daYun, now);
         return generateOutfitAdviceV11(
           input.tenGod ?? '食神',
           input.dailyStrategy ?? '均衡守成',
@@ -3521,7 +3530,9 @@ ${solarTerm ? `節氣：距${solarTerm.name}還有${solarTerm.daysUntil}天` : '
           daYun.currentDaYun.theme,
           input.moonPhaseName ?? '上弦月',
           input.moonPhaseType ?? 'first_quarter',
-          input.userContext
+          input.userContext,
+          wuxingResult.weighted,  // V3.0: 五行加權比例
+          env,                    // V3.0: 環境五行比例
         );
       }),
 
