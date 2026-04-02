@@ -517,7 +517,17 @@ export const yangzhaiRouter = router({
         return { success: true };
       }),
 
-    /** 刪除（停用）化解物品 */
+    /** 硬刪除化解物品 */
+    deleteRemedyItem: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') throw new TRPCError({ code: 'FORBIDDEN' });
+        const db = (await getDb())!;
+        await db.delete(remedyItemsTable).where(eq(remedyItemsTable.id, input.id));
+        return { success: true };
+      }),
+
+    /** 停用/啟用化解物品 */
     toggleRemedyItem: protectedProcedure
       .input(z.object({
         id: z.number(),

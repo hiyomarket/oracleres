@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -8,14 +8,112 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Compass, Shield, AlertTriangle, HelpCircle,
   Sparkles, Eye, Zap, Loader2, CheckCircle2,
   ThumbsUp, ThumbsDown, Camera, Upload, X, ImageIcon,
+  Share2, Copy, AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
+// ─── 社群分享元件 ───────────────────────────────────────────────
+function ShareButtons({ score, detectionCount, mainIssue }: {
+  score: number;
+  detectionCount: number;
+  mainIssue?: string;
+}) {
+  const buildText = () => {
+    if (detectionCount === 0) {
+      return `我的辦公座位環境分數 ${score}/100 🎉 沒有發現環境問題，繼續保持！\n\n透過天命共振辦公室風水診斷`;
+    }
+    const issue = mainIssue ? `主要問題：${mainIssue}` : `發現 ${detectionCount} 個環境問題`;
+    return `我的辦公座位環境分數 ${score}/100\n${issue}\n\n透過天命共振辦公室風水診斷`;
+  };
+  const url = typeof window !== 'undefined' ? `${window.location.origin}/office-fengshui` : 'https://oracleres.com/office-fengshui';
+  const text = buildText();
+
+  const shareToLine = () => {
+    window.open(`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+  };
+  const shareToFacebook = () => {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`, '_blank');
+  };
+  const copyLink = () => {
+    navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+      toast.success("已複製分享內容！");
+    }).catch(() => toast.error("複製失敗，請手動複製"));
+  };
+
+  return (
+    <div className="pt-4 border-t">
+      <p className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+        <Share2 className="w-4 h-4" /> 分享診斷結果
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" size="sm"
+          className="gap-1.5 border-green-500/30 text-green-400 hover:bg-green-500/10"
+          onClick={shareToLine}>
+          <span className="font-bold">L</span> LINE 分享
+        </Button>
+        <Button variant="outline" size="sm"
+          className="gap-1.5 border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+          onClick={shareToFacebook}>
+          <span className="font-bold">f</span> Facebook
+        </Button>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={copyLink}>
+          <Copy className="w-3.5 h-3.5" /> 複製連結
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── 上傳/分析等待動畫 ──────────────────────────────────────────
+function AnalyzingOverlay({ phase }: { phase: 'uploading' | 'analyzing' }) {
+  const uploadMsgs = ['正在上傳照片...', '處理圖片中...', '準備 AI 分析...'];
+  const analyzeMsgs = [
+    'AI 正在掃描你的辦公環境...',
+    '識別座位背後的支撐情況...',
+    '檢查頭頂是否有壓迫物...',
+    '分析門口與座位的關係...',
+    '評估整體環境能量...',
+    '生成改善建議中...',
+  ];
+  const msgs = phase === 'uploading' ? uploadMsgs : analyzeMsgs;
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => setIdx(p => (p + 1) % msgs.length), 2000);
+    return () => clearInterval(timer);
+  }, [msgs.length]);
+
+  return (
+    <div className="flex flex-col items-center justify-center py-10 gap-4">
+      <div className="relative">
+        <div className="w-16 h-16 rounded-full border-4 border-amber-500/20 border-t-amber-400 animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          {phase === 'uploading'
+            ? <Camera className="w-6 h-6 text-amber-400" />
+            : <Sparkles className="w-6 h-6 text-amber-400 animate-pulse" />}
+        </div>
+      </div>
+      <div className="text-center">
+        <p className="text-amber-400 font-medium">{msgs[idx]}</p>
+        {phase === 'analyzing' && (
+          <p className="text-xs text-muted-foreground mt-1">通常需要 10–20 秒</p>
+        )}
+      </div>
+      <div className="flex gap-1">
+        {[0, 1, 2].map(i => (
+          <div key={i} className="w-2 h-2 rounded-full bg-amber-400/60 animate-bounce"
+            style={{ animationDelay: `${i * 0.15}s` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 主元件 ─────────────────────────────────────────────────────
 export default function OfficeFengShui() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("daily");
@@ -26,31 +124,14 @@ export default function OfficeFengShui() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [photoContext, setPhotoContext] = useState("辦公桌");
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadPhase, setUploadPhase] = useState<'idle' | 'uploading' | 'analyzing'>('idle');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 每日方位查詢 - API 從 user profile 讀取 birthYear/gender
-  const dailyQuery = trpc.yangzhai.getDailyDirections.useQuery(
-    undefined,
-    { enabled: !!user }
-  );
-
-  // 形煞問答分析
+  const dailyQuery = trpc.yangzhai.getDailyDirections.useQuery(undefined, { enabled: !!user });
   const quizMutation = trpc.yangzhai.diagnoseFormShaQuiz.useMutation();
-
-  // 照片上傳
   const uploadPhotoMutation = trpc.yangzhai.uploadPhoto.useMutation();
-
-  // 照片分析
   const photoMutation = trpc.yangzhai.analyzeOfficePhoto.useMutation();
-
-  // 歷史記錄
-  const historyQuery = trpc.yangzhai.getAnalysisHistory.useQuery(
-    undefined,
-    { enabled: !!user }
-  );
-
-  // 反饋
+  const historyQuery = trpc.yangzhai.getAnalysisHistory.useQuery(undefined, { enabled: !!user });
   const feedbackMutation = trpc.yangzhai.submitFeedback.useMutation();
 
   if (!user) {
@@ -71,19 +152,20 @@ export default function OfficeFengShui() {
     );
   }
 
+  // ─── 問卷題目（門的方位改為第1題）───
   const quizQuestions = [
-    {
-      id: 'back_support',
-      label: '你的座位背後是什麼？',
-      hint: '背後有沒有實牆支撐，是判斷「靠山」的關鍵',
-      options: ['實牆', '走道/通道', '窗戶', '矮隔板', '其他同事'],
-    },
     {
       id: 'door_position',
       label: '門在你座位的哪個方向？',
-      hint: '門的位置是判斷氣流進出、是否容易受干擾的重要依據',
+      hint: '這是最重要的問題！門的位置決定了氣流進出方向，直接影響你的工作狀態和注意力',
       options: ['正前方', '正後方', '左前方', '右前方', '左後方', '右後方', '看不到門'],
       highlight: true,
+    },
+    {
+      id: 'back_support',
+      label: '你的座位背後是什麼？',
+      hint: '背後有沒有實牆支撐，影響你的安全感和穩定度',
+      options: ['實牆', '走道/通道', '窗戶', '矮隔板', '其他同事'],
     },
     {
       id: 'above_head',
@@ -100,13 +182,13 @@ export default function OfficeFengShui() {
     {
       id: 'left_side',
       label: '你的左手邊是什麼？',
-      hint: '左邊代表貴人方，最好有較高的物品支撐',
+      hint: '左邊是貴人方，最好有較高的物品支撐',
       options: ['實牆', '走道', '窗戶', '較高的櫃子/隔板', '空曠'],
     },
     {
       id: 'right_side',
       label: '你的右手邊是什麼？',
-      hint: '右邊代表動態方，不宜過高',
+      hint: '右邊是動態方，不宜過高',
       options: ['實牆', '走道', '窗戶', '較低的區域', '空曠'],
     },
     {
@@ -131,52 +213,41 @@ export default function OfficeFengShui() {
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("照片大小不能超過 10MB");
-      return;
-    }
+    if (file.size > 10 * 1024 * 1024) { toast.error("照片大小不能超過 10MB"); return; }
     setPhotoFile(file);
-    const url = URL.createObjectURL(file);
-    setPhotoPreview(url);
-    // 讀取 base64
+    photoMutation.reset();
+    setPhotoPreview(URL.createObjectURL(file));
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setPhotoBase64(ev.target?.result as string);
-    };
+    reader.onload = (ev) => setPhotoBase64(ev.target?.result as string);
     reader.readAsDataURL(file);
   };
 
   const handlePhotoAnalyze = async () => {
     if (!photoFile || !photoBase64) return;
-    setIsUploading(true);
+    setUploadPhase('uploading');
     try {
-      // 1. 上傳 base64 到 S3
       const { url: fileUrl } = await uploadPhotoMutation.mutateAsync({
         imageBase64: photoBase64,
         mimeType: photoFile.type,
       });
-      // 2. 呼叫 LLM 分析
-      setIsUploading(false);
-      await photoMutation.mutateAsync({
-        photoUrl: fileUrl,
-        context: photoContext,
-      });
+      setUploadPhase('analyzing');
+      await photoMutation.mutateAsync({ photoUrl: fileUrl, context: photoContext });
       toast.success("照片分析完成！");
-    } catch (err: any) {
-      toast.error(err?.message || "分析失敗，請稍後再試");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '分析失敗，請稍後再試';
+      toast.error(msg);
     } finally {
-      setIsUploading(false);
+      setUploadPhase('idle');
     }
   };
 
   const report = dailyQuery.data;
+  const doorBehind = quizAnswers['door_position'] === '正後方';
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SharedNav currentPage="office-fengshui" />
-
       <div className="container max-w-5xl py-8">
-        {/* 頁面標題 */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-amber-500/10">
@@ -214,7 +285,6 @@ export default function OfficeFengShui() {
               </div>
             ) : report ? (
               <div className="space-y-6">
-                {/* 命卦資訊 */}
                 <Card>
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between mb-4">
@@ -236,16 +306,12 @@ export default function OfficeFengShui() {
                   </CardContent>
                 </Card>
 
-                {/* 每日摘要 */}
                 {report.dailySummary && (
-                  <Card>
-                    <CardContent className="pt-6">
-                      <p className="text-sm text-muted-foreground">{report.dailySummary}</p>
-                    </CardContent>
-                  </Card>
+                  <Card><CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">{report.dailySummary}</p>
+                  </CardContent></Card>
                 )}
 
-                {/* 八方位吉凶 */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">今日八方位吉凶</CardTitle>
@@ -257,20 +323,12 @@ export default function OfficeFengShui() {
                         const isGood = dir.finalScore > 0;
                         const isBad = dir.finalScore < -30;
                         return (
-                          <div
-                            key={dir.direction}
-                            className={`p-3 rounded-lg border text-center transition-all ${
-                              isBad
-                                ? 'bg-red-500/10 border-red-500/30'
-                                : isGood
-                                ? 'bg-green-500/10 border-green-500/30'
-                                : 'bg-muted/30 border-border'
-                            }`}
-                          >
+                          <div key={dir.direction} className={`p-3 rounded-lg border text-center transition-all ${
+                            isBad ? 'bg-red-500/10 border-red-500/30' :
+                            isGood ? 'bg-green-500/10 border-green-500/30' : 'bg-muted/30 border-border'
+                          }`}>
                             <p className="font-bold text-lg">{dir.direction}</p>
-                            <p className={`text-sm font-medium ${
-                              isBad ? 'text-red-400' : isGood ? 'text-green-400' : 'text-muted-foreground'
-                            }`}>
+                            <p className={`text-sm font-medium ${isBad ? 'text-red-400' : isGood ? 'text-green-400' : 'text-muted-foreground'}`}>
                               {dir.star}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
@@ -281,14 +339,6 @@ export default function OfficeFengShui() {
                                 <AlertTriangle className="w-3 h-3 mr-1" /> 沖煞
                               </Badge>
                             )}
-                            {dir.isThreeKilling && (
-                              <Badge variant="secondary" className="mt-1 text-xs">
-                                不利
-                              </Badge>
-                            )}
-                            {dir.officeAdvice && (
-                              <p className="text-xs mt-2 text-muted-foreground">{dir.officeAdvice}</p>
-                            )}
                           </div>
                         );
                       })}
@@ -296,43 +346,39 @@ export default function OfficeFengShui() {
                   </CardContent>
                 </Card>
 
-                {/* 今日辦公建議 */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-400" />
-                      今日辦公開運建議
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {report.bestDirection && (
-                      <div className="p-4 rounded-lg bg-green-500/5 border border-green-500/20">
-                        <p className="font-medium text-green-400 mb-1">
-                          最佳方位：{report.bestDirection.direction}（{report.bestDirection.star}）
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {report.bestDirection && (
+                    <Card className="border-green-500/30">
+                      <CardContent className="pt-4">
+                        <p className="text-sm font-medium text-green-400 mb-1">
+                          今日最佳：{report.bestDirection.direction}（{report.bestDirection.star}）
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {report.bestDirection.officeAdvice || '開會、談判、面試盡量選擇面向此方位的座位'}
+                          {report.bestDirection.officeAdvice || '今日適合在此方位進行重要會議或決策'}
                         </p>
-                      </div>
-                    )}
-                    {report.worstDirection && (
-                      <div className="p-4 rounded-lg bg-red-500/5 border border-red-500/20">
-                        <p className="font-medium text-red-400 mb-1">
+                      </CardContent>
+                    </Card>
+                  )}
+                  {report.worstDirection && (
+                    <Card className="border-red-500/30">
+                      <CardContent className="pt-4">
+                        <p className="text-sm font-medium text-red-400 mb-1">
                           今日避開：{report.worstDirection.direction}（{report.worstDirection.star}）
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {report.worstDirection.officeAdvice || '今日避免在此方位進行重要決策或與人爭執'}
                         </p>
-                      </div>
-                    )}
-                    {report.seatAdvice && (
-                      <div className="p-4 rounded-lg bg-amber-500/5 border border-amber-500/20">
-                        <p className="text-sm font-medium text-amber-400 mb-1">座位建議</p>
-                        <p className="text-sm text-muted-foreground">{report.seatAdvice}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+
+                {report.seatAdvice && (
+                  <Card><CardContent className="pt-4">
+                    <p className="text-sm font-medium text-amber-400 mb-1">座位建議</p>
+                    <p className="text-sm text-muted-foreground">{report.seatAdvice}</p>
+                  </CardContent></Card>
+                )}
               </div>
             ) : (
               <Card className="p-8 text-center text-muted-foreground">
@@ -356,36 +402,50 @@ export default function OfficeFengShui() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {quizQuestions.map((q, idx) => (
-                    <div
-                      key={q.id}
-                      className={q.highlight ? 'p-4 rounded-lg border-2 border-amber-500/40 bg-amber-500/5' : ''}
-                    >
-                      <Label className="text-sm font-medium mb-1 block">
-                        {idx + 1}. {q.label}
-                        {q.highlight && (
-                          <Badge className="ml-2 text-xs bg-amber-500/20 text-amber-400 border-amber-500/30">
-                            重要
-                          </Badge>
+                  {quizQuestions.map((q, idx) => {
+                    const isDoor = q.id === 'door_position';
+                    const showDoorWarning = isDoor && quizAnswers['door_position'] === '正後方';
+                    return (
+                      <div key={q.id}>
+                        <div className={isDoor ? 'p-4 rounded-lg border-2 border-amber-500/40 bg-amber-500/5' : ''}>
+                          <Label className="text-sm font-medium mb-1 block">
+                            {idx + 1}. {q.label}
+                            {isDoor && (
+                              <Badge className="ml-2 text-xs bg-amber-500/20 text-amber-400 border-amber-500/30">
+                                最重要
+                              </Badge>
+                            )}
+                          </Label>
+                          {q.hint && <p className="text-xs text-muted-foreground mb-2">{q.hint}</p>}
+                          <div className="flex flex-wrap gap-2">
+                            {q.options.map((opt) => (
+                              <Button
+                                key={opt}
+                                variant={quizAnswers[q.id] === opt ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: opt }))}
+                              >
+                                {opt}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                        {/* 門在正後方即時警示 */}
+                        {showDoorWarning && (
+                          <div className="mt-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 flex items-start gap-2">
+                            <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+                            <div>
+                              <p className="text-sm font-medium text-red-400">注意！門在背後是最需要改善的情況</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                背後有門會讓你無法掌握進出情況，容易被突然進入的人嚇到，也難以集中注意力。
+                                建議盡量換到有實牆的座位，或在椅背放一件深色外套作為「靠山」。
+                              </p>
+                            </div>
+                          </div>
                         )}
-                      </Label>
-                      {q.hint && (
-                        <p className="text-xs text-muted-foreground mb-2">{q.hint}</p>
-                      )}
-                      <div className="flex flex-wrap gap-2">
-                        {q.options.map((opt) => (
-                          <Button
-                            key={opt}
-                            variant={quizAnswers[q.id] === opt ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: opt }))}
-                          >
-                            {opt}
-                          </Button>
-                        ))}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   <div className="pt-4 border-t">
                     <Button
@@ -395,15 +455,9 @@ export default function OfficeFengShui() {
                       size="lg"
                     >
                       {quizMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          AI 正在分析你的座位環境...
-                        </>
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" />AI 正在分析你的座位環境...</>
                       ) : (
-                        <>
-                          <Zap className="w-4 h-4 mr-2" />
-                          開始分析（{Object.keys(quizAnswers).length}/{quizQuestions.length}）
-                        </>
+                        <><Zap className="w-4 h-4 mr-2" />開始分析（{Object.keys(quizAnswers).length}/{quizQuestions.length}）</>
                       )}
                     </Button>
                   </div>
@@ -426,6 +480,20 @@ export default function OfficeFengShui() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {/* 門在正後方特別警示 */}
+                    {doorBehind && (
+                      <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertCircle className="w-5 h-5 text-red-400" />
+                          <p className="font-medium text-red-400">重要提醒：門在你的背後</p>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          這是辦公環境中最需要優先改善的問題。門在背後會讓你長期處於「無法掌控進出」的狀態，
+                          容易分心、緊張，也影響工作效率。建議優先換到有實牆的座位。
+                        </p>
+                      </div>
+                    )}
+
                     {quizMutation.data.detections?.filter((d) => d.detected).length === 0 && (
                       <div className="p-4 rounded-lg bg-green-500/5 border border-green-500/20 text-center">
                         <CheckCircle2 className="w-8 h-8 text-green-400 mx-auto mb-2" />
@@ -434,7 +502,6 @@ export default function OfficeFengShui() {
                       </div>
                     )}
 
-                    {/* 問題列表 */}
                     {quizMutation.data.detections?.filter((d) => d.detected).map((sha, i: number) => (
                       <div key={i} className="p-4 rounded-lg border bg-muted/20">
                         <div className="flex items-center justify-between mb-2">
@@ -446,10 +513,7 @@ export default function OfficeFengShui() {
                             }`} />
                             <span className="font-medium">{sha.shaName}</span>
                           </div>
-                          <Badge variant={
-                            sha.priority === 'critical' || sha.priority === 'high' ? 'destructive' :
-                            sha.priority === 'medium' ? 'secondary' : 'outline'
-                          }>
+                          <Badge variant={sha.priority === 'critical' || sha.priority === 'high' ? 'destructive' : sha.priority === 'medium' ? 'secondary' : 'outline'}>
                             {sha.priority === 'critical' ? '需要立即處理' :
                              sha.priority === 'high' ? '建議盡快處理' :
                              sha.priority === 'medium' ? '可以改善' : '小調整'}
@@ -464,13 +528,10 @@ export default function OfficeFengShui() {
                             </p>
                           </div>
                         )}
-                        {sha.urgencyMessage && (
-                          <p className="text-xs text-amber-400 mt-1">{sha.urgencyMessage}</p>
-                        )}
+                        {sha.urgencyMessage && <p className="text-xs text-amber-400 mt-1">{sha.urgencyMessage}</p>}
                       </div>
                     ))}
 
-                    {/* 優先行動清單 */}
                     {quizMutation.data.prioritizedActions?.length > 0 && (
                       <div className="space-y-2">
                         <p className="font-medium text-sm">建議改善順序：</p>
@@ -483,13 +544,18 @@ export default function OfficeFengShui() {
                       </div>
                     )}
 
-                    {/* 整體建議 */}
                     {quizMutation.data.overallAdvice && (
                       <div className="p-4 rounded-lg bg-amber-500/5 border border-amber-500/20">
                         <p className="text-sm font-medium text-amber-400 mb-1">綜合建議</p>
                         <p className="text-sm text-muted-foreground">{quizMutation.data.overallAdvice}</p>
                       </div>
                     )}
+
+                    <ShareButtons
+                      score={quizMutation.data.overallScore}
+                      detectionCount={quizMutation.data.detections?.filter(d => d.detected).length ?? 0}
+                      mainIssue={quizMutation.data.detections?.find(d => d.detected)?.shaName}
+                    />
                   </CardContent>
                 </Card>
               )}
@@ -512,10 +578,10 @@ export default function OfficeFengShui() {
                 <CardContent className="space-y-4">
                   {/* 照片上傳區 */}
                   <div
-                    className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-                      photoPreview ? 'border-amber-500/50 bg-amber-500/5' : 'border-border hover:border-amber-500/30 hover:bg-muted/20'
+                    className={`relative border-2 border-dashed rounded-xl overflow-hidden cursor-pointer transition-all ${
+                      photoPreview ? 'border-amber-500/50' : 'border-border hover:border-amber-500/30 hover:bg-muted/20'
                     }`}
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => uploadPhase === 'idle' && fileInputRef.current?.click()}
                   >
                     <input
                       ref={fileInputRef}
@@ -527,28 +593,27 @@ export default function OfficeFengShui() {
                     />
                     {photoPreview ? (
                       <div className="relative">
-                        <img
-                          src={photoPreview}
-                          alt="預覽"
-                          className="max-h-64 mx-auto rounded-lg object-contain"
-                        />
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="absolute top-2 right-2"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPhotoFile(null);
-                            setPhotoPreview(null);
-                            setPhotoBase64(null);
-                            photoMutation.reset();
-                          }}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
+                        <img src={photoPreview} alt="預覽" className="w-full max-h-64 object-cover" />
+                        {uploadPhase === 'idle' && (
+                          <button
+                            className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 hover:bg-background transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPhotoFile(null);
+                              setPhotoPreview(null);
+                              setPhotoBase64(null);
+                              photoMutation.reset();
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                        <div className="absolute bottom-2 left-2 bg-background/80 rounded px-2 py-0.5 text-xs text-muted-foreground">
+                          {photoFile?.name}
+                        </div>
                       </div>
                     ) : (
-                      <div className="space-y-3">
+                      <div className="p-8 text-center space-y-3">
                         <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto">
                           <ImageIcon className="w-8 h-8 text-amber-400" />
                         </div>
@@ -556,7 +621,7 @@ export default function OfficeFengShui() {
                           <p className="font-medium">點擊拍照或選擇照片</p>
                           <p className="text-sm text-muted-foreground mt-1">支援 JPG、PNG，最大 10MB</p>
                         </div>
-                        <div className="flex justify-center gap-3">
+                        <div className="flex justify-center gap-4">
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Camera className="w-3.5 h-3.5" /> 直接拍照
                           </div>
@@ -568,54 +633,50 @@ export default function OfficeFengShui() {
                     )}
                   </div>
 
-                  {/* 場景說明 */}
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">這張照片是什麼場景？</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {['辦公桌', '整個座位區域', '辦公室全景', '租屋房間', '書桌'].map((ctx) => (
-                        <Button
-                          key={ctx}
-                          variant={photoContext === ctx ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => setPhotoContext(ctx)}
-                        >
-                          {ctx}
-                        </Button>
-                      ))}
+                  {/* 場景選擇 */}
+                  {photoPreview && uploadPhase === 'idle' && (
+                    <div>
+                      <Label className="text-sm font-medium mb-2 block">這張照片是什麼場景？</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {['辦公桌', '整個座位區域', '辦公室全景', '租屋房間', '書桌'].map((ctx) => (
+                          <Button
+                            key={ctx}
+                            variant={photoContext === ctx ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setPhotoContext(ctx)}
+                          >
+                            {ctx}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* 分析提示 */}
-                  <div className="p-3 rounded-lg bg-muted/20 border border-border text-xs text-muted-foreground space-y-1">
-                    <p className="font-medium text-foreground">拍照小技巧：</p>
-                    <p>• 盡量拍到座位背後的環境（牆/走道/窗戶）</p>
-                    <p>• 包含頭頂上方（有沒有橫樑、管線）</p>
-                    <p>• 桌面和周圍環境一起拍進去</p>
-                  </div>
+                  {/* 拍照小技巧 */}
+                  {!photoPreview && (
+                    <div className="p-3 rounded-lg bg-muted/20 border border-border text-xs text-muted-foreground space-y-1">
+                      <p className="font-medium text-foreground">拍照小技巧：</p>
+                      <p>• 盡量拍到座位背後的環境（牆/走道/窗戶）</p>
+                      <p>• 包含頭頂上方（有沒有橫樑、管線）</p>
+                      <p>• 桌面和周圍環境一起拍進去</p>
+                    </div>
+                  )}
 
-                  <Button
-                    onClick={handlePhotoAnalyze}
-                    disabled={!photoFile || !photoBase64 || isUploading || uploadPhotoMutation.isPending || photoMutation.isPending}
-                    className="w-full"
-                    size="lg"
-                  >
-                      {isUploading || uploadPhotoMutation.isPending || photoMutation.isPending ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          {isUploading || uploadPhotoMutation.isPending ? '上傳照片中...' : 'AI 正在分析照片...'}
-                        </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        開始 AI 照片分析
-                      </>
-                    )}
-                  </Button>
+                  {/* 上傳/分析動畫 */}
+                  {uploadPhase !== 'idle' && <AnalyzingOverlay phase={uploadPhase} />}
+
+                  {/* 分析按鈕 */}
+                  {uploadPhase === 'idle' && photoFile && (
+                    <Button onClick={handlePhotoAnalyze} className="w-full" size="lg">
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      開始 AI 照片分析
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
 
               {/* 照片分析結果 */}
-              {photoMutation.data && (
+              {photoMutation.data && uploadPhase === 'idle' && (
                 <Card className="border-amber-500/30">
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -648,10 +709,7 @@ export default function OfficeFengShui() {
                             }`} />
                             <span className="font-medium">{sha.shaName}</span>
                           </div>
-                          <Badge variant={
-                            sha.priority === 'critical' || sha.priority === 'high' ? 'destructive' :
-                            sha.priority === 'medium' ? 'secondary' : 'outline'
-                          }>
+                          <Badge variant={sha.priority === 'critical' || sha.priority === 'high' ? 'destructive' : sha.priority === 'medium' ? 'secondary' : 'outline'}>
                             {sha.priority === 'critical' ? '需要立即處理' :
                              sha.priority === 'high' ? '建議盡快處理' :
                              sha.priority === 'medium' ? '可以改善' : '小調整'}
@@ -688,6 +746,12 @@ export default function OfficeFengShui() {
                         <p className="text-sm text-muted-foreground">{photoMutation.data.overallAdvice}</p>
                       </div>
                     )}
+
+                    <ShareButtons
+                      score={photoMutation.data.overallScore}
+                      detectionCount={photoMutation.data.detections?.filter(d => d.detected).length ?? 0}
+                      mainIssue={photoMutation.data.detections?.find(d => d.detected)?.shaName}
+                    />
                   </CardContent>
                 </Card>
               )}
@@ -728,24 +792,18 @@ export default function OfficeFengShui() {
                       </div>
                       {!record.feedback && (
                         <div className="flex gap-2 mt-3">
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <Button variant="outline" size="sm"
                             onClick={() => feedbackMutation.mutate(
                               { analysisId: record.id, feedback: 'helpful' },
                               { onSuccess: () => historyQuery.refetch() }
-                            )}
-                          >
+                            )}>
                             <ThumbsUp className="w-3 h-3 mr-1" /> 有幫助
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
+                          <Button variant="outline" size="sm"
                             onClick={() => feedbackMutation.mutate(
                               { analysisId: record.id, feedback: 'not_helpful' },
                               { onSuccess: () => historyQuery.refetch() }
-                            )}
-                          >
+                            )}>
                             <ThumbsDown className="w-3 h-3 mr-1" /> 沒幫助
                           </Button>
                         </div>
