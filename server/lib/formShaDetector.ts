@@ -289,25 +289,109 @@ export async function diagnoseByDescription(
     if (sha) detections.push(createDetection(sha, 80, '座位附近有尖角', sha.remedy));
   }
 
-  // 植物狀態檢測（plants）
+  // 廁所位置檢測（toilet_position）
+  const toiletAnswer = answers['toilet_position'] || '';
+  if (toiletAnswer.includes('正前方') || toiletAnswer.includes('正後方')) {
+    const sha = library.find(s => s.id === 'sha_toilet_adjacent');
+    if (sha) {
+      const loc = toiletAnswer.includes('正前方') ? '廁所在座位正前方，氣場直接影響工作區' : '廁所在座位正後方，容易影響背後能量';
+      detections.push(createDetection(sha, 80, loc, sha.remedy + '\n\n廁所在正前方或正後方時，建議在桌上放一碟粗鹽（每週更換），或在廁所方向放一盆植物作為緩衝。'));
+    }
+  } else if (toiletAnswer.includes('左方') || toiletAnswer.includes('右方') || toiletAnswer.includes('斜對角')) {
+    const sha = library.find(s => s.id === 'sha_toilet_adjacent');
+    if (sha) detections.push(createDetection(sha, 55, '廁所在座位側方', sha.remedy));
+  }
+
+  // 鏡子檢測（mirror_situation）
+  const mirrorAnswer = answers['mirror_situation'] || '';
+  if (mirrorAnswer.includes('正面對著我')) {
+    const sha = library.find(s => s.id === 'sha_mirror_reflect');
+    if (sha) detections.push(createDetection(sha, 85, '鏡子正對座位', '用霧面貼紙貼在鏡子上，或在鏡子前放植物遮擋。鏡子正對人容易讓人分心，也容易引起不必要的衝突。'));
+  } else if (mirrorAnswer.includes('在我側面')) {
+    const sha = library.find(s => s.id === 'sha_mirror_reflect');
+    if (sha) detections.push(createDetection(sha, 60, '鏡子在座位側面', sha.remedy));
+  }
+
+  // 魚缸位置檢測（fish_tank）
+  const fishTankAnswer = answers['fish_tank'] || '';
+  if (fishTankAnswer.includes('有，') && !fishTankAnswer.includes('沒有')) {
+    if (fishTankAnswer.includes('正後方')) {
+      // 魚缸在正後方：破財且爛桃花
+      detections.push({
+        detected: true,
+        shaId: 'sha_fish_tank_wrong',
+        shaName: '魚缸位置不對',
+        priority: 'high',
+        confidence: 85,
+        description: '魚缸放在座位正後方是最不好的位置，容易造成財運不穩，也可能引起感情上的困擾（爛桃花）。水往後流代表財去人散。',
+        location: '座位正後方',
+        remedy: '將魚缸移到座位的左邊（財位），或移到辦公室的東南角。如果無法移動，在魚缸和座位之間放一個書架或隔板做緩衝。',
+        remedyItems: ['書架（隔板）', '富貴竹（水培）'],
+        urgencyMessage: '建議盡快調整魚缸位置，這個問題同時影響財運和感情運',
+      });
+    } else if (fishTankAnswer.includes('正前方')) {
+      // 魚缸在正前方：可聚財但要注意距離
+      detections.push({
+        detected: true,
+        shaId: 'sha_fish_tank_front',
+        shaName: '魚缸在正前方',
+        priority: 'low',
+        confidence: 65,
+        description: '魚缸在座位正前方有一定的聚財效果，但如果距離太近（1公尺內）會讓人分心，也容易讓眼睛疲勞。',
+        location: '座位正前方',
+        remedy: '確保魚缸距離座位至少1.5公尺以上，且不要讓魚缸的水聲過大。魚缸保持清潔，定期換水。',
+        remedyItems: ['魚缸過濾器（靜音型）'],
+        urgencyMessage: '注意魚缸距離和清潔度即可',
+      });
+    } else if (fishTankAnswer.includes('左邊')) {
+      // 魚缸在左邊：最佳位置，聚財
+      // 不加入 detections，這是好的情況
+    } else if (fishTankAnswer.includes('右邊')) {
+      // 魚缸在右邊：次佳位置
+      // 不加入 detections
+    }
+  }
+
+  // 環境問題複選（environment_issues）
+  const envAnswer = answers['environment_issues'] || '';
+  if (envAnswer.includes('枯萎的植物')) {
+    const sha = library.find(s => s.id === 'sha_sharp_plants');
+    if (sha) detections.push(createDetection(sha, 70, '桌上有枯萎植物', '將枯萎植物移除或替換成健康的植物，枯萎的植物會帶來負面能量'));
+  }
+  if (envAnswer.includes('桌面很雜亂')) {
+    const sha = library.find(s => s.id === 'sha_clutter');
+    if (sha) detections.push(createDetection(sha, 75, '桌面', sha.remedy));
+  }
+  if (envAnswer.includes('光線昏暗')) {
+    const sha = library.find(s => s.id === 'sha_dark_corner');
+    if (sha) detections.push(createDetection(sha, 70, '整體環境', sha.remedy));
+  }
+
+  // 植物狀態檢測（舊版 key）
   const plantsAnswer = answers['plants'] || '';
   if (plantsAnswer.includes('枯萎')) {
     const sha = library.find(s => s.id === 'sha_sharp_plants');
-    if (sha) detections.push(createDetection(sha, 70, '桌上有枯萎植物', '將枯萎植物移除或替換成健康的植物，枯萎的植物會帶來負面能量'));
+    if (sha && !detections.find(d => d.shaId === 'sha_sharp_plants')) {
+      detections.push(createDetection(sha, 70, '桌上有枯萎植物', '將枯萎植物移除或替換成健康的植物，枯萎的植物會帶來負面能量'));
+    }
   }
 
   // 採光檢測（舊版 key）
   const lightAnswer = answers['採光情況'] || '';
   if (lightAnswer.includes('不足') || lightAnswer.includes('陰暗')) {
     const sha = library.find(s => s.id === 'sha_dark_corner');
-    if (sha) detections.push(createDetection(sha, 70, '整體環境', sha.remedy));
+    if (sha && !detections.find(d => d.shaId === 'sha_dark_corner')) {
+      detections.push(createDetection(sha, 70, '整體環境', sha.remedy));
+    }
   }
 
   // 桌面狀況檢測（舊版 key）
   const deskAnswer = answers['桌面狀況'] || '';
   if (deskAnswer.includes('凌亂') || deskAnswer.includes('堆滿')) {
     const sha = library.find(s => s.id === 'sha_clutter');
-    if (sha) detections.push(createDetection(sha, 75, '桌面', sha.remedy));
+    if (sha && !detections.find(d => d.shaId === 'sha_clutter')) {
+      detections.push(createDetection(sha, 75, '桌面', sha.remedy));
+    }
   }
 
   // 如果規則匹配沒有找到任何問題，用 LLM 做更深入分析

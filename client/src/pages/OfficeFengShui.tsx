@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -12,7 +12,7 @@ import {
   Compass, Shield, AlertTriangle, HelpCircle,
   Sparkles, Eye, Zap, Loader2, CheckCircle2,
   ThumbsUp, ThumbsDown, Camera, Upload, X, ImageIcon,
-  Share2, Copy, AlertCircle,
+  Share2, Copy, AlertCircle, Navigation, RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -70,6 +70,7 @@ function ShareButtons({ score, detectionCount, mainIssue }: {
 
 // ─── 上傳/分析等待動畫 ──────────────────────────────────────────
 function AnalyzingOverlay({ phase }: { phase: 'uploading' | 'analyzing' }) {
+  const [idx, setIdx] = useState(0);
   const uploadMsgs = ['正在上傳照片...', '處理圖片中...', '準備 AI 分析...'];
   const analyzeMsgs = [
     'AI 正在掃描你的辦公環境...',
@@ -80,21 +81,17 @@ function AnalyzingOverlay({ phase }: { phase: 'uploading' | 'analyzing' }) {
     '生成改善建議中...',
   ];
   const msgs = phase === 'uploading' ? uploadMsgs : analyzeMsgs;
-  const [idx, setIdx] = useState(0);
-
   useEffect(() => {
-    const timer = setInterval(() => setIdx(p => (p + 1) % msgs.length), 2000);
-    return () => clearInterval(timer);
+    const t = setInterval(() => setIdx(i => (i + 1) % msgs.length), 1800);
+    return () => clearInterval(t);
   }, [msgs.length]);
-
   return (
-    <div className="flex flex-col items-center justify-center py-10 gap-4">
-      <div className="relative">
-        <div className="w-16 h-16 rounded-full border-4 border-amber-500/20 border-t-amber-400 animate-spin" />
+    <div className="flex flex-col items-center gap-3 py-8">
+      <div className="relative w-16 h-16">
+        <div className="absolute inset-0 rounded-full border-4 border-amber-500/20" />
+        <div className="absolute inset-0 rounded-full border-4 border-t-amber-400 animate-spin" />
         <div className="absolute inset-0 flex items-center justify-center">
-          {phase === 'uploading'
-            ? <Camera className="w-6 h-6 text-amber-400" />
-            : <Sparkles className="w-6 h-6 text-amber-400 animate-pulse" />}
+          {phase === 'uploading' ? <Upload className="w-6 h-6 text-amber-400" /> : <Sparkles className="w-6 h-6 text-amber-400" />}
         </div>
       </div>
       <div className="text-center">
@@ -113,11 +110,271 @@ function AnalyzingOverlay({ phase }: { phase: 'uploading' | 'analyzing' }) {
   );
 }
 
+// ─── 手機羅盤元件 ────────────────────────────────────────────────
+const DIRECTIONS_8 = ['北', '東北', '東', '東南', '南', '西南', '西', '西北'];
+const DIRECTIONS_LABELS: Record<string, string> = {
+  '北': 'N', '東北': 'NE', '東': 'E', '東南': 'SE',
+  '南': 'S', '西南': 'SW', '西': 'W', '西北': 'NW',
+};
+
+function getDirectionName(heading: number): string {
+  const idx = Math.round(heading / 45) % 8;
+  return DIRECTIONS_8[idx];
+}
+
+function CompassWidget({ onSelect }: { onSelect: (dir: string) => void }) {
+  const [heading, setHeading] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [permissionState, setPermissionState] = useState<'idle' | 'requesting' | 'granted' | 'denied'>('idle');
+  const [manualMode, setManualMode] = useState(false);
+
+  const startCompass = useCallback(async () => {
+    setPermissionState('requesting');
+    setError(null);
+
+    // iOS 13+ requires explicit permission
+    if (typeof (DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }).requestPermission === 'function') {
+      try {
+        const perm = await (DeviceOrientationEvent as unknown as { requestPermission: () => Promise<string> }).requestPermission();
+        if (perm !== 'granted') {
+          setPermissionState('denied');
+          setError('請在手機設定中允許方向感應器存取');
+          return;
+        }
+      } catch {
+        setPermissionState('denied');
+        setError('無法取得方向感應器權限');
+        return;
+      }
+    }
+
+    setPermissionState('granted');
+
+    const handler = (e: DeviceOrientationEvent) => {
+      // webkitCompassHeading for iOS, alpha for Android (need to convert)
+      const ios = (e as DeviceOrientationEvent & { webkitCompassHeading?: number }).webkitCompassHeading;
+      if (ios !== undefined && ios !== null) {
+        setHeading(ios);
+      } else if (e.alpha !== null) {
+        // Android: alpha is degrees from north, but counter-clockwise
+        setHeading((360 - e.alpha) % 360);
+      }
+    };
+
+    window.addEventListener('deviceorientation', handler, true);
+    return () => window.removeEventListener('deviceorientation', handler, true);
+  }, []);
+
+  const currentDir = heading !== null ? getDirectionName(heading) : null;
+
+  if (manualMode) {
+    return (
+      <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium flex items-center gap-2">
+            <Compass className="w-4 h-4 text-amber-400" /> 手動選擇座位朝向
+          </p>
+          <Button variant="ghost" size="sm" onClick={() => setManualMode(false)} className="text-xs">
+            <Navigation className="w-3 h-3 mr-1" /> 用羅盤偵測
+          </Button>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {DIRECTIONS_8.map(dir => (
+            <Button key={dir} variant="outline" size="sm"
+              className="flex flex-col h-12 gap-0.5"
+              onClick={() => onSelect(dir)}>
+              <span className="text-xs text-muted-foreground">{DIRECTIONS_LABELS[dir]}</span>
+              <span className="font-medium">{dir}</span>
+            </Button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium flex items-center gap-2">
+          <Navigation className="w-4 h-4 text-amber-400" /> 手機羅盤偵測
+        </p>
+        <Button variant="ghost" size="sm" onClick={() => setManualMode(true)} className="text-xs">
+          手動選擇
+        </Button>
+      </div>
+
+      {permissionState === 'idle' && (
+        <div className="text-center py-4 space-y-3">
+          <div className="w-16 h-16 rounded-full border-2 border-amber-500/30 flex items-center justify-center mx-auto">
+            <Compass className="w-8 h-8 text-amber-400/60" />
+          </div>
+          <p className="text-sm text-muted-foreground">讓手機羅盤自動偵測你的座位朝向</p>
+          <Button onClick={startCompass} size="sm" className="gap-2">
+            <Navigation className="w-4 h-4" /> 開啟羅盤
+          </Button>
+        </div>
+      )}
+
+      {permissionState === 'requesting' && (
+        <div className="text-center py-4">
+          <Loader2 className="w-8 h-8 animate-spin text-amber-400 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">正在請求感應器權限...</p>
+        </div>
+      )}
+
+      {permissionState === 'denied' && (
+        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+          {error}
+          <Button variant="ghost" size="sm" className="mt-2 w-full" onClick={() => setManualMode(true)}>
+            改用手動選擇
+          </Button>
+        </div>
+      )}
+
+      {permissionState === 'granted' && (
+        <div className="space-y-3">
+          {heading !== null ? (
+            <>
+              {/* 羅盤視覺 */}
+              <div className="relative w-40 h-40 mx-auto">
+                <svg viewBox="0 0 160 160" className="w-full h-full">
+                  {/* 外圈 */}
+                  <circle cx="80" cy="80" r="75" fill="none" stroke="hsl(var(--border))" strokeWidth="2" />
+                  {/* 方位標記 */}
+                  {DIRECTIONS_8.map((dir, i) => {
+                    const angle = (i * 45 - 90) * (Math.PI / 180);
+                    const x = 80 + 60 * Math.cos(angle);
+                    const y = 80 + 60 * Math.sin(angle);
+                    return (
+                      <text key={dir} x={x} y={y} textAnchor="middle" dominantBaseline="middle"
+                        fontSize="9" fill={dir === currentDir ? '#f59e0b' : 'hsl(var(--muted-foreground))'}
+                        fontWeight={dir === currentDir ? 'bold' : 'normal'}>
+                        {dir}
+                      </text>
+                    );
+                  })}
+                  {/* 指針 - 旋轉到 heading 方向 */}
+                  <g transform={`rotate(${heading}, 80, 80)`}>
+                    <polygon points="80,20 76,80 80,85 84,80" fill="#ef4444" />
+                    <polygon points="80,140 76,80 80,85 84,80" fill="hsl(var(--muted-foreground))" />
+                  </g>
+                  {/* 中心點 */}
+                  <circle cx="80" cy="80" r="5" fill="hsl(var(--background))" stroke="hsl(var(--border))" strokeWidth="2" />
+                </svg>
+              </div>
+
+              <div className="text-center">
+                <p className="text-2xl font-bold text-amber-400">{currentDir}</p>
+                <p className="text-xs text-muted-foreground">{Math.round(heading)}° — 你目前面對的方向</p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button onClick={() => onSelect(currentDir!)} className="flex-1" size="sm">
+                  <CheckCircle2 className="w-4 h-4 mr-1" /> 確認是 {currentDir}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setHeading(null)}>
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                請面向你的座位坐好，讓手機平放，等指針穩定後確認
+              </p>
+            </>
+          ) : (
+            <div className="text-center py-4">
+              <Loader2 className="w-8 h-8 animate-spin text-amber-400 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">等待感應器回應...</p>
+              <p className="text-xs text-muted-foreground mt-1">請確認手機未鎖定方向</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── 問卷題目定義 ────────────────────────────────────────────────
+type QuizQuestion = {
+  id: string;
+  label: string;
+  hint?: string;
+  options: string[];
+  multi?: boolean;   // 複選題
+  highlight?: boolean;
+};
+
+const QUIZ_QUESTIONS: QuizQuestion[] = [
+  {
+    id: 'door_position',
+    label: '門在你座位的哪個方向？',
+    hint: '這是最重要的問題！門的位置決定了氣流進出方向，直接影響你的工作狀態和注意力',
+    options: ['正前方', '正後方', '左前方', '右前方', '左後方', '右後方', '看不到門'],
+    highlight: true,
+  },
+  {
+    id: 'back_support',
+    label: '你的座位背後是什麼？',
+    hint: '背後有沒有實牆支撐，影響你的安全感和穩定度',
+    options: ['實牆', '走道/通道', '窗戶', '矮隔板', '其他同事'],
+  },
+  {
+    id: 'above_head',
+    label: '你的頭頂上方有什麼？',
+    hint: '頭頂有橫樑或管線會造成無形的壓迫感',
+    options: ['平整天花板', '橫樑', '管線/風管', '吊燈/吊扇', '冷氣出風口'],
+  },
+  {
+    id: 'desk_facing',
+    label: '你的桌面正對什麼？',
+    hint: '桌面朝向影響你的工作氣場',
+    options: ['牆壁', '窗戶', '走道', '門口', '其他同事的背'],
+  },
+  {
+    id: 'toilet_position',
+    label: '廁所在你辦公室的哪個方向？',
+    hint: '廁所的位置和方向對工作運勢有影響，特別是在你的正前方或正後方時',
+    options: ['沒有廁所/不知道', '正前方', '正後方', '左方', '右方', '斜對角'],
+  },
+  {
+    id: 'mirror_situation',
+    label: '辦公室有沒有鏡子對著你？',
+    hint: '鏡子正對人會讓人容易分心，也容易引起不必要的衝突',
+    options: ['沒有鏡子', '有，正面對著我', '有，在我側面', '有，在我背後'],
+  },
+  {
+    id: 'fish_tank',
+    label: '辦公室有沒有魚缸？',
+    hint: '魚缸放對位置可以聚財，放錯位置反而破財，還可能引起感情問題',
+    options: ['沒有魚缸', '有，在我的左邊', '有，在我的右邊', '有，在我的正前方', '有，在我的正後方', '有，但位置不確定'],
+  },
+  {
+    id: 'sharp_corners',
+    label: '附近有沒有尖角對著你？（柱子角、牆角、桌角）',
+    hint: '尖角對著人會造成無形的壓力，可以選多個',
+    options: ['沒有', '有，在前方', '有，在側面', '有，在後方'],
+    multi: true,
+  },
+  {
+    id: 'environment_issues',
+    label: '你的辦公環境還有哪些狀況？（可多選）',
+    hint: '多選，選出所有符合你環境的狀況',
+    options: ['有枯萎的植物', '桌面很雜亂', '光線昏暗', '噪音很大', '空氣不流通', '以上都沒有'],
+    multi: true,
+  },
+];
+
 // ─── 主元件 ─────────────────────────────────────────────────────
 export default function OfficeFengShui() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("daily");
+
+  // 單選答案
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
+  // 複選答案
+  const [quizMultiAnswers, setQuizMultiAnswers] = useState<Record<string, string[]>>({});
+  // 羅盤偵測到的方向
+  const [compassDetected, setCompassDetected] = useState<string | null>(null);
+  const [showCompass, setShowCompass] = useState(false);
 
   // 照片上傳狀態
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -152,62 +409,50 @@ export default function OfficeFengShui() {
     );
   }
 
-  // ─── 問卷題目（門的方位改為第1題）───
-  const quizQuestions = [
-    {
-      id: 'door_position',
-      label: '門在你座位的哪個方向？',
-      hint: '這是最重要的問題！門的位置決定了氣流進出方向，直接影響你的工作狀態和注意力',
-      options: ['正前方', '正後方', '左前方', '右前方', '左後方', '右後方', '看不到門'],
-      highlight: true,
-    },
-    {
-      id: 'back_support',
-      label: '你的座位背後是什麼？',
-      hint: '背後有沒有實牆支撐，影響你的安全感和穩定度',
-      options: ['實牆', '走道/通道', '窗戶', '矮隔板', '其他同事'],
-    },
-    {
-      id: 'above_head',
-      label: '你的頭頂上方有什麼？',
-      hint: '頭頂有橫樑或管線會造成無形的壓迫感',
-      options: ['平整天花板', '橫樑', '管線/風管', '吊燈/吊扇', '冷氣出風口'],
-    },
-    {
-      id: 'desk_facing',
-      label: '你的桌面正對什麼？',
-      hint: '桌面朝向影響你的工作氣場',
-      options: ['牆壁', '窗戶', '走道', '門口', '其他同事的背'],
-    },
-    {
-      id: 'left_side',
-      label: '你的左手邊是什麼？',
-      hint: '左邊是貴人方，最好有較高的物品支撐',
-      options: ['實牆', '走道', '窗戶', '較高的櫃子/隔板', '空曠'],
-    },
-    {
-      id: 'right_side',
-      label: '你的右手邊是什麼？',
-      hint: '右邊是動態方，不宜過高',
-      options: ['實牆', '走道', '窗戶', '較低的區域', '空曠'],
-    },
-    {
-      id: 'sharp_corners',
-      label: '附近有沒有尖角對著你？（柱子角、牆角、桌角）',
-      hint: '尖角對著人會造成無形的壓力',
-      options: ['沒有', '有，在前方', '有，在側面', '有，在後方'],
-    },
-    {
-      id: 'plants',
-      label: '桌上或附近有沒有植物？',
-      hint: '植物的種類和狀態會影響環境能量',
-      options: ['沒有', '有小盆栽', '有大型植物', '有枯萎的植物'],
-    },
-  ];
+  // 計算答題進度
+  const singleQuestions = QUIZ_QUESTIONS.filter(q => !q.multi);
+  const multiQuestions = QUIZ_QUESTIONS.filter(q => q.multi);
+  const singleAnswered = singleQuestions.filter(q => !!quizAnswers[q.id]).length;
+  const multiAnswered = multiQuestions.filter(q => (quizMultiAnswers[q.id]?.length ?? 0) > 0).length;
+  const totalAnswered = singleAnswered + multiAnswered;
+  const totalQuestions = QUIZ_QUESTIONS.length;
+  const allAnswered = totalAnswered === totalQuestions;
+
+  const handleSingleSelect = (qId: string, opt: string) => {
+    setQuizAnswers(prev => ({ ...prev, [qId]: opt }));
+  };
+
+  const handleMultiToggle = (qId: string, opt: string) => {
+    setQuizMultiAnswers(prev => {
+      const cur = prev[qId] ?? [];
+      // 如果選了「以上都沒有」或「沒有」，清除其他選項
+      if (opt === '以上都沒有' || opt === '沒有') {
+        return { ...prev, [qId]: [opt] };
+      }
+      // 如果已選了「以上都沒有」，先清除它
+      const filtered = cur.filter(o => o !== '以上都沒有' && o !== '沒有');
+      if (filtered.includes(opt)) {
+        return { ...prev, [qId]: filtered.filter(o => o !== opt) };
+      }
+      return { ...prev, [qId]: [...filtered, opt] };
+    });
+  };
 
   const handleQuizSubmit = () => {
-    if (Object.keys(quizAnswers).length < quizQuestions.length) return;
-    quizMutation.mutate({ answers: quizAnswers });
+    if (!allAnswered) return;
+    // 合併單選和複選答案
+    const mergedAnswers: Record<string, string> = { ...quizAnswers };
+    for (const [k, v] of Object.entries(quizMultiAnswers)) {
+      mergedAnswers[k] = v.join('、');
+    }
+    quizMutation.mutate({ answers: mergedAnswers });
+  };
+
+  const handleCompassSelect = (dir: string) => {
+    setCompassDetected(dir);
+    setShowCompass(false);
+    // 自動填入座位朝向（desk_facing 用方向描述）
+    toast.success(`已偵測到你面向 ${dir}，已自動填入`);
   };
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -264,6 +509,9 @@ export default function OfficeFengShui() {
           <TabsList className="mb-6 flex flex-wrap gap-1 h-auto">
             <TabsTrigger value="daily" className="gap-1.5">
               <Compass className="w-4 h-4" /> 今日方位
+            </TabsTrigger>
+            <TabsTrigger value="compass" className="gap-1.5">
+              <Navigation className="w-4 h-4" /> 羅盤
             </TabsTrigger>
             <TabsTrigger value="quiz" className="gap-1.5">
               <HelpCircle className="w-4 h-4" /> 座位診斷
@@ -388,9 +636,94 @@ export default function OfficeFengShui() {
             )}
           </TabsContent>
 
+          {/* ===== 羅盤 Tab ===== */}
+          <TabsContent value="compass">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Navigation className="w-5 h-5 text-amber-400" />
+                    手機羅盤方位偵測
+                  </CardTitle>
+                  <CardDescription>
+                    用手機感應器偵測你目前面對的方向，不需要手動輸入
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-sm">
+                    <p className="font-medium text-amber-400 mb-1">使用方式</p>
+                    <ol className="text-muted-foreground space-y-1 list-decimal list-inside">
+                      <li>坐在你的辦公座位上，面向你平常工作的方向</li>
+                      <li>將手機平放在桌上（螢幕朝上）</li>
+                      <li>點「開啟羅盤」，等待指針穩定</li>
+                      <li>確認方向後，可直接帶入座位診斷</li>
+                    </ol>
+                  </div>
+
+                  <CompassWidget onSelect={(dir) => {
+                    setCompassDetected(dir);
+                    toast.success(`已記錄你的座位朝向：${dir}`);
+                  }} />
+
+                  {compassDetected && (
+                    <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle2 className="w-5 h-5 text-green-400" />
+                        <p className="font-medium text-green-400">已記錄座位朝向：{compassDetected}</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        你的座位面向{compassDetected}方。前往「座位診斷」可以根據這個方向進行完整分析。
+                      </p>
+                      <Button size="sm" onClick={() => setActiveTab('quiz')}>
+                        <HelpCircle className="w-4 h-4 mr-1" /> 前往座位診斷
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* 方位說明 */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">各方位對辦公的影響</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                        {[
+                          { dir: '北', desc: '適合需要冷靜思考的工作，有助於專注', type: 'neutral' },
+                          { dir: '東', desc: '充滿活力，適合創意工作和新計畫', type: 'good' },
+                          { dir: '南', desc: '熱情外向，適合需要表現和溝通的工作', type: 'good' },
+                          { dir: '西', desc: '適合需要收斂和整理的工作', type: 'neutral' },
+                          { dir: '東北', desc: '學習和考試方位，適合需要學習的工作', type: 'good' },
+                          { dir: '東南', desc: '財運方位，適合業務和財務相關工作', type: 'good' },
+                          { dir: '西南', desc: '人際關係方位，適合需要協調的工作', type: 'neutral' },
+                          { dir: '西北', desc: '領導力方位，適合管理職和決策工作', type: 'good' },
+                        ].map(({ dir, desc, type }) => (
+                          <div key={dir} className={`p-3 rounded-lg border ${
+                            type === 'good' ? 'border-green-500/20 bg-green-500/5' : 'border-border bg-muted/20'
+                          }`}>
+                            <p className="font-medium mb-1">{dir}方</p>
+                            <p className="text-muted-foreground text-xs">{desc}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
           {/* ===== 座位診斷 Tab ===== */}
           <TabsContent value="quiz">
             <div className="space-y-6">
+              {compassDetected && (
+                <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 flex items-center gap-2 text-sm">
+                  <Navigation className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="text-muted-foreground">
+                    羅盤已偵測到你的座位面向 <span className="text-amber-400 font-medium">{compassDetected}</span>，可作為參考
+                  </span>
+                </div>
+              )}
+
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -398,13 +731,17 @@ export default function OfficeFengShui() {
                     辦公座位快速診斷
                   </CardTitle>
                   <CardDescription>
-                    回答 {quizQuestions.length} 個問題，AI 會分析你的座位環境並給出改善建議
+                    回答 {totalQuestions} 個問題（部分可多選），AI 會分析你的座位環境並給出改善建議
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {quizQuestions.map((q, idx) => {
+                  {QUIZ_QUESTIONS.map((q, idx) => {
                     const isDoor = q.id === 'door_position';
                     const showDoorWarning = isDoor && quizAnswers['door_position'] === '正後方';
+                    const isMulti = q.multi === true;
+                    const multiSelected = quizMultiAnswers[q.id] ?? [];
+                    const singleSelected = quizAnswers[q.id];
+
                     return (
                       <div key={q.id}>
                         <div className={isDoor ? 'p-4 rounded-lg border-2 border-amber-500/40 bg-amber-500/5' : ''}>
@@ -415,19 +752,34 @@ export default function OfficeFengShui() {
                                 最重要
                               </Badge>
                             )}
+                            {isMulti && (
+                              <Badge variant="outline" className="ml-2 text-xs">
+                                可多選
+                              </Badge>
+                            )}
                           </Label>
                           {q.hint && <p className="text-xs text-muted-foreground mb-2">{q.hint}</p>}
                           <div className="flex flex-wrap gap-2">
-                            {q.options.map((opt) => (
-                              <Button
-                                key={opt}
-                                variant={quizAnswers[q.id] === opt ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: opt }))}
-                              >
-                                {opt}
-                              </Button>
-                            ))}
+                            {q.options.map((opt) => {
+                              const selected = isMulti
+                                ? multiSelected.includes(opt)
+                                : singleSelected === opt;
+                              return (
+                                <Button
+                                  key={opt}
+                                  variant={selected ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => isMulti
+                                    ? handleMultiToggle(q.id, opt)
+                                    : handleSingleSelect(q.id, opt)
+                                  }
+                                  className={selected && isMulti ? 'ring-2 ring-amber-500/50' : ''}
+                                >
+                                  {isMulti && selected && <CheckCircle2 className="w-3 h-3 mr-1" />}
+                                  {opt}
+                                </Button>
+                              );
+                            })}
                           </div>
                         </div>
                         {/* 門在正後方即時警示 */}
@@ -450,14 +802,14 @@ export default function OfficeFengShui() {
                   <div className="pt-4 border-t">
                     <Button
                       onClick={handleQuizSubmit}
-                      disabled={Object.keys(quizAnswers).length < quizQuestions.length || quizMutation.isPending}
+                      disabled={!allAnswered || quizMutation.isPending}
                       className="w-full"
                       size="lg"
                     >
                       {quizMutation.isPending ? (
                         <><Loader2 className="w-4 h-4 mr-2 animate-spin" />AI 正在分析你的座位環境...</>
                       ) : (
-                        <><Zap className="w-4 h-4 mr-2" />開始分析（{Object.keys(quizAnswers).length}/{quizQuestions.length}）</>
+                        <><Zap className="w-4 h-4 mr-2" />開始分析（{totalAnswered}/{totalQuestions}）</>
                       )}
                     </Button>
                   </div>
@@ -659,6 +1011,7 @@ export default function OfficeFengShui() {
                       <p>• 盡量拍到座位背後的環境（牆/走道/窗戶）</p>
                       <p>• 包含頭頂上方（有沒有橫樑、管線）</p>
                       <p>• 桌面和周圍環境一起拍進去</p>
+                      <p>• 如果有魚缸或鏡子，也一起拍進去</p>
                     </div>
                   )}
 
